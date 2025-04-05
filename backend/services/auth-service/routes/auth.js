@@ -1,0 +1,38 @@
+const express = require('express');
+const router = express.Router();
+const { registerValidation, loginValidation } = require('../../../common/middleware/requestValidator');
+const passwordPolicy = require('../../../common/middleware/passwordPolicy');
+const { validate } = require('../../../common/middleware/requestValidator');
+const authController = require('../controllers/authController');
+
+// 注册路由
+router.post(
+  '/register',
+  passwordPolicy,
+  registerValidation,
+  validate,
+  authController.register
+);
+
+// 登录路由
+router.post(
+  '/login',
+  loginValidation,
+  validate,
+  authController.login
+);
+
+// 登出路由
+router.post(
+  '/logout',
+  authController.logout
+);
+
+// 修改密码路由
+router.put(
+  '/password',
+  passwordPolicy,
+  authController.changePassword
+);
+
+module.exports = router; 

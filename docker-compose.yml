@@ -1,0 +1,211 @@
+version: '3.8'
+
+services:
+  # API网关
+  gateway:
+    build: ./backend/gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - USER_SERVICE_URL=http://user-service:3001
+      - PROGRESS_SERVICE_URL=http://progress-service:3002
+      - HOMEWORK_SERVICE_URL=http://homework-service:3003
+      - INTERACTION_SERVICE_URL=http://interaction-service:3004
+      - RESOURCE_SERVICE_URL=http://resource-service:3005
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3006
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3007
+    depends_on:
+      - user-service
+      - progress-service
+      - homework-service
+      - interaction-service
+      - resource-service
+      - analytics-service
+      - notification-service
+    networks:
+      - app-network
+    restart: always
+
+  # 用户服务
+  user-service:
+    build: ./backend/services/user-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - JWT_SECRET=your_jwt_secret_key
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    restart: always
+
+  # 进度服务
+  progress-service:
+    build: ./backend/services/progress-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    restart: always
+
+  # 作业服务
+  homework-service:
+    build: ./backend/services/homework-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    restart: always
+
+  # 家校互动服务
+  interaction-service:
+    build: ./backend/services/interaction-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    restart: always
+
+  # 学习资源服务
+  resource-service:
+    build: ./backend/services/resource-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+    volumes:
+      - resource-data:/app/uploads
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    restart: always
+
+  # 数据分析服务
+  analytics-service:
+    build: ./backend/services/analytics-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3006
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    restart: always
+
+  # 通知服务
+  notification-service:
+    build: ./backend/services/notification-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3007
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - RABBITMQ_URL=amqp://rabbitmq
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - app-network
+    restart: always
+
+  # Web前端
+  web-frontend:
+    build: ./frontend/web
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+    restart: always
+
+  # MongoDB数据库
+  mongo:
+    image: mongo:4.4
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+    restart: always
+
+  # RabbitMQ消息队列
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"  # AMQP协议端口
+      - "15672:15672"  # 管理界面端口
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - app-network
+    restart: always
+
+  # MinIO对象存储
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"  # API端口
+      - "9001:9001"  # 控制台端口
+    volumes:
+      - minio-data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server --console-address ":9001" /data
+    networks:
+      - app-network
+    restart: always
+
+  # Redis缓存服务
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    restart: always
+
+  # 数据服务
+  data-service:
+    build: ./backend/services/data-service
+    environment:
+      - NODE_ENV=production
+      - PORT=3008
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    depends_on:
+      - mongo
+      - minio
+    networks:
+      - app-network
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  rabbitmq-data:
+  minio-data:
+  resource-data:
+  redis-data:

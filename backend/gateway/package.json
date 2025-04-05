@@ -1,0 +1,21 @@
+{
+  "name": "student-tracking-system-gateway",
+  "version": "1.0.0",
+  "description": "小学生学习追踪系统API网关",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-http-proxy": "^1.6.3",
+    "express-rate-limit": "^6.7.0",
+    "helmet": "^6.1.5",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

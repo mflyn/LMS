@@ -1,0 +1,84 @@
+---
+env:
+  contexts:
+    - name: education-system
+      urls: 
+        - http://education-system.com
+      includePaths:
+        - http://education-system.com.*
+      excludePaths: []
+      authentication:
+        method: form
+        parameters:
+          loginUrl: http://education-system.com/api/auth/login
+          loginRequestData: '{"username": "test@example.com", "password": "test123"}'
+          loginPageUrl: http://education-system.com/login
+
+# 扫描规则配置
+rules:
+  - id: 10020 # X-Frame-Options Header
+    enabled: true
+    threshold: medium
+  - id: 10021 # X-Content-Type-Options Header
+    enabled: true
+    threshold: medium
+  - id: 10038 # Content Security Policy Header
+    enabled: true
+    threshold: medium
+  - id: 40012 # SQL Injection
+    enabled: true
+    threshold: high
+  - id: 40014 # Cross Site Scripting
+    enabled: true
+    threshold: high
+  - id: 40018 # SQL Injection - MySQL
+    enabled: true
+    threshold: high
+  - id: 90022 # Application Error Disclosure
+    enabled: true
+    threshold: medium
+
+# 爬虫配置
+spider:
+  maxDuration: 60
+  maxDepth: 10
+  maxChildren: 100
+  acceptCookies: true
+  handleODataParametersVisited: true
+  handleParameters: true
+  maxParseSizeBytes: 2621440
+  parseComments: true
+  parseGit: true
+  parseRobotsTxt: true
+  parseSitemapXml: true
+  parseLinks: true
+  postForm: true
+
+# 扫描配置
+scan:
+  maxDuration: 120
+  maxRuleDurationInMins: 5
+  maxScanDurationInMins: 60
+  threadPerHost: 2
+  maxResultsToList: 1000
+  delayInMs: 0
+  injectPluginIdInHeader: true
+  scanHeadersAllRequests: true
+  handleAntiCSRFTokens: true
+  alertThreshold: medium
+
+# 报告配置
+report:
+  title: "安全测试报告 - 小学生学习追踪系统"
+  template: modern
+  reportDir: security-reports
+  formats:
+    - html
+    - xml
+    - json
+  sections:
+    - title
+    - summary
+    - alerts
+    - instances
+    - appendix 

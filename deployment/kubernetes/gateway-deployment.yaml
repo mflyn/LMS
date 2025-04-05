@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  labels:
+    app: gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+      - name: gateway
+        image: learning-tracker/gateway:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: JWT_SECRET
+        - name: USER_SERVICE_URL
+          value: "http://user-service:3001"
+        - name: PROGRESS_SERVICE_URL
+          value: "http://progress-service:3002"
+        - name: HOMEWORK_SERVICE_URL
+          value: "http://homework-service:3003"
+        - name: INTERACTION_SERVICE_URL
+          value: "http://interaction-service:3004"
+        - name: RESOURCE_SERVICE_URL
+          value: "http://resource-service:3005"
+        - name: ANALYTICS_SERVICE_URL
+          value: "http://analytics-service:3006"
+        - name: NOTIFICATION_SERVICE_URL
+          value: "http://notification-service:3007"
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+spec:
+  selector:
+    app: gateway
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP
