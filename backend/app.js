@@ -7,6 +7,7 @@ const hpp = require('hpp');
 const compression = require('compression');
 const { responseTimeMiddleware, progressMiddleware } = require('./common/middleware/responseTime');
 const errorHandler = require('./common/middleware/errorHandler');
+const { logger, performanceLogger, errorLogger } = require('./common/config/logger');
 
 const app = express();
 
@@ -42,5 +43,37 @@ app.use('/api', require('./routes'));
 
 // 错误处理
 app.use(errorHandler);
+
+// 请求日志记录
+app.use(performanceLogger);
+
+// 记录应用启动
+logger.info('应用启动', {
+  nodeEnv: process.env.NODE_ENV,
+  port: process.env.PORT || 3000
+});
+
+// 错误处理中间件
+app.use(errorLogger);
+
+// 未捕获的异常处理
+process.on('uncaughtException', (error) => {
+  logger.error('未捕获的异常', {
+    error: error.message,
+    stack: error.stack
+  });
+  // 给进程一些时间来写入日志
+  setTimeout(() => {
+    process.exit(1);
+  }, 1000);
+});
+
+// 未处理的 Promise 拒绝
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('未处理的 Promise 拒绝', {
+    reason: reason,
+    promise: promise
+  });
+});
 
 module.exports = app; 

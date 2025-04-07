@@ -5,199 +5,141 @@
  */
 
 const winston = require('winston');
-const fs = require('fs');
+const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
-const { format } = require('winston');
 
-/**
- * 创建日志目录
- * @param {string} logDir 日志目录路径
- */
-const createLogDirectory = (logDir) => {
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir, { recursive: true });
-  }
+// 定义日志级别
+const levels = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  http: 3,
+  debug: 4
 };
 
-/**
- * 创建自定义日志格式
- * @param {boolean} colorize 是否启用颜色
- * @returns {winston.Format} Winston格式对象
- */
-const createLogFormat = (colorize = false) => {
-  const baseFormat = [
-    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    format.errors({ stack: true }),
-    format.metadata({ fillExcept: ['message', 'level', 'timestamp', 'service', 'requestId'] })
-  ];
-  
-  if (colorize) {
-    return format.combine(
-      ...baseFormat,
-      format.colorize(),
-      format.printf(({ level, message, timestamp, service, requestId, metadata }) => {
-        let metaStr = '';
-        if (metadata && Object.keys(metadata).length > 0) {
-          metaStr = JSON.stringify(metadata);
-        }
-        const reqId = requestId ? `[${requestId}]` : '';
-        return `${timestamp} [${service}] ${level}: ${reqId} ${message} ${metaStr}`;
-      })
-    );
-  }
-  
-  return format.combine(...baseFormat, format.json());
+// 定义日志颜色
+const colors = {
+  error: 'red',
+  warn: 'yellow',
+  info: 'green',
+  http: 'magenta',
+  debug: 'white'
 };
 
-/**
- * 创建日志记录器
- * @param {string} serviceName 服务名称
- * @param {string} logDir 日志目录路径
- * @param {Object} options 其他配置选项
- * @returns {Object} 包含logger和httpLogger的对象
- */
-const createLogger = (serviceName, logDir = 'logs', options = {}) => {
-  // 确保日志目录存在
-  createLogDirectory(logDir);
-  
-  // 获取配置选项
-  const { 
-    logLevel = process.env.LOG_LEVEL || 'info',
-    maxSize = 10485760, // 10MB
-    maxFiles = 5,
-    enableConsole = true,
-    enablePerformanceLogging = true
-  } = options;
-  
-  // 创建自定义日志格式
-  const consoleFormat = createLogFormat(true);
-  const fileFormat = createLogFormat(false);
-  
-  // 创建传输器数组
-  const transports = [];
-  
-  // 添加控制台传输器
-  if (enableConsole) {
-    transports.push(new winston.transports.Console({
-      format: consoleFormat
-    }));
-  }
-  
-  // 添加文件传输器
-  transports.push(
-    // 错误日志文件
-    new winston.transports.File({ 
-      filename: path.join(logDir, 'error.log'), 
+// 设置 winston 颜色
+winston.addColors(colors);
+
+// 定义日志格式
+const format = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.splat(),
+  winston.format.json(),
+  winston.format.printf(
+    (info) => `${info.timestamp} ${info.level}: ${info.message}${info.stack ? '\n' + info.stack : ''}`
+  )
+);
+
+// 创建日志目录
+const logDir = path.join(__dirname, '../../logs');
+
+// 创建 logger 实例
+const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  levels,
+  format,
+  transports: [
+    // 错误日志
+    new DailyRotateFile({
+      filename: path.join(logDir, 'error-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
       level: 'error',
-      maxsize: maxSize,
-      maxFiles: maxFiles,
-      tailable: true,
-      format: fileFormat
+      maxSize: '20m',
+      maxFiles: '14d',
+      zippedArchive: true
     }),
-    // 所有日志文件
-    new winston.transports.File({ 
-      filename: path.join(logDir, 'combined.log'),
-      maxsize: maxSize,
-      maxFiles: maxFiles,
-      tailable: true,
-      format: fileFormat
+
+    // 应用日志
+    new DailyRotateFile({
+      filename: path.join(logDir, 'application-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
+      maxSize: '20m',
+      maxFiles: '14d',
+      zippedArchive: true
+    }),
+
+    // 访问日志
+    new DailyRotateFile({
+      filename: path.join(logDir, 'access-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
+      level: 'http',
+      maxSize: '20m',
+      maxFiles: '14d',
+      zippedArchive: true
+    }),
+
+    // 性能日志
+    new DailyRotateFile({
+      filename: path.join(logDir, 'performance-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
+      maxSize: '20m',
+      maxFiles: '14d',
+      zippedArchive: true
     })
-  );
-  
-  // 如果启用性能日志，添加性能日志文件
-  if (enablePerformanceLogging) {
-    transports.push(
-      new winston.transports.File({
-        filename: path.join(logDir, 'performance.log'),
-        level: 'warn',
-        maxsize: maxSize,
-        maxFiles: maxFiles,
-        tailable: true,
-        format: fileFormat
-      })
-    );
-  }
-  
-  // 创建日志记录器
-  const logger = winston.createLogger({
-    level: logLevel,
-    defaultMeta: { service: serviceName },
-    transports: transports
-  });
-  
-  // 添加自定义日志方法
-  logger.performance = function(message, meta = {}) {
-    this.warn(message, { ...meta, logType: 'performance' });
-  };
-  
-  logger.audit = function(message, meta = {}) {
-    this.info(message, { ...meta, logType: 'audit' });
-  };
-  
-  // 添加HTTP请求日志中间件
-  const httpLogger = (req, res, next) => {
-    // 使用请求跟踪中间件生成的requestId
-    const requestId = req.requestId;
-    
-    // 记录请求开始时间
-    const start = Date.now();
-    
-    // 响应结束时记录日志
-    res.on('finish', () => {
-      const duration = Date.now() - start;
-      const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
-      
-      // 构建日志元数据
-      const logMeta = {
-        requestId: requestId,
+  ]
+});
+
+// 在开发环境下添加控制台输出
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple()
+    )
+  }));
+}
+
+// 创建性能监控中间件
+const performanceLogger = (req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.log({
+      level: 'http',
+      message: `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`,
+      meta: {
         method: req.method,
         url: req.originalUrl,
         status: res.statusCode,
-        duration: `${duration}ms`,
+        duration,
         ip: req.ip,
-        userAgent: req.get('user-agent'),
-        userId: req.user ? req.user.id : 'anonymous',
-        userRole: req.user ? req.user.role : null,
-        contentLength: res.get('content-length'),
-        referrer: req.get('referer') || req.get('referrer')
-      };
-      
-      // 记录HTTP请求日志
-      logger.log(logLevel, `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`, logMeta);
-      
-      // 如果请求处理时间超过阈值，记录性能日志
-      if (enablePerformanceLogging && duration > 1000) {
-        logger.performance(`慢请求: ${req.method} ${req.originalUrl}`, {
-          ...logMeta,
-          threshold: '1000ms'
-        });
+        userAgent: req.get('user-agent')
       }
     });
-    
-    next();
-  };
-  
-  return { logger, httpLogger };
+  });
+  next();
 };
 
-/**
- * 创建审计日志记录函数
- * @param {winston.Logger} logger - Winston日志记录器实例
- * @returns {Function} 审计日志记录函数
- */
-const createAuditLogger = (logger) => {
-  return (action, userId, details = {}) => {
-    logger.audit(`审计: ${action}`, {
-      action,
-      userId,
-      timestamp: new Date().toISOString(),
-      details
-    });
-  };
+// 错误日志中间件
+const errorLogger = (err, req, res, next) => {
+  logger.error({
+    message: err.message,
+    stack: err.stack,
+    meta: {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+      body: req.body,
+      query: req.query,
+      params: req.params
+    }
+  });
+  next(err);
 };
 
-module.exports = { 
-  createLogger,
-  createLogFormat,
-  createAuditLogger 
+module.exports = {
+  logger,
+  performanceLogger,
+  errorLogger
 };

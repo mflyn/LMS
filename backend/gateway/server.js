@@ -48,6 +48,10 @@ app.use('/api/users', authenticateToken, proxy('http://localhost:5001', {
   proxyReqPathResolver: (req) => `/api/users${req.url}`
 }));
 
+app.use('/api/students', authenticateToken, proxy('http://localhost:5001', {
+  proxyReqPathResolver: (req) => `/api/students${req.url}`
+}));
+
 app.use('/api/data', authenticateToken, proxy('http://localhost:5002', {
   proxyReqPathResolver: (req) => `/api/data${req.url}`
 }));

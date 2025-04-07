@@ -14,10 +14,9 @@ https://api.example.com/v1
 ### 响应格式
 ```json
 {
-  "success": true,
-  "data": {},
-  "error": null,
-  "message": "操作成功"
+  "code": 200,
+  "message": "success",
+  "data": {}
 }
 ```
 
@@ -41,7 +40,8 @@ POST /auth/register
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "id": "string",
     "username": "string",
@@ -67,7 +67,8 @@ POST /auth/login
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "token": "string",
     "user": {
@@ -95,7 +96,8 @@ GET /students
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "items": [
       {
@@ -120,7 +122,8 @@ GET /students/{id}
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "id": "string",
     "name": "string",
@@ -158,7 +161,8 @@ POST /scores
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "id": "string",
     "studentId": "string",
@@ -183,7 +187,8 @@ GET /scores/statistics
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "average": "number",
     "highest": "number",
@@ -220,7 +225,8 @@ POST /homework
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "id": "string",
     "title": "string",
@@ -245,7 +251,8 @@ POST /homework/{id}/submit
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "id": "string",
     "status": "string"
@@ -268,7 +275,8 @@ POST /resources/upload
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "id": "string",
     "url": "string",
@@ -291,7 +299,8 @@ GET /resources
 响应：
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "success",
   "data": {
     "items": [
       {
@@ -356,4 +365,4 @@ X-RateLimit-Reset: 1609459200
 ### 兼容性
 - 主版本号变更：不兼容的API修改
 - 次版本号变更：向下兼容的功能性新增
-- 修订号变更：向下兼容的问题修正 
+- 修订号变更：向下兼容的问题修正

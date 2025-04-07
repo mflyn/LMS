@@ -10,6 +10,8 @@
     "password-validator": "^5.3.0",
     "sanitize-html": "^2.15.0",
     "uuid": "^11.1.0",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {

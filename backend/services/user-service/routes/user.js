@@ -11,7 +11,11 @@ const authenticateToken = (req, res, next) => {
 // 角色检查中间件
 const checkRole = (roles) => {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: '未认证' });
+    if (!req.user) return res.status(401).json({
+    code: 401,
+    message: '未认证',
+    data: null
+  });
     
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ message: '权限不足' });
@@ -26,12 +30,20 @@ router.get('/me', async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      return res.status(404).json({ message: '用户不存在' });
+      return res.status(404).json({
+        code: 404,
+        message: '用户不存在',
+        data: null
+      });
     }
     res.json({ user });
   } catch (error) {
     console.error('获取用户信息错误:', error);
-    res.status(500).json({ message: '服务器错误' });
+    res.status(500).json({
+      code: 500,
+      message: '服务器错误',
+      data: null
+    });
   }
 });
 
@@ -42,7 +54,11 @@ router.get('/', checkRole(['admin']), async (req, res) => {
     res.json({ users });
   } catch (error) {
     console.error('获取用户列表错误:', error);
-    res.status(500).json({ message: '服务器错误' });
+    res.status(500).json({
+      code: 500,
+      message: '服务器错误',
+      data: null
+    });
   }
 });
 
@@ -63,7 +79,11 @@ router.put('/:id', async (req, res) => {
     ).select('-password');
     
     if (!updatedUser) {
-      return res.status(404).json({ message: '用户不存在' });
+      return res.status(404).json({
+        code: 404,
+        message: '用户不存在',
+        data: null
+      });
     }
     
     res.json({ user: updatedUser });
