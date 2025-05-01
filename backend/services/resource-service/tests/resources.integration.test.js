@@ -5,66 +5,68 @@
 
 const request = require('supertest');
 const mongoose = require('mongoose');
-const express = require('express');
-const { DbTestHelper, TestDataGenerator } = require('../../../common/test/testUtils');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const app = require('../app');
 const Resource = require('../models/Resource');
-const ResourceReview = require('../models/ResourceReview');
-const { createLogger } = require('../../../common/config/logger');
-const { errorHandler } = require('../../../common/middleware/errorHandler');
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../config');
+const TestDataGenerator = require('./TestDataGenerator');
 
-// 初始化数据库测试助手
-const dbHelper = new DbTestHelper();
-
-// 创建测试应用
-const createTestApp = () => {
-  const app = express();
-  app.use(express.json());
+describe('资源API集成测试', () => {
+  let mongoServer;
+  let adminToken, teacherToken, studentToken;
+  let testResources = [];
   
-  // 设置日志记录器
-  const { logger, httpLogger } = createLogger('resource-service-test', 'logs/test');
-  app.locals.logger = logger;
-  app.use(httpLogger);
-  
-  // 设置测试用户
-  app.use((req, res, next) => {
-    req.user = { _id: new mongoose.Types.ObjectId(), role: 'teacher' };
-    next();
-  });
-  
-  // 加载资源路由
-  const resourceRoutes = require('../routes/resources');
-  app.use('/api/resources', resourceRoutes);
-  
-  // 错误处理中间件
-  app.use(errorHandler);
-  
-  return app;
-};
-
-describe('资源服务API集成测试', () => {
-  let app;
-  let agent;
-  
-  // 在所有测试前连接到测试数据库并创建测试应用
   beforeAll(async () => {
-    await dbHelper.connect();
-    app = createTestApp();
-    agent = request(app);
+    // 设置内存MongoDB服务器
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
+    
+    // 创建测试用户
+    const admin = await User.create({
+      username: 'admin',
+      password: 'password',
+      email: 'admin@example.com',
+      role: 'admin'
+    });
+    
+    const teacher = await User.create({
+      username: 'teacher',
+      password: 'password',
+      email: 'teacher@example.com',
+      role: 'teacher'
+    });
+    
+    const student = await User.create({
+      username: 'student',
+      password: 'password',
+      email: 'student@example.com',
+      role: 'student'
+    });
+    
+    // 生成JWT令牌
+    adminToken = jwt.sign({ userId: admin._id, role: admin.role }, JWT_SECRET, { expiresIn: '1h' });
+    teacherToken = jwt.sign({ userId: teacher._id, role: teacher.role }, JWT_SECRET, { expiresIn: '1h' });
+    studentToken = jwt.sign({ userId: student._id, role: student.role }, JWT_SECRET, { expiresIn: '1h' });
   });
 
-  // 在所有测试后断开连接
   afterAll(async () => {
-    await dbHelper.disconnect();
+    await mongoose.disconnect();
+    await mongoServer.stop();
   });
 
-  // 在每个测试前清空数据库
   beforeEach(async () => {
-    await dbHelper.clearDatabase();
+    await Resource.deleteMany({});
+    testResources = [];
   });
 
   describe('GET /api/resources', () => {
     it('应该返回空资源列表', async () => {
-      const response = await agent.get('/api/resources');
+      const response = await request(app)
+        .get('/api/resources')
+        .set('Authorization', `Bearer ${teacherToken}`);
       
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('resources');

@@ -5,9 +5,9 @@ const dotenv = require('dotenv');
 const winston = require('winston');
 const fs = require('fs');
 const path = require('path');
-const jwt = require('jsonwebtoken');
-const config = require('./config');
-const authMiddleware = require('../../common/middleware/auth');
+
+// 导入中间件
+const { authenticateToken, checkRole } = require('./middleware/auth');
 
 // 加载环境变量
 dotenv.config();
@@ -38,9 +38,6 @@ if (!fs.existsSync('logs')) {
 app.use(cors());
 app.use(express.json());
 
-// 使用统一认证中间件
-const { authenticateJWT: authenticateToken, checkRole } = authMiddleware;
-
 // 请求日志中间件
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);
@@ -59,15 +56,20 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tr
   logger.error('MongoDB连接失败:', err.message);
 });
 
+// 导入Meeting模型
+const Meeting = require('./models/Meeting'); // 确保路径正确
+
 // 导入路由
 const messagesRouter = require('./routes/messages');
 const announcementsRouter = require('./routes/announcements');
 const meetingsRouter = require('./routes/meetings');
+const videoMeetingsRouter = require('./routes/video-meetings-simple');
 
-// 使用路由（添加统一认证中间件）
+// 使用路由（添加认证中间件）
 app.use('/api/interaction/messages', authenticateToken, messagesRouter);
 app.use('/api/interaction/announcements', authenticateToken, announcementsRouter);
 app.use('/api/interaction/meetings', authenticateToken, meetingsRouter);
+app.use('/api/interaction/video-meetings', authenticateToken, videoMeetingsRouter);
 
 // 健康检查路由
 app.get('/health', (req, res) => {
@@ -83,10 +85,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 启动服务器
-const PORT = process.env.PORT || 5004;
-app.listen(PORT, () => {
-  logger.info(`家校互动服务运行在端口 ${PORT}`);
-});
-
+// 导出应用
 module.exports = app;
+
+// 只有在非测试环境下才启动服务器
+if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 5004;
+  app.listen(PORT, () => {
+    logger.info(`家校互动服务运行在端口 ${PORT}`);
+  });
+}
