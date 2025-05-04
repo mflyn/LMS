@@ -86,7 +86,9 @@ describe('公告路由测试 - 第四部分', () => {
 
     it('应该处理数据库删除错误', async () => {
       // 模拟 findByIdAndDelete 方法抛出错误
-      Announcement.findByIdAndDelete.mockRejectedValue(new Error('数据库删除错误'));
+      Announcement.findByIdAndDelete.mockImplementation(() => {
+        throw new Error('数据库删除错误');
+      });
 
       // 发送请求
       const response = await request(app)

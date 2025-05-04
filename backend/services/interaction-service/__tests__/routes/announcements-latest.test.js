@@ -124,9 +124,14 @@ describe('公告路由测试 - 获取班级最新公告', () => {
 
     it('应该处理数据库查询错误', async () => {
       // 模拟 find 方法抛出错误
-      Announcement.find.mockImplementation(() => {
-        throw new Error('数据库查询错误');
-      });
+      const mockChain = {
+        sort: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        populate: jest.fn().mockImplementation(() => {
+          throw new Error('数据库查询错误');
+        })
+      };
+      Announcement.find.mockReturnValue(mockChain);
 
       // 发送请求
       const response = await request(app)

@@ -1,19 +1,36 @@
 const request = require('supertest');
 const express = require('express');
 const router = require('../../routes/video-meetings');
+
 // 模拟 Meeting 模型
 jest.mock('../../models/Meeting', () => {
-  return function() {
-    return {
-      save: jest.fn().mockResolvedValue(true)
-    };
+  return {
+    findById: jest.fn().mockImplementation(() => {
+      return {
+        _id: 'meeting-id-123',
+        title: '测试会议',
+        teacher: {
+          toString: () => 'teacher-id-123'
+        },
+        parent: {
+          toString: () => 'parent-id-123'
+        },
+        student: {
+          toString: () => 'student-id-123'
+        },
+        startTime: new Date(),
+        endTime: new Date(Date.now() + 3600000),
+        status: '待确认',
+        meetingLink: null,
+        save: jest.fn().mockResolvedValue(true),
+        toString: () => 'meeting-id-123'
+      };
+    })
   };
 });
 
-// 创建一个模拟的 Meeting 对象
-const Meeting = {
-  findById: jest.fn()
-};
+// 获取模拟的 Meeting 模型
+const Meeting = require('../../models/Meeting');
 
 describe('视频会议路由错误处理测试 - 第二部分', () => {
   let app;
@@ -130,21 +147,18 @@ describe('视频会议路由错误处理测试 - 第二部分', () => {
         'teacher-id-123': []
       };
 
-      // 模拟数组赋值抛出异常
-      const originalDefineProperty = Object.defineProperty;
-      Object.defineProperty = jest.fn((obj, prop, descriptor) => {
-        if (prop === 'teacher-id-123' && obj === global.signalingQueue) {
-          throw new Error('信令队列错误');
-        }
-        return originalDefineProperty(obj, prop, descriptor);
+      // 模拟数组的 splice 方法抛出异常
+      const originalSplice = Array.prototype.splice;
+      Array.prototype.splice = jest.fn(() => {
+        throw new Error('信令队列错误');
       });
 
       // 发送请求
       const response = await request(app)
         .get('/api/interaction/video-meetings/signal/messages');
 
-      // 恢复 Object.defineProperty
-      Object.defineProperty = originalDefineProperty;
+      // 恢复 Array.prototype.splice
+      Array.prototype.splice = originalSplice;
 
       // 验证响应
       expect(response.status).toBe(500);

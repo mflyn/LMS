@@ -46,8 +46,8 @@ describe('公告路由测试 - 创建公告', () => {
         author: 'author-id-1',
         classId: 'class-id-1',
         attachments: [
-          { 
-            name: '附件1.pdf', 
+          {
+            name: '附件1.pdf',
             url: 'http://example.com/files/attachment1.pdf',
             type: 'application/pdf',
             size: 1024
@@ -215,7 +215,9 @@ describe('公告路由测试 - 创建公告', () => {
       };
 
       // 模拟保存失败
-      const mockSave = jest.fn().mockRejectedValue(new Error('保存失败'));
+      const mockSave = jest.fn().mockImplementation(() => {
+        throw new Error('保存失败');
+      });
       Announcement.mockImplementation(function(data) {
         Object.assign(this, data);
         this.save = mockSave;

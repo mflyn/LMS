@@ -1,19 +1,36 @@
 const request = require('supertest');
 const express = require('express');
 const router = require('../../routes/video-meetings');
+
 // 模拟 Meeting 模型
 jest.mock('../../models/Meeting', () => {
-  return function() {
-    return {
-      save: jest.fn().mockResolvedValue(true)
-    };
+  return {
+    findById: jest.fn().mockImplementation(() => {
+      return {
+        _id: 'meeting-id-123',
+        title: '测试会议',
+        teacher: {
+          toString: () => 'teacher-id-123'
+        },
+        parent: {
+          toString: () => 'parent-id-123'
+        },
+        student: {
+          toString: () => 'student-id-123'
+        },
+        startTime: new Date(),
+        endTime: new Date(Date.now() + 3600000),
+        status: '待确认',
+        meetingLink: null,
+        save: jest.fn().mockResolvedValue(true),
+        toString: () => 'meeting-id-123'
+      };
+    })
   };
 });
 
-// 创建一个模拟的 Meeting 对象
-const Meeting = {
-  findById: jest.fn()
-};
+// 获取模拟的 Meeting 模型
+const Meeting = require('../../models/Meeting');
 
 describe('视频会议路由错误处理测试 - 第一部分', () => {
   let app;

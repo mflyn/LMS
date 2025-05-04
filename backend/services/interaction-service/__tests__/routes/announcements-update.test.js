@@ -44,8 +44,8 @@ describe('公告路由测试 - 更新公告', () => {
         title: '更新后的标题',
         content: '更新后的内容',
         attachments: [
-          { 
-            name: '新附件.pdf', 
+          {
+            name: '新附件.pdf',
             url: 'http://example.com/files/new-attachment.pdf',
             type: 'application/pdf',
             size: 2048
@@ -83,9 +83,9 @@ describe('公告路由测试 - 更新公告', () => {
       // 验证模拟函数被正确调用
       expect(Announcement.findByIdAndUpdate).toHaveBeenCalledWith(
         'announcement-id-1',
-        { 
-          title: updateData.title, 
-          content: updateData.content, 
+        {
+          title: updateData.title,
+          content: updateData.content,
           attachments: updateData.attachments,
           updatedAt: expect.any(Number)
         },
@@ -129,9 +129,9 @@ describe('公告路由测试 - 更新公告', () => {
       // 验证模拟函数被正确调用
       expect(Announcement.findByIdAndUpdate).toHaveBeenCalledWith(
         'announcement-id-1',
-        { 
-          title: updateData.title, 
-          content: updateData.content, 
+        {
+          title: updateData.title,
+          content: updateData.content,
           attachments: [],
           updatedAt: expect.any(Number)
         },
@@ -199,9 +199,9 @@ describe('公告路由测试 - 更新公告', () => {
       // 验证模拟函数被正确调用
       expect(Announcement.findByIdAndUpdate).toHaveBeenCalledWith(
         'non-existent-id',
-        { 
-          title: updateData.title, 
-          content: updateData.content, 
+        {
+          title: updateData.title,
+          content: updateData.content,
           attachments: [],
           updatedAt: expect.any(Number)
         },
@@ -217,7 +217,9 @@ describe('公告路由测试 - 更新公告', () => {
       };
 
       // 设置模拟函数抛出错误
-      Announcement.findByIdAndUpdate.mockRejectedValue(new Error('数据库错误'));
+      Announcement.findByIdAndUpdate.mockImplementation(() => {
+        throw new Error('数据库错误');
+      });
 
       // 发送请求
       const response = await request(app)
@@ -232,9 +234,9 @@ describe('公告路由测试 - 更新公告', () => {
       // 验证模拟函数被正确调用
       expect(Announcement.findByIdAndUpdate).toHaveBeenCalledWith(
         'announcement-id-1',
-        { 
-          title: updateData.title, 
-          content: updateData.content, 
+        {
+          title: updateData.title,
+          content: updateData.content,
           attachments: [],
           updatedAt: expect.any(Number)
         },

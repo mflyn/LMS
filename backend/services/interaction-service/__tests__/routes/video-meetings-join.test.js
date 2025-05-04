@@ -24,7 +24,16 @@ jest.mock('../../models/Meeting', () => {
     findById: jest.fn().mockImplementation(() => {
       return {
         ...mockMeeting,
-        toString: () => 'meeting-id-1'
+        toString: () => 'meeting-id-1',
+        teacher: {
+          toString: () => 'teacher-id-1'
+        },
+        parent: {
+          toString: () => 'parent-id-1'
+        },
+        student: {
+          toString: () => 'student-id-1'
+        }
       };
     })
   };
