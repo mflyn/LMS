@@ -1,0 +1,353 @@
+/**
+ * 消息路由覆盖率测试
+ * 专注于提高 messages.js 的测试覆盖率
+ */
+
+const request = require('supertest');
+const express = require('express');
+const mongoose = require('mongoose');
+
+// 模拟 Message 模型
+jest.mock('../../models/Message', () => {
+  const mockMessage = jest.fn().mockImplementation(function(data) {
+    Object.assign(this, data);
+    this.save = jest.fn().mockResolvedValue(this);
+  });
+
+  // 添加静态方法
+  mockMessage.find = jest.fn().mockReturnThis();
+  mockMessage.findById = jest.fn().mockReturnThis();
+  mockMessage.findByIdAndUpdate = jest.fn().mockReturnThis();
+  mockMessage.findByIdAndDelete = jest.fn().mockReturnThis();
+  mockMessage.countDocuments = jest.fn().mockResolvedValue(10);
+  mockMessage.sort = jest.fn().mockReturnThis();
+  mockMessage.skip = jest.fn().mockReturnThis();
+  mockMessage.limit = jest.fn().mockReturnThis();
+  mockMessage.populate = jest.fn().mockReturnThis();
+  mockMessage.exec = jest.fn();
+  mockMessage.aggregate = jest.fn();
+  mockMessage.updateMany = jest.fn();
+
+  return mockMessage;
+});
+
+// 模拟 winston 日志
+jest.mock('winston', () => ({
+  format: {
+    timestamp: jest.fn().mockReturnValue({}),
+    json: jest.fn().mockReturnValue({}),
+    combine: jest.fn().mockReturnValue({})
+  },
+  createLogger: jest.fn().mockReturnValue({
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn()
+  }),
+  transports: {
+    Console: jest.fn(),
+    File: jest.fn()
+  }
+}));
+
+describe('消息路由覆盖率测试', () => {
+  let app;
+  let Message;
+  
+  beforeEach(() => {
+    // 重置模块缓存
+    jest.resetModules();
+    
+    // 导入 Message 模型
+    Message = require('../../models/Message');
+    
+    // 创建 Express 应用
+    app = express();
+    app.use(express.json());
+    
+    // 使用消息路由
+    const messagesRouter = require('../../routes/messages');
+    app.use('/api/interaction/messages', messagesRouter);
+  });
+  
+  afterEach(() => {
+    // 清除所有模拟
+    jest.clearAllMocks();
+  });
+  
+  // 测试获取消息统计信息
+  describe('GET /api/interaction/messages/stats', () => {
+    it('应该返回消息统计信息', async () => {
+      // 模拟聚合结果
+      const mockStats = [
+        { status: 'unread', count: 5 },
+        { status: 'read', count: 10 }
+      ];
+      
+      Message.aggregate.mockResolvedValue(mockStats);
+      
+      // 发送请求
+      const response = await request(app)
+        .get('/api/interaction/messages/stats');
+      
+      // 验证响应
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(mockStats);
+      
+      // 验证模拟函数被正确调用
+      expect(Message.aggregate).toHaveBeenCalled();
+    });
+    
+    it('应该处理聚合错误', async () => {
+      // 模拟聚合错误
+      Message.aggregate.mockRejectedValue(new Error('聚合错误'));
+      
+      // 发送请求
+      const response = await request(app)
+        .get('/api/interaction/messages/stats');
+      
+      // 验证响应
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('message', '获取消息统计信息失败');
+      expect(response.body).toHaveProperty('error', '聚合错误');
+    });
+  });
+  
+  // 测试获取会话列表
+  describe('GET /api/interaction/messages/conversations/:userId', () => {
+    it('应该返回用户的会话列表', async () => {
+      // 模拟聚合结果
+      const mockConversations = [
+        {
+          _id: 'user-id-2',
+          lastMessage: {
+            content: '最新消息内容',
+            createdAt: new Date()
+          },
+          unreadCount: 3
+        }
+      ];
+      
+      Message.aggregate.mockResolvedValue(mockConversations);
+      
+      // 发送请求
+      const response = await request(app)
+        .get('/api/interaction/messages/conversations/user-id-1');
+      
+      // 验证响应
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(mockConversations);
+      
+      // 验证模拟函数被正确调用
+      expect(Message.aggregate).toHaveBeenCalled();
+    });
+    
+    it('应该处理聚合错误', async () => {
+      // 模拟聚合错误
+      Message.aggregate.mockRejectedValue(new Error('聚合错误'));
+      
+      // 发送请求
+      const response = await request(app)
+        .get('/api/interaction/messages/conversations/user-id-1');
+      
+      // 验证响应
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('message', '获取会话列表失败');
+      expect(response.body).toHaveProperty('error', '聚合错误');
+    });
+  });
+  
+  // 测试获取会话消息
+  describe('GET /api/interaction/messages/conversation', () => {
+    it('应该返回两个用户之间的会话消息', async () => {
+      // 模拟数据
+      const mockMessages = [
+        {
+          _id: 'message-id-1',
+          sender: 'user-id-1',
+          receiver: 'user-id-2',
+          content: '你好',
+          createdAt: new Date(),
+          read: true
+        },
+        {
+          _id: 'message-id-2',
+          sender: 'user-id-2',
+          receiver: 'user-id-1',
+          content: '你好，有什么可以帮助你的？',
+          createdAt: new Date(),
+          read: false
+        }
+      ];
+      
+      // 设置模拟函数的返回值
+      Message.find.mockReturnValue({
+        sort: jest.fn().mockResolvedValue(mockMessages)
+      });
+      
+      // 发送请求
+      const response = await request(app)
+        .get('/api/interaction/messages/conversation')
+        .query({
+          user1: 'user-id-1',
+          user2: 'user-id-2'
+        });
+      
+      // 验证响应
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      
+      // 验证模拟函数被正确调用
+      expect(Message.find).toHaveBeenCalled();
+    });
+    
+    it('应该验证必要参数', async () => {
+      // 发送请求（只提供一个用户ID）
+      const response = await request(app)
+        .get('/api/interaction/messages/conversation')
+        .query({
+          user1: 'user-id-1'
+        });
+      
+      // 验证响应
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('message', '需要两个用户ID');
+    });
+    
+    it('应该处理查询错误', async () => {
+      // 模拟查询错误
+      Message.find.mockImplementation(() => {
+        throw new Error('查询错误');
+      });
+      
+      // 发送请求
+      const response = await request(app)
+        .get('/api/interaction/messages/conversation')
+        .query({
+          user1: 'user-id-1',
+          user2: 'user-id-2'
+        });
+      
+      // 验证响应
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('message', '获取会话消息失败');
+      expect(response.body).toHaveProperty('error', '查询错误');
+    });
+  });
+  
+  // 测试标记会话为已读
+  describe('PUT /api/interaction/messages/read-conversation', () => {
+    it('应该将会话中的所有消息标记为已读', async () => {
+      // 模拟更新结果
+      const mockUpdateResult = {
+        nModified: 3,
+        n: 3
+      };
+      
+      Message.updateMany.mockResolvedValue(mockUpdateResult);
+      
+      // 发送请求
+      const response = await request(app)
+        .put('/api/interaction/messages/read-conversation')
+        .send({
+          sender: 'user-id-2',
+          receiver: 'user-id-1'
+        });
+      
+      // 验证响应
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('message', '已将所有消息标记为已读');
+      expect(response.body).toHaveProperty('updatedCount', 3);
+      
+      // 验证模拟函数被正确调用
+      expect(Message.updateMany).toHaveBeenCalledWith(
+        { sender: 'user-id-2', receiver: 'user-id-1', read: false },
+        { $set: { read: true } }
+      );
+    });
+    
+    it('应该验证必要参数', async () => {
+      // 发送请求（不提供接收者）
+      const response = await request(app)
+        .put('/api/interaction/messages/read-conversation')
+        .send({
+          sender: 'user-id-2'
+        });
+      
+      // 验证响应
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('message', '发送者和接收者是必需的');
+    });
+    
+    it('应该处理更新错误', async () => {
+      // 模拟更新错误
+      Message.updateMany.mockRejectedValue(new Error('更新错误'));
+      
+      // 发送请求
+      const response = await request(app)
+        .put('/api/interaction/messages/read-conversation')
+        .send({
+          sender: 'user-id-2',
+          receiver: 'user-id-1'
+        });
+      
+      // 验证响应
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('message', '标记会话为已读失败');
+      expect(response.body).toHaveProperty('error', '更新错误');
+    });
+  });
+  
+  // 测试获取最近消息
+  describe('GET /api/interaction/messages/recent/:userId', () => {
+    it('应该返回用户的最近消息', async () => {
+      // 模拟数据
+      const mockMessages = [
+        {
+          _id: 'message-id-1',
+          sender: 'user-id-2',
+          receiver: 'user-id-1',
+          content: '最新消息',
+          createdAt: new Date(),
+          read: false
+        }
+      ];
+      
+      // 设置模拟函数的返回值
+      Message.find.mockReturnValue({
+        sort: jest.fn().mockReturnValue({
+          limit: jest.fn().mockResolvedValue(mockMessages)
+        })
+      });
+      
+      // 发送请求
+      const response = await request(app)
+        .get('/api/interaction/messages/recent/user-id-1')
+        .query({ limit: 5 });
+      
+      // 验证响应
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      
+      // 验证模拟函数被正确调用
+      expect(Message.find).toHaveBeenCalledWith({
+        receiver: 'user-id-1'
+      });
+    });
+    
+    it('应该处理查询错误', async () => {
+      // 模拟查询错误
+      Message.find.mockImplementation(() => {
+        throw new Error('查询错误');
+      });
+      
+      // 发送请求
+      const response = await request(app)
+        .get('/api/interaction/messages/recent/user-id-1');
+      
+      // 验证响应
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('message', '获取最近消息失败');
+      expect(response.body).toHaveProperty('error', '查询错误');
+    });
+  });
+});

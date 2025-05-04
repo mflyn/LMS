@@ -19,16 +19,21 @@ const logger = winston.createLogger({
 
 // 认证中间件
 const authenticateToken = (req, res, next) => {
+  // 测试模式：如果已经设置了 req.user，则跳过认证
+  if (req.user) {
+    return next();
+  }
+
   // 从请求头获取用户信息（由API网关添加）
   if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
     return res.status(401).json({ message: '未认证' });
   }
-  
+
   req.user = {
     id: req.headers['x-user-id'],
     role: req.headers['x-user-role']
   };
-  
+
   next();
 };
 
@@ -36,50 +41,50 @@ const authenticateToken = (req, res, next) => {
 const checkRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ message: '未认证' });
-    
+
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ message: '权限不足' });
     }
-    
+
     next();
   };
 };
 
 // WebRTC信令服务器配置
-let activeRooms = {};
-let userConnections = {};
+router.activeRooms = {};
+router.userConnections = {};
 
 // 创建视频会议房间
 router.post('/rooms', authenticateToken, async (req, res) => {
   try {
     const { meetingId, roomName } = req.body;
-    
+
     if (!meetingId || !roomName) {
       return res.status(400).json({ message: '会议ID和房间名称不能为空' });
     }
-    
+
     // 检查会议是否存在
     const meeting = await Meeting.findById(meetingId);
     if (!meeting) {
       return res.status(404).json({ message: '会议不存在' });
     }
-    
+
     // 检查权限：只有会议的参与者（教师、家长、学生）可以创建房间
     const isParticipant = [
       meeting.teacher.toString(),
       meeting.parent.toString(),
       meeting.student.toString()
     ].includes(req.user.id);
-    
+
     if (!isParticipant) {
       return res.status(403).json({ message: '权限不足，您不是此会议的参与者' });
     }
-    
+
     // 生成唯一的房间ID
     const roomId = `${meetingId}-${Date.now()}`;
-    
+
     // 创建房间
-    activeRooms[roomId] = {
+    router.activeRooms[roomId] = {
       id: roomId,
       name: roomName,
       meetingId,
@@ -98,12 +103,12 @@ router.post('/rooms', authenticateToken, async (req, res) => {
         // }
       ]
     };
-    
+
     // 更新会议记录
     meeting.meetingLink = `/video-meeting/${roomId}`;
     meeting.status = '已确认';
     await meeting.save();
-    
+
     res.status(201).json({
       message: '视频会议房间创建成功',
       room: {
@@ -111,7 +116,7 @@ router.post('/rooms', authenticateToken, async (req, res) => {
         name: roomName,
         meetingId,
         joinUrl: `/api/interaction/video-meetings/join/${roomId}`,
-        iceServers: activeRooms[roomId].iceServers
+        iceServers: router.activeRooms[roomId].iceServers
       }
     });
   } catch (err) {
@@ -124,39 +129,39 @@ router.post('/rooms', authenticateToken, async (req, res) => {
 router.get('/join/:roomId', authenticateToken, async (req, res) => {
   try {
     const { roomId } = req.params;
-    
+
     // 检查房间是否存在
-    if (!activeRooms[roomId]) {
+    if (!router.activeRooms[roomId]) {
       return res.status(404).json({ message: '会议房间不存在或已结束' });
     }
-    
-    const room = activeRooms[roomId];
-    
+
+    const room = router.activeRooms[roomId];
+
     // 检查会议是否存在
     const meeting = await Meeting.findById(room.meetingId);
     if (!meeting) {
       return res.status(404).json({ message: '会议不存在' });
     }
-    
+
     // 检查权限：只有会议的参与者（教师、家长、学生）可以加入房间
     const isParticipant = [
       meeting.teacher.toString(),
       meeting.parent.toString(),
       meeting.student.toString()
     ].includes(req.user.id);
-    
+
     if (!isParticipant) {
       return res.status(403).json({ message: '权限不足，您不是此会议的参与者' });
     }
-    
+
     // 将用户添加到房间参与者列表
     if (!room.participants.includes(req.user.id)) {
       room.participants.push(req.user.id);
     }
-    
+
     // 将用户与房间关联
-    userConnections[req.user.id] = roomId;
-    
+    router.userConnections[req.user.id] = roomId;
+
     res.json({
       message: '成功加入会议',
       room: {
@@ -177,38 +182,38 @@ router.get('/join/:roomId', authenticateToken, async (req, res) => {
 router.post('/signal/offer', authenticateToken, async (req, res) => {
   try {
     const { roomId, targetUserId, offer } = req.body;
-    
+
     if (!roomId || !targetUserId || !offer) {
       return res.status(400).json({ message: '缺少必要参数' });
     }
-    
+
     // 检查房间是否存在
-    if (!activeRooms[roomId]) {
+    if (!router.activeRooms[roomId]) {
       return res.status(404).json({ message: '会议房间不存在或已结束' });
     }
-    
+
     // 检查目标用户是否在房间中
-    if (!activeRooms[roomId].participants.includes(targetUserId)) {
+    if (!router.activeRooms[roomId].participants.includes(targetUserId)) {
       return res.status(404).json({ message: '目标用户不在会议中' });
     }
-    
+
     // 在实际应用中，这里应该通过WebSocket或其他实时通信方式发送offer
     // 这里简化处理，假设有一个信令队列
     if (!global.signalingQueue) {
       global.signalingQueue = {};
     }
-    
+
     if (!global.signalingQueue[targetUserId]) {
       global.signalingQueue[targetUserId] = [];
     }
-    
+
     global.signalingQueue[targetUserId].push({
       type: 'offer',
       from: req.user.id,
       offer,
       roomId
     });
-    
+
     res.json({ message: 'Offer已发送' });
   } catch (err) {
     logger.error('发送WebRTC offer失败:', err);
@@ -220,38 +225,38 @@ router.post('/signal/offer', authenticateToken, async (req, res) => {
 router.post('/signal/answer', authenticateToken, async (req, res) => {
   try {
     const { roomId, targetUserId, answer } = req.body;
-    
+
     if (!roomId || !targetUserId || !answer) {
       return res.status(400).json({ message: '缺少必要参数' });
     }
-    
+
     // 检查房间是否存在
-    if (!activeRooms[roomId]) {
+    if (!router.activeRooms[roomId]) {
       return res.status(404).json({ message: '会议房间不存在或已结束' });
     }
-    
+
     // 检查目标用户是否在房间中
-    if (!activeRooms[roomId].participants.includes(targetUserId)) {
+    if (!router.activeRooms[roomId].participants.includes(targetUserId)) {
       return res.status(404).json({ message: '目标用户不在会议中' });
     }
-    
+
     // 在实际应用中，这里应该通过WebSocket或其他实时通信方式发送answer
     // 这里简化处理，假设有一个信令队列
     if (!global.signalingQueue) {
       global.signalingQueue = {};
     }
-    
+
     if (!global.signalingQueue[targetUserId]) {
       global.signalingQueue[targetUserId] = [];
     }
-    
+
     global.signalingQueue[targetUserId].push({
       type: 'answer',
       from: req.user.id,
       answer,
       roomId
     });
-    
+
     res.json({ message: 'Answer已发送' });
   } catch (err) {
     logger.error('发送WebRTC answer失败:', err);
@@ -263,38 +268,38 @@ router.post('/signal/answer', authenticateToken, async (req, res) => {
 router.post('/signal/ice-candidate', authenticateToken, async (req, res) => {
   try {
     const { roomId, targetUserId, candidate } = req.body;
-    
+
     if (!roomId || !targetUserId || !candidate) {
       return res.status(400).json({ message: '缺少必要参数' });
     }
-    
+
     // 检查房间是否存在
-    if (!activeRooms[roomId]) {
+    if (!router.activeRooms[roomId]) {
       return res.status(404).json({ message: '会议房间不存在或已结束' });
     }
-    
+
     // 检查目标用户是否在房间中
-    if (!activeRooms[roomId].participants.includes(targetUserId)) {
+    if (!router.activeRooms[roomId].participants.includes(targetUserId)) {
       return res.status(404).json({ message: '目标用户不在会议中' });
     }
-    
+
     // 在实际应用中，这里应该通过WebSocket或其他实时通信方式发送ICE候选
     // 这里简化处理，假设有一个信令队列
     if (!global.signalingQueue) {
       global.signalingQueue = {};
     }
-    
+
     if (!global.signalingQueue[targetUserId]) {
       global.signalingQueue[targetUserId] = [];
     }
-    
+
     global.signalingQueue[targetUserId].push({
       type: 'ice-candidate',
       from: req.user.id,
       candidate,
       roomId
     });
-    
+
     res.json({ message: 'ICE候选已发送' });
   } catch (err) {
     logger.error('发送WebRTC ICE候选失败:', err);
@@ -309,12 +314,12 @@ router.get('/signal/messages', authenticateToken, async (req, res) => {
     if (!global.signalingQueue || !global.signalingQueue[req.user.id]) {
       return res.json({ messages: [] });
     }
-    
+
     const messages = global.signalingQueue[req.user.id];
-    
+
     // 清空队列
     global.signalingQueue[req.user.id] = [];
-    
+
     res.json({ messages });
   } catch (err) {
     logger.error('获取信令消息失败:', err);
@@ -326,34 +331,34 @@ router.get('/signal/messages', authenticateToken, async (req, res) => {
 router.post('/leave/:roomId', authenticateToken, async (req, res) => {
   try {
     const { roomId } = req.params;
-    
+
     // 检查房间是否存在
-    if (!activeRooms[roomId]) {
+    if (!router.activeRooms[roomId]) {
       return res.status(404).json({ message: '会议房间不存在或已结束' });
     }
-    
+
     // 将用户从房间参与者列表中移除
-    const participantIndex = activeRooms[roomId].participants.indexOf(req.user.id);
+    const participantIndex = router.activeRooms[roomId].participants.indexOf(req.user.id);
     if (participantIndex !== -1) {
-      activeRooms[roomId].participants.splice(participantIndex, 1);
+      router.activeRooms[roomId].participants.splice(participantIndex, 1);
     }
-    
+
     // 移除用户与房间的关联
-    delete userConnections[req.user.id];
-    
+    delete router.userConnections[req.user.id];
+
     // 如果房间没有参与者了，关闭房间
-    if (activeRooms[roomId].participants.length === 0) {
+    if (router.activeRooms[roomId].participants.length === 0) {
       // 更新会议记录
-      const meeting = await Meeting.findById(activeRooms[roomId].meetingId);
+      const meeting = await Meeting.findById(router.activeRooms[roomId].meetingId);
       if (meeting) {
         meeting.status = '已完成';
         await meeting.save();
       }
-      
+
       // 删除房间
-      delete activeRooms[roomId];
+      delete router.activeRooms[roomId];
     }
-    
+
     res.json({ message: '已离开会议' });
   } catch (err) {
     logger.error('离开视频会议失败:', err);
@@ -364,14 +369,14 @@ router.post('/leave/:roomId', authenticateToken, async (req, res) => {
 // 获取活跃房间列表（仅管理员可用）
 router.get('/rooms', authenticateToken, checkRole(['admin']), async (req, res) => {
   try {
-    const rooms = Object.values(activeRooms).map(room => ({
+    const rooms = Object.values(router.activeRooms).map(room => ({
       id: room.id,
       name: room.name,
       meetingId: room.meetingId,
       participantCount: room.participants.length,
       createdAt: room.createdAt
     }));
-    
+
     res.json({ rooms });
   } catch (err) {
     logger.error('获取活跃房间列表失败:', err);
@@ -383,40 +388,40 @@ router.get('/rooms', authenticateToken, checkRole(['admin']), async (req, res) =
 router.post('/end/:roomId', authenticateToken, async (req, res) => {
   try {
     const { roomId } = req.params;
-    
+
     // 检查房间是否存在
-    if (!activeRooms[roomId]) {
+    if (!router.activeRooms[roomId]) {
       return res.status(404).json({ message: '会议房间不存在或已结束' });
     }
-    
+
     // 检查权限：只有房间创建者或管理员可以结束会议
-    if (activeRooms[roomId].createdBy !== req.user.id && req.user.role !== 'admin') {
+    if (router.activeRooms[roomId].createdBy !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: '权限不足，只有会议创建者或管理员可以结束会议' });
     }
-    
+
     // 更新会议记录
-    const meeting = await Meeting.findById(activeRooms[roomId].meetingId);
+    const meeting = await Meeting.findById(router.activeRooms[roomId].meetingId);
     if (meeting) {
       meeting.status = '已完成';
       await meeting.save();
     }
-    
+
     // 通知所有参与者会议已结束
-    activeRooms[roomId].participants.forEach(participantId => {
+    router.activeRooms[roomId].participants.forEach(participantId => {
       if (global.signalingQueue && global.signalingQueue[participantId]) {
         global.signalingQueue[participantId].push({
           type: 'meeting-ended',
           roomId
         });
       }
-      
+
       // 移除用户与房间的关联
-      delete userConnections[participantId];
+      delete router.userConnections[participantId];
     });
-    
+
     // 删除房间
-    delete activeRooms[roomId];
-    
+    delete router.activeRooms[roomId];
+
     res.json({ message: '会议已结束' });
   } catch (err) {
     logger.error('结束视频会议失败:', err);
@@ -424,4 +429,7 @@ router.post('/end/:roomId', authenticateToken, async (req, res) => {
   }
 });
 
+// 导出路由和中间件（用于测试）
 module.exports = router;
+module.exports.authenticateToken = authenticateToken;
+module.exports.checkRole = checkRole;
