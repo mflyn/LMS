@@ -83,11 +83,14 @@ describe('公告路由 CRUD 测试', () => {
         author: 'user-id-1',
         class: 'class-id-1',
         attachments: [],
-        save: jest.fn().mockResolvedValue(savedAnnouncement)
+        save: jest.fn().mockResolvedValue(savedAnnouncement),
+        toJSON: function() {
+          return savedAnnouncement;
+        }
       };
 
       // 替换 Announcement 构造函数
-      global.Announcement = jest.fn().mockImplementation(() => mockAnnouncementInstance);
+      Announcement.mockImplementation(() => mockAnnouncementInstance);
 
       // 发送请求
       const response = await request(app)
@@ -107,7 +110,7 @@ describe('公告路由 CRUD 测试', () => {
       expect(response.body).toHaveProperty('author', 'user-id-1');
 
       // 验证 Announcement 构造函数被调用
-      expect(global.Announcement).toHaveBeenCalledWith({
+      expect(Announcement).toHaveBeenCalledWith({
         title: '新公告',
         content: '这是新公告的内容',
         author: 'user-id-1',
@@ -119,7 +122,7 @@ describe('公告路由 CRUD 测试', () => {
       expect(mockAnnouncementInstance.save).toHaveBeenCalled();
 
       // 恢复原始的 Announcement 构造函数
-      global.Announcement = OriginalAnnouncement;
+      Announcement.mockRestore();
     });
 
     it('应该验证必要参数', async () => {
@@ -165,7 +168,7 @@ describe('公告路由 CRUD 测试', () => {
       };
 
       // 替换 Announcement 构造函数
-      global.Announcement = jest.fn().mockImplementation(() => mockAnnouncementInstance);
+      Announcement.mockImplementation(() => mockAnnouncementInstance);
 
       // 发送请求
       const response = await request(app)
@@ -183,7 +186,7 @@ describe('公告路由 CRUD 测试', () => {
       expect(response.body).toHaveProperty('error', '保存错误');
 
       // 恢复原始的 Announcement 构造函数
-      global.Announcement = OriginalAnnouncement;
+      Announcement.mockRestore();
     });
   });
 
@@ -212,12 +215,15 @@ describe('公告路由 CRUD 测试', () => {
       expect(response.body).toHaveProperty('content', '这是更新后的公告内容');
 
       // 验证 findByIdAndUpdate 方法被调用
+      // 使用 expect.objectContaining 来匹配部分对象，因为 updatedAt 是动态生成的
       expect(Announcement.findByIdAndUpdate).toHaveBeenCalledWith(
         'announcement-id-1',
-        {
+        expect.objectContaining({
           title: '更新后的公告',
-          content: '这是更新后的公告内容'
-        },
+          content: '这是更新后的公告内容',
+          attachments: [],
+          updatedAt: expect.any(Number)
+        }),
         { new: true }
       );
     });
