@@ -1,18 +1,6 @@
 const mongoose = require('mongoose');
 const ResourceCollection = require('../../models/ResourceCollection');
 
-// 使用内存数据库进行测试
-beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/test-db', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-});
-
-afterAll(async () => {
-  await mongoose.connection.close();
-});
-
 describe('ResourceCollection 模型测试', () => {
   beforeEach(async () => {
     await ResourceCollection.deleteMany({});
@@ -21,7 +9,7 @@ describe('ResourceCollection 模型测试', () => {
   it('应该成功创建并保存资源收藏记录', async () => {
     const mockUserId = new mongoose.Types.ObjectId();
     const mockResourceId = new mongoose.Types.ObjectId();
-    
+
     const collectionData = {
       user: mockUserId,
       resource: mockResourceId,
@@ -64,7 +52,7 @@ describe('ResourceCollection 模型测试', () => {
   it('应该使用默认收藏夹名称', async () => {
     const mockUserId = new mongoose.Types.ObjectId();
     const mockResourceId = new mongoose.Types.ObjectId();
-    
+
     const collection = new ResourceCollection({
       user: mockUserId,
       resource: mockResourceId,
@@ -73,7 +61,7 @@ describe('ResourceCollection 模型测试', () => {
     });
 
     const savedCollection = await collection.save();
-    
+
     // 验证使用了默认收藏夹名称
     expect(savedCollection.collectionName).toBe('默认收藏夹');
   });
@@ -81,7 +69,7 @@ describe('ResourceCollection 模型测试', () => {
   it('应该能够更新收藏信息', async () => {
     const mockUserId = new mongoose.Types.ObjectId();
     const mockResourceId = new mongoose.Types.ObjectId();
-    
+
     const collection = new ResourceCollection({
       user: mockUserId,
       resource: mockResourceId,
@@ -90,12 +78,12 @@ describe('ResourceCollection 模型测试', () => {
     });
 
     const savedCollection = await collection.save();
-    
+
     // 更新收藏信息
     savedCollection.collectionName = '更新后的收藏夹';
     savedCollection.notes = '更新后的笔记';
     const updatedCollection = await savedCollection.save();
-    
+
     expect(updatedCollection.collectionName).toBe('更新后的收藏夹');
     expect(updatedCollection.notes).toBe('更新后的笔记');
   });

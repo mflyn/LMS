@@ -20,7 +20,34 @@
 - 测试多个组件之间的交互
 - 测试 API 接口
 - 测试数据库操作
-- 测试文件命名规范：`*.integration.test.js`
+- 测试文件命名规范：`*.test.js`（位于 integration 目录下）
+- 测试目录结构：
+  ```
+  tests/
+  ├── integration/
+  │   ├── cross-service.test.js  # 跨服务集成测试
+  ```
+
+各服务内部也有集成测试：
+  ```
+  services/
+  ├── resource-service/
+  │   ├── __tests__/
+  │   │   ├── integration/
+  │   │   │   └── resource-flow.test.js
+  ├── progress-service/
+  │   ├── __tests__/
+  │   │   ├── integration/
+  │   │   │   └── progress-flow.test.js
+  ├── homework-service/
+  │   ├── __tests__/
+  │   │   ├── integration/
+  │   │   │   └── homework-flow.test.js
+  ├── analytics-service/
+  │   ├── __tests__/
+  │   │   ├── integration/
+  │   │   │   └── analytics-flow.test.js
+  ```
 
 ### 3. 端到端测试
 - 测试完整的业务流程
@@ -122,7 +149,7 @@ describe('Auth Service', () => {
       password: 'Test123!',
       email: 'test@example.com'
     };
-    
+
     const result = await authService.register(userData);
     expect(result.success).toBe(true);
     expect(result.user).toHaveProperty('id');
@@ -134,7 +161,7 @@ describe('Auth Service', () => {
       password: 'Test123!',
       email: 'test@example.com'
     };
-    
+
     await expect(authService.register(userData))
       .rejects
       .toThrow('Username already exists');
@@ -153,7 +180,7 @@ describe('Auth API', () => {
         username: 'testuser',
         password: 'Test123!'
       });
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('token');
   });
@@ -165,14 +192,14 @@ describe('Auth API', () => {
 // tests/performance/api.test.js
 describe('API Performance', () => {
   test('should handle 100 concurrent requests', async () => {
-    const requests = Array(100).fill().map(() => 
+    const requests = Array(100).fill().map(() =>
       request(app).get('/api/data')
     );
-    
+
     const start = Date.now();
     await Promise.all(requests);
     const duration = Date.now() - start;
-    
+
     expect(duration).toBeLessThan(5000); // 5秒内完成
   });
 });
@@ -240,4 +267,4 @@ jobs:
 - 使用调试器
 - 添加日志
 - 检查测试数据
-- 验证环境配置 
+- 验证环境配置

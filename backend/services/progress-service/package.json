@@ -1,7 +1,7 @@
 {
-  "name": "homework-service",
+  "name": "progress-service",
   "version": "1.0.0",
-  "description": "作业服务 - 小学生学习追踪系统",
+  "description": "Progress service for Learning Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,21 +10,16 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "amqplib": "^0.10.0",
-    "axios": "^1.4.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.13.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.0",
-    "express": "^4.18.2",
-    "express-validator": "^7.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.0.0",
-    "winston": "^3.8.0"
+    "dotenv": "^10.0.0"
   },
   "devDependencies": {
-    "jest": "^29.0.0",
-    "nodemon": "^2.0.22",
-    "supertest": "^6.3.0",
-    "mongodb-memory-server": "^8.12.2"
+    "jest": "^27.0.6",
+    "supertest": "^6.1.6",
+    "mongodb-memory-server": "^7.3.6",
+    "nodemon": "^2.0.12"
   },
   "jest": {
     "testEnvironment": "node",

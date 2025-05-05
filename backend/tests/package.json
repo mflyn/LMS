@@ -1,0 +1,18 @@
+{
+  "name": "lms-integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for Learning Management System",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --config=jest.config.js",
+    "test:coverage": "jest --config=jest.config.js --coverage"
+  },
+  "dependencies": {
+    "mongoose": "^5.13.7",
+    "supertest": "^6.1.6"
+  },
+  "devDependencies": {
+    "jest": "^27.0.6",
+    "mongodb-memory-server": "^7.3.6"
+  }
+}

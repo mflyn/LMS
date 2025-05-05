@@ -29,10 +29,10 @@ const ResourceSchema = new Schema({
     type: String
   }],
   file: {
-    name: String,
-    path: String,
-    type: String,
-    size: Number
+    name: { type: String },
+    path: { type: String },
+    type: { type: String },
+    size: { type: Number }
   },
   uploader: {
     type: Schema.Types.ObjectId,
