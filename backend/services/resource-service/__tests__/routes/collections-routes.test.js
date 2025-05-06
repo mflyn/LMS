@@ -602,6 +602,49 @@ describe('Collections 路由测试', () => {
       // 由于 MongoDB 的 ObjectId 比较问题，我们只验证 user 属性存在
     });
 
+    it('应该返回空收藏夹列表', async () => {
+      // 模拟 ResourceCollection.aggregate 方法返回空数组
+      ResourceCollection.aggregate.mockResolvedValue([]);
+
+      // 发送请求
+      const response = await request(app)
+        .get('/api/resources/collections/folders')
+        .set('x-user-id', testUserId);
+
+      // 验证响应
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('folders');
+      expect(response.body.folders).toHaveLength(0);
+
+      // 验证 ResourceCollection.aggregate 被调用
+      expect(ResourceCollection.aggregate).toHaveBeenCalled();
+    });
+
+    it('应该正确处理特殊字符的收藏夹名称', async () => {
+      // 模拟包含特殊字符的收藏夹名称
+      const mockFolders = [
+        { _id: '学习资料!@#$%^&*()', count: 2 },
+        { _id: '重要资源<>?:"{}|', count: 3 },
+        { _id: '其他 空格 测试', count: 1 }
+      ];
+      ResourceCollection.aggregate.mockResolvedValue(mockFolders);
+
+      // 发送请求
+      const response = await request(app)
+        .get('/api/resources/collections/folders')
+        .set('x-user-id', testUserId);
+
+      // 验证响应
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('folders');
+      expect(response.body.folders).toHaveLength(mockFolders.length);
+
+      // 验证特殊字符被正确处理
+      expect(response.body.folders[0]._id).toBe('学习资料!@#$%^&*()');
+      expect(response.body.folders[1]._id).toBe('重要资源<>?:"{}|');
+      expect(response.body.folders[2]._id).toBe('其他 空格 测试');
+    });
+
     it('未授权时应该返回401错误', async () => {
       // 发送请求，不设置用户ID
       const response = await request(app)
@@ -633,6 +676,197 @@ describe('Collections 路由测试', () => {
 
       // 恢复控制台
       consoleSpy.mockRestore();
+    });
+  });
+
+  // 测试批量操作功能
+  describe('批量操作测试 (假设的API)', () => {
+    // 注意：以下测试是针对假设的批量操作API，如果实际API不存在，需要先实现这些API
+
+    describe('批量删除收藏', () => {
+      // 标记为跳过，因为这些API端点尚未实现
+      it.skip('应该成功批量删除收藏', async () => {
+        // 模拟 ResourceCollection.deleteMany 方法
+        ResourceCollection.deleteMany = jest.fn().mockResolvedValue({
+          deletedCount: 3
+        });
+
+        // 发送请求
+        const response = await request(app)
+          .delete('/api/resources/collections')
+          .set('x-user-id', testUserId)
+          .send({
+            collectionIds: [
+              new mongoose.Types.ObjectId().toString(),
+              new mongoose.Types.ObjectId().toString(),
+              new mongoose.Types.ObjectId().toString()
+            ]
+          });
+
+        // 验证响应
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('message', '成功删除3个收藏');
+        expect(response.body).toHaveProperty('deletedCount', 3);
+
+        // 验证 ResourceCollection.deleteMany 被调用
+        expect(ResourceCollection.deleteMany).toHaveBeenCalledWith({
+          _id: { $in: expect.any(Array) },
+          user: testUserId
+        });
+      });
+
+      it.skip('未授权时应该返回401错误', async () => {
+        // 发送请求，不设置用户ID
+        const response = await request(app)
+          .delete('/api/resources/collections')
+          .send({
+            collectionIds: [
+              new mongoose.Types.ObjectId().toString()
+            ]
+          });
+
+        // 验证响应
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty('message', '未授权，请先登录');
+      });
+
+      it.skip('没有提供收藏ID时应该返回400错误', async () => {
+        // 发送请求，不提供收藏ID
+        const response = await request(app)
+          .delete('/api/resources/collections')
+          .set('x-user-id', testUserId)
+          .send({});
+
+        // 验证响应
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('message', '请提供要删除的收藏ID');
+      });
+
+      it.skip('数据库错误时应该返回500错误', async () => {
+        // 模拟 ResourceCollection.deleteMany 方法抛出错误
+        ResourceCollection.deleteMany = jest.fn().mockRejectedValue(new Error('数据库错误'));
+
+        // 模拟控制台错误输出
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+        // 发送请求
+        const response = await request(app)
+          .delete('/api/resources/collections')
+          .set('x-user-id', testUserId)
+          .send({
+            collectionIds: [
+              new mongoose.Types.ObjectId().toString()
+            ]
+          });
+
+        // 验证响应
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty('message', '服务器错误');
+
+        // 验证错误被记录
+        expect(consoleSpy).toHaveBeenCalledWith('批量删除收藏失败:', expect.any(Error));
+
+        // 恢复控制台
+        consoleSpy.mockRestore();
+      });
+    });
+
+    describe('批量移动收藏到其他收藏夹', () => {
+      it.skip('应该成功批量移动收藏', async () => {
+        // 模拟 ResourceCollection.updateMany 方法
+        ResourceCollection.updateMany = jest.fn().mockResolvedValue({
+          modifiedCount: 2
+        });
+
+        // 发送请求
+        const response = await request(app)
+          .put('/api/resources/collections/move')
+          .set('x-user-id', testUserId)
+          .send({
+            collectionIds: [
+              new mongoose.Types.ObjectId().toString(),
+              new mongoose.Types.ObjectId().toString()
+            ],
+            targetCollectionName: '新收藏夹'
+          });
+
+        // 验证响应
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('message', '成功移动2个收藏到"新收藏夹"');
+        expect(response.body).toHaveProperty('modifiedCount', 2);
+
+        // 验证 ResourceCollection.updateMany 被调用
+        expect(ResourceCollection.updateMany).toHaveBeenCalledWith(
+          {
+            _id: { $in: expect.any(Array) },
+            user: testUserId
+          },
+          {
+            $set: { collectionName: '新收藏夹' }
+          }
+        );
+      });
+
+      it.skip('未授权时应该返回401错误', async () => {
+        // 发送请求，不设置用户ID
+        const response = await request(app)
+          .put('/api/resources/collections/move')
+          .send({
+            collectionIds: [
+              new mongoose.Types.ObjectId().toString()
+            ],
+            targetCollectionName: '新收藏夹'
+          });
+
+        // 验证响应
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty('message', '未授权，请先登录');
+      });
+
+      it.skip('缺少必要参数时应该返回400错误', async () => {
+        // 发送请求，不提供目标收藏夹名称
+        const response = await request(app)
+          .put('/api/resources/collections/move')
+          .set('x-user-id', testUserId)
+          .send({
+            collectionIds: [
+              new mongoose.Types.ObjectId().toString()
+            ]
+          });
+
+        // 验证响应
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('message', '请提供目标收藏夹名称');
+      });
+
+      it.skip('数据库错误时应该返回500错误', async () => {
+        // 模拟 ResourceCollection.updateMany 方法抛出错误
+        ResourceCollection.updateMany = jest.fn().mockRejectedValue(new Error('数据库错误'));
+
+        // 模拟控制台错误输出
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+        // 发送请求
+        const response = await request(app)
+          .put('/api/resources/collections/move')
+          .set('x-user-id', testUserId)
+          .send({
+            collectionIds: [
+              new mongoose.Types.ObjectId().toString()
+            ],
+            targetCollectionName: '新收藏夹'
+          });
+
+        // 验证响应
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty('message', '服务器错误');
+
+        // 验证错误被记录
+        expect(consoleSpy).toHaveBeenCalledWith('批量移动收藏失败:', expect.any(Error));
+
+        // 恢复控制台
+        consoleSpy.mockRestore();
+      });
     });
   });
 });

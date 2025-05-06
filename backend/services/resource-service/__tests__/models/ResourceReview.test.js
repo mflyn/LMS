@@ -183,6 +183,9 @@ describe('ResourceReview 模型测试', () => {
         isRecommended: true
       });
 
+      // 设置 isNew 标志，用于测试新评论和更新评论的不同处理
+      mockReview.isNew = true;
+
       // 模拟 save 和 remove 方法
       mockReview.save = jest.fn().mockImplementation(async function() {
         // 调用 pre save 钩子
@@ -302,19 +305,58 @@ describe('ResourceReview 模型测试', () => {
       expect(mockReview.updatedAt).not.toEqual(initialUpdatedAt);
     });
 
-    it('保存评论时应该更新资源的平均评分', async () => {
+    it('保存新评论时应该正确计算平均评分', async () => {
+      // 确保 isNew 为 true
+      mockReview.isNew = true;
+
       // 模拟保存操作
       await mockReview.save();
 
       // 验证查找评论
       expect(mockReviewModel.find).toHaveBeenCalledWith({ resource: mockReview.resource });
 
+      // 计算预期的平均评分和评论数
+      // 现有评论: [3, 5] + 新评论: 4 = [3, 5, 4]
+      const expectedRating = parseFloat(((3 + 5 + 4) / 3).toFixed(1)); // 4.0
+      const expectedCount = 3; // 2 现有评论 + 1 新评论
+
       // 验证更新资源
       expect(mockResourceModel.findByIdAndUpdate).toHaveBeenCalledWith(
         mockReview.resource,
         expect.objectContaining({
-          averageRating: expect.any(Number),
-          reviewCount: expect.any(Number)
+          averageRating: expectedRating,
+          reviewCount: expectedCount
+        })
+      );
+    });
+
+    it('更新评论时应该正确计算平均评分', async () => {
+      // 设置 isNew 为 false，表示更新现有评论
+      mockReview.isNew = false;
+
+      // 设置评论ID为现有评论之一
+      mockReview._id = mockReviews[0]._id;
+
+      // 更新评分
+      mockReview.rating = 4; // 原来是 3
+
+      // 模拟保存操作
+      await mockReview.save();
+
+      // 验证查找评论
+      expect(mockReviewModel.find).toHaveBeenCalledWith({ resource: mockReview.resource });
+
+      // 计算预期的平均评分和评论数
+      // 原评论: [3, 5] 更新后: [4, 5]
+      const expectedRating = parseFloat(((4 + 5) / 2).toFixed(1)); // 4.5
+      const expectedCount = 2; // 评论数量不变
+
+      // 验证更新资源
+      expect(mockResourceModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockReview.resource,
+        expect.objectContaining({
+          averageRating: expectedRating,
+          reviewCount: expectedCount
         })
       );
     });
@@ -326,12 +368,37 @@ describe('ResourceReview 模型测试', () => {
       // 验证查找评论
       expect(mockReviewModel.find).toHaveBeenCalledWith({ resource: mockReview.resource });
 
+      // 计算预期的平均评分和评论数
+      // 现有评论: [3, 5]
+      const expectedRating = parseFloat(((3 + 5) / 2).toFixed(1)); // 4.0
+      const expectedCount = 2;
+
       // 验证更新资源
       expect(mockResourceModel.findByIdAndUpdate).toHaveBeenCalledWith(
         mockReview.resource,
         expect.objectContaining({
-          averageRating: expect.any(Number),
-          reviewCount: expect.any(Number)
+          averageRating: expectedRating,
+          reviewCount: expectedCount
+        })
+      );
+    });
+
+    it('删除最后一条评论时应该将平均评分设为0', async () => {
+      // 模拟没有评论的情况
+      mockReviewModel.find.mockResolvedValue([]);
+
+      // 模拟删除操作
+      await mockReview.remove();
+
+      // 验证查找评论
+      expect(mockReviewModel.find).toHaveBeenCalledWith({ resource: mockReview.resource });
+
+      // 验证更新资源
+      expect(mockResourceModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockReview.resource,
+        expect.objectContaining({
+          averageRating: 0,
+          reviewCount: 0
         })
       );
     });
@@ -372,6 +439,64 @@ describe('ResourceReview 模型测试', () => {
 
       // 恢复控制台
       consoleSpy.mockRestore();
+    });
+
+    it('保存评论时应该处理无效资源ID', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      // 设置无效的资源ID
+      mockReview.resource = 'invalid-id';
+
+      // 模拟 findByIdAndUpdate 抛出错误
+      mockResourceModel.findByIdAndUpdate.mockRejectedValue(
+        new Error('无效的资源ID')
+      );
+
+      // 模拟保存操作
+      await mockReview.save();
+
+      // 验证错误被记录
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('更新资源平均评分失败'),
+        expect.any(Error)
+      );
+
+      // 恢复控制台
+      consoleSpy.mockRestore();
+    });
+
+    it('应该正确处理评分为小数的情况', async () => {
+      // 设置评分为小数
+      mockReviews = [
+        {
+          _id: new mongoose.Types.ObjectId(),
+          resource: mockResourceId,
+          rating: 3.5
+        },
+        {
+          _id: new mongoose.Types.ObjectId(),
+          resource: mockResourceId,
+          rating: 4.5
+        }
+      ];
+
+      // 更新模拟
+      mockReviewModel.find.mockResolvedValue(mockReviews);
+
+      // 模拟删除操作
+      await mockReview.remove();
+
+      // 计算预期的平均评分
+      const expectedRating = parseFloat(((3.5 + 4.5) / 2).toFixed(1)); // 4.0
+
+      // 验证更新资源
+      expect(mockResourceModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockReview.resource,
+        expect.objectContaining({
+          averageRating: expectedRating,
+          reviewCount: 2
+        })
+      );
     });
   });
 });
