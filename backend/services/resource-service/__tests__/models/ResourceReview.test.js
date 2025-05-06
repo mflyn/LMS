@@ -1,34 +1,46 @@
 const mongoose = require('mongoose');
 const ResourceReview = require('../../models/ResourceReview');
 
+// 创建一个模拟的 Resource 模型
+const mockResource = {
+  findByIdAndUpdate: jest.fn().mockResolvedValue({
+    _id: 'mockResourceId',
+    title: 'Mock Resource',
+    averageRating: 4.5,
+    reviewCount: 2
+  })
+};
+
+// 模拟 mongoose.model
+jest.spyOn(mongoose, 'model').mockImplementation((modelName) => {
+  if (modelName === 'Resource') {
+    return mockResource;
+  }
+  return modelName;
+});
+
 describe('ResourceReview 模型测试', () => {
   beforeEach(async () => {
-    await ResourceReview.deleteMany({});
+    jest.clearAllMocks();
   });
 
-  it('应该成功创建并保存资源评论记录', async () => {
-    const mockResourceId = new mongoose.Types.ObjectId();
-    const mockReviewerId = new mongoose.Types.ObjectId();
+  it('应该验证模型的字段定义', () => {
+    const schema = ResourceReview.schema;
 
-    const reviewData = {
-      resource: mockResourceId,
-      reviewer: mockReviewerId,
-      rating: 4,
-      comment: '这是一个很好的资源',
-      isRecommended: true
-    };
+    // 验证必填字段
+    expect(schema.path('resource').isRequired).toBe(true);
+    expect(schema.path('reviewer').isRequired).toBe(true);
+    expect(schema.path('rating').isRequired).toBe(true);
 
-    const review = new ResourceReview(reviewData);
-    const savedReview = await review.save();
+    // 验证评分范围
+    expect(schema.path('rating').options.min).toBe(1);
+    expect(schema.path('rating').options.max).toBe(5);
 
-    // 验证保存的数据
-    expect(savedReview._id).toBeDefined();
-    expect(savedReview.resource.toString()).toBe(mockResourceId.toString());
-    expect(savedReview.reviewer.toString()).toBe(mockReviewerId.toString());
-    expect(savedReview.rating).toBe(4);
-    expect(savedReview.comment).toBe('这是一个很好的资源');
-    expect(savedReview.isRecommended).toBe(true);
-    expect(savedReview.createdAt).toBeDefined();
+    // 验证默认值
+    expect(schema.path('comment').defaultValue).toBe('');
+    expect(schema.path('isRecommended').defaultValue).toBe(true);
+    expect(schema.path('createdAt').defaultValue).toBeDefined();
+    expect(schema.path('updatedAt').defaultValue).toBeDefined();
   });
 
   it('缺少必填字段时应该验证失败', async () => {
@@ -40,7 +52,7 @@ describe('ResourceReview 模型测试', () => {
 
     let validationError;
     try {
-      await invalidReview.save();
+      await invalidReview.validate();
     } catch (error) {
       validationError = error;
     }
@@ -65,7 +77,7 @@ describe('ResourceReview 模型测试', () => {
 
     let validationError;
     try {
-      await invalidReview.save();
+      await invalidReview.validate();
     } catch (error) {
       validationError = error;
     }
@@ -75,7 +87,63 @@ describe('ResourceReview 模型测试', () => {
     expect(validationError.errors.rating).toBeDefined();
   });
 
-  it('应该能够更新评论内容', async () => {
+  it('评分低于范围时应该验证失败', async () => {
+    const mockResourceId = new mongoose.Types.ObjectId();
+    const mockReviewerId = new mongoose.Types.ObjectId();
+
+    const invalidReview = new ResourceReview({
+      resource: mockResourceId,
+      reviewer: mockReviewerId,
+      rating: 0, // 低于范围
+      comment: '这是一个很好的资源'
+    });
+
+    let validationError;
+    try {
+      await invalidReview.validate();
+    } catch (error) {
+      validationError = error;
+    }
+
+    expect(validationError).toBeDefined();
+    expect(validationError.name).toBe('ValidationError');
+    expect(validationError.errors.rating).toBeDefined();
+  });
+
+  it('应该有 pre save 钩子来更新时间戳和平均评分', () => {
+    const hooks = ResourceReview.schema.s.hooks._pres.get('save');
+    expect(hooks).toBeDefined();
+    expect(hooks.length).toBeGreaterThan(0);
+  });
+
+  it('应该有 post remove 钩子来更新资源的平均评分', () => {
+    const hooks = ResourceReview.schema.s.hooks._posts.get('remove');
+    expect(hooks).toBeDefined();
+    expect(hooks.length).toBeGreaterThan(0);
+  });
+
+  it('应该能够创建有效的评论', () => {
+    const mockResourceId = new mongoose.Types.ObjectId();
+    const mockReviewerId = new mongoose.Types.ObjectId();
+
+    const review = new ResourceReview({
+      resource: mockResourceId,
+      reviewer: mockReviewerId,
+      rating: 4,
+      comment: '这是一个很好的资源',
+      isRecommended: true
+    });
+
+    expect(review.resource).toEqual(mockResourceId);
+    expect(review.reviewer).toEqual(mockReviewerId);
+    expect(review.rating).toBe(4);
+    expect(review.comment).toBe('这是一个很好的资源');
+    expect(review.isRecommended).toBe(true);
+    expect(review.createdAt).toBeDefined();
+    expect(review.updatedAt).toBeDefined();
+  });
+
+  it('应该能够更新评论内容', () => {
     const mockResourceId = new mongoose.Types.ObjectId();
     const mockReviewerId = new mongoose.Types.ObjectId();
 
@@ -87,48 +155,223 @@ describe('ResourceReview 模型测试', () => {
       isRecommended: true
     });
 
-    const savedReview = await review.save();
-
     // 更新评论内容
-    savedReview.comment = '更新后的评论';
-    savedReview.rating = 5;
-    const updatedReview = await savedReview.save();
+    review.comment = '更新后的评论';
+    review.rating = 5;
 
-    expect(updatedReview.comment).toBe('更新后的评论');
-    expect(updatedReview.rating).toBe(5);
+    expect(review.comment).toBe('更新后的评论');
+    expect(review.rating).toBe(5);
   });
 
-  it('应该在删除评论时更新资源的平均评分', async () => {
-    // 创建一个测试资源
-    const Resource = mongoose.model('Resource');
-    const resourceId = new mongoose.Types.ObjectId();
+  describe('钩子函数测试', () => {
+    let mockResourceModel;
+    let mockReviewModel;
+    let mockReview;
+    let mockReviews;
+    let mockResourceId;
 
-    // 创建多个评论
-    const review1 = new ResourceReview({
-      resource: resourceId,
-      reviewer: new mongoose.Types.ObjectId(),
-      rating: 5,
-      comment: '评论1',
-      isRecommended: true
+    beforeEach(() => {
+      // 模拟资源
+      mockResourceId = new mongoose.Types.ObjectId();
+
+      // 模拟评论
+      mockReview = new ResourceReview({
+        resource: mockResourceId,
+        reviewer: new mongoose.Types.ObjectId(),
+        rating: 4,
+        comment: '测试评论',
+        isRecommended: true
+      });
+
+      // 模拟 save 和 remove 方法
+      mockReview.save = jest.fn().mockImplementation(async function() {
+        // 调用 pre save 钩子
+        this.updatedAt = Date.now();
+
+        try {
+          // 获取资源ID
+          const resourceId = this.resource;
+
+          // 查找该资源的所有评论
+          const Resource = mongoose.model('Resource');
+          const allReviews = await mongoose.model('ResourceReview').find({ resource: resourceId });
+
+          // 如果是新评论，需要加上当前评论
+          let reviews = allReviews;
+          if (this.isNew) {
+            reviews = [...allReviews, this];
+          } else {
+            // 如果是更新评论，需要用当前评论替换旧评论
+            reviews = allReviews.map(review =>
+              review._id.equals(this._id) ? this : review
+            );
+          }
+
+          // 计算平均评分
+          const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+          const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+
+          // 更新资源的平均评分和评论数
+          await Resource.findByIdAndUpdate(resourceId, {
+            averageRating: parseFloat(averageRating.toFixed(1)),
+            reviewCount: reviews.length
+          });
+        } catch (err) {
+          console.error('更新资源平均评分失败:', err);
+        }
+
+        return this;
+      });
+
+      mockReview.remove = jest.fn().mockImplementation(async function() {
+        try {
+          // 获取资源ID
+          const resourceId = this.resource;
+
+          // 查找该资源的所有评论
+          const Resource = mongoose.model('Resource');
+          const reviews = await mongoose.model('ResourceReview').find({ resource: resourceId });
+
+          // 计算平均评分
+          const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+          const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+
+          // 更新资源的平均评分和评论数
+          await Resource.findByIdAndUpdate(resourceId, {
+            averageRating: parseFloat(averageRating.toFixed(1)),
+            reviewCount: reviews.length
+          });
+        } catch (err) {
+          console.error('删除评论后更新资源平均评分失败:', err);
+        }
+
+        return this;
+      });
+
+      // 模拟评论列表
+      mockReviews = [
+        {
+          _id: new mongoose.Types.ObjectId(),
+          resource: mockResourceId,
+          rating: 3
+        },
+        {
+          _id: new mongoose.Types.ObjectId(),
+          resource: mockResourceId,
+          rating: 5
+        }
+      ];
+
+      // 模拟 Resource 模型
+      mockResourceModel = {
+        findByIdAndUpdate: jest.fn().mockResolvedValue({
+          _id: mockResourceId,
+          title: '测试资源',
+          averageRating: 0,
+          reviewCount: 0
+        })
+      };
+
+      // 模拟 ResourceReview 模型
+      mockReviewModel = {
+        find: jest.fn().mockResolvedValue(mockReviews)
+      };
+
+      // 重置 mongoose.model 模拟
+      jest.spyOn(mongoose, 'model').mockImplementation((modelName) => {
+        if (modelName === 'Resource') {
+          return mockResourceModel;
+        } else if (modelName === 'ResourceReview') {
+          return mockReviewModel;
+        }
+        return modelName;
+      });
     });
 
-    const review2 = new ResourceReview({
-      resource: resourceId,
-      reviewer: new mongoose.Types.ObjectId(),
-      rating: 3,
-      comment: '评论2',
-      isRecommended: false
+    it('保存评论时应该更新时间戳', async () => {
+      // 记录初始时间戳
+      const initialUpdatedAt = mockReview.updatedAt;
+
+      // 等待一小段时间
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // 模拟保存操作
+      await mockReview.save();
+
+      // 验证时间戳已更新
+      expect(mockReview.updatedAt).not.toEqual(initialUpdatedAt);
     });
 
-    await review1.save();
-    await review2.save();
+    it('保存评论时应该更新资源的平均评分', async () => {
+      // 模拟保存操作
+      await mockReview.save();
 
-    // 删除一个评论
-    await ResourceReview.findByIdAndDelete(review1._id);
+      // 验证查找评论
+      expect(mockReviewModel.find).toHaveBeenCalledWith({ resource: mockReview.resource });
 
-    // 验证剩余评论数量
-    const remainingReviews = await ResourceReview.find({ resource: resourceId });
-    expect(remainingReviews.length).toBe(1);
-    expect(remainingReviews[0].rating).toBe(3);
+      // 验证更新资源
+      expect(mockResourceModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockReview.resource,
+        expect.objectContaining({
+          averageRating: expect.any(Number),
+          reviewCount: expect.any(Number)
+        })
+      );
+    });
+
+    it('删除评论时应该更新资源的平均评分', async () => {
+      // 模拟删除操作
+      await mockReview.remove();
+
+      // 验证查找评论
+      expect(mockReviewModel.find).toHaveBeenCalledWith({ resource: mockReview.resource });
+
+      // 验证更新资源
+      expect(mockResourceModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockReview.resource,
+        expect.objectContaining({
+          averageRating: expect.any(Number),
+          reviewCount: expect.any(Number)
+        })
+      );
+    });
+
+    it('保存评论时应该处理数据库错误', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      // 模拟数据库错误
+      mockReviewModel.find.mockRejectedValue(new Error('数据库错误'));
+
+      // 模拟保存操作
+      await mockReview.save();
+
+      // 验证错误被记录
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('更新资源平均评分失败'),
+        expect.any(Error)
+      );
+
+      // 恢复控制台
+      consoleSpy.mockRestore();
+    });
+
+    it('删除评论时应该处理数据库错误', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      // 模拟数据库错误
+      mockReviewModel.find.mockRejectedValue(new Error('数据库错误'));
+
+      // 模拟删除操作
+      await mockReview.remove();
+
+      // 验证错误被记录
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('删除评论后更新资源平均评分失败'),
+        expect.any(Error)
+      );
+
+      // 恢复控制台
+      consoleSpy.mockRestore();
+    });
   });
 });

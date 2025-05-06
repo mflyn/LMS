@@ -156,16 +156,22 @@ describe('资源服务生命周期集成测试', () => {
     // 保存资源
     const savedResource = await resource.save();
 
-    // 直接创建收藏记录
-    const collection = new ResourceCollection({
-      user: studentId,
-      resource: savedResource._id,
-      collectionName: '重要学习资料',
-      notes: '这是一个需要重点学习的资源'
-    });
+    // 通过 API 收藏资源
+    const response = await request(app)
+      .post('/api/resources/collections')
+      .set('x-user-id', studentId)
+      .set('x-user-role', 'student')
+      .send({
+        resourceId: savedResource._id,
+        collectionName: '重要学习资料',
+        notes: '这是一个需要重点学习的资源'
+      });
 
-    // 保存收藏
-    await collection.save();
+    // 验证响应
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty('message', '收藏成功');
+    expect(response.body).toHaveProperty('collection');
+    expect(response.body.collection).toHaveProperty('collectionName', '重要学习资料');
 
     // 验证收藏已保存到数据库
     const savedCollection = await ResourceCollection.findOne({
@@ -192,25 +198,35 @@ describe('资源服务生命周期集成测试', () => {
       resources.push(await resource.save());
     }
 
-    // 创建多个收藏
+    // 通过 API 创建多个收藏
     for (let i = 0; i < resources.length; i++) {
-      const collection = new ResourceCollection({
-        user: studentId,
-        resource: resources[i]._id,
-        collectionName: i === 0 ? '重要学习资料' : `收藏夹${i}`,
-        notes: `这是资源${i+1}的收藏笔记`
-      });
-      await collection.save();
+      const response = await request(app)
+        .post('/api/resources/collections')
+        .set('x-user-id', studentId)
+        .set('x-user-role', 'student')
+        .send({
+          resourceId: resources[i]._id,
+          collectionName: i === 0 ? '重要学习资料' : `收藏夹${i}`,
+          notes: `这是资源${i+1}的收藏笔记`
+        });
+
+      expect(response.status).toBe(201);
     }
 
-    // 直接从数据库查询收藏列表
-    const collections = await ResourceCollection.find({ user: studentId })
-      .populate('resource');
+    // 通过 API 获取用户的收藏列表
+    const response = await request(app)
+      .get('/api/resources/collections')
+      .set('x-user-id', studentId)
+      .set('x-user-role', 'student');
 
-    // 验证查询结果
-    expect(collections.length).toBe(3);
+    // 验证响应
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('collections');
+    expect(Array.isArray(response.body.collections)).toBe(true);
+    expect(response.body.collections.length).toBe(3);
 
     // 验证收藏列表中包含我们刚才收藏的资源
+    const collections = response.body.collections;
     const foundCollection = collections.find(
       c => c.collectionName === '重要学习资料'
     );
@@ -367,22 +383,32 @@ describe('资源服务生命周期集成测试', () => {
     // 保存资源
     const savedResource = await resource.save();
 
-    // 创建收藏
-    const collection = new ResourceCollection({
-      user: studentId,
-      resource: savedResource._id,
-      collectionName: '测试收藏夹',
-      notes: '这是收藏笔记'
-    });
+    // 通过 API 收藏资源
+    const collectResponse = await request(app)
+      .post('/api/resources/collections')
+      .set('x-user-id', studentId)
+      .set('x-user-role', 'student')
+      .send({
+        resourceId: savedResource._id,
+        collectionName: '测试收藏夹',
+        notes: '这是收藏笔记'
+      });
 
-    // 保存收藏
-    const savedCollection = await collection.save();
+    expect(collectResponse.status).toBe(201);
+    const collectionId = collectResponse.body.collection._id;
 
-    // 直接从数据库删除收藏
-    await ResourceCollection.findByIdAndDelete(savedCollection._id);
+    // 通过 API 取消收藏
+    const deleteResponse = await request(app)
+      .delete(`/api/resources/collections/${collectionId}`)
+      .set('x-user-id', studentId)
+      .set('x-user-role', 'student');
+
+    // 验证响应
+    expect(deleteResponse.status).toBe(200);
+    expect(deleteResponse.body).toHaveProperty('message', '收藏已删除');
 
     // 验证数据库中的收藏已删除
-    const deletedCollection = await ResourceCollection.findById(savedCollection._id);
+    const deletedCollection = await ResourceCollection.findById(collectionId);
     expect(deletedCollection).toBeNull();
   });
 

@@ -75,10 +75,12 @@ app.use(httpLogger);
 // 导入路由
 const resourcesRouter = require('./routes/resources');
 const recommendationsRouter = require('./routes/recommendations');
+const collectionsRouter = require('./routes/collections');
 
 // 使用路由模块
-app.use('/api/resources', resourcesRouter);
 app.use('/api/recommendations', recommendationsRouter);
+app.use('/api/resources/collections', collectionsRouter);
+app.use('/api/resources', resourcesRouter);
 
 // 错误处理中间件
 app.use(errorHandler);

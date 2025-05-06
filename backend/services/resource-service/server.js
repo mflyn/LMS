@@ -79,7 +79,7 @@ app.get('/api/resources/:id', async (req, res) => {
 });
 
 // 上传资源
-app.post('/api/resources', upload.single('file'), async (req, res) => {
+app.post('/api/resources', app.locals.upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: '请上传文件' });
