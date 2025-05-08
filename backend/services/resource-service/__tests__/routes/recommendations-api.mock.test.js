@@ -351,6 +351,9 @@ describe('推荐 API 测试', () => {
     });
 
     it('数据库错误时应该返回500错误', async () => {
+      // 暂时模拟 console.error，抑制其输出
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
       // 模拟 Resource.findById 方法
       Resource.findById.mockResolvedValue({
         _id: testResourceId,
@@ -372,6 +375,12 @@ describe('推荐 API 测试', () => {
       // 验证响应
       expect(response.status).toBe(500);
       expect(response.body).toHaveProperty('message', '数据库错误');
+
+      // (可选) 验证 console.error 是否被调用了一次
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+
+      // 恢复 console.error 的原始实现
+      consoleErrorSpy.mockRestore();
     });
   });
 

@@ -167,5 +167,42 @@ describe('简化版协同过滤工具测试', () => {
 
       expect(recommendations).toEqual([]);
     });
+
+    it('应该正确处理正相关用户的评分', () => {
+      // 创建测试数据，确保有正相关的用户
+      const testRatings = {
+        'user1': {
+          'resource1': 5,
+          'resource2': 4
+        },
+        'user2': {
+          'resource1': 5,
+          'resource2': 4,
+          'resource3': 5,
+          'resource4': 3
+        },
+        'user3': {
+          'resource1': 1,
+          'resource2': 2,
+          'resource5': 5
+        }
+      };
+
+      // 为用户1生成推荐
+      const recommendations = getRecommendations(testRatings, 'user1');
+
+      // 验证推荐
+      expect(recommendations.length).toBeGreaterThan(0);
+
+      // 验证推荐包含用户2的资源（正相关）
+      const recommendedResources = recommendations.map(rec => rec.resource);
+      expect(recommendedResources).toContain('resource3');
+      expect(recommendedResources).toContain('resource4');
+
+      // 验证评分计算正确
+      const resource3Rec = recommendations.find(rec => rec.resource === 'resource3');
+      expect(resource3Rec).toBeDefined();
+      expect(resource3Rec.score).toBeGreaterThan(0);
+    });
   });
 });
