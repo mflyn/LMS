@@ -35,5 +35,5 @@ module.exports = {
   maxWorkers: '50%',
 
   // 测试环境设置
-  setupFiles: ['<rootDir>/tests/setup.js']
+  setupFiles: ['../backend/jest.setup.js']
 } 

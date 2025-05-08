@@ -1,5 +1,22 @@
 {
+  "name": "code-trae",
+  "version": "1.0.0",
+  "description": "小学生学习追踪系统",
+  "main": "backend/app.js",
+  "scripts": {
+    "start": "node backend/app.js",
+    "dev": "nodemon backend/app.js",
+    "test": "jest --coverage --config=backend/jest.config.js --rootDir=backend",
+    "test:unit": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.unit.test.js'",
+    "test:integration": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.integration.test.js'",
+    "test:e2e": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.e2e.test.js'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "k6:perf": "k6 run tests/performance/k6.config.js",
+    "zap:security": "zap-cli --config-file tests/security/zap-config.yaml quick-scan --start-options '-cmd'"
+  },
   "dependencies": {
+    "mongoose": "^8.5.1",
     "connect-mongo": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
@@ -20,6 +37,13 @@
     "jest-junit": "^16.0.0",
     "k6": "^0.0.0",
     "mongodb-memory-server": "^10.1.4",
-    "supertest": "^7.1.0"
-  }
+    "supertest": "^7.1.0",
+    "nodemon": "^3.1.4",
+    "eslint": "^9.8.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Your Name",
+  "license": "MIT"
 }
