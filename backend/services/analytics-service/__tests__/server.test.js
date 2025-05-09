@@ -7,8 +7,29 @@ jest.mock('mongoose', () => {
     connect: jest.fn().mockResolvedValue(true),
     connection: {
       on: jest.fn()
+    },
+    Schema: function() {
+      return {
+        pre: jest.fn().mockReturnThis(),
+        index: jest.fn().mockReturnThis()
+      };
     }
   };
+
+  // 添加 Schema.Types
+  mMongoDB.Schema.Types = {
+    ObjectId: 'ObjectId',
+    String: String,
+    Number: Number,
+    Date: Date,
+    Boolean: Boolean,
+    Array: Array,
+    Mixed: 'Mixed'
+  };
+
+  // 添加 model 方法
+  mMongoDB.model = jest.fn().mockReturnValue({});
+
   return mMongoDB;
 });
 

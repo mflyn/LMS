@@ -6,14 +6,15 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 // 根据环境选择正确的模块
-let createLogger, errorHandler;
+let createLogger, errorHandlerModule;
 if (process.env.NODE_ENV === 'test') {
   createLogger = require('./__tests__/mocks/logger').createLogger;
-  errorHandler = require('./__tests__/mocks/errorHandler').errorHandler;
+  errorHandlerModule = require('./__tests__/mocks/errorHandler');
 } else {
   createLogger = require('../../../common/config/logger').createLogger;
-  errorHandler = require('../../../common/middleware/errorHandler').errorHandler;
+  errorHandlerModule = require('../../../common/middleware/errorHandler');
 }
+const { errorHandler } = errorHandlerModule;
 
 // 加载环境变量
 dotenv.config();

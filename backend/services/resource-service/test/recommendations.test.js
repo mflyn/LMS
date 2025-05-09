@@ -235,3 +235,59 @@ describe('资源推荐功能测试', () => {
       const res = await chai.request(app)
         .post('/api/resource/recommendations/reviews')
         .send({
+          resource: '60d0fe4f5311236168a109cb',
+          rating: 5,
+          comment: '非常好的资源',
+          isRecommended: true
+        });
+        
+      expect(res).to.have.status(200);
+      expect(res.body).to.have.property('message');
+      expect(res.body.message).to.equal('评价已更新');
+    });
+    
+    it('应该拒绝无效的评分值', async () => {
+      const res = await chai.request(app)
+        .post('/api/resource/recommendations/reviews')
+        .send({
+          resource: '60d0fe4f5311236168a109cb',
+          rating: 6, // 无效的评分值
+          comment: '测试无效评分',
+          isRecommended: true
+        });
+        
+      expect(res).to.have.status(400);
+      expect(res.body).to.have.property('message');
+    });
+  });
+  
+  describe('GET /reviews/:resourceId', () => {
+    it('应该返回资源的评论列表', async () => {
+      // 模拟ResourceReview.find
+      sinon.restore();
+      sinon.stub(ResourceReview, 'find').returns({
+        populate: sinon.stub().returns({
+          exec: sinon.stub().resolves(testReviews)
+        })
+      });
+      
+      // 模拟ResourceReview.aggregate
+      sinon.stub(ResourceReview, 'aggregate').resolves([
+        {
+          _id: null,
+          averageRating: 4.5,
+          count: 5
+        }
+      ]);
+      
+      const res = await chai.request(app)
+        .get('/api/resource/recommendations/reviews/60d0fe4f5311236168a109cb');
+        
+      expect(res).to.have.status(200);
+      expect(res.body).to.have.property('reviews');
+      expect(res.body).to.have.property('stats');
+      expect(res.body.stats).to.have.property('averageRating');
+      expect(res.body.stats).to.have.property('count');
+    });
+  });
+});

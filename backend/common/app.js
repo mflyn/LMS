@@ -4,7 +4,17 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const xss = require('xss-clean');
 const hpp = require('hpp');
-const { sessionConfig, sessionSecurity, sessionCleanup } = require('./middleware/sessionManager');
+
+// 根据环境选择正确的模块
+let session, sessionManagerModule;
+if (process.env.NODE_ENV === 'test') {
+  session = jest.fn();
+  sessionManagerModule = require('./middleware/mockSessionManager');
+} else {
+  session = require('express-session');
+  sessionManagerModule = require('./middleware/sessionManager');
+}
+const { sessionConfig, sessionSecurity, sessionCleanup } = sessionManagerModule;
 const passwordPolicy = require('./middleware/passwordPolicy');
 const { validate, sanitizeInput } = require('./middleware/requestValidator');
 const { upload, fileUploadSecurity } = require('./middleware/fileUploadSecurity');
@@ -56,8 +66,8 @@ app.use(limiter);
 
 // CORS配置
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-frontend-domain.com'] 
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://your-frontend-domain.com']
     : ['http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -84,4 +94,4 @@ app.use(sensitiveOperationLogger);
 // 错误处理
 app.use(errorHandler);
 
-module.exports = app; 
+module.exports = app;

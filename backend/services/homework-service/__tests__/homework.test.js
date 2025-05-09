@@ -90,4 +90,71 @@ describe('作业服务测试', () => {
     it('教师应该能够创建新作业', async () => {
       const homeworkData = {
         title: '语文作业 - 作文',
-        description: '以"我的家乡
+        description: '以"我的家乡"为题写一篇作文，不少于800字',
+        subject: '语文',
+        grade: '三年级',
+        class: '1班',
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 一周后
+        attachments: []
+      };
+
+      const response = await request(app)
+        .post('/api/homework')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .send(homeworkData);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('message', '作业创建成功');
+      expect(response.body).toHaveProperty('homework');
+      expect(response.body.homework).toHaveProperty('title', homeworkData.title);
+      expect(response.body.homework).toHaveProperty('description', homeworkData.description);
+      expect(response.body.homework).toHaveProperty('teacher');
+    });
+
+    it('学生不应该能够创建作业', async () => {
+      const homeworkData = {
+        title: '数学作业',
+        description: '完成课本第20页习题',
+        subject: '数学',
+        grade: '三年级',
+        class: '1班',
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        attachments: []
+      };
+
+      const response = await request(app)
+        .post('/api/homework')
+        .set('Authorization', `Bearer ${studentToken}`)
+        .send(homeworkData);
+
+      expect(response.status).toBe(403);
+      expect(response.body).toHaveProperty('message', '权限不足');
+    });
+  });
+
+  // 测试获取作业列表
+  describe('GET /api/homework', () => {
+    it('应该返回作业列表', async () => {
+      const response = await request(app)
+        .get('/api/homework')
+        .set('Authorization', `Bearer ${teacherToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('homeworks');
+      expect(Array.isArray(response.body.homeworks)).toBe(true);
+    });
+
+    it('应该支持分页', async () => {
+      const response = await request(app)
+        .get('/api/homework')
+        .query({ page: 1, limit: 10 })
+        .set('Authorization', `Bearer ${teacherToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('homeworks');
+      expect(response.body).toHaveProperty('pagination');
+      expect(response.body.pagination).toHaveProperty('currentPage', 1);
+      expect(response.body.pagination).toHaveProperty('limit', 10);
+    });
+  });
+});

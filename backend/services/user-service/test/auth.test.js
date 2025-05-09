@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../server');
 const User = require('../models/User');
+
+// 使用模拟模块
+jest.mock('bcrypt', () => require('./mocks/bcrypt'));
+jest.mock('jsonwebtoken', () => require('./mocks/jsonwebtoken'));
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -138,4 +143,8 @@ describe('认证API测试', () => {
           password: 'anypassword',
         });
 
-      expect(res.statusCode).toEqual
+      expect(res.statusCode).toEqual(401);
+      expect(res.body).toHaveProperty('message', '用户名或密码不正确');
+    });
+  });
+});
