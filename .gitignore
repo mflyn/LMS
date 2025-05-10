@@ -9,6 +9,17 @@ coverage/
 test-results/
 performance-results/
 security-reports/
+reports/
+junit/
+jest-junit.xml
+jest-*.json
+.jest-*
+__coverage__/
+.coverage/
+coverage-*
+*.lcov
+clover.xml
+coverage-final.json
 
 # Production
 build/
@@ -41,6 +52,8 @@ pids/
 .cache/
 node_modules/.cache/
 node_modules/.cache/mongodb-memory-server/
+.jest-cache/
+.babel-cache/
 
 # IDE
 .idea/
@@ -66,6 +79,9 @@ web-build/
 *.temp
 .tmp/
 temp/
+tmp/
+.tmp-*
+__tmp__/
 
 # Docker
 .docker/
@@ -84,4 +100,4 @@ kubeconfig.yaml
 
 # System Files
 .DS_Store
-Thumbs.db 
+Thumbs.db

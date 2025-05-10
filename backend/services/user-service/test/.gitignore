@@ -1,0 +1,39 @@
+# Test-specific gitignore for user-service
+
+# Coverage reports
+coverage/
+__coverage__/
+.coverage/
+coverage-*/
+*.lcov
+clover.xml
+coverage-final.json
+coverage-summary.json
+
+# Jest
+jest-junit.xml
+jest-*.json
+.jest-*
+.jest-cache/
+
+# Test results
+test-results/
+test-report/
+test-output/
+junit/
+junit.xml
+xunit.xml
+test-report.xml
+
+# Temporary test files
+*.snap.fail
+*.snap.new
+__snapshots__/__diff_output__/
+__snapshots__/*.snap.fail
+__snapshots__/*.snap.new
+
+# Mock data
+__mocks__/__data__/
+
+# Test logs
+test-*.log
