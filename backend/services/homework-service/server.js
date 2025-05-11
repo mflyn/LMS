@@ -36,16 +36,20 @@ app.use((req, res, next) => {
 });
 
 // 连接到MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  logger.info('MongoDB连接成功');
-})
-.catch((err) => {
-  logger.error('MongoDB连接失败:', err.message);
-});
+if (process.env.NODE_ENV !== 'test') {
+  mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    logger.info('MongoDB连接成功');
+  })
+  .catch((err) => {
+    logger.error('MongoDB连接失败:', err.message);
+  });
+} else {
+  logger.info('测试环境，跳过MongoDB连接');
+}
 
 // 导入路由
 const homeworkRoutes = require('./routes/homework');
@@ -68,13 +72,13 @@ async function connectRabbitMQ() {
   try {
     const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://localhost');
     const channel = await connection.createChannel();
-    
+
     // 声明交换机
     const exchange = 'homework.events';
     await channel.assertExchange(exchange, 'topic', { durable: true });
-    
+
     logger.info('RabbitMQ连接成功');
-    
+
     // 返回通道以便发布消息
     return { channel, exchange };
   } catch (error) {
@@ -85,15 +89,29 @@ async function connectRabbitMQ() {
 
 // 启动服务器
 const PORT = process.env.PORT || 3002;
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   logger.info(`作业服务运行在端口 ${PORT}`);
-  
-  // 连接到RabbitMQ
-  const mq = await connectRabbitMQ();
-  
-  // 将MQ通道添加到app对象，以便在路由中使用
-  if (mq) {
-    app.locals.mq = mq;
+
+  // 在非测试环境下连接到RabbitMQ
+  if (process.env.NODE_ENV !== 'test') {
+    const mq = await connectRabbitMQ();
+
+    // 将MQ通道添加到app对象，以便在路由中使用
+    if (mq) {
+      app.locals.mq = mq;
+    }
+  } else {
+    // 在测试环境中使用模拟的MQ
+    app.locals.mq = {
+      channel: {
+        publish: (exchange, routingKey, content, options) => {
+          logger.info(`[TEST] 发布消息到 ${exchange}.${routingKey}`);
+          return true;
+        }
+      },
+      exchange: 'homework.events'
+    };
+    logger.info('测试环境，使用模拟的RabbitMQ');
   }
 });
 

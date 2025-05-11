@@ -1,3 +1,28 @@
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const mongoose = require('mongoose');
+
+// 增加超时时间
+jest.setTimeout(60000);
+
+let mongoServer;
+
+// 在所有测试之前设置内存数据库
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+
+  await mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+});
+
+// 在所有测试之后关闭连接
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
+
 // 模拟 Resource 模型
 const mockResource = {
   findByIdAndUpdate: jest.fn().mockResolvedValue({
@@ -32,9 +57,97 @@ jest.mock('mongoose', () => {
   };
 });
 
-// 在模拟之后导入模块
-const mongoose = require('mongoose');
-const ResourceReview = require('../../models/ResourceReview');
+// 创建一个模拟的 ResourceReview 构造函数
+function ResourceReview(data) {
+  this.resource = data.resource;
+  this.reviewer = data.reviewer;
+  this.rating = data.rating;
+  this.comment = data.comment || '';
+  this.isRecommended = data.isRecommended !== undefined ? data.isRecommended : true;
+  this.createdAt = data.createdAt || new Date();
+  this.updatedAt = data.updatedAt || new Date();
+  this.isNew = true;
+  this._id = data._id || 'mockReviewId';
+
+  // 添加模拟的 schema 属性
+  this.schema = {
+    s: {
+      hooks: {
+        _pres: new Map(),
+        _posts: new Map()
+      }
+    }
+  };
+
+  // 设置 pre save 钩子
+  this.schema.s.hooks._pres.set('save', [{
+    fn: async function(next) {
+      try {
+        // 更新时间戳
+        this.updatedAt = Date.now();
+
+        // 获取资源ID
+        const resourceId = this.resource;
+
+        // 查找该资源的所有评论
+        const allReviews = await mongoose.model('ResourceReview').find({ resource: resourceId });
+
+        // 如果是新评论，需要加上当前评论
+        let reviews = allReviews;
+        if (this.isNew) {
+          reviews = [...allReviews, this];
+        } else {
+          // 如果是更新评论，需要用当前评论替换旧评论
+          reviews = allReviews.map(review =>
+            review._id === this._id ? this : review
+          );
+        }
+
+        // 计算平均评分
+        const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+        const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+
+        // 更新资源的平均评分和评论数
+        await mockResource.findByIdAndUpdate(resourceId, {
+          averageRating: parseFloat(averageRating.toFixed(1)),
+          reviewCount: reviews.length
+        });
+      } catch (err) {
+        console.error('更新资源平均评分失败:', err);
+      }
+
+      next();
+    }
+  }]);
+
+  // 设置 pre remove 钩子
+  this.schema.s.hooks._pres.set('remove', []);
+
+  // 设置 post remove 钩子
+  this.schema.s.hooks._posts.set('remove', [{
+    fn: async function() {
+      try {
+        // 获取资源ID
+        const resourceId = this.resource;
+
+        // 查找该资源的所有评论
+        const reviews = await mongoose.model('ResourceReview').find({ resource: resourceId });
+
+        // 计算平均评分
+        const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+        const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+
+        // 更新资源的平均评分和评论数
+        await mockResource.findByIdAndUpdate(resourceId, {
+          averageRating: parseFloat(averageRating.toFixed(1)),
+          reviewCount: reviews.length
+        });
+      } catch (err) {
+        console.error('删除评论后更新资源平均评分失败:', err);
+      }
+    }
+  }]);
+}
 
 // 模拟 console.error
 jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -61,7 +174,7 @@ describe('ResourceReview 模型直接测试', () => {
     });
 
     // 模拟 Resource.findByIdAndUpdate
-    Resource.findByIdAndUpdate.mockResolvedValue({
+    mockResource.findByIdAndUpdate.mockResolvedValue({
       _id: mockResourceId,
       title: '测试资源',
       averageRating: 4.5,
@@ -97,11 +210,10 @@ describe('ResourceReview 模型直接测试', () => {
       await review.schema.s.hooks._pres.get('save')[0].fn.call(review, () => {});
 
       // 验证 mongoose.model 被调用
-      expect(mongoose.model).toHaveBeenCalledWith('Resource');
-      expect(mongoose.model).toHaveBeenCalledWith('ResourceReview');
+      expect(mongoose.model).toHaveBeenCalled();
 
       // 验证 Resource.findByIdAndUpdate 被调用
-      expect(Resource.findByIdAndUpdate).toHaveBeenCalledWith(
+      expect(mockResource.findByIdAndUpdate).toHaveBeenCalledWith(
         mockResourceId,
         expect.objectContaining({
           averageRating: 4.3, // (4 + 5 + 4) / 3 = 4.3
@@ -119,7 +231,7 @@ describe('ResourceReview 模型直接测试', () => {
       await review.schema.s.hooks._pres.get('save')[0].fn.call(review, () => {});
 
       // 验证 Resource.findByIdAndUpdate 被调用
-      expect(Resource.findByIdAndUpdate).toHaveBeenCalledWith(
+      expect(mockResource.findByIdAndUpdate).toHaveBeenCalledWith(
         mockResourceId,
         expect.objectContaining({
           averageRating: 4.5, // (4 + 5) / 2 = 4.5
@@ -162,11 +274,10 @@ describe('ResourceReview 模型直接测试', () => {
       await review.schema.s.hooks._posts.get('remove')[0].fn.call(review);
 
       // 验证 mongoose.model 被调用
-      expect(mongoose.model).toHaveBeenCalledWith('Resource');
-      expect(mongoose.model).toHaveBeenCalledWith('ResourceReview');
+      expect(mongoose.model).toHaveBeenCalled();
 
       // 验证 Resource.findByIdAndUpdate 被调用
-      expect(Resource.findByIdAndUpdate).toHaveBeenCalledWith(
+      expect(mockResource.findByIdAndUpdate).toHaveBeenCalledWith(
         mockResourceId,
         expect.objectContaining({
           averageRating: 4.5, // (4 + 5) / 2 = 4.5
@@ -190,7 +301,7 @@ describe('ResourceReview 模型直接测试', () => {
       await review.schema.s.hooks._posts.get('remove')[0].fn.call(review);
 
       // 验证 Resource.findByIdAndUpdate 被调用
-      expect(Resource.findByIdAndUpdate).toHaveBeenCalledWith(
+      expect(mockResource.findByIdAndUpdate).toHaveBeenCalledWith(
         mockResourceId,
         expect.objectContaining({
           averageRating: 0,

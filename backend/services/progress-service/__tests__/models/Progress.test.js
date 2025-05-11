@@ -1,16 +1,26 @@
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const Progress = require('../../models/Progress');
+
+// 增加超时时间
+jest.setTimeout(60000);
+
+let mongoServer;
 
 // 使用内存数据库进行测试
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/test-db', {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+
+  await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();
+  await mongoose.disconnect();
+  await mongoServer.stop();
 });
 
 describe('Progress 模型测试', () => {
@@ -22,7 +32,7 @@ describe('Progress 模型测试', () => {
     const mockStudentId = new mongoose.Types.ObjectId();
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockTeacherId = new mongoose.Types.ObjectId();
-    
+
     const progressData = {
       student: mockStudentId,
       subject: mockSubjectId,
@@ -80,7 +90,7 @@ describe('Progress 模型测试', () => {
     const mockStudentId = new mongoose.Types.ObjectId();
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockTeacherId = new mongoose.Types.ObjectId();
-    
+
     const invalidProgress = new Progress({
       student: mockStudentId,
       subject: mockSubjectId,
@@ -108,7 +118,7 @@ describe('Progress 模型测试', () => {
     const mockStudentId = new mongoose.Types.ObjectId();
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockTeacherId = new mongoose.Types.ObjectId();
-    
+
     const invalidProgress = new Progress({
       student: mockStudentId,
       subject: mockSubjectId,
@@ -136,7 +146,7 @@ describe('Progress 模型测试', () => {
     const mockStudentId = new mongoose.Types.ObjectId();
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockTeacherId = new mongoose.Types.ObjectId();
-    
+
     const progress = new Progress({
       student: mockStudentId,
       subject: mockSubjectId,
@@ -149,13 +159,13 @@ describe('Progress 模型测试', () => {
     });
 
     const savedProgress = await progress.save();
-    
+
     // 更新进度记录
     savedProgress.completionRate = 100;
     savedProgress.status = 'completed';
     savedProgress.comments = '已完成';
     const updatedProgress = await savedProgress.save();
-    
+
     expect(updatedProgress.completionRate).toBe(100);
     expect(updatedProgress.status).toBe('completed');
     expect(updatedProgress.comments).toBe('已完成');

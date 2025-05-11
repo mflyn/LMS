@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 /**
  * 用户模型
@@ -121,7 +121,7 @@ userSchema.index({ class: 1, role: 1 });
 userSchema.pre('save', async function(next) {
   // 只有在密码被修改时才重新加密
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -164,11 +164,11 @@ userSchema.statics.findStudentsByClass = function(classId) {
 userSchema.statics.findStudentsByTeacher = async function(teacherId) {
   const teacher = await this.findById(teacherId).populate('subjects');
   if (!teacher || teacher.role !== 'teacher') return [];
-  
+
   const subjectIds = teacher.subjects.map(s => s._id);
   const classes = await mongoose.model('Class').find({ 'subjects.teacher': teacherId });
   const classIds = classes.map(c => c._id);
-  
+
   return this.find({ class: { $in: classIds }, role: 'student' });
 };
 

@@ -1,16 +1,26 @@
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const Grade = require('../../models/Grade');
+
+// 增加超时时间
+jest.setTimeout(60000);
+
+let mongoServer;
 
 // 使用内存数据库进行测试
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/test-db', {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+
+  await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();
+  await mongoose.disconnect();
+  await mongoServer.stop();
 });
 
 describe('Grade 模型测试', () => {
@@ -23,7 +33,7 @@ describe('Grade 模型测试', () => {
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockClassId = new mongoose.Types.ObjectId();
     const mockTeacherId = new mongoose.Types.ObjectId();
-    
+
     const gradeData = {
       student: mockStudentId,
       subject: mockSubjectId,
@@ -81,7 +91,7 @@ describe('Grade 模型测试', () => {
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockClassId = new mongoose.Types.ObjectId();
     const mockTeacherId = new mongoose.Types.ObjectId();
-    
+
     const invalidGrade = new Grade({
       student: mockStudentId,
       subject: mockSubjectId,
@@ -110,7 +120,7 @@ describe('Grade 模型测试', () => {
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockClassId = new mongoose.Types.ObjectId();
     const mockTeacherId = new mongoose.Types.ObjectId();
-    
+
     const grade = new Grade({
       student: mockStudentId,
       subject: mockSubjectId,
@@ -123,10 +133,10 @@ describe('Grade 模型测试', () => {
     });
 
     const savedGrade = await grade.save();
-    
+
     // 验证百分比计算
     expect(savedGrade.percentage).toBe('85.00');
-    
+
     // 修改分数并再次验证
     savedGrade.score = 75;
     await savedGrade.save();

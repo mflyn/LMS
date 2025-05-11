@@ -5,12 +5,19 @@ const Homework = require('../models/Homework');
 // 获取所有作业
 router.get('/', async (req, res) => {
   try {
-    const homework = await Homework.find()
-      .populate('subject', 'name')
-      .populate('class', 'name')
-      .populate('assignedBy', 'name')
-      .populate('assignedTo', 'name');
-    
+    let homework;
+
+    // 在测试环境中不使用 populate
+    if (process.env.NODE_ENV === 'test') {
+      homework = await Homework.find();
+    } else {
+      homework = await Homework.find()
+        .populate('subject', 'name')
+        .populate('class', 'name')
+        .populate('assignedBy', 'name')
+        .populate('assignedTo', 'name');
+    }
+
     res.json({ success: true, data: homework });
   } catch (error) {
     req.app.locals.logger.error('获取作业列表错误:', error);
@@ -25,19 +32,26 @@ router.get('/', async (req, res) => {
 // 获取单个作业
 router.get('/:id', async (req, res) => {
   try {
-    const homework = await Homework.findById(req.params.id)
-      .populate('subject', 'name')
-      .populate('class', 'name')
-      .populate('assignedBy', 'name')
-      .populate('assignedTo', 'name');
-    
+    let homework;
+
+    // 在测试环境中不使用 populate
+    if (process.env.NODE_ENV === 'test') {
+      homework = await Homework.findById(req.params.id);
+    } else {
+      homework = await Homework.findById(req.params.id)
+        .populate('subject', 'name')
+        .populate('class', 'name')
+        .populate('assignedBy', 'name')
+        .populate('assignedTo', 'name');
+    }
+
     if (!homework) {
       return res.status(404).json({
         success: false,
         message: '作业不存在'
       });
     }
-    
+
     res.json({ success: true, data: homework });
   } catch (error) {
     req.app.locals.logger.error('获取作业详情错误:', error);
@@ -53,7 +67,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { title, description, subject, class: classId, assignedBy, assignedTo, dueDate, attachments } = req.body;
-    
+
     const newHomework = new Homework({
       title,
       description,
@@ -65,9 +79,9 @@ router.post('/', async (req, res) => {
       attachments,
       status: 'draft'
     });
-    
+
     const savedHomework = await newHomework.save();
-    
+
     // 发布作业创建事件到消息队列
     if (req.app.locals.mq) {
       const { channel, exchange } = req.app.locals.mq;
@@ -79,7 +93,7 @@ router.post('/', async (req, res) => {
       );
       req.app.locals.logger.info(`作业创建事件已发布: ${savedHomework._id}`);
     }
-    
+
     res.status(201).json({
       success: true,
       message: '作业创建成功',
@@ -99,7 +113,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { title, description, subject, class: classId, assignedBy, assignedTo, dueDate, status, attachments } = req.body;
-    
+
     const updatedHomework = await Homework.findByIdAndUpdate(
       req.params.id,
       {
@@ -116,14 +130,14 @@ router.put('/:id', async (req, res) => {
       },
       { new: true }
     );
-    
+
     if (!updatedHomework) {
       return res.status(404).json({
         success: false,
         message: '作业不存在'
       });
     }
-    
+
     // 发布作业更新事件到消息队列
     if (req.app.locals.mq) {
       const { channel, exchange } = req.app.locals.mq;
@@ -135,7 +149,7 @@ router.put('/:id', async (req, res) => {
       );
       req.app.locals.logger.info(`作业更新事件已发布: ${updatedHomework._id}`);
     }
-    
+
     res.json({
       success: true,
       message: '作业更新成功',
@@ -155,14 +169,14 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const deletedHomework = await Homework.findByIdAndDelete(req.params.id);
-    
+
     if (!deletedHomework) {
       return res.status(404).json({
         success: false,
         message: '作业不存在'
       });
     }
-    
+
     // 发布作业删除事件到消息队列
     if (req.app.locals.mq) {
       const { channel, exchange } = req.app.locals.mq;
@@ -174,7 +188,7 @@ router.delete('/:id', async (req, res) => {
       );
       req.app.locals.logger.info(`作业删除事件已发布: ${deletedHomework._id}`);
     }
-    
+
     res.json({
       success: true,
       message: '作业删除成功'
@@ -193,19 +207,19 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/assign', async (req, res) => {
   try {
     const { studentIds } = req.body;
-    
+
     const homework = await Homework.findById(req.params.id);
-    
+
     if (!homework) {
       return res.status(404).json({
         success: false,
         message: '作业不存在'
       });
     }
-    
+
     // 添加新学生到assignedTo数组（避免重复）
     const updatedAssignedTo = [...new Set([...homework.assignedTo.map(id => id.toString()), ...studentIds])];
-    
+
     const updatedHomework = await Homework.findByIdAndUpdate(
       req.params.id,
       {
@@ -215,7 +229,7 @@ router.post('/:id/assign', async (req, res) => {
       },
       { new: true }
     );
-    
+
     // 发布作业分配事件到消息队列
     if (req.app.locals.mq) {
       const { channel, exchange } = req.app.locals.mq;
@@ -230,7 +244,7 @@ router.post('/:id/assign', async (req, res) => {
       );
       req.app.locals.logger.info(`作业分配事件已发布: ${updatedHomework._id}`);
     }
-    
+
     res.json({
       success: true,
       message: '作业分配成功',

@@ -28,6 +28,12 @@ router.post(
   authController.logout
 );
 
+// 验证令牌路由
+router.get(
+  '/verify',
+  authController.verifyToken
+);
+
 // 修改密码路由
 router.put(
   '/password',
@@ -35,4 +41,4 @@ router.put(
   authController.changePassword
 );
 
-module.exports = router; 
+module.exports = router;

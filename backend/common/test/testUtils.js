@@ -196,7 +196,7 @@ class TestDataGenerator {
   static generateResourceData() {
     const subjects = ['语文', '数学', '英语', '科学', '社会', '音乐', '美术', '体育'];
     const types = ['教案', '课件', '习题', '视频', '音频', '图片', '文档'];
-    
+
     return {
       title: `测试资源${this.generateRandomString(5)}`,
       description: '这是一个用于测试的学习资源',
@@ -212,8 +212,22 @@ class TestDataGenerator {
   }
 }
 
+/**
+ * 创建模拟日志记录器
+ * @returns {Object} 模拟日志记录器
+ */
+function createMockLogger() {
+  return {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+  };
+}
+
 module.exports = {
   DbTestHelper,
   RequestTestHelper,
-  TestDataGenerator
+  TestDataGenerator,
+  createMockLogger
 };

@@ -1,5 +1,28 @@
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const ResourceReview = require('../../models/ResourceReview');
+
+// 增加超时时间
+jest.setTimeout(60000);
+
+let mongoServer;
+
+// 在所有测试之前设置内存数据库
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+
+  await mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+});
+
+// 在所有测试之后关闭连接
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
 
 // 创建一个模拟的 Resource 模型
 const mockResource = {

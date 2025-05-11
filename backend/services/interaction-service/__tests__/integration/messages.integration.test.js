@@ -9,6 +9,12 @@ const { connect, closeDatabase, clearDatabase } = require('../test-utils/db-hand
 const app = require('../../server');
 const Message = require('../../models/Message');
 
+// 增加超时时间
+jest.setTimeout(60000);
+
+// 设置测试环境
+process.env.NODE_ENV = 'test';
+
 // 创建测试用户
 const testUsers = {
   teacher: {

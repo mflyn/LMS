@@ -44,17 +44,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// 连接到MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  logger.info('MongoDB连接成功');
-})
-.catch((err) => {
-  logger.error('MongoDB连接失败:', err.message);
-});
+// 连接到MongoDB（在测试环境中不连接）
+if (process.env.NODE_ENV !== 'test') {
+  mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    logger.info('MongoDB连接成功');
+  })
+  .catch((err) => {
+    logger.error('MongoDB连接失败:', err.message);
+  });
+}
 
 // 导入Meeting模型
 const Meeting = require('./models/Meeting'); // 确保路径正确

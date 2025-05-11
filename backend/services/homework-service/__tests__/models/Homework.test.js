@@ -1,16 +1,26 @@
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const Homework = require('../../models/Homework');
+
+// 增加超时时间
+jest.setTimeout(60000);
+
+let mongoServer;
 
 // 使用内存数据库进行测试
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/test-db', {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+
+  await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();
+  await mongoose.disconnect();
+  await mongoServer.stop();
 });
 
 describe('Homework 模型测试', () => {
@@ -23,7 +33,7 @@ describe('Homework 模型测试', () => {
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockClassId = new mongoose.Types.ObjectId();
     const mockStudentId = new mongoose.Types.ObjectId();
-    
+
     const homeworkData = {
       title: '数学作业',
       description: '完成课本第15页的习题1-5',
@@ -33,13 +43,7 @@ describe('Homework 模型测试', () => {
       assignedTo: [mockStudentId],
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 一周后
       status: 'assigned',
-      attachments: [
-        {
-          name: '参考资料.pdf',
-          path: '/uploads/reference.pdf',
-          type: 'application/pdf'
-        }
-      ]
+      attachments: ['/uploads/reference.pdf']
     };
 
     const homework = new Homework(homeworkData);
@@ -56,7 +60,7 @@ describe('Homework 模型测试', () => {
     expect(savedHomework.assignedTo[0].toString()).toBe(mockStudentId.toString());
     expect(savedHomework.status).toBe('assigned');
     expect(savedHomework.attachments.length).toBe(1);
-    expect(savedHomework.attachments[0].name).toBe('参考资料.pdf');
+    expect(savedHomework.attachments[0]).toBe('/uploads/reference.pdf');
     expect(savedHomework.createdAt).toBeDefined();
     expect(savedHomework.updatedAt).toBeDefined();
   });
@@ -87,7 +91,7 @@ describe('Homework 模型测试', () => {
     const mockTeacherId = new mongoose.Types.ObjectId();
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockClassId = new mongoose.Types.ObjectId();
-    
+
     const invalidHomework = new Homework({
       title: '数学作业',
       description: '完成课本第15页的习题1-5',
@@ -114,7 +118,7 @@ describe('Homework 模型测试', () => {
     const mockTeacherId = new mongoose.Types.ObjectId();
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockClassId = new mongoose.Types.ObjectId();
-    
+
     const homework = new Homework({
       title: '数学作业',
       description: '完成课本第15页的习题1-5',
@@ -126,7 +130,7 @@ describe('Homework 模型测试', () => {
     });
 
     const savedHomework = await homework.save();
-    
+
     // 验证使用了默认状态
     expect(savedHomework.status).toBe('draft');
   });
@@ -135,7 +139,7 @@ describe('Homework 模型测试', () => {
     const mockTeacherId = new mongoose.Types.ObjectId();
     const mockSubjectId = new mongoose.Types.ObjectId();
     const mockClassId = new mongoose.Types.ObjectId();
-    
+
     const homework = new Homework({
       title: '数学作业',
       description: '完成课本第15页的习题1-5',
@@ -147,12 +151,12 @@ describe('Homework 模型测试', () => {
     });
 
     const savedHomework = await homework.save();
-    
+
     // 更新作业记录
     savedHomework.title = '更新后的数学作业';
     savedHomework.status = 'assigned';
     const updatedHomework = await savedHomework.save();
-    
+
     expect(updatedHomework.title).toBe('更新后的数学作业');
     expect(updatedHomework.status).toBe('assigned');
   });

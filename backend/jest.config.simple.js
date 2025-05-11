@@ -1,7 +1,26 @@
 module.exports = {
   testEnvironment: 'node',
-  coveragePathIgnorePatterns: ['/node_modules/'],
-  testMatch: ['**/__tests__/integration/*.simple.test.js', '**/tests/integration/*.simple.test.js'],
+  testMatch: ['**/__tests__/**/*.test.js'],
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
+  collectCoverageFrom: [
+    '**/services/**/*.js',
+    '!**/node_modules/**',
+    '!**/__tests__/**',
+    '!**/coverage/**',
+    '!**/mocks/**'
+  ],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/__tests__/',
+    '/test/',
+    '/mocks/'
+  ],
+  testTimeout: 30000, // 增加超时时间到30秒
+  setupFilesAfterEnv: [
+    './jest.setup.simple.js'
+  ],
   verbose: true,
   forceExit: true,
   clearMocks: true,
