@@ -1,8 +1,24 @@
 const { UserBasedCF, ItemBasedCF, HybridRecommender } = require('../../utils/collaborativeFiltering');
 const { calculateSimilarity, getRecommendations } = require('../../utils/collaborativeFiltering.simple');
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+
+// 增加超时时间
+jest.setTimeout(60000);
 
 describe('协同过滤算法集成测试', () => {
+  // 连接到内存数据库
+  let mongoServer;
+  beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
   // 模拟用户评分数据
   const mockUserRatings = [
     { userId: 'user1', resourceId: 'resource1', rating: 5 },

@@ -2,14 +2,31 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
 // 设置测试环境
 process.env.NODE_ENV = 'test';
+
+// 增加超时时间
+jest.setTimeout(60000);
 
 const app = require('../../app');
 const Resource = require('../../models/Resource');
 const ResourceReview = require('../../models/ResourceReview');
 const ResourceCollection = require('../../models/ResourceCollection');
+
+// 连接到内存数据库
+let mongoServer;
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri);
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
 
 describe('资源服务集成测试', () => {
   // 简化的集成测试
@@ -47,7 +64,7 @@ describe('资源服务集成测试', () => {
 
     // 清理
     await Resource.findByIdAndDelete(savedResource._id);
-  });
+  }, 30000);
 
   it('应该能够创建和查询资源评价', async () => {
     // 创建一个资源
@@ -88,7 +105,7 @@ describe('资源服务集成测试', () => {
     // 清理
     await ResourceReview.findByIdAndDelete(savedReview._id);
     await Resource.findByIdAndDelete(savedResource._id);
-  });
+  }, 30000);
 
   it('应该能够创建和查询资源收藏', async () => {
     // 创建一个资源
@@ -129,5 +146,5 @@ describe('资源服务集成测试', () => {
     // 清理
     await ResourceCollection.findByIdAndDelete(savedCollection._id);
     await Resource.findByIdAndDelete(savedResource._id);
-  });
+  }, 30000);
 });

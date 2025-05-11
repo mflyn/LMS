@@ -26,6 +26,18 @@ const app = express();
 const { logger, httpLogger } = createLogger('resource-service');
 app.locals.logger = logger;
 
+// 在测试环境中，我们不需要连接到真实的数据库
+if (process.env.NODE_ENV !== 'test') {
+  // 连接到MongoDB
+  mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/resource-service')
+    .then(() => {
+      logger.info('MongoDB连接成功');
+    })
+    .catch(err => {
+      logger.error('MongoDB连接失败:', err);
+    });
+}
+
 // 确保上传目录存在
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {

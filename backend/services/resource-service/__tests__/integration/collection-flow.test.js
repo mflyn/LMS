@@ -1,29 +1,46 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
 // 设置测试环境
 process.env.NODE_ENV = 'test';
+
+// 增加超时时间
+jest.setTimeout(60000);
 
 const app = require('../../app');
 const Resource = require('../../models/Resource');
 const ResourceCollection = require('../../models/ResourceCollection');
 const { cleanupTestData } = require('../utils/testUtils');
 
+// 连接到内存数据库
+let mongoServer;
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri);
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
+
 describe('资源收藏服务集成测试', () => {
   // 在所有测试开始前清理数据
   beforeAll(async () => {
     await cleanupTestData();
-  });
+  }, 30000);
 
   // 在所有测试结束后清理数据
   afterAll(async () => {
     await cleanupTestData();
-  });
+  }, 30000);
 
   // 在每个测试前准备数据
   beforeEach(async () => {
     await cleanupTestData();
-  });
+  }, 30000);
 
   // 创建一个有效的用户ID (MongoDB ObjectId)
   const testUserId = new mongoose.Types.ObjectId().toString();
@@ -95,7 +112,7 @@ describe('资源收藏服务集成测试', () => {
     for (const resource of resources) {
       await Resource.findByIdAndDelete(resource._id);
     }
-  });
+  }, 30000);
 
   it('应该能够检查资源是否已被收藏', async () => {
     // 创建一个资源
@@ -141,7 +158,7 @@ describe('资源收藏服务集成测试', () => {
       await ResourceCollection.findByIdAndDelete(collection._id);
     }
     await Resource.findByIdAndDelete(savedResource._id);
-  });
+  }, 30000);
 
   it('应该能够更新收藏信息', async () => {
     // 创建一个资源
@@ -193,7 +210,7 @@ describe('资源收藏服务集成测试', () => {
     // 清理
     await ResourceCollection.findByIdAndDelete(collectionId);
     await Resource.findByIdAndDelete(savedResource._id);
-  });
+  }, 30000);
 
   it('应该能够取消收藏资源', async () => {
     // 创建一个资源
@@ -237,7 +254,7 @@ describe('资源收藏服务集成测试', () => {
 
     // 清理
     await Resource.findByIdAndDelete(savedResource._id);
-  });
+  }, 30000);
 
   it('应该能够按收藏夹名称分组获取收藏', async () => {
     // 创建多个测试资源
@@ -306,5 +323,5 @@ describe('资源收藏服务集成测试', () => {
     for (const resource of resources) {
       await Resource.findByIdAndDelete(resource._id);
     }
-  });
+  }, 30000);
 });

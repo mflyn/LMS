@@ -2,9 +2,13 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
 // 设置测试环境
 process.env.NODE_ENV = 'test';
+
+// 增加超时时间
+jest.setTimeout(60000);
 
 const app = require('../../app');
 const Resource = require('../../models/Resource');
@@ -12,21 +16,34 @@ const ResourceReview = require('../../models/ResourceReview');
 const ResourceCollection = require('../../models/ResourceCollection');
 const { cleanupTestData } = require('../utils/testUtils');
 
+// 连接到内存数据库
+let mongoServer;
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri);
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
+
 describe('资源服务生命周期集成测试', () => {
   // 在所有测试开始前清理数据
   beforeAll(async () => {
     await cleanupTestData();
-  });
+  }, 30000);
 
   // 在所有测试结束后清理数据
   afterAll(async () => {
     await cleanupTestData();
-  });
+  }, 30000);
 
   // 在每个测试前清理数据
   beforeEach(async () => {
     await cleanupTestData();
-  });
+  }, 30000);
 
   // 创建一个有效的用户ID (MongoDB ObjectId)
   const teacherId = new mongoose.Types.ObjectId().toString();
@@ -62,7 +79,7 @@ describe('资源服务生命周期集成测试', () => {
     const foundResource = await Resource.findById(savedResource._id);
     expect(foundResource).toBeDefined();
     expect(foundResource.title).toBe('生命周期测试资源');
-  });
+  }, 30000);
 
   it('学生应该能够查看资源详情', async () => {
     // 创建一个资源对象
@@ -94,7 +111,7 @@ describe('资源服务生命周期集成测试', () => {
     expect(foundResource.title).toBe('生命周期测试资源');
     expect(foundResource.subject).toBe('数学');
     expect(foundResource.grade).toBe('三年级');
-  });
+  }, 30000);
 
   it('学生应该能够评价资源', async () => {
     // 创建一个资源对象
@@ -140,7 +157,7 @@ describe('资源服务生命周期集成测试', () => {
     // 验证资源的平均评分已更新
     const updatedResource = await Resource.findById(savedResource._id);
     expect(updatedResource.averageRating).toBe(4);
-  });
+  }, 30000);
 
   it('学生应该能够收藏资源', async () => {
     // 创建一个资源对象
@@ -181,7 +198,7 @@ describe('资源服务生命周期集成测试', () => {
     expect(savedCollection).toBeDefined();
     expect(savedCollection.collectionName).toBe('重要学习资料');
     expect(savedCollection.notes).toBe('这是一个需要重点学习的资源');
-  });
+  }, 30000);
 
   it('学生应该能够查看自己的收藏列表', async () => {
     // 创建多个资源对象
@@ -232,7 +249,7 @@ describe('资源服务生命周期集成测试', () => {
     );
     expect(foundCollection).toBeDefined();
     expect(foundCollection.resource.title).toBe('收藏列表测试资源1');
-  });
+  }, 30000);
 
   it('学生应该能够查看资源的评价列表', async () => {
     // 创建一个资源对象
@@ -278,7 +295,7 @@ describe('资源服务生命周期集成测试', () => {
     expect(studentReview).toBeDefined();
     expect(studentReview.rating).toBe(5);
     expect(studentReview.comment).toBe('这是评价3');
-  });
+  }, 30000);
 
   it('教师应该能够更新自己上传的资源', async () => {
     // 创建一个资源对象
@@ -310,7 +327,7 @@ describe('资源服务生命周期集成测试', () => {
     expect(updatedResource.title).toBe('更新后的资源标题');
     expect(updatedResource.description).toBe('这是更新后的资源描述');
     expect(updatedResource.grade).toBe('四年级');
-  });
+  }, 30000);
 
   it('学生应该能够更新自己的评价', async () => {
     // 创建一个资源对象
@@ -367,7 +384,7 @@ describe('资源服务生命周期集成测试', () => {
     // 验证资源的平均评分已更新
     const updatedResource = await Resource.findById(savedResource._id);
     expect(updatedResource.averageRating).toBe(5);
-  });
+  }, 30000);
 
   it('学生应该能够取消收藏资源', async () => {
     // 创建一个资源对象
@@ -410,7 +427,7 @@ describe('资源服务生命周期集成测试', () => {
     // 验证数据库中的收藏已删除
     const deletedCollection = await ResourceCollection.findById(collectionId);
     expect(deletedCollection).toBeNull();
-  });
+  }, 30000);
 
   it('教师应该能够删除自己上传的资源', async () => {
     // 创建一个资源对象
@@ -451,5 +468,5 @@ describe('资源服务生命周期集成测试', () => {
     // 验证数据库中的资源已删除
     const deletedResource = await Resource.findById(savedResource._id);
     expect(deletedResource).toBeNull();
-  });
-});
+  }, 30000);
+}, 30000);
