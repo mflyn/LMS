@@ -69,6 +69,8 @@ const reportsRouter = require('./routes/reports');
 const trendsRouter = require('./routes/trends');
 const longTermTrendsRouter = require('./routes/long-term-trends');
 const behaviorRouter = require('./routes/behavior');
+const integrationRouter = require('./routes/integration');
+const performanceRouter = require('./routes/performance');
 
 // 使用路由模块
 app.use('/api/analytics/progress', progressRouter);
@@ -76,6 +78,8 @@ app.use('/api/analytics/reports', reportsRouter);
 app.use('/api/analytics/trends', trendsRouter);
 app.use('/api/analytics/long-term-trends', longTermTrendsRouter);
 app.use('/api/analytics/behavior', behaviorRouter);
+app.use('/api/analytics/performance', performanceRouter);
+app.use('/api/analytics', integrationRouter);
 
 // 健康检查路由
 app.get('/health', (req, res) => {
@@ -94,12 +98,12 @@ app.use((err, req, res, next) => {
 // Socket.IO连接处理
 io.on('connection', (socket) => {
   logger.info('新的WebSocket连接');
-  
+
   socket.on('join', (userId) => {
     socket.join(userId);
     logger.info(`用户 ${userId} 加入了数据分析频道`);
   });
-  
+
   socket.on('disconnect', () => {
     logger.info('WebSocket连接断开');
   });

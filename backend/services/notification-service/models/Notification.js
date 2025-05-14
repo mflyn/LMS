@@ -20,6 +20,9 @@ const NotificationSchema = new Schema({
     type: Boolean,
     default: false
   },
+  readAt: {
+    type: Date
+  },
   createdAt: {
     type: Date,
     default: Date.now

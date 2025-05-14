@@ -8,12 +8,12 @@ const authenticateToken = (req, res, next) => {
   if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
     return res.status(401).json({ message: '未认证' });
   }
-  
+
   req.user = {
     id: req.headers['x-user-id'],
     role: req.headers['x-user-role']
   };
-  
+
   next();
 };
 
@@ -24,10 +24,10 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.id !== req.params.userId) {
       return res.status(403).json({ message: '权限不足' });
     }
-    
-    const notifications = await Notification.find({ userId: req.params.userId })
+
+    const notifications = await Notification.find({ user: req.params.userId })
       .sort({ createdAt: -1 });
-    
+
     res.json({ notifications });
   } catch (error) {
     console.error('获取通知错误:', error);
@@ -39,20 +39,20 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
 router.put('/:notificationId/read', authenticateToken, async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.notificationId);
-    
+
     if (!notification) {
       return res.status(404).json({ message: '通知不存在' });
     }
-    
+
     // 检查权限：只有通知的接收者可以标记为已读
-    if (notification.userId !== req.user.id) {
+    if (notification.user.toString() !== req.user.id) {
       return res.status(403).json({ message: '权限不足' });
     }
-    
+
     notification.read = true;
     notification.readAt = Date.now();
     await notification.save();
-    
+
     res.json({ message: '通知已标记为已读', notification });
   } catch (error) {
     console.error('标记通知错误:', error);
@@ -64,18 +64,18 @@ router.put('/:notificationId/read', authenticateToken, async (req, res) => {
 router.delete('/:notificationId', authenticateToken, async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.notificationId);
-    
+
     if (!notification) {
       return res.status(404).json({ message: '通知不存在' });
     }
-    
+
     // 检查权限：只有通知的接收者或管理员可以删除
-    if (req.user.role !== 'admin' && notification.userId !== req.user.id) {
+    if (req.user.role !== 'admin' && notification.user.toString() !== req.user.id) {
       return res.status(403).json({ message: '权限不足' });
     }
-    
+
     await Notification.findByIdAndDelete(req.params.notificationId);
-    
+
     res.json({ message: '通知已删除' });
   } catch (error) {
     console.error('删除通知错误:', error);
