@@ -1,6 +1,7 @@
 # 本地开发环境部署指南
 
 本文档提供了在本地环境中部署小学生学习追踪系统的详细步骤，适用于以下环境配置：
+
 - 后端服务器：Ubuntu 虚拟机
 - 前端开发客户端：MacBook Pro
 - 移动端测试设备：iPhone
@@ -24,6 +25,7 @@
 ## 环境要求
 
 ### Ubuntu 虚拟机（后端服务器）
+
 - 操作系统：Ubuntu 20.04 LTS 或更高版本
 - CPU：至少 2 核
 - 内存：至少 4GB
@@ -35,6 +37,7 @@
   - Node.js 18.x 或更高版本（可选，用于直接运行服务）
 
 ### MacBook Pro（前端开发）
+
 - 操作系统：macOS Monterey 或更高版本
 - 软件要求：
   - Node.js 18.x 或更高版本
@@ -44,6 +47,7 @@
   - Chrome 或 Safari 浏览器
 
 ### iPhone（移动端测试）
+
 - iOS 15 或更高版本
 - Safari 浏览器
 - 可选：Expo Go 应用（用于 React Native 开发）
@@ -92,6 +96,7 @@ nano .env
 ```
 
 修改以下关键配置：
+
 - `MONGODB_URI`：MongoDB 连接字符串
 - `REDIS_URI`：Redis 连接字符串
 - `JWT_SECRET`：JWT 密钥（请使用强密码）
@@ -156,7 +161,7 @@ cp .env.example .env.local
 
 编辑 `.env.local` 文件，设置 API 地址为 Ubuntu 虚拟机的 IP 地址：
 
-```
+```plaintext
 REACT_APP_API_URL=http://<虚拟机IP>:3000/api
 ```
 
@@ -170,7 +175,7 @@ npm install
 npm start
 ```
 
-前端应用将在 http://localhost:3000 启动。
+前端应用将在 `http://localhost:3000` 启动。
 
 ## 移动端配置（iPhone）
 
@@ -188,11 +193,13 @@ npm start
 ### 方法 2：使用 React Native 应用（如果项目包含）
 
 1. 在 MacBook Pro 上安装 Expo CLI：
+
    ```bash
    npm install -g expo-cli
    ```
 
 2. 在移动端目录启动 Expo 开发服务器：
+
    ```bash
    cd LMS/mobile
    npm install
@@ -221,7 +228,8 @@ npm start
    sudo nano /etc/hosts
    ```
    添加：
-   ```
+
+   ```plaintext
    <虚拟机IP> backend.local
    ```
 
@@ -305,6 +313,7 @@ npm start
 2. 考虑使用 Docker 卷挂载提高开发效率
 3. 使用本地网络而非公共网络进行开发，减少延迟
 4. 定期清理 Docker 缓存和未使用的镜像：
+
    ```bash
    docker system prune -a
    ```
@@ -318,12 +327,14 @@ npm start
 3. **[移动端开发与测试指南](./mobile-setup.md)** - iPhone 设备的配置与测试方法
 
 这种部署方式的优势在于：
+
 - 开发环境与生产环境隔离，避免相互影响
 - 虚拟机提供了与生产环境类似的 Linux 环境
 - 前端开发可以在熟悉的 macOS 环境中进行
 - 移动端测试可以直接在真实设备上进行
 
 建议按照以下工作流程进行开发：
+
 1. 在 Ubuntu 虚拟机上运行后端服务
 2. 在 MacBook Pro 上进行前端开发
 3. 使用 iPhone 测试移动端体验
