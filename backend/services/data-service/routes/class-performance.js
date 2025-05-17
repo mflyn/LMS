@@ -2,22 +2,25 @@ const express = require('express');
 const router = express.Router();
 const classPerformanceController = require('../controllers/classPerformanceController');
 const { authenticateGateway, checkRole } = require('../../../common/middleware/auth');
+const { validate } = require('../../../common/middleware/requestValidator.js');
+// 从新的本地验证器文件导入规则
 const {
-    validate,
+    mongoIdParamValidation,
+    performanceQueryValidationRules,
     recordPerformanceValidationRules,
-    updatePerformanceValidationRules,
-    studentIdParamValidationRules,
-    classIdParamValidationRules,
-    performanceIdParamValidationRules
-} = require('../middleware/validators/classPerformanceValidators');
+    updatePerformanceValidationRules
+} = require('../validators/classPerformanceValidators');
+
+const ROLES = { STUDENT: 'student', PARENT: 'parent', TEACHER: 'teacher', ADMIN: 'admin', SUPERADMIN: 'superadmin' };
 
 // 获取特定学生的班级表现记录
 // Permission: Student (own), Parent (own child - service logic), Teacher (service logic), Admin, Superadmin
 router.get('/student/:studentId',
     authenticateGateway,
-    studentIdParamValidationRules(),
+    checkRole([ROLES.STUDENT, ROLES.PARENT, ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]),
+    ...mongoIdParamValidation('studentId'),
+    performanceQueryValidationRules(), // Apply query validation
     validate,
-    checkRole(['student', 'parent', 'teacher', 'admin', 'superadmin']), // Base roles
     classPerformanceController.getStudentPerformance
 );
 
@@ -25,9 +28,10 @@ router.get('/student/:studentId',
 // Permission: Teacher, Admin, Superadmin
 router.get('/class/:classId',
     authenticateGateway,
-    classIdParamValidationRules(),
+    checkRole([ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]),
+    ...mongoIdParamValidation('classId'),
+    performanceQueryValidationRules(), // Apply query validation
     validate,
-    checkRole(['teacher', 'admin', 'superadmin']),
     classPerformanceController.getClassPerformance
 );
 
@@ -35,7 +39,7 @@ router.get('/class/:classId',
 // Permission: Teacher, Admin, Superadmin
 router.post('/', 
     authenticateGateway,
-    checkRole(['teacher', 'admin', 'superadmin']),
+    checkRole([ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]),
     recordPerformanceValidationRules(),
     validate,
     classPerformanceController.recordPerformance
@@ -45,8 +49,9 @@ router.post('/',
 // Permission: Teacher (who recorded), Admin, Superadmin (service layer handles specific teacher check)
 router.put('/:id', 
     authenticateGateway,
-    checkRole(['teacher', 'admin', 'superadmin']), // Base roles, service checks recorder ID for teachers
-    updatePerformanceValidationRules(), // This includes param('id') validation
+    checkRole([ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]),
+    ...mongoIdParamValidation('id'), // Added missing Id validation
+    updatePerformanceValidationRules(),
     validate,
     classPerformanceController.updatePerformance
 );
@@ -55,8 +60,8 @@ router.put('/:id',
 // Permission: Teacher (who recorded), Admin, Superadmin (service layer handles specific teacher check)
 router.delete('/:id', 
     authenticateGateway,
-    checkRole(['teacher', 'admin', 'superadmin']), // Base roles, service checks recorder ID for teachers
-    performanceIdParamValidationRules(),
+    checkRole([ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]),
+    ...mongoIdParamValidation('id'),
     validate,
     classPerformanceController.deletePerformance
 );

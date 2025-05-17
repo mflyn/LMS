@@ -5,47 +5,58 @@ const dotenv = require('dotenv');
 const winston = require('winston');
 const amqp = require('amqplib');
 
+// 导入共享错误处理和日志相关
+const { errorHandler, AppError, catchAsync, setupUncaughtExceptionHandler, requestTracker } = require('../../../common/middleware/errorHandler');
+const { authenticateGateway, checkRole } = require('../../../common/middleware/auth'); // 预先导入，路由会用到
+const { validate } = require('../../../common/middleware/requestValidator'); // 预先导入，路由会用到
+
 // 加载环境变量
 dotenv.config();
 
 // 创建Express应用
 const app = express();
 
-// 配置日志记录器
+// 配置日志记录器 (保留本地winston配置，因为common中未提供通用应用日志配置器)
 const logger = winston.createLogger({
-  level: 'info',
+  level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.json()
   ),
+  defaultMeta: { service: 'homework-service' }, // 添加服务标识
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
+    // 生产环境可以考虑更结构化的日志或发送到日志服务
   ],
 });
+// 如果不是生产环境，可以保留文件日志用于调试
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.File({ filename: 'logs/error.log', level: 'error' }));
+  logger.add(new winston.transports.File({ filename: 'logs/combined.log' }));
+}
+app.locals.logger = logger; // 将logger暴露给路由使用
+
+// 处理未捕获的顶层异常
+setupUncaughtExceptionHandler(logger);
 
 // 中间件
-app.use(cors());
+app.use(cors()); // cors应该更早，以便options请求能正确处理
 app.use(express.json());
 
-// 请求日志中间件
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url}`);
-  next();
-});
+// 使用共享的请求追踪中间件
+app.use(requestTracker(logger));
 
 // 连接到MongoDB
 if (process.env.NODE_ENV !== 'test') {
-  mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker';
+  mongoose.connect(mongoURI) // 移除旧的 useNewUrlPaser 和 useUnifiedTopology
   .then(() => {
     logger.info('MongoDB连接成功');
   })
   .catch((err) => {
-    logger.error('MongoDB连接失败:', err.message);
+    logger.error('MongoDB连接失败:', { message: err.message, stack: err.stack });
+    // 严重错误，可以考虑退出进程
+    // process.exit(1);
   });
 } else {
   logger.info('测试环境，跳过MongoDB连接');
@@ -55,17 +66,12 @@ if (process.env.NODE_ENV !== 'test') {
 const homeworkRoutes = require('./routes/homework');
 
 // 使用路由
+// 注意：认证中间件 authenticateGateway 应该在这里全局应用，或者在 homeworkRoutes 内部的每个路由上应用
+// 为简化，暂时先不在 server.js 全局应用，而是期望在 routes/homework.js 中按需应用
 app.use('/api/homework', homeworkRoutes);
 
-// 错误处理中间件
-app.use((err, req, res, next) => {
-  logger.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: '服务器内部错误',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
+// 使用共享的错误处理中间件
+app.use(errorHandler(logger));
 
 // 连接到RabbitMQ
 async function connectRabbitMQ() {
@@ -82,8 +88,10 @@ async function connectRabbitMQ() {
     // 返回通道以便发布消息
     return { channel, exchange };
   } catch (error) {
-    logger.error('RabbitMQ连接失败:', error.message);
-    setTimeout(connectRabbitMQ, 5000);
+    logger.error('RabbitMQ连接失败:', { message: error.message });
+    // 考虑更健壮的重试或通知机制
+    setTimeout(connectRabbitMQ, 5000); // 简单的重试
+    // throw new AppError('Failed to connect to RabbitMQ', 500); // 或者抛出错误让服务启动失败
   }
 }
 
@@ -94,11 +102,19 @@ const server = app.listen(PORT, async () => {
 
   // 在非测试环境下连接到RabbitMQ
   if (process.env.NODE_ENV !== 'test') {
-    const mq = await connectRabbitMQ();
-
-    // 将MQ通道添加到app对象，以便在路由中使用
-    if (mq) {
-      app.locals.mq = mq;
+    try {
+      const mq = await connectRabbitMQ();
+      if (mq) {
+        app.locals.mq = mq;
+      } else {
+        // 如果RabbitMQ连接是关键的，服务启动时连接失败应该导致服务启动失败
+        logger.error('RabbitMQ未能成功初始化，服务可能功能不完整');
+        // throw new Error('Failed to initialize RabbitMQ connection during startup');
+      }
+    } catch (err) {
+        logger.error('启动时连接RabbitMQ失败', { message: err.message, stack: err.stack });
+        // 根据策略决定是否退出
+        // process.exit(1);
     }
   } else {
     // 在测试环境中使用模拟的MQ
@@ -113,6 +129,20 @@ const server = app.listen(PORT, async () => {
     };
     logger.info('测试环境，使用模拟的RabbitMQ');
   }
+});
+
+process.on('SIGTERM', () => {
+  logger.info('收到 SIGTERM 信号，开始优雅关闭...');
+  server.close(() => {
+    logger.info('HTTP服务器已关闭');
+    mongoose.connection.close(false).then(() => {
+      logger.info('MongoDB连接已关闭');
+      process.exit(0);
+    }).catch(err => {
+      logger.error('关闭MongoDB连接时出错', { message: err.message });
+      process.exit(1);
+    });
+  });
 });
 
 module.exports = app;

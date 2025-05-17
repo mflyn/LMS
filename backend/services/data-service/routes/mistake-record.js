@@ -4,22 +4,25 @@ const mistakeController = require('../controllers/mistakeRecordController');
 const { authenticateGateway, checkRole } = require('../../../common/middleware/auth');
 // requestTracker is applied globally by createBaseApp, no need here if routes are part of base app
 // const { requestTracker } = require('../../../common/middleware/errorHandler'); 
+const { validate } = require('../../../common/middleware/requestValidator.js'); // Common validate function
+// 从新的本地验证器文件导入规则
 const {
-    validate,
-    recordMistakeValidationRules,
-    updateMistakeValidationRules,
-    studentIdParamValidationRules,
-    subjectIdParamValidationRules,
-    mistakeIdParamValidationRules
-} = require('../middleware/validators/mistakeRecordValidators');
+    mongoIdParamValidation, // Using the one from local validator
+    mistakeRecordQueryValidationRules,
+    createMistakeRecordValidationRules,
+    updateMistakeRecordValidationRules
+} = require('../validators/mistakeRecordValidators');
+
+const ROLES = { STUDENT: 'student', PARENT: 'parent', TEACHER: 'teacher', ADMIN: 'admin', SUPERADMIN: 'superadmin' };
 
 // GET student's mistake records
 // Roles: student (own), parent (child), teacher (class student), admin, superadmin
 router.get('/student/:studentId',
     authenticateGateway,
-    studentIdParamValidationRules(),
+    checkRole([ROLES.STUDENT, ROLES.PARENT, ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]),
+    ...mongoIdParamValidation('studentId'),
+    mistakeRecordQueryValidationRules(), // Apply query validation
     validate,
-    checkRole(['student', 'parent', 'teacher', 'admin', 'superadmin']), // Service layer handles specific student/child/class access
     mistakeController.getStudentMistakes
 );
 
@@ -27,10 +30,11 @@ router.get('/student/:studentId',
 // Roles: student (own), parent (child), teacher (class student), admin, superadmin
 router.get('/student/:studentId/subject/:subjectId',
     authenticateGateway,
-    studentIdParamValidationRules(),
-    subjectIdParamValidationRules(),
+    checkRole([ROLES.STUDENT, ROLES.PARENT, ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]),
+    ...mongoIdParamValidation('studentId'),
+    ...mongoIdParamValidation('subjectId'),
+    mistakeRecordQueryValidationRules(), // Apply query validation (will ignore non-relevant fields)
     validate,
-    checkRole(['student', 'parent', 'teacher', 'admin', 'superadmin']), // Service layer handles specifics
     mistakeController.getStudentMistakesBySubject
 );
 
@@ -38,8 +42,8 @@ router.get('/student/:studentId/subject/:subjectId',
 // Roles: student (own), teacher, admin, superadmin (service layer checks if student is creating for self)
 router.post('/',
     authenticateGateway,
-    checkRole(['student', 'teacher', 'admin', 'superadmin']), // Allows these roles to attempt creation
-    recordMistakeValidationRules(),
+    checkRole([ROLES.STUDENT, ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]),
+    createMistakeRecordValidationRules(), // Apply create rules
     validate,
     mistakeController.recordMistake
 );
@@ -48,8 +52,11 @@ router.post('/',
 // Roles: creator, teacher (class student), admin, superadmin (service layer handles specifics)
 router.put('/:id',
     authenticateGateway,
-    // No generic checkRole here, service layer handles detailed permission (creator, or teacher/admin with scope)
-    updateMistakeValidationRules(), // includes ID param validation
+    // checkRole can be more granular here or handled entirely by service based on ownership/role scope
+    // For example, a student can only update their own, teacher their student's, admin wider scope.
+    // checkRole([ROLES.STUDENT, ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]), // Example base roles
+    ...mongoIdParamValidation('id'), // Validate ID param
+    updateMistakeRecordValidationRules(), // Apply update rules
     validate,
     mistakeController.updateMistake
 );
@@ -58,10 +65,10 @@ router.put('/:id',
 // Roles: creator, admin, superadmin (service layer handles specifics, teachers might be restricted)
 router.delete('/:id',
     authenticateGateway,
-    // No generic checkRole here for teacher, service layer is stricter (creator or admin/superadmin)
-    mistakeIdParamValidationRules(), // separate validation for ID in param
-    validate,
-    checkRole(['student', 'teacher', 'admin', 'superadmin']), // Base check, service layer will enforce creator or admin/superadmin for actual deletion
+    // Similar to PUT, service layer should primarily enforce who can delete (creator, admin, etc.)
+    checkRole([ROLES.STUDENT, ROLES.TEACHER, ROLES.ADMIN, ROLES.SUPERADMIN]), // Example base roles
+    ...mongoIdParamValidation('id'),
+    validate, // No specific body validation needed for delete
     mistakeController.deleteMistake
 );
 

@@ -30,6 +30,7 @@ const MistakeRecordSchema = new Schema({
   },
   tags: [{
     type: String,
+    index: true
   }],
   source: {
     type: String
@@ -37,17 +38,13 @@ const MistakeRecordSchema = new Schema({
   status: {
     type: String,
     enum: ['unresolved', 'reviewing', 'resolved', 'archived'],
-    default: 'unresolved'
-  },
-  date: {
-    type: Date,
-    required: true,
-    default: Date.now
+    default: 'unresolved',
+    index: true
   },
   resolvedDate: {
     type: Date
   },
-  createdBy: {
+  recordedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -60,8 +57,7 @@ const MistakeRecordSchema = new Schema({
   timestamps: true
 });
 
-MistakeRecordSchema.index({ student: 1, status: 1, date: -1 });
+MistakeRecordSchema.index({ student: 1, status: 1, createdAt: -1 });
 MistakeRecordSchema.index({ subject: 1, status: 1 });
-MistakeRecordSchema.index({ tags: 1 });
 
 module.exports = mongoose.model('MistakeRecord', MistakeRecordSchema);

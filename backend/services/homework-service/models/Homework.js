@@ -42,15 +42,7 @@ const HomeworkSchema = new Schema({
     name: String,
     path: String,
     type: String
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  }]
+}, { timestamps: true });
 
 module.exports = mongoose.model('Homework', HomeworkSchema);

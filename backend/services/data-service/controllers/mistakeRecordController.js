@@ -1,23 +1,46 @@
-const mistakeRecordServiceInstance = require('../services/mistakeRecordService');
+const MistakeRecordService = require('../services/mistakeRecordService'); // Import the class
 const { catchAsync } = require('../../../common/middleware/errorHandler');
 const { AppResponse } = require('../../../common/utils/appResponse');
-const logger = require('../../../common/utils/logger').logger; // Import the actual logger
 
-const mistakeRecordService = new mistakeRecordServiceInstance(logger); // Instantiate with logger
+class MistakeRecordController {
+  constructor() {
+    // Service instance will be created per request via _getServiceInstance
+  }
 
-const getStudentMistakes = catchAsync(async (req, res, next) => {
-    const mistakes = await mistakeRecordService.getMistakesByStudent(req.params.studentId, req.user);
-    res.status(200).json(new AppResponse(200, 'Student mistake records retrieved successfully.', mistakes));
-});
+  _getServiceInstance(req) {
+    if (!this.mistakeRecordService || this.mistakeRecordService.logger !== req.app.locals.logger) {
+        this.mistakeRecordService = new MistakeRecordService(req.app.locals.logger);
+    }
+    return this.mistakeRecordService;
+  }
 
-const getStudentMistakesBySubject = catchAsync(async (req, res, next) => {
-    const mistakes = await mistakeRecordService.getMistakesByStudentAndSubject(req.params.studentId, req.params.subjectId, req.user);
-    res.status(200).json(new AppResponse(200, 'Student mistake records for subject retrieved successfully.', mistakes));
-});
+  getStudentMistakes = catchAsync(async (req, res, next) => {
+    const service = this._getServiceInstance(req);
+    const { studentId } = req.params;
+    const requestingUser = req.user;
+    const queryParams = req.query;
 
-const recordMistake = catchAsync(async (req, res, next) => {
-    const newMistake = await mistakeRecordService.createMistakeRecord(req.body, req.user);
-    // Audit log can be triggered from service or by subscribing to an event
+    const result = await service.getMistakesByStudent(studentId, requestingUser, queryParams);
+    res.status(200).json(new AppResponse(200, 'Student mistake records retrieved successfully.', result.data, null, result.pagination));
+  });
+
+  getStudentMistakesBySubject = catchAsync(async (req, res, next) => {
+    const service = this._getServiceInstance(req);
+    const { studentId, subjectId } = req.params;
+    const requestingUser = req.user;
+    const queryParams = req.query;
+
+    const result = await service.getMistakesByStudentAndSubject(studentId, subjectId, requestingUser, queryParams);
+    res.status(200).json(new AppResponse(200, 'Student mistake records for subject retrieved successfully.', result.data, null, result.pagination));
+  });
+
+  recordMistake = catchAsync(async (req, res, next) => {
+    const service = this._getServiceInstance(req);
+    const mistakeData = req.body;
+    const requestingUser = req.user;
+
+    const newMistake = await service.createMistakeRecord(mistakeData, requestingUser);
+    
     if (req.app.locals.auditLog) {
         req.app.locals.auditLog('创建错题记录', req.user.id, {
             mistakeId: newMistake._id,
@@ -26,32 +49,49 @@ const recordMistake = catchAsync(async (req, res, next) => {
         });
     }
     res.status(201).json(new AppResponse(201, 'Mistake record created successfully.', newMistake));
-});
+  });
 
-const updateMistake = catchAsync(async (req, res, next) => {
-    const updatedMistake = await mistakeRecordService.updateMistakeRecord(req.params.id, req.body, req.user);
+  updateMistake = catchAsync(async (req, res, next) => {
+    const service = this._getServiceInstance(req);
+    const { id: mistakeId } = req.params;
+    const updateData = req.body;
+    const requestingUser = req.user;
+
+    const updatedMistake = await service.updateMistakeRecord(mistakeId, updateData, requestingUser);
+    
     if (req.app.locals.auditLog) {
+        // Log only specific, non-sensitive identifiers or a summary of changes from service layer if available
+        const auditChanges = {};
+        if(updateData.status) auditChanges.status = updateData.status;
+        if(updateData.resolvedDate) auditChanges.resolvedDate = updateData.resolvedDate;
+        // Avoid logging full req.body like 'question', 'answer' etc. unless explicitly sanitized
+
         req.app.locals.auditLog('更新错题记录', req.user.id, {
             mistakeId: updatedMistake._id,
             studentId: updatedMistake.student,
-            changes: req.body // Be cautious logging full req.body if it contains sensitive data not part of the update
+            changes: auditChanges // Log a curated list of changes
         });
     }
     res.status(200).json(new AppResponse(200, 'Mistake record updated successfully.', updatedMistake));
-});
+  });
 
-const deleteMistake = catchAsync(async (req, res, next) => {
-    const mistakeId = req.params.id; // Capture before deletion for audit log
-    // Try to get studentId before deleting. This might fail if record is already gone or for other reasons.
+  deleteMistake = catchAsync(async (req, res, next) => {
+    const service = this._getServiceInstance(req);
+    const { id: mistakeId } = req.params;
+    const requestingUser = req.user;
+    const logger = req.app.locals.logger; // For direct use if needed before service instantiation for audit
+
     let studentIdForAudit = null;
     try {
-      const record = await mistakeRecordService.getMistakeById(mistakeId); // Use service method to get record
+      // Assuming service.getMistakeById might not be the primary way if service itself logs details or is complex
+      // Or, ensure service.getMistakeById exists and is efficient
+      const record = await service.getMistakeById(mistakeId, requestingUser); // Pass user for permission check if service needs it
       studentIdForAudit = record ? record.student : null;
     } catch (e) {
       logger.warn(`Could not retrieve mistake record ${mistakeId} for audit logging before deletion.`, { error: e.message });
     }
 
-    await mistakeRecordService.deleteMistakeRecord(mistakeId, req.user);
+    await service.deleteMistakeRecord(mistakeId, requestingUser);
     
     if (req.app.locals.auditLog && studentIdForAudit) { 
         req.app.locals.auditLog('删除错题记录', req.user.id, {
@@ -61,16 +101,11 @@ const deleteMistake = catchAsync(async (req, res, next) => {
     } else if (req.app.locals.auditLog) {
         req.app.locals.auditLog('删除错题记录尝试', req.user.id, {
             mistakeId: mistakeId,
-            details: 'Student ID could not be determined for audit log.'
+            details: 'Student ID for audit log could not be determined or record did not exist prior to delete call.'
         });
     }
     res.status(200).json(new AppResponse(200, 'Mistake record deleted successfully.'));
-});
+  });
+}
 
-module.exports = {
-    getStudentMistakes,
-    getStudentMistakesBySubject,
-    recordMistake,
-    updateMistake,
-    deleteMistake,
-}; 
+module.exports = new MistakeRecordController(); 

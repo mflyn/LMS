@@ -8,15 +8,14 @@ const homeworkService = new homeworkServiceInstance(logger);
 
 
 const getStudentHomework = catchAsync(async (req, res, next) => {
-    const homework = await homeworkService.getHomeworkForStudent(req.params.studentId, req.user);
-    res.status(200).json(new AppResponse(200, 'Homework retrieved successfully', homework));
+    // Pass query parameters from req.query to the service method
+    const result = await homeworkService.getHomeworkForStudent(req.params.studentId, req.user, req.query);
+    // The service now returns an object with { data, pagination }
+    res.status(200).json(new AppResponse(200, 'Homework retrieved successfully', result.data, null, result.pagination));
 });
 
-const assignHomework = catchAsync(async (req, res, next) => {
-    // req.body should contain studentIds directly now, not classId
-    const result = await homeworkService.assignHomeworkToStudents(req.body, req.user);
-    res.status(201).json(new AppResponse(201, `Successfully assigned homework to ${result.length} student(s)`, result));
-});
+// assignHomework controller method is now removed as the corresponding service method was removed.
+// The POST /api/homework route in routes/homework.js should also be removed.
 
 const submitHomework = catchAsync(async (req, res, next) => {
     const homework = await homeworkService.submitStudentHomework(req.params.id, req.body, req.user);
@@ -30,7 +29,7 @@ const gradeHomework = catchAsync(async (req, res, next) => {
 
 module.exports = {
     getStudentHomework,
-    assignHomework,
+    // assignHomework, // Removed
     submitHomework,
     gradeHomework,
 }; 

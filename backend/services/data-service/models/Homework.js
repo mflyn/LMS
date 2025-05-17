@@ -8,21 +8,26 @@ const attachmentSchema = new Schema({
 }, { _id: false });
 
 const HomeworkSchema = new Schema({
-  title: {
-    type: String,
-    required: true
-  },
-  description: {
-    type: String,
-    // required: true, // Description can be optional
-  },
-  subject: {
+  // Link to the original assignment in homework-service
+  assignmentId: {
     type: Schema.Types.ObjectId,
-    ref: 'Subject',
+    // ref: 'HomeworkAssignment', // Logical ref, not a direct Mongoose populate ref across services usually
     required: true,
     index: true
   },
-  // class field removed as homework is assigned to individual students directly
+  title: {
+    type: String,
+    required: true // Redundant, synced from homework-service via event
+  },
+  description: {
+    type: String, // Redundant, synced from homework-service via event
+  },
+  subject: {
+    type: Schema.Types.ObjectId,
+    ref: 'Subject', // Ref to Subject model within data-service
+    required: true,
+    index: true
+  },
   student: {
     type: Schema.Types.ObjectId,
     ref: 'User', // Should point to User model in user-service context
@@ -32,28 +37,33 @@ const HomeworkSchema = new Schema({
   assignedDate: {
     type: Date,
     required: true,
-    default: Date.now
+    default: Date.now // Or set by the event from homework-service
   },
   dueDate: {
     type: Date,
-    required: true
+    required: true // Redundant, synced from homework-service via event
   },
   status: {
     type: String,
-    enum: ['assigned', 'submitted', 'graded', 'resubmitted'], // Added resubmitted, removed in_progress
+    enum: ['assigned', 'submitted', 'graded', 'resubmitted'],
     default: 'assigned'
   },
   content: {
     type: String // Student's submitted text content
   },
-  originalAttachments: [attachmentSchema], // Attachments provided by teacher when assigning
+  // originalAttachments are part of the assignment definition in homework-service.
+  // If needed for display, they can be fetched via assignmentId or redundantly stored (synced via event).
+  // For simplicity, let's assume they are not stored directly here to reduce redundancy, 
+  // or if stored, they are explicitly marked as synced.
+  // originalAttachments: [attachmentSchema], 
   submissionAttachments: [attachmentSchema], // Attachments submitted by student
   score: {
     type: Number
   },
-  totalScore: { // Max possible score for this homework, set by teacher
-    type: Number,
-    // required: true // Could be made required if always known at assignment
+  // totalScore is part of the assignment definition in homework-service.
+  // It can be stored redundantly (synced) or fetched when needed.
+  totalScore: {
+    type: Number, 
   },
   feedback: {
     type: String
@@ -64,11 +74,13 @@ const HomeworkSchema = new Schema({
   gradedDate: {
     type: Date
   },
-  assignedBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User', // Teacher/Admin who assigned
-    required: true
-  },
+  // assignedBy is part of the assignment definition in homework-service.
+  // Can be stored redundantly (synced) or fetched when needed.
+  // assignedBy: {
+  //   type: Schema.Types.ObjectId,
+  //   ref: 'User',
+  //   required: true
+  // },
   gradedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User' // Teacher/Admin who graded
@@ -79,5 +91,6 @@ const HomeworkSchema = new Schema({
 
 HomeworkSchema.index({ student: 1, dueDate: -1 });
 HomeworkSchema.index({ subject: 1, status: 1 });
+HomeworkSchema.index({ assignmentId: 1, student: 1 }, { unique: true }); // Ensures one submission record per student per assignment
 
 module.exports = mongoose.model('Homework', HomeworkSchema);

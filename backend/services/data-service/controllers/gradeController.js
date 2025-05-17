@@ -1,94 +1,85 @@
 const GradeService = require('../services/gradeService');
 const { catchAsync } = require('../../../common/middleware/errorHandler');
-// Import specific error types if controller needs to throw them directly for pre-service checks
-const { BadRequestError } = require('../../../common/middleware/errorTypes'); 
-const mongoose = require('mongoose'); // For ObjectId validation if needed directly in controller
+const { AppResponse } = require('../../../common/utils/appResponse'); // For consistent responses
 
 class GradeController {
+  constructor() {
+    // Service instances can be created per request or be singletons managed elsewhere
+    // For simplicity here, creating per request or assuming middleware might attach it.
+    // If service needs logger from app.locals, it must be instantiated where req is available.
+  }
+
+  // Helper to get service instance with logger, assuming this controller is instantiated per request or has access to req
+  _getServiceInstance(req) {
+    if (!this.gradeService || this.gradeService.logger !== req.app.locals.logger) {
+        // Pass logger from app.locals to the service constructor
+        this.gradeService = new GradeService(req.app.locals.logger);
+    }
+    return this.gradeService;
+  }
 
   getStudentGrades = catchAsync(async (req, res, next) => {
-    const logger = req.app.locals.logger;
+    const gradeService = this._getServiceInstance(req);
     const { studentId } = req.params;
-    const requestingUser = req.user; // Assumes authenticateJWT middleware populates req.user
+    const requestingUser = req.user;
+    const queryParams = req.query; // Pass query params for filtering/pagination
 
-    logger.info(`[GradeController] Request to fetch grades for student ID: ${studentId}`);
+    // Controller no longer logs directly, service does.
+    // Controller no longer does studentId format check, middleware does.
 
-    // Basic validation in controller, more complex in service or via middleware
-    if (!mongoose.Types.ObjectId.isValid(studentId)) {
-        return next(new BadRequestError('Invalid student ID format provided.'));
-    }
-
-    const grades = await GradeService.getGradesForStudent(studentId, requestingUser, logger);
+    const result = await gradeService.getGradesForStudent(studentId, requestingUser, queryParams);
     
-    // GradeService might return empty array if no grades found, not necessarily an error.
-    // If an error (like NotFoundError for student not existing at all) is desired for no grades,
-    // GradeService should throw that error.
-    res.status(200).json({
-      status: 'success',
-      results: grades.length,
-      data: { grades },
-    });
+    // Assuming GradeService returns an object like { data: grades, pagination: {...} }
+    res.status(200).json(new AppResponse(200, 'Student grades retrieved successfully', result.data, null, result.pagination));
   });
 
   getClassGrades = catchAsync(async (req, res, next) => {
-    const logger = req.app.locals.logger;
+    const gradeService = this._getServiceInstance(req);
     const { classId } = req.params;
     const requestingUser = req.user;
+    const queryParams = req.query; // Pass query params for filtering/pagination
 
-    logger.info(`[GradeController] Request to fetch grades for class ID: ${classId}`);
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
-        return next(new BadRequestError('Invalid class ID format provided.'));
-    }
+    const result = await gradeService.getGradesForClass(classId, requestingUser, queryParams);
 
-    const grades = await GradeService.getGradesForClass(classId, requestingUser, logger);
-    res.status(200).json({
-      status: 'success',
-      results: grades.length,
-      data: { grades },
-    });
+    // Assuming GradeService returns an object like { data: grades, pagination: {...} }
+    res.status(200).json(new AppResponse(200, 'Class grades retrieved successfully', result.data, null, result.pagination));
   });
 
   createGrade = catchAsync(async (req, res, next) => {
-    const logger = req.app.locals.logger;
+    const gradeService = this._getServiceInstance(req);
     const gradeData = req.body;
     const requestingUser = req.user;
-
-    logger.info('[GradeController] Request to create new grade', { gradeData });
     
-    // Input validation for gradeData should be primarily handled by validation middleware.
-    // Minimal checks can be here if necessary, but service layer will also validate.
-
-    const newGrade = await GradeService.createGrade(gradeData, requestingUser, logger);
+    const newGrade = await gradeService.createGrade(gradeData, requestingUser);
     
-    logger.info('[GradeController] Grade created successfully', { gradeId: newGrade._id });
-    res.status(201).json({
-      status: 'success',
-      message: 'Grade created successfully',
-      data: { grade: newGrade },
-    });
+    res.status(201).json(new AppResponse(201, 'Grade created successfully', newGrade));
   });
 
   batchCreateGrades = catchAsync(async (req, res, next) => {
-    const logger = req.app.locals.logger;
-    const { grades: gradesData } = req.body; // Assuming body is { grades: [...] }
+    const gradeService = this._getServiceInstance(req);
+    const gradesData = req.body; // Expect req.body to be the array of grades directly
     const requestingUser = req.user;
 
-    logger.info(`[GradeController] Request to batch create grades. Count: ${gradesData ? gradesData.length : 0}`);
+    const result = await gradeService.batchCreateGrades(gradesData, requestingUser);
 
-    if (!gradesData || !Array.isArray(gradesData) || gradesData.length === 0) {
-      return next(new BadRequestError('Request body must contain a non-empty array of grades.'));
-    }
+    res.status(201).json(new AppResponse(201, `Successfully processed batch grade creation. ${result.insertedCount} grades were inserted.`, { insertedCount: result.insertedCount, insertedIds: result.insertedIds } ));
+  });
 
-    const result = await GradeService.batchCreateGrades(gradesData, requestingUser, logger);
+  updateGrade = catchAsync(async (req, res, next) => {
+    const gradeService = this._getServiceInstance(req);
+    const { id: gradeId } = req.params;
+    const updateData = req.body;
+    const requestingUser = req.user;
+    const updatedGrade = await gradeService.updateGrade(gradeId, updateData, requestingUser);
+    res.status(200).json(new AppResponse(200, 'Grade updated successfully', updatedGrade));
+  });
 
-    logger.info(`[GradeController] Batch grade creation processed. ${result.length} grades potentially inserted.`);
-    res.status(201).json({
-      status: 'success',
-      message: `Successfully processed batch grade creation. ${result.length} grades were inserted.`,
-      // data: { result } // The result from insertMany can be large, decide if it needs to be returned
-      // Or more specific: data: { insertedCount: result.length, insertedIds: result.map(g => g._id) } 
-      data: { insertedCount: result.length }
-    });
+  deleteGrade = catchAsync(async (req, res, next) => {
+    const gradeService = this._getServiceInstance(req);
+    const { id: gradeId } = req.params;
+    const requestingUser = req.user;
+    const result = await gradeService.deleteGrade(gradeId, requestingUser);
+    res.status(200).json(new AppResponse(200, result.message || 'Grade deleted successfully')); // Or use 204 No Content
   });
 }
 

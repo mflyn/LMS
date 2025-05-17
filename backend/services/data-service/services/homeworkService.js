@@ -6,71 +6,67 @@ class HomeworkService {
         this.logger = logger;
     }
 
-    async getHomeworkForStudent(studentId, requestingUser) {
+    async getHomeworkForStudent(studentId, requestingUser, queryParams = {}) {
         if (!studentId) {
             throw new BadRequestError('Student ID is required.');
         }
+
+        const query = { student: studentId };
+        if (queryParams.status) query.status = queryParams.status;
+        if (queryParams.subject) query.subject = queryParams.subject;
+
         // Permission check:
+        // Student can only view their own homework
         if (requestingUser.role === 'student' && requestingUser.id !== studentId) {
             throw new ForbiddenError('You are not authorized to view this student\'s homework.');
         }
-        // TODO: Add logic for parents to view their children's homework.
-        // TODO: Add logic for teachers to view homework of students in their classes.
-        // For now, admins/superadmins bypass these specific checks if not student themselves.
-        if (requestingUser.role === 'teacher' || requestingUser.role === 'parent'){
-            // Placeholder for more complex logic. For now, let's assume they need specific linkage not yet implemented.
-            this.logger.info(`Teacher/Parent ${requestingUser.id} attempting to access homework for student ${studentId}. Further checks needed.`);
-            // For now, we prevent access if not admin/superadmin or student themselves, to be safe until logic is built.
-            if(requestingUser.role !== 'admin' && requestingUser.role !== 'superadmin') {
-                // This part might be too restrictive for teachers if they should see all students for now
-                // For simplicity in this step, let's assume teachers and parents also need specific permissions not yet built
-                // throw new ForbiddenError('Access for teachers/parents requires specific student linkage.');
+        // Parent can view their children's homework - (requires children linkage in User model)
+        if (requestingUser.role === 'parent') {
+            // Assuming requestingUser.children is an array of student IDs
+            if (!requestingUser.children || !requestingUser.children.includes(studentId)) {
+                throw new ForbiddenError('You are not authorized to view this student\'s homework.');
             }
+            this.logger.info(`Parent ${requestingUser.id} accessing homework for child ${studentId}`);
         }
-
-
-        const homework = await Homework.find({ student: studentId })
-            .sort({ dueDate: -1 })
-            .populate('subject', 'name description'); // Populate subject details
-
-        if (!homework || homework.length === 0) {
-            this.logger.info(`No homework found for student: ${studentId}`);
+        // Teacher can view homework of students (e.g., in their classes) - (requires class/student linkage)
+        if (requestingUser.role === 'teacher') {
+            // This logic needs to be more specific, e.g., checking if studentId is in one of the teacher's classes.
+            // For now, let's assume a teacher can see any student homework if explicitly requested (controller should limit studentId if needed)
+            // Or, if a specific classId is part of the query, filter by that.
+            this.logger.info(`Teacher ${requestingUser.id} accessing homework for student ${studentId}. Ensure proper class/student linkage for authorization.`);
+            // Add class-based filtering here if applicable and classId is available from queryParams or teacher's profile
         }
-        return homework;
+        // Admins/Superadmins have broader access, usually no specific student-linkage check here unless for auditing.
+
+        const limit = parseInt(queryParams.limit, 10) || 10;
+        const page = parseInt(queryParams.page, 10) || 1;
+        const sortBy = queryParams.sortBy || 'dueDate';
+        const sortOrder = queryParams.sortOrder === 'asc' ? 1 : -1;
+
+        const homeworkRecords = await Homework.find(query)
+            .sort({ [sortBy]: sortOrder })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate('subject', 'name description'); 
+            // Consider populating assignmentId details from homework-service if an internal call/cache is available in future.
+
+        const totalRecords = await Homework.countDocuments(query);
+        
+        this.logger.info(`Retrieved ${homeworkRecords.length} homework records for student: ${studentId}`);
+        return {
+            data: homeworkRecords,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalRecords / limit),
+                totalItems: totalRecords,
+                itemsPerPage: limit
+            }
+        };
     }
 
-    async assignHomeworkToStudents(homeworkData, assigningUser) {
-        const { title, description, subject, studentIds, dueDate, attachments } = homeworkData;
-        this.logger.info(`Attempting to assign homework by ${assigningUser.id}`, { title, studentCount: studentIds ? studentIds.length : 0 });
-
-        if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
-            throw new BadRequestError('Student IDs must be provided as a non-empty array.');
-        }
-
-        const homeworkRecords = studentIds.map(studentId => ({
-            title,
-            description,
-            subject, 
-            student: studentId,
-            dueDate,
-            originalAttachments: attachments || [], // Renamed from 'attachments' to avoid conflict with submission attachments
-            status: 'assigned',
-            assignedBy: assigningUser.id,
-            assignedDate: new Date(),
-        }));
-
-        try {
-            const result = await Homework.insertMany(homeworkRecords, { ordered: false });
-            this.logger.info(`Successfully assigned homework "${title}" to ${result.length} students by user ${assigningUser.id}.`);
-            return result;
-        } catch (error) {
-            this.logger.error(`Error assigning homework: ${error.message}`, { 
-                error: { message: error.message, stack: error.stack, name: error.name }, 
-                homeworkData 
-            });
-            throw new AppError(`Failed to assign homework. Please check student IDs and other data. Original error: ${error.message}`, 500); // Informative but not too detailed
-        }
-    }
+    // assignHomeworkToStudents method is now removed.
+    // The creation of student-specific homework records will be handled by an event consumer
+    // listening to events from homework-service (e.g., 'homework.assigned').
 
     async submitStudentHomework(homeworkId, submissionData, requestingUser) {
         const { content, submissionAttachments } = submissionData;
@@ -93,39 +89,46 @@ class HomeworkService {
 
         const savedHomework = await homework.save();
         this.logger.info(`Homework ${homeworkId} submitted by student ${requestingUser.id}.`);
+        // TODO: Potentially emit an event 'homework.submitted' if other services need to react.
         return savedHomework;
     }
 
     async gradeStudentHomework(homeworkId, gradingData, requestingUser) {
-        const { score, feedback } = gradingData;
+        const { score, feedback, status, totalScore } = gradingData; // Allow updating totalScore if applicable
         const homework = await Homework.findById(homeworkId);
 
         if (!homework) {
             throw new NotFoundError('Homework not found.');
         }
         
-        // Basic check: only teachers, admins, superadmins can grade
         if (!['teacher', 'admin', 'superadmin'].includes(requestingUser.role)){
             throw new ForbiddenError('You are not authorized to grade homework.');
         }
-        // TODO: Add more specific check: e.g., only the teacher who assigned or teacher of the student's class.
+        // TODO: Add more specific check: e.g., only teacher of the student's class, or teacher who is linked to the original assignment.
+        // This might involve checking homework.assignmentId and cross-referencing with teacher's assignments in homework-service (potentially via API call or replicated data).
 
-        if (homework.status !== 'submitted') {
-            this.logger.warn(`Grading homework ${homeworkId} that is not in 'submitted' status (current: ${homework.status}) by user ${requestingUser.id}`);
-            // Optionally, allow grading/re-grading of already graded homework
-            if (homework.status !== 'graded') { // If not 'submitted' and also not already 'graded' then it is an issue.
-                 throw new BadRequestError(`Homework must be in "submitted" status to be graded. Current status: "${homework.status}".`);
-            }
+        // Allow grading if status is 'submitted' or if it's already 'graded' (re-grading)
+        if (homework.status !== 'submitted' && homework.status !== 'graded') {
+            this.logger.warn(`Grading homework ${homeworkId} that is not in 'submitted' or 'graded' status (current: ${homework.status}) by user ${requestingUser.id}`);
+            throw new BadRequestError(`Homework must be in "submitted" or "graded" status to be graded. Current status: "${homework.status}".`);
         }
 
-        homework.score = score;
-        homework.feedback = feedback;
-        homework.status = 'graded';
+        if (score !== undefined) homework.score = score;
+        if (feedback !== undefined) homework.feedback = feedback;
+        if (status && ['graded', 'resubmitted'].includes(status)) {
+            homework.status = status; // Teacher can set to graded or request resubmission
+        } else if (score !== undefined) { // If score is provided, but no valid status, default to graded
+            homework.status = 'graded';
+        }
+        // Update totalScore if provided in gradingData, this allows flexibility if not set initially
+        if (totalScore !== undefined) homework.totalScore = totalScore; 
+
         homework.gradedDate = new Date();
         homework.gradedBy = requestingUser.id;
 
         const savedHomework = await homework.save();
-        this.logger.info(`Homework ${homeworkId} graded by user ${requestingUser.id}. Score: ${score}`);
+        this.logger.info(`Homework ${homeworkId} graded by user ${requestingUser.id}. Score: ${score}, Status: ${homework.status}`);
+        // TODO: Potentially emit an event 'homework.graded' if other services need to react (e.g., notification-service, progress-service).
         return savedHomework;
     }
 }

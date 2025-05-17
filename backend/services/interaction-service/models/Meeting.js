@@ -4,30 +4,36 @@ const Schema = mongoose.Schema;
 const MeetingSchema = new Schema({
   title: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   description: {
     type: String,
-    default: ''
+    default: '',
+    trim: true
   },
   teacher: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   parent: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   student: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   startTime: {
     type: Date,
-    required: true
+    required: true,
+    index: true
   },
   endTime: {
     type: Date,
@@ -35,12 +41,14 @@ const MeetingSchema = new Schema({
   },
   location: {
     type: String,
-    default: '线上会议'
+    default: '线上会议',
+    trim: true
   },
   status: {
     type: String,
     enum: ['待确认', '已确认', '已取消', '已完成'],
-    default: '待确认'
+    default: '待确认',
+    index: true
   },
   meetingType: {
     type: String,
@@ -48,25 +56,20 @@ const MeetingSchema = new Schema({
     default: '线上'
   },
   meetingLink: {
-    type: String
+    type: String,
+    trim: true
   },
   notes: {
-    type: String
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+    type: String,
+    trim: true
   }
+}, {
+  timestamps: true
 });
 
-// 更新时间中间件
-MeetingSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
+// Indexes
+MeetingSchema.index({ teacher: 1, startTime: 1, status: 1 });
+MeetingSchema.index({ parent: 1, startTime: 1, status: 1 });
+MeetingSchema.index({ student: 1, startTime: 1, status: 1 });
 
 module.exports = mongoose.model('Meeting', MeetingSchema);

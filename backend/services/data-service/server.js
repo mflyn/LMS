@@ -3,6 +3,7 @@ const createBaseApp = require('../../common/createBaseApp'); // 调整路径
 const config = require('./config');
 const mainRoutes = require('./routes'); // data-service 的主路由
 const logger = require('../../common/utils/logger');
+const { setupUncaughtExceptionHandler } = require('../../common/middleware/errorHandler');
 
 // 1. 创建基础应用实例
 const app = createBaseApp({
@@ -22,12 +23,14 @@ if (!mongoURI) {
   process.exit(1);
 }
 
+setupUncaughtExceptionHandler(logger);
+
 mongoose.connect(mongoURI)
 .then(() => {
   logger.info(`MongoDB Connected to data-service at ${mongoURI}`);
 
   // 4. 启动服务器
-  const PORT = config.port || process.env.DATA_SERVICE_PORT || 3003;
+  const PORT = process.env.DATA_SERVICE_PORT || 3003;
   if (!PORT) {
     logger.error('FATAL ERROR: Port for data-service is not defined.');
     process.exit(1);

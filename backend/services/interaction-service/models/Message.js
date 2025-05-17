@@ -5,31 +5,34 @@ const MessageSchema = new Schema({
   sender: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   receiver: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   content: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   attachments: [{
-    name: String,
-    url: String,
-    type: String,
-    size: Number
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    fileType: { type: String },
+    size: { type: Number }
   }],
   read: {
     type: Boolean,
     default: false
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+}, {
+  timestamps: true
 });
+
+MessageSchema.index({ receiver: 1, read: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Message', MessageSchema);

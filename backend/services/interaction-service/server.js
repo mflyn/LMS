@@ -2,12 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const winston = require('winston');
-const fs = require('fs');
 const path = require('path');
 
-// 导入中间件
-const { authenticateToken, checkRole } = require('./middleware/auth');
+// 导入共享组件
+const { createLogger, requestTracker } = require('../../../common/utils/logger');
+const { errorHandler, setupUncaughtExceptionHandler } = require('../../../common/middleware/errorHandler');
+const { AppError } = require('../../../common/middleware/errorTypes'); // For MONGO_URI check
+
+// 导入共享认证中间件
+const { authenticateGateway, checkRole } = require('../../../common/middleware/auth');
 
 // 加载环境变量
 dotenv.config();
@@ -15,51 +18,35 @@ dotenv.config();
 // 创建Express应用
 const app = express();
 
-// 配置日志记录器
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
-  ],
-});
+// 配置共享日志记录器
+const logger = createLogger('interaction-service', process.env.LOG_LEVEL);
+app.locals.logger = logger; // Make logger available in app.locals
 
-// 确保日志目录存在
-if (!fs.existsSync('logs')) {
-  fs.mkdirSync('logs', { recursive: true });
-}
+// Set up uncaught exception handler
+setupUncaughtExceptionHandler(logger);
 
 // 中间件
 app.use(cors());
 app.use(express.json());
+app.use(requestTracker(logger)); // Use shared request tracker
 
-// 请求日志中间件
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url}`);
-  next();
-});
+// 连接到MongoDB
+const mongoURI = process.env.MONGO_URI;
+if (!mongoURI) {
+  logger.error('MongoDB URI (MONGO_URI) is not defined in environment variables.');
+  process.exit(1); // Exit if MONGO_URI is not set
+}
 
-// 连接到MongoDB（在测试环境中不连接）
 if (process.env.NODE_ENV !== 'test') {
-  mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  mongoose.connect(mongoURI) // Removed deprecated options
   .then(() => {
     logger.info('MongoDB连接成功');
   })
   .catch((err) => {
     logger.error('MongoDB连接失败:', err.message);
+    process.exit(1); // Exit on connection failure too
   });
 }
-
-// 导入Meeting模型
-const Meeting = require('./models/Meeting'); // 确保路径正确
 
 // 导入路由
 const messagesRouter = require('./routes/messages');
@@ -67,32 +54,26 @@ const announcementsRouter = require('./routes/announcements');
 const meetingsRouter = require('./routes/meetings');
 const videoMeetingsRouter = require('./routes/video-meetings-simple');
 
-// 使用路由（添加认证中间件）
-app.use('/api/interaction/messages', authenticateToken, messagesRouter);
-app.use('/api/interaction/announcements', authenticateToken, announcementsRouter);
-app.use('/api/interaction/meetings', authenticateToken, meetingsRouter);
-app.use('/api/interaction/video-meetings', authenticateToken, videoMeetingsRouter);
+// 使用路由 (使用共享的 authenticateGateway)
+app.use('/api/interaction/messages', authenticateGateway, messagesRouter);
+app.use('/api/interaction/announcements', authenticateGateway, announcementsRouter);
+app.use('/api/interaction/meetings', authenticateGateway, meetingsRouter);
+app.use('/api/interaction/video-meetings', authenticateGateway, videoMeetingsRouter);
 
 // 健康检查路由
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'interaction-service' });
 });
 
-// 错误处理中间件
-app.use((err, req, res, next) => {
-  logger.error(err.stack);
-  res.status(500).json({
-    message: '服务器内部错误',
-    error: process.env.NODE_ENV === 'production' ? {} : err.message
-  });
-});
+// 使用共享的错误处理中间件 (应放在所有路由之后)
+app.use(errorHandler(logger));
 
-// 导出应用
+// 导出应用 (主要用于测试)
 module.exports = app;
 
-// 只有在非测试环境下才启动服务器
+// 启动服务器
 if (process.env.NODE_ENV !== 'test') {
-  const PORT = process.env.PORT || 5004;
+  const PORT = process.env.INTERACTION_SERVICE_PORT || process.env.PORT || 5004; // Prefer specific port
   app.listen(PORT, () => {
     logger.info(`家校互动服务运行在端口 ${PORT}`);
   });

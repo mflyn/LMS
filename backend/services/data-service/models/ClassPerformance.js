@@ -22,12 +22,14 @@ const ClassPerformanceSchema = new Schema({
   },
   date: {
     type: Date,
-    required: true
+    required: true,
+    index: true
   },
   type: {
     type: String,
     enum: ['participation', 'behavior', 'attendance', 'quiz', 'interaction', 'other'],
-    required: true
+    required: true,
+    index: true
   },
   score: {
     type: Number,
@@ -35,17 +37,22 @@ const ClassPerformanceSchema = new Schema({
     max: 5,
   },
   comments: {
-    type: String
+    type: String,
+    required: function() {
+      return typeof this.score !== 'number';
+    }
   },
   recordedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
   }
+}, {
+  timestamps: true
 });
+
+ClassPerformanceSchema.index({ student: 1, date: -1 });
+ClassPerformanceSchema.index({ class: 1, subject: 1, date: -1 });
+ClassPerformanceSchema.index({ class: 1, type: 1, date: -1 });
 
 module.exports = mongoose.model('ClassPerformance', ClassPerformanceSchema);

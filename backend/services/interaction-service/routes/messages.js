@@ -1,179 +1,84 @@
 const express = require('express');
 const router = express.Router();
-const Message = require('../models/Message');
-const winston = require('winston');
+const MessageService = require('../services/messageService');
+const { validate } = require('../../../common/middleware/requestValidator');
+const { catchAsync } = require('../../../common/middleware/errorHandler');
+const { AppResponse } = require('../../../common/utils/appResponse');
+const {
+  getMessagesValidationRules,
+  messageIdValidationRules,
+  sendMessageValidationRules,
+  getUnreadStatsValidationRules
+} = require('../validators/messageValidators');
 
-// 获取日志记录器实例
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
-  ],
-});
+// Helper to get service instance (could be a more sophisticated DI)
+const getService = (req) => new MessageService(req.app.locals.logger);
 
 // 获取消息列表
-router.get('/', async (req, res) => {
-  try {
-    const { sender, receiver, startDate, endDate, limit = 20, skip = 0 } = req.query;
-
-    const query = {};
-
-    if (sender) query.sender = sender;
-    if (receiver) query.receiver = receiver;
-
-    if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate) query.createdAt.$lte = new Date(endDate);
-    }
-
-    let messages;
-
-    // 在测试环境中不使用 populate
-    if (process.env.NODE_ENV === 'test') {
-      messages = await Message.find(query)
-        .sort({ createdAt: -1 })
-        .skip(parseInt(skip))
-        .limit(parseInt(limit));
-    } else {
-      messages = await Message.find(query)
-        .sort({ createdAt: -1 })
-        .skip(parseInt(skip))
-        .limit(parseInt(limit))
-        .populate('sender', 'name role')
-        .populate('receiver', 'name role');
-    }
-
-    const total = await Message.countDocuments(query);
-
-    res.json({
-      data: messages,
-      pagination: {
-        total,
-        limit: parseInt(limit),
-        skip: parseInt(skip),
-      }
-    });
-  } catch (err) {
-    logger.error('获取消息列表失败:', err);
-    res.status(500).json({ message: '获取消息列表失败', error: err.message });
-  }
-});
+router.get('/', 
+  getMessagesValidationRules(), 
+  validate, 
+  catchAsync(async (req, res) => {
+    const service = getService(req);
+    const result = await service.getMessages(req.user, req.query);
+    res.status(200).json(new AppResponse(200, 'Messages retrieved successfully.', result.data, null, result.pagination));
+  })
+);
 
 // 获取单个消息
-router.get('/:id', async (req, res) => {
-  try {
-    let message;
-
-    // 在测试环境中不使用 populate
-    if (process.env.NODE_ENV === 'test') {
-      message = await Message.findById(req.params.id);
-    } else {
-      message = await Message.findById(req.params.id)
-        .populate('sender', 'name role')
-        .populate('receiver', 'name role');
-    }
-
-    if (!message) {
-      return res.status(404).json({ message: '消息不存在' });
-    }
-
-    res.json(message);
-  } catch (err) {
-    logger.error('获取消息失败:', err);
-    res.status(500).json({ message: '获取消息失败', error: err.message });
-  }
-});
+router.get('/:id', 
+  messageIdValidationRules(), 
+  validate, 
+  catchAsync(async (req, res) => {
+    const service = getService(req);
+    const message = await service.getMessageById(req.user, req.params.id);
+    res.status(200).json(new AppResponse(200, 'Message retrieved successfully.', message));
+  })
+);
 
 // 发送消息
-router.post('/', async (req, res) => {
-  try {
-    const { sender, receiver, content, attachments } = req.body;
-
-    if (!sender || !receiver || !content) {
-      return res.status(400).json({ message: '发送者、接收者和内容不能为空' });
-    }
-
-    const message = new Message({
-      sender,
-      receiver,
-      content,
-      attachments: attachments || [],
-      read: false,
-    });
-
-    await message.save();
-
-    // 如果有WebSocket连接，可以在这里发送实时通知
-
-    res.status(201).json(message);
-  } catch (err) {
-    logger.error('发送消息失败:', err);
-    res.status(500).json({ message: '发送消息失败', error: err.message });
-  }
-});
+router.post('/', 
+  sendMessageValidationRules(), 
+  validate, 
+  catchAsync(async (req, res) => {
+    const service = getService(req);
+    const message = await service.sendMessage(req.user, req.body);
+    res.status(201).json(new AppResponse(201, 'Message sent successfully.', message));
+  })
+);
 
 // 标记消息为已读
-router.put('/:id/read', async (req, res) => {
-  try {
-    const message = await Message.findByIdAndUpdate(
-      req.params.id,
-      { read: true },
-      { new: true }
-    );
-
-    if (!message) {
-      return res.status(404).json({ message: '消息不存在' });
-    }
-
-    res.json(message);
-  } catch (err) {
-    logger.error('标记消息已读失败:', err);
-    res.status(500).json({ message: '标记消息已读失败', error: err.message });
-  }
-});
+router.put('/:id/read', 
+  messageIdValidationRules(), 
+  validate, 
+  catchAsync(async (req, res) => {
+    const service = getService(req);
+    const message = await service.markMessageAsRead(req.user, req.params.id);
+    res.status(200).json(new AppResponse(200, 'Message marked as read.', message));
+  })
+);
 
 // 删除消息
-router.delete('/:id', async (req, res) => {
-  try {
-    const message = await Message.findByIdAndDelete(req.params.id);
-
-    if (!message) {
-      return res.status(404).json({ message: '消息不存在' });
-    }
-
-    res.json({ message: '消息已删除' });
-  } catch (err) {
-    logger.error('删除消息失败:', err);
-    res.status(500).json({ message: '删除消息失败', error: err.message });
-  }
-});
+router.delete('/:id', 
+  messageIdValidationRules(), 
+  validate, 
+  catchAsync(async (req, res) => {
+    const service = getService(req);
+    await service.deleteMessage(req.user, req.params.id);
+    res.status(200).json(new AppResponse(200, 'Message deleted successfully.')); // Or 204 No Content
+  })
+);
 
 // 获取未读消息数量
-router.get('/stats/unread', async (req, res) => {
-  try {
-    const { userId } = req.query;
-
-    if (!userId) {
-      return res.status(400).json({ message: '用户ID不能为空' });
-    }
-
-    const unreadCount = await Message.countDocuments({
-      receiver: userId,
-      read: false
-    });
-
-    res.json({ unreadCount });
-  } catch (err) {
-    logger.error('获取未读消息数量失败:', err);
-    res.status(500).json({ message: '获取未读消息数量失败', error: err.message });
-  }
-});
+router.get('/stats/unread', 
+  getUnreadStatsValidationRules(),
+  validate, 
+  catchAsync(async (req, res) => {
+    const service = getService(req);
+    // Service method expects targetUserId as a second param, which comes from query for this route
+    const result = await service.getUnreadMessageCount(req.user, req.query.userId);
+    res.status(200).json(new AppResponse(200, 'Unread message count retrieved.', result));
+  })
+);
 
 module.exports = router;

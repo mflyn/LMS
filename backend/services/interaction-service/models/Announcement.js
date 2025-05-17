@@ -4,16 +4,19 @@ const Schema = mongoose.Schema;
 const AnnouncementSchema = new Schema({
   title: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   content: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   author: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   class: {
     type: Schema.Types.ObjectId,
@@ -21,15 +24,15 @@ const AnnouncementSchema = new Schema({
     required: true
   },
   attachments: [{
-    name: String,
-    url: String,
-    type: String,
-    size: Number
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    fileType: { type: String },
+    size: { type: Number }
   }],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+}, {
+  timestamps: true
 });
+
+AnnouncementSchema.index({ class: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Announcement', AnnouncementSchema);
