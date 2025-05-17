@@ -1,4 +1,5 @@
-const { MongoMemoryServer } = require('mongodb-memory-server');
+require('dotenv').config({ path: '.env.test' }); // 加载测试环境变量
+
 const mongoose = require('mongoose');
 
 // 注册所有模型
@@ -38,33 +39,13 @@ try {
   mongoose.model('User', UserSchema);
 }
 
-let mongoServer;
-
-// 增加测试超时时间
-jest.setTimeout(30000);
-
-// 在所有测试开始前启动内存数据库
-beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  console.log(`MongoDB successfully connected to ${mongoUri}`);
-});
-
-// 在所有测试结束后关闭连接
-afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
-});
-
-// 在每个测试前清理数据库
+// beforeEach 用于在每个测试用例运行前清理数据
 beforeEach(async () => {
+  // console.log('[TEST SETUP - beforeEach] Cleaning database collections...');
   const collections = mongoose.connection.collections;
   for (const key in collections) {
     const collection = collections[key];
     await collection.deleteMany({});
   }
+  // console.log('[TEST SETUP - beforeEach] Database collections cleaned.');
 });
