@@ -19,34 +19,34 @@ module.exports = {
   refreshTokenExpiration,
   
   // 认证中间件
-  getAuthMiddleware: (jwt) => {
-    return (req, res, next) => {
-      // 从请求头获取用户信息（由API网关添加）
-      if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
-        return res.status(401).json({ message: '未认证' });
-      }
+  // getAuthMiddleware: (jwt) => {
+  //   return (req, res, next) => {
+  //     // 从请求头获取用户信息（由API网关添加）
+  //     if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
+  //       return res.status(401).json({ message: '未认证' });
+  //     }
       
-      req.user = {
-        id: req.headers['x-user-id'],
-        role: req.headers['x-user-role']
-      };
+  //     req.user = {
+  //       id: req.headers['x-user-id'],
+  //       role: req.headers['x-user-role']
+  //     };
       
-      next();
-    };
-  },
+  //     next();
+  //   };
+  // },
   
-  // 角色检查中间件
-  getRoleCheckMiddleware: () => {
-    return (roles) => {
-      return (req, res, next) => {
-        if (!req.user) return res.status(401).json({ message: '未认证' });
+  // // 角色检查中间件
+  // getRoleCheckMiddleware: () => {
+  //   return (roles) => {
+  //     return (req, res, next) => {
+  //       if (!req.user) return res.status(401).json({ message: '未认证' });
         
-        if (!roles.includes(req.user.role)) {
-          return res.status(403).json({ message: '权限不足' });
-        }
+  //       if (!roles.includes(req.user.role)) {
+  //         return res.status(403).json({ message: '权限不足' });
+  //       }
         
-        next();
-      };
-    };
-  }
+  //       next();
+  //     };
+  //   };
+  // }
 };

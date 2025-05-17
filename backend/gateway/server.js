@@ -6,6 +6,7 @@ const proxy = require('express-http-proxy');
 const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../common/config/auth');
 const createBaseApp = require('../common/createBaseApp');
+const { UnauthorizedError, ForbiddenError } = require('../common/middleware/errorTypes');
 const config = require('./config');
 const logger = require('../common/utils/logger');
 
@@ -32,13 +33,13 @@ const authenticateToken = (req, res, next) => {
     // 暂时保持原样，但这是一个需要根据实际公开API来调整的地方。
     // 如果路径本身在下游服务中不需要认证，网关层面也不应该拦截。
     // 如果是受保护路径没有token，则返回401
-    return res.status(401).json({ status: 'error', message: 'No token provided' });
+    return next(new UnauthorizedError('No token provided'));
   }
   
   jwt.verify(token, jwtSecret, (err, user) => {
     if (err) {
       logger.warn(`JWT verification failed for token: ${token}`, { error: err.message, path: req.path });
-      return res.status(403).json({ status: 'error', message: 'Invalid or expired token' });
+      return next(new ForbiddenError('Invalid or expired token'));
     }
     req.user = user;
     if (user && user.id) req.headers['x-user-id'] = user.id;

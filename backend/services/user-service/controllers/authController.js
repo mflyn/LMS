@@ -1,13 +1,8 @@
-const jwt = require('jsonwebtoken');
-const { jwtSecret, tokenExpiration } = require('../../../common/config/auth');
 const { catchAsync } = require('../../../common/middleware/errorHandler');
 const { BadRequestError, UnauthorizedError, ConflictError } = require('../../../common/middleware/errorTypes');
 const User = require('../models/User');
 const UserService = require('../services/userService');
 const mongoose = require('mongoose'); // For mongoose.Types.ObjectId.isValid if needed in future methods
-
-const payload = { id: user._id, username: user.username, role: user.role };
-const token = jwt.sign(payload, jwtSecret, { expiresIn: tokenExpiration }); 
 
 class AuthController {
   constructor() {

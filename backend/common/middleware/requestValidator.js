@@ -69,7 +69,9 @@ const registerValidation = [
     .withMessage('请输入有效的邮箱地址'),
   body('role')
     .isIn(['student', 'teacher', 'parent'])
-    .withMessage('角色必须是学生、教师或家长')
+    .withMessage('角色必须是学生、教师或家长'),
+  body('firstName').optional().trim().isAlpha('en-US', {ignore: ' '}).withMessage('名字只能包含字母'),
+  body('lastName').optional().trim().isAlpha('en-US', {ignore: ' '}).withMessage('姓氏只能包含字母')
 ];
 
 // 用户登录验证规则
@@ -81,6 +83,45 @@ const loginValidation = [
   body('password')
     .notEmpty()
     .withMessage('密码不能为空')
+];
+
+// 修改密码验证规则
+const changePasswordValidation = [
+  body('oldPassword')
+    .notEmpty().withMessage('旧密码不能为空'),
+  body('newPassword')
+    .notEmpty().withMessage('新密码不能为空')
+    .isLength({ min: 8 }).withMessage('新密码长度至少为8个字符')
+];
+
+// 更新用户信息验证规则
+const updateUserValidation = [
+  body('email')
+    .optional()
+    .isEmail()
+    .withMessage('请输入有效的邮箱地址'),
+  // Note: email uniqueness should be checked at the service/controller layer after validation
+  body('firstName')
+    .optional()
+    .trim()
+    .isAlpha('en-US', { ignore: ' ' })
+    .withMessage('名字只能包含字母'),
+  body('lastName')
+    .optional()
+    .trim()
+    .isAlpha('en-US', { ignore: ' ' })
+    .withMessage('姓氏只能包含字母'),
+  body('avatar')
+    .optional()
+    .isURL()
+    .withMessage('头像必须是一个有效的URL'),
+  body('contactNumber')
+    .optional()
+    .trim()
+    // .isMobilePhone('any', { strictMode: false }) // Example, can be specific like 'zh-CN'
+    // .withMessage('请输入有效的手机号码')
+    // Using a simpler string check for now, as isMobilePhone can be restrictive or require specific libraries
+    .isLength({ min: 7, max: 15 }).withMessage('联系电话长度应在7-15位之间') 
 ];
 
 // 课程创建验证规则
@@ -119,6 +160,8 @@ module.exports = {
   sanitizeInput,
   registerValidation,
   loginValidation,
+  changePasswordValidation,
+  updateUserValidation,
   courseValidation,
   resourceValidation
 }; 

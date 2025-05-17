@@ -3,6 +3,7 @@ const createBaseApp = require('../../common/createBaseApp'); // 调整路径到 
 const config = require('./config');
 const mainRoutes = require('./routes'); // user-service 的主路由
 const logger = require('../../common/utils/logger'); // 直接导入 logger 用于启动日志
+const { setupUncaughtExceptionHandler } = require('../../common/middleware/errorHandler'); // Added import
 
 // 1. 创建基础应用实例
 const app = createBaseApp({
@@ -24,6 +25,8 @@ if (!mongoURI) {
   logger.error('FATAL ERROR: mongoURI for user-service is not defined in config or environment.');
   process.exit(1);
 }
+
+setupUncaughtExceptionHandler(logger); // Called setupUncaughtExceptionHandler
 
 mongoose.connect(mongoURI)
 .then(() => {

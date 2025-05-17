@@ -1,34 +1,33 @@
 const express = require('express');
 const authController = require('../controllers/authController');
 const { authenticateJWT } = require('../../../common/middleware/auth'); // Import JWT authentication middleware
+// Removed local validator import: const { validate, registrationValidationRules, ... } = require('../middleware/validators/authValidators');
 const {
   validate,
-  registrationValidationRules,
-  loginValidationRules,
-  changePasswordValidationRules
-} = require('../middleware/validators/authValidators'); // 调整路径以匹配实际位置
-// Import input validation middleware if you have them, e.g.:
-// const { validateRegistration, validateLogin, validateChangePassword } = require('../../../common/middleware/requestValidator'); // Adjust path as needed
+  registerValidation, // Changed from registrationValidationRules
+  loginValidation,    // Changed from loginValidationRules
+  changePasswordValidation // Changed from changePasswordValidationRules
+} = require('../../../common/middleware/requestValidator.js'); // Path to common validator
 
 const router = express.Router();
 
 // Authentication routes
 router.post('/register',
-  registrationValidationRules(), // Add validation rules
-  validate, // Apply validation
+  registerValidation, // Use imported array directly
+  validate, 
   authController.register
 );
 
 router.post('/login',
-  loginValidationRules(), // Add validation rules
-  validate, // Apply validation
+  loginValidation, // Use imported array directly
+  validate, 
   authController.login
 );
 
 router.post('/change-password',
-  authenticateJWT, // Protect this route
-  changePasswordValidationRules(), // Add validation rules
-  validate, // Apply validation
+  authenticateJWT, 
+  changePasswordValidation, // Use imported array directly
+  validate, 
   authController.changePassword
 );
 

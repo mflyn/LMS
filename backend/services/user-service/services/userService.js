@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const User = require('../models/User'); // Assuming User model is here
 const Role = require('../models/Role'); // Assuming Role model is here, if needed for validation
 const { generateToken } = require('../../common/middleware/auth');
-const authConfig = require('../../common/config/auth');
 const {
   AppError,
   BadRequestError,
@@ -70,7 +69,7 @@ class UserService {
       await newUser.save();
       logger.info('[UserService] User registered successfully', { userId: newUser._id, username: newUser.username });
 
-      const token = generateToken({ id: newUser._id, role: newUser.role });
+      const token = generateToken({ id: newUser._id, username: newUser.username, role: newUser.role });
       return { user: cleanUser(newUser), token };
     } catch (error) {
       logger.error('[UserService] Error during user registration', { error: error.message, stack: error.stack });
@@ -84,28 +83,35 @@ class UserService {
     }
   }
 
-  async loginUser({ email, password }, logger) {
-    logger.info('[UserService] Attempting to login user', { email });
+  async loginUser({ username, password }, logger) {
+    logger.info('[UserService] Attempting to login user', { loginIdentifier: username });
 
-    if (!email || !password) {
-      logger.warn('[UserService] Login failed: Missing email or password');
-      throw new BadRequestError('Email and password are required.');
+    if (!username || !password) {
+      logger.warn('[UserService] Login failed: Missing username/email or password');
+      throw new BadRequestError('Username/Email and password are required.');
     }
 
-    const user = await User.findOne({ email }).select('+password'); // Include password for comparison
+    // Allow login with either username or email
+    const user = await User.findOne({ 
+      $or: [
+        { email: username }, 
+        { username: username } 
+      ]
+    }).select('+password'); 
+    
     if (!user) {
-      logger.warn('[UserService] Login failed: User not found', { email });
-      throw new AuthenticationError('Invalid email or password.'); // Generic message for security
+      logger.warn('[UserService] Login failed: User not found', { loginIdentifier: username });
+      throw new AuthenticationError('Invalid credentials.'); // Generic message for security
     }
 
-    const isMatch = await user.comparePassword(password); // Assuming comparePassword method in User model
+    const isMatch = await user.comparePassword(password); 
     if (!isMatch) {
-      logger.warn('[UserService] Login failed: Password mismatch', { email });
-      throw new AuthenticationError('Invalid email or password.'); // Generic message
+      logger.warn('[UserService] Login failed: Password mismatch', { loginIdentifier: username });
+      throw new AuthenticationError('Invalid credentials.'); // Generic message
     }
 
-    logger.info('[UserService] User logged in successfully', { userId: user._id, email: user.email });
-    const token = generateToken({ id: user._id, role: user.role });
+    logger.info('[UserService] User logged in successfully', { userId: user._id, loginIdentifier: username });
+    const token = generateToken({ id: user._id, username: user.username, role: user.role });
     return { user: cleanUser(user), token };
   }
 
