@@ -73,67 +73,112 @@ const requestTracker = (req, res, next) => {
  * @param {Function} next - Express下一个中间件函数
  */
 const errorHandler = (err, req, res, next) => {
-  // 设置默认错误信息
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
-  
-  // 开发环境下的详细错误信息
+  // Log the full error internally, especially in dev or for operational errors
+  if (req.app && req.app.locals.logger) {
+    const logLevel = (err.isOperational && err.statusCode < 500) ? 'warn' : 'error';
+    req.app.locals.logger[logLevel](`Error caught by errorHandler: ${err.message}`, {
+      requestId: req.requestId,
+      errorName: err.name,
+      statusCode: err.statusCode,
+      isOperational: err.isOperational,
+      stack: process.env.NODE_ENV === 'development' || err.isOperational ? err.stack : undefined,
+      details: err.errors, // For ValidationError
+      code: err.code // For system errors like ECONNREFUSED
+    });
+  } else {
+    // Fallback console log if logger is not available
+    console.error('ERROR 💥', err);
+  }
+
+  // Initialize with err's properties or defaults
+  let responseStatusCode = err.statusCode || 500;
+  let responseStatus = err.status || (responseStatusCode >= 500 ? 'error' : 'fail');
+
   if (process.env.NODE_ENV === 'development') {
-    res.status(err.statusCode).json({
-      status: err.status,
-      error: err,
+    return res.status(responseStatusCode).json({
+      status: responseStatus,
+      error: err, // Send full error object in dev
       message: err.message,
       stack: err.stack
     });
   } 
-  // 生产环境下的友好错误信息
+  // Production environment:
   else {
-    // 处理不同类型的错误
-    let errorMessage = '发生了一个错误';
-    let errorCode = 'UNKNOWN_ERROR';
-    
-    if (err instanceof AppError) {
-      errorMessage = err.message;
-      errorCode = err.code;
-    } else if (err.name === 'ValidationError') {
-      errorMessage = '数据验证失败';
-      errorCode = 'VALIDATION_ERROR';
-    } else if (err.name === 'CastError') {
-      errorMessage = '无效的数据格式';
-      errorCode = 'INVALID_DATA_FORMAT';
-    } else if (err.code === 11000) {
-      errorMessage = '数据已存在';
-      errorCode = 'DUPLICATE_DATA';
-    } else if (err.name === 'JsonWebTokenError') {
-      errorMessage = '无效的认证信息';
-      errorCode = 'INVALID_TOKEN';
-    } else if (err.name === 'TokenExpiredError') {
-      errorMessage = '认证信息已过期';
-      errorCode = 'TOKEN_EXPIRED';
+    let displayedMessage = 'An unexpected error occurred. Please try again later.';
+    let errorCodeForClient = 'UNKNOWN_ERROR';
+
+    if (err.isOperational) { // Trust operational errors (AppError and its children)
+      displayedMessage = err.message;
+      errorCodeForClient = err.name; // Use err.name as the basis for client-facing error code for AppErrors
+      // responseStatusCode and responseStatus were set from err.statusCode and err.status or defaults
+      // For AppError, these are usually set correctly in the error instance itself.
+
+      if (err.name === 'ValidationError' && err.errors) {
+        return res.status(err.statusCode).json({ // Use err.statusCode directly from ValidationError
+          status: err.status,
+          code: errorCodeForClient,
+          message: displayedMessage,
+          errors: err.errors, // Send structured validation errors
+          suggestion: getErrorSuggestion(err.name)
+        });
+      }
+    } else {
+      // Handle specific non-operational errors to provide better (but still safe) client feedback
+      // The initial responseStatusCode might be from the error (e.g., SyntaxError from body-parser has 400)
+      
+      if (err instanceof SyntaxError && responseStatusCode === 400 && err.message.toLowerCase().includes('json')) {
+        // Likely a JSON parsing error from middleware like express.json()
+        // responseStatusCode is already 400, responseStatus is 'fail'
+        errorCodeForClient = 'INVALID_JSON_FORMAT';
+        displayedMessage = 'The request body contains invalid JSON and could not be parsed.';
+      } else if (err.code && ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'EHOSTUNREACH', 'ECONNRESET'].includes(err.code)) {
+        // Node.js system errors, often related to network issues with downstream services
+        responseStatusCode = 503; // Service Unavailable
+        responseStatus = 'error';
+        errorCodeForClient = 'SERVICE_CONNECTION_ISSUE';
+        displayedMessage = 'A required downstream service is temporarily unavailable. Please try again shortly.';
+      } else {
+        // For all other truly unknown/unexpected non-operational errors, ensure 500.
+        responseStatusCode = 500;
+        responseStatus = 'error';
+        // errorCodeForClient and displayedMessage remain the default 'UNKNOWN_ERROR' and generic message.
+      }
     }
     
-    // 发送友好的错误响应
-    res.status(err.statusCode).json({
-      status: err.status,
-      code: errorCode,
-      message: errorMessage,
-      suggestion: getErrorSuggestion(errorCode)
+    const suggestion = getErrorSuggestion(errorCodeForClient);
+    
+    return res.status(responseStatusCode).json({
+      status: responseStatus,
+      code: errorCodeForClient,
+      message: displayedMessage,
+      suggestion
     });
   }
 };
 
-// 获取错误建议
+// 获取错误建议 (Keys should match AppError class names or specific Mongoose error names handled)
 const getErrorSuggestion = (errorCode) => {
   const suggestions = {
-    'VALIDATION_ERROR': '请检查输入的数据格式是否正确',
-    'INVALID_DATA_FORMAT': '请确保输入的数据格式正确',
-    'DUPLICATE_DATA': '该数据已存在，请尝试其他值',
-    'INVALID_TOKEN': '请重新登录获取新的认证信息',
-    'TOKEN_EXPIRED': '请重新登录以继续操作',
-    'UNKNOWN_ERROR': '请稍后重试，如果问题持续存在请联系管理员'
+    'ValidationError': '请检查您输入的数据是否符合要求。',
+    'BadRequestError': '您的请求格式有误，请检查后重试。',
+    'UnauthorizedError': '您需要登录才能执行此操作。',
+    'ForbiddenError': '您没有足够的权限执行此操作。',
+    'NotFoundError': '您请求的资源未找到。',
+    'ConflictError': '操作导致资源冲突，例如尝试创建已存在的唯一资源。',
+    'TooManyRequestsError': '您的请求过于频繁，请稍后再试。',
+    'InternalServerError': '服务器发生内部错误，请稍后重试。',
+    'ServiceUnavailableError': '服务暂时不可用，请稍后重试。',
+    'DatabaseError': '数据库操作失败，请稍后重试。',
+    'CastError': '提供的数据格式无效，例如无效的ID格式。',
+    'JsonWebTokenError': '认证令牌无效，请重新登录。',
+    'TokenExpiredError': '认证令牌已过期，请重新登录。',
+    'DUPLICATE_DATA': '数据已存在，请尝试其他值。',
+    'INVALID_JSON_FORMAT': '请核对您提交的JSON数据格式是否正确，并确保其符合接口要求。',
+    'SERVICE_CONNECTION_ISSUE': '系统暂时无法连接到所需服务，该问题通常是暂时的，请稍后重试。如果问题持续，请联系技术支持。',
+    'UNKNOWN_ERROR': '请稍后重试，如果问题持续存在请联系我们的支持团队。'
   };
   
-  return suggestions[errorCode] || '请稍后重试';
+  return suggestions[errorCode] || suggestions['UNKNOWN_ERROR'];
 };
 
 // 异步错误处理包装器
@@ -188,49 +233,21 @@ const handleDatabaseError = (err) => {
   
   // 处理重复键错误
   if (err.code === 11000) {
-    return new DatabaseError('数据已存在，无法创建重复记录', 409);
+    // return new DatabaseError('数据已存在，无法创建重复记录', 409); // Original
+    // More specific message based on what caused the duplicate error is often better if possible
+    // For example, if it's a username or email:
+    const field = Object.keys(err.keyValue)[0];
+    const value = err.keyValue[field];
+    return new AppError(`提供的 ${field} '${value}' 已存在。`, 409, 'DUPLICATE_FIELD'); // 409 Conflict
   }
   
   // 处理ID格式错误
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
-    return new NotFoundError(`找不到ID为 ${err.value} 的资源`);
+    return new NotFoundError(`找不到ID为 ${err.value} 的资源，提供的ID格式无效。`);
   }
   
   // 其他数据库错误
   return new DatabaseError(err.message);
-};
-
-/**
- * 性能监控中间件
- * 记录请求处理时间超过阈值的请求
- * @param {number} threshold - 时间阈值（毫秒）
- * @returns {Function} Express中间件
- */
-const performanceMonitor = (threshold = 1000) => {
-  return (req, res, next) => {
-    const start = Date.now();
-    
-    // 请求结束时检查处理时间
-    res.on('finish', () => {
-      const duration = Date.now() - start;
-      
-      // 如果处理时间超过阈值，记录性能警告日志
-      if (duration > threshold && req.app && req.app.locals.logger) {
-        req.app.locals.logger.warn(`性能警告: 请求处理时间 ${duration}ms 超过阈值 ${threshold}ms`, {
-          requestId: req.requestId,
-          method: req.method,
-          url: req.originalUrl,
-          duration: `${duration}ms`,
-          threshold: `${threshold}ms`,
-          ip: req.ip,
-          userId: req.user ? req.user.id : 'anonymous',
-          service: req.app.locals.serviceName || 'unknown-service'
-        });
-      }
-    });
-    
-    next();
-  };
 };
 
 module.exports = {
@@ -239,5 +256,5 @@ module.exports = {
   setupUncaughtExceptionHandler,
   requestTracker,
   handleDatabaseError,
-  performanceMonitor
+  // performanceMonitor // Removed from exports
 };

@@ -51,7 +51,37 @@ afterAll(async () => {
 
 describe('作业路由测试', () => {
   beforeEach(async () => {
-    await Homework.deleteMany({});
+    // 诊断日志
+    console.log('Mongoose connection readystate:', mongoose.connection.readyState); // 1 means connected
+    console.log('Homework model object:', Homework);
+    console.log('Type of Homework.deleteMany:', typeof Homework.deleteMany);
+    console.log('Homework.modelName:', Homework.modelName); // Should be 'Homework'
+
+    try {
+      await Homework.deleteMany({});
+    } catch (e) {
+      console.error('Error during Homework.deleteMany:', e);
+      // 备用方案：如果 deleteMany 失败，尝试通过 collection 直接删除
+      if (mongoose.connection.readyState === 1 && Homework.collection) {
+         console.log('Attempting direct collection drop for Homework...');
+         try {
+            await Homework.collection.drop(); // 这会移除整个 collection，包括索引
+            console.log('Homework collection dropped successfully.');
+            // 如果需要保持索引，可以考虑 await Homework.collection.deleteMany({});
+         } catch (dropError) {
+            // 如果 drop 失败（例如 collection 不存在），通常可以忽略
+            if (dropError.code === 26 || dropError.message.includes('ns not found')) {
+               console.log('Homework collection did not exist, no need to drop.');
+            } else {
+               console.error('Error dropping Homework collection:', dropError);
+            }
+         }
+      } else {
+         console.log('Cannot attempt direct collection drop, connection or collection unavailable.');
+      }
+      // 抛出原始错误以便测试仍然失败并指示问题
+      throw e;
+    }
     // 重置模拟函数
     app.locals.logger.info.mockClear();
     app.locals.logger.error.mockClear();

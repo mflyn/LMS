@@ -3,15 +3,20 @@
  * 所有微服务共享此配置以确保认证机制一致性
  */
 
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL ERROR: JWT_SECRET is not defined in environment variables.');
+}
+
+const jwtSecret = process.env.JWT_SECRET;
+
+// 建议使用更标准的时间格式或者ms库进行转换
+const tokenExpiration = process.env.JWT_TOKEN_EXPIRATION || '1d'; // 例如: 1d, 2h, 30m
+const refreshTokenExpiration = process.env.JWT_REFRESH_TOKEN_EXPIRATION || '7d';
+
 module.exports = {
-  // JWT密钥，生产环境应使用环境变量
-  jwtSecret: process.env.JWT_SECRET || 'your-secret-key-here',
-  
-  // Token过期时间
-  tokenExpiration: '24h',
-  
-  // 刷新Token过期时间
-  refreshTokenExpiration: '7d',
+  jwtSecret,
+  tokenExpiration,
+  refreshTokenExpiration,
   
   // 认证中间件
   getAuthMiddleware: (jwt) => {

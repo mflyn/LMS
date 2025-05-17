@@ -5,17 +5,20 @@ const ClassPerformanceSchema = new Schema({
   student: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   class: {
     type: Schema.Types.ObjectId,
     ref: 'Class',
-    required: true
+    required: true,
+    index: true
   },
   subject: {
     type: Schema.Types.ObjectId,
     ref: 'Subject',
-    required: true
+    required: true,
+    index: true
   },
   date: {
     type: Date,
@@ -23,14 +26,13 @@ const ClassPerformanceSchema = new Schema({
   },
   type: {
     type: String,
-    enum: ['participation', 'behavior', 'attendance', 'other'],
+    enum: ['participation', 'behavior', 'attendance', 'quiz', 'interaction', 'other'],
     required: true
   },
   score: {
     type: Number,
-    min: 0,
+    min: -5,
     max: 5,
-    required: true
   },
   comments: {
     type: String

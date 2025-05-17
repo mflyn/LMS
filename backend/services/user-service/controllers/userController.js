@@ -1,167 +1,145 @@
-const { logger } = require('../../../common/config/logger');
 const UserService = require('../services/userService');
+const { catchAsync } = require('../../../common/middleware/errorHandler');
+const {
+  BadRequestError,
+  NotFoundError,
+  ForbiddenError,
+  // ConflictError, // No longer needed here after register/login move
+  // UnauthorizedError // No longer needed here
+} = require('../../../common/middleware/errorTypes');
+const mongoose = require('mongoose');
 
 class UserController {
-  async register(req, res, next) {
-    try {
-      logger.info('开始用户注册', {
-        email: req.body.email,
-        username: req.body.username
-      });
-
-      const user = await UserService.createUser(req.body);
-      
-      logger.info('用户注册成功', {
-        userId: user.id,
-        email: user.email
-      });
-
-      res.status(201).json(user);
-    } catch (error) {
-      logger.error('用户注册失败', {
-        error: error.message,
-        stack: error.stack,
-        body: req.body
-      });
-      res.status(500).json({
-        code: 500,
-        message: '服务器错误',
-        data: null
-      });
-    }
+  constructor() {
+    // Bind methods if needed, or ensure arrow functions are used for class properties
+    // For simplicity, I'll use arrow functions for methods assigned to class properties
   }
 
-  async login(req, res, next) {
-    try {
-      const startTime = Date.now();
-      logger.info('用户登录尝试', {
-        email: req.body.email
-      });
+  // NOTE: register and login have been moved to auth.controller.js
+  // --- User Profile Management (current user) ---
+  
+  getProfile = catchAsync(async (req, res, next) => {
+    const logger = req.app.locals.logger;
+    const userId = req.user.id; // From authenticateJWT middleware
+    logger.info(`Fetching profile for user ID: ${userId}`);
 
-      const { token, user } = await UserService.login(req.body);
+    const user = await UserService.getUserProfile(userId, logger); // Pass logger
 
-      const duration = Date.now() - startTime;
-      logger.info('用户登录成功', {
-        userId: user.id,
-        email: user.email,
-        duration: `${duration}ms`
-      });
+    logger.info(`Profile successfully fetched for user ID: ${userId}`);
+    res.status(200).json({
+      status: 'success',
+      data: { user }, // UserService ensures 'user' is clean
+    });
+  });
 
-      res.json({
-        code: 200,
-        message: 'success',
-        data: { token, user }
-      });
-    } catch (error) {
-      logger.error('用户登录失败', {
-        error: error.message,
-        email: req.body.email
-      });
-      
-      res.status(500).json({
-        code: 500,
-        message: '服务器错误',
-        data: null
-      });
+  updateProfile = catchAsync(async (req, res, next) => {
+    const logger = req.app.locals.logger;
+    const userId = req.user.id;
+    const updateData = req.body;
+    logger.info(`Update profile attempt for user ID: ${userId}`, { updateData });
+
+    // Input validation for updateData by middleware
+
+    const updatedUser = await UserService.updateUserProfile(userId, updateData, logger); // Pass logger
+
+    logger.info(`Profile updated successfully for user ID: ${userId}`);
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile updated successfully',
+      data: { user: updatedUser }, // UserService ensures 'user' is clean
+    });
+  });
+
+  deleteAccount = catchAsync(async (req, res, next) => {
+    const logger = req.app.locals.logger;
+    const userId = req.user.id;
+    const reason = req.body.reason; // Optional: reason for deletion
+    logger.warn(`Account deletion attempt for user ID: ${userId}`, { reason });
+
+    await UserService.deleteUserAccount(userId, logger); // Pass logger
+
+    logger.info(`Account successfully deleted for user ID: ${userId}`);
+    res.status(204).json({ // Or res.status(204).send();
+      status: 'success',
+      data: null,
+    });
+  });
+
+  // --- Admin User Management ---
+
+  getAllUsers = catchAsync(async (req, res, next) => {
+    const logger = req.app.locals.logger;
+    logger.info('Admin fetching all users');
+    // Add query params for pagination, filtering, sorting (e.g., req.query)
+    const users = await UserService.fetchAllUsers(req.query, logger); // Pass logger
+
+    logger.info(`Successfully fetched ${users.length} users`);
+    res.status(200).json({
+      status: 'success',
+      results: users.length,
+      data: { users }, // UserService ensures 'users' are clean
+    });
+  });
+
+  getUserById = catchAsync(async (req, res, next) => {
+    const logger = req.app.locals.logger;
+    const { userId } = req.params;
+    logger.info(`Admin fetching user by ID: ${userId}`);
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return next(new BadRequestError('Invalid user ID format'));
     }
-  }
+    const user = await UserService.fetchUserById(userId, logger); // Pass logger
 
-  async updateProfile(req, res, next) {
-    try {
-      logger.info('开始更新用户资料', {
-        userId: req.user.id,
-        updates: req.body
-      });
+    logger.info(`Successfully fetched user by ID: ${userId}`);
+    res.status(200).json({
+      status: 'success',
+      data: { user }, // UserService ensures 'user' is clean
+    });
+  });
 
-      const user = await UserService.updateUser(req.user.id, req.body);
+  updateUserById = catchAsync(async (req, res, next) => {
+    const logger = req.app.locals.logger;
+    const { userId } = req.params;
+    const updateData = req.body;
+    logger.info(`Admin updating user ID: ${userId}`, { updateData });
 
-      logger.info('用户资料更新成功', {
-        userId: user.id,
-        updatedFields: Object.keys(req.body)
-      });
-
-      res.json({
-        code: 200,
-        message: 'success',
-        data: user
-      });
-    } catch (error) {
-      logger.error('用户资料更新失败', {
-        userId: req.user.id,
-        error: error.message,
-        updates: req.body
-      });
-      res.status(500).json({
-        code: 500,
-        message: '服务器错误',
-        data: null
-      });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return next(new BadRequestError('Invalid user ID format'));
     }
-  }
+    // Input validation for updateData by middleware
 
-  async getProfile(req, res, next) {
-    try {
-      const startTime = Date.now();
-      
-      const user = await UserService.getUserById(req.user.id);
-      
-      const duration = Date.now() - startTime;
-      if (duration > 500) { // 如果查询时间超过 500ms，记录性能警告
-        logger.warn('用户资料查询性能警告', {
-          userId: req.user.id,
-          duration: `${duration}ms`
-        });
-      }
+    const updatedUser = await UserService.updateUserAsAdmin(userId, updateData, logger); // Pass logger
 
-      logger.info('用户资料获取成功', {
-        userId: user.id,
-        duration: `${duration}ms`
-      });
+    logger.info(`Admin successfully updated user ID: ${userId}`);
+    res.status(200).json({
+      status: 'success',
+      message: 'User updated successfully by admin',
+      data: { user: updatedUser }, // UserService ensures 'user' is clean
+    });
+  });
 
-      res.json({
-        code: 200,
-        message: 'success',
-        data: user
-      });
-    } catch (error) {
-      logger.error('用户资料获取失败', {
-        userId: req.user.id,
-        error: error.message
-      });
-      res.status(500).json({
-        code: 500,
-        message: '服务器错误',
-        data: null
-      });
+  deleteUserById = catchAsync(async (req, res, next) => {
+    const logger = req.app.locals.logger;
+    const { userId } = req.params;
+    logger.warn(`Admin deleting user ID: ${userId}`);
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return next(new BadRequestError('Invalid user ID format'));
     }
-  }
-
-  async deleteAccount(req, res, next) {
-    try {
-      logger.warn('用户请求删除账号', {
-        userId: req.user.id,
-        reason: req.body.reason
-      });
-
-      await UserService.deleteUser(req.user.id);
-
-      logger.info('用户账号删除成功', {
-        userId: req.user.id
-      });
-
-      res.status(204).send();
-    } catch (error) {
-      logger.error('用户账号删除失败', {
-        userId: req.user.id,
-        error: error.message
-      });
-      res.status(500).json({
-        code: 500,
-        message: '服务器错误',
-        data: null
-      });
+    // Potentially prevent admin from deleting themselves if that's a business rule
+    if (req.user.id === userId) {
+        return next(new ForbiddenError('Administrators cannot delete their own account using this endpoint.'));
     }
-  }
+
+    await UserService.deleteUserAsAdmin(userId, logger); // Pass logger
+
+    logger.info(`Admin successfully deleted user ID: ${userId}`);
+    res.status(204).json({ // Or res.status(204).send();
+      status: 'success',
+      data: null,
+    });
+  });
 }
 
 module.exports = new UserController();

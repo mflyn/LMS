@@ -1,66 +1,47 @@
-const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
-const Grade = require('./models/Grade');
-const Homework = require('./models/Homework');
-const ClassPerformance = require('./models/ClassPerformance');
-const MistakeRecord = require('./models/MistakeRecord');
+const createBaseApp = require('../../common/createBaseApp'); // 调整路径
 const config = require('./config');
+const mainRoutes = require('./routes'); // data-service 的主路由
+const logger = require('../../common/utils/logger');
 
-const app = express();
+// 1. 创建基础应用实例
+const app = createBaseApp({
+  serviceName: 'data-service',
+  enableSessions: false, // 数据服务通常是无状态API，不需要会话
+  // 如果 data-service 需要特定的CORS或速率限制，可以在这里配置 options
+});
 
-// 中间件
-app.use(cors());
-app.use(express.json());
+// 2. 挂载 data-service 特有的路由
+// 假设其 API 在 /api/data/* 下 (如设计文档和网关配置所示)
+app.use('/api/data', mainRoutes);
 
-// 连接数据库
-mongoose.connect(config.mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB连接成功'))
-.catch(err => console.error('MongoDB连接失败:', err));
+// 3. 数据库连接
+const mongoURI = config.mongoURI;
+if (!mongoURI) {
+  logger.error('FATAL ERROR: mongoURI for data-service is not defined in config or environment.');
+  process.exit(1);
+}
 
-// 认证中间件
-const authenticateToken = (req, res, next) => {
-  // 从请求头获取用户信息（由API网关添加）
-  if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
-    return res.status(401).json({ message: '未认证' });
+mongoose.connect(mongoURI)
+.then(() => {
+  logger.info(`MongoDB Connected to data-service at ${mongoURI}`);
+
+  // 4. 启动服务器
+  const PORT = config.port || process.env.DATA_SERVICE_PORT || 3003;
+  if (!PORT) {
+    logger.error('FATAL ERROR: Port for data-service is not defined.');
+    process.exit(1);
   }
-  
-  req.user = {
-    id: req.headers['x-user-id'],
-    role: req.headers['x-user-role']
-  };
-  
-  next();
-};
 
-// 角色检查中间件
-const checkRole = (roles) => {
-  return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: '未认证' });
-    
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: '权限不足' });
-    }
-    
-    next();
-  };
-};
-
-// 导入路由
-const routes = require('./routes');
-
-// 使用路由
-app.use('/api/data', routes);
-
-// 健康检查
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'data-service' });
+  app.listen(PORT, () => {
+    logger.info(`Data service running on port ${PORT}`);
+  });
+})
+.catch(err => {
+  logger.error('MongoDB connection error for data-service:', err);
+  process.exit(1);
 });
 
-const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => {
-  console.log(`数据服务运行在端口 ${PORT}`);
-});
+// 本地定义的 authenticateToken 和 checkRole 中间件已不再需要，
+// data-service 内部路由应使用 common/middleware/auth.js 中的相应中间件。
+// 健康检查端点也由 createBaseApp 或网关处理。

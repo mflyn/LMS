@@ -1,5 +1,4 @@
 module.exports = {
-  jwtSecret: process.env.JWT_SECRET || 'your-secret-key-here', // 使用环境变量，提供默认值作为后备
   tokenExpiration: '24h',
   services: {
     user: 'http://localhost:5001',
@@ -10,8 +9,13 @@ module.exports = {
     resource: 'http://localhost:5006',
     analytics: 'http://localhost:5007'
   },
-  rateLimits: {
-    windowMs: 15 * 60 * 1000, // 15分钟
-    max: 100 // 每个IP在windowMs内最多100个请求
+  serviceHosts: {
+    auth: process.env.AUTH_SERVICE_URL || 'http://localhost:3002',
+    user: process.env.USER_SERVICE_URL || 'http://localhost:3001',
+    data: process.env.DATA_SERVICE_URL || 'http://localhost:3003'
+  },
+  rateLimitOptions: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
   }
 };

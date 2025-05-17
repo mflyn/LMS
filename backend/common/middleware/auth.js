@@ -5,23 +5,29 @@
  */
 
 const jwt = require('jsonwebtoken');
-const config = require('../config/auth');
+const { jwtSecret, tokenExpiration, refreshTokenExpiration } = require('../config/auth');
+const { UnauthorizedError, ForbiddenError } = require('./errorTypes'); // Assuming errorTypes.js is in the same directory
 
 /**
  * JWT认证中间件
  * 验证请求头中的Authorization Bearer token
  */
 const authenticateJWT = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (token == null) return res.status(401).json({ message: '未提供认证令牌' });
-  
-  jwt.verify(token, config.jwtSecret, (err, user) => {
-    if (err) return res.status(403).json({ message: '令牌无效或已过期' });
-    req.user = user;
-    next();
-  });
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, jwtSecret, (err, decodedUser) => {
+      if (err) {
+        // Consider more specific errors based on err.name (e.g., TokenExpiredError)
+        return next(new ForbiddenError('Invalid or expired token. Please log in again.')); 
+      }
+      req.user = decodedUser;
+      next();
+    });
+  } else {
+    return next(new UnauthorizedError('Access token is missing. Please include it in the Authorization header as a Bearer token.'));
+  }
 };
 
 /**
@@ -30,14 +36,14 @@ const authenticateJWT = (req, res, next) => {
  * 适用于通过API网关转发的请求
  */
 const authenticateGateway = (req, res, next) => {
-  // 从请求头获取用户信息（由API网关添加）
   if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
-    return res.status(401).json({ message: '未认证' });
+    return next(new UnauthorizedError('User identification headers (x-user-id, x-user-role) are missing or incomplete. Ensure API Gateway is configured correctly.'));
   }
   
   req.user = {
     id: req.headers['x-user-id'],
     role: req.headers['x-user-role']
+    // Potentially include other user details if gateway provides them
   };
   
   next();
@@ -50,10 +56,13 @@ const authenticateGateway = (req, res, next) => {
  */
 const checkRole = (roles) => {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: '未认证' });
+    if (!req.user || !req.user.role) { // Check for req.user and req.user.role
+        // This error should ideally not happen if authenticateJWT/authenticateGateway ran successfully.
+        return next(new UnauthorizedError('User not authenticated or role information is missing. Ensure an authentication middleware (authenticateJWT or authenticateGateway) runs before checkRole.'));
+    }
     
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: '权限不足' });
+      return next(new ForbiddenError(`Access denied. Your role ('${req.user.role}') is not authorized for this resource. Required roles: ${roles.join(', ')}.`));
     }
     
     next();
@@ -65,8 +74,16 @@ const checkRole = (roles) => {
  * @param {Object} payload - 令牌负载
  * @returns {String} - JWT令牌
  */
-const generateToken = (payload) => {
-  return jwt.sign(payload, config.jwtSecret, { expiresIn: config.tokenExpiration });
+const generateToken = (user, type = 'access') => {
+  const payload = {
+    id: user._id || user.id,
+    role: user.role,
+    username: user.username,
+  };
+  const secret = jwtSecret;
+  const expiresIn = type === 'refresh' ? refreshTokenExpiration : tokenExpiration;
+
+  return jwt.sign(payload, secret, { expiresIn });
 };
 
 module.exports = {

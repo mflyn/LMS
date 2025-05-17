@@ -1,65 +1,56 @@
-const express = require('express');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-const User = require('./models/User');
-const Role = require('./models/Role');
+const createBaseApp = require('../../common/createBaseApp'); // 调整路径到 common 目录
 const config = require('./config');
+const mainRoutes = require('./routes'); // user-service 的主路由
+const logger = require('../../common/utils/logger'); // 直接导入 logger 用于启动日志
 
-const app = express();
+// 1. 创建基础应用实例
+const app = createBaseApp({
+  serviceName: 'user-service',
+  // productionCorsOrigin: ['https://your-frontend.com'], // 如果需要特定CORS源
+  // developmentCorsOrigin: ['http://localhost:8081'], // 如果前端开发端口不是默认的
+  enableSessions: false, // 用户服务通常不需要HTTP会话
+  // rateLimitOptions: { windowMs: 10 * 60 * 1000, max: 50 } // 如果需要自定义速率限制
+});
 
-// 中间件
-app.use(cors());
-app.use(express.json());
+// 2. 挂载 user-service 特有的路由 (在所有通用中间件之后，全局错误处理器之前)
+// 确保路由前缀与 API 网关配置和服务设计一致
+// 例如，如果设计文档中 user-service 的所有 API 都在 /api/users 或 /api/auth 下
+app.use('/api', mainRoutes); // 假设 mainRoutes 内部处理了 /users 和 /auth 等子路径
 
-// 连接数据库
-mongoose.connect(config.mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB连接成功'))
-.catch(err => console.error('MongoDB连接失败:', err));
+// 3. 数据库连接
+const mongoURI = config.mongoURI;
+if (!mongoURI) {
+  logger.error('FATAL ERROR: mongoURI for user-service is not defined in config or environment.');
+  process.exit(1);
+}
 
-// 认证中间件
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+mongoose.connect(mongoURI)
+.then(() => {
+  logger.info(`MongoDB Connected to user-service at ${mongoURI}`);
   
-  if (token == null) return res.status(401).json({ message: '未提供认证令牌' });
-  
-  jwt.verify(token, config.jwtSecret, (err, user) => {
-    if (err) return res.status(403).json({ message: '令牌无效或已过期' });
-    req.user = user;
-    next();
+  // 4. 启动服务器
+  const PORT = config.port || process.env.USER_SERVICE_PORT || 3001;
+  if (!PORT) {
+    logger.error('FATAL ERROR: Port for user-service is not defined.');
+    process.exit(1);
+  }
+
+  app.listen(PORT, () => {
+    logger.info(`User service running on port ${PORT}`);
   });
-};
-
-// 角色检查中间件
-const checkRole = (roles) => {
-  return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: '未认证' });
-    
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: '权限不足' });
-    }
-    
-    next();
-  };
-};
-
-// 导入路由
-const routes = require('./routes');
-
-// 使用路由
-app.use('/api', routes);
-
-// 健康检查
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'user-service' });
+})
+.catch(err => {
+  logger.error('MongoDB connection error for user-service:', err);
+  process.exit(1);
 });
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`用户服务运行在端口 ${PORT}`);
-});
+// 5. 可选: 更优雅的未捕获异常和Promise拒绝处理 (虽然 createBaseApp 中的 errorHandler 会处理一部分)
+// process.on('unhandledRejection', (reason, promise) => {
+//   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+//   // Application specific logging, throwing an error, or other logic here
+// });
+// process.on('uncaughtException', (error) => {
+//   logger.error('Uncaught Exception thrown:', error);
+//   process.exit(1);
+// });

@@ -5,12 +5,14 @@ const MistakeRecordSchema = new Schema({
   student: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   subject: {
     type: Schema.Types.ObjectId,
     ref: 'Subject',
-    required: true
+    required: true,
+    index: true
   },
   question: {
     type: String,
@@ -18,36 +20,48 @@ const MistakeRecordSchema = new Schema({
   },
   answer: {
     type: String,
-    required: true
   },
   correctAnswer: {
     type: String,
     required: true
   },
-  knowledgePoints: [{
+  analysis: {
+    type: String
+  },
+  tags: [{
     type: String,
-    required: true
   }],
-  comments: {
+  source: {
     type: String
   },
   status: {
     type: String,
-    enum: ['unresolved', 'reviewing', 'resolved'],
+    enum: ['unresolved', 'reviewing', 'resolved', 'archived'],
     default: 'unresolved'
   },
   date: {
     type: Date,
-    required: true
+    required: true,
+    default: Date.now
   },
-  recordedBy: {
+  resolvedDate: {
+    type: Date
+  },
+  createdBy: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  resolvedDate: {
-    type: Date
+  updatedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   }
+}, {
+  timestamps: true
 });
+
+MistakeRecordSchema.index({ student: 1, status: 1, date: -1 });
+MistakeRecordSchema.index({ subject: 1, status: 1 });
+MistakeRecordSchema.index({ tags: 1 });
 
 module.exports = mongoose.model('MistakeRecord', MistakeRecordSchema);

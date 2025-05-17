@@ -1,15 +1,13 @@
 const { body, query, param, validationResult } = require('express-validator');
 const sanitizeHtml = require('sanitize-html');
+const { ValidationError } = require('./errorTypes'); // Assuming errorTypes.js is in the same directory
 
 // 通用验证中间件
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({
-      status: 'error',
-      message: '请求参数验证失败',
-      errors: errors.array()
-    });
+    // 将详细错误信息传递给 ValidationError，它会处理 status 和 message
+    return next(new ValidationError(errors.array(), '请求参数验证失败')); 
   }
   next();
 };

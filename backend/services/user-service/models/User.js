@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
@@ -9,64 +10,90 @@ const UserSchema = new Schema({
   username: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   password: {
     type: String,
-    required: true
+    required: true,
+    select: false
   },
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   role: {
     type: String,
-    enum: ['student', 'parent', 'teacher', 'admin'],
-    required: true
+    enum: ['student', 'parent', 'teacher', 'admin', 'superadmin'],
+    required: true,
+    index: true
   },
   avatar: {
     type: String
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  lastLogin: {
-    type: Date
-  },
-  // 学生特有字段
   grade: {
     type: String,
     required: function() { return this.role === 'student'; }
   },
-  class: {
+  studentClass: {
     type: String,
     required: function() { return this.role === 'student'; }
   },
-  studentId: {
+  studentIdNumber: {
     type: String,
-    required: function() { return this.role === 'student'; }
+    unique: true,
+    sparse: true,
   },
-  // 家长特有字段
   children: [{
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: function() { return this.role === 'parent'; }
   }],
-  // 教师特有字段
-  teacherId: {
+  teacherIdNumber: {
     type: String,
-    required: function() { return this.role === 'teacher'; }
+    unique: true,
+    sparse: true,
   },
-  subjects: [{
+  subjectsTaught: [{
     type: String,
-    required: function() { return this.role === 'teacher'; }
   }],
-  classesManaged: [{
+  classesOverseen: [{
     type: String,
-    required: function() { return this.role === 'teacher'; }
-  }]
+  }],
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+}, {
+  timestamps: true
 });
+
+UserSchema.index({ role: 1, isActive: 1 });
+
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+UserSchema.methods.comparePassword = async function(candidatePassword) {
+  if (typeof this.password !== 'string' || !this.password) {
+    throw new Error('User password not available for comparison. Ensure it is selected from the database.');
+  }
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    console.error('Password comparison (bcrypt) error:', error);
+    return false;
+  }
+};
 
 module.exports = mongoose.model('User', UserSchema);

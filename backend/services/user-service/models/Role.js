@@ -6,7 +6,8 @@ const RoleSchema = new Schema({
     type: String,
     required: true,
     unique: true,
-    enum: ['student', 'parent', 'teacher', 'admin']
+    index: true,
+    enum: ['student', 'parent', 'teacher', 'admin', 'superadmin']
   },
   description: {
     type: String,
@@ -14,12 +15,9 @@ const RoleSchema = new Schema({
   },
   permissions: [{
     type: String,
-    required: true
   }],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Role', RoleSchema);

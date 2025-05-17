@@ -14,9 +14,13 @@ const auditLogger = (options = {}) => {
       return next();
     }
 
-    // 生成请求ID
-    const requestId = uuidv4();
-    req.requestId = requestId;
+    // 使用已有的 requestId，如果不存在则生成一个新的 (作为后备)
+    // 理想情况下，requestId 应该由 requestTracker 中间件提前设置
+    const requestId = req.requestId || uuidv4();
+    // 确保 req.requestId 也被设置，以供后续中间件使用（如果它是由此中间件首次生成的）
+    if (!req.requestId) {
+      req.requestId = requestId;
+    }
 
     // 记录请求开始时间
     const startTime = Date.now();
