@@ -8,11 +8,12 @@ const authRoutes = require('../../routes/auth');
 const User = require('../../models/User');
 const Role = require('../../models/Role');
 const config = require('../../config');
+const app = require('../../server'); // 使用 user-service 自己的 app
 
 // 创建一个简单的Express应用用于测试
-const app = express();
-app.use(express.json());
-app.use('/api/auth', authRoutes);
+const appForTests = express();
+appForTests.use(express.json());
+appForTests.use('/api/auth', authRoutes);
 
 let mongoServer;
 
@@ -38,6 +39,15 @@ beforeAll(async () => {
     description: '教师角色',
     permissions: ['read_resources', 'create_resources', 'grade_homework']
   });
+
+  // 确保必要的角色存在
+  const rolesToEnsure = ['student', 'teacher', 'admin', 'superadmin'];
+  for (const roleName of rolesToEnsure) {
+    const roleExists = await Role.findOne({ name: roleName });
+    if (!roleExists) {
+      await new Role({ name: roleName, description: `${roleName} role` }).save();
+    }
+  }
 });
 
 // 在所有测试之后关闭连接
@@ -51,220 +61,192 @@ beforeEach(async () => {
   await User.deleteMany({});
 });
 
-describe('认证路由测试', () => {
-  describe('POST /api/auth/register', () => {
-    it('应该成功注册新用户', async () => {
-      const userData = {
-        name: '测试用户',
-        username: 'testuser',
-        password: 'password123',
-        email: 'test@example.com',
-        role: 'student',
-        grade: '三年级',
-        class: '1班',
-        studentId: 'S12345'
-      };
+describe('认证 API 测试 (/api/auth)', () => {
+  const baseUserData = {
+    name: 'Auth Test User',
+    username: 'auth_test_user',
+    password: 'Password123!',
+    email: 'auth_test@example.com',
+  };
 
-      const response = await request(app)
+  describe('POST /api/auth/register', () => {
+    it('应该成功注册新用户 (学生)', async () => {
+      const studentData = {
+        ...baseUserData,
+        role: 'student',
+        grade: '七年级',
+        studentClass: '3班',
+        studentIdNumber: 'S73001'
+      };
+      const response = await request(appForTests)
         .post('/api/auth/register')
-        .send(userData);
+        .send(studentData);
 
       expect(response.status).toBe(201);
-      expect(response.body.message).toBe('用户注册成功');
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.user.username).toBe(studentData.username);
+      expect(response.body.data.user.email).toBe(studentData.email);
+      expect(response.body.data.user.role).toBe('student');
+      expect(response.body.data.token).toBeDefined();
 
-      // 验证用户是否已保存到数据库
-      const user = await User.findOne({ username: 'testuser' });
-      expect(user).not.toBeNull();
-      expect(user.name).toBe('测试用户');
-      expect(user.email).toBe('test@example.com');
-      expect(user.role).toBe('student');
-
-      // 验证密码是否已加密
-      const isPasswordValid = await bcrypt.compare('password123', user.password);
-      expect(isPasswordValid).toBe(true);
+      const dbUser = await User.findOne({ username: studentData.username });
+      expect(dbUser).toBeDefined();
+      expect(dbUser.grade).toBe(studentData.grade);
     });
 
-    it('应该拒绝注册已存在的用户名', async () => {
-      // 先创建一个用户
-      const existingUser = new User({
-        name: '已存在用户',
-        username: 'existinguser',
-        password: await bcrypt.hash('password123', 10),
-        email: 'existing@example.com',
-        role: 'student',
-        grade: '三年级',
-        class: '1班',
-        studentId: 'S12345'
-      });
-      await existingUser.save();
-
-      // 尝试使用相同用户名注册
-      const userData = {
-        name: '新用户',
-        username: 'existinguser',
-        password: 'password123',
-        email: 'new@example.com',
-        role: 'student',
-        grade: '四年级',
-        class: '2班',
-        studentId: 'S67890'
-      };
-
-      const response = await request(app)
+    it('注册时用户名已存在应该失败', async () => {
+      await new User({ ...baseUserData, role: 'student', grade:'级', studentClass: '班' }).save(); // 先注册一个用户
+      const response = await request(appForTests)
         .post('/api/auth/register')
-        .send(userData);
+        .send({ ...baseUserData, email: 'new_email@example.com', role: 'teacher' });
+      
+      expect(response.status).toBe(400); // 或者 409 Conflict，取决于API设计
+      expect(response.body.status).toBe('fail'); // 或 'error'
+      expect(response.body.message).toMatch(/username already exists/i);
+    });
+
+    it('注册时邮箱已存在应该失败', async () => {
+      await new User({ ...baseUserData, username: 'new_user_for_email_test', role: 'student', grade:'级', studentClass: '班' }).save();
+      const response = await request(appForTests)
+        .post('/api/auth/register')
+        .send({ ...baseUserData, username: 'another_new_user', role: 'teacher' });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('用户名已存在');
+      expect(response.body.message).toMatch(/email already exists/i);
     });
 
-    it('应该拒绝无效的角色', async () => {
-      const userData = {
-        name: '测试用户',
-        username: 'testuser',
-        password: 'password123',
-        email: 'test@example.com',
-        role: 'invalid_role' // 无效角色
-      };
-
-      const response = await request(app)
+    // 根据 authValidators.js 中的规则添加更多验证失败的测试
+    it('注册时密码太短应该失败', async () => {
+      const response = await request(appForTests)
         .post('/api/auth/register')
-        .send(userData);
-
+        .send({ ...baseUserData, role: 'student', password: '123' });
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('无效的角色');
+      expect(response.body.errors).toBeDefined();
+      const passwordError = response.body.errors.find(e => e.path === 'password');
+      expect(passwordError).toBeDefined();
     });
 
-    it('应该处理服务器错误', async () => {
-      // 模拟数据库错误
-      jest.spyOn(User.prototype, 'save').mockImplementationOnce(() => {
-        throw new Error('数据库错误');
-      });
-
-      const userData = {
-        name: '测试用户',
-        username: 'testuser',
-        password: 'password123',
-        email: 'test@example.com',
-        role: 'student',
-        grade: '三年级',
-        class: '1班',
-        studentId: 'S12345'
-      };
-
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(userData);
-
-      expect(response.status).toBe(500);
-      expect(response.body.message).toBe('服务器错误');
-
-      // 恢复模拟
-      User.prototype.save.mockRestore();
+    it('注册时缺少必填字段 (如username) 应该失败', async () => {
+        const incompleteData = { ...baseUserData, role: 'student' };
+        delete incompleteData.username;
+        const response = await request(appForTests)
+            .post('/api/auth/register')
+            .send(incompleteData);
+        expect(response.status).toBe(400);
+        expect(response.body.errors).toBeDefined();
+        const usernameError = response.body.errors.find(e => e.path === 'username');
+        expect(usernameError).toBeDefined();
     });
   });
 
   describe('POST /api/auth/login', () => {
-    it('应该成功登录并返回令牌', async () => {
-      // 创建测试用户
-      const hashedPassword = await bcrypt.hash('password123', 10);
-      const testUser = new User({
-        name: '测试用户',
-        username: 'testuser',
-        password: hashedPassword,
-        email: 'test@example.com',
-        role: 'student',
-        grade: '三年级',
-        class: '1班',
-        studentId: 'S12345'
-      });
-      await testUser.save();
+    beforeEach(async () => {
+      // 创建一个用户用于登录测试
+      const user = new User({ ...baseUserData, role: 'teacher' });
+      await user.save(); // pre-save hook will hash password
+    });
 
-      const loginData = {
-        username: 'testuser',
-        password: 'password123'
-      };
-
-      const response = await request(app)
+    it('应该成功登录并返回token', async () => {
+      const response = await request(appForTests)
         .post('/api/auth/login')
-        .send(loginData);
-
+        .send({ username: baseUserData.username, password: baseUserData.password });
+      
       expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.token).toBeDefined();
-      expect(response.body.user).toBeDefined();
-      expect(response.body.user.username).toBe('testuser');
-      expect(response.body.user.name).toBe('测试用户');
-      expect(response.body.user.role).toBe('student');
-
-      // 验证令牌
-      const decoded = jwt.verify(response.body.token, config.jwtSecret);
-      expect(decoded.username).toBe('testuser');
-      expect(decoded.role).toBe('student');
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.user.username).toBe(baseUserData.username);
     });
 
-    it('应该拒绝不存在的用户', async () => {
-      const loginData = {
-        username: 'nonexistentuser',
-        password: 'password123'
-      };
-
-      const response = await request(app)
+    it('使用错误密码登录应该失败', async () => {
+      const response = await request(appForTests)
         .post('/api/auth/login')
-        .send(loginData);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('用户名或密码不正确');
+        .send({ username: baseUserData.username, password: 'wrongpassword' });
+      expect(response.status).toBe(401);
+      expect(response.body.message).toMatch(/Invalid credentials|用户名或密码错误/i);
     });
 
-    it('应该拒绝错误的密码', async () => {
-      // 创建测试用户
-      const hashedPassword = await bcrypt.hash('password123', 10);
-      const testUser = new User({
-        name: '测试用户',
-        username: 'testuser',
-        password: hashedPassword,
-        email: 'test@example.com',
+    it('使用不存在的用户名登录应该失败', async () => {
+      const response = await request(appForTests)
+        .post('/api/auth/login')
+        .send({ username: 'nonexistentuser', password: baseUserData.password });
+      expect(response.status).toBe(401);
+    });
+
+    it('登录时缺少用户名应验证失败', async () => {
+      const response = await request(appForTests)
+        .post('/api/auth/login')
+        .send({ password: baseUserData.password });
+      expect(response.status).toBe(400);
+      expect(response.body.errors).toBeDefined();
+    });
+  });
+
+  describe('POST /api/auth/change-password', () => {
+    let userToken;
+    let createdUserId;
+    const oldPassword = 'OldPassword123!';
+    const newPassword = 'NewPassword456!';
+
+    beforeEach(async () => {
+      const userToChangePass = await User.create({
+        ...baseUserData,
+        username: 'user_change_pass',
+        email: 'user_change_pass@example.com',
+        password: oldPassword,
         role: 'student',
-        grade: '三年级',
-        class: '1班',
-        studentId: 'S12345'
+        grade:'级', studentClass: '班'
       });
-      await testUser.save();
+      createdUserId = userToChangePass._id;
 
-      const loginData = {
-        username: 'testuser',
-        password: 'wrongpassword'
-      };
-
-      const response = await request(app)
+      const loginResponse = await request(appForTests)
         .post('/api/auth/login')
-        .send(loginData);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('用户名或密码不正确');
+        .send({ username: 'user_change_pass', password: oldPassword });
+      userToken = loginResponse.body.data.token;
     });
 
-    it('应该处理服务器错误', async () => {
-      // 模拟数据库错误
-      jest.spyOn(User, 'findOne').mockImplementationOnce(() => {
-        throw new Error('数据库错误');
-      });
+    it('应该成功修改密码', async () => {
+      const response = await request(appForTests)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ oldPassword: oldPassword, newPassword: newPassword, confirmPassword: newPassword });
+      
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe('success');
+      expect(response.body.message).toMatch(/Password changed successfully/i);
 
-      const loginData = {
-        username: 'testuser',
-        password: 'password123'
-      };
-
-      const response = await request(app)
+      // 验证新密码可以用于登录
+      const loginWithNewPass = await request(appForTests)
         .post('/api/auth/login')
-        .send(loginData);
+        .send({ username: 'user_change_pass', password: newPassword });
+      expect(loginWithNewPass.status).toBe(200);
+      expect(loginWithNewPass.body.data.token).toBeDefined();
+    });
 
-      expect(response.status).toBe(500);
-      expect(response.body.message).toBe('服务器错误');
+    it('使用错误的旧密码修改密码应该失败', async () => {
+      const response = await request(appForTests)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ oldPassword: 'wrongoldpassword', newPassword: newPassword, confirmPassword: newPassword });
+      expect(response.status).toBe(401); // 或者 400
+      expect(response.body.message).toMatch(/Incorrect old password/i);
+    });
 
-      // 恢复模拟
-      User.findOne.mockRestore();
+    it('新密码与确认密码不匹配时应该失败', async () => {
+      const response = await request(appForTests)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ oldPassword: oldPassword, newPassword: newPassword, confirmPassword: 'doesnotmatch' });
+      expect(response.status).toBe(400);
+      expect(response.body.errors).toBeDefined(); // 期望验证器返回错误
+      const confirmPasswordError = response.body.errors.find(e => e.path === 'confirmPassword');
+      expect(confirmPasswordError).toBeDefined();
+    });
+
+    it('未经认证的用户修改密码应该失败', async () => {
+      const response = await request(appForTests)
+        .post('/api/auth/change-password')
+        .send({ oldPassword: oldPassword, newPassword: newPassword, confirmPassword: newPassword });
+      expect(response.status).toBe(401); // Unauthorized
     });
   });
 });

@@ -205,13 +205,19 @@ class UserService {
     }
 
     // Admin might be allowed to update more fields, like 'role'
-    // Be careful with password updates - if password is in updateData, it should be hashed.
-    // This example assumes password isn't updated here directly, or User model pre-save handles it.
-    if (updateData.password) {
-        // If allowing password update, ensure it's hashed
-        // const salt = await bcrypt.genSalt(10);
-        // updateData.password = await bcrypt.hash(updateData.password, salt);
-        logger.warn(`[UserService] Admin update for user ${userId} includes password. Ensure it's handled (hashed).`);
+    // Handle password update: if password is in updateData and not empty, it should be hashed.
+    if (updateData.password && typeof updateData.password === 'string' && updateData.password.trim() !== '') {
+        logger.info(`[UserService] Admin update for user ${userId} includes new password. Hashing password.`);
+        // Password hashing is handled by the pre-save hook in User model if we trigger .save()
+        // Since findByIdAndUpdate bypasses save hooks for password, we need to hash it manually here OR fetch and save.
+        // For simplicity and directness with findByIdAndUpdate, we'll hash manually here.
+        // This means the User model's pre-save password hook won't run for this specific update path.
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(updateData.password, salt);
+    } else if (updateData.hasOwnProperty('password')) {
+        // If password field is present but empty or not a string, remove it to avoid setting an invalid password
+        delete updateData.password;
+        logger.info(`[UserService] Admin update for user ${userId} had an empty or invalid password field, it will be ignored.`);
     }
 
     const user = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true, runValidators: true });
@@ -239,6 +245,59 @@ class UserService {
     }
     logger.info(`[UserService] Admin: Successfully deleted user ID: ${userId}`);
     return true;
+  }
+
+  async createUserAsAdmin(userData, logger) {
+    logger.info('[UserService] Admin attempting to create new user', { username: userData.username, email: userData.email });
+
+    const { username, email, password, role, ...otherData } = userData;
+
+    if (!username || !email || !password || !role) {
+      logger.warn('[UserService] Admin user creation failed: Missing required fields');
+      throw new BadRequestError('Username, email, password, and role are required for admin user creation.');
+    }
+
+    // Validate role against the Role model
+    const existingRole = await Role.findOne({ name: role });
+    if (!existingRole) {
+      logger.warn(`[UserService] Admin user creation failed: Invalid role specified - ${role}.`);
+      throw new BadRequestError(`Invalid role: ${role}. Ensure the role is predefined in the system.`);
+    }
+
+    let existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      if (existingUser.email === email) {
+        logger.warn('[UserService] Admin user creation failed: Email already exists', { email });
+        throw new ConflictError('Email already exists.');
+      }
+      if (existingUser.username === username) {
+        logger.warn('[UserService] Admin user creation failed: Username already exists', { username });
+        throw new ConflictError('Username already exists.');
+      }
+    }
+    
+    // Password will be hashed by the pre-save hook in the User model.
+    const newUser = new User({
+      username,
+      email,
+      password, // User model's pre-save hook will hash this
+      role,
+      ...otherData,
+      isActive: userData.isActive === undefined ? true : userData.isActive, // Default to true if not specified
+    });
+
+    try {
+      await newUser.save();
+      logger.info('[UserService] Admin successfully created user', { userId: newUser._id, username: newUser.username });
+      return cleanUser(newUser);
+    } catch (error) {
+      logger.error('[UserService] Error during admin user creation', { error: error.message, stack: error.stack });
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(e => e.message).join(', ');
+        throw new BadRequestError(`Validation failed: ${messages}`);
+      }
+      throw new AppError('Failed to create user due to a server error.', 500);
+    }
   }
 
   async changePassword(userId, oldPassword, newPassword, logger) {
