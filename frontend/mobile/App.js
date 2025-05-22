@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StatusBar, View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { StatusBar, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -8,6 +8,7 @@ import { AuthContext } from './src/contexts/AuthContext';
 import { NetworkProvider, useNetwork } from './src/contexts/NetworkContext';
 import analyticsService from './src/services/analyticsService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { navigationRef } from './src/services/NavigationService';
 
 // 离线模式指示器组件
 const OfflineBanner = () => {
@@ -27,8 +28,8 @@ const MainApp = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userToken, setUserToken] = useState(null);
   
-  // 认证上下文
-  const authContext = {
+  // 认证上下文 - 使用 useMemo 优化
+  const authContext = useMemo(() => ({
     signIn: async (token) => {
       try {
         await AsyncStorage.setItem('userToken', token);
@@ -50,7 +51,7 @@ const MainApp = () => {
       }
     },
     token: userToken,
-  };
+  }), [userToken]); // 依赖 userToken，当 userToken 变化时重新计算
   
   // 检查是否已登录
   useEffect(() => {
@@ -72,28 +73,28 @@ const MainApp = () => {
   useEffect(() => {
     analyticsService.init({ autoSync: true });
     
-    // 记录应用启动事件
-    analyticsService.trackEvent('app_start', {
-      timestamp: new Date().toISOString(),
-    });
-    
-    // 应用关闭时记录会话结束事件
+    // 应用关闭时记录会话结束事件，并停止自动同步
     return () => {
       analyticsService.trackEvent('session_end', {
         timestamp: new Date().toISOString(),
       });
+      analyticsService.stopAutoSync();
     };
   }, []);
   
   if (isLoading) {
-    return null; // 或者显示加载指示器
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4a90e2" />
+      </View>
+    );
   }
   
   return (
     <AuthContext.Provider value={authContext}>
       <PaperProvider>
         <StatusBar barStyle="dark-content" />
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <OfflineBanner />
           <AppNavigator />
         </NavigationContainer>
@@ -124,5 +125,11 @@ const styles = StyleSheet.create({
   offlineText: {
     color: '#721c24',
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
 });

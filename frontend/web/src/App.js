@@ -47,15 +47,9 @@ const AppContent = () => {
         {isAuthenticated && <AppHeader />}
         <Layout>
           {isAuthenticated && <AppSidebar />}
-          <Layout style={{ padding: '0 24px 24px' }}>
+          <Layout>
             <Content
-              style={{
-                margin: '24px 16px',
-                padding: 24,
-                minHeight: 280,
-                background: '#fff',
-                borderRadius: '4px',
-              }}
+              className="app-content"
             >
               <Routes>
                 <Route path="/login" element={<Login />} />
@@ -79,6 +73,25 @@ const AppContent = () => {
                     <Analytics />
                   </ProtectedRoute>
                 } />
+                <Route path="/profile" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/notifications" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/courses" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/assignments" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/progress" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/children" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/performance" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/communication" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/classes" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/students" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/grades" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/homework" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/parent-communication" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/users" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/classes-admin" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/courses-admin" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/system" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                <Route path="/reports" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -3,10 +3,11 @@
  * 用于监控网络状态变化并通知应用其他部分
  */
 
-import { useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { Alert } from 'react-native';
-import enhancedApi from './enhancedApi';
+// useEffect, useState, Alert, enhancedApi 相关的导入不再需要，因为 useNetworkStatus 被移除
+// import { useEffect, useState } from 'react';
+// import { Alert } from 'react-native';
+// import enhancedApi from './enhancedApi';
 
 // 网络状态事件监听器
 let netInfoUnsubscribe = null;
@@ -65,27 +66,26 @@ const networkManager = {
     }
   },
   
-  /**
-   * 当网络恢复连接时同步离线数据
-   */
+  // syncDataWhenConnected 方法也被移除，因为它是 useNetworkStatus 内部逻辑的一部分
+  // 如果 NetworkContext 需要类似功能，应在其内部实现
+  /*
   syncDataWhenConnected: async () => {
     try {
       const isConnected = await networkManager.checkNetworkStatus();
       if (!isConnected) return;
       
       console.log('网络已恢复，开始同步离线数据...');
-      await enhancedApi.syncPendingData();
+      await enhancedApi.syncPendingData(); // enhancedApi 导入也已移除
       console.log('离线数据同步完成');
     } catch (error) {
       console.error('同步离线数据失败:', error);
     }
   },
+  */
 };
 
-/**
- * 网络状态Hook
- * @returns {Object} 包含网络状态的对象
- */
+// useNetworkStatus Hook 被移除
+/*
 export const useNetworkStatus = () => {
   const [isConnected, setIsConnected] = useState(true);
   const [isFirstConnect, setIsFirstConnect] = useState(true);
@@ -124,5 +124,6 @@ export const useNetworkStatus = () => {
   
   return { isConnected };
 };
+*/
 
 export default networkManager;

@@ -33,6 +33,8 @@ const deviceInfo = {
   screenHeight: Dimensions.get('window').height,
 };
 
+let autoSyncIntervalId = null; // 存储 interval ID
+
 /**
  * 用户行为分析服务
  */
@@ -51,13 +53,27 @@ const analyticsService = {
       
       // 设置定期同步
       if (options.autoSync) {
+        if (autoSyncIntervalId) {
+          clearInterval(autoSyncIntervalId); // 清除旧的 interval (如果有)
+        }
         // 每5分钟尝试同步一次数据
-        setInterval(() => {
+        autoSyncIntervalId = setInterval(() => {
           analyticsService.syncEvents();
         }, 5 * 60 * 1000);
       }
     } catch (error) {
       console.error('初始化分析服务失败:', error);
+    }
+  },
+  
+  /**
+   * 停止自动同步
+   */
+  stopAutoSync: () => {
+    if (autoSyncIntervalId) {
+      clearInterval(autoSyncIntervalId);
+      autoSyncIntervalId = null;
+      console.log('Analytics auto sync stopped.');
     }
   },
   
@@ -251,6 +267,9 @@ const analyticsService = {
     try {
       await AsyncStorage.removeItem(ANALYTICS_QUEUE_KEY);
       await AsyncStorage.removeItem(ANALYTICS_USER_PREFS_KEY);
+      // 如果需要，也可以在这里停止自动同步，但这通常与应用生命周期或用户明确操作相关
+      // analyticsService.stopAutoSync(); 
+      console.log('All analytics data cleared from AsyncStorage.');
     } catch (error) {
       console.error('清除分析数据失败:', error);
     }

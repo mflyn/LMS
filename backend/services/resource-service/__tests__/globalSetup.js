@@ -1,4 +1,5 @@
 require('dotenv').config({ path: '.env.test' }); // 确保环境变量在 globalSetup 中也可用
+process.env.NODE_ENV = 'test'; // Explicitly set NODE_ENV for tests
 
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');

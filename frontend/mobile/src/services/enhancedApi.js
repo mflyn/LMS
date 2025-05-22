@@ -5,6 +5,23 @@
 
 import api from './api';
 import offlineStorage from './offlineStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+/**
+ * 创建一个稳定的对象字符串表示形式，用于缓存键。
+ * @param {Object} obj - 要字符串化的对象。
+ * @returns {string} 对象的稳定字符串表示。
+ */
+const getStableObjectString = (obj) => {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return String(obj);
+  }
+  const sortedObj = {};
+  Object.keys(obj).sort().forEach(key => {
+    sortedObj[key] = obj[key];
+  });
+  return JSON.stringify(sortedObj);
+};
 
 /**
  * 创建支持离线模式的API请求
@@ -119,7 +136,7 @@ const enhancedApi = {
   homework: {
     getAll: (filters) => withOfflineSupport(
       () => api.homework.getAll(filters),
-      `homework_all_${JSON.stringify(filters || {})}`
+      `homework_all_${getStableObjectString(filters || {})}`
     ),
     getById: (id) => withOfflineSupport(
       () => api.homework.getById(id),

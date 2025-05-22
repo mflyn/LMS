@@ -42,9 +42,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // 登录函数
-  const login = async (username, password) => {
+  const login = async (username, password, role) => {
     try {
-      const response = await axios.post('/api/auth/login', { username, password });
+      const response = await axios.post('/api/auth/login', { username, password, role });
       const { token, user } = response.data;
       
       // 保存令牌到本地存储

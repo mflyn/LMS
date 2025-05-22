@@ -1,10 +1,26 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
+import * as NavigationService from './NavigationService'; // 导入 NavigationService
+
+// API 配置 (简化版，未来可移至单独文件并结合环境变量)
+const ENV = __DEV__ ? 'development' : 'production'; // __DEV__ 是 React Native 的全局变量
+
+const API_CONFIGS = {
+  development: {
+    baseURL: 'http://localhost:3000/api', // 开发环境网关地址
+  },
+  production: {
+    baseURL: 'https://your-production-api.com/api', // 生产环境网关地址 (请替换为真实地址)
+  },
+  // 可以添加 staging 等其他环境
+};
+
+const currentConfig = API_CONFIGS[ENV] || API_CONFIGS.development; // 默认为开发配置
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api', // 网关地址
+  baseURL: currentConfig.baseURL, // 从配置读取 baseURL
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -14,7 +30,7 @@ const api = axios.create({
 // 请求拦截器 - 添加token
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('token');
+    const token = await AsyncStorage.getItem('userToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -37,9 +53,9 @@ api.interceptors.response.use(
       
       if (status === 401) {
         // 未授权，清除token并重定向到登录页
-        AsyncStorage.removeItem('token');
+        AsyncStorage.removeItem('userToken');
         Alert.alert('会话已过期', '请重新登录');
-        // 这里可以添加导航到登录页的逻辑
+        NavigationService.resetRoot('Login'); // 添加导航逻辑
       } else if (status === 403) {
         Alert.alert('权限不足', '您没有权限执行此操作');
       } else if (status === 500) {

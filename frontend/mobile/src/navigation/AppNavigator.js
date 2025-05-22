@@ -4,17 +4,17 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 // 导入现有页面
-import LoginScreen from '../components/LoginScreen';
-import DashboardScreen from '../components/DashboardScreen';
-import NotificationsScreen from '../components/NotificationsScreen';
+import LoginScreen from '../screens/LoginScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 // 导入新页面
-import ResourcesScreen from '../components/ResourcesScreen';
-import ResourceDetailScreen from '../components/ResourceDetailScreen';
-import InteractionScreen from '../components/InteractionScreen';
-import VideoMeetingScreen from '../components/VideoMeetingScreen';
-import MeetingListScreen from '../components/MeetingListScreen';
-import ProfileScreen from '../components/ProfileScreen';
+import ResourcesScreen from '../screens/ResourcesScreen';
+import ResourceDetailScreen from '../screens/ResourceDetailScreen';
+import InteractionScreen from '../screens/InteractionScreen';
+import VideoMeetingScreen from '../screens/VideoMeetingScreen';
+import MeetingListScreen from '../screens/MeetingListScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 // 创建导航器
 const Tab = createBottomTabNavigator();

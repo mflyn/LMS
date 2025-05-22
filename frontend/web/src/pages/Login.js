@@ -17,7 +17,7 @@ const Login = () => {
     setLoading(true);
     try {
       // 在实际登录请求中，可能需要传递用户类型
-      const success = await login(values.username, values.password);
+      const success = await login(values.username, values.password, values.userType);
       if (success) {
         // 根据用户类型导航到不同的仪表盘
         navigate('/dashboard');

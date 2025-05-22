@@ -1,59 +1,58 @@
-import React, { useState } from 'react';
-import { Card, Tabs, Empty, Spin, Alert, Button, Rate, Input, List, Avatar, Typography, Tag, Space } from 'antd';
-import { FileTextOutlined, VideoCameraOutlined, PictureOutlined, FileOutlined, DownloadOutlined, StarOutlined, LikeOutlined, MessageOutlined, UserOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Tabs, Empty, Spin, Alert, Button, Typography, Tag, Space, message } from 'antd';
+import { FileTextOutlined, VideoCameraOutlined, PictureOutlined, FileOutlined, DownloadOutlined } from '@ant-design/icons';
+import RatingsAndComments from './RatingsAndComments';
+import RelatedResources from './RelatedResources';
 
 const { TabPane } = Tabs;
-const { TextArea } = Input;
 const { Text, Title, Paragraph } = Typography;
+
+// 模拟的初始评论数据，实际应用中应从API获取或作为prop传入
+const MOCK_INITIAL_COMMENTS = [
+  {
+    id: 'comment1',
+    resourceId: 'mockResource1', // Ensure this matches the resource being previewed if needed by RatingsAndComments
+    user: { id: 'user101', name: '李老师', avatar: null },
+    content: '这是一个非常好的学习资源，内容丰富，适合三年级学生使用。',
+    rating: 5,
+    createdAt: '2023-10-15T14:30:00Z'
+  },
+  {
+    id: 'comment2',
+    resourceId: 'mockResource1',
+    user: { id: 'user102', name: '王老师', avatar: null },
+    content: '资料质量很高，但是有些内容可能对低年级学生来说有点难度。',
+    rating: 4,
+    createdAt: '2023-10-14T09:45:00Z'
+  }
+];
 
 // 资源预览组件
 const ResourcePreview = ({ resource, onClose }) => {
   const [activeTab, setActiveTab] = useState('preview');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [userRating, setUserRating] = useState(0);
-  const [userComment, setUserComment] = useState('');
-  
-  // 模拟评论数据
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      user: { id: 101, name: '李老师', avatar: null },
-      content: '这是一个非常好的学习资源，内容丰富，适合三年级学生使用。',
-      rating: 5,
-      createdAt: '2023-10-15 14:30'
-    },
-    {
-      id: 2,
-      user: { id: 102, name: '王老师', avatar: null },
-      content: '资料质量很高，但是有些内容可能对低年级学生来说有点难度。',
-      rating: 4,
-      createdAt: '2023-10-14 09:45'
-    }
-  ]);
-  
-  // 提交评分和评论
-  const handleSubmitRating = () => {
-    if (userRating === 0) {
-      alert('请先进行评分');
-      return;
-    }
-    
-    // 在实际项目中，这里应该调用API提交评分和评论
-    // 模拟添加新评论
-    const newComment = {
-      id: Date.now(),
-      user: { id: 999, name: '当前用户', avatar: null },
-      content: userComment,
-      rating: userRating,
-      createdAt: new Date().toLocaleString()
-    };
-    
-    setComments([newComment, ...comments]);
-    setUserComment('');
-    alert('评分和评论已提交');
+
+  // 评论提交处理函数 (将来对接API)
+  const handleCommentSubmission = (commentData, successCallback) => {
+    console.log('Submitting comment:', commentData);
+    setLoading(true); // Simulate API call loading
+    setTimeout(() => {
+      // 模拟API成功响应
+      const newlySubmittedComment = {
+        ...commentData,
+        id: `comment-${Date.now()}`, // Simulate a new ID from backend
+        user: { id: commentData.userId, name: commentData.userName, avatar: null }, // Reconstruct user object
+        createdAt: new Date().toISOString(), // Simulate backend timestamp
+      };
+      message.success('评论已提交成功！');
+      if (successCallback) {
+        successCallback(newlySubmittedComment);
+      }
+      setLoading(false);
+    }, 1000);
   };
-  
+
   // 渲染文档预览
   const renderDocumentPreview = () => {
     // 在实际项目中，这里应该使用PDF预览组件，如react-pdf
@@ -123,105 +122,24 @@ const ResourcePreview = ({ resource, onClose }) => {
     }
   };
   
-  // 渲染评分和评论
-  const renderRatingsAndComments = () => {
+  // 渲染评分和评论 - 现在使用新组件
+  const renderRatingsAndCommentsTab = () => {
+    if (!resource) return <Empty description="资源信息不完整，无法加载评价区。" />;
     return (
-      <div>
-        <div style={{ marginBottom: 24 }}>
-          <Title level={5}>为此资源评分</Title>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-            <Rate allowHalf value={userRating} onChange={setUserRating} />
-            <span style={{ marginLeft: 8 }}>{userRating ? `${userRating} 分` : ''}</span>
-          </div>
-          <TextArea 
-            rows={4} 
-            placeholder="分享您对此资源的看法..."
-            value={userComment}
-            onChange={e => setUserComment(e.target.value)}
-            style={{ marginBottom: 16 }}
-          />
-          <Button type="primary" onClick={handleSubmitRating}>提交评价</Button>
-        </div>
-        
-        <Divider />
-        
-        <div>
-          <Title level={5}>用户评价 ({comments.length})</Title>
-          <List
-            itemLayout="horizontal"
-            dataSource={comments}
-            renderItem={item => (
-              <List.Item>
-                <List.Item.Meta
-                  avatar={<Avatar icon={<UserOutlined />} />}
-                  title={
-                    <Space>
-                      <Text strong>{item.user.name}</Text>
-                      <Rate disabled defaultValue={item.rating} style={{ fontSize: 12 }} />
-                    </Space>
-                  }
-                  description={
-                    <>
-                      <Paragraph>{item.content}</Paragraph>
-                      <Text type="secondary">{item.createdAt}</Text>
-                    </>
-                  }
-                />
-              </List.Item>
-            )}
-          />
-        </div>
-      </div>
+      <RatingsAndComments 
+        resourceId={resource.id} 
+        initialComments={MOCK_INITIAL_COMMENTS.filter(c => c.resourceId === resource.id)} // Pass filtered comments or fetch them
+        onCommentSubmit={handleCommentSubmission} 
+      />
     );
   };
   
-  // 渲染相关推荐
-  const renderRelatedResources = () => {
-    // 模拟相关资源数据
-    const relatedResources = [
-      { id: 101, title: '三年级语文阅读理解练习', type: '习题', subject: '语文', grade: '三年级', uploader: { name: '李老师' }, rating: 4.5, downloads: 120 },
-      { id: 102, title: '小学生必背古诗词', type: '文档', subject: '语文', grade: '全年级', uploader: { name: '王老师' }, rating: 5, downloads: 230 },
-      { id: 103, title: '语文知识点总结', type: '文档', subject: '语文', grade: '三年级', uploader: { name: '张老师' }, rating: 4, downloads: 98 },
-    ];
-    
-    return (
-      <List
-        itemLayout="horizontal"
-        dataSource={relatedResources}
-        renderItem={item => (
-          <List.Item
-            actions={[
-              <Button type="link" key="view">查看</Button>,
-              <Button type="link" key="download">下载</Button>
-            ]}
-          >
-            <List.Item.Meta
-              avatar={
-                <Avatar 
-                  icon={
-                    item.type === '文档' ? <FileTextOutlined /> :
-                    item.type === '视频' ? <VideoCameraOutlined /> :
-                    item.type === '图片' ? <PictureOutlined /> :
-                    <FileOutlined />
-                  } 
-                  style={{ backgroundColor: '#1890ff' }}
-                />
-              }
-              title={item.title}
-              description={
-                <Space>
-                  <Tag color="blue">{item.subject}</Tag>
-                  <Tag color="green">{item.grade}</Tag>
-                  <Tag color="orange">{item.type}</Tag>
-                  <span><StarOutlined /> {item.rating}</span>
-                  <span><DownloadOutlined /> {item.downloads}</span>
-                </Space>
-              }
-            />
-          </List.Item>
-        )}
-      />
-    );
+  // 渲染相关推荐 - 现在使用新组件
+  const renderRelatedResourcesTab = () => {
+    if (!resource) return <Empty description="资源信息不完整，无法加载相关推荐。" />;
+    // 实际应用中，relatedData 应该通过API获取，或者基于当前 resource.id 和其他逻辑推荐
+    // 此处我们仅传递 currentResourceId，RelatedResources 组件内部会使用模拟数据
+    return <RelatedResources currentResourceId={resource.id} />;
   };
   
   return (
@@ -246,10 +164,10 @@ const ResourcePreview = ({ resource, onClose }) => {
             {renderPreviewByType()}
           </TabPane>
           <TabPane tab="评价" key="ratings">
-            {renderRatingsAndComments()}
+            {renderRatingsAndCommentsTab()}
           </TabPane>
           <TabPane tab="相关推荐" key="related">
-            {renderRelatedResources()}
+            {renderRelatedResourcesTab()}
           </TabPane>
         </Tabs>
       )}

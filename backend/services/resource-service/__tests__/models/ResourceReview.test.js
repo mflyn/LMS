@@ -4,22 +4,29 @@ const ResourceReview = require('../../models/ResourceReview');
 // 增加超时时间
 jest.setTimeout(60000);
 
-// 创建一个模拟的 Resource 模型
-const mockResource = {
+// 创建一个模拟的 Resource 模型方法
+const mockResourceStaticMethods = {
   findByIdAndUpdate: jest.fn().mockResolvedValue({
     _id: 'mockResourceId',
     title: 'Mock Resource',
     averageRating: 4.5,
     reviewCount: 2
   })
+  // 如果 Resource 模型还有其他静态方法被钩子使用，也在这里 mock
 };
 
 // 模拟 mongoose.model
 jest.spyOn(mongoose, 'model').mockImplementation((modelName) => {
   if (modelName === 'Resource') {
-    return mockResource;
+    // 返回一个模拟 Resource 模型静态方法的对象
+    return mockResourceStaticMethods;
   }
-  return modelName;
+  if (modelName === 'ResourceReview') {
+    return ResourceReview; // 返回真实的 ResourceReview 模型构造函数
+  }
+  // 对于其他模型，可以返回一个通用 mock 或抛出错误
+  // console.warn(`mongoose.model called with unmocked model: ${modelName}`);
+  return jest.fn(); // 或者 throw new Error(`Unmocked model: ${modelName}`);
 });
 
 describe('ResourceReview 模型测试', () => {
@@ -499,6 +506,48 @@ describe('ResourceReview 模型测试', () => {
           averageRating: expectedRating,
           reviewCount: 2
         })
+      );
+    });
+
+    it('当评论被删除时，post remove 钩子应该正确更新资源评分和数量', async () => {
+      const resourceId = new mongoose.Types.ObjectId();
+      const reviewerId = new mongoose.Types.ObjectId();
+      
+      // 在此测试中，我们不模拟 ResourceReview.find，而是依赖实际的查询
+      // mockResourceStaticMethods.findByIdAndUpdate 需要在每次测试前被清除
+      mockResourceStaticMethods.findByIdAndUpdate.mockClear();
+
+      // 1. 创建并保存一个评论到内存数据库
+      const reviewData = {
+        resource: resourceId,
+        reviewer: reviewerId,
+        rating: 4,
+        comment: '一个要被删除的评论'
+      };
+      const reviewInstance = new ResourceReview(reviewData);
+      const savedReview = await reviewInstance.save();
+      expect(savedReview._id).toBeDefined();
+
+      // 确保在 remove 之前，Resource.findByIdAndUpdate 没有被调用
+      expect(mockResourceStaticMethods.findByIdAndUpdate).not.toHaveBeenCalled();
+
+      // 2. 调用 remove() 方法删除评论
+      // remove() 方法在 Mongoose 5.x 及更早版本中直接在文档实例上调用
+      // 在 Mongoose 6.x+ 中，通常使用 Model.deleteOne({_id: ...}) 或 Model.findByIdAndDelete()
+      // 假设我们使用的是允许 instance.remove() 的版本，或者 ResourceReview.remove 是一个静态方法
+      // 如果 ResourceReview.remove 是实例方法：
+      await savedReview.remove(); 
+      // 如果 remove 是一个需要参数的静态方法，或者需要特定方式调用，请相应调整
+      // 例如: await ResourceReview.deleteOne({ _id: savedReview._id });
+
+      // 3. 验证 post remove 钩子是否触发了 Resource.findByIdAndUpdate
+      expect(mockResourceStaticMethods.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+      expect(mockResourceStaticMethods.findByIdAndUpdate).toHaveBeenCalledWith(
+        resourceId,
+        {
+          averageRating: 0, // 因为这是唯一（现已删除）的评论
+          reviewCount: 0
+        }
       );
     });
   });

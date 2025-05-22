@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Tabs, Button, Form, Badge, Modal, Input, Select, DatePicker, Typography, List, Avatar, Tag, message, Spin, Alert, Divider, Space, Tooltip } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Row, Col, Card, Tabs, Button, Form, Badge, Modal, Input, Select, DatePicker, Typography, List, Avatar, Tag, message, Spin, Alert, Divider, Space, Tooltip, PageHeader } from 'antd';
 import { 
   MessageOutlined, 
   VideoCameraOutlined, 
@@ -18,6 +18,11 @@ import axios from 'axios';
 import moment from 'moment';
 import VideoMeeting from '../components/meeting/VideoMeeting';
 
+// Import new Tab components
+import MessagesTab from './interaction/MessagesTab';
+import MeetingsTab from './interaction/MeetingsTab';
+import AnnouncementsTab from './interaction/AnnouncementsTab';
+
 const { TabPane } = Tabs;
 const { TextArea } = Input;
 const { Option } = Select;
@@ -26,12 +31,12 @@ const { RangePicker } = DatePicker;
 
 const Interaction = () => {
   const { currentUser, userRole } = useAuth();
-  const [messages, setMessages] = useState([]);
-  const [meetings, setMeetings] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
+  const [messagesData, setMessagesData] = useState([]);
+  const [meetingsData, setMeetingsData] = useState([]);
+  const [announcementsData, setAnnouncementsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('1');
+  const [activeTabKey, setActiveTabKey] = useState('messages');
   
   // 新消息表单状态
   const [newMessage, setNewMessage] = useState({
@@ -79,183 +84,76 @@ const Interaction = () => {
   const [detailItem, setDetailItem] = useState(null);
   const [detailType, setDetailType] = useState('');
   
-  // 获取数据
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        await Promise.all([
-          fetchMessages(),
-          fetchMeetings(),
-          fetchAnnouncements()
-        ]);
-      } catch (err) {
-        setError('加载数据失败，请稍后重试');
-        console.error('加载数据失败:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
+  // Centralized data fetching logic
+  const fetchMessages = useCallback(async () => {
+    // TODO: Replace with actual API call
+    // Simulating API call from original Interaction.js
+    const mockMessages = [
+        { id: 1, sender: { id: 'teacher1', name: '李老师', avatar: null, role: 'teacher' }, receiver: { id: 'parent1', name: '张小明家长', avatar: null, role: 'parent' }, content: '您好，张小明最近在课堂上表现很积极，希望能继续保持！', attachments: [], createdAt: '2023-10-15 14:30', read: true },
+        { id: 2, sender: { id: 'parent1', name: '张小明家长' }, receiver: { id: 'teacher1', name: '李老师' }, content: '谢谢老师的鼓励！', attachments: [], createdAt: '2023-10-15 15:45', read: false },
+      ];
+    return mockMessages;
   }, []);
-  
-  // 获取消息列表
-  const fetchMessages = async () => {
-    try {
-      // 模拟API调用
-      // const response = await axios.get('/api/interaction/messages');
-      // setMessages(response.data);
-      
-      // 模拟数据
-      const mockMessages = [
-        {
-          id: 1,
-          sender: { id: 101, name: '李老师', avatar: null, role: 'teacher' },
-          receiver: { id: 201, name: '张小明家长', avatar: null, role: 'parent' },
-          content: '您好，张小明最近在课堂上表现很积极，希望能继续保持！',
-          attachments: [],
-          createdAt: '2023-10-15 14:30',
-          read: true
-        },
-        {
-          id: 2,
-          sender: { id: 201, name: '张小明家长', avatar: null, role: 'parent' },
-          receiver: { id: 101, name: '李老师', avatar: null, role: 'teacher' },
-          content: '谢谢老师的鼓励，我们会在家里继续督促他学习的。',
-          attachments: [],
-          createdAt: '2023-10-15 15:45',
-          read: false
-        },
-        {
-          id: 3,
-          sender: { id: 101, name: '李老师', avatar: null, role: 'teacher' },
-          receiver: { id: 202, name: '王小红家长', avatar: null, role: 'parent' },
-          content: '王小红最近数学作业完成情况不太好，请家长多关注。',
-          attachments: [{ name: '作业情况.pdf', url: '#' }],
-          createdAt: '2023-10-14 16:20',
-          read: true
-        },
+
+  const fetchMeetings = useCallback(async () => {
+    // TODO: Replace with actual API call
+    const mockMeetings = [
+        { id: 1, title: '期中考试家长会', description: '讨论期中考试情况和后续学习计划', teacher: { id: 'teacher1', name: '李老师' }, parent: { id: 'parent1', name: '张小明家长' }, student: { id: 'student1', name: '张小明' }, startTime: '2023-10-20 18:30', endTime: '2023-10-20 19:30', location: '三年级2班教室', meetingType: 'offline', status: 'scheduled' },
+        { id: 2, title: '在线辅导计划', description: '讨论在线辅导计划', teacher: { id: 'teacher1', name: '李老师' }, parent: { id: 'parent1', name: '张小明家长' }, student: { id: 'student1', name: '张小明' }, startTime: '2023-10-22 19:00', endTime: '2023-10-22 20:00', meetingType: 'online', meetingLink: 'https://example.com/meeting123', status: 'scheduled' },
       ];
-      
-      setMessages(mockMessages);
-    } catch (error) {
-      console.error('获取消息失败:', error);
-      throw error;
-    }
-  };
-  
-  // 获取会议列表
-  const fetchMeetings = async () => {
-    try {
-      // 模拟API调用
-      // const response = await axios.get('/api/interaction/meetings');
-      // setMeetings(response.data);
-      
-      // 模拟数据
-      const mockMeetings = [
-        {
-          id: 1,
-          title: '期中考试家长会',
-          description: '讨论期中考试情况和后续学习计划',
-          teacher: { id: 101, name: '李老师' },
-          parent: { id: 201, name: '张小明家长' },
-          student: { id: 301, name: '张小明' },
-          startTime: '2023-10-20 18:30',
-          endTime: '2023-10-20 19:30',
-          location: '三年级2班教室',
-          meetingType: 'offline',
-          meetingLink: '',
-          status: 'scheduled'
-        },
-        {
-          id: 2,
-          title: '个别辅导计划讨论',
-          description: '针对王小红的学习情况制定个别辅导计划',
-          teacher: { id: 101, name: '李老师' },
-          parent: { id: 202, name: '王小红家长' },
-          student: { id: 302, name: '王小红' },
-          startTime: '2023-10-22 19:00',
-          endTime: '2023-10-22 20:00',
-          meetingType: 'online',
-          meetingLink: 'https://meeting.example.com/abc123',
-          status: 'scheduled'
-        },
-        {
-          id: 3,
-          title: '学习进步表扬会',
-          description: '表扬李小华近期学习进步明显',
-          teacher: { id: 102, name: '王老师' },
-          parent: { id: 203, name: '李小华家长' },
-          student: { id: 303, name: '李小华' },
-          startTime: '2023-10-18 17:30',
-          endTime: '2023-10-18 18:00',
-          location: '教师办公室',
-          meetingType: 'offline',
-          meetingLink: '',
-          status: 'completed'
-        },
+    return mockMeetings;
+  }, []);
+
+  const fetchAnnouncements = useCallback(async () => {
+    // TODO: Replace with actual API call
+    const mockAnnouncements = [
+        { id: 1, title: '期中考试安排', content: '期中考试将于10月25日至10月27日进行。', publisher: { id: 'teacher1', name: '李老师', role: 'teacher' }, classId: 'class1', className: '三年级2班', publishTime: '2023-10-15 10:00', important: true, attachments: [] },
       ];
-      
-      setMeetings(mockMeetings);
-    } catch (error) {
-      console.error('获取会议失败:', error);
-      throw error;
-    }
-  };
-  
-  // 获取公告列表
-  const fetchAnnouncements = async () => {
+    return mockAnnouncements;
+  }, []);
+
+  const loadAllData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      // 模拟API调用
-      // const response = await axios.get('/api/interaction/announcements');
-      // setAnnouncements(response.data);
-      
-      // 模拟数据
-      const mockAnnouncements = [
-        {
-          id: 1,
-          title: '期中考试安排',
-          content: '期中考试将于10月25日至10月27日进行，请各位家长督促孩子做好复习准备。',
-          publisher: { id: 101, name: '李老师', role: 'teacher' },
-          classId: '3-2',
-          className: '三年级2班',
-          publishTime: '2023-10-15 10:00',
-          attachments: [{ name: '考试安排表.pdf', url: '#' }],
-          important: true
-        },
-        {
-          id: 2,
-          title: '校园流感预防通知',
-          content: '近期流感高发，请各位家长注意孩子的健康状况，做好预防措施。',
-          publisher: { id: 999, name: '学校卫生室', role: 'admin' },
-          classId: 'all',
-          className: '全校通知',
-          publishTime: '2023-10-14 09:30',
-          attachments: [],
-          important: true
-        },
-        {
-          id: 3,
-          title: '课外阅读书目推荐',
-          content: '为丰富学生课外阅读，现推荐以下书目，请家长酌情为孩子购买。',
-          publisher: { id: 102, name: '王老师', role: 'teacher' },
-          classId: '3-2',
-          className: '三年级2班',
-          publishTime: '2023-10-12 14:15',
-          attachments: [{ name: '推荐书目.docx', url: '#' }],
-          important: false
-        },
-      ];
-      
-      setAnnouncements(mockAnnouncements);
-    } catch (error) {
-      console.error('获取公告失败:', error);
-      throw error;
+      const [msgData, mtgData, annData] = await Promise.all([
+        fetchMessages(),
+        fetchMeetings(),
+        fetchAnnouncements(),
+      ]);
+      setMessagesData(msgData);
+      setMeetingsData(mtgData);
+      setAnnouncementsData(annData);
+    } catch (err) {
+      console.error("Failed to load interaction data:", err);
+      setError("数据加载失败，请稍后刷新重试。");
+    } finally {
+      setLoading(false);
     }
-  };
-  
+  }, [fetchMessages, fetchMeetings, fetchAnnouncements]);
+
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
+
+  const handleRefreshTab = (tabKey) => {
+    // This function allows individual tabs to trigger a refresh of their specific data,
+    // or a full refresh if simpler.
+    switch(tabKey) {
+        case 'messages':
+            fetchMessages().then(setMessagesData).catch(err => setError("刷新消息失败"));
+            break;
+        case 'meetings':
+            fetchMeetings().then(setMeetingsData).catch(err => setError("刷新会议失败"));
+            break;
+        case 'announcements':
+            fetchAnnouncements().then(setAnnouncementsData).catch(err => setError("刷新公告失败"));
+            break;
+        default:
+            loadAllData(); // Fallback to reload all
+    }
+  }
+
   // 发送消息
   const handleSendMessage = async () => {
     if (!newMessage.receiver || !newMessage.content) {
@@ -381,7 +279,7 @@ const Interaction = () => {
       >
         <List
           itemLayout="horizontal"
-          dataSource={messages}
+          dataSource={messagesData}
           renderItem={item => {
             const isReceived = item.receiver.id === (currentUser?.id || 0);
             return (
@@ -446,7 +344,7 @@ const Interaction = () => {
       >
         <List
           itemLayout="horizontal"
-          dataSource={meetings}
+          dataSource={meetingsData}
           renderItem={item => (
             <List.Item
               actions={[<a key="view" onClick={() => handleViewDetail(item, 'meeting')}>查看详情</a>]}
@@ -521,7 +419,7 @@ const Interaction = () => {
       >
         <List
           itemLayout="horizontal"
-          dataSource={announcements}
+          dataSource={announcementsData}
           renderItem={item => (
             <List.Item
               actions={[<a key="view" onClick={() => handleViewDetail(item, 'announcement')}>查看详情</a>]}
@@ -921,35 +819,54 @@ const Interaction = () => {
     );
   };
   
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 200px)' }}><Spin size="large" tip="加载交互信息中..." /></div>;
+  }
+
   return (
-    <div className="interaction-container" style={{ padding: '24px' }}>
-      <Title level={2}>家校互动</Title>
-      
-      {error && <Alert message="错误" description={error} type="error" showIcon style={{ marginBottom: 16 }} />}
-      
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <Spin size="large" />
-        </div>
-      ) : (
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab={<span><MessageOutlined />消息</span>} key="1">
-            {renderMessages()}
-          </TabPane>
-          <TabPane tab={<span><VideoCameraOutlined />会议</span>} key="2">
-            {renderMeetings()}
-          </TabPane>
-          <TabPane tab={<span><NotificationOutlined />公告</span>} key="3">
-            {renderAnnouncements()}
-          </TabPane>
-        </Tabs>
-      )}
+    <PageHeader title="互动交流中心">
+      {error && <Alert message={error} type="error" showIcon closable onClose={() => setError(null)} style={{ marginBottom: 16 }}/>}
+      <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
+        <TabPane 
+          tab={<Space><MessageOutlined />消息</Space>} 
+          key="messages"
+        >
+          <MessagesTab 
+            initialMessages={messagesData} 
+            isLoading={loading} // Could be more granular if tabs load independently
+            loadError={error}   // Same as above
+            onRefresh={() => handleRefreshTab('messages')} 
+          />
+        </TabPane>
+        <TabPane 
+          tab={<Space><VideoCameraOutlined />会议</Space>} 
+          key="meetings"
+        >
+          <MeetingsTab 
+            initialMeetings={meetingsData}
+            isLoading={loading}
+            loadError={error}
+            onRefresh={() => handleRefreshTab('meetings')}
+          />
+        </TabPane>
+        <TabPane 
+          tab={<Space><NotificationOutlined />公告</Space>} 
+          key="announcements"
+        >
+          <AnnouncementsTab 
+            initialAnnouncements={announcementsData}
+            isLoading={loading}
+            loadError={error}
+            onRefresh={() => handleRefreshTab('announcements')}
+          />
+        </TabPane>
+      </Tabs>
       
       {renderDetailModal()}
       {renderSendMessageModal()}
       {renderCreateMeetingModal()}
       {renderPublishAnnouncementModal()}
-    </div>
+    </PageHeader>
   );
 };
 
