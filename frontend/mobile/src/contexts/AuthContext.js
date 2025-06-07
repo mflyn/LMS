@@ -4,7 +4,11 @@ import React, { createContext } from 'react';
 export const AuthContext = createContext({
   signIn: async () => {},
   signOut: async () => {},
+  switchRole: async () => {},
+  showRoleSelector: () => {},
   token: null,
+  role: null,
+  isAuthenticated: false,
 });
 
 // AuthProvider 组件被移除
@@ -27,8 +31,8 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthContext.Provider'); 
   }
   // 可以添加更具体的检查，例如 context.signIn 是否存在，以确保获取到的是 App.js 中提供的完整 context
-  // if (typeof context.signIn !== 'function') {
-  //   throw new Error('AuthContext seems to be missing expected signIn function. Ensure App.js provides the correct context value.');
-  // }
+  if (typeof context.signIn !== 'function') {
+    throw new Error('AuthContext seems to be missing expected signIn function. Ensure App.js provides the correct context value.');
+  }
   return context;
 };
