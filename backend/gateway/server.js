@@ -27,18 +27,16 @@ const authenticateToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
   
   if (token == null) {
-    // 对于公共路径 (如 /api/auth/login, /api/auth/register)，不应强制认证
-    // 这个逻辑应该在路由层面决定，而不是全局应用 authenticateToken
-    // 因此，对于期望公开的路径，不应使用此中间件，或此中间件需要更复杂的路径排除逻辑
-    // 暂时保持原样，但这是一个需要根据实际公开API来调整的地方。
-    // 如果路径本身在下游服务中不需要认证，网关层面也不应该拦截。
-    // 如果是受保护路径没有token，则返回401
     return next(new UnauthorizedError('No token provided'));
   }
   
   jwt.verify(token, jwtSecret, (err, user) => {
     if (err) {
-      logger.warn(`JWT verification failed for token: ${token}`, { error: err.message, path: req.path });
+      logger.warn(`JWT verification failed for token: ${token.substring(0, 10)}...`, { 
+        error: err.message, 
+        path: req.path,
+        requestId: req.requestId 
+      });
       return next(new ForbiddenError('Invalid or expired token'));
     }
     req.user = user;
@@ -47,6 +45,24 @@ const authenticateToken = (req, res, next) => {
     if (user && user.username) req.headers['x-user-name'] = user.username;
     next();
   });
+};
+
+// 可选认证中间件 - 对于某些路径可能需要用户信息但不强制要求
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (token) {
+    jwt.verify(token, jwtSecret, (err, user) => {
+      if (!err && user) {
+        req.user = user;
+        if (user && user.id) req.headers['x-user-id'] = user.id;
+        if (user && user.role) req.headers['x-user-role'] = user.role;
+        if (user && user.username) req.headers['x-user-name'] = user.username;
+      }
+    });
+  }
+  next();
 };
 
 // 3. API 代理路由 (这些是网关的核心功能)
@@ -74,10 +90,29 @@ app.use('/api/students', authenticateToken, proxy(userServiceUrl, {
   proxyReqPathResolver: (req) => `/api/students${req.url}`
 }));
 
-// 需要认证的数据服务路由
+// 需要认证的数据服务路由 - 修正：确保路由路径与设计文档一致
 app.use('/api/data', authenticateToken, proxy(dataServiceUrl, {
   proxyReqPathResolver: (req) => `/api/data${req.url}`
 }));
+
+// 添加其他核心服务路由（如果存在）
+if (config.serviceHosts.analytics) {
+  app.use('/api/analytics', authenticateToken, proxy(config.serviceHosts.analytics, {
+    proxyReqPathResolver: (req) => `/api/analytics${req.url}`
+  }));
+}
+
+if (config.serviceHosts.homework) {
+  app.use('/api/homework', authenticateToken, proxy(config.serviceHosts.homework, {
+    proxyReqPathResolver: (req) => `/api/homework${req.url}`
+  }));
+}
+
+if (config.serviceHosts.progress) {
+  app.use('/api/progress', authenticateToken, proxy(config.serviceHosts.progress, {
+    proxyReqPathResolver: (req) => `/api/progress${req.url}`
+  }));
+}
 
 // (其他之前定义的代理路由，如 progress, interaction, notification, resource, analytics)
 // ... 如果这些服务存在并且需要通过网关暴露 ...

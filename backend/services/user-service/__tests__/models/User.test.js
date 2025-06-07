@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 // const { MongoMemoryServer } = require('mongodb-memory-server'); // 由全局配置处理
-const User = require('../../models/User');
+const User = require('../../../../common/models/User'); // 修正：使用公共模型
 
 // let mongoServer; // 由全局配置处理
 

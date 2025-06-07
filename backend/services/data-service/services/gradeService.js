@@ -1,7 +1,7 @@
 const Grade = require('../models/Grade');
-const User = require('../models/User'); // Assuming User model might be needed for validation or enrichment, adjust path if different
-const Subject = require('../models/Subject'); // Assuming Subject model might be needed, adjust path
-const Class = require('../models/Class');
+const User = require('../../../common/models/User'); // 修正：使用公共模型
+const Subject = require('../../../common/models/Subject'); // 修正：使用公共模型
+const Class = require('../../../common/models/Class'); // 修正：使用公共模型
 const { NotFoundError, BadRequestError, AppError, ForbiddenError } = require('../../../common/middleware/errorTypes');
 const mongoose = require('mongoose');
 

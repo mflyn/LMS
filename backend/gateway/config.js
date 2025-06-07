@@ -1,4 +1,5 @@
 module.exports = {
+  port: process.env.GATEWAY_PORT || 5000,
   tokenExpiration: '24h',
   services: {
     user: 'http://localhost:5001',
@@ -7,12 +8,18 @@ module.exports = {
     interaction: 'http://localhost:5004',
     notification: 'http://localhost:5005',
     resource: 'http://localhost:5006',
-    analytics: 'http://localhost:5007'
+    analytics: 'http://localhost:5007',
+    homework: 'http://localhost:5008'
   },
   serviceHosts: {
-    auth: process.env.AUTH_SERVICE_URL || 'http://localhost:3002',
     user: process.env.USER_SERVICE_URL || 'http://localhost:3001',
-    data: process.env.DATA_SERVICE_URL || 'http://localhost:3003'
+    data: process.env.DATA_SERVICE_URL || 'http://localhost:3003',
+    analytics: process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3007',
+    homework: process.env.HOMEWORK_SERVICE_URL || 'http://localhost:3008',
+    progress: process.env.PROGRESS_SERVICE_URL || 'http://localhost:3009',
+    interaction: process.env.INTERACTION_SERVICE_URL || 'http://localhost:3010',
+    notification: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3011',
+    resource: process.env.RESOURCE_SERVICE_URL || 'http://localhost:3012'
   },
   rateLimitOptions: {
     windowMs: 15 * 60 * 1000, // 15 minutes

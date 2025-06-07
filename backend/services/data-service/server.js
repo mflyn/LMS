@@ -13,8 +13,8 @@ const app = createBaseApp({
 });
 
 // 2. 挂载 data-service 特有的路由
-// 假设其 API 在 /api/data/* 下 (如设计文档和网关配置所示)
-app.use('/api/data', mainRoutes);
+// 修正：数据服务直接暴露API，网关会添加/api/data前缀
+app.use('/api', mainRoutes);
 
 // 3. 数据库连接
 const mongoURI = config.mongoURI;
@@ -30,7 +30,7 @@ mongoose.connect(mongoURI)
   logger.info(`MongoDB Connected to data-service at ${mongoURI}`);
 
   // 4. 启动服务器
-  const PORT = process.env.DATA_SERVICE_PORT || 3003;
+  const PORT = config.port || process.env.DATA_SERVICE_PORT || 3003;
   if (!PORT) {
     logger.error('FATAL ERROR: Port for data-service is not defined.');
     process.exit(1);

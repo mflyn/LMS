@@ -8,7 +8,7 @@ const {
   // UnauthorizedError // No longer needed here
 } = require('../../../common/middleware/errorTypes');
 const mongoose = require('mongoose');
-const User = require('../models/User');
+const User = require('../../../common/models/User');
 
 class UserController {
   constructor() {

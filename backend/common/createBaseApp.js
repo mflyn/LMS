@@ -133,7 +133,7 @@ function createBaseApp(options = {}) {
   // 8. 全局错误处理中间件 (必须在所有路由和中间件之后)
   app.use(errorHandler);
 
-  logger.info(\`Base application configured for service: \${serviceName}\`);
+  logger.info(`Base application configured for service: ${serviceName}`);
 
   return app;
 }

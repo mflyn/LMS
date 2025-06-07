@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { generateToken } = require('../middleware/auth');
 
 class AuthService {
   constructor({ logger }) {

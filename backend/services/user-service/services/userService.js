@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
-const User = require('../models/User'); // Assuming User model is here
-const Role = require('../models/Role'); // Assuming Role model is here, if needed for validation
-const { generateToken } = require('../../common/middleware/auth');
+const User = require('../../../common/models/User'); // 修正：使用公共模型
+const Role = require('../../../common/models/Role'); // 修正：使用公共模型
+const { generateToken } = require('../../../common/middleware/auth'); // 修正路径
 const {
   AppError,
   BadRequestError,
@@ -10,7 +10,7 @@ const {
   AuthenticationError,
   ConflictError,
   ForbiddenError
-} = require('../../common/middleware/errorTypes');
+} = require('../../../common/middleware/errorTypes'); // 修正路径
 
 // Helper function to clean user object (remove password)
 const cleanUser = (user) => {

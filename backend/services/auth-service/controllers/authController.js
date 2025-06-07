@@ -1,6 +1,9 @@
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { catchAsync } = require('../../../common/middleware/errorHandler');
+const User = require('../../../common/models/User');
+const { generateToken } = require('../../../common/middleware/auth');
+const { BadRequestError, UnauthorizedError, ConflictError } = require('../../../common/middleware/errorTypes');
 // 使用 console 代替 logger
 const logger = {
   info: console.info,

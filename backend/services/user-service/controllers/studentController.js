@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const User = require('../../../common/models/User');
 // const { logger } = require('../../../common/config/logger'); // Replaced by req.app.locals.logger
 const { catchAsync } = require('../../../common/middleware/errorHandler');
 const { NotFoundError, InternalServerError } = require('../../../common/middleware/errorTypes');

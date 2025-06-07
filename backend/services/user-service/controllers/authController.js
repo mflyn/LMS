@@ -1,6 +1,6 @@
 const { catchAsync } = require('../../../common/middleware/errorHandler');
 const { BadRequestError, UnauthorizedError, ConflictError } = require('../../../common/middleware/errorTypes');
-const User = require('../models/User');
+const User = require('../../../common/models/User');
 const UserService = require('../services/userService');
 const mongoose = require('mongoose'); // For mongoose.Types.ObjectId.isValid if needed in future methods
 
