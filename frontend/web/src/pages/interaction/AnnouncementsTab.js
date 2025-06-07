@@ -105,7 +105,7 @@ const AnnouncementsTab = ({ initialAnnouncements, isLoading, loadError, onRefres
             <Paragraph ellipsis={{ rows: 3, expandable: true, symbol: '更多' }}>
               {item.content}
             </Paragraph>
-            <Space split={<Divider type="vertical" />">
+            <Space split={<Divider type="vertical" />}>
                 <Text type="secondary">发布于: {moment(item.publishTime).format('YYYY-MM-DD HH:mm')}</Text>
                 {item.attachments && item.attachments.length > 0 && 
                     <Text type="secondary"><FileOutlined /> {item.attachments.length}个附件</Text>}

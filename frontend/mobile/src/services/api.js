@@ -2,26 +2,12 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import * as NavigationService from './NavigationService'; // 导入 NavigationService
-
-// API 配置 (简化版，未来可移至单独文件并结合环境变量)
-const ENV = __DEV__ ? 'development' : 'production'; // __DEV__ 是 React Native 的全局变量
-
-const API_CONFIGS = {
-  development: {
-    baseURL: 'http://localhost:3000/api', // 开发环境网关地址
-  },
-  production: {
-    baseURL: 'https://your-production-api.com/api', // 生产环境网关地址 (请替换为真实地址)
-  },
-  // 可以添加 staging 等其他环境
-};
-
-const currentConfig = API_CONFIGS[ENV] || API_CONFIGS.development; // 默认为开发配置
+import config from '../config/env'; // 导入环境配置
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: currentConfig.baseURL, // 从配置读取 baseURL
-  timeout: 10000,
+  baseURL: config.API_BASE_URL, // 从配置读取 baseURL
+  timeout: config.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },

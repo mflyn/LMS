@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
 
 // 导入现有页面
 import LoginScreen from '../screens/LoginScreen';
@@ -77,9 +78,11 @@ const MainTabNavigator = () => {
 
 // 主导航栈
 const AppNavigator = () => {
+  const { token } = useAuth();
+  
   return (
     <Stack.Navigator
-      initialRouteName="Login"
+      initialRouteName={token ? "Main" : "Login"}
       screenOptions={{
         headerStyle: {
           backgroundColor: '#4a90e2',
@@ -90,31 +93,38 @@ const AppNavigator = () => {
         },
       }}
     >
-      <Stack.Screen 
-        name="Login" 
-        component={LoginScreen} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="Main" 
-        component={MainTabNavigator} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="ResourceDetail" 
-        component={ResourceDetailScreen} 
-        options={{ title: '资源详情' }}
-      />
-      <Stack.Screen 
-        name="VideoMeeting" 
-        component={VideoMeetingScreen} 
-        options={{ title: '视频会议' }}
-      />
-      <Stack.Screen 
-        name="MeetingList" 
-        component={MeetingListScreen} 
-        options={{ title: '会议列表' }}
-      />
+      {token ? (
+        // 已登录用户的导航栈
+        <>
+          <Stack.Screen 
+            name="Main" 
+            component={MainTabNavigator} 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="ResourceDetail" 
+            component={ResourceDetailScreen} 
+            options={{ title: '资源详情' }}
+          />
+          <Stack.Screen 
+            name="VideoMeeting" 
+            component={VideoMeetingScreen} 
+            options={{ title: '视频会议' }}
+          />
+          <Stack.Screen 
+            name="MeetingList" 
+            component={MeetingListScreen} 
+            options={{ title: '会议列表' }}
+          />
+        </>
+      ) : (
+        // 未登录用户的导航栈
+        <Stack.Screen 
+          name="Login" 
+          component={LoginScreen} 
+          options={{ headerShown: false }}
+        />
+      )}
     </Stack.Navigator>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Card, Tabs, Button, Form, Badge, Modal, Input, Select, DatePicker, Typography, List, Avatar, Tag, message, Spin, Alert, Divider, Space, Tooltip, PageHeader } from 'antd';
+import { Row, Col, Card, Tabs, Button, Form, Badge, Modal, Input, Select, DatePicker, Typography, List, Avatar, Tag, message, Spin, Alert, Divider, Space, Tooltip } from 'antd';
 import { 
   MessageOutlined, 
   VideoCameraOutlined, 
@@ -824,10 +824,13 @@ const Interaction = () => {
   }
 
   return (
-    <PageHeader title="互动交流中心">
+    <div style={{ padding: 24 }}>
+      <Typography.Title level={2} style={{ marginBottom: 24 }}>
+        互动交流中心
+      </Typography.Title>
       {error && <Alert message={error} type="error" showIcon closable onClose={() => setError(null)} style={{ marginBottom: 16 }}/>}
       <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
-        <TabPane 
+        <Tabs.TabPane 
           tab={<Space><MessageOutlined />消息</Space>} 
           key="messages"
         >
@@ -837,8 +840,8 @@ const Interaction = () => {
             loadError={error}   // Same as above
             onRefresh={() => handleRefreshTab('messages')} 
           />
-        </TabPane>
-        <TabPane 
+        </Tabs.TabPane>
+        <Tabs.TabPane 
           tab={<Space><VideoCameraOutlined />会议</Space>} 
           key="meetings"
         >
@@ -848,8 +851,8 @@ const Interaction = () => {
             loadError={error}
             onRefresh={() => handleRefreshTab('meetings')}
           />
-        </TabPane>
-        <TabPane 
+        </Tabs.TabPane>
+        <Tabs.TabPane 
           tab={<Space><NotificationOutlined />公告</Space>} 
           key="announcements"
         >
@@ -859,14 +862,14 @@ const Interaction = () => {
             loadError={error}
             onRefresh={() => handleRefreshTab('announcements')}
           />
-        </TabPane>
+        </Tabs.TabPane>
       </Tabs>
       
       {renderDetailModal()}
       {renderSendMessageModal()}
       {renderCreateMeetingModal()}
       {renderPublishAnnouncementModal()}
-    </PageHeader>
+    </div>
   );
 };
 

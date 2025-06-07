@@ -778,6 +778,9 @@ export const AttendanceRateChart = ({ data, period, height = 300, showTableView 
     }]
   };
   
+  let tableColumns = [];
+  let tableDataSource = [];
+  
   if (data && data.attendanceData && data.attendanceData.length > 0) {
     chartData.labels = data.attendanceData.map(item => item.date);
     chartData.datasets[0].data = data.attendanceData.map(item => item.rate);

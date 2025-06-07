@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
           axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
           
           // 验证令牌并获取用户信息
-          const response = await axios.get('/api/users/me');
+          const response = await axios.get('/api/users/profile');
           setCurrentUser(response.data.user);
           setUserRole(response.data.user.role);
           setToken(storedToken);

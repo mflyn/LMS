@@ -15,7 +15,7 @@ export const WebSocketProvider = ({ children }) => {
   useEffect(() => {
     if (currentUser && token) {
       // 创建Socket.IO连接
-      const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5007';
+      const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:8000';
       const socketInstance = io(socketUrl, {
         auth: {
           token
