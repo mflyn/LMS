@@ -232,3 +232,6 @@ const styles = StyleSheet.create({
   retryButton: {
     marginTop: 8,
   },
+});
+
+export default NotificationsScreen;

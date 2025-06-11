@@ -9,10 +9,10 @@ import analyticsService from './src/services/analyticsService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { navigationRef } from './src/services/NavigationService';
 
-// 导入不同角色的导航器
+// 导入统一的导航器
 import MainAppNavigator from './src/navigation/AppNavigator';
-import ParentAppNavigator from './parent-app/navigation/AppNavigator';
-import StudentAppNavigator from './student-app/navigation/AppNavigator';
+import ParentNavigator from './src/navigation/ParentNavigator';
+import StudentNavigator from './src/navigation/StudentNavigator';
 
 // 导入角色选择屏幕
 import RoleSelectionScreen from './src/screens/RoleSelectionScreen';
@@ -41,9 +41,9 @@ const OfflineBanner = () => {
 const getNavigatorByRole = (role) => {
   switch (role) {
     case USER_ROLES.PARENT:
-      return ParentAppNavigator;
+      return ParentNavigator;
     case USER_ROLES.STUDENT:
-      return StudentAppNavigator;
+      return StudentNavigator;
     case USER_ROLES.TEACHER:
     default:
       return MainAppNavigator; // 默认使用主导航器（教师端）
@@ -205,6 +205,17 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
   offlineBanner: {
     backgroundColor: '#f8d7da',
     padding: 10,
@@ -215,16 +226,5 @@ const styles = StyleSheet.create({
   offlineText: {
     color: '#721c24',
     fontWeight: 'bold',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
   },
 });
