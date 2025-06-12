@@ -65,11 +65,27 @@ const registerValidation = [
     .isLength({ min: 8 })
     .withMessage('密码长度至少为8个字符'),
   body('email')
+    .optional()
     .isEmail()
     .withMessage('请输入有效的邮箱地址'),
+  body('phone')
+    .optional()
+    .matches(/^1[3-9]\d{9}$/)
+    .withMessage('请输入有效的手机号码'),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('姓名不能为空'),
   body('role')
     .isIn(['student', 'teacher', 'parent'])
     .withMessage('角色必须是学生、教师或家长'),
+  // 自定义验证：确保至少提供邮箱或手机号之一
+  body().custom((value, { req }) => {
+    if (!req.body.email && !req.body.phone) {
+      throw new Error('必须提供邮箱或手机号码');
+    }
+    return true;
+  }),
   body('firstName').optional().trim().isAlpha('en-US', {ignore: ' '}).withMessage('名字只能包含字母'),
   body('lastName').optional().trim().isAlpha('en-US', {ignore: ' '}).withMessage('姓氏只能包含字母')
 ];
@@ -80,6 +96,25 @@ const loginValidation = [
     .trim()
     .notEmpty()
     .withMessage('用户名不能为空'),
+  body('password')
+    .notEmpty()
+    .withMessage('密码不能为空')
+];
+
+// 邮箱或手机号登录验证规则
+const emailPhoneLoginValidation = [
+  body('identifier')
+    .trim()
+    .notEmpty()
+    .withMessage('请输入邮箱或手机号')
+    .custom((value) => {
+      const isEmail = /^\S+@\S+\.\S+$/.test(value);
+      const isPhone = /^1[3-9]\d{9}$/.test(value);
+      if (!isEmail && !isPhone) {
+        throw new Error('请输入有效的邮箱地址或手机号码');
+      }
+      return true;
+    }),
   body('password')
     .notEmpty()
     .withMessage('密码不能为空')
@@ -291,6 +326,7 @@ module.exports = {
   sanitizeInput,
   registerValidation,
   loginValidation,
+  emailPhoneLoginValidation,
   changePasswordValidation,
   updateUserValidation,
   mongoIdParamValidation,

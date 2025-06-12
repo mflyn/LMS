@@ -1,30 +1,39 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Radio, message, Row, Col } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Typography, Radio, message, Row, Col, Tabs } from 'antd';
+import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const { Title, Text } = Typography;
+const { TabPane } = Tabs;
 
 const Login = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithEmailOrPhone } = useAuth();
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState('student');
+  const [loginType, setLoginType] = useState('username');
 
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      // 在实际登录请求中，可能需要传递用户类型
-      const success = await login(values.username, values.password, values.userType);
+      let success = false;
+      
+      if (loginType === 'username') {
+        // 用户名登录
+        success = await login(values.username, values.password, values.userType);
+      } else {
+        // 邮箱或手机号登录
+        success = await loginWithEmailOrPhone(values.identifier, values.password);
+      }
+      
       if (success) {
-        // 根据用户类型导航到不同的仪表盘
         navigate('/dashboard');
       }
     } catch (error) {
       console.error('登录错误:', error);
-      message.error('登录失败，请检查用户名和密码');
+      message.error('登录失败，请检查登录信息');
     } finally {
       setLoading(false);
     }
@@ -32,6 +41,11 @@ const Login = () => {
 
   const handleUserTypeChange = (e) => {
     setUserType(e.target.value);
+  };
+
+  const handleLoginTypeChange = (key) => {
+    setLoginType(key);
+    form.resetFields(['username', 'identifier']);
   };
 
   return (
@@ -53,28 +67,61 @@ const Login = () => {
             onFinish={handleSubmit}
             layout="vertical"
           >
-            <Form.Item
-              name="userType"
-              initialValue={userType}
-            >
-              <Radio.Group onChange={handleUserTypeChange} value={userType} buttonStyle="solid" style={{ width: '100%', textAlign: 'center', marginBottom: 16 }}>
-                <Radio.Button value="student">学生</Radio.Button>
-                <Radio.Button value="parent">家长</Radio.Button>
-                <Radio.Button value="teacher">教师</Radio.Button>
-                <Radio.Button value="admin">管理员</Radio.Button>
-              </Radio.Group>
-            </Form.Item>
-            
-            <Form.Item
-              name="username"
-              rules={[{ required: true, message: '请输入用户名!' }]}
-            >
-              <Input 
-                prefix={<UserOutlined />} 
-                placeholder="用户名" 
-                size="large" 
-              />
-            </Form.Item>
+            {/* 登录方式选择 */}
+            <Tabs activeKey={loginType} onChange={handleLoginTypeChange} centered style={{ marginBottom: 16 }}>
+              <TabPane tab="用户名登录" key="username">
+                <Form.Item
+                  name="username"
+                  rules={[{ required: true, message: '请输入用户名!' }]}
+                >
+                  <Input 
+                    prefix={<UserOutlined />} 
+                    placeholder="用户名" 
+                    size="large" 
+                  />
+                </Form.Item>
+              </TabPane>
+              <TabPane tab="邮箱/手机号登录" key="identifier">
+                <Form.Item
+                  name="identifier"
+                  rules={[
+                    { required: true, message: '请输入邮箱或手机号!' },
+                    {
+                      validator: (_, value) => {
+                        if (!value) return Promise.resolve();
+                        const isEmail = /^\S+@\S+\.\S+$/.test(value);
+                        const isPhone = /^1[3-9]\d{9}$/.test(value);
+                        if (isEmail || isPhone) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('请输入有效的邮箱地址或手机号码!'));
+                      }
+                    }
+                  ]}
+                >
+                  <Input 
+                    prefix={<MailOutlined />} 
+                    placeholder="邮箱地址或手机号码" 
+                    size="large" 
+                  />
+                </Form.Item>
+              </TabPane>
+            </Tabs>
+
+            {/* 用户类型选择（仅用户名登录时显示） */}
+            {loginType === 'username' && (
+              <Form.Item
+                name="userType"
+                initialValue={userType}
+              >
+                <Radio.Group onChange={handleUserTypeChange} value={userType} buttonStyle="solid" style={{ width: '100%', textAlign: 'center', marginBottom: 16 }}>
+                  <Radio.Button value="student">学生</Radio.Button>
+                  <Radio.Button value="parent">家长</Radio.Button>
+                  <Radio.Button value="teacher">教师</Radio.Button>
+                  <Radio.Button value="admin">管理员</Radio.Button>
+                </Radio.Group>
+              </Form.Item>
+            )}
 
             <Form.Item
               name="password"

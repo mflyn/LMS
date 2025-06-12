@@ -10,6 +10,7 @@ import { WebSocketProvider } from './contexts/WebSocketContext';
 
 // 导入页面组件
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 import Interaction from './pages/Interaction';
@@ -53,6 +54,7 @@ const AppContent = () => {
             >
               <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />

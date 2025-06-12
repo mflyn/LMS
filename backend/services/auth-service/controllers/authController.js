@@ -15,7 +15,7 @@ const logger = {
 // 注册控制器
 exports.register = async (req, res) => {
   try {
-    const { username, password, email, name, role } = req.body;
+    const { username, password, email, phone, name, role } = req.body;
 
     // 检查用户名是否已存在
     const existingUser = await User.findOne({ username });
@@ -26,13 +26,26 @@ exports.register = async (req, res) => {
       });
     }
 
-    // 检查邮箱是否已存在
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
-      return res.status(400).json({
-        status: 'error',
-        message: '邮箱已被注册'
-      });
+    // 检查邮箱是否已存在（如果提供了邮箱）
+    if (email) {
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) {
+        return res.status(400).json({
+          status: 'error',
+          message: '邮箱已被注册'
+        });
+      }
+    }
+
+    // 检查手机号是否已存在（如果提供了手机号）
+    if (phone) {
+      const existingPhone = await User.findOne({ phone });
+      if (existingPhone) {
+        return res.status(400).json({
+          status: 'error',
+          message: '手机号已被注册'
+        });
+      }
     }
 
     // 创建新用户
@@ -40,6 +53,7 @@ exports.register = async (req, res) => {
       username,
       password,
       email,
+      phone,
       name,
       role
     });
@@ -62,8 +76,10 @@ exports.register = async (req, res) => {
           id: user._id,
           username: user.username,
           email: user.email,
+          phone: user.phone,
           name: user.name,
-          role: user.role
+          role: user.role,
+          registrationType: user.registrationType
         },
         token
       }
@@ -78,7 +94,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// 登录控制器
+// 登录控制器（用户名登录）
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -101,6 +117,10 @@ exports.login = async (req, res) => {
       });
     }
 
+    // 更新最后登录时间
+    user.lastLogin = new Date();
+    await user.save();
+
     // 创建JWT令牌
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -115,14 +135,77 @@ exports.login = async (req, res) => {
         user: {
           id: user._id,
           username: user.username,
+          email: user.email,
+          phone: user.phone,
           name: user.name,
-          role: user.role
+          role: user.role,
+          registrationType: user.registrationType
         },
         token
       }
     });
   } catch (error) {
     logger.error('登录失败:', error);
+    res.status(500).json({
+      status: 'error',
+      message: '登录失败',
+      error: error.message
+    });
+  }
+};
+
+// 邮箱或手机号登录控制器
+exports.loginWithEmailOrPhone = async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+
+    // 查找用户（通过邮箱或手机号）
+    const user = await User.findByEmailOrPhone(identifier);
+    if (!user) {
+      return res.status(401).json({
+        status: 'error',
+        message: '邮箱/手机号或密码错误'
+      });
+    }
+
+    // 验证密码
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        status: 'error',
+        message: '邮箱/手机号或密码错误'
+      });
+    }
+
+    // 更新最后登录时间
+    user.lastLogin = new Date();
+    await user.save();
+
+    // 创建JWT令牌
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1d' }
+    );
+
+    // 返回用户信息和令牌
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          phone: user.phone,
+          name: user.name,
+          role: user.role,
+          registrationType: user.registrationType
+        },
+        token
+      }
+    });
+  } catch (error) {
+    logger.error('邮箱/手机号登录失败:', error);
     res.status(500).json({
       status: 'error',
       message: '登录失败',

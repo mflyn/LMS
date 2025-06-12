@@ -26,6 +26,118 @@ describe('认证服务测试', () => {
       expect(response.body.data.user.name).toBe(userData.name);
     });
 
+    it('应该成功使用手机号注册新用户', async () => {
+      const userData = {
+        username: 'phoneuser',
+        password: 'Test123!@#',
+        phone: '13800138000',
+        role: 'student',
+        name: '手机号用户'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send(userData);
+
+      expect(response.status).toBe(201);
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.user.username).toBe(userData.username);
+      expect(response.body.data.user.phone).toBe(userData.phone);
+      expect(response.body.data.user.registrationType).toBe('phone');
+      expect(response.body.data.user.role).toBe(userData.role);
+      expect(response.body.data.user.name).toBe(userData.name);
+    });
+
+    it('应该成功使用混合方式注册新用户', async () => {
+      const userData = {
+        username: 'mixeduser',
+        password: 'Test123!@#',
+        email: 'mixed@example.com',
+        phone: '13900139000',
+        role: 'student',
+        name: '混合用户'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send(userData);
+
+      expect(response.status).toBe(201);
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.user.username).toBe(userData.username);
+      expect(response.body.data.user.email).toBe(userData.email);
+      expect(response.body.data.user.phone).toBe(userData.phone);
+      expect(response.body.data.user.registrationType).toBe('mixed');
+      expect(response.body.data.user.role).toBe(userData.role);
+      expect(response.body.data.user.name).toBe(userData.name);
+    });
+
+    it('应该拒绝既没有邮箱也没有手机号的注册', async () => {
+      const userData = {
+        username: 'invaliduser',
+        password: 'Test123!@#',
+        role: 'student',
+        name: '无效用户'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send(userData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.status).toBe('error');
+      expect(response.body.message).toContain('至少提供一种联系方式');
+    });
+
+    it('应该拒绝无效格式的手机号', async () => {
+      const userData = {
+        username: 'invalidphoneuser',
+        password: 'Test123!@#',
+        phone: '12345678901', // 无效格式
+        role: 'student',
+        name: '无效手机号用户'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send(userData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.status).toBe('error');
+    });
+
+    it('应该拒绝重复的手机号', async () => {
+      const userData1 = {
+        username: 'user1',
+        password: 'Test123!@#',
+        phone: '13800138000',
+        role: 'student',
+        name: '用户1'
+      };
+
+      const userData2 = {
+        username: 'user2',
+        password: 'Test123!@#',
+        phone: '13800138000', // 重复的手机号
+        role: 'student',
+        name: '用户2'
+      };
+
+      // 先创建第一个用户
+      await request(app)
+        .post('/api/auth/register')
+        .send(userData1);
+
+      // 尝试创建第二个用户
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send(userData2);
+
+      expect(response.status).toBe(400);
+      expect(response.body.status).toBe('error');
+      expect(response.body.message).toContain('手机号已存在');
+    });
+
     it('应该拒绝重复的用户名', async () => {
       const userData = {
         username: 'testuser',
@@ -123,6 +235,166 @@ describe('认证服务测试', () => {
       expect(response.status).toBe(401);
       expect(response.body.status).toBe('error');
       expect(response.body.message).toContain('用户名或密码错误');
+    });
+  });
+
+  // 新增：邮箱/手机号登录测试
+  describe('POST /api/auth/login-email-phone', () => {
+    beforeEach(async () => {
+      // 创建邮箱用户
+      await User.create({
+        username: 'emailuser',
+        password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', // Test123!@#
+        email: 'email@example.com',
+        role: 'student',
+        name: '邮箱用户'
+      });
+
+      // 创建手机号用户
+      await User.create({
+        username: 'phoneuser',
+        password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', // Test123!@#
+        phone: '13800138000',
+        role: 'student',
+        name: '手机号用户'
+      });
+
+      // 创建混合用户
+      await User.create({
+        username: 'mixeduser',
+        password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', // Test123!@#
+        email: 'mixed@example.com',
+        phone: '13900139000',
+        role: 'student',
+        name: '混合用户'
+      });
+    });
+
+    it('应该成功使用邮箱登录', async () => {
+      const loginData = {
+        identifier: 'email@example.com',
+        password: 'Test123!@#'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login-email-phone')
+        .send(loginData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.user.email).toBe(loginData.identifier);
+      expect(response.body.data.user.username).toBe('emailuser');
+    });
+
+    it('应该成功使用手机号登录', async () => {
+      const loginData = {
+        identifier: '13800138000',
+        password: 'Test123!@#'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login-email-phone')
+        .send(loginData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.user.phone).toBe(loginData.identifier);
+      expect(response.body.data.user.username).toBe('phoneuser');
+    });
+
+    it('应该成功使用混合用户的邮箱登录', async () => {
+      const loginData = {
+        identifier: 'mixed@example.com',
+        password: 'Test123!@#'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login-email-phone')
+        .send(loginData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.user.email).toBe(loginData.identifier);
+      expect(response.body.data.user.username).toBe('mixeduser');
+    });
+
+    it('应该成功使用混合用户的手机号登录', async () => {
+      const loginData = {
+        identifier: '13900139000',
+        password: 'Test123!@#'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login-email-phone')
+        .send(loginData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe('success');
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.user.phone).toBe(loginData.identifier);
+      expect(response.body.data.user.username).toBe('mixeduser');
+    });
+
+    it('应该拒绝错误的密码', async () => {
+      const loginData = {
+        identifier: 'email@example.com',
+        password: 'wrongpassword'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login-email-phone')
+        .send(loginData);
+
+      expect(response.status).toBe(401);
+      expect(response.body.status).toBe('error');
+      expect(response.body.message).toContain('邮箱/手机号或密码错误');
+    });
+
+    it('应该拒绝不存在的邮箱', async () => {
+      const loginData = {
+        identifier: 'notexist@example.com',
+        password: 'Test123!@#'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login-email-phone')
+        .send(loginData);
+
+      expect(response.status).toBe(401);
+      expect(response.body.status).toBe('error');
+      expect(response.body.message).toContain('邮箱/手机号或密码错误');
+    });
+
+    it('应该拒绝不存在的手机号', async () => {
+      const loginData = {
+        identifier: '13700137000',
+        password: 'Test123!@#'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login-email-phone')
+        .send(loginData);
+
+      expect(response.status).toBe(401);
+      expect(response.body.status).toBe('error');
+      expect(response.body.message).toContain('邮箱/手机号或密码错误');
+    });
+
+    it('应该拒绝无效格式的标识符', async () => {
+      const loginData = {
+        identifier: 'invalid-identifier',
+        password: 'Test123!@#'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login-email-phone')
+        .send(loginData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.status).toBe('error');
     });
   });
 

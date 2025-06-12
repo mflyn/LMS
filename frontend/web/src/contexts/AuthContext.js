@@ -41,11 +41,11 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // 登录函数
+  // 登录函数（用户名登录）
   const login = async (username, password, role) => {
     try {
       const response = await axios.post('/api/auth/login', { username, password, role });
-      const { token, user } = response.data;
+      const { token, user } = response.data.data;
       
       // 保存令牌到本地存储
       localStorage.setItem('token', token);
@@ -63,6 +63,32 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('登录失败:', error);
       message.error(error.response?.data?.message || '登录失败，请检查用户名和密码');
+      return false;
+    }
+  };
+
+  // 邮箱或手机号登录函数
+  const loginWithEmailOrPhone = async (identifier, password) => {
+    try {
+      const response = await axios.post('/api/auth/login-email-phone', { identifier, password });
+      const { token, user } = response.data.data;
+      
+      // 保存令牌到本地存储
+      localStorage.setItem('token', token);
+      
+      // 设置axios默认请求头
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // 更新状态
+      setCurrentUser(user);
+      setUserRole(user.role);
+      setToken(token);
+      
+      message.success('登录成功！');
+      return true;
+    } catch (error) {
+      console.error('登录失败:', error);
+      message.error(error.response?.data?.message || '登录失败，请检查邮箱/手机号和密码');
       return false;
     }
   };
@@ -103,6 +129,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     token,
     login,
+    loginWithEmailOrPhone,
     register,
     logout,
     isAuthenticated: !!token,

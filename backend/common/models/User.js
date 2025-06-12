@@ -22,8 +22,9 @@ const userSchema = new Schema({
   },
   email: {
     type: String,
-    required: true,
+    required: false,
     unique: true,
+    sparse: true, // 允许多个null值，但非null值必须唯一
     trim: true,
     lowercase: true,
     match: [/^\S+@\S+\.\S+$/, '请提供有效的电子邮件地址']
@@ -45,7 +46,11 @@ const userSchema = new Schema({
   },
   phone: {
     type: String,
-    trim: true
+    required: false,
+    unique: true,
+    sparse: true, // 允许多个null值，但非null值必须唯一
+    trim: true,
+    match: [/^1[3-9]\d{9}$/, '请提供有效的手机号码']
   },
   gender: {
     type: String,
@@ -106,6 +111,12 @@ const userSchema = new Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+  registrationType: {
+    type: String,
+    enum: ['email', 'phone', 'mixed'],
+    required: true,
+    default: 'email'
   }
 }, {
   timestamps: true
@@ -114,8 +125,27 @@ const userSchema = new Schema({
 // 创建索引
 userSchema.index({ username: 1 }, { unique: true });
 userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ phone: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ class: 1, role: 1 });
+
+// 验证用户必须提供邮箱或手机号之一
+userSchema.pre('validate', function(next) {
+  if (!this.email && !this.phone) {
+    return next(new Error('用户必须提供邮箱或手机号码'));
+  }
+  
+  // 设置注册类型
+  if (this.email && this.phone) {
+    this.registrationType = 'mixed';
+  } else if (this.email) {
+    this.registrationType = 'email';
+  } else if (this.phone) {
+    this.registrationType = 'phone';
+  }
+  
+  next();
+});
 
 // 密码加密中间件
 userSchema.pre('save', async function(next) {
@@ -170,6 +200,21 @@ userSchema.statics.findStudentsByTeacher = async function(teacherId) {
   const classIds = classes.map(c => c._id);
 
   return this.find({ class: { $in: classIds }, role: 'student' });
+};
+
+// 静态方法：根据邮箱或手机号查找用户（用于登录）
+userSchema.statics.findByEmailOrPhone = function(identifier) {
+  // 判断是邮箱还是手机号
+  const isEmail = /^\S+@\S+\.\S+$/.test(identifier);
+  const isPhone = /^1[3-9]\d{9}$/.test(identifier);
+  
+  if (isEmail) {
+    return this.findOne({ email: identifier });
+  } else if (isPhone) {
+    return this.findOne({ phone: identifier });
+  } else {
+    return null;
+  }
 };
 
 const User = mongoose.model('User', userSchema);

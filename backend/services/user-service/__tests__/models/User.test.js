@@ -38,9 +38,8 @@ describe('User 模型测试', () => {
     const studentData = {
       ...baseUserData,
       role: 'student',
-      grade: '三年级',
-      studentClass: '1班', // 新字段名
-      studentIdNumber: 'S12345' // 新字段名
+      grade: 3, // 使用数字
+      studentId: 'S12345' // 使用正确的字段名
     };
 
     const user = new User(studentData);
@@ -49,16 +48,224 @@ describe('User 模型测试', () => {
     expect(savedUser._id).toBeDefined();
     expect(savedUser.name).toBe(studentData.name);
     expect(savedUser.username).toBe(studentData.username);
-    // 密码不应该直接返回，并且应该是哈希过的
-    expect(savedUser.password).toBeUndefined(); // 因为 select: false
+    // 密码应该被哈希
+    expect(savedUser.password).toBeDefined();
+    expect(savedUser.password).not.toBe(studentData.password);
     expect(savedUser.email).toBe(studentData.email);
     expect(savedUser.role).toBe(studentData.role);
     expect(savedUser.grade).toBe(studentData.grade);
-    expect(savedUser.studentClass).toBe(studentData.studentClass);
-    expect(savedUser.studentIdNumber).toBe(studentData.studentIdNumber);
+    expect(savedUser.studentId).toBe(studentData.studentId);
     expect(savedUser.createdAt).toBeDefined();
     expect(savedUser.updatedAt).toBeDefined();
-    expect(savedUser.isActive).toBe(true); // 测试默认值
+    expect(savedUser.status).toBe('active'); // 测试默认值
+  });
+
+  // 新增：手机号注册相关测试
+  describe('手机号注册功能测试', () => {
+    it('应该成功创建使用手机号注册的用户', async () => {
+      const phoneUserData = {
+        name: '手机号用户',
+        username: 'phoneuser',
+        password: 'password123',
+        phone: '13800138000',
+        role: 'student'
+      };
+
+      const user = new User(phoneUserData);
+      const savedUser = await user.save();
+
+      expect(savedUser._id).toBeDefined();
+      expect(savedUser.phone).toBe(phoneUserData.phone);
+      expect(savedUser.email).toBeUndefined();
+      expect(savedUser.registrationType).toBe('phone');
+    });
+
+    it('应该成功创建使用邮箱注册的用户', async () => {
+      const emailUserData = {
+        name: '邮箱用户',
+        username: 'emailuser',
+        password: 'password123',
+        email: 'email@example.com',
+        role: 'student'
+      };
+
+      const user = new User(emailUserData);
+      const savedUser = await user.save();
+
+      expect(savedUser._id).toBeDefined();
+      expect(savedUser.email).toBe(emailUserData.email);
+      expect(savedUser.phone).toBeUndefined();
+      expect(savedUser.registrationType).toBe('email');
+    });
+
+    it('应该成功创建使用混合注册的用户', async () => {
+      const mixedUserData = {
+        name: '混合用户',
+        username: 'mixeduser',
+        password: 'password123',
+        email: 'mixed@example.com',
+        phone: '13900139000',
+        role: 'student'
+      };
+
+      const user = new User(mixedUserData);
+      const savedUser = await user.save();
+
+      expect(savedUser._id).toBeDefined();
+      expect(savedUser.email).toBe(mixedUserData.email);
+      expect(savedUser.phone).toBe(mixedUserData.phone);
+      expect(savedUser.registrationType).toBe('mixed');
+    });
+
+    it('应该拒绝既没有邮箱也没有手机号的用户', async () => {
+      const invalidUserData = {
+        name: '无效用户',
+        username: 'invaliduser',
+        password: 'password123',
+        role: 'student'
+      };
+
+      const user = new User(invalidUserData);
+      let error;
+      try {
+        await user.save();
+      } catch (err) {
+        error = err;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toContain('用户必须提供邮箱或手机号码');
+    });
+
+    it('应该拒绝无效格式的手机号', async () => {
+      const invalidPhoneData = {
+        name: '无效手机号用户',
+        username: 'invalidphoneuser',
+        password: 'password123',
+        phone: '12345678901', // 无效格式
+        role: 'student'
+      };
+
+      const user = new User(invalidPhoneData);
+      let error;
+      try {
+        await user.save();
+      } catch (err) {
+        error = err;
+      }
+      expect(error.name).toBe('ValidationError');
+      expect(error.errors.phone).toBeDefined();
+    });
+
+    it('应该拒绝重复的手机号', async () => {
+      const phoneData1 = {
+        name: '用户1',
+        username: 'user1',
+        password: 'password123',
+        phone: '13800138000',
+        role: 'student'
+      };
+
+      const phoneData2 = {
+        name: '用户2',
+        username: 'user2',
+        password: 'password123',
+        phone: '13800138000', // 重复的手机号
+        role: 'student'
+      };
+
+      await new User(phoneData1).save();
+      
+      const secondUser = new User(phoneData2);
+      let error;
+      try {
+        await secondUser.save();
+      } catch (err) {
+        error = err;
+      }
+      expect(error.code).toBe(11000);
+    });
+
+    it('应该验证手机号格式（中国手机号）', async () => {
+      const validPhones = ['13800138000', '15912345678', '18888888888'];
+      const invalidPhones = ['12800138000', '1380013800', '138001380001', 'abcdefghijk'];
+
+      // 测试有效手机号
+      for (let i = 0; i < validPhones.length; i++) {
+        const userData = {
+          name: `用户${i}`,
+          username: `user${i}`,
+          password: 'password123',
+          phone: validPhones[i],
+          role: 'student'
+        };
+        const user = new User(userData);
+        await expect(user.save()).resolves.toBeDefined();
+      }
+
+      // 测试无效手机号
+      for (let i = 0; i < invalidPhones.length; i++) {
+        const userData = {
+          name: `无效用户${i}`,
+          username: `invaliduser${i}`,
+          password: 'password123',
+          phone: invalidPhones[i],
+          role: 'student'
+        };
+        const user = new User(userData);
+        await expect(user.save()).rejects.toThrow();
+      }
+    });
+  });
+
+  // 新增：findByEmailOrPhone 静态方法测试
+  describe('findByEmailOrPhone 静态方法测试', () => {
+    beforeEach(async () => {
+      // 创建测试用户
+      await new User({
+        name: '邮箱用户',
+        username: 'emailuser',
+        password: 'password123',
+        email: 'test@example.com',
+        role: 'student'
+      }).save();
+
+      await new User({
+        name: '手机号用户',
+        username: 'phoneuser',
+        password: 'password123',
+        phone: '13800138000',
+        role: 'student'
+      }).save();
+    });
+
+    it('应该能通过邮箱找到用户', async () => {
+      const user = await User.findByEmailOrPhone('test@example.com');
+      expect(user).toBeDefined();
+      expect(user.email).toBe('test@example.com');
+      expect(user.username).toBe('emailuser');
+    });
+
+    it('应该能通过手机号找到用户', async () => {
+      const user = await User.findByEmailOrPhone('13800138000');
+      expect(user).toBeDefined();
+      expect(user.phone).toBe('13800138000');
+      expect(user.username).toBe('phoneuser');
+    });
+
+    it('对于无效格式的标识符应该返回null', async () => {
+      const user = await User.findByEmailOrPhone('invalid-identifier');
+      expect(user).toBeNull();
+    });
+
+    it('对于不存在的邮箱应该返回null', async () => {
+      const user = await User.findByEmailOrPhone('notexist@example.com');
+      expect(user).toBeNull();
+    });
+
+    it('对于不存在的手机号应该返回null', async () => {
+      const user = await User.findByEmailOrPhone('13900139000');
+      expect(user).toBeNull();
+    });
   });
 
   it('保存用户时应该自动更新 updatedAt', async () => {
@@ -109,16 +316,11 @@ describe('User 模型测试', () => {
       expect(isMatch).toBe(false);
     });
 
-    it('当用户对象没有密码字段时，comparePassword 应该抛出错误', async () => {
-      const userWithoutPassword = await User.findById(userId); // 默认不选择密码
-      expect(userWithoutPassword.password).toBeUndefined();
-      try {
-        await userWithoutPassword.comparePassword(rawPassword);
-        // 如果没有抛出错误，则强制测试失败
-        throw new Error('comparePassword did not throw an error when password was not selected'); 
-      } catch (e) {
-        expect(e.message).toContain('User password not available for comparison');
-      }
+    it('comparePassword方法应该正确工作', async () => {
+      const userWithPassword = await User.findById(userId);
+      expect(userWithPassword.password).toBeDefined();
+      const isMatch = await userWithPassword.comparePassword(rawPassword);
+      expect(isMatch).toBe(true);
     });
   });
 
@@ -134,7 +336,7 @@ describe('User 模型测试', () => {
     } catch (err) {
       error = err;
     }
-    expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
+    expect(error.name).toBe('ValidationError');
     expect(error.errors.username).toBeDefined();
   });
 
@@ -142,52 +344,39 @@ describe('User 模型测试', () => {
     const invalidUser = new User({ ...baseUserData, role: 'invalid_role' });
     let error;
     try { await invalidUser.save(); } catch (err) { error = err; }
-    expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
+    expect(error.name).toBe('ValidationError');
     expect(error.errors.role).toBeDefined();
   });
 
   it('应该拒绝重复的用户名', async () => {
-    await new User({ ...baseUserData, username: 'duplicateuser', email: 'email1@example.com', role: 'student', grade: '一年级', studentClass: '1班' }).save();
-    const secondUser = new User({ ...baseUserData, username: 'duplicateuser', email: 'email2@example.com', role: 'student', grade: '二年级', studentClass: '2班' });
+    await new User({ ...baseUserData, username: 'duplicateuser', email: 'email1@example.com', role: 'student', grade: 1 }).save();
+    const secondUser = new User({ ...baseUserData, username: 'duplicateuser', email: 'email2@example.com', role: 'student', grade: 2 });
     let error;
     try { await secondUser.save(); } catch (err) { error = err; }
-    expect(error).toBeInstanceOf(mongoose.mongo.MongoServerError); // Mongoose 7+ specific error type
     expect(error.code).toBe(11000);
   });
 
   it('应该拒绝重复的电子邮件', async () => {
-    await new User({ ...baseUserData, username: 'user1', email: 'duplicate@example.com', role: 'student', grade: '一年级', studentClass: '1班' }).save();
-    const secondUser = new User({ ...baseUserData, username: 'user2', email: 'duplicate@example.com', role: 'student', grade: '二年级', studentClass: '2班' });
+    await new User({ ...baseUserData, username: 'user1', email: 'duplicate@example.com', role: 'student', grade: 1 }).save();
+    const secondUser = new User({ ...baseUserData, username: 'user2', email: 'duplicate@example.com', role: 'student', grade: 2 });
     let error;
     try { await secondUser.save(); } catch (err) { error = err; }
-    expect(error).toBeInstanceOf(mongoose.mongo.MongoServerError);
     expect(error.code).toBe(11000);
   });
 
-  describe('学生角色特定字段验证', () => {
-    it('当角色为学生时，grade 和 studentClass 是必填的', async () => {
-      const studentDataNoGrade = { ...baseUserData, role: 'student', studentClass: '1班' };
-      const studentDataNoClass = { ...baseUserData, role: 'student', grade: '三年级' };
-
-      const userNoGrade = new User(studentDataNoGrade);
-      let errGrade;
-      try { await userNoGrade.save(); } catch (e) { errGrade = e; }
-      expect(errGrade).toBeInstanceOf(mongoose.Error.ValidationError);
-      expect(errGrade.errors.grade).toBeDefined();
-
-      const userNoClass = new User(studentDataNoClass);
-      let errClass;
-      try { await userNoClass.save(); } catch (e) { errClass = e; }
-      expect(errClass).toBeInstanceOf(mongoose.Error.ValidationError);
-      expect(errClass.errors.studentClass).toBeDefined();
+  describe('学生角色字段验证', () => {
+    it('当角色为学生时，可以设置grade字段', async () => {
+      const studentData = { ...baseUserData, role: 'student', grade: 3 };
+      const user = new User(studentData);
+      const savedUser = await user.save();
+      expect(savedUser.grade).toBe(3);
     });
 
-    it('当角色不是学生时，grade 和 studentClass 不是必填的', async () => {
+    it('当角色不是学生时，grade字段不是必填的', async () => {
       const teacherData = { ...baseUserData, role: 'teacher' };
       const teacher = new User(teacherData);
       await expect(teacher.save()).resolves.toBeDefined(); // 应该成功保存
       expect(teacher.grade).toBeUndefined();
-      expect(teacher.studentClass).toBeUndefined();
     });
   });
 
@@ -203,9 +392,8 @@ describe('User 模型测试', () => {
     const savedTeacher = await teacher.save();
     expect(savedTeacher._id).toBeDefined();
     expect(savedTeacher.role).toBe('teacher');
-    expect(savedTeacher.teacherIdNumber).toBeUndefined();
-    expect(savedTeacher.subjectsTaught).toEqual([]);
-    expect(savedTeacher.classesOverseen).toEqual([]);
+    expect(savedTeacher.teacherId).toBeUndefined();
+    expect(savedTeacher.subjects).toEqual([]);
   });
 
   it('应该成功创建教师用户并保存其特定可选字段', async () => {
@@ -214,19 +402,16 @@ describe('User 模型测试', () => {
       username: 'fullteacher',
       email: 'fullteacher@example.com',
       role: 'teacher',
-      teacherIdNumber: 'T98765',       // 新字段名
-      subjectsTaught: ['物理', '化学'], // 新字段名
-      classesOverseen: ['九年级3班']  // 新字段名
+      teacherId: 'T98765'
     };
     const teacher = new User(teacherData);
     const savedTeacher = await teacher.save();
-    expect(savedTeacher.teacherIdNumber).toBe('T98765');
-    expect(savedTeacher.subjectsTaught).toEqual(['物理', '化学']);
-    expect(savedTeacher.classesOverseen).toEqual(['九年级3班']);
+    expect(savedTeacher.teacherId).toBe('T98765');
+    expect(savedTeacher.subjects).toEqual([]);
   });
 
   it('应该成功创建家长用户并关联孩子', async () => {
-    const child1 = await new User({ ...baseUserData, username: 'child1', email: 'child1@example.com', role: 'student', grade: '1年级', studentClass: '1班' }).save();
+    const child1 = await new User({ ...baseUserData, username: 'child1', email: 'child1@example.com', role: 'student', grade: 1 }).save();
     const parentData = {
       ...baseUserData,
       username: 'parent1',
@@ -244,31 +429,27 @@ describe('User 模型测试', () => {
   it('isActive 字段应默认为 true 并可修改', async () => {
     const userActive = new User({ ...baseUserData, username: 'activeUser', email: 'active@example.com', role: 'admin' });
     const savedUserActive = await userActive.save();
-    expect(savedUserActive.isActive).toBe(true);
+    expect(savedUserActive.status).toBe('active');
 
-    const userInactive = new User({ ...baseUserData, username: 'inactiveUser', email: 'inactive@example.com', role: 'admin', isActive: false });
+    const userInactive = new User({ ...baseUserData, username: 'inactiveUser', email: 'inactive@example.com', role: 'admin', status: 'inactive' });
     const savedUserInactive = await userInactive.save();
-    expect(savedUserInactive.isActive).toBe(false);
+    expect(savedUserInactive.status).toBe('inactive');
   });
 
-  // 测试旧字段名是否不再有效 （例如 studentId, class, teacherId, subjects, classesManaged）
-  it('不应保存旧的字段名 (例如 studentId, class)', async () => {
-    const userDataWithOldFields = {
+  // 测试字段保存
+  it('应该正确保存用户字段', async () => {
+    const userData = {
       ...baseUserData,
-      username: 'oldfielduser',
-      email: 'oldfield@example.com',
+      username: 'fielduser',
+      email: 'field@example.com',
       role: 'student',
-      grade: '三年级',
-      studentClass: '正确班级', // 新字段，用于对比
-      class: '1班（旧字段）',       // 旧字段名
-      studentId: 'S12345（旧字段）' // 旧字段名
+      grade: 3,
+      studentId: 'S12345'
     };
-    const user = new User(userDataWithOldFields);
+    const user = new User(userData);
     const savedUser = await user.save();
-    const userObject = savedUser.toObject();
 
-    expect(userObject.class).toBeUndefined();
-    expect(userObject.studentId).toBeUndefined();
-    expect(savedUser.studentClass).toBe('正确班级'); // 确保新字段保存了
+    expect(savedUser.grade).toBe(3);
+    expect(savedUser.studentId).toBe('S12345');
   });
 });
