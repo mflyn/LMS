@@ -58,8 +58,8 @@
 ### 开发环境部署
 1. 克隆代码库
 ```bash
-git clone https://github.com/your-org/education-system.git
-cd education-system
+git clone https://github.com/your-org/LMS.git
+cd LMS
 ```
 
 2. 安装依赖
