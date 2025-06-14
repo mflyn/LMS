@@ -1,6 +1,6 @@
 const { body, param, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
-const Role = require('../../models/Role'); // To validate against existing roles
+const Role = require('../../../../common/models/Role'); // To validate against existing roles
 
 // Common password validation rule
 const passwordValidation = body('password')

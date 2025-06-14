@@ -8,7 +8,18 @@ const hpp = require('hpp');
 // 根据环境选择正确的模块
 let session, sessionManagerModule;
 if (process.env.NODE_ENV === 'test') {
-  session = jest.fn();
+  // 在测试环境中创建一个模拟的 session 中间件函数
+  session = () => (req, res, next) => {
+    req.session = {
+      id: 'test-session-id',
+      userId: 'test-user-id',
+      userAgent: req.headers['user-agent'] || 'test-agent',
+      ip: req.ip || '127.0.0.1',
+      touch: () => {},
+      destroy: (callback) => { if (callback) callback(); }
+    };
+    next();
+  };
   sessionManagerModule = require('./middleware/mockSessionManager');
 } else {
   session = require('express-session');
@@ -18,8 +29,8 @@ const { sessionConfig, sessionSecurity, sessionCleanup } = sessionManagerModule;
 const passwordPolicy = require('./middleware/passwordPolicy');
 const { validate, sanitizeInput } = require('./middleware/requestValidator');
 const { upload, fileUploadSecurity } = require('./middleware/fileUploadSecurity');
-const { auditLogger, sensitiveOperationLogger } = require('./middleware/auditLogger');
-const errorHandler = require('./middleware/errorHandler');
+const auditLogger = require('./middleware/auditLogger');
+const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
@@ -88,8 +99,7 @@ app.use(hpp());
 
 // 安全中间件
 app.use(sanitizeInput);
-app.use(auditLogger);
-app.use(sensitiveOperationLogger);
+app.use(auditLogger());
 
 // 错误处理
 app.use(errorHandler);

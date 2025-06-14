@@ -10,7 +10,7 @@ const mongoSanitize = require('express-mongo-sanitize'); // For NoSQL injection 
 const { requestTracker, errorHandler } = require('./middleware/errorHandler');
 const { auditLogger } = require('./middleware/auditLogger'); // Assuming auditLogger is correctly exported
 const { sanitizeInput } = require('./middleware/requestValidator'); // For HTML sanitization
-const logger = require('./utils/logger');
+const { logger } = require('./utils/logger');
 
 // 导入会话管理 (如果需要，并使其可选)
 // let session, sessionManagerModule;

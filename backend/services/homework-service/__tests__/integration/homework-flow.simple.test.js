@@ -1,5 +1,11 @@
 // 简化版集成测试，不依赖外部模块
 describe('作业服务集成测试 (简化版)', () => {
+  beforeAll(async () => {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+  });
+
   it('应该能够测试作业服务的基本功能', () => {
     // 简单的测试，不依赖外部模块
     expect(true).toBe(true);

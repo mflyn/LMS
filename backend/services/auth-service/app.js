@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const authRoutes = require('./routes/auth');
+const { errorHandler } = require('../../common/middleware/errorHandler');
 
 const app = express();
 
@@ -23,13 +24,6 @@ app.get('/health', (req, res) => {
 });
 
 // 错误处理中间件
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    status: 'error',
-    message: '服务器内部错误',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
+app.use(errorHandler);
 
 module.exports = app;

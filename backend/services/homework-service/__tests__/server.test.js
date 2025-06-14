@@ -23,6 +23,9 @@ describe('Homework Service 服务器测试', () => {
   let mongoServer;
 
   beforeAll(async () => {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
     // 创建内存数据库
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();

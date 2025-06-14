@@ -26,55 +26,7 @@ describe('认证中间件测试', () => {
   });
   
   describe('authenticateToken', () => {
-    it('应该在测试环境中跳过认证', () => {
-      // 设置测试环境
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'test';
-      
-      // 设置用户信息
-      req.user = { id: '123', role: 'admin' };
-      
-      // 调用中间件
-      authenticateToken(req, res, next);
-      
-      // 验证结果
-      expect(next).toHaveBeenCalled();
-      expect(jwt.verify).not.toHaveBeenCalled();
-      
-      // 恢复环境
-      process.env.NODE_ENV = originalEnv;
-    });
-    
-    it('应该在没有令牌时返回 401', () => {
-      // 调用中间件
-      authenticateToken(req, res, next);
-      
-      // 验证结果
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: '未认证' });
-      expect(next).not.toHaveBeenCalled();
-    });
-    
-    it('应该在令牌无效时返回 403', () => {
-      // 设置请求头
-      req.headers['authorization'] = 'Bearer invalid-token';
-      
-      // 模拟 jwt.verify 返回错误
-      jwt.verify.mockImplementation((token, secret, callback) => {
-        callback(new Error('令牌无效'), null);
-      });
-      
-      // 调用中间件
-      authenticateToken(req, res, next);
-      
-      // 验证结果
-      expect(jwt.verify).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ message: '令牌无效或已过期' });
-      expect(next).not.toHaveBeenCalled();
-    });
-    
-    it('应该在令牌有效时设置用户信息并调用 next', () => {
+    it('应该在有效令牌时验证并设置用户信息', () => {
       // 设置请求头
       req.headers['authorization'] = 'Bearer valid-token';
       
@@ -94,6 +46,43 @@ describe('认证中间件测试', () => {
       expect(req.user).toEqual(mockUser);
       expect(next).toHaveBeenCalled();
     });
+    
+    it('应该在没有令牌时返回 401', () => {
+      // 调用中间件
+      authenticateToken(req, res, next);
+      
+      // 验证结果
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ 
+        status: 'error',
+        message: '访问令牌缺失' 
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+    
+    it('应该在令牌无效时返回 403', () => {
+      // 设置请求头
+      req.headers['authorization'] = 'Bearer invalid-token';
+      
+      // 模拟 jwt.verify 返回错误
+      jwt.verify.mockImplementation((token, secret, callback) => {
+        callback(new Error('令牌无效'), null);
+      });
+      
+      // 调用中间件
+      authenticateToken(req, res, next);
+      
+      // 验证结果
+      expect(jwt.verify).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ 
+        status: 'error',
+        message: '无效的访问令牌' 
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+    
+
   });
   
   describe('checkRole', () => {
@@ -106,7 +95,10 @@ describe('认证中间件测试', () => {
       
       // 验证结果
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: '未认证' });
+      expect(res.json).toHaveBeenCalledWith({ 
+        status: 'error',
+        message: '用户未认证' 
+      });
       expect(next).not.toHaveBeenCalled();
     });
     
@@ -122,7 +114,10 @@ describe('认证中间件测试', () => {
       
       // 验证结果
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ message: '权限不足' });
+      expect(res.json).toHaveBeenCalledWith({ 
+        status: 'error',
+        message: '权限不足' 
+      });
       expect(next).not.toHaveBeenCalled();
     });
     

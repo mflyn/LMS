@@ -62,11 +62,11 @@ class ConflictError extends AppError {
 }
 
 /**
- * 422 - 无法处理的实体
+ * 400 - 数据验证失败
  */
 class ValidationError extends AppError {
   constructor(message = '数据验证失败', errors = {}) {
-    super(message, 422);
+    super(message, 400);
     this.errors = errors;
   }
 }

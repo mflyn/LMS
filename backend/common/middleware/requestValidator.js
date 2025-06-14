@@ -6,8 +6,12 @@ const { ValidationError } = require('./errorTypes'); // Assuming errorTypes.js i
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // 将详细错误信息传递给 ValidationError，它会处理 status 和 message
-    return next(new ValidationError(errors.array(), '请求参数验证失败')); 
+    // 提取第一个错误消息作为主要消息
+    const firstError = errors.array()[0];
+    const message = firstError.msg || '请求参数验证失败';
+    
+    // 将详细错误信息传递给 ValidationError
+    return next(new ValidationError(message, errors.array())); 
   }
   next();
 };
@@ -82,7 +86,7 @@ const registerValidation = [
   // 自定义验证：确保至少提供邮箱或手机号之一
   body().custom((value, { req }) => {
     if (!req.body.email && !req.body.phone) {
-      throw new Error('必须提供邮箱或手机号码');
+      throw new Error('至少提供一种联系方式（邮箱或手机号）');
     }
     return true;
   }),

@@ -2,11 +2,27 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../server');
-const User = require('../models/User');
+const User = require('../../../common/models/User');
 
 // 使用模拟模块
 jest.mock('bcrypt', () => require('./mocks/bcrypt'));
-jest.mock('jsonwebtoken', () => require('./mocks/jsonwebtoken'));
+jest.mock('jsonwebtoken', () => ({
+  sign: jest.fn().mockImplementation((payload, secret, options) => {
+    return `mock_token_for_${payload.username || payload.id}`;
+  }),
+  verify: jest.fn().mockImplementation((token, secret) => {
+    const matches = token.match(/mock_token_for_(.*)/);
+    if (matches && matches[1]) {
+      return {
+        id: matches[1],
+        username: matches[1],
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600
+      };
+    }
+    throw new Error('Invalid token');
+  })
+}));
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');

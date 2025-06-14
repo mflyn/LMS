@@ -198,6 +198,7 @@ performanceDataSchema.statics.getPerformanceTrend = async function(serviceName, 
   return this.aggregate(pipeline);
 };
 
+// 创建模型
 const PerformanceData = mongoose.model('PerformanceData', performanceDataSchema);
 
 module.exports = PerformanceData;

@@ -9,6 +9,9 @@ let mongoServer;
 
 // 使用内存数据库进行测试
 beforeAll(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
 

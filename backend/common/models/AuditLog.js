@@ -1,14 +1,20 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const auditLogSchema = new mongoose.Schema({
+/**
+ * 审计日志模型
+ * 用于记录系统中的用户操作和系统事件
+ */
+const auditLogSchema = new Schema({
   requestId: {
     type: String,
     required: true,
-    unique: true
+    index: true
   },
   timestamp: {
     type: Date,
-    required: true
+    default: Date.now,
+    index: true
   },
   method: {
     type: String,
@@ -26,21 +32,23 @@ const auditLogSchema = new mongoose.Schema({
     required: true
   },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
   },
   operationType: {
     type: String,
-    enum: ['normal', 'sensitive']
+    enum: ['normal', 'sensitive'],
+    default: 'normal'
   },
   requestBody: {
-    type: mongoose.Schema.Types.Mixed
+    type: Schema.Types.Mixed
   },
   requestQuery: {
-    type: mongoose.Schema.Types.Mixed
+    type: Schema.Types.Mixed
   },
   requestParams: {
-    type: mongoose.Schema.Types.Mixed
+    type: Schema.Types.Mixed
   },
   responseTime: {
     type: Number
@@ -49,30 +57,35 @@ const auditLogSchema = new mongoose.Schema({
     type: Number
   },
   responseBody: {
-    type: mongoose.Schema.Types.Mixed
+    type: Schema.Types.Mixed
   },
   status: {
     type: String,
     enum: ['pending', 'completed', 'error'],
     default: 'pending'
   },
+  error: {
+    message: String,
+    stack: String
+  },
   completedAt: {
     type: Date
-  },
-  error: {
-    type: mongoose.Schema.Types.Mixed
   }
 }, {
   timestamps: true
 });
 
 // 创建索引
-auditLogSchema.index({ requestId: 1 });
-auditLogSchema.index({ userId: 1 });
-auditLogSchema.index({ timestamp: 1 });
-auditLogSchema.index({ operationType: 1 });
-auditLogSchema.index({ status: 1 });
+auditLogSchema.index({ userId: 1, timestamp: -1 });
+auditLogSchema.index({ operationType: 1, timestamp: -1 });
+auditLogSchema.index({ status: 1, timestamp: -1 });
 
-const AuditLog = mongoose.model('AuditLog', auditLogSchema);
+// 避免重复编译模型
+let AuditLog;
+try {
+  AuditLog = mongoose.model('AuditLog');
+} catch (error) {
+  AuditLog = mongoose.model('AuditLog', auditLogSchema);
+}
 
 module.exports = AuditLog; 

@@ -12,7 +12,7 @@ schema
   .has().digits()                                // 必须包含数字
   .has().symbols()                               // 必须包含特殊字符
   .has().not().spaces()                          // 不能包含空格
-  .is().not().oneOf(['Passw0rd', 'Password123']); // 不能使用常见密码
+  .not().oneOf(['Passw0rd', 'Password123']); // 不能使用常见密码
 
 const passwordPolicy = (req, res, next) => {
   const { password } = req.body;

@@ -52,7 +52,7 @@ const authenticateGateway = (req, res, next) => {
 /**
  * 角色检查中间件
  * 检查用户是否具有所需角色
- * @param {Array} roles - 允许访问的角色数组
+ * @param {Array|String} roles - 允许访问的角色数组或单个角色字符串
  */
 const checkRole = (roles) => {
   return (req, res, next) => {
@@ -61,8 +61,11 @@ const checkRole = (roles) => {
         return next(new UnauthorizedError('User not authenticated or role information is missing. Ensure an authentication middleware (authenticateJWT or authenticateGateway) runs before checkRole.'));
     }
     
-    if (!roles.includes(req.user.role)) {
-      return next(new ForbiddenError(`Access denied. Your role ('${req.user.role}') is not authorized for this resource. Required roles: ${roles.join(', ')}.`));
+    // 将单个角色字符串转换为数组
+    const allowedRoles = Array.isArray(roles) ? roles : [roles];
+    
+    if (!allowedRoles.includes(req.user.role)) {
+      return next(new ForbiddenError(`Access denied. Your role ('${req.user.role}') is not authorized for this resource. Required roles: ${allowedRoles.join(', ')}.`));
     }
     
     next();

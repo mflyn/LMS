@@ -32,7 +32,7 @@ exports.register = async (req, res) => {
       if (existingEmail) {
         return res.status(400).json({
           status: 'error',
-          message: '邮箱已被注册'
+          message: '邮箱已存在'
         });
       }
     }
@@ -43,7 +43,7 @@ exports.register = async (req, res) => {
       if (existingPhone) {
         return res.status(400).json({
           status: 'error',
-          message: '手机号已被注册'
+          message: '手机号已存在'
         });
       }
     }

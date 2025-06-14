@@ -1,8 +1,32 @@
 const request = require('supertest');
-const app = require('../../../common/app');
+const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const app = require('../app');
 const User = require('../../../common/models/User');
 
+let mongoServer;
+
 describe('认证服务测试', () => {
+  beforeAll(async () => {
+    // 启动内存数据库
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    
+    // 连接到内存数据库
+    await mongoose.connect(mongoUri);
+  });
+
+  afterAll(async () => {
+    // 关闭数据库连接
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+    await mongoServer.stop();
+  });
+
+  beforeEach(async () => {
+    // 清理数据库
+    await User.deleteMany({});
+  });
   // 测试注册功能
   describe('POST /api/auth/register', () => {
     it('应该成功注册新用户', async () => {

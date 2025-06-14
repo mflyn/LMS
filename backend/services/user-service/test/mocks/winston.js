@@ -9,7 +9,8 @@ const winston = {
     warn: jest.fn(),
     debug: jest.fn(),
     http: jest.fn(),
-    log: jest.fn()
+    log: jest.fn(),
+    add: jest.fn()
   }),
   format: {
     combine: jest.fn(),

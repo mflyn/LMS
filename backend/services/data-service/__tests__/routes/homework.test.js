@@ -21,6 +21,12 @@ jest.mock('mongoose', () => {
   };
 });
 
+beforeAll(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+});
+
 describe('Homework Routes', () => {
   let app;
 

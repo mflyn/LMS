@@ -217,6 +217,12 @@ userSchema.statics.findByEmailOrPhone = function(identifier) {
   }
 };
 
-const User = mongoose.model('User', userSchema);
+// 避免重复编译模型
+let User;
+try {
+  User = mongoose.model('User');
+} catch (error) {
+  User = mongoose.model('User', userSchema);
+}
 
 module.exports = User;

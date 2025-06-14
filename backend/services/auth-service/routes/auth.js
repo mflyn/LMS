@@ -9,7 +9,7 @@ const authController = require('../controllers/authController');
 router.post(
   '/register',
   passwordPolicy,
-  registerValidation,
+  ...registerValidation,
   validate,
   authController.register
 );
@@ -17,7 +17,7 @@ router.post(
 // 登录路由（用户名登录）
 router.post(
   '/login',
-  loginValidation,
+  ...loginValidation,
   validate,
   authController.login
 );
@@ -25,7 +25,7 @@ router.post(
 // 邮箱或手机号登录路由
 router.post(
   '/login-email-phone',
-  emailPhoneLoginValidation,
+  ...emailPhoneLoginValidation,
   validate,
   authController.loginWithEmailOrPhone
 );

@@ -5,8 +5,8 @@ const jwt = require('jsonwebtoken');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const express = require('express');
 const authRoutes = require('../../routes/auth');
-const User = require('../../models/User');
-const Role = require('../../models/Role');
+const User = require('../../../../common/models/User');
+const Role = require('../../../../common/models/Role');
 const config = require('../../config');
 const app = require('../../server'); // 使用 user-service 自己的 app
 

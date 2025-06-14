@@ -16,7 +16,8 @@ jest.mock('jsonwebtoken', () => ({
 // Based on common/config/auth.js, it seems to be direct exports.
 jest.mock('../../config/auth', () => ({
   jwtSecret: 'testsecret', // Provide a mock secret
-  jwtExpiration: '1h',     // Provide a mock expiration
+  tokenExpiration: '1h',     // Provide a mock expiration
+  refreshTokenExpiration: '7d', // Provide a mock refresh token expiration
 }));
 
 
@@ -51,35 +52,30 @@ describe('Auth Middleware', () => {
 
   describe('generateToken', () => {
     it('should generate a token with correct payload and default expiration from mocked authConfig', () => {
-      const payload = { id: 'userId123', role: 'user' };
+      const user = { _id: 'userId123', role: 'user', username: 'testuser' };
       const expectedToken = 'mockTokenString';
       jwt.sign.mockReturnValue(expectedToken); // Mock the return value of jwt.sign
 
-      const token = generateToken(payload);
+      const token = generateToken(user);
 
       expect(jwt.sign).toHaveBeenCalledWith(
-        payload,
+        { id: 'userId123', role: 'user', username: 'testuser' },
         'testsecret', // from mocked authConfig
         { expiresIn: '1h' } // from mocked authConfig
       );
       expect(token).toBe(expectedToken);
     });
 
-    it('should use expiration from payload if provided, and this value is passed to jwt.sign options', () => {
-      const payloadWithExpiresIn = { id: 'userId123', role: 'user', expiresIn: '2h' };
-      // The actual payload for signing should be the original payload.
-      // The expiresIn from the payload is used for the options.
-      jwt.sign.mockReturnValue('customExpireToken');
+    it('should use refresh token expiration when type is refresh', () => {
+      const user = { _id: 'userId123', role: 'user', username: 'testuser' };
+      jwt.sign.mockReturnValue('refreshToken');
       
-      generateToken(payloadWithExpiresIn);
+      generateToken(user, 'refresh');
       
-      // The first argument to jwt.sign should be the payload *without* our custom 'expiresIn' if we were cleaning it,
-      // but auth.js's generateToken passes the payload as is.
-      // The options object's expiresIn IS correctly taken from payload.expiresIn.
       expect(jwt.sign).toHaveBeenCalledWith(
-        payloadWithExpiresIn, // current auth.js signs the payload as-is
+        { id: 'userId123', role: 'user', username: 'testuser' },
         'testsecret',
-        { expiresIn: '2h' }  // expiresIn from payload overrides config default
+        { expiresIn: '7d' }  // refreshTokenExpiration from mocked config
       );
     });
   });
@@ -87,103 +83,92 @@ describe('Auth Middleware', () => {
   describe('authenticateJWT', () => {
     it('should call next() and set req.user if token is valid', () => {
       mockReq.headers.authorization = 'Bearer validtokenstring';
-      // req.header('Authorization') should return 'Bearer validtokenstring'
-      mockReq.header = jest.fn().mockReturnValue('Bearer validtokenstring');
 
       const decodedPayload = { id: 'userId123', role: 'user', iat: Date.now() / 1000, exp: (Date.now() / 1000) + 3600 };
-      jwt.verify.mockReturnValue(decodedPayload);
+      jwt.verify.mockImplementation((token, secret, callback) => {
+        callback(null, decodedPayload);
+      });
 
       authenticateJWT(mockReq, mockRes, mockNext);
 
-      expect(mockReq.header).toHaveBeenCalledWith('Authorization');
-      expect(jwt.verify).toHaveBeenCalledWith('validtokenstring', 'testsecret');
+      expect(jwt.verify).toHaveBeenCalledWith('validtokenstring', 'testsecret', expect.any(Function));
       expect(mockReq.user).toEqual(decodedPayload);
       expect(mockNext).toHaveBeenCalledWith();
       expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
     });
 
     it('should call next with UnauthorizedError if no token is provided (no Authorization header)', () => {
-      mockReq.header = jest.fn().mockReturnValue(undefined); // Simulate no Authorization header
+      // mockReq.headers.authorization is undefined by default
 
       authenticateJWT(mockReq, mockRes, mockNext);
       
       expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('No token provided.');
+      expect(error.message).toBe('Access token is missing. Please include it in the Authorization header as a Bearer token.');
       expect(error.statusCode).toBe(401);
     });
     
     it('should call next with UnauthorizedError if token is malformed (not Bearer)', () => {
-      mockReq.header = jest.fn().mockReturnValue('invalidtokenstring'); // Token not in Bearer format
+      mockReq.headers.authorization = 'invalidtokenstring'; // Token not in Bearer format
 
       authenticateJWT(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('Token is not in Bearer format.');
+      expect(error.message).toBe('Access token is missing. Please include it in the Authorization header as a Bearer token.');
       expect(error.statusCode).toBe(401);
     });
 
-    it('should call next with UnauthorizedError if jwt.verify throws an error', () => {
-      mockReq.header = jest.fn().mockReturnValue('Bearer expiredOrInvalidToken');
-      jwt.verify.mockImplementation(() => { 
+    it('should call next with ForbiddenError if jwt.verify throws an error', () => {
+      mockReq.headers.authorization = 'Bearer expiredOrInvalidToken';
+      jwt.verify.mockImplementation((token, secret, callback) => {
         // Simulate a JWT error, e.g., TokenExpiredError or JsonWebTokenError
         const err = new Error('jwt expired'); 
         err.name = 'TokenExpiredError'; 
-        throw err; 
+        callback(err);
       });
 
       authenticateJWT(mockReq, mockRes, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+      expect(mockNext).toHaveBeenCalledWith(expect.any(ForbiddenError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('Invalid or expired token.');
-      expect(error.statusCode).toBe(401);
+      expect(error.message).toBe('Invalid or expired token. Please log in again.');
+      expect(error.statusCode).toBe(403);
       expect(mockReq.user).toBeNull();
     });
   });
 
   describe('authenticateGateway', () => {
     it('should call next() and set req.user if x-user-id and x-user-role headers are present', () => {
-      // Simulate headers being present via req.header
-      mockReq.header = jest.fn(name => {
-        if (name.toLowerCase() === 'x-user-id') return 'gatewayUserId';
-        if (name.toLowerCase() === 'x-user-role') return 'admin';
-        return undefined;
-      });
+      mockReq.headers['x-user-id'] = 'gatewayUserId';
+      mockReq.headers['x-user-role'] = 'admin';
 
       authenticateGateway(mockReq, mockRes, mockNext);
       
-      expect(mockReq.header).toHaveBeenCalledWith('x-user-id');
-      expect(mockReq.header).toHaveBeenCalledWith('x-user-role');
       expect(mockReq.user).toEqual({ id: 'gatewayUserId', role: 'admin' });
       expect(mockNext).toHaveBeenCalledWith();
       expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
     });
 
     it('should call next with UnauthorizedError if x-user-id header is missing', () => {
-      mockReq.header = jest.fn(name => {
-        // if (name.toLowerCase() === 'x-user-id') return undefined; // Missing
-        if (name.toLowerCase() === 'x-user-role') return 'admin';
-        return undefined;
-      });
+      mockReq.headers['x-user-role'] = 'admin';
+      // x-user-id is missing
+      
       authenticateGateway(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('User ID or role not provided by gateway.');
+      expect(error.message).toBe('User identification headers (x-user-id, x-user-role) are missing or incomplete. Ensure API Gateway is configured correctly.');
       expect(error.statusCode).toBe(401);
     });
 
     it('should call next with UnauthorizedError if x-user-role header is missing', () => {
-       mockReq.header = jest.fn(name => {
-        if (name.toLowerCase() === 'x-user-id') return 'gatewayUserId';
-        // if (name.toLowerCase() === 'x-user-role') return undefined; // Missing
-        return undefined;
-      });
+      mockReq.headers['x-user-id'] = 'gatewayUserId';
+      // x-user-role is missing
+      
       authenticateGateway(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('User ID or role not provided by gateway.');
+      expect(error.message).toBe('User identification headers (x-user-id, x-user-role) are missing or incomplete. Ensure API Gateway is configured correctly.');
       expect(error.statusCode).toBe(401);
     });
   });
@@ -211,7 +196,7 @@ describe('Auth Middleware', () => {
       middleware(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(expect.any(ForbiddenError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('You do not have permission to perform this action.');
+      expect(error.message).toBe("Access denied. Your role ('user') is not authorized for this resource. Required roles: admin.");
       expect(error.statusCode).toBe(403);
     });
 
@@ -221,28 +206,28 @@ describe('Auth Middleware', () => {
       middleware(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(expect.any(ForbiddenError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('You do not have permission to perform this action.');
+      expect(error.message).toBe("Access denied. Your role ('user') is not authorized for this resource. Required roles: admin, editor.");
       expect(error.statusCode).toBe(403);
     });
 
-    it('should call next with ForbiddenError if req.user is not present', () => {
+    it('should call next with UnauthorizedError if req.user is not present', () => {
       mockReq.user = null; // req.user is not set
       const middleware = checkRole('admin');
       middleware(mockReq, mockRes, mockNext);
-      expect(mockNext).toHaveBeenCalledWith(expect.any(ForbiddenError));
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('Access denied. User role not found.');
-      expect(error.statusCode).toBe(403);
+      expect(error.message).toBe('User not authenticated or role information is missing. Ensure an authentication middleware (authenticateJWT or authenticateGateway) runs before checkRole.');
+      expect(error.statusCode).toBe(401);
     });
     
-    it('should call next with ForbiddenError if req.user.role is not present', () => {
+    it('should call next with UnauthorizedError if req.user.role is not present', () => {
       mockReq.user = { id: 'userIdWithoutRole' }; // req.user is set, but req.user.role is undefined
       const middleware = checkRole('admin');
       middleware(mockReq, mockRes, mockNext);
-      expect(mockNext).toHaveBeenCalledWith(expect.any(ForbiddenError));
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('Access denied. User role not found.');
-      expect(error.statusCode).toBe(403);
+      expect(error.message).toBe('User not authenticated or role information is missing. Ensure an authentication middleware (authenticateJWT or authenticateGateway) runs before checkRole.');
+      expect(error.statusCode).toBe(401);
     });
   });
 }); 
