@@ -236,6 +236,8 @@ class ConfigManager {
       logLevel: this.config.LOG_LEVEL,
       logFilePath: this.config.LOG_FILE_PATH,
       jwtSecret: this.config.JWT_SECRET,
+      tokenExpiration: this.config.JWT_TOKEN_EXPIRATION,
+      refreshTokenExpiration: this.config.JWT_REFRESH_TOKEN_EXPIRATION,
       corsConfig: this.config.CORS_CONFIG,
       rateLimitConfig: this.config.RATE_LIMIT_CONFIG
     };
@@ -245,11 +247,10 @@ class ConfigManager {
         return {
           ...baseConfig,
           port: this.config.GATEWAY_PORT,
-          serviceUrls: this.config.SERVICE_URLS,
-          tokenExpiration: this.config.JWT_TOKEN_EXPIRATION,
-          refreshTokenExpiration: this.config.JWT_REFRESH_TOKEN_EXPIRATION
+          serviceUrls: this.config.SERVICE_URLS
         };
         
+      case 'auth':
       case 'user':
         return {
           ...baseConfig,
@@ -266,10 +267,60 @@ class ConfigManager {
           redisConfig: this.config.REDIS_CONFIG
         };
         
+      case 'analytics':
+        return {
+          ...baseConfig,
+          port: this.config.ANALYTICS_SERVICE_PORT,
+          mongoUri: this.config.DATABASE_CONFIGS.default,
+          redisConfig: this.config.REDIS_CONFIG
+        };
+        
+      case 'homework':
+        return {
+          ...baseConfig,
+          port: this.config.HOMEWORK_SERVICE_PORT,
+          mongoUri: this.config.DATABASE_CONFIGS.default,
+          redisConfig: this.config.REDIS_CONFIG
+        };
+        
+      case 'progress':
+        return {
+          ...baseConfig,
+          port: this.config.PROGRESS_SERVICE_PORT,
+          mongoUri: this.config.DATABASE_CONFIGS.default,
+          redisConfig: this.config.REDIS_CONFIG
+        };
+        
+      case 'interaction':
+        return {
+          ...baseConfig,
+          port: this.config.INTERACTION_SERVICE_PORT,
+          mongoUri: this.config.DATABASE_CONFIGS.default,
+          redisConfig: this.config.REDIS_CONFIG
+        };
+        
+      case 'notification':
+        return {
+          ...baseConfig,
+          port: this.config.NOTIFICATION_SERVICE_PORT,
+          mongoUri: this.config.DATABASE_CONFIGS.default,
+          redisConfig: this.config.REDIS_CONFIG
+        };
+        
+      case 'resource':
+        return {
+          ...baseConfig,
+          port: this.config.RESOURCE_SERVICE_PORT,
+          mongoUri: this.config.DATABASE_CONFIGS.default,
+          redisConfig: this.config.REDIS_CONFIG,
+          uploadMaxSize: this.config.UPLOAD_MAX_SIZE,
+          uploadAllowedTypes: this.config.UPLOAD_ALLOWED_TYPES
+        };
+        
       default:
         return {
           ...baseConfig,
-          port: this.config[`${serviceName.toUpperCase()}_SERVICE_PORT`],
+          port: this.config[`${serviceName.toUpperCase()}_SERVICE_PORT`] || 3000,
           mongoUri: this.config.DATABASE_CONFIGS.default,
           redisConfig: this.config.REDIS_CONFIG
         };
