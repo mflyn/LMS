@@ -1,22 +1,26 @@
 /**
  * 统一认证配置文件
  * 所有微服务共享此配置以确保认证机制一致性
+ * 现在使用统一配置管理器
  */
 
-if (!process.env.JWT_SECRET) {
-  throw new Error('FATAL ERROR: JWT_SECRET is not defined in environment variables.');
-}
+const { configManager } = require('./index');
 
-const jwtSecret = process.env.JWT_SECRET;
-
-// 建议使用更标准的时间格式或者ms库进行转换
-const tokenExpiration = process.env.JWT_TOKEN_EXPIRATION || '1d'; // 例如: 1d, 2h, 30m
-const refreshTokenExpiration = process.env.JWT_REFRESH_TOKEN_EXPIRATION || '7d';
+// 验证必需的认证配置
+configManager.validateRequiredConfig(['JWT_SECRET']);
 
 module.exports = {
-  jwtSecret,
-  tokenExpiration,
-  refreshTokenExpiration,
+  get jwtSecret() {
+    return configManager.get('JWT_SECRET');
+  },
+  
+  get tokenExpiration() {
+    return configManager.get('JWT_TOKEN_EXPIRATION', '1d');
+  },
+  
+  get refreshTokenExpiration() {
+    return configManager.get('JWT_REFRESH_TOKEN_EXPIRATION', '7d');
+  },
   
   // 认证中间件
   // getAuthMiddleware: (jwt) => {
