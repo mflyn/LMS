@@ -1,3 +1,6 @@
+# 使用国内镜像源的 Docker Compose 配置
+# 当官方镜像源无法访问时使用此配置
+
 services:
   # API网关
   gateway:
@@ -131,18 +134,18 @@ services:
       - app-network
     restart: always
 
-  # MongoDB数据库
+  # MongoDB数据库 - 使用国内镜像
   mongo:
-    image: mongo:4.4
+    image: registry.cn-hangzhou.aliyuncs.com/library/mongo:4.4
     volumes:
       - mongo-data:/data/db
     networks:
       - app-network
     restart: always
 
-  # RabbitMQ消息队列
+  # RabbitMQ消息队列 - 使用国内镜像
   rabbitmq:
-    image: rabbitmq:3-management
+    image: registry.cn-hangzhou.aliyuncs.com/library/rabbitmq:3-management
     ports:
       - "5672:5672"  # AMQP协议端口
       - "15672:15672"  # 管理界面端口
@@ -152,9 +155,9 @@ services:
       - app-network
     restart: always
 
-  # MinIO对象存储
+  # MinIO对象存储 - 使用国内镜像
   minio:
-    image: minio/minio
+    image: registry.cn-hangzhou.aliyuncs.com/minio/minio:latest
     ports:
       - "9000:9000"  # API端口
       - "9001:9001"  # 控制台端口
@@ -168,9 +171,9 @@ services:
       - app-network
     restart: always
 
-  # Redis缓存服务
+  # Redis缓存服务 - 使用国内镜像
   redis:
-    image: redis:6
+    image: registry.cn-hangzhou.aliyuncs.com/library/redis:6
     ports:
       - "6379:6379"
     volumes:
@@ -206,4 +209,4 @@ volumes:
   rabbitmq-data:
   minio-data:
   resource-data:
-  redis-data:
+  redis-data: 
