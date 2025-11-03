@@ -6,13 +6,16 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 // 根据环境选择正确的模块
-let createLogger, errorHandlerModule;
+let createLogger, performanceLogger, errorHandlerModule;
 if (process.env.NODE_ENV === 'test') {
   createLogger = require('./__tests__/mocks/logger').createLogger;
+  performanceLogger = (req, res, next) => next(); // Mock middleware
   errorHandlerModule = require('./__tests__/mocks/errorHandler');
 } else {
-  createLogger = require('../../../common/config/logger').createLogger;
-  errorHandlerModule = require('../../../common/middleware/errorHandler');
+  const loggerModule = require('../../common/config/logger');
+  createLogger = loggerModule.createLogger;
+  performanceLogger = loggerModule.performanceLogger;
+  errorHandlerModule = require('../../common/middleware/errorHandler');
 }
 const { errorHandler } = errorHandlerModule;
 
@@ -23,7 +26,7 @@ dotenv.config();
 const app = express();
 
 // 创建日志记录器
-const { logger, httpLogger } = createLogger('resource-service');
+const logger = createLogger('resource-service');
 app.locals.logger = logger;
 
 // 在测试环境中，我们不需要连接到真实的数据库
@@ -83,7 +86,7 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadDir));
 
 // 请求日志中间件
-app.use(httpLogger);
+app.use(performanceLogger);
 
 // 导入路由
 const resourcesRouter = require('./routes/resources');

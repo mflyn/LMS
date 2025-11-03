@@ -1,7 +1,8 @@
 const homeworkServiceInstance = require('../services/homeworkService');
-const { catchAsync } = require('../../../common/middleware/errorHandler');
-const { AppResponse } = require('../../../common/utils/appResponse');
-const logger = require('../../../common/utils/logger').logger; // Import the actual logger
+const { catchAsync } = require('../../common/middleware/errorHandler');
+const { AppResponse } = require('../../common/utils/appResponse');
+const { createLogger } = require('../../common/config/logger'); // Import the actual logger
+const logger = createLogger('homework-controller');
 
 // Instantiate the service, or inject it if using DI
 const homeworkService = new homeworkServiceInstance(logger);

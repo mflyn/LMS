@@ -5,12 +5,11 @@ const dotenv = require('dotenv');
 const path = require('path');
 
 // 导入共享组件
-const { createLogger, requestTracker } = require('../../../common/utils/logger');
-const { errorHandler, setupUncaughtExceptionHandler } = require('../../../common/middleware/errorHandler');
-const { AppError } = require('../../../common/middleware/errorTypes'); // For MONGO_URI check
+const { createLogger } = require('../../common/config/logger');
+const { errorHandler, setupUncaughtExceptionHandler, requestTracker, AppError } = require('../../common/middleware/errorHandler');
 
 // 导入共享认证中间件
-const { authenticateGateway, checkRole } = require('../../../common/middleware/auth');
+const { authenticateGateway, checkRole } = require('../../common/middleware/auth');
 
 // 加载环境变量
 dotenv.config();
@@ -28,7 +27,7 @@ setupUncaughtExceptionHandler(logger);
 // 中间件
 app.use(cors());
 app.use(express.json());
-app.use(requestTracker(logger)); // Use shared request tracker
+app.use(requestTracker); // Use shared request tracker
 
 // 连接到MongoDB
 const mongoURI = process.env.MONGO_URI;
@@ -66,7 +65,7 @@ app.get('/health', (req, res) => {
 });
 
 // 使用共享的错误处理中间件 (应放在所有路由之后)
-app.use(errorHandler(logger));
+app.use(errorHandler);
 
 // 导出应用 (主要用于测试)
 module.exports = app;

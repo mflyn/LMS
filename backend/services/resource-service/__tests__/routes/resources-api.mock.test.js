@@ -143,7 +143,7 @@ app.post('/api/resources', mockSingle('file'), catchAsync(async (req, res) => {
     tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
     file: {
       name: req.file.originalname,
-      path: `/uploads/${req.file.filename}`,
+      path: `/uploads/${req.file.filename}`, // 保持前导斜杠以兼容客户端
       type: req.file.mimetype,
       size: req.file.size
     },
@@ -168,8 +168,9 @@ app.get('/api/resources/:id/download', catchAsync(async (req, res) => {
   resource.downloads += 1;
   await resource.save();
 
-  // 获取文件路径
-  const filePath = path.join(__dirname, '..', resource.file.path);
+  // 获取文件路径 - 移除前导斜杠
+  const relativePath = resource.file.path.replace(/^\/+/, '');
+  const filePath = path.join(__dirname, '..', relativePath);
 
   // 检查文件是否存在
   if (!fs.existsSync(filePath)) {
@@ -219,9 +220,10 @@ app.delete('/api/resources/:id', catchAsync(async (req, res) => {
     return res.status(404).json({ message: '资源不存在' });
   }
 
-  // 删除文件
+  // 删除文件 - 移除前导斜杠
   if (resource.file && resource.file.path) {
-    const filePath = path.join(__dirname, '..', resource.file.path);
+    const relativePath = resource.file.path.replace(/^\/+/, '');
+    const filePath = path.join(__dirname, '..', relativePath);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }

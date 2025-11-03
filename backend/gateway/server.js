@@ -8,7 +8,8 @@ const { jwtSecret } = require('../common/config/auth');
 const createBaseApp = require('../common/createBaseApp');
 const { UnauthorizedError, ForbiddenError } = require('../common/middleware/errorTypes');
 const config = require('./config');
-const logger = require('../common/utils/logger');
+const { createLogger } = require('../common/config/logger');
+const logger = createLogger('api-gateway');
 
 // 1. 创建基础应用实例
 const app = createBaseApp({
@@ -32,6 +33,7 @@ const authenticateToken = (req, res, next) => {
   
   jwt.verify(token, jwtSecret, (err, user) => {
     if (err) {
+      const logger = req.app.locals.logger || console; // Fallback to console if logger is not available
       logger.warn(`JWT verification failed for token: ${token.substring(0, 10)}...`, { 
         error: err.message, 
         path: req.path,

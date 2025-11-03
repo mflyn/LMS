@@ -260,6 +260,9 @@ module.exports = {
   errorHandler,
   catchAsync,
   notFoundHandler,
+  requestTracker,
+  AppError,
   handleUncaughtException,
-  handleUnhandledRejection
+  handleUnhandledRejection,
+  setupUncaughtExceptionHandler: handleUncaughtException  // 添加别名以保持向后兼容
 };

@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const createBaseApp = require('../../common/createBaseApp'); // 调整路径到 common 目录
 const config = require('./config');
 const mainRoutes = require('./routes'); // user-service 的主路由
-const logger = require('../../common/utils/logger'); // 直接导入 logger 用于启动日志
+const { createLogger } = require('../../common/config/logger'); // 直接导入 logger 用于启动日志
+const logger = createLogger('user-service');
 const { setupUncaughtExceptionHandler } = require('../../common/middleware/errorHandler'); // Added import
 
 // 1. 创建基础应用实例

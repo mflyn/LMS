@@ -7,7 +7,8 @@ const { BadRequestError, UnauthorizedError, ConflictError } = require('../../../
 
 // 使用统一的配置管理和日志系统
 const { configManager } = require('../../../common/config');
-const { logger } = require('../../../common/config/logger');
+const { createLogger } = require('../../../common/config/logger');
+const logger = createLogger('auth-controller');
 
 // 注册控制器
 exports.register = catchAsync(async (req, res, next) => {

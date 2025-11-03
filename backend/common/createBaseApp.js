@@ -10,7 +10,7 @@ const mongoSanitize = require('express-mongo-sanitize'); // For NoSQL injection 
 const { requestTracker, errorHandler } = require('./middleware/errorHandler');
 const { auditLogger } = require('./middleware/auditLogger'); // Assuming auditLogger is correctly exported
 const { sanitizeInput } = require('./middleware/requestValidator'); // For HTML sanitization
-const { logger } = require('./utils/logger');
+const { createLogger } = require('./config/logger');
 
 // 导入会话管理 (如果需要，并使其可选)
 // let session, sessionManagerModule;
@@ -27,6 +27,7 @@ function createBaseApp(options = {}) {
   const app = express();
   const serviceName = options.serviceName || 'unknown-service';
   const isProduction = process.env.NODE_ENV === 'production';
+  const logger = createLogger(serviceName);
 
   // 1. 设置 app.locals (会被 errorHandler, logger, auditLogger 等使用)
   app.locals.logger = logger;

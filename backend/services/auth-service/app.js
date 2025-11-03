@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 // 导入统一配置和日志系统
 const { configManager } = require('../../common/config');
-const { logger, performanceLogger, errorLogger } = require('../../common/config/logger');
+const { createLogger, performanceLogger, errorLogger } = require('../../common/config/logger');
 
 // 导入路由
 const authRoutes = require('./routes/auth');
@@ -14,6 +14,8 @@ const authRoutes = require('./routes/auth');
 const { errorHandler } = require('../../common/middleware/errorHandler');
 
 const app = express();
+const logger = createLogger('auth-service');
+app.locals.logger = logger; // Make logger available to all middleware
 
 // 获取服务特定配置
 const config = configManager.getServiceConfig('auth');
@@ -35,14 +37,7 @@ app.use(morgan('combined', {
 app.use((req, res, next) => {
   req.requestId = require('crypto').randomUUID();
   req.startTime = Date.now();
-  
-  // 为每个请求添加请求ID到日志上下文
-  logger.defaultMeta = { 
-    ...logger.defaultMeta, 
-    requestId: req.requestId,
-    service: 'auth-service'
-  };
-  
+
   next();
 });
 

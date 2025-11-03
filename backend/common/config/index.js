@@ -18,9 +18,9 @@ const configSchema = Joi.object({
   JWT_REFRESH_TOKEN_EXPIRATION: Joi.string().default('7d'),
   
   // 数据库配置
-  MONGO_URI: Joi.string().uri().required(),
-  USER_SERVICE_MONGO_URI: Joi.string().uri().optional(),
-  DATA_SERVICE_MONGO_URI: Joi.string().uri().optional(),
+  MONGO_URI: Joi.string().uri({ scheme: ['mongodb', 'mongodb+srv'] }).required(),
+  USER_SERVICE_MONGO_URI: Joi.string().uri({ scheme: ['mongodb', 'mongodb+srv'] }).optional(),
+  DATA_SERVICE_MONGO_URI: Joi.string().uri({ scheme: ['mongodb', 'mongodb+srv'] }).optional(),
   
   // 服务端口配置
   GATEWAY_PORT: Joi.number().port().default(5000),

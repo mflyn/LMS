@@ -90,7 +90,7 @@ router.post('/',
         tags: req.body.tags,
         file: {
           name: req.file.originalname,
-          path: `/uploads/${req.file.filename}`,
+          path: `/uploads/${req.file.filename}`, // 保持前导斜杠以兼容客户端 URL 拼接
           type: req.file.mimetype,
           size: req.file.size
         },
@@ -118,8 +118,9 @@ router.get('/:id/download',
       resource.downloads += 1;
       await resource.save();
 
-      // 获取文件路径
-      const filePath = path.join(__dirname, '..', resource.file.path);
+      // 获取文件路径 - 移除前导斜杠以确保 path.join 正确工作
+      const relativePath = resource.file.path.replace(/^\/+/, '');
+      const filePath = path.join(__dirname, '..', relativePath);
 
       // 检查文件是否存在
       if (!fs.existsSync(filePath)) {
@@ -179,8 +180,10 @@ router.delete('/:id',
         throw new AppError('您没有权限删除此资源', 403);
       }
 
+      // 删除文件 - 移除前导斜杠以确保 path.join 正确工作
       if (resource.file && resource.file.path) {
-        const filePath = path.join(__dirname, '..', resource.file.path);
+        const relativePath = resource.file.path.replace(/^\/+/, '');
+        const filePath = path.join(__dirname, '..', relativePath);
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }

@@ -43,67 +43,14 @@ const format = winston.format.combine(
 // 创建日志目录
 const logDir = path.join(__dirname, '../../logs');
 
-// 创建 logger 实例
-const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  levels,
-  format,
-  transports: [
-    // 错误日志
-    new DailyRotateFile({
-      filename: path.join(logDir, 'error-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      level: 'error',
-      maxSize: '20m',
-      maxFiles: '14d',
-      zippedArchive: true
-    }),
 
-    // 应用日志
-    new DailyRotateFile({
-      filename: path.join(logDir, 'application-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      maxSize: '20m',
-      maxFiles: '14d',
-      zippedArchive: true
-    }),
-
-    // 访问日志
-    new DailyRotateFile({
-      filename: path.join(logDir, 'access-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      level: 'http',
-      maxSize: '20m',
-      maxFiles: '14d',
-      zippedArchive: true
-    }),
-
-    // 性能日志
-    new DailyRotateFile({
-      filename: path.join(logDir, 'performance-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      maxSize: '20m',
-      maxFiles: '14d',
-      zippedArchive: true
-    })
-  ]
-});
-
-// 在开发环境下添加控制台输出
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }));
-}
 
 // 创建性能监控中间件
 const performanceLogger = (req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
+    const logger = req.app.locals.logger || console;
     logger.log({
       level: 'http',
       message: `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`,
@@ -122,6 +69,7 @@ const performanceLogger = (req, res, next) => {
 
 // 错误日志中间件
 const errorLogger = (err, req, res, next) => {
+  const logger = req.app.locals.logger || console;
   logger.error({
     message: err.message,
     stack: err.stack,
@@ -138,8 +86,57 @@ const errorLogger = (err, req, res, next) => {
   next(err);
 };
 
+/**
+ * 创建服务特定的日志记录器
+ * @param {string} serviceName - 服务名称
+ * @param {object} options - 可选配置
+ * @returns {object} Winston logger 实例
+ */
+function createLogger(serviceName, options = {}) {
+  const logLevel = options.logLevel || process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
+
+  const serviceLogger = winston.createLogger({
+    level: logLevel,
+    levels,
+    format,
+    defaultMeta: { service: serviceName },
+    transports: [
+      // 错误日志
+      new DailyRotateFile({
+        filename: path.join(logDir, `${serviceName}-error-%DATE%.log`),
+        datePattern: 'YYYY-MM-DD',
+        level: 'error',
+        maxSize: '20m',
+        maxFiles: '14d',
+        zippedArchive: true
+      }),
+
+      // 应用日志
+      new DailyRotateFile({
+        filename: path.join(logDir, `${serviceName}-%DATE%.log`),
+        datePattern: 'YYYY-MM-DD',
+        maxSize: '20m',
+        maxFiles: '14d',
+        zippedArchive: true
+      })
+    ]
+  });
+
+  // 在开发环境下添加控制台输出
+  if (process.env.NODE_ENV !== 'production') {
+    serviceLogger.add(new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    }));
+  }
+
+  return serviceLogger;
+}
+
 module.exports = {
-  logger,
   performanceLogger,
-  errorLogger
+  errorLogger,
+  createLogger
 };

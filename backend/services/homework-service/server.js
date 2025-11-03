@@ -6,9 +6,9 @@ const winston = require('winston');
 const amqp = require('amqplib');
 
 // 导入共享错误处理和日志相关
-const { errorHandler, AppError, catchAsync, setupUncaughtExceptionHandler, requestTracker } = require('../../../common/middleware/errorHandler');
-const { authenticateGateway, checkRole } = require('../../../common/middleware/auth'); // 预先导入，路由会用到
-const { validate } = require('../../../common/middleware/requestValidator'); // 预先导入，路由会用到
+const { errorHandler, AppError, catchAsync, setupUncaughtExceptionHandler, requestTracker } = require('../../common/middleware/errorHandler');
+const { authenticateGateway, checkRole } = require('../../common/middleware/auth'); // 预先导入，路由会用到
+const { validate } = require('../../common/middleware/requestValidator'); // 预先导入，路由会用到
 
 // 加载环境变量
 dotenv.config();
@@ -44,7 +44,7 @@ app.use(cors()); // cors应该更早，以便options请求能正确处理
 app.use(express.json());
 
 // 使用共享的请求追踪中间件
-app.use(requestTracker(logger));
+app.use(requestTracker);
 
 // 连接到MongoDB
 if (process.env.NODE_ENV !== 'test') {
@@ -71,7 +71,7 @@ const homeworkRoutes = require('./routes/homework');
 app.use('/api/homework', homeworkRoutes);
 
 // 使用共享的错误处理中间件
-app.use(errorHandler(logger));
+app.use(errorHandler);
 
 // 连接到RabbitMQ
 async function connectRabbitMQ() {
