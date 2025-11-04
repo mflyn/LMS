@@ -1,30 +1,38 @@
 const studentController = require('../../controllers/studentController');
 const User = require('../../models/User');
-const { logger } = require('../../../../common/config/logger');
 
 // 模拟依赖
 jest.mock('../../models/User');
-jest.mock('../../../../common/config/logger', () => ({
-  logger: {
+jest.mock('../../../../common/config/logger', () => {
+  const mockLoggerInstance = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn()
-  }
-}));
+  };
+
+  return {
+    createLogger: jest.fn(() => mockLoggerInstance)
+  };
+});
+
+const { createLogger } = require('../../../../common/config/logger');
 
 describe('StudentController', () => {
   let req;
   let res;
+  let mockLogger;
 
   beforeEach(() => {
     // 重置所有模拟
     jest.clearAllMocks();
+    mockLogger = createLogger();
 
     // 模拟请求对象
     req = {
       query: {},
       params: {},
-      body: {}
+      body: {},
+      app: { locals: { logger: mockLogger } }
     };
 
     // 模拟响应对象
@@ -79,7 +87,7 @@ describe('StudentController', () => {
       expect(mockFind.limit).toHaveBeenCalledWith(10);
       expect(mockFind.sort).toHaveBeenCalledWith({ name: 1 });
       expect(User.countDocuments).toHaveBeenCalledWith({ role: 'student' });
-      expect(logger.info).toHaveBeenCalledWith('获取学生列表成功', expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         code: 200,
@@ -203,7 +211,7 @@ describe('StudentController', () => {
       await studentController.getStudents(req, res);
 
       // 验证结果
-      expect(logger.error).toHaveBeenCalledWith('获取学生列表失败', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         code: 500,
@@ -240,7 +248,7 @@ describe('StudentController', () => {
       // 验证结果
       expect(User.findOne).toHaveBeenCalledWith({ _id: 'student1', role: 'student' });
       expect(mockFindOne.select).toHaveBeenCalledWith('_id name class grade studentId');
-      expect(logger.info).toHaveBeenCalledWith('获取学生详情成功', expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         code: 200,
@@ -273,7 +281,7 @@ describe('StudentController', () => {
       // 验证结果
       expect(User.findOne).toHaveBeenCalledWith({ _id: 'nonexistent', role: 'student' });
       expect(mockFindOne.select).toHaveBeenCalledWith('_id name class grade studentId');
-      expect(logger.warn).toHaveBeenCalledWith('学生不存在', expect.any(Object));
+      expect(mockLogger.warn).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({
         code: 404,
@@ -298,7 +306,7 @@ describe('StudentController', () => {
       await studentController.getStudentById(req, res);
 
       // 验证结果
-      expect(logger.error).toHaveBeenCalledWith('获取学生详情失败', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         code: 500,

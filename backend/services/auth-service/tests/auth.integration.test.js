@@ -4,6 +4,7 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../app');
 const User = require('../models/User');
 const bcryptjs = require('bcryptjs');
+const { __mockLogger: integrationMockLogger } = require('../../../common/config/logger');
 
 // 增加超时时间
 jest.setTimeout(60000);
@@ -21,14 +22,23 @@ jest.mock('../../../common/middleware/requestValidator', () => ({
 
 jest.mock('../../../common/middleware/passwordPolicy', () => (req, res, next) => next());
 
-jest.mock('../../../common/config/logger', () => ({
-  logger: {
+jest.mock('../../../common/config/logger', () => {
+  const mockLoggerInstance = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
-  }
-}));
+    debug: jest.fn(),
+    http: jest.fn(),
+    log: jest.fn()
+  };
+
+  return {
+    createLogger: jest.fn(() => mockLoggerInstance),
+    performanceLogger: jest.fn((req, res, next) => next()),
+    errorLogger: jest.fn((err, req, res, next) => next(err)),
+    __mockLogger: mockLoggerInstance
+  };
+});
 
 describe('认证API集成测试', () => {
   let mongoServer;
@@ -46,6 +56,12 @@ describe('认证API集成测试', () => {
   });
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+    Object.values(integrationMockLogger).forEach(fn => {
+      if (typeof fn.mockClear === 'function') {
+        fn.mockClear();
+      }
+    });
     // 清理数据库
     await User.deleteMany({});
 

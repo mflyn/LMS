@@ -21,16 +21,26 @@ jest.mock('../../../common/middleware/requestValidator', () => ({
 
 jest.mock('../../../common/middleware/passwordPolicy', () => (req, res, next) => next());
 
-jest.mock('../../../common/config/logger', () => ({
-  logger: {
+jest.mock('../../../common/config/logger', () => {
+  const mockLoggerInstance = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
-  }
-}));
+    debug: jest.fn(),
+    http: jest.fn(),
+    log: jest.fn()
+  };
+
+  return {
+    createLogger: jest.fn(() => mockLoggerInstance),
+    performanceLogger: jest.fn((req, res, next) => next()),
+    errorLogger: jest.fn((err, req, res, next) => next(err)),
+    __mockLogger: mockLoggerInstance
+  };
+});
 
 // 使用真实的 User 模型
+const { __mockLogger: directMockLogger } = require('../../../common/config/logger');
 const User = require('../models/User');
 
 // 导入路由
@@ -64,6 +74,12 @@ describe('认证服务直接测试', () => {
   });
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+    Object.values(directMockLogger).forEach(fn => {
+      if (typeof fn.mockClear === 'function') {
+        fn.mockClear();
+      }
+    });
     // 清理测试数据
     await User.deleteMany({});
   });

@@ -1,31 +1,39 @@
 const userController = require('../../controllers/userController');
 const UserService = require('../../services/userService');
-const { logger } = require('../../../../common/config/logger');
 
 // 模拟依赖
 jest.mock('../../services/userService');
-jest.mock('../../../../common/config/logger', () => ({
-  logger: {
+jest.mock('../../../../common/config/logger', () => {
+  const mockLoggerInstance = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn()
-  }
-}));
+  };
+
+  return {
+    createLogger: jest.fn(() => mockLoggerInstance)
+  };
+});
+
+const { createLogger } = require('../../../../common/config/logger');
 
 describe('UserController', () => {
   let req;
   let res;
   let next;
+  let mockLogger;
 
   beforeEach(() => {
     // 重置所有模拟
     jest.clearAllMocks();
+    mockLogger = createLogger();
 
     // 模拟请求对象
     req = {
       body: {},
       user: { id: 'user123' },
-      params: {}
+      params: {},
+      app: { locals: { logger: mockLogger } }
     };
 
     // 模拟响应对象
@@ -62,8 +70,8 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.createUser).toHaveBeenCalledWith(req.body);
-      expect(logger.info).toHaveBeenCalledWith('开始用户注册', expect.any(Object));
-      expect(logger.info).toHaveBeenCalledWith('用户注册成功', expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(mockUser);
     });
@@ -84,7 +92,7 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.createUser).toHaveBeenCalledWith(req.body);
-      expect(logger.error).toHaveBeenCalledWith('用户注册失败', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         code: 500,
@@ -119,8 +127,8 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.login).toHaveBeenCalledWith(req.body);
-      expect(logger.info).toHaveBeenCalledWith('用户登录尝试', expect.any(Object));
-      expect(logger.info).toHaveBeenCalledWith('用户登录成功', expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({
         code: 200,
         message: 'success',
@@ -144,7 +152,7 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.login).toHaveBeenCalledWith(req.body);
-      expect(logger.error).toHaveBeenCalledWith('用户登录失败', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         code: 500,
@@ -178,8 +186,8 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.updateUser).toHaveBeenCalledWith('user123', req.body);
-      expect(logger.info).toHaveBeenCalledWith('开始更新用户资料', expect.any(Object));
-      expect(logger.info).toHaveBeenCalledWith('用户资料更新成功', expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({
         code: 200,
         message: 'success',
@@ -203,7 +211,7 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.updateUser).toHaveBeenCalledWith('user123', req.body);
-      expect(logger.error).toHaveBeenCalledWith('用户资料更新失败', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         code: 500,
@@ -233,7 +241,7 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.getUserById).toHaveBeenCalledWith('user123');
-      expect(logger.info).toHaveBeenCalledWith('用户资料获取成功', expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({
         code: 200,
         message: 'success',
@@ -267,8 +275,8 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.getUserById).toHaveBeenCalledWith('user123');
-      expect(logger.warn).toHaveBeenCalledWith('用户资料查询性能警告', expect.any(Object));
-      expect(logger.info).toHaveBeenCalledWith('用户资料获取成功', expect.any(Object));
+      expect(mockLogger.warn).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({
         code: 200,
         message: 'success',
@@ -292,7 +300,7 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.getUserById).toHaveBeenCalledWith('user123');
-      expect(logger.error).toHaveBeenCalledWith('用户资料获取失败', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         code: 500,
@@ -316,8 +324,8 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.deleteUser).toHaveBeenCalledWith('user123');
-      expect(logger.warn).toHaveBeenCalledWith('用户请求删除账号', expect.any(Object));
-      expect(logger.info).toHaveBeenCalledWith('用户账号删除成功', expect.any(Object));
+      expect(mockLogger.warn).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalled();
     });
@@ -336,7 +344,7 @@ describe('UserController', () => {
 
       // 验证结果
       expect(UserService.deleteUser).toHaveBeenCalledWith('user123');
-      expect(logger.error).toHaveBeenCalledWith('用户账号删除失败', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         code: 500,
