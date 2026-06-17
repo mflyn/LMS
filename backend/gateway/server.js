@@ -92,6 +92,14 @@ app.use('/api/students', authenticateToken, proxy(userServiceUrl, {
   proxyReqPathResolver: (req) => `/api/students${req.url}`
 }));
 
+app.use('/api/families', authenticateToken, proxy(userServiceUrl, {
+  proxyReqPathResolver: (req) => `/api/families${req.url}`
+}));
+
+app.use('/api/children', authenticateToken, proxy(userServiceUrl, {
+  proxyReqPathResolver: (req) => `/api/children${req.url}`
+}));
+
 // 需要认证的数据服务路由 - 修正：确保路由路径与设计文档一致
 app.use('/api/data', authenticateToken, proxy(dataServiceUrl, {
   proxyReqPathResolver: (req) => `/api/data${req.url}`

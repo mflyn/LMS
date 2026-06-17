@@ -1,7 +1,5 @@
 module.exports = {
   testEnvironment: 'node',
-  globalSetup: './__tests__/globalSetup.js',
-  globalTeardown: './__tests__/globalTeardown.js',
   setupFilesAfterEnv: ['./__tests__/setup.js'],
   coveragePathIgnorePatterns: [
     '/node_modules/',
@@ -37,6 +35,7 @@ module.exports = {
   restoreMocks: true,
   testTimeout: 30000, 
   moduleNameMapper: {
+    '^mongoose$': '<rootDir>/../../../node_modules/mongoose',
     // '^(../../../common/(.*))$': '<rootDir>/../../common/$1',
   },
-}; 
+};

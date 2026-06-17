@@ -92,6 +92,73 @@ const userSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
+  familyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Family',
+    index: true
+  },
+  childProfile: {
+    nickname: {
+      type: String,
+      trim: true
+    },
+    school: {
+      type: String,
+      trim: true
+    },
+    grade: {
+      type: Number,
+      min: 1,
+      max: 12
+    },
+    avatar: {
+      type: String,
+      trim: true
+    },
+    textbookVersion: {
+      type: String,
+      trim: true
+    },
+    interests: [{
+      type: String,
+      trim: true
+    }],
+    weakSubjects: [{
+      type: String,
+      trim: true
+    }],
+    sportsPreferences: [{
+      type: String,
+      trim: true
+    }],
+    artInterests: [{
+      type: String,
+      trim: true
+    }],
+    laborHabits: [{
+      type: String,
+      trim: true
+    }],
+    moralGoals: [{
+      type: String,
+      trim: true
+    }],
+    pinHash: {
+      type: String,
+      select: false
+    }
+  },
+  parentProfile: {
+    familyRole: {
+      type: String,
+      enum: ['father', 'mother', 'guardian', 'other'],
+      default: 'guardian'
+    },
+    defaultChildId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  },
   subjects: [{
     type: Schema.Types.ObjectId,
     ref: 'Subject'
@@ -128,6 +195,7 @@ userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ phone: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ class: 1, role: 1 });
+userSchema.index({ familyId: 1, role: 1 });
 
 // 验证用户必须提供邮箱或手机号之一
 userSchema.pre('validate', function(next) {

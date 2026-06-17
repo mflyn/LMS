@@ -7,7 +7,9 @@
 const jwt = require('jsonwebtoken');
 const { configManager } = require('../config');
 const { UnauthorizedError, ForbiddenError } = require('./errorTypes');
-const { logger } = require('../config/logger');
+const { createLogger } = require('../config/logger');
+
+const logger = createLogger('auth-middleware');
 
 /**
  * JWT认证中间件

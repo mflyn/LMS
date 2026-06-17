@@ -380,7 +380,7 @@ class ConfigManager {
 const configManager = new ConfigManager();
 
 // 导出配置管理器和便捷方法
-module.exports = {
+const exportedConfig = {
   configManager,
   
   // 便捷方法
@@ -388,12 +388,14 @@ module.exports = {
   getAll: () => configManager.getAll(),
   getServiceConfig: (serviceName) => configManager.getServiceConfig(serviceName),
   validateRequired: (keys) => configManager.validateRequiredConfig(keys),
-  
-  // 向后兼容的导出
-  auth: require('./auth'),
-  db: require('./db'),
-  logger: require('./logger')
 };
+
+module.exports = exportedConfig;
+
+// 向后兼容的导出
+exportedConfig.auth = require('./auth');
+exportedConfig.db = require('./db');
+exportedConfig.logger = require('./logger');
 
 // 进程退出时清理资源
 process.on('SIGINT', () => {
