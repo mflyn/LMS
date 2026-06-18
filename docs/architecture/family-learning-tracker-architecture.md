@@ -1,6 +1,6 @@
 # 家庭成长跟踪架构设计
 
-**Document status:** IN_REVIEW
+**Document status:** APPROVED
 **Baseline candidate:** FGT-MVP-1
 **Decision records:**
 

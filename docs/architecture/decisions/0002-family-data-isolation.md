@@ -1,6 +1,6 @@
 # ADR-0002: 家庭数据隔离由身份和资源归属共同决定
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-06-18
 
 ## Context

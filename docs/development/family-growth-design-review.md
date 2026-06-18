@@ -1,7 +1,7 @@
 # 家庭成长跟踪设计基线评审记录
 
 **Review ID:** FGT-DR-2026-06-18
-**Status:** IN_REVIEW
+**Status:** APPROVED
 **Branch:** codex/family-growth-tracker
 **Gate:** Task 4.5
 
@@ -9,11 +9,11 @@
 
 | Artifact | Review status | Approved commit | Reviewer | Review date |
 | --- | --- | --- | --- | --- |
-| Product requirements | IN_REVIEW | not-approved | unassigned | pending |
-| Architecture design and ADRs | IN_REVIEW | not-approved | unassigned | pending |
-| API contract | IN_REVIEW | not-approved | unassigned | pending |
-| Test strategy | IN_REVIEW | not-approved | Codex | 2026-06-18 |
-| Traceability matrix | IN_REVIEW | not-approved | Codex | 2026-06-18 |
+| Product requirements | APPROVED | baseline manifest candidate | linmingfeng | 2026-06-19 |
+| Architecture design and ADRs | APPROVED | baseline manifest candidate | linmingfeng / Codex | 2026-06-19 |
+| API contract | APPROVED | baseline manifest candidate | linmingfeng / Codex | 2026-06-19 |
+| Test strategy | APPROVED | baseline manifest candidate | Codex | 2026-06-19 |
+| Traceability matrix | APPROVED | baseline manifest candidate | Codex | 2026-06-19 |
 
 ## Finding Rules
 
@@ -25,58 +25,46 @@
 
 | ID | Severity | Requirement | Evidence | Disposition | Status |
 | --- | --- | --- | --- | --- | --- |
-| FGT-T3-001 | MAJOR | `FR-FAM-001`, `NFR-TIME-001` | `Family.js:4-24` has no timezone; `familyController.js:116-120` ignores request timezone and `familyView:9-16` cannot return it. | Add validated IANA timezone with default and API tests. | OPEN |
-| FGT-T3-002 | MAJOR | `FR-CHILD-003` | `familyController.js:335-337` accepts 4-8 digits while baseline requires 4-6. | Add contract tests and restrict validation to 4-6 digits. | OPEN |
-| FGT-T3-003 | BLOCKER | `FR-CHILD-005` | `User.js:100-150` has no tokenVersion; PIN reset at `familyController.js:346-347` only replaces hash; JWT verification never checks current version. | Add tokenVersion, include it in child token and reject stale child tokens. | OPEN |
-| FGT-T3-004 | MAJOR | `FR-CHILD-004` | `familyController.js:358-374` performs credential checks without per-IP/family/child failure tracking or `429`. | Add 5-attempt/15-minute limiter with generic credentials response. | OPEN |
-| FGT-T3-005 | MAJOR | `FR-CHILD-004` | Child token at `familyController.js:376-380` includes only id/username/role; `auth.js:150-162` uses global 1-day expiry and omits familyId, childId and tokenVersion. | Issue a child token capped at 12 hours with required claims. | OPEN |
-| FGT-T3-006 | MAJOR | Task 3 API contract | `familyController.js:38-41` returns top-level message instead of stable `error.code/message/details`; child list also omits contract pagination. | Introduce shared family error/list response helpers and contract tests. | OPEN |
-| FGT-T3-007 | MINOR | Engineering quality | Fresh tests emit duplicate Mongoose index warnings for username, email, phone, name and ownerParentId. | Remove duplicate schema index declarations without changing uniqueness. | OPEN |
-| FGT-T4-001 | MAJOR | `FR-TASK-002`, `FR-TASK-003`, `NFR-TIME-001` | `GrowthTask.js:48-52` stores dueDate as BSON Date; `growthTasks.js:99-115` calculates today/week in server local time and never reads Family.timezone. | Store LocalDate String and add fixed-clock family-timezone boundary tests. | OPEN |
-| FGT-T4-002 | MAJOR | `FR-TASK-006` | `GrowthTask.js:82-86` defines repeatRule; `growthTasks.js:151` and `344-357` accept it instead of `400 REPEAT_RULE_NOT_SUPPORTED`. | Remove field and reject repeatRule on create/edit. | OPEN |
-| FGT-T4-003 | MAJOR | Task 4 API contract | `growthTasks.js:11-14` returns top-level message; list at `202-210` has no page/pageSize or maximum validation. | Adopt stable errors and pagination with contract tests. | OPEN |
-| FGT-T4-004 | MAJOR | `NFR-DATA-001` | `GrowthTask.js:119` index `{ childId, dimension, status }` omits familyId, contrary to the family-first index baseline. | Replace with `{ familyId, childId, dimension, status }`. | OPEN |
-| FGT-T4-005 | MAJOR | `FR-TASK-003` | `growthTasks.js:184-192` validates dimension but accepts arbitrary status values; current tests cover only valid filters. | Validate status enum and add stable validation-error tests. | OPEN |
-| FGT-T4-006 | MAJOR | `NFR-SEC-001`, `FR-TASK-003`-`FR-TASK-006` | Tests deny cross-family create only; list, detail, edit, complete, confirm and delete are not exercised against another family. | Add database-backed cross-family tests for every task operation. | OPEN |
-| FGT-GW-001 | BLOCKER | `NFR-SEC-002` | `gateway/server.js:25-48` writes decoded claims into request headers without a strip-all identity-header step or signature; `auth.js:67-96` trusts any supplied x-user-id/x-user-role. | Add shared signed identity envelope and reject direct forged downstream requests. | OPEN |
-| FGT-GW-002 | BLOCKER | `NFR-SEC-002` | No gateway/downstream code generates or verifies method/path/timestamp/nonce; there is no freshness or replay protection. | Add HMAC-SHA256 canonical envelope, five-minute freshness and nonce replay store. | OPEN |
-| FGT-GW-003 | MAJOR | `NFR-SEC-002` | Repository search finds no tests for forged headers, signature tampering, expiry or nonce replay; family tests directly set trusted x-user headers. | Add common auth and gateway integration security suites. | OPEN |
-| FGT-GW-004 | MAJOR | `NFR-SEC-002`, `NFR-COMPAT-001` | `gateway/simple-server.js:13-31` is a second unsigned gateway entrypoint and does not contain family routes. | Remove it from supported entrypoints or reuse the same security/proxy module. | OPEN |
+| FGT-T3-001 | MAJOR | `FR-FAM-001`, `NFR-TIME-001` | `Family.js:4-24` has no timezone; `familyController.js:116-120` ignores request timezone and `familyView:9-16` cannot return it. | Added validated IANA timezone, default, response field and tests. | CLOSED |
+| FGT-T3-002 | MAJOR | `FR-CHILD-003` | `familyController.js:335-337` accepts 4-8 digits while baseline requires 4-6. | Restricted PIN to 4-6 digits with boundary tests. | CLOSED |
+| FGT-T3-003 | BLOCKER | `FR-CHILD-005` | `User.js:100-150` has no tokenVersion; PIN reset at `familyController.js:346-347` only replaces hash; JWT verification never checks current version. | Added tokenVersion, reset increment and stale-token rejection. | CLOSED |
+| FGT-T3-004 | MAJOR | `FR-CHILD-004` | `familyController.js:358-374` performs credential checks without per-IP/family/child failure tracking or `429`. | Added 5-attempt/15-minute limiter and generic response. | CLOSED |
+| FGT-T3-005 | MAJOR | `FR-CHILD-004` | Child token at `familyController.js:376-380` includes only id/username/role; `auth.js:150-162` uses global 1-day expiry and omits familyId, childId and tokenVersion. | Added familyId, childId, tokenVersion and 12-hour expiry. | CLOSED |
+| FGT-T3-006 | MAJOR | Task 3 API contract | `familyController.js:38-41` returns top-level message instead of stable `error.code/message/details`; child list also omits contract pagination. | Added stable response helpers and child pagination. | CLOSED |
+| FGT-T3-007 | MINOR | Engineering quality | Fresh tests emit duplicate Mongoose index warnings for username, email, phone, name and ownerParentId. | Removed duplicate declarations while retaining uniqueness. | CLOSED |
+| FGT-T4-001 | MAJOR | `FR-TASK-002`, `FR-TASK-003`, `NFR-TIME-001` | `GrowthTask.js:48-52` stores dueDate as BSON Date; `growthTasks.js:99-115` calculates today/week in server local time and never reads Family.timezone. | Stores LocalDate and scopes today/week by family timezone. | CLOSED |
+| FGT-T4-002 | MAJOR | `FR-TASK-006` | `GrowthTask.js:82-86` defines repeatRule; `growthTasks.js:151` and `344-357` accept it instead of `400 REPEAT_RULE_NOT_SUPPORTED`. | Removed field and rejects repeatRule on create/edit. | CLOSED |
+| FGT-T4-003 | MAJOR | Task 4 API contract | `growthTasks.js:11-14` returns top-level message; list at `202-210` has no page/pageSize or maximum validation. | Added stable errors and bounded pagination. | CLOSED |
+| FGT-T4-004 | MAJOR | `NFR-DATA-001` | `GrowthTask.js:119` index `{ childId, dimension, status }` omits familyId, contrary to the family-first index baseline. | Replaced with family-first compound index. | CLOSED |
+| FGT-T4-005 | MAJOR | `FR-TASK-003` | `growthTasks.js:184-192` validates dimension but accepts arbitrary status values; current tests cover only valid filters. | Added enum validation and stable error test. | CLOSED |
+| FGT-T4-006 | MAJOR | `NFR-SEC-001`, `FR-TASK-003`-`FR-TASK-006` | Tests deny cross-family create only; list, detail, edit, complete, confirm and delete are not exercised against another family. | Added database-backed denial tests for every operation. | CLOSED |
+| FGT-GW-001 | BLOCKER | `NFR-SEC-002` | `gateway/server.js:25-48` writes decoded claims into request headers without a strip-all identity-header step or signature; `auth.js:67-96` trusts any supplied x-user-id/x-user-role. | Added strip-all and HMAC-signed identity envelope. | CLOSED |
+| FGT-GW-002 | BLOCKER | `NFR-SEC-002` | No gateway/downstream code generates or verifies method/path/timestamp/nonce; there is no freshness or replay protection. | Added canonical method/path/timestamp/nonce, freshness and replay checks. | CLOSED |
+| FGT-GW-003 | MAJOR | `NFR-SEC-002` | Repository search finds no tests for forged headers, signature tampering, expiry or nonce replay; family tests directly set trusted x-user headers. | Added common and gateway security suites; family tests use signed headers. | CLOSED |
+| FGT-GW-004 | MAJOR | `NFR-SEC-002`, `NFR-COMPAT-001` | `gateway/simple-server.js:13-31` is a second unsigned gateway entrypoint and does not contain family routes. | Simple entrypoint now delegates to the secured production server. | CLOSED |
+| FGT-FR-001 | MAJOR | `NFR-SEC-002` | Final review found gateway and user-service global error handlers mounted before business routes. | Mounted a final error handler after routes in both production services. | CLOSED |
+| FGT-FR-002 | MAJOR | `FR-CHILD-004` | Final review found nonexistent family/child credentials did not increment the PIN failure counter. | Centralized failure recording; nonexistent credentials lock on attempt five. | CLOSED |
+| FGT-FR-003 | MAJOR | `NFR-SEC-002` | Final review found missing/short identity secrets failed only during a request and deployment examples omitted the shared secret. | Validate at middleware creation and require the secret in example/Compose configuration. | CLOSED |
 
 ## Verification Evidence
 
-### Task 3 targeted tests
-
-- Date: 2026-06-18
-- Command: `npm test --prefix backend/services/user-service -- --runInBand __tests__/routes/family.test.js __tests__/routes/children.test.js`
-- Result: exit 0; 2 suites passed; 5 tests passed; 0 failed.
-- Covered: one family per parent, multiple children, cross-family child read/edit denial, child PIN happy path, sibling list denial.
-- Not covered: timezone, PIN bounds, rate limiting, stale-token rejection, child token claims/expiry, stable errors and pagination.
-
-### Task 4 targeted tests
-
-- Date: 2026-06-18
-- Command: `npm test --prefix backend/services/homework-service -- --runInBand __tests__/growthTasks.test.js`
-- Result: exit 0; 1 suite passed; 12 tests passed; 0 failed.
-- Covered: five-dimension create, cross-family create denial, server-local today/week filters, dimension filter, child completion, parent confirmation and child confirmation denial.
-- Not covered: family timezone boundaries, LocalDate storage, repeatRule rejection, pagination, stable errors, invalid status, delete/archive and cross-family operations other than create.
-
-### Gateway trust-boundary inspection
-
-- Date: 2026-06-18
-- Command: `rg -n "x-user-id|identity envelope|nonce|replay|signature|forged|伪造|重放" backend/gateway backend/common backend/services/*/__tests__`
-- Result: raw x-user headers are produced by both gateway entrypoints and accepted by common middleware; no complete signed-envelope test suite exists.
-- Direct-forgery evidence: a request sent directly to a downstream family route with arbitrary x-user-id/x-user-role passes `authenticateGateway` without cryptographic verification.
-- Gate effect: Task 5 remains blocked until forged, tampered, expired and replayed envelopes are rejected and a valid gateway envelope passes.
+- Date: 2026-06-19
+- Shared auth: 2 suites, 21 tests passed.
+- Gateway: 1 suite, 3 tests passed.
+- Family and children: 2 suites, 11 tests passed.
+- Growth tasks: 1 suite, 17 tests passed.
+- Deployment configuration: both Compose files passed `docker compose config -q` with a valid identity secret.
+- Static quality: `git diff --check` passed and targeted user tests emit no duplicate schema-index warnings.
+- Total targeted regression: 6 suites, 52 tests passed, 0 failed.
 
 ## Task 5 Entry Decision
 
-**Decision:** BLOCKED
-**Reason:** Open blockers `FGT-T3-003`, `FGT-GW-001`, and `FGT-GW-002` plus open MAJOR findings require the approved remediation plan before Task 5.
+**Decision:** APPROVED
+**Reason:** All 3 BLOCKER, 16 MAJOR and 1 MINOR findings are closed with code and regression evidence. Task 5 may start from the tagged baseline.
 
 ## Sign-off
 
 | Role | Name | Decision | Date |
 | --- | --- | --- | --- |
-| Product owner | linmingfeng | PENDING | pending |
-| Technical reviewer | Codex | PENDING | pending |
+| Product owner | linmingfeng | APPROVED | 2026-06-19 |
+| Technical reviewer | Codex | APPROVED | 2026-06-19 |

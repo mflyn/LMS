@@ -1,6 +1,6 @@
 # ADR-0004: MVP 每条成长任务表示一次发生
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-06-18
 
 ## Context

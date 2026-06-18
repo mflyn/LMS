@@ -1,6 +1,6 @@
 # ADR-0003: 业务日期使用家庭 LocalDate
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-06-18
 
 ## Context

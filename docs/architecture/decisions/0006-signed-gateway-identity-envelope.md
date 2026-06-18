@@ -1,6 +1,6 @@
 # ADR-0006: Gateway 使用签名身份信封调用下游
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-06-18
 
 ## Context

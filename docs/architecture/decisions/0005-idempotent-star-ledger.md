@@ -1,6 +1,6 @@
 # ADR-0005: 星星使用不可变幂等流水
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-06-18
 
 ## Context

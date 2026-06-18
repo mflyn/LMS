@@ -1,6 +1,6 @@
 # ADR-0001: MVP 复用现有服务和共享 MongoDB
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-06-18
 
 ## Context
