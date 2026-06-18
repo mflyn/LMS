@@ -1,5 +1,10 @@
 # 家庭版成长跟踪产品需求与功能边界
 
+**Document status:** IN_REVIEW
+**Baseline candidate:** FGT-MVP-1
+**Last reviewed:** 2026-06-18
+**Change control:** Semantic changes require a review record and traceability update.
+
 ## 1. 背景与定位
 
 当前项目原本按照“学校级学习管理系统”规划，覆盖学生管理、作业管理、学习资源、数据分析、家校互动、Web 端和移动端等能力。现阶段项目仍处于半成品状态，功能面较广，但工程闭环、前后端联调、测试稳定性和生产化能力仍需收敛。
@@ -97,6 +102,7 @@
 
 - 支持孩子独立入口。
 - 支持简单 PIN 码或家长授权登录。
+- PIN 由家长设置或重置；连续失败必须限流，重置后旧的孩子 token 失效。
 - 孩子只能查看自己的任务、成长记录、错题和奖励。
 
 #### 暂不做
@@ -146,7 +152,7 @@
 - 预计用时。
 - 目标数量或强度，例如跳绳 500 个、阅读 20 页、练琴 30 分钟、整理房间 1 次。
 - 优先级。
-- 是否重复：每天、每周、自定义。
+- 是否重复：每天、每周、自定义（第二阶段能力）。
 - 任务说明。
 - 附件或图片，作为可选能力。
 
@@ -179,6 +185,8 @@
 - 实际数量，可选。
 - 简单备注。
 - 家长确认。
+
+第一版每条任务只表示一次发生，不实现重复任务模板。每天执行的习惯由每天一条任务表示，从而保证每日完成状态和周报的 `4/7` 等统计没有歧义。重复任务模板和 occurrence 生成进入第二阶段。
 
 ### 5.4 每日成长记录
 
@@ -357,15 +365,17 @@
 #### 功能清单
 
 - 完成任务获得星星。
-- 连续打卡。
-- 每周小目标。
-- 徽章。
+- 连续打卡（第二阶段能力）。
+- 每周小目标（第二阶段能力）。
+- 徽章（第二阶段能力）。
 - 奖励兑换。
 - 家长手动确认奖励。
 
 #### 设计原则
 
 激励系统的目标是正反馈，不是游戏化成瘾。奖励应由家长可控，且与真实家庭约定结合。
+
+第一阶段只实现“家长确认任务后获得星星、查看星星流水和余额、家长确认奖励兑换”。星星发放和兑换必须幂等并保留流水；连续打卡、每周目标和徽章进入第二阶段。
 
 ## 6. 第一阶段可以暂时不做的功能
 
@@ -508,7 +518,6 @@
 
 - 今日任务。
 - 本周任务。
-- 重复任务。
 - 已完成任务。
 
 #### 记录
@@ -577,8 +586,8 @@
 #### 成就
 
 - 星星。
-- 徽章。
-- 连续完成。
+- 星星流水。
+- 家庭奖励。
 - 本周进步。
 
 #### 我的
@@ -597,6 +606,7 @@
 
 - familyId。
 - familyName。
+- timezone：IANA 时区名，默认 Asia/Shanghai。
 - ownerParentId。
 - members。
 - createdAt。
@@ -649,7 +659,7 @@
 - status。
 - difficulty。
 - parentConfirmed。
-- repeatRule。
+- starAwardState：not_applicable、pending、awarded。
 
 ### 9.5 GrowthLog
 
@@ -717,6 +727,24 @@
 - requiredStars。
 - status。
 
+### 9.9 StarLedgerEntry
+
+星星流水。
+
+字段建议：
+
+- ledgerEntryId。
+- familyId。
+- childId。
+- type：earn、spend、adjust。
+- amount。
+- sourceType。
+- sourceId。
+- createdBy。
+- createdAt。
+
+同一个任务确认或奖励兑换只能产生一条对应流水，余额由流水求和得到。第一阶段每个首次确认的任务固定发放 1 颗星。
+
 ## 10. MVP 功能清单
 
 ### 10.1 家长端 MVP
@@ -745,7 +773,7 @@
 - 请求帮助。
 - 体育、艺术、劳动和习惯任务反馈。
 - 今日复习错题。
-- 星星和徽章。
+- 星星余额和奖励。
 - 简单自评。
 
 ### 10.3 系统能力 MVP
@@ -759,6 +787,40 @@
 - 错题复习提醒。
 - 锻炼、劳动和习惯提醒。
 - 每周报告提醒。
+
+日期类业务字段统一按家庭时区解释。家庭保存 IANA 时区，默认 `Asia/Shanghai`；周报按周一至周日统计，日期区间包含起止日。
+
+### 10.4 MVP Requirements and Acceptance Criteria
+
+`plannedTask` 表示首次计划实现该需求的任务，`gateAtTask` 表示最晚必须完成验证的任务门禁。批准后如需调整任务编号，必须在评审记录中说明原因和批准人，不能通过直接调大任务编号掩盖延期。
+
+| ID | Title | plannedTask | gateAtTask | deliveryPhase | implementationStatus | Actor and precondition | Trigger | Observable acceptance, failure and authorization boundary |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `FR-FAM-001` | 创建家庭 | 3 | 4 | baseline | implemented | 已登录家长尚未加入家庭 | 提交家庭名称和有效 IANA 时区 | 创建唯一家庭并返回 `201`；重复创建返回 `409`；客户端不能指定所有者。 |
+| `FR-FAM-002` | 管理家庭 | 3 | 4 | baseline | implemented | 家长属于目标家庭 | 读取或修改家庭 | 只返回或修改本人家庭；其他家庭返回 `403`；不存在返回 `404`。 |
+| `FR-CHILD-001` | 管理孩子档案 | 3 | 4 | baseline | implemented | 家长已有家庭 | 创建或修改孩子档案 | 同一家庭可有多个孩子；只能修改本人家庭孩子；跨家庭返回 `403`。 |
+| `FR-CHILD-002` | 孩子自助访问 | 3 | 4 | baseline | implemented | 孩子持有有效孩子 token | 查看档案或孩子列表 | 只能查看本人档案；不能列出或访问兄弟姐妹；越权返回 `403`。 |
+| `FR-CHILD-003` | 设置孩子 PIN | 3 | 4 | baseline | implemented | 家长拥有目标孩子 | 设置或重置 PIN | 只接受 4 至 6 位数字；只保存加盐哈希；日志和响应不出现明文；跨家庭返回 `403`。 |
+| `FR-CHILD-004` | 孩子 PIN 登录 | 3 | 4 | baseline | implemented | 家庭、孩子和 PIN 已配置 | 提交 familyId、childId 和 PIN | 正确凭据返回有效期不超过 12 小时的孩子 token；错误统一返回 `401 INVALID_CHILD_CREDENTIALS`；同一 IP、家庭和孩子 15 分钟内 5 次失败后返回 `429`。 |
+| `FR-CHILD-005` | PIN 重置撤销 token | 3 | 4 | baseline | implemented | 家长拥有目标孩子 | 重置孩子 PIN | `tokenVersion` 增加；旧孩子 token 后续请求返回 `401`；新 PIN 可重新登录。 |
+| `FR-TASK-001` | 创建五育任务 | 4 | 4 | baseline | implemented | 家长拥有目标孩子 | 创建单次成长任务 | 德智体美劳五个维度均可创建；跨家庭返回 `403`；缺少必填字段返回稳定 `400` 错误码。 |
+| `FR-TASK-002` | 记录任务目标 | 4 | 4 | baseline | implemented | 家长拥有目标孩子 | 填写任务内容 | 保存 LocalDate 截止日、预计时长、目标数量和单位、优先级、说明及可选附件元数据。 |
+| `FR-TASK-003` | 查询成长任务 | 4 | 4 | baseline | implemented | 家长拥有孩子或孩子本人登录 | 按状态、维度、today 或 week 查询 | 只返回可访问孩子的数据；today 使用家庭时区；week 为周一到周日且包含两端；列表分页。 |
+| `FR-TASK-004` | 完成成长任务 | 4 | 4 | baseline | implemented | 可访问任务处于 pending 或 completed | 家长或孩子提交完成反馈 | 保存实际时长/数量、难度、求助标记和孩子备注并进入 completed；confirmed/archived 返回 `409`。 |
+| `FR-TASK-005` | 家长确认任务 | 4 | 4 | baseline | implemented | 家长拥有处于 completed 的任务 | 提交家长反馈 | 任务进入 confirmed 并记录时间；孩子确认或跨家庭确认返回 `403`；非法状态返回 `409`。 |
+| `FR-TASK-006` | 删除归档与拒绝重复规则 | 4 | 4 | baseline | implemented | 家长拥有目标任务 | 删除任务或提交 repeatRule | pending 任务物理删除；completed/confirmed 任务归档；MVP 对 repeatRule 返回 `400 REPEAT_RULE_NOT_SUPPORTED`。 |
+| `FR-LOG-001` | 记录五育过程 | 5 | 5 | mvp | planned | 家长拥有孩子或孩子本人登录 | 创建或更新成长记录 | 五个维度均可记录日期、内容、时长/数量和反思；字段按角色授权；跨家庭返回 `403`。 |
+| `FR-POINT-001` | 管理知识与能力点 | 5 | 5 | mvp | planned | 家长拥有目标孩子 | 创建、更新或查询能力点 | 支持智育知识、体育能力、美育练习、劳动技能和德育习惯，并可按维度及科目/领域筛选。 |
+| `FR-MISTAKE-001` | 管理智育错题 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 创建、订正或查询错题 | 只接受 academic 维度；记录错因、知识点、订正和复习日期；跨家庭返回 `403`。 |
+| `FR-REPORT-001` | 生成成长周报 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 查询周一开始的自然周 | 确定性汇总五育任务、时长、错题和反馈；必需数据源失败返回 `503 AGGREGATION_UNAVAILABLE`，不得静默按零处理。 |
+| `FR-REWARD-001` | 确认任务发放星星 | 5 | 5 | mvp | planned | 家长首次确认已完成任务 | 确认任务或重试确认 | 以 taskId 幂等写入一条 1 星 earn 流水；重复确认不重复发放；暂时失败保留 pending 并返回 `503`。 |
+| `FR-REWARD-002` | 兑换家庭奖励 | 5 | 5 | mvp | planned | 家长拥有孩子且余额充足 | 使用幂等键确认兑换 | 在事务中写 spend 流水并更新奖励；余额不足返回 `409 INSUFFICIENT_STARS`；重试不能重复扣减。 |
+| `FR-NOTIFY-001` | 派生家庭提醒 | 7 | 7 | mvp | planned | 家长拥有孩子或孩子本人登录 | 查询家庭提醒 | 返回今日任务、未完成、复习、锻炼、习惯和周报提醒；部分源失败时声明 `meta.partial` 和不可用来源。 |
+| `NFR-SEC-001` | 家庭数据授权 | 3 | 4 | baseline | implemented | 任意家庭数据请求 | 携带身份和资源参数 | 服务端从认证身份及资源归属推导 familyId；请求中的 familyId 不能单独授权；跨家庭访问返回 `403`。 |
+| `NFR-SEC-002` | 网关身份信封 | 4 | 4 | baseline | implemented | 请求经过 gateway 或直接访问下游 | 转发或验证身份 | gateway 删除客户端身份头并签名方法、路径、用户、角色、时间戳和 nonce；下游拒绝伪造、篡改、过期和重放请求。 |
+| `NFR-DATA-001` | 家庭数据归属 | 3 | 4 | baseline | implemented | 创建或查询孩子数据 | 写入或读取记录 | 每条孩子数据同时保存 familyId 和 childId；列表与详情查询都包含两者的归属约束。 |
+| `NFR-TIME-001` | 日期与时区一致性 | 4 | 4 | baseline | implemented | 处理业务日期或事件时间 | 创建任务或按日期查询 | 业务日期使用家庭时区的 `YYYY-MM-DD`；事件时间使用 UTC ISO 8601；跨午夜和周边界结果确定。 |
+| `NFR-COMPAT-001` | 学校版兼容 | 3 | 4 | baseline | implemented | 家庭版能力上线或回滚 | 启用/停用家庭路由 | 旧学校模型和路由不被删除且不进入家庭 MVP UI；回滚可停用家庭路由而不删除两类数据。 |
 
 ## 11. 第一阶段执行边界
 
@@ -776,6 +838,7 @@
 - 年级和教材版本模板。
 - 月报。
 - 更丰富的知识点、运动项目、艺术练习、劳动实践和习惯模板。
+- 重复任务模板、连续打卡和徽章。
 - 家长共同管理。
 - 多孩子对比。
 - 轻量 AI 周报总结。
