@@ -2,6 +2,7 @@ const express = require('express');
 const request = require('supertest');
 const mongoose = require('mongoose');
 const User = require('../../../../common/models/User');
+const Family = require('../../../../common/models/Family');
 const routes = require('../../routes');
 const { createIdentityHeaders } = require('../../../../common/middleware/gatewayIdentity');
 
@@ -101,5 +102,13 @@ describe('family routes', () => {
 
     expect(secondResponse.status).toBe(409);
     expect(secondResponse.body.success).toBe(false);
+  });
+
+  test('database enforces one owned family per parent', async () => {
+    const parent = await createParent();
+    await Family.create({ familyName: '第一个家', ownerParentId: parent._id });
+
+    await expect(Family.create({ familyName: '第二个家', ownerParentId: parent._id }))
+      .rejects.toMatchObject({ code: 11000 });
   });
 });

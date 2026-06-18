@@ -195,9 +195,6 @@ const userSchema = new Schema({
 });
 
 // 创建索引
-userSchema.index({ username: 1 }, { unique: true });
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ phone: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ class: 1, role: 1 });
 userSchema.index({ familyId: 1, role: 1 });

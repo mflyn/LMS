@@ -22,7 +22,7 @@ const familySchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    index: true
+    unique: true
   },
   memberParentIds: [{
     type: Schema.Types.ObjectId,
