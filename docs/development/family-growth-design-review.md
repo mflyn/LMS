@@ -38,6 +38,10 @@
 | FGT-T4-004 | MAJOR | `NFR-DATA-001` | `GrowthTask.js:119` index `{ childId, dimension, status }` omits familyId, contrary to the family-first index baseline. | Replace with `{ familyId, childId, dimension, status }`. | OPEN |
 | FGT-T4-005 | MAJOR | `FR-TASK-003` | `growthTasks.js:184-192` validates dimension but accepts arbitrary status values; current tests cover only valid filters. | Validate status enum and add stable validation-error tests. | OPEN |
 | FGT-T4-006 | MAJOR | `NFR-SEC-001`, `FR-TASK-003`-`FR-TASK-006` | Tests deny cross-family create only; list, detail, edit, complete, confirm and delete are not exercised against another family. | Add database-backed cross-family tests for every task operation. | OPEN |
+| FGT-GW-001 | BLOCKER | `NFR-SEC-002` | `gateway/server.js:25-48` writes decoded claims into request headers without a strip-all identity-header step or signature; `auth.js:67-96` trusts any supplied x-user-id/x-user-role. | Add shared signed identity envelope and reject direct forged downstream requests. | OPEN |
+| FGT-GW-002 | BLOCKER | `NFR-SEC-002` | No gateway/downstream code generates or verifies method/path/timestamp/nonce; there is no freshness or replay protection. | Add HMAC-SHA256 canonical envelope, five-minute freshness and nonce replay store. | OPEN |
+| FGT-GW-003 | MAJOR | `NFR-SEC-002` | Repository search finds no tests for forged headers, signature tampering, expiry or nonce replay; family tests directly set trusted x-user headers. | Add common auth and gateway integration security suites. | OPEN |
+| FGT-GW-004 | MAJOR | `NFR-SEC-002`, `NFR-COMPAT-001` | `gateway/simple-server.js:13-31` is a second unsigned gateway entrypoint and does not contain family routes. | Remove it from supported entrypoints or reuse the same security/proxy module. | OPEN |
 
 ## Verification Evidence
 
@@ -56,6 +60,14 @@
 - Result: exit 0; 1 suite passed; 12 tests passed; 0 failed.
 - Covered: five-dimension create, cross-family create denial, server-local today/week filters, dimension filter, child completion, parent confirmation and child confirmation denial.
 - Not covered: family timezone boundaries, LocalDate storage, repeatRule rejection, pagination, stable errors, invalid status, delete/archive and cross-family operations other than create.
+
+### Gateway trust-boundary inspection
+
+- Date: 2026-06-18
+- Command: `rg -n "x-user-id|identity envelope|nonce|replay|signature|forged|伪造|重放" backend/gateway backend/common backend/services/*/__tests__`
+- Result: raw x-user headers are produced by both gateway entrypoints and accepted by common middleware; no complete signed-envelope test suite exists.
+- Direct-forgery evidence: a request sent directly to a downstream family route with arbitrary x-user-id/x-user-role passes `authenticateGateway` without cryptographic verification.
+- Gate effect: Task 5 remains blocked until forged, tampered, expired and replayed envelopes are rejected and a valid gateway envelope passes.
 
 ## Task 5 Entry Decision
 

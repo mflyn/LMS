@@ -29,7 +29,7 @@ Conformance values are `COVERED`, `PARTIAL`, `GAP`, and `PLANNED_TASK_5_PLUS`. T
 | `FR-REWARD-002` | 5 | 5 | 10.4 | 4.8, ADR-0005 | rewards | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
 | `FR-NOTIFY-001` | 7 | 7 | 10.4 | 3.1, ADR-0001 | notifications | `notification-service` planned | planned Task 7 | PLANNED_TASK_5_PLUS | none |
 | `NFR-SEC-001` | 3 | 4 | 10.4 | 5/6, ADR-0002 | all family APIs | family controllers/routes | Task 3 passes; Task 4 only create denial tested | PARTIAL | `FGT-T4-006` |
-| `NFR-SEC-002` | 4 | 4 | 10.4 | 3.3, ADR-0006 | gateway envelope | `gateway/server.js`, `common/middleware/auth.js` | no dedicated suite | GAP | audit pending |
+| `NFR-SEC-002` | 4 | 4 | 10.4 | 3.3, ADR-0006 | gateway envelope | `gateway/server.js`, `common/middleware/auth.js` | no signed-envelope suite; raw headers trusted | GAP | `FGT-GW-001`, `FGT-GW-002`, `FGT-GW-003`, `FGT-GW-004` |
 | `NFR-DATA-001` | 3 | 4 | 10.4 | 4/5, ADR-0002 | all child data APIs | Family/User/GrowthTask | records carry both IDs; one task index omits family | PARTIAL | `FGT-T4-004` |
 | `NFR-TIME-001` | 4 | 4 | 10.4 | 3.2, ADR-0003 | family/task dates | `Family.js`, `GrowthTask.js`, routes | BSON Date and server-local range | GAP | `FGT-T3-001`, `FGT-T4-001` |
 | `NFR-COMPAT-001` | 3 | 4 | 10.4 | 7 | legacy and family routes | legacy plus new route modules | baseline full suite | COVERED | no deletion observed |
