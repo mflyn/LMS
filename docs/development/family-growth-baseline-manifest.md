@@ -1,35 +1,34 @@
 # 家庭成长跟踪基线清单
 
 **baselineId:** FGT-MVP-1
-**status:** IN_REVIEW
-**candidateCommit:** aa63b7f609bc447b2212842be950c49ea3c3d253
-**statusUpdatedAt:** 2026-06-18
+**status:** APPROVED
+**candidateCommit:** 265da78a07da114f47a2f3bff861f2ddff655707
+**statusUpdatedAt:** 2026-06-19
 **owner:** linmingfeng
 **baselineApprover:** linmingfeng
 **technicalReviewer:** Codex
 **qualityApprover:** linmingfeng
 **singleMaintainerException:** false
 
-该清单不记录自身哈希。当前候选提交包含设计和审查证据，但存在阻断整改；代码整改或候选内容变化后必须生成新的 candidateCommit 和全部内容哈希。
+该清单不记录自身哈希。`candidateCommit` 是完成代码整改、最终评审和文档审批的内容提交；下表哈希均从该提交生成。后续变更必须建立新基线，不得覆盖本记录。
 
 | documentId | path | version | sha256 | status | owner | author | reviewers | approvers | openRisks |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| FGT-PRD | `docs/product/family-learning-tracker.md` | 1.0-rc1 | `32c2ad717acde75e310ab39f6a96ffa20e499ee964c0eafe18d298e855983c43` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | `FGT-T3-001`-`FGT-T3-006` |
-| FGT-ARCH | `docs/architecture/family-learning-tracker-architecture.md` | 1.0-rc1 | `02bf2cdc5a0b07a7119537b7a2cc52261304b5bfe2821a8d3843f812383fec00` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | `FGT-T3-001`, `FGT-T4-001`-`FGT-T4-006`, `FGT-GW-001`-`FGT-GW-004` |
-| FGT-ADR-0001 | `docs/architecture/decisions/0001-reuse-existing-services.md` | 1.0-rc1 | `c076d9b2280a8cd86a5a12b42ca08559b90c7a6d40457771082c612c68d1986a` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | none |
-| FGT-ADR-0002 | `docs/architecture/decisions/0002-family-data-isolation.md` | 1.0-rc1 | `424af0bdee3d86eb0ec98fdb8f38e06dd083f4c1ee7cd2d8729d5e3c2287a77d` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | `FGT-T4-006` |
-| FGT-ADR-0003 | `docs/architecture/decisions/0003-family-local-date.md` | 1.0-rc1 | `4cd0a1a49d327c02b1eee703ae26d5145f2b1477d8a701d12e95588bcc83cf8c` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | `FGT-T3-001`, `FGT-T4-001` |
-| FGT-ADR-0004 | `docs/architecture/decisions/0004-single-occurrence-growth-tasks.md` | 1.0-rc1 | `d8cb4a99984aea9ddfd766ede332ecdd8e8ab5912811bf55ae57c851feb880ba` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | `FGT-T4-002` |
-| FGT-ADR-0005 | `docs/architecture/decisions/0005-idempotent-star-ledger.md` | 1.0-rc1 | `65beff3a265a248864f05d0e318f21be2ec8cc3ed3b41b0b0640f25bfba15f33` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | none; planned Task 5 |
-| FGT-ADR-0006 | `docs/architecture/decisions/0006-signed-gateway-identity-envelope.md` | 1.0-rc1 | `c2d3e65fb2ccd5935b99eea7a0c573014697ca56a67bf4604783230885e7dbea` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | `FGT-GW-001`-`FGT-GW-004` |
-| FGT-API | `docs/api/family-learning-tracker-api.md` | 1.0-rc1 | `b99398d1d7427294ad559176cd2c4ae966dcad581babbd54030736e87fe86e21` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | `FGT-T3-006`, `FGT-T4-003`, `FGT-T4-005` |
-| FGT-TEST | `docs/development/family-growth-test-strategy.md` | 1.0-rc1 | `405aedb86fb1dc3a4c19b3ec17d31c649b913a5a0bfd3646bc4a25e9525dd3a6` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | missing remediation security tests |
-| FGT-TRACE | `docs/development/family-growth-requirement-traceability.md` | 1.0-rc1 | `97c5da01a724b38c75fcd93c79027bd7fdd62ca243799fb25f38529356378028` | IN_REVIEW | linmingfeng | Codex | linmingfeng | linmingfeng | all open findings in review record |
+| FGT-PRD | `docs/product/family-learning-tracker.md` | 1.0 | `cc139bb0c0fe76d4e2d82f50ed046317d331364e8dcb1992921885adafbba1ee` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | none |
+| FGT-ARCH | `docs/architecture/family-learning-tracker-architecture.md` | 1.0 | `0173d5d32dcfc1d75b30b2273ccd937c9b5d36561ceb1296ea23f6186068478a` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | none |
+| FGT-ADR-0001 | `docs/architecture/decisions/0001-reuse-existing-services.md` | 1.0 | `883f24725cbd697663c8a1b087eee00e7dc5e571728fcf075e6da330b1c7b593` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | none |
+| FGT-ADR-0002 | `docs/architecture/decisions/0002-family-data-isolation.md` | 1.0 | `4c08ef2bfddcda04dcd1f9a2754729de1be8dab91284db0e0c87a99e40265331` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | none |
+| FGT-ADR-0003 | `docs/architecture/decisions/0003-family-local-date.md` | 1.0 | `1f7f73ea7f038431edac4e7eb2a2e513ef1421b66a41bb55bc3a1ff72a5c2e90` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | none |
+| FGT-ADR-0004 | `docs/architecture/decisions/0004-single-occurrence-growth-tasks.md` | 1.0 | `36be86735522106a1b34f512563fc77a3ec0e80e951f241edd27a744414622a6` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | none |
+| FGT-ADR-0005 | `docs/architecture/decisions/0005-idempotent-star-ledger.md` | 1.0 | `4b02a7f0cc4a532410fedddb98b3681f581936f2af104d197f8cc860d9bb0cfb` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | planned Task 5 |
+| FGT-ADR-0006 | `docs/architecture/decisions/0006-signed-gateway-identity-envelope.md` | 1.0 | `14b487cf156b27c1dd650a0ebfb7564248790d96776b853cfb71bebcade9311d` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | in-process nonce store is MVP-only |
+| FGT-API | `docs/api/family-learning-tracker-api.md` | 1.0 | `68e92bc38052f9b63d7f18627d2ff39e55a2a98d31387a5ce2158eecb802d3b6` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | none |
+| FGT-TEST | `docs/development/family-growth-test-strategy.md` | 1.0 | `8b230208adebc87a2433ce3c1924b0f8cb7b5e8af7ec457d6f3472dd13939341` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | full E2E begins after Task 5 |
+| FGT-TRACE | `docs/development/family-growth-requirement-traceability.md` | 1.0 | `7dbd0864b1f1c4b69ec96061ec78caca33148fcd01c37fec17b07defa82d0f48` | APPROVED | linmingfeng | Codex | linmingfeng | linmingfeng | Task 5+ items remain planned |
 
-## Review-open Evidence
+## Approval Evidence
 
-- Product, architecture, API, test strategy and traceability are all `IN_REVIEW`.
-- Task 3 tests: 2 suites, 5 tests passed.
-- Task 4 tests: 1 suite, 12 tests passed.
-- Open findings: 3 BLOCKER, 13 MAJOR, 1 MINOR.
-- Task 5 decision: BLOCKED_REMEDIATION.
+- Product, architecture, API, test strategy, traceability and all six ADRs are approved.
+- Targeted regression: 6 suites, 52 tests passed, 0 failed.
+- Findings closed: 3 BLOCKER, 16 MAJOR, 1 MINOR; no open Task 4.5 findings.
+- Task 5 decision: APPROVED TO START.
