@@ -1,14 +1,10 @@
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const proxy = require('express-http-proxy');
-const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../common/config/auth');
 const createBaseApp = require('../common/createBaseApp');
-const { UnauthorizedError, ForbiddenError } = require('../common/middleware/errorTypes');
 const config = require('./config');
 const { createLogger } = require('../common/config/logger');
+const { createAuthenticateToken, stripClientIdentity } = require('./identityMiddleware');
 const logger = createLogger('api-gateway');
 
 // 1. 创建基础应用实例
@@ -22,50 +18,12 @@ const app = createBaseApp({
   // rateLimitOptions: config.rateLimitOptions // 可以从网关配置中读取速率限制选项
 });
 
-// 2. 网关核心中间件: JWT认证 (这个中间件是网关特有的，因为它处理原始token并设置下游头部)
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (token == null) {
-    return next(new UnauthorizedError('No token provided'));
-  }
-  
-  jwt.verify(token, jwtSecret, (err, user) => {
-    if (err) {
-      const logger = req.app.locals.logger || console; // Fallback to console if logger is not available
-      logger.warn(`JWT verification failed for token: ${token.substring(0, 10)}...`, { 
-        error: err.message, 
-        path: req.path,
-        requestId: req.requestId 
-      });
-      return next(new ForbiddenError('Invalid or expired token'));
-    }
-    req.user = user;
-    if (user && user.id) req.headers['x-user-id'] = user.id;
-    if (user && user.role) req.headers['x-user-role'] = user.role;
-    if (user && user.username) req.headers['x-user-name'] = user.username;
-    next();
-  });
-};
+const authenticateToken = createAuthenticateToken({
+  jwtSecret,
+  identitySecret: process.env.GATEWAY_IDENTITY_SECRET
+});
 
-// 可选认证中间件 - 对于某些路径可能需要用户信息但不强制要求
-const optionalAuth = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (token) {
-    jwt.verify(token, jwtSecret, (err, user) => {
-      if (!err && user) {
-        req.user = user;
-        if (user && user.id) req.headers['x-user-id'] = user.id;
-        if (user && user.role) req.headers['x-user-role'] = user.role;
-        if (user && user.username) req.headers['x-user-name'] = user.username;
-      }
-    });
-  }
-  next();
-};
+app.use(stripClientIdentity);
 
 // 3. API 代理路由 (这些是网关的核心功能)
 // 注意: 确保服务地址来自配置，并且是正确的
@@ -138,12 +96,16 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'api-gateway' });
 });
 
-// 5. 启动服务器
 const PORT = process.env.GATEWAY_PORT || config.port || 5000; // 网关通常在不同端口
-if (!PORT) {
-  logger.error('FATAL ERROR: Port for API Gateway is not defined.');
-  process.exit(1);
-}
-app.listen(PORT, () => {
+
+const startServer = () => app.listen(PORT, () => {
   logger.info(`API Gateway service running on port ${PORT}`);
 });
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;
+module.exports.authenticateToken = authenticateToken;
+module.exports.startServer = startServer;

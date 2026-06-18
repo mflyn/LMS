@@ -3,6 +3,9 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const User = require('../../../../common/models/User');
 const routes = require('../../routes');
+const { createIdentityHeaders } = require('../../../../common/middleware/gatewayIdentity');
+
+process.env.GATEWAY_IDENTITY_SECRET = 'test-gateway-identity-secret-32-bytes-long';
 
 const createApp = () => {
   const app = express();
@@ -22,9 +25,11 @@ const createParent = (overrides = {}) => User.create({
   ...overrides
 });
 
-const parentHeaders = (parent) => ({
-  'x-user-id': parent._id.toString(),
-  'x-user-role': 'parent'
+const parentHeaders = (parent, method, originalUrl) => createIdentityHeaders({
+  method,
+  originalUrl,
+  user: { id: parent._id.toString(), role: 'parent' },
+  secret: process.env.GATEWAY_IDENTITY_SECRET
 });
 
 describe('family routes', () => {
@@ -39,7 +44,7 @@ describe('family routes', () => {
 
     const createResponse = await request(app)
       .post('/api/families')
-      .set(parentHeaders(parent))
+      .set(parentHeaders(parent, 'POST', '/api/families'))
       .send({ familyName: '小明的家' });
 
     expect(createResponse.status).toBe(201);
@@ -51,7 +56,7 @@ describe('family routes', () => {
 
     const readResponse = await request(app)
       .get('/api/families/me')
-      .set(parentHeaders(parent));
+      .set(parentHeaders(parent, 'GET', '/api/families/me'));
 
     expect(readResponse.status).toBe(200);
     expect(readResponse.body.data.family.familyName).toBe('小明的家');
@@ -63,13 +68,13 @@ describe('family routes', () => {
 
     await request(app)
       .post('/api/families')
-      .set(parentHeaders(parent))
+      .set(parentHeaders(parent, 'POST', '/api/families'))
       .send({ familyName: '第一个家' })
       .expect(201);
 
     const secondResponse = await request(app)
       .post('/api/families')
-      .set(parentHeaders(parent))
+      .set(parentHeaders(parent, 'POST', '/api/families'))
       .send({ familyName: '第二个家' });
 
     expect(secondResponse.status).toBe(409);

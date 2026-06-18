@@ -2,6 +2,9 @@ const express = require('express');
 const request = require('supertest');
 const User = require('../../../../common/models/User');
 const routes = require('../../routes');
+const { createIdentityHeaders } = require('../../../../common/middleware/gatewayIdentity');
+
+process.env.GATEWAY_IDENTITY_SECRET = 'test-gateway-identity-secret-32-bytes-long';
 
 const createApp = () => {
   const app = express();
@@ -20,20 +23,28 @@ const createParent = (name = '测试家长') => User.create({
   role: 'parent'
 });
 
-const parentHeaders = (parent) => ({
-  'x-user-id': parent._id.toString(),
-  'x-user-role': 'parent'
+const signedHeaders = (user, method, originalUrl) => createIdentityHeaders({
+  method,
+  originalUrl,
+  user,
+  secret: process.env.GATEWAY_IDENTITY_SECRET
 });
 
-const childHeaders = (child) => ({
-  'x-user-id': child._id.toString(),
-  'x-user-role': 'student'
-});
+const parentHeaders = (parent, method, originalUrl) => signedHeaders({
+  id: parent._id.toString(),
+  role: 'parent'
+}, method, originalUrl);
+
+const childHeaders = (child, method, originalUrl) => signedHeaders({
+  id: child._id.toString(),
+  childId: child._id.toString(),
+  role: 'student'
+}, method, originalUrl);
 
 const createFamily = async (app, parent, familyName = '测试家庭') => {
   const response = await request(app)
     .post('/api/families')
-    .set(parentHeaders(parent))
+    .set(parentHeaders(parent, 'POST', '/api/families'))
     .send({ familyName });
 
   expect(response.status).toBe(201);
@@ -43,7 +54,7 @@ const createFamily = async (app, parent, familyName = '测试家庭') => {
 const createChild = async (app, parent, childName = '小明') => {
   const response = await request(app)
     .post('/api/children')
-    .set(parentHeaders(parent))
+    .set(parentHeaders(parent, 'POST', '/api/children'))
     .send({
       name: childName,
       grade: 3,
@@ -84,7 +95,7 @@ describe('children routes', () => {
 
     const listResponse = await request(app)
       .get('/api/children')
-      .set(parentHeaders(parent));
+      .set(parentHeaders(parent, 'GET', '/api/children'));
 
     expect(listResponse.status).toBe(200);
     expect(listResponse.body.data.items.map((child) => child.name)).toEqual(['小明', '小红']);
@@ -99,13 +110,13 @@ describe('children routes', () => {
 
     const readResponse = await request(app)
       .get(`/api/children/${childB.childId}`)
-      .set(parentHeaders(parentA));
+      .set(parentHeaders(parentA, 'GET', `/api/children/${childB.childId}`));
 
     expect(readResponse.status).toBe(403);
 
     const editResponse = await request(app)
       .patch(`/api/children/${childB.childId}`)
-      .set(parentHeaders(parentA))
+      .set(parentHeaders(parentA, 'PATCH', `/api/children/${childB.childId}`))
       .send({ name: '不应修改' });
 
     expect(editResponse.status).toBe(403);
@@ -119,7 +130,7 @@ describe('children routes', () => {
 
     await request(app)
       .post(`/api/children/${firstChild.childId}/pin`)
-      .set(parentHeaders(parent))
+      .set(parentHeaders(parent, 'POST', `/api/children/${firstChild.childId}/pin`))
       .send({ pin: '1234' })
       .expect(200);
 
@@ -137,7 +148,7 @@ describe('children routes', () => {
 
     const siblingsResponse = await request(app)
       .get('/api/children')
-      .set(childHeaders({ _id: firstChild.childId }));
+      .set(childHeaders({ _id: firstChild.childId }, 'GET', '/api/children'));
 
     expect(siblingsResponse.status).toBe(403);
   });

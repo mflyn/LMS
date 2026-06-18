@@ -7,12 +7,21 @@ const mongoose = require('mongoose');
 const app = require('../server');
 const User = require('../../../common/models/User');
 const Family = require('../../../common/models/Family');
+const { createIdentityHeaders } = require('../../../common/middleware/gatewayIdentity');
+
+process.env.GATEWAY_IDENTITY_SECRET = 'test-gateway-identity-secret-32-bytes-long';
 
 const unique = (prefix) => `${prefix}${Math.random().toString(36).slice(2, 10)}`;
 
-const userHeaders = (user) => ({
-  'x-user-id': user._id.toString(),
-  'x-user-role': user.role
+const userHeaders = (user, method, originalUrl) => createIdentityHeaders({
+  method,
+  originalUrl,
+  user: {
+    id: user._id.toString(),
+    childId: user.role === 'student' ? user._id.toString() : undefined,
+    role: user.role
+  },
+  secret: process.env.GATEWAY_IDENTITY_SECRET
 });
 
 const createFamilyFixture = async (label) => {
@@ -91,7 +100,7 @@ const taskPayload = (child, overrides = {}) => ({
 const createTask = async (parent, child, overrides = {}) => {
   const response = await request(app)
     .post('/api/growth-tasks')
-    .set(userHeaders(parent))
+    .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
     .send(taskPayload(child, overrides));
 
   expect(response.status).toBe(201);
@@ -110,7 +119,7 @@ describe('growth task routes', () => {
 
     const response = await request(app)
       .post('/api/growth-tasks')
-      .set(userHeaders(parent))
+      .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(taskPayload(child, { dimension, ...overrides }));
 
     expect(response.status).toBe(201);
@@ -130,7 +139,7 @@ describe('growth task routes', () => {
 
     const response = await request(app)
       .post('/api/growth-tasks')
-      .set(userHeaders(familyA.parent))
+      .set(userHeaders(familyA.parent, 'POST', '/api/growth-tasks'))
       .send(taskPayload(familyB.child));
 
     expect(response.status).toBe(403);
@@ -150,7 +159,7 @@ describe('growth task routes', () => {
 
     const response = await request(app)
       .get('/api/growth-tasks')
-      .set(userHeaders(parent))
+      .set(userHeaders(parent, 'GET', `/api/growth-tasks?childId=${child._id}&scope=today`))
       .query({ childId: child._id.toString(), scope: 'today' });
 
     expect(response.status).toBe(200);
@@ -171,7 +180,7 @@ describe('growth task routes', () => {
 
     const response = await request(app)
       .get('/api/growth-tasks')
-      .set(userHeaders(parent))
+      .set(userHeaders(parent, 'GET', `/api/growth-tasks?childId=${child._id}&scope=week`))
       .query({ childId: child._id.toString(), scope: 'week' });
 
     expect(response.status).toBe(200);
@@ -195,7 +204,7 @@ describe('growth task routes', () => {
 
     const response = await request(app)
       .get('/api/growth-tasks')
-      .set(userHeaders(parent))
+      .set(userHeaders(parent, 'GET', `/api/growth-tasks?childId=${child._id}&dimension=physical`))
       .query({ childId: child._id.toString(), dimension: 'physical' });
 
     expect(response.status).toBe(200);
@@ -219,7 +228,7 @@ describe('growth task routes', () => {
 
     const response = await request(app)
       .patch(`/api/growth-tasks/${task.taskId}/complete`)
-      .set(userHeaders(child))
+      .set(userHeaders(child, 'PATCH', `/api/growth-tasks/${task.taskId}/complete`))
       .send({
         actualMinutes: 18,
         actualAmount: 520,
@@ -246,13 +255,13 @@ describe('growth task routes', () => {
 
     await request(app)
       .patch(`/api/growth-tasks/${task.taskId}/complete`)
-      .set(userHeaders(child))
+      .set(userHeaders(child, 'PATCH', `/api/growth-tasks/${task.taskId}/complete`))
       .send({ actualMinutes: 25, difficulty: 'normal' })
       .expect(200);
 
     const response = await request(app)
       .patch(`/api/growth-tasks/${task.taskId}/confirm`)
-      .set(userHeaders(parent))
+      .set(userHeaders(parent, 'PATCH', `/api/growth-tasks/${task.taskId}/confirm`))
       .send({ parentFeedback: '完成得很认真' });
 
     expect(response.status).toBe(200);
@@ -270,13 +279,13 @@ describe('growth task routes', () => {
 
     await request(app)
       .patch(`/api/growth-tasks/${task.taskId}/complete`)
-      .set(userHeaders(child))
+      .set(userHeaders(child, 'PATCH', `/api/growth-tasks/${task.taskId}/complete`))
       .send({ actualMinutes: 20, difficulty: 'normal' })
       .expect(200);
 
     const response = await request(app)
       .patch(`/api/growth-tasks/${task.taskId}/confirm`)
-      .set(userHeaders(child))
+      .set(userHeaders(child, 'PATCH', `/api/growth-tasks/${task.taskId}/confirm`))
       .send({ parentFeedback: '孩子不能确认' });
 
     expect(response.status).toBe(403);

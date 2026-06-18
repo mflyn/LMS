@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const { configManager } = require('../config');
 const { UnauthorizedError, ForbiddenError } = require('./errorTypes');
 const { createLogger } = require('../config/logger');
+const { verifyIdentityEnvelope } = require('./gatewayIdentity');
 
 const logger = createLogger('auth-middleware');
 
@@ -65,35 +66,31 @@ const authenticateJWT = (req, res, next) => {
  * 适用于通过API网关转发的请求
  */
 const authenticateGateway = (req, res, next) => {
-  if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
-    logger.warn('网关认证失败 - 缺少用户标识头', {
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-      url: req.originalUrl,
-      headers: {
-        'x-user-id': req.headers['x-user-id'],
-        'x-user-role': req.headers['x-user-role']
-      }
+  try {
+    req.user = verifyIdentityEnvelope({
+      method: req.method,
+      originalUrl: req.originalUrl,
+      headers: req.headers,
+      secret: process.env.GATEWAY_IDENTITY_SECRET
     });
-    
-    return next(new UnauthorizedError('User identification headers (x-user-id, x-user-role) are missing or incomplete. Ensure API Gateway is configured correctly.'));
+
+    logger.debug('网关认证成功', {
+      userId: req.user.id,
+      role: req.user.role,
+      ip: req.ip,
+      url: req.originalUrl
+    });
+    return next();
+  } catch (error) {
+    logger.warn('网关身份信封验证失败', {
+      code: error.code || 'INVALID_IDENTITY_ENVELOPE',
+      ip: req.ip,
+      url: req.originalUrl
+    });
+    const authError = new UnauthorizedError('Invalid gateway identity envelope');
+    authError.code = error.code || 'INVALID_IDENTITY_ENVELOPE';
+    return next(authError);
   }
-  
-  req.user = {
-    id: req.headers['x-user-id'],
-    role: req.headers['x-user-role']
-    // Potentially include other user details if gateway provides them
-  };
-  
-  // 记录网关认证成功日志
-  logger.debug('网关认证成功', {
-    userId: req.user.id,
-    role: req.user.role,
-    ip: req.ip,
-    url: req.originalUrl
-  });
-  
-  next();
 };
 
 /**
