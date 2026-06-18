@@ -4,14 +4,23 @@ const GrowthTask = require('../models/GrowthTask');
 const User = require('../../../common/models/User');
 const Family = require('../../../common/models/Family');
 const { authenticateGateway } = require('../../../common/middleware/auth');
+const { formatLocalDate, getWeekRange } = require('../../../common/utils/familyDate');
+const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
 
 const router = express.Router();
 const DIMENSIONS = ['moral', 'academic', 'physical', 'artistic', 'labor'];
+const STATUSES = ['pending', 'completed', 'confirmed', 'archived'];
 
-const sendError = (res, status, message) => res.status(status).json({
-  success: false,
-  message
-});
+const statusCodes = {
+  400: 'VALIDATION_ERROR',
+  401: 'UNAUTHENTICATED',
+  403: 'CHILD_ACCESS_DENIED',
+  404: 'RESOURCE_NOT_FOUND',
+  409: 'TASK_STATE_CONFLICT'
+};
+const sendError = (res, status, message, code = statusCodes[status] || 'INTERNAL_ERROR') => (
+  sendFamilyError(res, status, code, message)
+);
 
 const taskView = (task) => ({
   taskId: task._id.toString(),
@@ -31,7 +40,6 @@ const taskView = (task) => ({
   actualAmount: task.actualAmount,
   unit: task.unit,
   priority: task.priority,
-  repeatRule: task.repeatRule,
   status: task.status,
   difficulty: task.difficulty,
   needsHelp: task.needsHelp,
@@ -96,22 +104,14 @@ const assertUserCanAccessChild = async (user, childId) => {
   return null;
 };
 
-const getDateRangeForScope = (scope, now = new Date()) => {
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-
+const getDateRangeForScope = (scope, timezone, now = new Date(Date.now())) => {
+  const today = formatLocalDate(now, timezone);
   if (scope === 'today') {
-    const end = new Date(start);
-    end.setDate(end.getDate() + 1);
-    return { start, end };
+    return { start: today, end: today };
   }
 
   if (scope === 'week') {
-    const mondayOffset = start.getDay() === 0 ? -6 : 1 - start.getDay();
-    start.setDate(start.getDate() + mondayOffset);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 7);
-    return { start, end };
+    return getWeekRange(today);
   }
 
   return null;
@@ -121,6 +121,9 @@ router.post('/', authenticateGateway, async (req, res) => {
   try {
     if (req.user.role !== 'parent') {
       return sendError(res, 403, 'Only parents can create growth tasks');
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'repeatRule')) {
+      return sendError(res, 400, 'repeatRule is not supported in the MVP', 'REPEAT_RULE_NOT_SUPPORTED');
     }
 
     const { childId, dimension, title, taskType, dueDate } = req.body;
@@ -148,7 +151,6 @@ router.post('/', authenticateGateway, async (req, res) => {
       targetAmount: req.body.targetAmount,
       unit: req.body.unit,
       priority: req.body.priority,
-      repeatRule: req.body.repeatRule,
       attachments: req.body.attachments
     });
 
@@ -182,6 +184,9 @@ router.get('/', authenticateGateway, async (req, res) => {
     };
 
     if (req.query.status) {
+      if (!STATUSES.includes(req.query.status)) {
+        return sendError(res, 400, 'Invalid status');
+      }
       query.status = req.query.status;
     }
     if (req.query.dimension) {
@@ -191,22 +196,41 @@ router.get('/', authenticateGateway, async (req, res) => {
       query.dimension = req.query.dimension;
     }
 
-    const dateRange = getDateRangeForScope(req.query.scope);
+    if (req.query.scope && !['today', 'week'].includes(req.query.scope)) {
+      return sendError(res, 400, 'Invalid scope');
+    }
+    const family = await Family.findById(access.familyId).select('timezone');
+    if (!family) return sendError(res, 404, 'Family not found');
+    const dateRange = getDateRangeForScope(req.query.scope, family.timezone);
     if (dateRange) {
       query.dueDate = {
         $gte: dateRange.start,
-        $lt: dateRange.end
+        $lte: dateRange.end
       };
     }
 
-    const tasks = await GrowthTask.find(query).sort({ dueDate: 1, createdAt: 1 });
+    let pagination;
+    try {
+      pagination = parsePagination(req.query);
+    } catch (error) {
+      return sendError(res, 400, error.message, error.code);
+    }
+    const [tasks, total] = await Promise.all([
+      GrowthTask.find(query)
+        .sort({ dueDate: 1, createdAt: 1 })
+        .skip(pagination.skip)
+        .limit(pagination.pageSize),
+      GrowthTask.countDocuments(query)
+    ]);
     const items = tasks.map(taskView);
 
     return res.json({
       success: true,
       data: {
         items,
-        total: items.length
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        total
       }
     });
   } catch (error) {
@@ -327,6 +351,9 @@ router.patch('/:taskId', authenticateGateway, async (req, res) => {
     if (req.user.role !== 'parent') {
       return sendError(res, 403, 'Only parents can edit growth tasks');
     }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'repeatRule')) {
+      return sendError(res, 400, 'repeatRule is not supported in the MVP', 'REPEAT_RULE_NOT_SUPPORTED');
+    }
     if (!mongoose.Types.ObjectId.isValid(req.params.taskId)) {
       return sendError(res, 400, 'Invalid taskId');
     }
@@ -353,7 +380,6 @@ router.patch('/:taskId', authenticateGateway, async (req, res) => {
       'targetAmount',
       'unit',
       'priority',
-      'repeatRule',
       'attachments'
     ];
     allowedFields.forEach((field) => {

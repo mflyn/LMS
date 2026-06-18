@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const { LOCAL_DATE_PATTERN } = require('../../../common/utils/familyDate');
 
 const growthTaskSchema = new Schema({
   childId: {
@@ -50,9 +51,17 @@ const growthTaskSchema = new Schema({
     default: ''
   },
   dueDate: {
-    type: Date,
+    type: String,
     required: true,
-    index: true
+    validate: {
+      validator: (value) => {
+        if (!LOCAL_DATE_PATTERN.test(value)) return false;
+        const [year, month, day] = value.split('-').map(Number);
+        const parsed = new Date(Date.UTC(year, month - 1, day));
+        return parsed.toISOString().slice(0, 10) === value;
+      },
+      message: 'dueDate must be a valid YYYY-MM-DD LocalDate'
+    }
   },
   estimatedMinutes: {
     type: Number,
@@ -78,11 +87,6 @@ const growthTaskSchema = new Schema({
     type: String,
     enum: ['low', 'medium', 'high'],
     default: 'medium'
-  },
-  repeatRule: {
-    type: String,
-    trim: true,
-    default: 'none'
   },
   status: {
     type: String,
@@ -120,7 +124,7 @@ const growthTaskSchema = new Schema({
 });
 
 growthTaskSchema.index({ familyId: 1, childId: 1, dueDate: 1 });
-growthTaskSchema.index({ childId: 1, dimension: 1, status: 1 });
+growthTaskSchema.index({ familyId: 1, childId: 1, dimension: 1, status: 1 });
 
 module.exports = mongoose.models.GrowthTask
   || mongoose.model('GrowthTask', growthTaskSchema);

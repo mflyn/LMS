@@ -8,6 +8,7 @@ const app = require('../server');
 const User = require('../../../common/models/User');
 const Family = require('../../../common/models/Family');
 const { createIdentityHeaders } = require('../../../common/middleware/gatewayIdentity');
+const { addLocalDateDays, formatLocalDate, getWeekRange } = require('../../../common/utils/familyDate');
 
 process.env.GATEWAY_IDENTITY_SECRET = 'test-gateway-identity-secret-32-bytes-long';
 
@@ -19,6 +20,8 @@ const userHeaders = (user, method, originalUrl) => createIdentityHeaders({
   user: {
     id: user._id.toString(),
     childId: user.role === 'student' ? user._id.toString() : undefined,
+    familyId: user.familyId ? user.familyId.toString() : undefined,
+    tokenVersion: user.role === 'student' ? user.childProfile.tokenVersion || 0 : undefined,
     role: user.role
   },
   secret: process.env.GATEWAY_IDENTITY_SECRET
@@ -63,23 +66,7 @@ const createFamilyFixture = async (label) => {
   return { parent, family, child };
 };
 
-const startOfDay = (date = new Date()) => {
-  const value = new Date(date);
-  value.setHours(0, 0, 0, 0);
-  return value;
-};
-
-const addDays = (date, days) => {
-  const value = new Date(date);
-  value.setDate(value.getDate() + days);
-  return value;
-};
-
-const startOfWeek = (date = new Date()) => {
-  const value = startOfDay(date);
-  const mondayOffset = value.getDay() === 0 ? -6 : 1 - value.getDay();
-  return addDays(value, mondayOffset);
-};
+const currentLocalDate = () => formatLocalDate(new Date(), 'Asia/Shanghai');
 
 const taskPayload = (child, overrides = {}) => ({
   childId: child._id.toString(),
@@ -89,7 +76,7 @@ const taskPayload = (child, overrides = {}) => ({
   title: '完成分数计算练习',
   taskType: 'practice',
   description: '完成 20 道分数计算题',
-  dueDate: addDays(startOfDay(), 1).toISOString(),
+  dueDate: addLocalDateDays(currentLocalDate(), 1),
   estimatedMinutes: 30,
   targetAmount: 20,
   unit: 'questions',
@@ -148,13 +135,14 @@ describe('growth task routes', () => {
 
   test('scope=today returns only tasks due today', async () => {
     const { parent, child } = await createFamilyFixture('今日');
+    const today = currentLocalDate();
     await createTask(parent, child, {
       title: '今天任务',
-      dueDate: addDays(startOfDay(), 0).toISOString()
+      dueDate: today
     });
     await createTask(parent, child, {
       title: '明天任务',
-      dueDate: addDays(startOfDay(), 1).toISOString()
+      dueDate: addLocalDateDays(today, 1)
     });
 
     const response = await request(app)
@@ -168,14 +156,14 @@ describe('growth task routes', () => {
 
   test('scope=week returns only tasks due in the current week', async () => {
     const { parent, child } = await createFamilyFixture('本周');
-    const weekStart = startOfWeek();
+    const { start: weekStart } = getWeekRange(currentLocalDate());
     await createTask(parent, child, {
       title: '本周任务',
-      dueDate: addDays(weekStart, 2).toISOString()
+      dueDate: addLocalDateDays(weekStart, 2)
     });
     await createTask(parent, child, {
       title: '下周任务',
-      dueDate: addDays(weekStart, 7).toISOString()
+      dueDate: addLocalDateDays(weekStart, 7)
     });
 
     const response = await request(app)
@@ -290,5 +278,114 @@ describe('growth task routes', () => {
 
     expect(response.status).toBe(403);
     expect(response.body.success).toBe(false);
+  });
+
+  test('stores dueDate as LocalDate and uses family timezone for today', async () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date('2030-01-01T16:30:00.000Z').getTime());
+    try {
+      const { parent, child } = await createFamilyFixture('时区');
+      const todayTask = await createTask(parent, child, { title: '上海今天', dueDate: '2030-01-02' });
+      await createTask(parent, child, { title: '上海昨天', dueDate: '2030-01-01' });
+      expect(todayTask.dueDate).toBe('2030-01-02');
+
+      const endpoint = `/api/growth-tasks?childId=${child._id}&scope=today`;
+      const response = await request(app)
+        .get('/api/growth-tasks')
+        .set(userHeaders(parent, 'GET', endpoint))
+        .query({ childId: child._id.toString(), scope: 'today' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.map((task) => task.title)).toEqual(['上海今天']);
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
+  test('rejects repeatRule on create and edit', async () => {
+    const { parent, child } = await createFamilyFixture('重复');
+    const createResponse = await request(app)
+      .post('/api/growth-tasks')
+      .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
+      .send(taskPayload(child, { repeatRule: 'daily' }));
+    expect(createResponse.status).toBe(400);
+    expect(createResponse.body.error.code).toBe('REPEAT_RULE_NOT_SUPPORTED');
+
+    const task = await createTask(parent, child);
+    const endpoint = `/api/growth-tasks/${task.taskId}`;
+    const editResponse = await request(app)
+      .patch(endpoint)
+      .set(userHeaders(parent, 'PATCH', endpoint))
+      .send({ repeatRule: 'weekly' });
+    expect(editResponse.status).toBe(400);
+    expect(editResponse.body.error.code).toBe('REPEAT_RULE_NOT_SUPPORTED');
+  });
+
+  test('validates status and paginates task lists', async () => {
+    const { parent, child } = await createFamilyFixture('分页');
+    await createTask(parent, child, { title: '任务一' });
+    await createTask(parent, child, { title: '任务二' });
+
+    const invalidEndpoint = `/api/growth-tasks?childId=${child._id}&status=unknown`;
+    const invalid = await request(app)
+      .get('/api/growth-tasks')
+      .set(userHeaders(parent, 'GET', invalidEndpoint))
+      .query({ childId: child._id.toString(), status: 'unknown' });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.error.code).toBe('VALIDATION_ERROR');
+
+    const pageEndpoint = `/api/growth-tasks?childId=${child._id}&page=1&pageSize=1`;
+    const page = await request(app)
+      .get('/api/growth-tasks')
+      .set(userHeaders(parent, 'GET', pageEndpoint))
+      .query({ childId: child._id.toString(), page: 1, pageSize: 1 });
+    expect(page.status).toBe(200);
+    expect(page.body.data.items).toHaveLength(1);
+    expect(page.body.data).toEqual(expect.objectContaining({ page: 1, pageSize: 1, total: 2 }));
+  });
+
+  test('denies another family across every task operation with stable errors', async () => {
+    const familyA = await createFamilyFixture('越权A');
+    const familyB = await createFamilyFixture('越权B');
+    const task = await createTask(familyB.parent, familyB.child);
+    const cases = [
+      ['get', `/api/growth-tasks?childId=${familyB.child._id}`, `/api/growth-tasks?childId=${familyB.child._id}`, null],
+      ['get', `/api/growth-tasks/${task.taskId}`, `/api/growth-tasks/${task.taskId}`, null],
+      ['patch', `/api/growth-tasks/${task.taskId}`, `/api/growth-tasks/${task.taskId}`, { title: '越权修改' }],
+      ['patch', `/api/growth-tasks/${task.taskId}/complete`, `/api/growth-tasks/${task.taskId}/complete`, { actualMinutes: 1 }],
+      ['patch', `/api/growth-tasks/${task.taskId}/confirm`, `/api/growth-tasks/${task.taskId}/confirm`, {}],
+      ['delete', `/api/growth-tasks/${task.taskId}`, `/api/growth-tasks/${task.taskId}`, null]
+    ];
+
+    for (const [method, signedUrl, requestUrl, body] of cases) {
+      let operation = request(app)[method](requestUrl)
+        .set(userHeaders(familyA.parent, method.toUpperCase(), signedUrl));
+      if (body) operation = operation.send(body);
+      const response = await operation;
+      expect(response.status).toBe(403);
+      expect(response.body.error.code).toBe('CHILD_ACCESS_DENIED');
+    }
+  });
+
+  test('deletes pending tasks and archives completed tasks', async () => {
+    const { parent, child } = await createFamilyFixture('归档');
+    const pending = await createTask(parent, child, { title: '待删除' });
+    const pendingEndpoint = `/api/growth-tasks/${pending.taskId}`;
+    const deleted = await request(app)
+      .delete(pendingEndpoint)
+      .set(userHeaders(parent, 'DELETE', pendingEndpoint));
+    expect(deleted.body.data.deleted).toBe(true);
+
+    const completed = await createTask(parent, child, { title: '待归档' });
+    const completeEndpoint = `/api/growth-tasks/${completed.taskId}/complete`;
+    await request(app)
+      .patch(completeEndpoint)
+      .set(userHeaders(parent, 'PATCH', completeEndpoint))
+      .send({ actualMinutes: 5 })
+      .expect(200);
+    const completedEndpoint = `/api/growth-tasks/${completed.taskId}`;
+    const archived = await request(app)
+      .delete(completedEndpoint)
+      .set(userHeaders(parent, 'DELETE', completedEndpoint));
+    expect(archived.body.data.task.status).toBe('archived');
   });
 });
