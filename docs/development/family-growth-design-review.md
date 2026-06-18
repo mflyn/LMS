@@ -72,7 +72,7 @@
 ## Task 5 Entry Decision
 
 **Decision:** BLOCKED
-**Reason:** Baseline review and Task 3/4 conformance review are not complete.
+**Reason:** Open blockers `FGT-T3-003`, `FGT-GW-001`, and `FGT-GW-002` plus open MAJOR findings require the approved remediation plan before Task 5.
 
 ## Sign-off
 

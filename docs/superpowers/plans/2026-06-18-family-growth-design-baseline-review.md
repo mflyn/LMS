@@ -685,7 +685,7 @@ Set owner and product/baseline approver to `linmingfeng`, author and technical r
 Include product, architecture, all ADRs, API, test strategy, and traceability. Do not include the manifest's own hash. Compute each content hash with:
 
 ```bash
-git show "$candidateCommit:$path" | shasum -a 256
+git show "$candidateCommit:$doc_path" | shasum -a 256
 ```
 
 Leave the prepared manifest unstaged until Step 6, where it is committed with the updated review record as a separate review-open commit. Any later candidate content change invalidates this manifest and requires a new candidate commit and hashes.

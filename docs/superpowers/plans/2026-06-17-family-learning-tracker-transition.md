@@ -460,7 +460,7 @@ Create a unique index on `familyId + childId + sourceType + sourceId + type`. St
 
 ### Task 4.5: Design Baseline Review Gate
 
-**Status:** IN_REVIEW
+**Status:** BLOCKED_REMEDIATION
 
 Task 5 is blocked until all entry criteria in
 `docs/superpowers/specs/2026-06-18-family-growth-design-baseline-review-design.md`
