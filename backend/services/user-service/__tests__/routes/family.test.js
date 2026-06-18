@@ -45,12 +45,13 @@ describe('family routes', () => {
     const createResponse = await request(app)
       .post('/api/families')
       .set(parentHeaders(parent, 'POST', '/api/families'))
-      .send({ familyName: '小明的家' });
+      .send({ familyName: '小明的家', timezone: 'America/New_York' });
 
     expect(createResponse.status).toBe(201);
     expect(createResponse.body.success).toBe(true);
     expect(createResponse.body.data.family).toEqual(expect.objectContaining({
       familyName: '小明的家',
+      timezone: 'America/New_York',
       ownerParentId: parent._id.toString()
     }));
 
@@ -60,7 +61,28 @@ describe('family routes', () => {
 
     expect(readResponse.status).toBe(200);
     expect(readResponse.body.data.family.familyName).toBe('小明的家');
+    expect(readResponse.body.data.family.timezone).toBe('America/New_York');
     expect(readResponse.body.data.children).toEqual([]);
+  });
+
+  test('family defaults timezone and rejects invalid IANA timezone', async () => {
+    const defaultParent = await createParent();
+    const defaultResponse = await request(app)
+      .post('/api/families')
+      .set(parentHeaders(defaultParent, 'POST', '/api/families'))
+      .send({ familyName: '默认时区家庭' });
+
+    expect(defaultResponse.status).toBe(201);
+    expect(defaultResponse.body.data.family.timezone).toBe('Asia/Shanghai');
+
+    const invalidParent = await createParent();
+    const invalidResponse = await request(app)
+      .post('/api/families')
+      .set(parentHeaders(invalidParent, 'POST', '/api/families'))
+      .send({ familyName: '错误时区家庭', timezone: 'Mars/Olympus' });
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidResponse.body.error.code).toBe('VALIDATION_ERROR');
   });
 
   test('parent cannot create a second family', async () => {

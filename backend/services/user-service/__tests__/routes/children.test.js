@@ -1,5 +1,6 @@
 const express = require('express');
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const User = require('../../../../common/models/User');
 const routes = require('../../routes');
 const { createIdentityHeaders } = require('../../../../common/middleware/gatewayIdentity');
@@ -10,6 +11,14 @@ const createApp = () => {
   const app = express();
   app.use(express.json());
   app.use('/api', routes);
+  app.use((error, req, res, next) => res.status(error.statusCode || 500).json({
+    success: false,
+    error: {
+      code: error.code || 'INTERNAL_ERROR',
+      message: error.message,
+      details: []
+    }
+  }));
   return app;
 };
 
@@ -99,6 +108,7 @@ describe('children routes', () => {
 
     expect(listResponse.status).toBe(200);
     expect(listResponse.body.data.items.map((child) => child.name)).toEqual(['小明', '小红']);
+    expect(listResponse.body.data).toEqual(expect.objectContaining({ page: 1, pageSize: 20, total: 2 }));
   });
 
   test('parent cannot read or edit another family child', async () => {
@@ -145,11 +155,107 @@ describe('children routes', () => {
     expect(loginResponse.status).toBe(200);
     expect(loginResponse.body.data.token).toEqual(expect.any(String));
     expect(loginResponse.body.data.child.childId).toBe(firstChild.childId);
+    const decoded = jwt.decode(loginResponse.body.data.token);
+    expect(decoded).toEqual(expect.objectContaining({
+      id: firstChild.childId,
+      childId: firstChild.childId,
+      familyId: family.familyId,
+      role: 'student',
+      tokenVersion: 1
+    }));
+    expect(decoded.exp - decoded.iat).toBeLessThanOrEqual(12 * 60 * 60);
 
     const siblingsResponse = await request(app)
       .get('/api/children')
-      .set(childHeaders({ _id: firstChild.childId }, 'GET', '/api/children'));
+      .set(signedHeaders(decoded, 'GET', '/api/children'));
 
     expect(siblingsResponse.status).toBe(403);
+  });
+
+  test('PIN accepts 4 to 6 digits and rejects values outside the contract', async () => {
+    const parent = await createParent();
+    await createFamily(app, parent);
+    const child = await createChild(app, parent);
+    const endpoint = `/api/children/${child.childId}/pin`;
+
+    for (const pin of ['123', '1234567']) {
+      const response = await request(app)
+        .post(endpoint)
+        .set(parentHeaders(parent, 'POST', endpoint))
+        .send({ pin });
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    }
+
+    for (const pin of ['1234', '123456']) {
+      await request(app)
+        .post(endpoint)
+        .set(parentHeaders(parent, 'POST', endpoint))
+        .send({ pin })
+        .expect(200);
+    }
+  });
+
+  test('fifth failed PIN login is rate limited with a generic error', async () => {
+    const parent = await createParent();
+    const family = await createFamily(app, parent);
+    const child = await createChild(app, parent);
+    const endpoint = `/api/children/${child.childId}/pin`;
+    await request(app)
+      .post(endpoint)
+      .set(parentHeaders(parent, 'POST', endpoint))
+      .send({ pin: '1234' })
+      .expect(200);
+
+    for (let attempt = 1; attempt <= 4; attempt += 1) {
+      const response = await request(app).post('/api/auth/child-pin-login').send({
+        familyId: family.familyId,
+        childId: child.childId,
+        pin: '9999'
+      });
+      expect(response.status).toBe(401);
+      expect(response.body.error.code).toBe('INVALID_CHILD_CREDENTIALS');
+    }
+
+    const locked = await request(app).post('/api/auth/child-pin-login').send({
+      familyId: family.familyId,
+      childId: child.childId,
+      pin: '9999'
+    });
+    expect(locked.status).toBe(429);
+    expect(locked.body.error.code).toBe('PIN_LOGIN_RATE_LIMITED');
+  });
+
+  test('resetting PIN invalidates a previously signed child identity', async () => {
+    const parent = await createParent();
+    const family = await createFamily(app, parent);
+    const child = await createChild(app, parent);
+    const pinEndpoint = `/api/children/${child.childId}/pin`;
+    await request(app)
+      .post(pinEndpoint)
+      .set(parentHeaders(parent, 'POST', pinEndpoint))
+      .send({ pin: '1234' })
+      .expect(200);
+
+    const login = await request(app).post('/api/auth/child-pin-login').send({
+      familyId: family.familyId,
+      childId: child.childId,
+      pin: '1234'
+    });
+    const oldIdentity = jwt.decode(login.body.data.token);
+
+    await request(app)
+      .post(pinEndpoint)
+      .set(parentHeaders(parent, 'POST', pinEndpoint))
+      .send({ pin: '5678' })
+      .expect(200);
+
+    const profileEndpoint = `/api/children/${child.childId}`;
+    const staleResponse = await request(app)
+      .get(profileEndpoint)
+      .set(signedHeaders(oldIdentity, 'GET', profileEndpoint));
+
+    expect(staleResponse.status).toBe(401);
+    expect(staleResponse.body.error.code).toBe('STALE_CHILD_TOKEN');
   });
 });

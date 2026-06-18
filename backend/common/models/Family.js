@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const { isValidTimeZone } = require('../utils/familyDate');
 
 const familySchema = new Schema({
   familyName: {
@@ -7,6 +8,15 @@ const familySchema = new Schema({
     required: true,
     trim: true,
     maxlength: 50
+  },
+  timezone: {
+    type: String,
+    required: true,
+    default: 'Asia/Shanghai',
+    validate: {
+      validator: isValidTimeZone,
+      message: 'timezone must be a valid IANA timezone'
+    }
   },
   ownerParentId: {
     type: Schema.Types.ObjectId,
@@ -26,7 +36,6 @@ const familySchema = new Schema({
   timestamps: true
 });
 
-familySchema.index({ ownerParentId: 1 }, { unique: true });
 familySchema.index({ memberParentIds: 1 });
 familySchema.index({ childIds: 1 });
 

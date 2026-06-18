@@ -65,14 +65,35 @@ const authenticateJWT = (req, res, next) => {
  * 验证请求头中的x-user-id和x-user-role
  * 适用于通过API网关转发的请求
  */
-const authenticateGateway = (req, res, next) => {
+const authenticateGateway = async (req, res, next) => {
   try {
-    req.user = verifyIdentityEnvelope({
+    const identity = verifyIdentityEnvelope({
       method: req.method,
       originalUrl: req.originalUrl,
       headers: req.headers,
       secret: process.env.GATEWAY_IDENTITY_SECRET
     });
+
+    if (identity.role === 'student') {
+      if (!identity.childId || !identity.familyId || !Number.isInteger(identity.tokenVersion)) {
+        const invalid = new Error('INVALID_IDENTITY_ENVELOPE');
+        invalid.code = 'INVALID_IDENTITY_ENVELOPE';
+        throw invalid;
+      }
+      const User = require('../models/User');
+      const child = await User.findOne({
+        _id: identity.childId,
+        role: 'student',
+        familyId: identity.familyId
+      }).select('childProfile.tokenVersion');
+      if (!child || child.childProfile.tokenVersion !== identity.tokenVersion) {
+        const stale = new Error('STALE_CHILD_TOKEN');
+        stale.code = 'STALE_CHILD_TOKEN';
+        throw stale;
+      }
+    }
+
+    req.user = identity;
 
     logger.debug('网关认证成功', {
       userId: req.user.id,
@@ -144,26 +165,30 @@ const checkRole = (roles) => {
  * @param {String} type - 令牌类型 ('access' | 'refresh')
  * @returns {String} - JWT令牌
  */
-const generateToken = (user, type = 'access') => {
+const generateToken = (user, type = 'access', options = {}) => {
   const payload = {
     id: user._id || user.id,
     role: user.role,
-    username: user.username,
+    username: user.username
   };
+  ['familyId', 'childId', 'tokenVersion'].forEach((field) => {
+    if (user[field] !== undefined) payload[field] = user[field];
+  });
   
   const jwtSecret = configManager.get('JWT_SECRET');
   const tokenExpiration = type === 'refresh' 
     ? configManager.get('JWT_REFRESH_TOKEN_EXPIRATION') 
     : configManager.get('JWT_TOKEN_EXPIRATION');
 
-  const token = jwt.sign(payload, jwtSecret, { expiresIn: tokenExpiration });
+  const effectiveExpiration = options.expiresIn || tokenExpiration;
+  const token = jwt.sign(payload, jwtSecret, { expiresIn: effectiveExpiration });
   
   // 记录令牌生成日志
   logger.debug('JWT令牌生成', {
     userId: payload.id,
     role: payload.role,
     type: type,
-    expiresIn: tokenExpiration
+    expiresIn: effectiveExpiration
   });
   
   return token;

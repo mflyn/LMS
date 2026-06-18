@@ -3,12 +3,19 @@ const mongoose = require('mongoose');
 const User = require('../../../common/models/User');
 const Family = require('../../../common/models/Family');
 const { generateToken } = require('../../../common/middleware/auth');
+const { isValidTimeZone } = require('../../../common/utils/familyDate');
+const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
+
+const PIN_WINDOW_MS = 15 * 60 * 1000;
+const PIN_MAX_FAILURES = 5;
+const pinFailures = new Map();
 
 const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 const familyView = (family) => ({
   familyId: family._id.toString(),
   familyName: family.familyName,
+  timezone: family.timezone,
   ownerParentId: family.ownerParentId.toString(),
   memberParentIds: family.memberParentIds.map((id) => id.toString()),
   childIds: family.childIds.map((id) => id.toString()),
@@ -35,10 +42,18 @@ const childView = (child) => {
   };
 };
 
-const sendError = (res, status, message) => res.status(status).json({
-  success: false,
-  message
-});
+const statusCodes = {
+  400: 'VALIDATION_ERROR',
+  401: 'UNAUTHENTICATED',
+  403: 'CHILD_ACCESS_DENIED',
+  404: 'RESOURCE_NOT_FOUND',
+  409: 'RESOURCE_CONFLICT',
+  429: 'PIN_LOGIN_RATE_LIMITED'
+};
+
+const sendError = (res, status, message, code = statusCodes[status] || 'INTERNAL_ERROR') => (
+  sendFamilyError(res, status, code, message)
+);
 
 const requireParent = (req, res) => {
   if (!req.user || req.user.role !== 'parent') {
@@ -107,6 +122,10 @@ const createFamily = async (req, res) => {
     if (!familyName) {
       return sendError(res, 400, 'familyName is required');
     }
+    const timezone = req.body.timezone || 'Asia/Shanghai';
+    if (!isValidTimeZone(timezone)) {
+      return sendError(res, 400, 'timezone must be a valid IANA timezone', 'VALIDATION_ERROR');
+    }
 
     const existingFamily = await findParentFamily(req.user.id);
     if (existingFamily) {
@@ -115,6 +134,7 @@ const createFamily = async (req, res) => {
 
     const family = await Family.create({
       familyName,
+      timezone,
       ownerParentId: req.user.id,
       memberParentIds: [req.user.id],
       childIds: []
@@ -232,16 +252,28 @@ const listChildren = async (req, res) => {
       return sendError(res, 404, 'Family not found');
     }
 
-    const children = await User.find({ _id: { $in: family.childIds }, role: 'student' });
+    let pagination;
+    try {
+      pagination = parsePagination(req.query);
+    } catch (error) {
+      return sendError(res, 400, error.message, error.code);
+    }
+    const pagedIds = family.childIds.slice(pagination.skip, pagination.skip + pagination.pageSize);
+    const children = await User.find({ _id: { $in: pagedIds }, role: 'student' });
     const childById = new Map(children.map((child) => [child._id.toString(), child]));
-    const items = family.childIds
+    const items = pagedIds
       .map((id) => childById.get(id.toString()))
       .filter(Boolean)
       .map(childView);
 
     return res.json({
       success: true,
-      data: { items }
+      data: {
+        items,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        total: family.childIds.length
+      }
     });
   } catch (error) {
     return sendError(res, 500, error.message);
@@ -333,8 +365,8 @@ const setChildPin = async (req, res) => {
     if (!requireParent(req, res)) return;
 
     const pin = String(req.body.pin || '');
-    if (!/^\d{4,8}$/.test(pin)) {
-      return sendError(res, 400, 'PIN must be 4 to 8 digits');
+    if (!/^\d{4,6}$/.test(pin)) {
+      return sendError(res, 400, 'PIN must be 4 to 6 digits', 'VALIDATION_ERROR');
     }
 
     const family = await findParentFamily(req.user.id);
@@ -344,6 +376,7 @@ const setChildPin = async (req, res) => {
     }
 
     child.childProfile.pinHash = await bcrypt.hash(pin, 10);
+    child.childProfile.tokenVersion = (child.childProfile.tokenVersion || 0) + 1;
     await child.save();
 
     return res.json({
@@ -358,26 +391,47 @@ const setChildPin = async (req, res) => {
 const childPinLogin = async (req, res) => {
   try {
     const { familyId, childId, pin } = req.body;
+    const failureKey = `${req.ip}|${familyId || ''}|${childId || ''}`;
+    const now = Date.now();
+    const state = pinFailures.get(failureKey);
+    if (state && state.lockedUntil > now) {
+      return sendError(res, 429, 'Too many child PIN attempts', 'PIN_LOGIN_RATE_LIMITED');
+    }
     if (!isObjectId(familyId) || !isObjectId(childId) || !pin) {
-      return sendError(res, 400, 'familyId, childId and pin are required');
+      return sendError(res, 401, 'Invalid child credentials', 'INVALID_CHILD_CREDENTIALS');
     }
 
     const family = await Family.findById(familyId);
     const child = await assertFamilyChild(family, childId);
     if (!child || !child.childProfile.pinHash) {
-      return sendError(res, 401, 'Invalid child credentials');
+      return sendError(res, 401, 'Invalid child credentials', 'INVALID_CHILD_CREDENTIALS');
     }
 
     const matches = await bcrypt.compare(String(pin), child.childProfile.pinHash);
     if (!matches) {
-      return sendError(res, 401, 'Invalid child credentials');
+      const failures = state && state.windowStartedAt + PIN_WINDOW_MS > now ? state.failures + 1 : 1;
+      const nextState = {
+        failures,
+        windowStartedAt: state && state.windowStartedAt + PIN_WINDOW_MS > now ? state.windowStartedAt : now,
+        lockedUntil: failures >= PIN_MAX_FAILURES ? now + PIN_WINDOW_MS : 0
+      };
+      pinFailures.set(failureKey, nextState);
+      if (failures >= PIN_MAX_FAILURES) {
+        return sendError(res, 429, 'Too many child PIN attempts', 'PIN_LOGIN_RATE_LIMITED');
+      }
+      return sendError(res, 401, 'Invalid child credentials', 'INVALID_CHILD_CREDENTIALS');
     }
+
+    pinFailures.delete(failureKey);
 
     const token = generateToken({
       id: child._id,
       username: child.username,
-      role: 'student'
-    });
+      role: 'student',
+      childId: child._id.toString(),
+      familyId: child.familyId.toString(),
+      tokenVersion: child.childProfile.tokenVersion || 0
+    }, 'access', { expiresIn: '12h' });
 
     return res.json({
       success: true,

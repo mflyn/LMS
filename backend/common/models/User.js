@@ -146,6 +146,11 @@ const userSchema = new Schema({
     pinHash: {
       type: String,
       select: false
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0
     }
   },
   parentProfile: {
