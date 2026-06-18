@@ -58,4 +58,11 @@ describe('gateway identity middleware', () => {
       now: 1_750_000_000_000
     })).toEqual(expect.objectContaining({ id: 'parent-1', role: 'parent' }));
   });
+
+  test('rejects an unsafe identity secret when middleware is created', () => {
+    expect(() => createAuthenticateToken({
+      jwtSecret: JWT_SECRET,
+      identitySecret: 'too-short'
+    })).toThrow('GATEWAY_IDENTITY_SECRET must contain at least 32 characters');
+  });
 });

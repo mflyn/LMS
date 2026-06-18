@@ -7,6 +7,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - USER_SERVICE_URL=http://user-service:3001
       - PROGRESS_SERVICE_URL=http://progress-service:3002
       - HOMEWORK_SERVICE_URL=http://homework-service:3003
@@ -34,6 +35,7 @@ services:
       - PORT=3001
       - MONGO_URI=mongodb://mongo:27017/learning-tracker
       - JWT_SECRET=your_jwt_secret_key
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
     depends_on:
       - mongo
     networks:
@@ -47,6 +49,7 @@ services:
       - NODE_ENV=production
       - PORT=3002
       - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
     depends_on:
       - mongo
     networks:
@@ -60,6 +63,7 @@ services:
       - NODE_ENV=production
       - PORT=3003
       - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
     depends_on:
       - mongo
     networks:
@@ -73,6 +77,7 @@ services:
       - NODE_ENV=production
       - PORT=3004
       - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
     depends_on:
       - mongo
     networks:
@@ -86,6 +91,7 @@ services:
       - NODE_ENV=production
       - PORT=3005
       - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
     volumes:
       - resource-data:/app/uploads
     depends_on:

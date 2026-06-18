@@ -4,7 +4,7 @@ const config = require('./config');
 const mainRoutes = require('./routes'); // user-service 的主路由
 const { createLogger } = require('../../common/config/logger'); // 直接导入 logger 用于启动日志
 const logger = createLogger('user-service');
-const { setupUncaughtExceptionHandler } = require('../../common/middleware/errorHandler'); // Added import
+const { errorHandler, setupUncaughtExceptionHandler } = require('../../common/middleware/errorHandler'); // Added import
 
 // 1. 创建基础应用实例
 const app = createBaseApp({
@@ -19,6 +19,7 @@ const app = createBaseApp({
 // 确保路由前缀与 API 网关配置和服务设计一致
 // 例如，如果设计文档中 user-service 的所有 API 都在 /api/users 或 /api/auth 下
 app.use('/api', mainRoutes); // 假设 mainRoutes 内部处理了 /users 和 /auth 等子路径
+app.use(errorHandler);
 
 // 3. 数据库连接
 const mongoURI = config.mongoURI;

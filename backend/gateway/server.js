@@ -4,6 +4,7 @@ const { jwtSecret } = require('../common/config/auth');
 const createBaseApp = require('../common/createBaseApp');
 const config = require('./config');
 const { createLogger } = require('../common/config/logger');
+const { errorHandler } = require('../common/middleware/errorHandler');
 const { createAuthenticateToken, stripClientIdentity } = require('./identityMiddleware');
 const logger = createLogger('api-gateway');
 
@@ -95,6 +96,8 @@ if (config.serviceHosts.progress) {
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'api-gateway' });
 });
+
+app.use(errorHandler);
 
 const PORT = process.env.GATEWAY_PORT || config.port || 5000; // 网关通常在不同端口
 

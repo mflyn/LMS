@@ -147,6 +147,7 @@ const resetIdentityNonceStore = () => nonceStore.clear();
 module.exports = {
   IDENTITY_HEADERS,
   MAX_AGE_MS,
+  assertIdentitySecret: assertSecret,
   createIdentityHeaders,
   normalizeRequestTarget,
   resetIdentityNonceStore,

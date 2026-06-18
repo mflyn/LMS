@@ -1,6 +1,7 @@
 const express = require('express');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../../../../common/models/User');
 const routes = require('../../routes');
 const { createIdentityHeaders } = require('../../../../common/middleware/gatewayIdentity');
@@ -220,6 +221,29 @@ describe('children routes', () => {
     const locked = await request(app).post('/api/auth/child-pin-login').send({
       familyId: family.familyId,
       childId: child.childId,
+      pin: '9999'
+    });
+    expect(locked.status).toBe(429);
+    expect(locked.body.error.code).toBe('PIN_LOGIN_RATE_LIMITED');
+  });
+
+  test('nonexistent child credentials count toward the same PIN rate limit', async () => {
+    const familyId = new mongoose.Types.ObjectId().toString();
+    const childId = new mongoose.Types.ObjectId().toString();
+
+    for (let attempt = 1; attempt <= 4; attempt += 1) {
+      const response = await request(app).post('/api/auth/child-pin-login').send({
+        familyId,
+        childId,
+        pin: '9999'
+      });
+      expect(response.status).toBe(401);
+      expect(response.body.error.code).toBe('INVALID_CHILD_CREDENTIALS');
+    }
+
+    const locked = await request(app).post('/api/auth/child-pin-login').send({
+      familyId,
+      childId,
       pin: '9999'
     });
     expect(locked.status).toBe(429);

@@ -10,6 +10,18 @@ const PIN_WINDOW_MS = 15 * 60 * 1000;
 const PIN_MAX_FAILURES = 5;
 const pinFailures = new Map();
 
+const recordPinFailure = (failureKey, state, now) => {
+  const withinWindow = state && state.windowStartedAt + PIN_WINDOW_MS > now;
+  const failures = withinWindow ? state.failures + 1 : 1;
+  const nextState = {
+    failures,
+    windowStartedAt: withinWindow ? state.windowStartedAt : now,
+    lockedUntil: failures >= PIN_MAX_FAILURES ? now + PIN_WINDOW_MS : 0
+  };
+  pinFailures.set(failureKey, nextState);
+  return nextState.lockedUntil > now;
+};
+
 const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 const familyView = (family) => ({
@@ -398,25 +410,24 @@ const childPinLogin = async (req, res) => {
       return sendError(res, 429, 'Too many child PIN attempts', 'PIN_LOGIN_RATE_LIMITED');
     }
     if (!isObjectId(familyId) || !isObjectId(childId) || !pin) {
+      if (recordPinFailure(failureKey, state, now)) {
+        return sendError(res, 429, 'Too many child PIN attempts', 'PIN_LOGIN_RATE_LIMITED');
+      }
       return sendError(res, 401, 'Invalid child credentials', 'INVALID_CHILD_CREDENTIALS');
     }
 
     const family = await Family.findById(familyId);
     const child = await assertFamilyChild(family, childId);
     if (!child || !child.childProfile.pinHash) {
+      if (recordPinFailure(failureKey, state, now)) {
+        return sendError(res, 429, 'Too many child PIN attempts', 'PIN_LOGIN_RATE_LIMITED');
+      }
       return sendError(res, 401, 'Invalid child credentials', 'INVALID_CHILD_CREDENTIALS');
     }
 
     const matches = await bcrypt.compare(String(pin), child.childProfile.pinHash);
     if (!matches) {
-      const failures = state && state.windowStartedAt + PIN_WINDOW_MS > now ? state.failures + 1 : 1;
-      const nextState = {
-        failures,
-        windowStartedAt: state && state.windowStartedAt + PIN_WINDOW_MS > now ? state.windowStartedAt : now,
-        lockedUntil: failures >= PIN_MAX_FAILURES ? now + PIN_WINDOW_MS : 0
-      };
-      pinFailures.set(failureKey, nextState);
-      if (failures >= PIN_MAX_FAILURES) {
+      if (recordPinFailure(failureKey, state, now)) {
         return sendError(res, 429, 'Too many child PIN attempts', 'PIN_LOGIN_RATE_LIMITED');
       }
       return sendError(res, 401, 'Invalid child credentials', 'INVALID_CHILD_CREDENTIALS');
