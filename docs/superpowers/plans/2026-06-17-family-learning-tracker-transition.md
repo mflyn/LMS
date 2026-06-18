@@ -8,6 +8,8 @@
 
 **Tech Stack:** Node.js, Express, Mongoose, MongoDB, Jest, Supertest, React 18, Ant Design, Axios, React Router.
 
+**Path Convention:** 本计划中的所有文件路径均相对于当前 Git worktree 根目录。执行前先运行 `git rev-parse --show-toplevel` 并在该目录工作；禁止将路径替换为某个开发者机器上的绝对路径，以免修改错误 worktree。
+
 ---
 
 ## Scope Decision
@@ -23,15 +25,17 @@
 
 移动端不进入第一轮主线实现；只在最后做一次导航和接口兼容评估，避免同时维护 Web、Parent App、Student App 三条 UI 线。
 
+跨服务聚合采用迁移期共享只读仓储：`backend/common/repositories/familyReadRepository.js` 只提供带 `familyId + childId` 约束的任务、记录、错题和能力点投影查询。各服务仍是自己集合的唯一写入方；禁止跨目录导入其他服务的私有模型。周报在读取失败时返回 `503`，提醒允许部分降级但必须返回 `meta.partial`。
+
 ## Current State Observations
 
-- `/Users/linmingfeng/GitHub PRJ/LMS/docs/product/family-learning-tracker.md` 已定义家庭版成长产品边界、核心闭环、MVP 功能和推荐模型。
-- `/Users/linmingfeng/GitHub PRJ/LMS/backend/common/models/User.js` 仍是学校版通用用户模型，包含 `teacher`、`student`、`admin`、`class`、`subjects` 等字段。
-- `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/homework-service/models/Homework.js` 仍绑定 `class`、`assignedBy`、`assignedTo`，需要改造成 `GrowthTask` 语义，支持课内学习、体育锻炼、艺术练习、劳动实践和品德习惯。
-- `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/models/Progress.js` 仍是章节完成率模型，需要新增或替换为 `GrowthLog`、`KnowledgePoint`、`Reward` 和周报相关模型。
-- `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/data-service/models/MistakeRecord.js` 已有错题雏形，但字段偏题库和学校分析，需要收敛为家庭智育错题记录。
-- `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/config/menuConfig.js` 和 `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/App.js` 仍暴露教师、管理员、课程、班级、会议、家校互动等学校版入口。
-- `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/dashboards/ParentDashboard.js` 可作为家长首页基础，但当前展示考试、出勤、老师评语，需要改为德智体美劳任务分布、成长投入时长、错题、周报和鼓励反馈。
+- `docs/product/family-learning-tracker.md` 已定义家庭版成长产品边界、核心闭环、MVP 功能和推荐模型。
+- `backend/common/models/User.js` 仍是学校版通用用户模型，包含 `teacher`、`student`、`admin`、`class`、`subjects` 等字段。
+- `backend/services/homework-service/models/Homework.js` 仍绑定 `class`、`assignedBy`、`assignedTo`，需要改造成 `GrowthTask` 语义，支持课内学习、体育锻炼、艺术练习、劳动实践和品德习惯。
+- `backend/services/progress-service/models/Progress.js` 仍是章节完成率模型，需要新增或替换为 `GrowthLog`、`KnowledgePoint`、`Reward` 和周报相关模型。
+- `backend/services/data-service/models/MistakeRecord.js` 已有错题雏形，但字段偏题库和学校分析，需要收敛为家庭智育错题记录。
+- `frontend/web/src/config/menuConfig.js` 和 `frontend/web/src/App.js` 仍暴露教师、管理员、课程、班级、会议、家校互动等学校版入口。
+- `frontend/web/src/pages/dashboards/ParentDashboard.js` 可作为家长首页基础，但当前展示考试、出勤、老师评语，需要改为德智体美劳任务分布、成长投入时长、错题、周报和鼓励反馈。
 
 ## Target MVP API Surface
 
@@ -82,26 +86,31 @@
 - `PATCH /api/rewards/:rewardId/redeem`：家长确认奖励兑换。
 - `GET /api/notifications/family?childId=`：查询今日任务、未完成任务、错题复习、锻炼、习惯和周报提醒。
 
+内部接口不通过 gateway 对外暴露：
+
+- `POST /api/internal/stars/award`：任务首次确认后按 `taskId` 幂等发放星星，仅接受服务凭据。
+
 ## Target Data Models
 
 ### User
 
-Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/common/models/User.js`
+Modify: `backend/common/models/User.js`
 
 Keep `role` values for backward compatibility during migration, but first-stage UI only uses `parent` and `student`. Add family-specific fields without deleting legacy fields in the first pass:
 
 - `familyId: ObjectId`
-- `childProfile: { nickname, school, grade, avatar, textbookVersion, interests, weakSubjects, pinHash }`
+- `childProfile: { nickname, school, grade, avatar, textbookVersion, interests, weakSubjects, pinHash, tokenVersion }`
 - `parentProfile: { familyRole, defaultChildId }`
 - `children: ObjectId[]` remains for compatibility, but new access checks must prefer `familyId`.
 
 ### Family
 
-Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/common/models/Family.js`
+Create: `backend/common/models/Family.js`
 
 Fields:
 
 - `familyName: String`
+- `timezone: String`，IANA 时区名，默认 `Asia/Shanghai`
 - `ownerParentId: ObjectId`
 - `memberParentIds: ObjectId[]`
 - `childIds: ObjectId[]`
@@ -109,30 +118,31 @@ Fields:
 
 ### GrowthTask
 
-Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/homework-service/models/GrowthTask.js`
+Create: `backend/services/homework-service/models/GrowthTask.js`
 
 Fields:
 
 - `childId`, `familyId`, `createdByParentId`
 - `dimension: moral|academic|physical|artistic|labor`
 - `area`, `subject`, `title`, `taskType`, `description`
-- `dueDate`, `estimatedMinutes`, `actualMinutes`
+- `dueDate: LocalDate String`, `estimatedMinutes`, `actualMinutes`
 - `targetAmount`, `actualAmount`, `unit`
-- `priority`, `repeatRule`
+- `priority`
 - `status: pending|completed|confirmed|archived`
 - `difficulty: easy|normal|hard`
 - `needsHelp: Boolean`
 - `childNote`, `parentFeedback`
 - `attachments`
 - `completedAt`, `confirmedAt`
+- `starAwardState: not_applicable|pending|awarded`
 
 ### GrowthLog
 
-Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/models/GrowthLog.js`
+Create: `backend/services/progress-service/models/GrowthLog.js`
 
 Fields:
 
-- `childId`, `familyId`, `date`
+- `childId`, `familyId`, `date: LocalDate String`
 - `dimension: moral|academic|physical|artistic|labor`
 - `area`, `subject`, `content`, `durationMinutes`
 - `amount`, `unit`
@@ -145,7 +155,7 @@ Fields:
 
 ### KnowledgePoint
 
-Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/models/KnowledgePoint.js`
+Create: `backend/services/progress-service/models/KnowledgePoint.js`
 
 Fields:
 
@@ -155,7 +165,7 @@ Fields:
 
 ### FamilyMistake
 
-Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/models/FamilyMistake.js`
+Create: `backend/services/analytics-service/models/FamilyMistake.js`
 
 Fields:
 
@@ -167,7 +177,7 @@ Fields:
 
 ### WeeklyReport
 
-Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/models/WeeklyReport.js`
+Create: `backend/services/analytics-service/models/WeeklyReport.js`
 
 Fields:
 
@@ -180,7 +190,7 @@ Fields:
 
 ### Reward
 
-Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/models/Reward.js`
+Create: `backend/services/progress-service/models/Reward.js`
 
 Fields:
 
@@ -188,16 +198,31 @@ Fields:
 - `status: active|redeemed|disabled`
 - `createdByParentId`, `redeemedAt`
 
+### StarLedgerEntry
+
+Create: `backend/services/progress-service/models/StarLedgerEntry.js`
+
+Fields:
+
+- `childId`, `familyId`
+- `type: earn|spend|adjust`
+- `amount`
+- `sourceType: task_confirmation|reward_redemption|parent_adjustment`
+- `sourceId`, `idempotencyKey`
+- `createdBy`, `createdAt`
+
+Create a unique index on `familyId + childId + sourceType + sourceId + type`. Star balance is derived from the immutable ledger; do not keep a separately mutable balance field. Badges are not part of the first-stage MVP.
+
 ## Implementation Tasks
 
 ### Task 1: Freeze Product Scope and Architecture Decisions
 
 **Files:**
 
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/docs/product/family-learning-tracker.md`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/docs/architecture/family-learning-tracker-architecture.md`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/docs/api/family-learning-tracker-api.md`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/docs/README.md`
+- Modify: `docs/product/family-learning-tracker.md`
+- Create: `docs/architecture/family-learning-tracker-architecture.md`
+- Create: `docs/api/family-learning-tracker-api.md`
+- Modify: `docs/README.md`
 
 - [ ] **Step 1: Add a first-stage decision summary to the product doc**
 
@@ -213,7 +238,7 @@ Fields:
 
 - [ ] **Step 2: Write the architecture document**
 
-  Create `/Users/linmingfeng/GitHub PRJ/LMS/docs/architecture/family-learning-tracker-architecture.md` with:
+  Create `docs/architecture/family-learning-tracker-architecture.md` with:
 
   - MVP module diagram.
   - Existing service to family capability mapping.
@@ -223,7 +248,7 @@ Fields:
 
 - [ ] **Step 3: Write the API contract document**
 
-  Create `/Users/linmingfeng/GitHub PRJ/LMS/docs/api/family-learning-tracker-api.md` using the `Target MVP API Surface` section above as the contract. Include request and response examples for:
+  Create `docs/api/family-learning-tracker-api.md` using the `Target MVP API Surface` section above as the contract. Include request and response examples for:
 
   - Create child.
   - Create growth task.
@@ -234,7 +259,7 @@ Fields:
 
 - [ ] **Step 4: Link the new docs**
 
-  Update `/Users/linmingfeng/GitHub PRJ/LMS/docs/README.md` so the product, architecture, and API docs are all visible from the docs homepage.
+  Update `docs/README.md` so the product, architecture, and API docs are all visible from the docs homepage.
 
 - [ ] **Step 5: Verify documentation formatting**
 
@@ -257,12 +282,12 @@ Fields:
 
 **Files:**
 
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/package.json`
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/user-service/package.json`
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/homework-service/package.json`
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/package.json`
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/package.json`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/docs/development/family-tracker-test-baseline.md`
+- Inspect: `package.json`
+- Inspect: `backend/services/user-service/package.json`
+- Inspect: `backend/services/homework-service/package.json`
+- Inspect: `backend/services/progress-service/package.json`
+- Inspect: `backend/services/analytics-service/package.json`
+- Create: `docs/development/family-tracker-test-baseline.md`
 
 - [ ] **Step 1: Run the current backend test baseline**
 
@@ -289,7 +314,7 @@ Fields:
 
 - [ ] **Step 3: Create the baseline report**
 
-  Create `/Users/linmingfeng/GitHub PRJ/LMS/docs/development/family-tracker-test-baseline.md` with:
+  Create `docs/development/family-tracker-test-baseline.md` with:
 
   - Command run.
   - Pass/fail result.
@@ -308,16 +333,16 @@ Fields:
 
 **Files:**
 
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/common/models/User.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/common/models/Family.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/common/models/index.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/user-service/controllers/familyController.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/user-service/routes/family.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/user-service/routes/children.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/user-service/routes/index.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/gateway/server.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/user-service/__tests__/routes/family.test.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/user-service/__tests__/routes/children.test.js`
+- Modify: `backend/common/models/User.js`
+- Create: `backend/common/models/Family.js`
+- Modify: `backend/common/models/index.js`
+- Create: `backend/services/user-service/controllers/familyController.js`
+- Create: `backend/services/user-service/routes/family.js`
+- Create: `backend/services/user-service/routes/children.js`
+- Modify: `backend/services/user-service/routes/index.js`
+- Modify: `backend/gateway/server.js`
+- Test: `backend/services/user-service/__tests__/routes/family.test.js`
+- Test: `backend/services/user-service/__tests__/routes/children.test.js`
 
 - [ ] **Step 1: Write route tests for family and child ownership**
 
@@ -327,6 +352,9 @@ Fields:
   - A parent can add multiple children to own family.
   - Parent A cannot read or edit Parent B's child.
   - A child PIN login returns a token scoped to that child.
+  - PIN accepts only 4 to 6 digits and is never returned or logged.
+  - Five failed attempts for the same IP, family and child within 15 minutes produce `429` with a generic error.
+  - Resetting PIN increments `tokenVersion` and invalidates prior child tokens.
   - A child cannot list siblings.
 
 - [ ] **Step 2: Implement `Family` model and user family fields**
@@ -374,11 +402,11 @@ Fields:
 
 **Files:**
 
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/homework-service/models/GrowthTask.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/homework-service/routes/growthTasks.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/homework-service/server.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/gateway/server.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/homework-service/__tests__/growthTasks.test.js`
+- Create: `backend/services/homework-service/models/GrowthTask.js`
+- Create: `backend/services/homework-service/routes/growthTasks.js`
+- Modify: `backend/services/homework-service/server.js`
+- Modify: `backend/gateway/server.js`
+- Test: `backend/services/homework-service/__tests__/growthTasks.test.js`
 
 - [ ] **Step 1: Write growth task API tests**
 
@@ -392,6 +420,8 @@ Fields:
   - Parent cannot create task for another family child.
   - `scope=today` returns only today's due tasks.
   - `scope=week` returns due tasks in the current week.
+  - `today` and `week` use the family IANA timezone, with Monday as the inclusive week start.
+  - First-stage creation rejects `repeatRule` with `400 REPEAT_RULE_NOT_SUPPORTED`.
   - `dimension=physical` returns only physical tasks.
   - Child marks own task completed with actual minutes, actual amount and difficulty.
   - Parent confirms a completed task with feedback.
@@ -428,21 +458,42 @@ Fields:
   git commit -m "feat: add family growth tasks"
   ```
 
+### Task 4.5: Design Baseline Review Gate
+
+**Status:** IN_REVIEW
+
+Task 5 is blocked until all entry criteria in
+`docs/superpowers/specs/2026-06-18-family-growth-design-baseline-review-design.md`
+are satisfied.
+
+- [ ] Product requirements have stable IDs and acceptance criteria.
+- [ ] Architecture decisions are recorded and approved.
+- [ ] API contract is complete and internally consistent.
+- [ ] Test strategy and requirement traceability are complete.
+- [ ] Task 3/4 implementation findings are recorded.
+- [ ] All BLOCKER and MAJOR findings are closed.
+- [ ] Product, architecture, and API baselines are approved.
+- [ ] Task 5 entry decision is signed.
+
 ### Task 5: Add Growth Logs, Ability Points and Rewards
 
 **Files:**
 
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/models/GrowthLog.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/models/KnowledgePoint.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/models/Reward.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/routes/growthLogs.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/routes/knowledgePoints.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/routes/rewards.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/routes/index.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/gateway/server.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/__tests__/growthLogs.test.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/__tests__/knowledgePoints.test.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/progress-service/__tests__/rewards.test.js`
+- Create: `backend/services/progress-service/models/GrowthLog.js`
+- Create: `backend/services/progress-service/models/KnowledgePoint.js`
+- Create: `backend/services/progress-service/models/Reward.js`
+- Create: `backend/services/progress-service/models/StarLedgerEntry.js`
+- Create: `backend/services/progress-service/routes/growthLogs.js`
+- Create: `backend/services/progress-service/routes/knowledgePoints.js`
+- Create: `backend/services/progress-service/routes/rewards.js`
+- Create: `backend/services/progress-service/routes/internalStars.js`
+- Modify: `backend/services/homework-service/routes/growthTasks.js`
+- Test: `backend/services/homework-service/__tests__/growthTasks.test.js`
+- Modify: `backend/services/progress-service/routes/index.js`
+- Modify: `backend/gateway/server.js`
+- Test: `backend/services/progress-service/__tests__/growthLogs.test.js`
+- Test: `backend/services/progress-service/__tests__/knowledgePoints.test.js`
+- Test: `backend/services/progress-service/__tests__/rewards.test.js`
 
 - [ ] **Step 1: Write tests for growth logs**
 
@@ -452,13 +503,15 @@ Fields:
 
   Tests must prove a parent can create and update a child's academic knowledge point, physical ability point, artistic practice point, labor skill point and moral habit point, and list by dimension plus subject or area.
 
-- [ ] **Step 3: Write tests for rewards**
+- [ ] **Step 3: Write tests for stars and rewards**
 
-  Tests must prove a parent can create rewards, completed tasks can increment stars, and only a parent can confirm redemption.
+  Tests must prove a parent can create rewards; first task confirmation creates exactly one 1-star `earn` ledger entry even when retried; balance is derived from the ledger; redemption atomically creates one `spend` entry and updates reward status; insufficient balance returns `409`; and only a parent can confirm redemption. The internal award route must reject ordinary user tokens.
 
 - [ ] **Step 4: Implement models and routes**
 
-  Use `/api/growth-logs`, `/api/knowledge-points`, and `/api/rewards` as the public route prefixes.
+  Use `/api/growth-logs`, `/api/knowledge-points`, and `/api/rewards` as the public route prefixes. Mount `/api/internal/stars/award` only inside the service network and require a service credential; do not proxy it through gateway.
+
+  Extend task confirmation as a small idempotent saga: atomically set `status=confirmed` and `starAwardState=pending`, call the internal award route with `taskId`, then set `starAwardState=awarded`. If the call fails, return `503 STAR_AWARD_PENDING`; retrying confirmation must resume the pending award instead of creating another ledger entry.
 
 - [ ] **Step 5: Wire gateway**
 
@@ -468,6 +521,7 @@ Fields:
 
   ```bash
   npm test --prefix backend/services/progress-service -- --runInBand growthLogs knowledgePoints rewards
+  npm test --prefix backend/services/homework-service -- --runInBand growthTasks
   ```
 
   Expected: new progress-service tests pass.
@@ -475,7 +529,7 @@ Fields:
 - [ ] **Step 7: Commit progress domain**
 
   ```bash
-  git add backend/services/progress-service backend/gateway/server.js
+  git add backend/services/progress-service backend/services/homework-service/routes/growthTasks.js backend/services/homework-service/__tests__/growthTasks.test.js backend/gateway/server.js
   git commit -m "feat: add growth logs ability points and rewards"
   ```
 
@@ -483,14 +537,16 @@ Fields:
 
 **Files:**
 
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/models/FamilyMistake.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/models/WeeklyReport.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/routes/familyMistakes.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/routes/weeklyReports.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/server.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/gateway/server.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/__tests__/familyMistakes.test.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/analytics-service/__tests__/weeklyReports.test.js`
+- Create: `backend/services/analytics-service/models/FamilyMistake.js`
+- Create: `backend/services/analytics-service/models/WeeklyReport.js`
+- Create: `backend/common/repositories/familyReadRepository.js`
+- Test: `backend/common/repositories/__tests__/familyReadRepository.test.js`
+- Create: `backend/services/analytics-service/routes/familyMistakes.js`
+- Create: `backend/services/analytics-service/routes/weeklyReports.js`
+- Modify: `backend/services/analytics-service/server.js`
+- Modify: `backend/gateway/server.js`
+- Test: `backend/services/analytics-service/__tests__/familyMistakes.test.js`
+- Test: `backend/services/analytics-service/__tests__/weeklyReports.test.js`
 
 - [ ] **Step 1: Write mistake tests**
 
@@ -537,6 +593,8 @@ Fields:
   - Knowledge points with `masteryLevel=needs_review`.
   - Dimension distribution across `moral|academic|physical|artistic|labor`.
 
+  Use `familyReadRepository`; every read method requires both `familyId` and `childId`, applies an explicit timeout and returns projections only. Do not import private models from homework-service or progress-service. If any required projection fails, return `503 AGGREGATION_UNAVAILABLE` rather than treating missing data as zero.
+
   No AI generation is used in first-stage weekly reports.
 
 - [ ] **Step 5: Run tests**
@@ -550,7 +608,7 @@ Fields:
 - [ ] **Step 6: Commit mistakes and reports**
 
   ```bash
-  git add backend/services/analytics-service backend/gateway/server.js
+  git add backend/common/repositories backend/services/analytics-service backend/gateway/server.js
   git commit -m "feat: add family mistakes and weekly reports"
   ```
 
@@ -558,11 +616,11 @@ Fields:
 
 **Files:**
 
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/notification-service/models/Notification.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/notification-service/routes/familyNotifications.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/notification-service/server.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/backend/gateway/server.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/backend/services/notification-service/__tests__/familyNotifications.test.js`
+- Modify: `backend/services/notification-service/models/Notification.js`
+- Create: `backend/services/notification-service/routes/familyNotifications.js`
+- Modify: `backend/services/notification-service/server.js`
+- Modify: `backend/gateway/server.js`
+- Test: `backend/services/notification-service/__tests__/familyNotifications.test.js`
 
 - [ ] **Step 1: Write notification tests**
 
@@ -579,6 +637,8 @@ Fields:
 - [ ] **Step 2: Implement derived notification route**
 
   First-stage notifications can be computed on read from task, mistake, habit and report data. Do not introduce background jobs until the demo flow is stable.
+
+  Reuse `familyReadRepository`. Independent reminder categories may degrade separately; when one fails, return the available items with `meta.partial=true` and list the failed category in `meta.unavailableSources`.
 
 - [ ] **Step 3: Wire gateway**
 
@@ -603,11 +663,11 @@ Fields:
 
 **Files:**
 
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/config/menuConfig.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/App.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/services/familyApi.js`
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/contexts/AuthContext.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/__tests__/integration/FamilyNavigation.test.js`
+- Modify: `frontend/web/src/config/menuConfig.js`
+- Modify: `frontend/web/src/App.js`
+- Create: `frontend/web/src/services/familyApi.js`
+- Modify: `frontend/web/src/contexts/AuthContext.js`
+- Test: `frontend/web/src/__tests__/integration/FamilyNavigation.test.js`
 
 - [ ] **Step 1: Write navigation test**
 
@@ -684,17 +744,17 @@ Fields:
 
 **Files:**
 
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/dashboards/ParentDashboard.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/family/TasksPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/family/GrowthLogsPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/family/MistakesPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/family/GrowthPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/family/ProgressPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/family/ChildrenPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/family/SettingsPage.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/__tests__/pages/FamilyDashboard.test.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/__tests__/pages/FamilyTasks.test.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/__tests__/pages/FamilyMistakes.test.js`
+- Modify: `frontend/web/src/pages/dashboards/ParentDashboard.js`
+- Create: `frontend/web/src/pages/family/TasksPage.js`
+- Create: `frontend/web/src/pages/family/GrowthLogsPage.js`
+- Create: `frontend/web/src/pages/family/MistakesPage.js`
+- Create: `frontend/web/src/pages/family/GrowthPage.js`
+- Create: `frontend/web/src/pages/family/ProgressPage.js`
+- Create: `frontend/web/src/pages/family/ChildrenPage.js`
+- Create: `frontend/web/src/pages/family/SettingsPage.js`
+- Test: `frontend/web/src/__tests__/pages/FamilyDashboard.test.js`
+- Test: `frontend/web/src/__tests__/pages/FamilyTasks.test.js`
+- Test: `frontend/web/src/__tests__/pages/FamilyMistakes.test.js`
 
 - [ ] **Step 1: Write dashboard test**
 
@@ -760,13 +820,13 @@ Fields:
 
 **Files:**
 
-- Modify: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/App.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/ChildPinLogin.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/child/ChildTodayPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/child/ChildMistakesPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/child/ChildAchievementsPage.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/pages/child/ChildProfilePage.js`
-- Test: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/src/__tests__/integration/ChildFlow.test.js`
+- Modify: `frontend/web/src/App.js`
+- Create: `frontend/web/src/pages/ChildPinLogin.js`
+- Create: `frontend/web/src/pages/child/ChildTodayPage.js`
+- Create: `frontend/web/src/pages/child/ChildMistakesPage.js`
+- Create: `frontend/web/src/pages/child/ChildAchievementsPage.js`
+- Create: `frontend/web/src/pages/child/ChildProfilePage.js`
+- Test: `frontend/web/src/__tests__/integration/ChildFlow.test.js`
 
 - [ ] **Step 1: Write child flow test**
 
@@ -776,7 +836,7 @@ Fields:
   - Child sees only own today growth tasks across dimensions.
   - Child marks one academic task and one physical task complete.
   - Child sets actual minutes, actual amount, difficulty and needs-help flag.
-  - Child sees stars and badges.
+  - Child sees star balance, star ledger and available family rewards.
   - Child cannot open parent routes.
 
 - [ ] **Step 2: Implement child route shell**
@@ -819,8 +879,8 @@ Fields:
 
 **Files:**
 
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/__tests__/integration/family-growth-demo-flow.test.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/docs/development/family-tracker-demo-script.md`
+- Create: `__tests__/integration/family-growth-demo-flow.test.js`
+- Create: `docs/development/family-tracker-demo-script.md`
 
 - [ ] **Step 1: Write backend integration test**
 
@@ -835,10 +895,11 @@ Fields:
   7. Record 1 math mistake under academic dimension.
   8. Create today's growth log with academic, physical, artistic and labor entries.
   9. Generate weekly growth report with dimension distribution.
+  10. Confirming the same task twice produces one star ledger entry, then redeem one family reward without double spending.
 
 - [ ] **Step 2: Write demo script doc**
 
-  Create `/Users/linmingfeng/GitHub PRJ/LMS/docs/development/family-tracker-demo-script.md` with click-by-click manual demo steps for the same flow.
+  Create `docs/development/family-tracker-demo-script.md` with click-by-click manual demo steps for the same flow.
 
 - [ ] **Step 3: Run integration test**
 
@@ -859,11 +920,11 @@ Fields:
 
 **Files:**
 
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/mobile/src/navigation/ParentNavigator.js`
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/mobile/src/navigation/StudentNavigator.js`
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/mobile/parent-app/navigation/AppNavigator.js`
-- Inspect: `/Users/linmingfeng/GitHub PRJ/LMS/frontend/mobile/student-app/navigation/AppNavigator.js`
-- Create: `/Users/linmingfeng/GitHub PRJ/LMS/docs/development/mobile-family-tracker-gap-analysis.md`
+- Inspect: `frontend/mobile/src/navigation/ParentNavigator.js`
+- Inspect: `frontend/mobile/src/navigation/StudentNavigator.js`
+- Inspect: `frontend/mobile/parent-app/navigation/AppNavigator.js`
+- Inspect: `frontend/mobile/student-app/navigation/AppNavigator.js`
+- Create: `docs/development/mobile-family-tracker-gap-analysis.md`
 
 - [ ] **Step 1: Compare mobile routes to new Web routes**
 
@@ -916,9 +977,11 @@ Expected final result:
 
 1. Complete Task 1 and Task 2 first. This prevents architecture drift and makes existing test risk visible.
 2. Complete Task 3 before any child-owned feature. All later permissions depend on `familyId` and child ownership.
-3. Complete Task 4, Task 5 and Task 6 as separate commits. These are the core domain capabilities.
-4. Complete Task 8 before Task 9. Web pages should use the final route and API client shape.
-5. Complete Task 11 before mobile assessment. The demo flow is the real MVP acceptance test.
+3. Complete Task 4, then pass Task 4.5 before starting Task 5. The gate freezes requirements, architecture, API, traceability and Task 3/4 conformance.
+4. Complete Task 5 and Task 6 as separate commits after Task 4.5 approval. These are the remaining core domain capabilities.
+5. Complete Task 7 after the shared read repository in Task 6; notifications depend on that read boundary.
+6. Complete Task 8 before Task 9. Web pages should use the final route and API client shape.
+7. Complete Task 11 before mobile assessment. The demo flow is the real MVP acceptance test.
 
 ## Out of Scope for First Implementation Pass
 
@@ -931,3 +994,4 @@ Expected final result:
 - Complex RBAC management UI.
 - New microservices.
 - Production-grade scheduled jobs.
+- Repeating task templates, streaks and badges.
