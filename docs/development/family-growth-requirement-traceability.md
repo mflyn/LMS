@@ -15,12 +15,12 @@ Conformance values are `COVERED`, `PARTIAL`, `GAP`, and `PLANNED_TASK_5_PLUS`. T
 | `FR-CHILD-003` | 3 | 4 | 10.4 | 4.2, 6.1 | child PIN set | `User.js`, `familyController.js` | happy path only | PARTIAL | `FGT-T3-002` |
 | `FR-CHILD-004` | 3 | 4 | 10.4 | 3.3, 6.1 | child PIN login | `familyController.js`, `auth.js` | happy path only | GAP | `FGT-T3-004`, `FGT-T3-005`, `FGT-T3-006` |
 | `FR-CHILD-005` | 3 | 4 | 10.4 | 4.2 | PIN reset/token | `User.js`, `familyController.js`, `auth.js` | no stale-token test | GAP | `FGT-T3-003` |
-| `FR-TASK-001` | 4 | 4 | 10.4 | 4.3, ADR-0002 | task create | `GrowthTask.js`, `growthTasks.js` | `growthTasks.test.js` | PARTIAL | audit pending |
-| `FR-TASK-002` | 4 | 4 | 10.4 | 4.3, ADR-0003 | task create/edit | `GrowthTask.js`, `growthTasks.js` | `growthTasks.test.js` | PARTIAL | audit pending |
-| `FR-TASK-003` | 4 | 4 | 10.4 | 3.2, 4.3 | task list/detail | `growthTasks.js` | `growthTasks.test.js` | GAP | audit pending |
-| `FR-TASK-004` | 4 | 4 | 10.4 | GrowthTask state machine | task complete | `growthTasks.js` | `growthTasks.test.js` | PARTIAL | audit pending |
-| `FR-TASK-005` | 4 | 4 | 10.4 | GrowthTask state machine | task confirm | `growthTasks.js` | `growthTasks.test.js` | PARTIAL | audit pending |
-| `FR-TASK-006` | 4 | 4 | 10.4 | ADR-0004 | task edit/delete | `GrowthTask.js`, `growthTasks.js` | `growthTasks.test.js` | GAP | audit pending |
+| `FR-TASK-001` | 4 | 4 | 10.4 | 4.3, ADR-0002 | task create | `GrowthTask.js`, `growthTasks.js` | five dimensions and cross-family create pass | COVERED | none |
+| `FR-TASK-002` | 4 | 4 | 10.4 | 4.3, ADR-0003 | task create/edit | `GrowthTask.js`, `growthTasks.js` | field create tests pass; LocalDate fails design | PARTIAL | `FGT-T4-001` |
+| `FR-TASK-003` | 4 | 4 | 10.4 | 3.2, 4.3 | task list/detail | `growthTasks.js` | valid filter tests only | GAP | `FGT-T4-001`, `FGT-T4-003`, `FGT-T4-005`, `FGT-T4-006` |
+| `FR-TASK-004` | 4 | 4 | 10.4 | GrowthTask state machine | task complete | `growthTasks.js` | child completion passes; cross-family missing | PARTIAL | `FGT-T4-006` |
+| `FR-TASK-005` | 4 | 4 | 10.4 | GrowthTask state machine | task confirm | `growthTasks.js` | parent/child role tests pass; cross-family missing | PARTIAL | `FGT-T4-006` |
+| `FR-TASK-006` | 4 | 4 | 10.4 | ADR-0004 | task edit/delete | `GrowthTask.js`, `growthTasks.js` | repeat rejection and delete/archive tests missing | GAP | `FGT-T4-002`, `FGT-T4-006` |
 | `FR-LOG-001` | 5 | 5 | 10.4 | 4.4 | growth logs | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
 | `FR-POINT-001` | 5 | 5 | 10.4 | 4.5 | knowledge points | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
 | `FR-MISTAKE-001` | 6 | 6 | 10.4 | 4.6 | mistakes | `analytics-service` planned | planned Task 6 | PLANNED_TASK_5_PLUS | none |
@@ -28,8 +28,8 @@ Conformance values are `COVERED`, `PARTIAL`, `GAP`, and `PLANNED_TASK_5_PLUS`. T
 | `FR-REWARD-001` | 5 | 5 | 10.4 | 4.8, ADR-0005 | task confirm/stars | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
 | `FR-REWARD-002` | 5 | 5 | 10.4 | 4.8, ADR-0005 | rewards | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
 | `FR-NOTIFY-001` | 7 | 7 | 10.4 | 3.1, ADR-0001 | notifications | `notification-service` planned | planned Task 7 | PLANNED_TASK_5_PLUS | none |
-| `NFR-SEC-001` | 3 | 4 | 10.4 | 5/6, ADR-0002 | all family APIs | family controllers/routes | Task 3 database ownership tests pass | COVERED | none for Task 3 |
+| `NFR-SEC-001` | 3 | 4 | 10.4 | 5/6, ADR-0002 | all family APIs | family controllers/routes | Task 3 passes; Task 4 only create denial tested | PARTIAL | `FGT-T4-006` |
 | `NFR-SEC-002` | 4 | 4 | 10.4 | 3.3, ADR-0006 | gateway envelope | `gateway/server.js`, `common/middleware/auth.js` | no dedicated suite | GAP | audit pending |
-| `NFR-DATA-001` | 3 | 4 | 10.4 | 4/5, ADR-0002 | all child data APIs | Family/User/GrowthTask | Task 3 child records carry both IDs | COVERED | Task 4 audit pending |
-| `NFR-TIME-001` | 4 | 4 | 10.4 | 3.2, ADR-0003 | family/task dates | `Family.js`, `GrowthTask.js`, routes | no family timezone evidence | GAP | `FGT-T3-001`; Task 4 audit pending |
+| `NFR-DATA-001` | 3 | 4 | 10.4 | 4/5, ADR-0002 | all child data APIs | Family/User/GrowthTask | records carry both IDs; one task index omits family | PARTIAL | `FGT-T4-004` |
+| `NFR-TIME-001` | 4 | 4 | 10.4 | 3.2, ADR-0003 | family/task dates | `Family.js`, `GrowthTask.js`, routes | BSON Date and server-local range | GAP | `FGT-T3-001`, `FGT-T4-001` |
 | `NFR-COMPAT-001` | 3 | 4 | 10.4 | 7 | legacy and family routes | legacy plus new route modules | baseline full suite | COVERED | no deletion observed |
