@@ -116,6 +116,10 @@ if (config.serviceHosts.homework) {
   app.use('/api/homework', authenticateToken, proxy(config.serviceHosts.homework, {
     proxyReqPathResolver: (req) => `/api/homework${req.url}`
   }));
+
+  app.use('/api/growth-tasks', authenticateToken, proxy(config.serviceHosts.homework, {
+    proxyReqPathResolver: (req) => `/api/growth-tasks${req.url}`
+  }));
 }
 
 if (config.serviceHosts.progress) {

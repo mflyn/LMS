@@ -64,11 +64,13 @@ if (process.env.NODE_ENV !== 'test') {
 
 // 导入路由
 const homeworkRoutes = require('./routes/homework');
+const growthTaskRoutes = require('./routes/growthTasks');
 
 // 使用路由
 // 注意：认证中间件 authenticateGateway 应该在这里全局应用，或者在 homeworkRoutes 内部的每个路由上应用
 // 为简化，暂时先不在 server.js 全局应用，而是期望在 routes/homework.js 中按需应用
 app.use('/api/homework', homeworkRoutes);
+app.use('/api/growth-tasks', growthTaskRoutes);
 
 // 使用共享的错误处理中间件
 app.use(errorHandler);
@@ -95,32 +97,11 @@ async function connectRabbitMQ() {
   }
 }
 
-// 启动服务器
-const PORT = process.env.PORT || 3002;
-const server = app.listen(PORT, async () => {
-  logger.info(`作业服务运行在端口 ${PORT}`);
-
-  // 在非测试环境下连接到RabbitMQ
-  if (process.env.NODE_ENV !== 'test') {
-    try {
-      const mq = await connectRabbitMQ();
-      if (mq) {
-        app.locals.mq = mq;
-      } else {
-        // 如果RabbitMQ连接是关键的，服务启动时连接失败应该导致服务启动失败
-        logger.error('RabbitMQ未能成功初始化，服务可能功能不完整');
-        // throw new Error('Failed to initialize RabbitMQ connection during startup');
-      }
-    } catch (err) {
-        logger.error('启动时连接RabbitMQ失败', { message: err.message, stack: err.stack });
-        // 根据策略决定是否退出
-        // process.exit(1);
-    }
-  } else {
-    // 在测试环境中使用模拟的MQ
+const initializeMessageQueue = async () => {
+  if (process.env.NODE_ENV === 'test') {
     app.locals.mq = {
       channel: {
-        publish: (exchange, routingKey, content, options) => {
+        publish: (exchange, routingKey) => {
           logger.info(`[TEST] 发布消息到 ${exchange}.${routingKey}`);
           return true;
         }
@@ -128,21 +109,44 @@ const server = app.listen(PORT, async () => {
       exchange: 'homework.events'
     };
     logger.info('测试环境，使用模拟的RabbitMQ');
+    return;
   }
-});
 
-process.on('SIGTERM', () => {
-  logger.info('收到 SIGTERM 信号，开始优雅关闭...');
-  server.close(() => {
-    logger.info('HTTP服务器已关闭');
-    mongoose.connection.close(false).then(() => {
-      logger.info('MongoDB连接已关闭');
-      process.exit(0);
-    }).catch(err => {
-      logger.error('关闭MongoDB连接时出错', { message: err.message });
-      process.exit(1);
+  try {
+    const mq = await connectRabbitMQ();
+    if (mq) {
+      app.locals.mq = mq;
+    } else {
+      logger.error('RabbitMQ未能成功初始化，服务可能功能不完整');
+    }
+  } catch (err) {
+    logger.error('启动时连接RabbitMQ失败', { message: err.message, stack: err.stack });
+  }
+};
+
+let server;
+if (require.main === module) {
+  const PORT = process.env.PORT || 3002;
+  server = app.listen(PORT, async () => {
+    logger.info(`作业服务运行在端口 ${PORT}`);
+    await initializeMessageQueue();
+  });
+
+  process.on('SIGTERM', () => {
+    logger.info('收到 SIGTERM 信号，开始优雅关闭...');
+    server.close(() => {
+      logger.info('HTTP服务器已关闭');
+      mongoose.connection.close(false).then(() => {
+        logger.info('MongoDB连接已关闭');
+        process.exit(0);
+      }).catch(err => {
+        logger.error('关闭MongoDB连接时出错', { message: err.message });
+        process.exit(1);
+      });
     });
   });
-});
+} else if (process.env.NODE_ENV === 'test') {
+  initializeMessageQueue();
+}
 
 module.exports = app;
