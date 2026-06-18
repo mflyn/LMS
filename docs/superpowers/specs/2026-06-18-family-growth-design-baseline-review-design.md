@@ -28,6 +28,7 @@
 | `docs/development/family-growth-requirement-traceability.md` | 需求到设计、API、代码和测试的映射 | Task 3/4 不得存在无需求代码或无验证需求 |
 | `docs/development/family-growth-test-strategy.md` | 分层测试、环境、数据、质量门禁和遗留失败策略 | 明确单元、契约、集成、端到端和安全测试责任 |
 | `docs/development/family-growth-design-review.md` | 评审发现、整改项、签署和版本 | 所有阻断问题关闭后才能批准进入 Task 5 |
+| `docs/development/family-growth-baseline-manifest.md` | 冻结基线版本、内容哈希、状态和签署 | 唯一权威的基线状态登记；必须绑定不可变 Git 提交 |
 
 ## 4. 需求编号与验收规则
 
@@ -44,7 +45,18 @@
 - `FR-NOTIFY-*`：家庭提醒。
 - `NFR-SEC-*`、`NFR-DATA-*`、`NFR-TIME-*`、`NFR-COMPAT-*`：安全、数据、日期时区和兼容性要求。
 
-每条需求必须包含：目标角色、前置条件、触发动作、正常结果、异常结果、权限边界和可观察验收标准。不能用“支持”“适当”“必要时”等无法验证的词作为验收条件。
+每条需求必须包含：
+
+- 稳定需求编号和标题。
+- `plannedTask`：首次计划实现的任务编号，例如 `3`、`4`、`5`；尚未排入当前计划时使用 `later`，不得留空。
+- `gateAtTask`：该需求最晚在哪个任务开始前必须验证；跨领域非功能需求必须填写，普通功能需求默认等于 `plannedTask`。
+- `deliveryPhase`：`baseline`、`mvp` 或 `later`。
+- `implementationStatus`：`planned`、`implemented`、`verified` 或 `deferred`。
+- 目标角色、前置条件和触发动作。
+- 正常结果、异常结果和权限边界。
+- 可观察验收标准及对应测试层级。
+
+不能用“支持”“适当”“必要时”等无法验证的词作为验收条件。`plannedTask` 一经批准不得为了掩盖延期而直接改大；调整必须记录变更原因和批准人。
 
 ## 5. 详细设计最低要求
 
@@ -68,6 +80,15 @@
 
 孩子 PIN 设计必须覆盖哈希存储、失败限流、错误信息收敛、token 有效期和 PIN 重置后的 token 失效。
 
+网关到下游服务的信任边界必须同时满足：
+
+- gateway 在转发前删除客户端提供的 `x-user-id`、`x-user-role`、`x-user-name` 和所有内部服务认证头，再根据已验证 token 重新生成身份信息。
+- 下游服务不得仅凭 `x-user-*` 头信任调用者。第一阶段采用 gateway 签名的身份信封，至少覆盖 HTTP 方法、规范化路径、用户 ID、角色、时间戳和随机 nonce；下游使用独立服务密钥验签，并拒绝过期或重复 nonce。未来可以等价替换为 mTLS 或下游直接验证用户 JWT。
+- 内部命令接口使用独立的服务凭据，不能接受普通家长或孩子 token。
+- 网络隔离只能作为纵深防御，不能替代请求级服务认证。
+
+安全测试至少覆盖：客户端伪造的 `x-user-*` 被 gateway 覆盖；直接访问下游并伪造身份头被拒绝；签名篡改、过期时间戳和 nonce 重放被拒绝；合法 gateway 请求仍能通过。任何一项失败均为 `BLOCKER`。
+
 ### 5.4 日期与时区
 
 所有业务日期必须说明使用家庭时区还是 UTC。`today`、自然周边界、起止日包含规则和时间戳序列化必须形成统一契约，并有跨午夜和跨周测试。
@@ -87,6 +108,10 @@
 5. 将已有测试映射到需求编号，标记缺失的正常、异常和越权测试。
 6. 记录差异的严重级别、整改文件、验证命令和处理状态。
 
+本轮实现符合性门禁只覆盖 `plannedTask` 为 `3` 或 `4` 的功能需求，以及明确标记 `gateAtTask=4` 的跨领域非功能需求。`plannedTask>=5` 的需求仍需完成设计和验收标准，但“尚未实现”不能记为 Task 3/4 的 `MAJOR`。如果 Task 3/4 已提前实现后续需求，则必须映射并进行安全、兼容性检查；只有它与当前基线冲突或破坏现有行为时才阻断门禁。
+
+追踪矩阵必须分别给出：`requirementId`、`plannedTask`、`gateAtTask`、设计章节、API、代码、测试、符合性结论和差异编号。没有 `plannedTask` 的需求不得进入符合性统计。
+
 严重级别：
 
 - `BLOCKER`：越权、数据隔离失败、不可恢复的数据错误或核心契约冲突，必须在进入 Task 5 前修复。
@@ -95,7 +120,49 @@
 
 ## 7. 评审流程与状态
 
-文档状态只允许：`DRAFT`、`IN_REVIEW`、`APPROVED`、`SUPERSEDED`。
+### 7.1 权威状态与元数据
+
+文档状态只允许：`DRAFT`、`IN_REVIEW`、`APPROVED`、`SUPERSEDED`。权威状态保存在 `docs/development/family-growth-baseline-manifest.md`，而不是依赖各文档中可能过期的文字标签。
+
+清单中每份被评审的内容文档必须记录：
+
+- `documentId`、路径和文档版本。
+- 候选基线 Git commit SHA。
+- 文件内容 SHA-256。
+- 当前状态和状态更新时间。
+- `owner`、`author`、`reviewers`、`approvers`。
+- 未关闭风险和对应评审记录。
+
+manifest 不记录自身 SHA-256；它的完整性由包含它的 Git commit 和 annotated tag 保证，避免自引用。
+
+角色职责：
+
+- `owner` 维护文档并发起评审。
+- 产品批准人批准产品范围和需求；技术批准人批准架构、ADR 和 API；质量批准人批准测试策略和验证证据。
+- 基线批准人确认全部准入条件并签署整体基线。一个人可以承担多个角色，但必须分别填写角色字段；多人项目中，作者不得作为自己文档的唯一 reviewer。单维护者项目必须在清单中记录 `singleMaintainerException` 和自审依据。
+
+### 7.2 状态转换
+
+只允许以下转换：
+
+- `DRAFT -> IN_REVIEW`：owner 已生成候选提交、完成自检并指定 reviewer。
+- `IN_REVIEW -> DRAFT`：出现内容修改请求；修改后必须生成新的候选提交和哈希。
+- `IN_REVIEW -> APPROVED`：所需批准人已签署，阻断问题关闭，验证证据完整。
+- `APPROVED -> SUPERSEDED`：新的基线已获批准并明确替代旧基线。
+
+禁止直接从 `DRAFT` 进入 `APPROVED`，也禁止修改已批准候选提交中的文件后继续沿用原批准状态。
+
+### 7.3 不可变基线生成
+
+为避免清单记录自身提交造成自引用，批准过程使用三个阶段：
+
+1. 在工作区干净且 `git diff --check` 通过后，提交所有候选内容文档，得到 `candidateCommit`。
+2. 在独立的 review-open commit 中创建或更新 manifest 和评审记录，将状态设为 `IN_REVIEW`，写入 `candidateCommit` 和各内容文件 SHA-256。reviewer 只审查该候选提交；任何内容修改都产生新的候选提交、哈希和 review-open commit。
+3. 所需批准人签署后，在独立的 approval commit 中把 manifest 状态更新为 `APPROVED`，写入签署人和最终验证结果；随后在该 approval commit 上创建 annotated tag，例如 `family-growth-baseline-v1`。
+
+基线批准时必须确认候选提交中的文件哈希与 manifest 完全一致；创建 approval commit 和 tag 前，当前工作区及暂存区必须干净。存在未提交修改或哈希不一致时禁止批准。
+
+### 7.4 评审顺序
 
 评审按以下顺序进行：
 
@@ -104,7 +171,7 @@
 3. API 评审：确认公开接口、错误码、幂等、分页和兼容规则。
 4. 测试评审：确认每项需求都有对应验证层级和命令。
 5. Task 3/4 符合性审查：完成差异登记与阻断项整改。
-6. 基线签署：记录文档版本、评审人、日期、结论和遗留风险。
+6. 基线签署：生成 approval commit 和 annotated baseline tag，记录候选提交、文件哈希、评审人、日期、结论和遗留风险。
 
 任何基线文档在批准后发生语义变化，都必须通过新的 ADR 或评审记录说明原因，并同步追踪矩阵和测试策略。
 
@@ -114,13 +181,15 @@
 
 - 产品、架构和 API 文档状态均为 `APPROVED`。
 - 所有 MVP 需求都有编号和验收标准。
-- Task 3/4 需求在追踪矩阵中覆盖到代码和测试。
+- 所有需求均标注 `plannedTask`；Task 3/4 需求在追踪矩阵中覆盖到代码和测试。
 - Task 3/4 的 `BLOCKER` 和 `MAJOR` 差异为零。
 - 定向测试通过；遗留全量测试失败已在基线报告中分类，且没有新增回归。
-- `git diff --check` 通过，评审记录完成签署。
+- gateway 身份信封和伪造身份头安全测试通过。
+- `git diff --check` 通过，manifest 中的候选文件哈希已核验，创建 tag 前工作区及暂存区干净。
+- 评审记录完成签署，approval commit 和 annotated baseline tag 已创建。
 
 ## 9. 本阶段产出边界
 
-本阶段将更新现有产品、架构、API 和实施计划，新增 ADR、追踪矩阵、测试策略和评审记录。代码整改必须根据差异清单另列实施步骤并使用 TDD，不与纯文档基线提交混合。
+本阶段将更新现有产品、架构、API 和实施计划，新增 ADR、追踪矩阵、测试策略、评审记录和 baseline manifest。代码整改必须根据差异清单另列实施步骤并使用 TDD，不与纯文档候选基线提交混合。
 
 本规范获书面确认后，下一步是编写可逐项执行的设计基线评审实施计划；实施计划完成后，先执行文档基线和 Task 3/4 审查，再决定是否需要代码整改。
