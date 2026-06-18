@@ -12,8 +12,8 @@
 | Product requirements | IN_REVIEW | not-approved | unassigned | pending |
 | Architecture design and ADRs | IN_REVIEW | not-approved | unassigned | pending |
 | API contract | IN_REVIEW | not-approved | unassigned | pending |
-| Test strategy | DRAFT | not-approved | unassigned | pending |
-| Traceability matrix | DRAFT | not-approved | unassigned | pending |
+| Test strategy | IN_REVIEW | not-approved | Codex | 2026-06-18 |
+| Traceability matrix | IN_REVIEW | not-approved | Codex | 2026-06-18 |
 
 ## Finding Rules
 
