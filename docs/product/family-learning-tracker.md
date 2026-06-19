@@ -2,7 +2,7 @@
 
 **Document status:** APPROVED
 **Baseline candidate:** FGT-MVP-1
-**Last reviewed:** 2026-06-18
+**Last reviewed:** 2026-06-19
 **Change control:** Semantic changes require a review record and traceability update.
 
 ## 1. 背景与定位
@@ -124,9 +124,9 @@
 
 | 维度 | 说明 | 示例任务 |
 | --- | --- | --- |
-| 德育 | 品德、习惯、责任感、情绪和社交行为 | 主动整理书包、礼貌表达、遵守约定、情绪复盘 |
+| 德育 | 品德、习惯、责任感、情绪、社交行为和作息习惯 | 主动整理书包、礼貌表达、遵守约定、按时睡觉、情绪复盘 |
 | 智育 | 课内学习、课外阅读、知识点、错题和思维训练 | 数学练习、英语阅读、科学实验、错题订正 |
-| 体育 | 体能、运动技能、户外活动和健康作息 | 跳绳、跑步、游泳、篮球、早睡打卡 |
+| 体育 | 体能、运动技能和户外活动 | 跳绳、跑步、游泳、篮球、户外徒步 |
 | 美育 | 音乐、美术、审美、表达和创造 | 练琴、画画、手工、观展、朗诵 |
 | 劳育 | 家务、劳动技能、生活自理和服务意识 | 洗碗、整理房间、做饭准备、照顾植物 |
 
@@ -154,14 +154,14 @@
 - 优先级。
 - 是否重复：每天、每周、自定义（第二阶段能力）。
 - 任务说明。
-- 附件或图片，作为可选能力。
+- 附件或图片，第一阶段只允许引用已上传且属于本家庭的私有媒体资源。
 
 孩子可以处理任务：
 
 - 查看今日任务。
 - 标记完成。
 - 填写实际用时。
-- 上传完成照片。
+- 上传完成照片；上传前校验类型和大小，展示时使用短时效授权地址。
 - 记录难度感受。
 - 标记是否需要家长帮助。
 
@@ -328,6 +328,16 @@
 - 德育目标“按时睡觉”完成 4/7 天
 - 下周建议保持数学错题复习，增加 2 次户外运动，固定周三和周六做劳动任务
 ```
+
+#### 周报统计口径
+
+- `weekStart` 必须是家庭时区中的周一，`weekEnd=weekStart+6 天`，区间包含两端。
+- 计划任务分母是 `dueDate` 位于该周、且在该周结束时已创建的任务；在该周结束前取消的任务不计入，在周结束后取消的任务仍保留在历史分母中。
+- 完成任务分子只统计分母内且 `completedAt` 不晚于该周结束瞬间的任务；跨周补完成不会回写历史周完成率。
+- `taskCompletionRate=completedTaskCount/plannedTaskCount`；分母为 0 时返回 `null`，不能返回伪造的 `0%` 或 `100%`。
+- 总成长时长和各维度时长只汇总 `GrowthLog.durationMinutes`，不再叠加任务 `actualMinutes`，避免同一次活动重复计时。
+- 错题数量统计该周创建的错题；待复习知识点取截至周末仍未掌握且复习日不晚于周末的记录。
+- 已结束自然周的统计字段首次生成后冻结；仅家长反馈和孩子周反思可继续更新。当前周允许按源数据重新计算。
 
 ### 5.8 家长反馈与孩子自评
 
@@ -633,7 +643,7 @@
 - familyId。
 - name。
 - grade。
-- avatar。
+- avatarMediaId。
 - subjects。
 - createdAt。
 
@@ -660,6 +670,8 @@
 - difficulty。
 - parentConfirmed。
 - starAwardState：not_applicable、pending、awarded。
+- attachmentMediaIds。
+- completedAt、confirmedAt、cancelledAt。
 
 ### 9.5 GrowthLog
 
@@ -694,7 +706,7 @@
 - dimension：固定为 academic。
 - subject。
 - knowledgePoint。
-- imageUrl。
+- questionMediaId、childAnswerMediaId。
 - reason。
 - corrected。
 - reviewDates。
@@ -745,6 +757,32 @@
 
 同一个任务确认或奖励兑换只能产生一条对应流水，余额由流水求和得到。第一阶段每个首次确认的任务固定发放 1 颗星。
 
+### 9.10 ReminderSettings
+
+- `familyId`
+- `weeklyReportDay: 1..7`，ISO 星期，默认 `7`（周日）
+- `taskReminderEnabled`
+- `overdueReminderEnabled`
+- `mistakeReviewReminderEnabled`
+- `dimensionReminderEnabled`
+- `weeklyReportReminderEnabled`
+- `quietHoursStart`、`quietHoursEnd`，家庭本地时间 `HH:mm`
+- `updatedByParentId`
+
+提醒设置每个家庭唯一。第一阶段提醒仍按读取时派生，不发送推送；所有“今天”和周报日判断使用家庭 IANA 时区。
+
+### 9.11 MediaAsset
+
+- `familyId`
+- `childId`，头像可为空
+- `purpose: avatar|task_attachment|task_completion|mistake_question|mistake_answer|growth_evidence`
+- `storageKey`，服务端生成且不可由客户端指定
+- `originalName`、`mimeType`、`sizeBytes`
+- `status: active|deleted`
+- `createdBy`、`createdAt`、`deletedAt`
+
+媒体默认私有，只通过短时效授权下载地址读取。第一阶段仅接受 JPEG、PNG、WebP，单文件最大 10 MiB；服务端移除 EXIF 元数据，不允许 SVG、可执行内容或公开永久 URL。删除采用软删除，资源解除引用后保留 30 天再物理清理；孩子只能上传自己的任务完成、错题和成长证据，家长可以管理本家庭全部媒体。
+
 ## 10. MVP 功能清单
 
 ### 10.1 家长端 MVP
@@ -790,6 +828,15 @@
 
 日期类业务字段统一按家庭时区解释。家庭保存 IANA 时区，默认 `Asia/Shanghai`；周报按周一至周日统计，日期区间包含起止日。
 
+#### 前端流程与通用状态验收
+
+- 家长 Web 端包含注册/登录、家庭初始化、孩子切换、首页、任务、记录、错题、成长、进度、孩子和设置路由；刷新受保护路由后保持合法会话，未登录访问统一跳转登录页。
+- 孩子入口包含家庭与孩子选择、PIN 登录、今天、错题、成就和我的；孩子 token 不能进入任何家长路由，退出后清除本地凭据并返回孩子登录页。
+- 所有依赖孩子上下文的家长页面使用同一个孩子切换器；切换时取消旧请求并清空旧孩子缓存，不能短暂展示上一孩子的数据。
+- 列表和面板必须分别提供加载、空数据、可重试错误和部分降级状态；提交操作防重复并显示成功或稳定错误码对应的信息。
+- 支持 360px 至桌面宽度，键盘可完成登录、切换孩子、创建/完成/确认任务和记录错题；表单控件有可访问名称，状态不只依赖颜色表达。
+- 端到端验收覆盖：家长注册并创建家庭和孩子 -> 创建五育任务 -> 孩子 PIN 登录完成任务 -> 家长确认 -> 记录成长/错题 -> 查看周报、提醒、星星和奖励。
+
 ### 10.4 MVP Requirements and Acceptance Criteria
 
 `plannedTask` 表示首次计划实现该需求的任务，`gateAtTask` 表示最晚必须完成验证的任务门禁。批准后如需调整任务编号，必须在评审记录中说明原因和批准人，不能通过直接调大任务编号掩盖延期。
@@ -805,23 +852,30 @@
 | `FR-CHILD-004` | 孩子 PIN 登录 | 3 | 4 | baseline | implemented | 家庭、孩子和 PIN 已配置 | 提交 familyId、childId 和 PIN | 正确凭据返回有效期不超过 12 小时的孩子 token；错误统一返回 `401 INVALID_CHILD_CREDENTIALS`；同一 IP、家庭和孩子 15 分钟内 5 次失败后返回 `429`。 |
 | `FR-CHILD-005` | PIN 重置撤销 token | 3 | 4 | baseline | implemented | 家长拥有目标孩子 | 重置孩子 PIN | `tokenVersion` 增加；旧孩子 token 后续请求返回 `401`；新 PIN 可重新登录。 |
 | `FR-TASK-001` | 创建五育任务 | 4 | 4 | baseline | implemented | 家长拥有目标孩子 | 创建单次成长任务 | 德智体美劳五个维度均可创建；跨家庭返回 `403`；缺少必填字段返回稳定 `400` 错误码。 |
-| `FR-TASK-002` | 记录任务目标 | 4 | 4 | baseline | implemented | 家长拥有目标孩子 | 填写任务内容 | 保存 LocalDate 截止日、预计时长、目标数量和单位、优先级、说明及可选附件元数据。 |
+| `FR-TASK-002` | 记录任务目标 | 4 | 4 | baseline | implemented | 家长拥有目标孩子 | 填写任务内容 | 保存 LocalDate 截止日、预计时长、目标数量和单位、优先级及说明；附件只在 FR-MEDIA-001 上线后接受经授权的 mediaId，上线前返回 `400 MEDIA_NOT_ENABLED`。 |
 | `FR-TASK-003` | 查询成长任务 | 4 | 4 | baseline | implemented | 家长拥有孩子或孩子本人登录 | 按状态、维度、today 或 week 查询 | 只返回可访问孩子的数据；today 使用家庭时区；week 为周一到周日且包含两端；列表分页。 |
 | `FR-TASK-004` | 完成成长任务 | 4 | 4 | baseline | implemented | 可访问任务处于 pending 或 completed | 家长或孩子提交完成反馈 | 保存实际时长/数量、难度、求助标记和孩子备注并进入 completed；confirmed/archived 返回 `409`。 |
 | `FR-TASK-005` | 家长确认任务 | 4 | 4 | baseline | implemented | 家长拥有处于 completed 的任务 | 提交家长反馈 | 任务进入 confirmed 并记录时间；孩子确认或跨家庭确认返回 `403`；非法状态返回 `409`。 |
-| `FR-TASK-006` | 删除归档与拒绝重复规则 | 4 | 4 | baseline | implemented | 家长拥有目标任务 | 删除任务或提交 repeatRule | pending 任务物理删除；completed/confirmed 任务归档；MVP 对 repeatRule 返回 `400 REPEAT_RULE_NOT_SUPPORTED`。 |
-| `FR-LOG-001` | 记录五育过程 | 5 | 5 | mvp | planned | 家长拥有孩子或孩子本人登录 | 创建或更新成长记录 | 五个维度均可记录日期、内容、时长/数量和反思；字段按角色授权；跨家庭返回 `403`。 |
-| `FR-POINT-001` | 管理知识与能力点 | 5 | 5 | mvp | planned | 家长拥有目标孩子 | 创建、更新或查询能力点 | 支持智育知识、体育能力、美育练习、劳动技能和德育习惯，并可按维度及科目/领域筛选。 |
+| `FR-TASK-006` | 取消归档与拒绝重复规则 | 4 | 4 | baseline | implemented | 家长拥有目标任务 | 删除任务或提交 repeatRule | pending 任务软取消为 cancelled 并记录 cancelledAt；completed/confirmed 任务归档；任何任务均不物理删除；MVP 对 repeatRule 返回 `400 REPEAT_RULE_NOT_SUPPORTED`。 |
+| `FR-LOG-001` | 记录五育过程 | 5 | 5 | mvp | implemented | 家长拥有孩子或孩子本人登录 | 创建或更新成长记录 | 五个维度均可记录日期、内容、时长/数量和反思；字段按角色授权；跨家庭返回 `403`。 |
+| `FR-POINT-001` | 管理知识与能力点 | 5 | 5 | mvp | implemented | 家长拥有目标孩子 | 创建、更新或查询能力点 | 支持智育知识、体育能力、美育练习、劳动技能和德育习惯，并可按维度及科目/领域筛选。 |
 | `FR-MISTAKE-001` | 管理智育错题 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 创建、订正或查询错题 | 只接受 academic 维度；记录错因、知识点、订正和复习日期；跨家庭返回 `403`。 |
-| `FR-REPORT-001` | 生成成长周报 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 查询周一开始的自然周 | 确定性汇总五育任务、时长、错题和反馈；必需数据源失败返回 `503 AGGREGATION_UNAVAILABLE`，不得静默按零处理。 |
-| `FR-REWARD-001` | 确认任务发放星星 | 5 | 5 | mvp | planned | 家长首次确认已完成任务 | 确认任务或重试确认 | 以 taskId 幂等写入一条 1 星 earn 流水；重复确认不重复发放；暂时失败保留 pending 并返回 `503`。 |
-| `FR-REWARD-002` | 兑换家庭奖励 | 5 | 5 | mvp | planned | 家长拥有孩子且余额充足 | 使用幂等键确认兑换 | 在事务中写 spend 流水并更新奖励；余额不足返回 `409 INSUFFICIENT_STARS`；重试不能重复扣减。 |
+| `FR-REPORT-001` | 生成成长周报 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 查询周一开始的自然周 | 按 5.7 固定公式汇总五育任务、GrowthLog 时长、错题和反馈；历史周不受周末后的取消或补完成影响；必需数据源失败返回 `503 AGGREGATION_UNAVAILABLE`。 |
+| `FR-MEDIA-001` | 上传和读取私有图片 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 上传头像、任务、错题或成长证据并请求读取 | 只接受允许的 purpose、MIME 和 10 MiB 上限；去除 EXIF；返回 mediaId 和短时效授权 URL；跨家庭和非法引用返回 `403`。 |
+| `FR-MEDIA-002` | 删除和清理私有图片 | 6 | 6 | mvp | planned | 家长拥有媒体或孩子拥有本人媒体 | 删除媒体 | 标记 deleted 后立即不可读取和新建引用；解除引用后保留 30 天清理；审计记录不包含原图内容或授权 URL。 |
+| `FR-REWARD-001` | 确认任务发放星星 | 5 | 5 | mvp | implemented | 家长首次确认已完成任务 | 确认任务或重试确认 | 以 taskId 幂等写入一条 1 星 earn 流水；重复确认不重复发放；暂时失败保留 pending 并返回 `503`。 |
+| `FR-REWARD-002` | 兑换家庭奖励 | 5 | 5 | mvp | implemented | 家长拥有孩子且余额充足 | 使用幂等键确认兑换 | 在事务中写 spend 流水并更新奖励；余额不足返回 `409 INSUFFICIENT_STARS`；重试不能重复扣减。 |
 | `FR-NOTIFY-001` | 派生家庭提醒 | 7 | 7 | mvp | planned | 家长拥有孩子或孩子本人登录 | 查询家庭提醒 | 返回今日任务、未完成、复习、锻炼、习惯和周报提醒；部分源失败时声明 `meta.partial` 和不可用来源。 |
+| `FR-NOTIFY-002` | 配置家庭提醒 | 7 | 7 | mvp | planned | 家长属于目标家庭 | 读取或更新提醒设置 | 保存各提醒开关、ISO 周报日和安静时段；孩子只读；日期判断使用家庭时区；同一提醒类型、孩子和 LocalDate 只返回一条。 |
+| `FR-UI-001` | 家长 Web 应用壳 | 8 | 9 | mvp | planned | 家长已登录或需要初始化家庭 | 导航、刷新、切换孩子和加载页面 | 受保护路由、家庭初始化、统一孩子上下文、加载/空/错误/部分降级状态均按 10.3 验收；学校版入口不出现在家庭导航。 |
+| `FR-UI-002` | 孩子简化 Web 入口 | 10 | 10 | mvp | planned | 孩子具有有效 PIN | 登录、导航、完成任务和退出 | 只展示本人数据和允许动作；家长路由不可达；PIN 失败和过期 token 显示可恢复状态；退出清除 token。 |
+| `FR-FLOW-001` | 家庭成长端到端闭环 | 11 | 11 | mvp | planned | 空白家庭账号 | 执行第一阶段演示流程 | 自动化覆盖 10.3 所述完整闭环、跨角色切换、图片私有访问、周报确定性、提醒去重及星星兑换幂等。 |
 | `NFR-SEC-001` | 家庭数据授权 | 3 | 4 | baseline | implemented | 任意家庭数据请求 | 携带身份和资源参数 | 服务端从认证身份及资源归属推导 familyId；请求中的 familyId 不能单独授权；跨家庭访问返回 `403`。 |
 | `NFR-SEC-002` | 网关身份信封 | 4 | 4 | baseline | implemented | 请求经过 gateway 或直接访问下游 | 转发或验证身份 | gateway 删除客户端身份头并签名方法、路径、用户、角色、时间戳和 nonce；下游拒绝伪造、篡改、过期和重放请求。 |
-| `NFR-SEC-003` | 内部服务命令认证 | 5 | 5 | mvp | planned | homework-service 调用星星发放命令 | 提交任务确认来源 | 内部接口不经 gateway，对至少 32 字节的独立服务令牌做恒定时间比较；缺失或错误凭据返回 `401 INVALID_SERVICE_CREDENTIAL`，普通用户 token 不能授权。 |
+| `NFR-SEC-003` | 内部服务命令认证 | 5 | 5 | mvp | implemented | homework-service 调用星星发放命令 | 提交任务确认来源 | 内部接口不经 gateway，对至少 32 字节的独立服务令牌做恒定时间比较；缺失或错误凭据返回 `401 INVALID_SERVICE_CREDENTIAL`，普通用户 token 不能授权。 |
 | `NFR-DATA-001` | 家庭数据归属 | 3 | 4 | baseline | implemented | 创建或查询孩子数据 | 写入或读取记录 | 每条孩子数据同时保存 familyId 和 childId；列表与详情查询都包含两者的归属约束。 |
-| `NFR-DATA-002` | 星星和奖励一致性 | 5 | 5 | mvp | planned | 确认任务或兑换奖励 | 首次执行、并发执行或重试 | 任务确认以 taskId 幂等发放一条 earn；兑换在副本集事务中检查余额、写 spend 并更新奖励；任何失败不产生重复或半完成结果。 |
+| `NFR-DATA-002` | 星星和奖励一致性 | 5 | 5 | mvp | implemented | 确认任务或兑换奖励 | 首次执行、并发执行或重试 | 任务确认以 taskId 幂等发放一条 earn；兑换在副本集事务中检查余额、写 spend 并更新奖励；任何失败不产生重复或半完成结果。 |
+| `NFR-PRIVACY-001` | 未成年人媒体隐私 | 6 | 6 | mvp | planned | 上传、读取或删除孩子媒体 | 任一媒体操作 | 对象默认私有、授权 URL 短时效、移除 EXIF、日志脱敏、按 familyId+childId 授权，并执行软删除和 30 天清理策略。 |
 | `NFR-TIME-001` | 日期与时区一致性 | 4 | 4 | baseline | implemented | 处理业务日期或事件时间 | 创建任务或按日期查询 | 业务日期使用家庭时区的 `YYYY-MM-DD`；事件时间使用 UTC ISO 8601；跨午夜和周边界结果确定。 |
 | `NFR-COMPAT-001` | 学校版兼容 | 3 | 4 | baseline | implemented | 家庭版能力上线或回滚 | 启用/停用家庭路由 | 旧学校模型和路由不被删除且不进入家庭 MVP UI；回滚可停用家庭路由而不删除两类数据。 |
 

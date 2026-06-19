@@ -202,7 +202,7 @@ Redemption requires a non-empty `Idempotency-Key` header of at most 128 characte
 
 1. Read reward by `familyId + childId + rewardId`.
 2. If an entry with the idempotency key exists for this reward, return the stored successful result; if it belongs to another operation, return `409 IDEMPOTENCY_KEY_REUSED`.
-3. Upsert and increment the child's `StarLedgerGuard.version` to serialize balance-changing transactions.
+3. Upsert and increment the child's `StarLedgerGuard.version` to serialize balance-changing transactions. The first concurrent upsert may produce `E11000` on the unique family/child index; classify it as a retryable serialization race and restart the transaction, never return a generic 500.
 4. Require reward status `active`.
 5. Aggregate the child ledger balance in the same session.
 6. If balance is insufficient, abort with `409 INSUFFICIENT_STARS` and write nothing.
@@ -235,8 +235,16 @@ Required production variables:
 - `INTERNAL_SERVICE_TOKEN`: shared by homework-service and progress-service, at least 32 characters.
 - `PROGRESS_SERVICE_URL`: internal base URL used by homework-service.
 - `STAR_AWARD_TIMEOUT_MS`: optional positive integer, default 3000.
+- `MONGO_URI`: must select replica set `rs0` (or the production replica-set name) and use majority write concern for ledger transactions.
 
 Both services fail startup when Task 5 routes are enabled and the internal token is absent or too short. Docker Compose examples provide the same token through environment substitution, not a committed production secret.
+
+Repository deployment manifests are part of the Task 5 gate:
+
+- Root and China Compose files start MongoDB with `--replSet rs0 --bind_ip_all`, run an idempotent one-shot `rs.initiate()` initializer, wait for primary readiness, and connect every service with `replicaSet=rs0`.
+- Kubernetes uses a single-replica StatefulSet with stable DNS for the MVP, an idempotent initialization Job, readiness based on `db.hello().isWritablePrimary`, and service connection strings with `replicaSet=rs0`.
+- The legacy monolithic deployment Compose must either use the same replica-set contract or be explicitly documented as not supporting Task 5 rewards; it may not appear as a supported family-growth deployment while using standalone MongoDB.
+- Production must use a managed or multi-member replica set. The single-node layouts are only for local demo and non-HA staging.
 
 Rollback disables the three public gateway routes and the internal award client. Existing logs, points, rewards, and ledger entries are retained. An already confirmed task with `starAwardState=pending` remains recoverable when Task 5 is re-enabled.
 

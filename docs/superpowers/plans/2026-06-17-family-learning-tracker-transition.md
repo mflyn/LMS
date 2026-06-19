@@ -128,12 +128,12 @@ Fields:
 - `dueDate: LocalDate String`, `estimatedMinutes`, `actualMinutes`
 - `targetAmount`, `actualAmount`, `unit`
 - `priority`
-- `status: pending|completed|confirmed|archived`
+- `status: pending|completed|confirmed|cancelled|archived`
 - `difficulty: easy|normal|hard`
 - `needsHelp: Boolean`
 - `childNote`, `parentFeedback`
-- `attachments`
-- `completedAt`, `confirmedAt`
+- `attachmentMediaIds`
+- `completedAt`, `confirmedAt`, `cancelledAt`
 - `starAwardState: not_applicable|pending|awarded`
 
 ### GrowthLog
@@ -170,7 +170,7 @@ Create: `backend/services/analytics-service/models/FamilyMistake.js`
 Fields:
 
 - `childId`, `familyId`, `dimension: academic`, `subject`, `knowledgePointId`, `knowledgePointName`
-- `questionImageUrl`, `childAnswerImageUrl`, `correctAnswer`
+- `questionMediaId`, `childAnswerMediaId`, `correctAnswer`
 - `reason: concept|careless|reading|calculation|memory|method|time`
 - `corrected`, `reviewed`, `reviewReminderDate`, `mastered`
 - `parentNote`, `childExplanation`
@@ -212,6 +212,32 @@ Fields:
 - `createdBy`, `createdAt`
 
 Create a unique index on `familyId + childId + sourceType + sourceId + type`. Star balance is derived from the immutable ledger; do not keep a separately mutable balance field. Badges are not part of the first-stage MVP.
+
+### ReminderSettings
+
+Create: `backend/services/notification-service/models/ReminderSettings.js`
+
+Fields:
+
+- `familyId` unique
+- category enable flags
+- `weeklyReportDay: 1..7`, default 7
+- `quietHoursStart`, `quietHoursEnd`
+- `updatedByParentId`, timestamps
+
+### MediaAsset
+
+Create: `backend/services/resource-service/models/MediaAsset.js`
+
+Fields:
+
+- `familyId`, optional `childId`
+- `purpose`, server-generated `storageKey`
+- `originalName`, `mimeType`, `sizeBytes`
+- `status: active|deleted`
+- `createdBy`, `createdAt`, `deletedAt`
+
+Business models store media IDs only. Resource objects are private and are read through short-lived authorized URLs.
 
 ## Implementation Tasks
 
@@ -494,10 +520,15 @@ are satisfied.
 - Test: `backend/services/progress-service/__tests__/growthLogs.test.js`
 - Test: `backend/services/progress-service/__tests__/knowledgePoints.test.js`
 - Test: `backend/services/progress-service/__tests__/rewards.test.js`
+- Modify: `docker-compose.yml`
+- Modify: `docker-compose.china.yml`
+- Modify: `deployment/kubernetes/mongo-deployment.yaml`
 
 - [ ] **Step 1: Write tests for growth logs**
 
   Tests must prove parents and children can create/update allowed fields, dimensions `moral|academic|physical|artistic|labor` are accepted, and cross-family access is denied.
+
+  Creation and update must share the same role field whitelist. A child submitting `parentNote`, ownership or audit fields must receive `403 FIELD_ACCESS_DENIED` rather than silent field removal.
 
 - [ ] **Step 2: Write tests for knowledge and ability points**
 
@@ -512,6 +543,8 @@ are satisfied.
   Use `/api/growth-logs`, `/api/knowledge-points`, and `/api/rewards` as the public route prefixes. Mount `/api/internal/stars/award` only inside the service network and require a service credential; do not proxy it through gateway.
 
   Extend task confirmation as a small idempotent saga: atomically set `status=confirmed` and `starAwardState=pending`, call the internal award route with `taskId`, then set `starAwardState=awarded`. If the call fails, return `503 STAR_AWARD_PENDING`; retrying confirmation must resume the pending award instead of creating another ledger entry.
+
+  Run MongoDB as replica set `rs0` in Compose and Kubernetes and add `replicaSet=rs0` to service connection strings. Startup must reject standalone MongoDB when reward redemption is enabled. Compose initialization must be idempotent; Kubernetes must use a stable StatefulSet identity plus an idempotent initialization Job.
 
 - [ ] **Step 5: Wire gateway**
 
@@ -575,6 +608,10 @@ are satisfied.
   - `dimensionTaskStats.labor.completed` equals 2.
   - `topMistakeReasons` contains the dominant reason from fixtures.
   - `nextWeekSuggestion` contains deterministic, non-AI recommendations for math review, outdoor exercise and labor tasks.
+  - A task cancelled before week end is excluded from the denominator; cancellation after week end does not change the frozen report.
+  - A task completed after week end does not enter the historical numerator.
+  - A task with actualMinutes and a linked GrowthLog contributes duration once, from GrowthLog only.
+  - A zero-task week returns `taskCompletionRate: null`.
 
 - [ ] **Step 3: Implement models and routes**
 
@@ -595,6 +632,8 @@ are satisfied.
 
   Use `familyReadRepository`; every read method requires both `familyId` and `childId`, applies an explicit timeout and returns projections only. Do not import private models from homework-service or progress-service. If any required projection fails, return `503 AGGREGATION_UNAVAILABLE` rather than treating missing data as zero.
 
+  Apply the formulas in product section 5.7 and architecture section 4.7. Current-week reports may be invalidated; an ended week's first successful computation freezes its statistics. Feedback updates never mutate statistics.
+
   No AI generation is used in first-stage weekly reports.
 
 - [ ] **Step 5: Run tests**
@@ -612,11 +651,39 @@ are satisfied.
   git commit -m "feat: add family mistakes and weekly reports"
   ```
 
+### Task 6.5: Add Private Family Media
+
+**Files:**
+
+- Create: `backend/services/resource-service/models/MediaAsset.js`
+- Create: `backend/services/resource-service/routes/familyMedia.js`
+- Create: `backend/services/resource-service/services/privateMediaStore.js`
+- Modify: `backend/services/resource-service/server.js`
+- Modify: `backend/gateway/server.js`
+- Test: `backend/services/resource-service/__tests__/familyMedia.test.js`
+
+- [ ] **Step 1: Write media security tests**
+
+  Cover file-signature validation, JPEG/PNG/WebP allowlist, 10 MiB limit, EXIF removal, parent/child purpose rules, cross-family and sibling denial, 300-second access URL expiry, soft deletion, illegal business reference, log redaction and 30-day cleanup eligibility.
+
+- [ ] **Step 2: Implement private media APIs**
+
+  Implement `POST /api/media`, `GET /api/media/:mediaId/access` and `DELETE /api/media/:mediaId` exactly as the API contract. Never persist a public URL in task, mistake, profile or log documents; those models store mediaId references only after resource-service validates scope and purpose.
+
+- [ ] **Step 3: Run and commit**
+
+  ```bash
+  npm test --prefix backend/services/resource-service -- --runInBand familyMedia
+  git add backend/services/resource-service backend/gateway/server.js
+  git commit -m "feat: add private family media"
+  ```
+
 ### Task 7: Add Lightweight Family Notifications
 
 **Files:**
 
 - Modify: `backend/services/notification-service/models/Notification.js`
+- Create: `backend/services/notification-service/models/ReminderSettings.js`
 - Create: `backend/services/notification-service/routes/familyNotifications.js`
 - Modify: `backend/services/notification-service/server.js`
 - Modify: `backend/gateway/server.js`
@@ -632,11 +699,13 @@ are satisfied.
   - Physical exercise reminders.
   - Moral habit reminders.
   - Labor task reminders.
-  - Weekly report reminder on the configured report day.
+  - Weekly report reminder on `ReminderSettings.weeklyReportDay`.
+  - Settings defaults, parent update, child read-only, invalid ISO weekday and quiet-hour validation.
+  - Family-timezone day boundaries, disabled categories, stable ordering and `type + childId + LocalDate + sourceId` deduplication.
 
 - [ ] **Step 2: Implement derived notification route**
 
-  First-stage notifications can be computed on read from task, mistake, habit and report data. Do not introduce background jobs until the demo flow is stable.
+  First-stage notifications can be computed on read from task, mistake, habit and report data. Do not introduce background jobs until the demo flow is stable. Expose `GET/PATCH /api/notifications/settings`; default `weeklyReportDay=7`. Compute dates and quiet hours in the family timezone.
 
   Reuse `familyReadRepository`. Independent reminder categories may degrade separately; when one fails, return the available items with `meta.partial=true` and list the failed category in `meta.unavailableSources`.
 
@@ -690,6 +759,8 @@ are satisfied.
   - 视频会议
   - 管理端
 
+  Also verify an unauthenticated deep link redirects to parent login, refresh restores a valid parent session, child tokens cannot open parent routes, and logout clears the current role token.
+
 - [ ] **Step 2: Add family API client**
 
   `familyApi.js` exports functions:
@@ -707,6 +778,11 @@ are satisfied.
   - `createMistake`
   - `getWeeklyReport`
   - `listRewards`
+  - `uploadMedia`
+  - `getMediaAccess`
+  - `deleteMedia`
+  - `getReminderSettings`
+  - `updateReminderSettings`
 
 - [ ] **Step 3: Replace menu config**
 
@@ -723,7 +799,7 @@ are satisfied.
 
 - [ ] **Step 4: Replace route table**
 
-  Add protected routes for the new family pages. Keep legacy pages importable but unreachable from parent MVP navigation.
+  Add protected routes for the new family pages. Keep legacy pages importable but unreachable from parent MVP navigation. Parent and child sessions use separate storage keys and route guards; do not render protected content before identity restoration completes.
 
 - [ ] **Step 5: Run Web tests**
 
@@ -755,6 +831,7 @@ are satisfied.
 - Test: `frontend/web/src/__tests__/pages/FamilyDashboard.test.js`
 - Test: `frontend/web/src/__tests__/pages/FamilyTasks.test.js`
 - Test: `frontend/web/src/__tests__/pages/FamilyMistakes.test.js`
+- Test: `frontend/web/src/__tests__/pages/FamilyPageStates.test.js`
 
 - [ ] **Step 1: Write dashboard test**
 
@@ -789,9 +866,11 @@ are satisfied.
   - 需要帮助
   - 本周鼓励语
 
+  All child-scoped pages use one child context. Switching child cancels old requests and clears old-child query data before rendering the new child.
+
 - [ ] **Step 5: Implement pages**
 
-  Use Ant Design tables, forms, tabs and modals. Keep layout dense and task-focused; do not introduce a marketing landing page.
+  Use Ant Design tables, forms, tabs and modals. Keep layout dense and task-focused; do not introduce a marketing landing page. Every data surface has explicit loading, empty, retryable-error and partial states; write buttons prevent duplicate submission. Verify 360px responsive layout, keyboard operation, accessible names and non-color-only statuses.
 
 - [ ] **Step 6: Run page tests**
 
@@ -838,6 +917,8 @@ are satisfied.
   - Child sets actual minutes, actual amount, difficulty and needs-help flag.
   - Child sees star balance, star ledger and available family rewards.
   - Child cannot open parent routes.
+  - Child logout clears only the child token and returns to PIN login.
+  - Expired token and rate-limited PIN responses show recoverable states without exposing whether a child exists.
 
 - [ ] **Step 2: Implement child route shell**
 
@@ -896,6 +977,9 @@ are satisfied.
   8. Create today's growth log with academic, physical, artistic and labor entries.
   9. Generate weekly growth report with dimension distribution.
   10. Confirming the same task twice produces one star ledger entry, then redeem one family reward without double spending.
+  11. Upload a private completion or mistake image, verify sibling/cross-family access is denied, then soft-delete it.
+  12. Configure Sunday weekly-report reminders and verify family-timezone deduplication.
+  13. Reopen the prior week's report after a late cancellation and late completion and verify statistics are unchanged.
 
 - [ ] **Step 2: Write demo script doc**
 

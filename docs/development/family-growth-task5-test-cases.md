@@ -78,8 +78,8 @@ Test names must begin with the case ID. Unless stated otherwise, database cases 
 | --- | --- | --- | --- | --- | --- |
 | `TC-T5-GW-001` | Task 5 API | gateway | Request growth-log, knowledge-point and reward prefixes with valid JWT. | Gateway authenticates and proxies each path to progress-service. | `familyTask5Routes.test.js` |
 | `TC-T5-GW-002` | `NFR-SEC-003` | gateway | Request `/api/internal/stars/award` through gateway. | No proxy exists; request returns gateway 404. | `familyTask5Routes.test.js` |
-| `TC-T5-REG-001` | Task 5 gate | regression | Run Task 3/4 family suites after Task 5. | All targeted family suites pass. | existing suites |
-| `TC-T5-REG-002` | Task 5 gate | regression | Run exact full command and compare with v1.2. | No new family-branch failure; all deltas classified. | root Jest projects |
+| `TC-T5-REG-001` | Task 5 gate | regression | Run the first six commands in test strategy section 10 after Task 5. | All targeted family suites pass. | `family-growth-task5-gate.md` |
+| `TC-T5-REG-002` | Task 5 gate | regression | Run exact `npm run test:nocoverage` and compare with v1.2. | No new family-branch failure; all deltas classified. | `family-growth-task5-gate.md` |
 
 ## Coverage Summary
 
