@@ -17,6 +17,7 @@
 | `FGT-T5-IMP-007` | MAJOR | The homework Jest command had duplicate configurations and mixed invalid school-era suites into the family-growth gate. | Kept one canonical config, isolated five classified legacy suites, and retained real Homework model, growth-task, client, and full root legacy projects. | CLOSED |
 | `FGT-T5-IMP-008` | MINOR | Task 5 write paths lacked the identifiers and replay result required by the observability design. | Added an explicit-field audit helper and mutation logs without headers or credentials. | CLOSED |
 | `FGT-T5-IMP-009` | MAJOR | The test catalog contained two regression case IDs without direct code-test names. | Kept them as executable gate cases: targeted family regression and exact root regression, with command/result evidence recorded in the final gate document. | CLOSED |
+| `FGT-T5-IMP-010` | MAJOR | The approved user-service gate command also loaded nine classified school-era suites and retained an open handle after their failures. | The family user-service config now retains the four valid family/User/auth suites and isolates the nine legacy path/controller suites; root legacy projects remain the compatibility evidence. | CLOSED |
 
 ## Review Results
 
