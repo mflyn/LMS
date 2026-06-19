@@ -224,9 +224,9 @@ npm run test:nocoverage
 
 ```text
 Test Suites: 224 failed, 43 passed, 267 total
-Tests:       1126 failed, 18 skipped, 391 passed, 1535 total
+Tests:       1126 failed, 18 skipped, 393 passed, 1537 total
 Snapshots:   0 total
-Time:        50.021 s
+Time:        54.08 s
 ```
 
 与 2026-06-17 基线相比，失败套件减少 14，通过套件增加 19。失败测试数增加是因为配置错误在测试环境改为抛出后，原先被进程提前终止的遗留套件能够继续执行并报告每个失败用例，不是家庭成长链路新增回归。
@@ -238,5 +238,23 @@ Time:        50.021 s
 - gateway identity envelope 和 production error contract。
 - common auth、gateway identity 和 error handler。
 - progress-service startup、server、routes、model 和 integration，共 7 suites / 35 tests。
+
+## 7. 2026-06-19 PR 复审补充
+
+Progress Service 标准命令已恢复可执行：
+
+```bash
+npm test --prefix backend/services/progress-service -- --runInBand
+```
+
+结果为 7 suites / 35 tests 全部通过。服务只保留 `jest.config.js` 一份生效配置，`package.json` 测试脚本显式指定该文件。
+
+公共异常处理器与 Progress Service 联合回归：
+
+```bash
+npx jest --config backend/jest.config.js --selectProjects family-common progress-service --runInBand --coverage=false
+```
+
+结果为 14 suites / 94 tests 全部通过。新增用例覆盖 `uncaughtException` 和 `unhandledRejection`，确认处理器使用有效 logger 记录原始异常后退出。
 
 剩余失败仍属于本文件第 2.3 节已分类的旧学校模块、旧路径、非 progress-service 多 Mongo 生命周期、logger mock 和暂缓依赖问题。

@@ -48,6 +48,8 @@
 | FGT-PR-001 | BLOCKER | Task 5 test foundation | PR review found `progress-service/server.js` connected and listened during module import while its tests started independent MongoMemoryServer instances. | Split `createApp`/`connectDatabase`/`startServer`, prohibit import side effects, remove duplicate Mongo lifecycles and verify startup order. | CLOSED |
 | FGT-PR-002 | BLOCKER | API error contract | PR review found the production error handler returned the legacy status/message shape and route tests masked it with test-only handlers. | Use the approved error envelope in the shared handler, preserve stable codes and verify the real Express/auth/error chain. | CLOSED |
 | FGT-PR-003 | BLOCKER | Task 5 regression gate | PR review found no fresh `npm run test:nocoverage` exit code or baseline comparison, and ConfigManager terminated Jest before summary output. | Throw config errors in tests, isolate Jest projects, run the exact command to completion and compare against the recorded legacy baseline. | CLOSED |
+| FGT-PR-004 | BLOCKER | Progress service standard test command | PR review found both inline `package.json` Jest configuration and `jest.config.js`, so the documented `npm test --prefix backend/services/progress-service -- --runInBand` command stopped before running tests. | Removed the duplicate inline configuration and made the service scripts explicitly select `jest.config.js`; the standard command now runs 7 suites / 35 tests. | CLOSED |
+| FGT-PR-005 | BLOCKER | Process-level error logging | PR review found `handleUncaughtException` and `handleUnhandledRejection` referenced an undefined `logger`, replacing the original failure with a `ReferenceError`. | Inject the logger and process object with production defaults, preserve the compatibility alias, and verify both callbacks log the original failure before exit. | CLOSED |
 
 ## Verification Evidence
 
@@ -66,16 +68,18 @@
 - Production error contract: real Express chain passes for forged downstream identity and returns `401 INVALID_IDENTITY_ENVELOPE` in the approved envelope.
 - Progress service: 7 suites, 35 tests passed; importing `server.js` performs no Mongo connection or port listen; `startServer` connects before listening.
 - Exact full command: `npm run test:nocoverage`.
-- Full command result: exit 1; 224 suites failed, 43 passed, 267 total; 1126 tests failed, 18 skipped, 391 passed, 1535 total.
+- Full command result: exit 1; 224 suites failed, 43 passed, 267 total; 1126 tests failed, 18 skipped, 393 passed, 1537 total.
 - Recorded 2026-06-17 baseline: 238 suites failed, 24 passed, 262 total; 996 tests failed, 17 skipped, 207 passed, 1220 total.
 - Delta: failed suites -14, passed suites +19. The higher failed-test count is caused by ConfigManager no longer terminating Jest early, so previously aborted legacy suites now report individual failures.
 - New family-branch failures: 0. Family/child routes, growth tasks, gateway identity, shared auth/error contract and all progress-service suites pass inside the same full run.
 - Remaining failures match classified legacy categories: obsolete model paths, duplicate Mongo lifecycles outside progress-service, incomplete logger mocks, missing postponed-module dependencies and school-module response drift.
+- Progress service standard command: 7 suites, 35 tests passed.
+- Family common plus progress regression: 14 suites, 94 tests passed, including both process-level error callbacks.
 
 ## Task 5 Entry Decision
 
 **Decision:** APPROVED
-**Reason:** All original findings and the three post-approval PR blockers are closed with code and regression evidence. Task 5 may start after the revised baseline is tagged.
+**Reason:** All original findings and the five post-approval PR blockers are closed with code and regression evidence. Task 5 may start after the revised baseline is tagged.
 
 ## Sign-off
 

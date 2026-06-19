@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 const { AppError, BadRequestError } = require('../errorTypes');
-const { catchAsync, errorHandler, requestTracker } = require('../errorHandler');
+const {
+  catchAsync,
+  errorHandler,
+  handleUncaughtException,
+  handleUnhandledRejection,
+  requestTracker
+} = require('../errorHandler');
 
 describe('shared error middleware', () => {
   const originalNodeEnv = process.env.NODE_ENV;
@@ -101,5 +107,38 @@ describe('shared error middleware', () => {
     const error = new Error('async failure');
     await catchAsync(async () => { throw error; })(req, res, next);
     expect(next).toHaveBeenCalledWith(error);
+  });
+
+  test('uncaught exception handler logs with the supplied logger before exiting', () => {
+    const logger = { error: jest.fn() };
+    const processObject = { on: jest.fn(), exit: jest.fn() };
+    handleUncaughtException(logger, processObject);
+    const handler = processObject.on.mock.calls[0][1];
+    const error = new Error('uncaught failure');
+
+    handler(error);
+
+    expect(processObject.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
+    expect(logger.error).toHaveBeenCalledWith('未捕获异常', {
+      error: 'uncaught failure',
+      stack: error.stack
+    });
+    expect(processObject.exit).toHaveBeenCalledWith(1);
+  });
+
+  test('unhandled rejection handler logs with the supplied logger before exiting', () => {
+    const logger = { error: jest.fn() };
+    const processObject = { on: jest.fn(), exit: jest.fn() };
+    handleUnhandledRejection(logger, processObject);
+    const handler = processObject.on.mock.calls[0][1];
+
+    handler(new Error('rejected'), Promise.resolve());
+
+    expect(processObject.on).toHaveBeenCalledWith('unhandledRejection', expect.any(Function));
+    expect(logger.error).toHaveBeenCalledWith('未处理的Promise拒绝', {
+      reason: 'Error: rejected',
+      promise: '[object Promise]'
+    });
+    expect(processObject.exit).toHaveBeenCalledWith(1);
   });
 });

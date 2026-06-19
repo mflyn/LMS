@@ -202,30 +202,28 @@ const notFoundHandler = (req, res, next) => {
 /**
  * 未捕获异常处理器
  */
-const handleUncaughtException = () => {
-  process.on('uncaughtException', (err) => {
+const handleUncaughtException = (logger = defaultLogger, processObject = process) => {
+  processObject.on('uncaughtException', (err) => {
     logger.error('未捕获异常', {
       error: err.message,
       stack: err.stack
     });
-    
-    // 优雅关闭服务器
-    process.exit(1);
+
+    processObject.exit(1);
   });
 };
 
 /**
  * 未处理的Promise拒绝处理器
  */
-const handleUnhandledRejection = () => {
-  process.on('unhandledRejection', (reason, promise) => {
+const handleUnhandledRejection = (logger = defaultLogger, processObject = process) => {
+  processObject.on('unhandledRejection', (reason, promise) => {
     logger.error('未处理的Promise拒绝', {
-      reason: reason.toString(),
-      promise: promise.toString()
+      reason: String(reason),
+      promise: String(promise)
     });
-    
-    // 优雅关闭服务器
-    process.exit(1);
+
+    processObject.exit(1);
   });
 };
 
