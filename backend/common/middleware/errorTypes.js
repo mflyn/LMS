@@ -7,12 +7,26 @@
  * 基础应用错误类
  */
 class AppError extends Error {
-  constructor(message, statusCode) {
+  constructor(message, statusCode, code, isOperational = statusCode !== 500, details = []) {
     super(message);
     this.statusCode = statusCode;
+    this.code = code || AppError.defaultCode(statusCode);
+    this.details = details;
     this.name = this.constructor.name;
-    this.isOperational = true; // 标记为可操作错误，区分系统错误
+    this.isOperational = isOperational;
     Error.captureStackTrace(this, this.constructor);
+  }
+
+  static defaultCode(statusCode) {
+    return ({
+      400: 'VALIDATION_ERROR',
+      401: 'UNAUTHENTICATED',
+      403: 'ACCESS_DENIED',
+      404: 'RESOURCE_NOT_FOUND',
+      409: 'RESOURCE_CONFLICT',
+      429: 'RATE_LIMITED',
+      503: 'SERVICE_UNAVAILABLE'
+    })[statusCode] || 'INTERNAL_ERROR';
   }
 }
 
@@ -66,7 +80,8 @@ class ConflictError extends AppError {
  */
 class ValidationError extends AppError {
   constructor(message = '数据验证失败', errors = {}) {
-    super(message, 400);
+    const details = Array.isArray(errors) ? errors : Object.values(errors);
+    super(message, 400, 'VALIDATION_ERROR', true, details);
     this.errors = errors;
   }
 }

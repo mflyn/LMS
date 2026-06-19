@@ -45,6 +45,9 @@
 | FGT-FR-001 | MAJOR | `NFR-SEC-002` | Final review found gateway and user-service global error handlers mounted before business routes. | Mounted a final error handler after routes in both production services. | CLOSED |
 | FGT-FR-002 | MAJOR | `FR-CHILD-004` | Final review found nonexistent family/child credentials did not increment the PIN failure counter. | Centralized failure recording; nonexistent credentials lock on attempt five. | CLOSED |
 | FGT-FR-003 | MAJOR | `NFR-SEC-002` | Final review found missing/short identity secrets failed only during a request and deployment examples omitted the shared secret. | Validate at middleware creation and require the secret in example/Compose configuration. | CLOSED |
+| FGT-PR-001 | BLOCKER | Task 5 test foundation | PR review found `progress-service/server.js` connected and listened during module import while its tests started independent MongoMemoryServer instances. | Split `createApp`/`connectDatabase`/`startServer`, prohibit import side effects, remove duplicate Mongo lifecycles and verify startup order. | CLOSED |
+| FGT-PR-002 | BLOCKER | API error contract | PR review found the production error handler returned the legacy status/message shape and route tests masked it with test-only handlers. | Use the approved error envelope in the shared handler, preserve stable codes and verify the real Express/auth/error chain. | CLOSED |
+| FGT-PR-003 | BLOCKER | Task 5 regression gate | PR review found no fresh `npm run test:nocoverage` exit code or baseline comparison, and ConfigManager terminated Jest before summary output. | Throw config errors in tests, isolate Jest projects, run the exact command to completion and compare against the recorded legacy baseline. | CLOSED |
 
 ## Verification Evidence
 
@@ -57,10 +60,22 @@
 - Static quality: `git diff --check` passed and targeted user tests emit no duplicate schema-index warnings.
 - Total targeted regression: 6 suites, 52 tests passed, 0 failed.
 
+### Post-approval PR remediation
+
+- Date: 2026-06-19
+- Production error contract: real Express chain passes for forged downstream identity and returns `401 INVALID_IDENTITY_ENVELOPE` in the approved envelope.
+- Progress service: 7 suites, 35 tests passed; importing `server.js` performs no Mongo connection or port listen; `startServer` connects before listening.
+- Exact full command: `npm run test:nocoverage`.
+- Full command result: exit 1; 224 suites failed, 43 passed, 267 total; 1126 tests failed, 18 skipped, 391 passed, 1535 total.
+- Recorded 2026-06-17 baseline: 238 suites failed, 24 passed, 262 total; 996 tests failed, 17 skipped, 207 passed, 1220 total.
+- Delta: failed suites -14, passed suites +19. The higher failed-test count is caused by ConfigManager no longer terminating Jest early, so previously aborted legacy suites now report individual failures.
+- New family-branch failures: 0. Family/child routes, growth tasks, gateway identity, shared auth/error contract and all progress-service suites pass inside the same full run.
+- Remaining failures match classified legacy categories: obsolete model paths, duplicate Mongo lifecycles outside progress-service, incomplete logger mocks, missing postponed-module dependencies and school-module response drift.
+
 ## Task 5 Entry Decision
 
 **Decision:** APPROVED
-**Reason:** All 3 BLOCKER, 16 MAJOR and 1 MINOR findings are closed with code and regression evidence. Task 5 may start from the tagged baseline.
+**Reason:** All original findings and the three post-approval PR blockers are closed with code and regression evidence. Task 5 may start after the revised baseline is tagged.
 
 ## Sign-off
 

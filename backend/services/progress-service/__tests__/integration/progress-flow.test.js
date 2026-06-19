@@ -8,18 +8,22 @@ describe('进度服务集成测试', () => {
   let teacherId;
   let subjectId;
   
-  beforeAll(async () => {
+  beforeEach(async () => {
     // 创建测试ID
     studentId = new mongoose.Types.ObjectId();
     teacherId = new mongoose.Types.ObjectId();
     subjectId = new mongoose.Types.ObjectId();
     
-    // 清理测试数据
-    await Progress.deleteMany({});
-  });
-  
-  afterAll(async () => {
-    await mongoose.connection.close();
+    await Progress.create({
+      student: studentId,
+      subject: subjectId,
+      chapter: '第一章',
+      section: '1.2',
+      completionRate: 85,
+      status: 'in_progress',
+      createdBy: teacherId,
+      updatedBy: teacherId
+    });
   });
   
   it('教师应该能够创建和更新学生进度', async () => {
@@ -102,7 +106,10 @@ describe('进度服务集成测试', () => {
       .set(headers);
     
     expect(response.status).toBe(403);
-    expect(response.body).toHaveProperty('message', '权限不足');
+    expect(response.body.error).toEqual(expect.objectContaining({
+      code: 'ACCESS_DENIED',
+      message: '权限不足'
+    }));
   });
   
   it('教师应该能够查看所有学生的进度', async () => {

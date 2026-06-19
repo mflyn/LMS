@@ -1,4 +1,5 @@
 module.exports = {
+  displayName: 'user-service',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['./__tests__/setup.js'],
   coveragePathIgnorePatterns: [
@@ -6,7 +7,6 @@ module.exports = {
     '/__tests__/',
     'models/index.js', // 如果有
   ],
-  collectCoverage: true,
   collectCoverageFrom: [
     // 'app.js',
     'server.js',
@@ -29,11 +29,9 @@ module.exports = {
     '**/__tests__/**/*.test.js',
     '**/__tests__/**/*.spec.js',
   ],
-  verbose: true,
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  testTimeout: 30000, 
   moduleNameMapper: {
     '^mongoose$': '<rootDir>/../../../node_modules/mongoose',
     // '^(../../../common/(.*))$': '<rootDir>/../../common/$1',

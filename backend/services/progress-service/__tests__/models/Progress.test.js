@@ -1,27 +1,8 @@
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 const Progress = require('../../models/Progress');
 
 // 增加超时时间
 jest.setTimeout(60000);
-
-let mongoServer;
-
-// 使用内存数据库进行测试
-beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
-});
 
 describe('Progress 模型测试', () => {
   beforeEach(async () => {

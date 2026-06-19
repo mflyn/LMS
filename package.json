@@ -10,7 +10,7 @@
     "test:unit": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.unit.test.js'",
     "test:integration": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.integration.test.js'",
     "test:e2e": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.e2e.test.js'",
-    "test:nocoverage": "jest --config=backend/jest.config.js --rootDir=backend --coverage=false",
+    "test:nocoverage": "jest --config=backend/jest.config.js --coverage=false",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "k6:perf": "k6 run tests/performance/k6.config.js",

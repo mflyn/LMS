@@ -5,8 +5,10 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('../config/logger');
+const { createLogger } = require('../config/logger');
 const { AppError } = require('./errorTypes');
+
+const defaultLogger = createLogger('error-handler');
 
 /**
  * 请求跟踪中间件
@@ -86,7 +88,10 @@ const handleMongoError = (err) => {
     statusCode = 400;
   }
 
-  return new AppError(message, statusCode);
+  const code = statusCode === 409
+    ? 'RESOURCE_CONFLICT'
+    : statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR';
+  return new AppError(message, statusCode, code, statusCode < 500);
 };
 
 /**
@@ -101,7 +106,7 @@ const handleJWTError = (err) => {
     message = '令牌已过期';
   }
   
-  return new AppError(message, 401);
+  return new AppError(message, 401, 'UNAUTHENTICATED');
 };
 
 /**
@@ -109,48 +114,18 @@ const handleJWTError = (err) => {
  */
 const handleJoiError = (err) => {
   const message = err.details.map(detail => detail.message).join(', ');
-  return new AppError(message, 400);
+  return new AppError(message, 400, 'VALIDATION_ERROR', true, err.details || []);
 };
 
-/**
- * 开发环境错误响应
- */
-const sendErrorDev = (err, req, res) => {
-  const error = {
-    status: err.status || 'error',
-    error: err,
-    message: err.message,
-    stack: err.stack,
-    requestId: req.requestId,
-    timestamp: new Date().toISOString()
-  };
-
-  logger.error('开发环境错误详情', {
-    requestId: req.requestId,
-    error: err.message,
-    stack: err.stack,
-    url: req.originalUrl,
-    method: req.method,
-    ip: req.ip,
-    userAgent: req.get('user-agent')
-  });
-
-  res.status(err.statusCode).json(error);
-};
-
-/**
- * 生产环境错误响应
- */
-const sendErrorProd = (err, req, res) => {
-  const error = {
-    status: err.status || 'error',
-    message: err.isOperational ? err.message : '服务器内部错误',
-    requestId: req.requestId,
-    timestamp: new Date().toISOString()
-  };
+const sendContractError = (err, req, res) => {
+  const logger = req.app && req.app.locals.logger ? req.app.locals.logger : defaultLogger;
+  const isOperational = Boolean(err.isOperational);
+  const message = isOperational ? err.message : '服务器内部错误';
+  const code = isOperational && err.code ? err.code : 'INTERNAL_ERROR';
+  const details = isOperational && Array.isArray(err.details) ? err.details : [];
 
   // 记录所有错误到日志
-  if (err.isOperational) {
+  if (isOperational) {
     logger.warn('操作错误', {
       requestId: req.requestId,
       error: err.message,
@@ -172,7 +147,10 @@ const sendErrorProd = (err, req, res) => {
     });
   }
 
-  res.status(err.statusCode).json(error);
+  res.status(err.statusCode).json({
+    success: false,
+    error: { code, message, details }
+  });
 };
 
 /**
@@ -189,23 +167,18 @@ const errorHandler = (err, req, res, next) => {
 
   // 处理特定类型的错误
   if (err.name === 'CastError' || err.name === 'ValidationError' || err.code === 11000) {
-    error = handleMongoError(error);
+    error = handleMongoError(err);
   }
   
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    error = handleJWTError(error);
+    error = handleJWTError(err);
   }
   
   if (err.isJoi) {
-    error = handleJoiError(error);
+    error = handleJoiError(err);
   }
 
-  // 根据环境发送不同的错误响应
-  if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(error, req, res);
-  } else {
-    sendErrorProd(error, req, res);
-  }
+  sendContractError(error, req, res);
 };
 
 /**

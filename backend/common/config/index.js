@@ -108,6 +108,9 @@ class ConfigManager {
       console.log(`✅ 配置加载成功 (环境: ${this.config.NODE_ENV})`);
     } catch (error) {
       console.error('❌ 配置加载失败:', error.message);
+      if (process.env.NODE_ENV === 'test') {
+        throw error;
+      }
       process.exit(1);
     }
   }

@@ -1,0 +1,36 @@
+const express = require('express');
+const mongoose = require('mongoose');
+
+describe('progress-service startup boundary', () => {
+  test('importing the server does not connect to MongoDB or listen on a port', () => {
+    const connectSpy = jest.spyOn(mongoose, 'connect');
+    const listenSpy = jest.spyOn(express.application, 'listen');
+
+    const service = require('../server');
+
+    expect(service.createApp).toEqual(expect.any(Function));
+    expect(service.startServer).toEqual(expect.any(Function));
+    expect(connectSpy).not.toHaveBeenCalled();
+    expect(listenSpy).not.toHaveBeenCalled();
+
+    connectSpy.mockRestore();
+    listenSpy.mockRestore();
+  });
+
+  test('startServer connects before listening', async () => {
+    const calls = [];
+    const server = { close: jest.fn() };
+    const app = {
+      listen: jest.fn((port, callback) => {
+        calls.push(`listen:${port}`);
+        callback();
+        return server;
+      })
+    };
+    const connect = jest.fn(async () => calls.push('connect'));
+    const { startServer } = require('../server');
+
+    await expect(startServer({ app, port: 4321, connect })).resolves.toBe(server);
+    expect(calls).toEqual(['connect', 'listen:4321']);
+  });
+});

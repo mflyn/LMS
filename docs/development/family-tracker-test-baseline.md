@@ -211,3 +211,32 @@ Task 6 之前建议处理：
 1. Task 3 先修 `user-service` 测试 setup，使家庭和孩子权限测试能跑。
 2. 新增家庭成长能力时使用独立测试文件和最小 setup，避免被学校版会议、资源市场、复杂 analytics 测试拖住。
 3. 旧会议、公告、资源推荐和学校分析测试作为迁移债务记录，不进入第一阶段 MVP 阻塞路径。
+
+## 6. 2026-06-19 Task 5 准入复测
+
+执行命令：
+
+```bash
+npm run test:nocoverage
+```
+
+执行完成并返回退出码 `1`，未再被 `ConfigManager.process.exit(1)` 提前终止：
+
+```text
+Test Suites: 224 failed, 43 passed, 267 total
+Tests:       1126 failed, 18 skipped, 391 passed, 1535 total
+Snapshots:   0 total
+Time:        50.021 s
+```
+
+与 2026-06-17 基线相比，失败套件减少 14，通过套件增加 19。失败测试数增加是因为配置错误在测试环境改为抛出后，原先被进程提前终止的遗留套件能够继续执行并报告每个失败用例，不是家庭成长链路新增回归。
+
+同一次全量运行中，下列 Task 5 准入套件均通过：
+
+- family/children routes。
+- growthTasks routes。
+- gateway identity envelope 和 production error contract。
+- common auth、gateway identity 和 error handler。
+- progress-service startup、server、routes、model 和 integration，共 7 suites / 35 tests。
+
+剩余失败仍属于本文件第 2.3 节已分类的旧学校模块、旧路径、非 progress-service 多 Mongo 生命周期、logger mock 和暂缓依赖问题。

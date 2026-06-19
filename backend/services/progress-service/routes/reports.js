@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const Progress = require('../models/Progress');
 
+const sendError = (res, status, code, message) => res.status(status).json({
+  success: false,
+  error: { code, message, details: [] }
+});
+
 // 认证中间件
 const authenticateToken = (req, res, next) => {
   // 从请求头获取用户信息（由API网关添加）
   if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
-    return res.status(401).json({ message: '未认证' });
+    return sendError(res, 401, 'UNAUTHENTICATED', '未认证');
   }
   
   req.user = {
@@ -20,10 +25,10 @@ const authenticateToken = (req, res, next) => {
 // 角色检查中间件
 const checkRole = (roles) => {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: '未认证' });
+    if (!req.user) return sendError(res, 401, 'UNAUTHENTICATED', '未认证');
     
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: '权限不足' });
+      return sendError(res, 403, 'ACCESS_DENIED', '权限不足');
     }
     
     next();

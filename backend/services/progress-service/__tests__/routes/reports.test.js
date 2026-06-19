@@ -1,7 +1,6 @@
 const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 const reportsRouter = require('../../routes/reports');
 const Progress = require('../../models/Progress');
 
@@ -26,24 +25,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/reports', reportsRouter);
-
-// 使用内存数据库进行测试
-let mongoServer;
-
-beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
-});
 
 describe('报告路由测试', () => {
   beforeEach(async () => {
@@ -127,7 +108,10 @@ describe('报告路由测试', () => {
 
       // 验证响应
       expect(response.status).toBe(403);
-      expect(response.body).toHaveProperty('message', '权限不足');
+      expect(response.body.error).toEqual(expect.objectContaining({
+        code: 'ACCESS_DENIED',
+        message: '权限不足'
+      }));
     });
   });
 
@@ -164,9 +148,7 @@ describe('报告路由测试', () => {
 
       // 模拟populate函数
       const originalFind = Progress.find;
-      Progress.find = jest.fn().mockReturnValue({
-        populate: jest.fn().mockReturnThis(),
-        populate: jest.fn().mockResolvedValue([
+      const populated = [
           {
             _id: new mongoose.Types.ObjectId(),
             student: { _id: mockStudentId1, name: '学生1' },
@@ -185,8 +167,12 @@ describe('报告路由测试', () => {
             completionRate: 85,
             status: 'completed'
           }
-        ])
-      });
+        ];
+      const query = {
+        populate: jest.fn()
+      };
+      query.populate.mockReturnValueOnce(query).mockResolvedValueOnce(populated);
+      Progress.find = jest.fn().mockReturnValue(query);
 
       // 发送请求
       const response = await request(app)
@@ -241,7 +227,10 @@ describe('报告路由测试', () => {
 
       // 验证响应
       expect(response.status).toBe(403);
-      expect(response.body).toHaveProperty('message', '权限不足');
+      expect(response.body.error).toEqual(expect.objectContaining({
+        code: 'ACCESS_DENIED',
+        message: '权限不足'
+      }));
     });
   });
 });
