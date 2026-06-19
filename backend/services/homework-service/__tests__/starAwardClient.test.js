@@ -10,6 +10,12 @@ describe('Task 5 star award client', () => {
         internalServiceToken
       })).toThrow('INTERNAL_SERVICE_TOKEN');
     }
+    expect(() => createStarAwardClient({
+      axiosInstance,
+      progressServiceUrl: 'http://progress-service:3002',
+      internalServiceToken: 'test-internal-service-token-32-bytes',
+      timeout: 0
+    })).toThrow('STAR_AWARD_TIMEOUT_MS');
     expect(axiosInstance.post).not.toHaveBeenCalled();
   });
 

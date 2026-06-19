@@ -3,7 +3,8 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-for-growth-t
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/growth-task-test';
 
 jest.mock('../services/starAwardClient', () => ({
-  awardTaskStar: jest.fn().mockResolvedValue({ awarded: true, ledgerEntryId: 'ledger-default', starBalance: 1 })
+  awardTaskStar: jest.fn().mockResolvedValue({ awarded: true, ledgerEntryId: 'ledger-default', starBalance: 1 }),
+  validateClientConfig: jest.fn()
 }));
 
 const request = require('supertest');

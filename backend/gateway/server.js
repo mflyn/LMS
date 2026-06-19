@@ -85,6 +85,12 @@ if (config.serviceHosts.progress) {
   app.use('/api/progress', authenticateToken, proxy(config.serviceHosts.progress, {
     proxyReqPathResolver: (req) => `/api/progress${req.url}`
   }));
+
+  ['/api/growth-logs', '/api/knowledge-points', '/api/rewards'].forEach((prefix) => {
+    app.use(prefix, authenticateToken, proxy(config.serviceHosts.progress, {
+      proxyReqPathResolver: (req) => `${prefix}${req.url}`
+    }));
+  });
 }
 
 // (其他之前定义的代理路由，如 progress, interaction, notification, resource, analytics)

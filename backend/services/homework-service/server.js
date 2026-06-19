@@ -13,6 +13,13 @@ const { validate } = require('../../common/middleware/requestValidator'); // 预
 // 加载环境变量
 dotenv.config();
 
+const { validateClientConfig } = require('./services/starAwardClient');
+validateClientConfig({
+  progressServiceUrl: process.env.PROGRESS_SERVICE_URL || 'http://progress-service:3002',
+  internalServiceToken: process.env.INTERNAL_SERVICE_TOKEN,
+  timeout: Number(process.env.STAR_AWARD_TIMEOUT_MS || 3000)
+});
+
 // 创建Express应用
 const app = express();
 

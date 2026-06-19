@@ -33,7 +33,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - JWT_SECRET=your_jwt_secret_key
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
     depends_on:
@@ -48,10 +48,15 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3002
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN}
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
     networks:
       - app-network
     restart: always
@@ -62,10 +67,17 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3003
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN}
+      - PROGRESS_SERVICE_URL=http://progress-service:3002
+      - STAR_AWARD_TIMEOUT_MS=${STAR_AWARD_TIMEOUT_MS:-3000}
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
     networks:
       - app-network
     restart: always
@@ -76,7 +88,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3004
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
     depends_on:
       - mongo
@@ -90,7 +102,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3005
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
     volumes:
       - resource-data:/app/uploads
@@ -106,7 +118,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3006
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
     depends_on:
       - mongo
     networks:
@@ -119,7 +131,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3007
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - RABBITMQ_URL=amqp://rabbitmq
     depends_on:
       - mongo
@@ -140,11 +152,31 @@ services:
   # MongoDB数据库
   mongo:
     image: mongo:4.4
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
     networks:
       - app-network
     restart: always
+
+  mongo-init:
+    image: mongo:4.4
+    depends_on:
+      - mongo
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        until mongo --host mongo:27017 --quiet --eval "db.adminCommand('ping').ok"; do sleep 2; done;
+        mongo --host mongo:27017 --quiet --eval "try { rs.status() } catch (error) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }";
+        until mongo --host mongo:27017 --quiet --eval "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"; do sleep 2; done
+    networks:
+      - app-network
+    restart: "no"
 
   # RabbitMQ消息队列
   rabbitmq:
@@ -191,7 +223,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3008
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - MINIO_ENDPOINT=minio
       - MINIO_PORT=9000
       - MINIO_ACCESS_KEY=minioadmin

@@ -66,6 +66,8 @@ const configSchema = Joi.object({
   RATE_LIMIT_WINDOW_MS: Joi.number().default(15 * 60 * 1000), // 15分钟
   RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100),
   CORS_ORIGIN: Joi.string().default('*'),
+  INTERNAL_SERVICE_TOKEN: Joi.string().min(32).optional(),
+  STAR_AWARD_TIMEOUT_MS: Joi.number().integer().positive().default(3000),
   
   // 监控配置
   ENABLE_METRICS: Joi.boolean().default(false),

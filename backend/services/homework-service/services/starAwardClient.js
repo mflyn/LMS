@@ -1,11 +1,14 @@
 const axios = require('axios');
 
-const validateClientConfig = ({ progressServiceUrl, internalServiceToken }) => {
+const validateClientConfig = ({ progressServiceUrl, internalServiceToken, timeout = 3000 }) => {
   if (typeof progressServiceUrl !== 'string' || !progressServiceUrl.trim()) {
     throw new Error('PROGRESS_SERVICE_URL is required');
   }
   if (typeof internalServiceToken !== 'string' || internalServiceToken.length < 32) {
     throw new Error('INTERNAL_SERVICE_TOKEN must contain at least 32 characters');
+  }
+  if (!Number.isInteger(timeout) || timeout < 1) {
+    throw new Error('STAR_AWARD_TIMEOUT_MS must be a positive integer');
   }
 };
 
@@ -23,7 +26,7 @@ const createStarAwardClient = ({
   internalServiceToken,
   timeout = 3000
 }) => {
-  validateClientConfig({ progressServiceUrl, internalServiceToken });
+  validateClientConfig({ progressServiceUrl, internalServiceToken, timeout });
   const baseUrl = progressServiceUrl.replace(/\/+$/, '');
 
   return {
@@ -46,8 +49,9 @@ const createStarAwardClient = ({
 };
 
 const awardTaskStar = (payload) => createStarAwardClient({
-  progressServiceUrl: process.env.PROGRESS_SERVICE_URL || 'http://progress-service:3003',
-  internalServiceToken: process.env.INTERNAL_SERVICE_TOKEN
+  progressServiceUrl: process.env.PROGRESS_SERVICE_URL || 'http://progress-service:3002',
+  internalServiceToken: process.env.INTERNAL_SERVICE_TOKEN,
+  timeout: Number(process.env.STAR_AWARD_TIMEOUT_MS || 3000)
 }).awardTaskStar(payload);
 
 module.exports = { awardTaskStar, createStarAwardClient, validateClientConfig };

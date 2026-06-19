@@ -26,7 +26,7 @@ spec:
         - name: PORT
           value: "3006"
         - name: MONGO_URI
-          value: "mongodb://mongo:27017/learning-tracker"
+          value: "mongodb://mongo:27017/learning-tracker?replicaSet=rs0"
         resources:
           limits:
             cpu: "400m"
