@@ -17,6 +17,19 @@ const environmentMap = (entries) => Object.fromEntries(
 );
 
 describe('Task 5 deployment contracts', () => {
+  test('root regression isolates family Mongo suites from legacy projects', () => {
+    const packageJson = require('../../../../package.json');
+
+    expect(packageJson.scripts['test:nocoverage'])
+      .toBe('npm run test:family-regression && npm run test:legacy-regression');
+    expect(packageJson.scripts['test:family-regression']).toContain(
+      '--selectProjects family-common user-service homework-service progress-service --runInBand'
+    );
+    expect(packageJson.scripts['test:legacy-regression']).toContain(
+      '--selectProjects progress-legacy legacy'
+    );
+  });
+
   test.each(['docker-compose.yml', 'docker-compose.china.yml'])(
     '%s uses the same externally supplied JWT secret for signing and verification',
     (composePath) => {
