@@ -7,6 +7,7 @@ const reportRoutes = require('./routes/reports');
 const growthLogRoutes = require('./routes/growthLogs');
 const knowledgePointRoutes = require('./routes/knowledgePoints');
 const internalStarRoutes = require('./routes/internalStars');
+const rewardRoutes = require('./routes/rewards');
 const { errorHandler, requestTracker } = require('../../common/middleware/errorHandler');
 const { createLogger } = require('../../common/config/logger');
 
@@ -25,6 +26,7 @@ const createApp = () => {
   app.use('/api/growth-logs', growthLogRoutes);
   app.use('/api/knowledge-points', knowledgePointRoutes);
   app.use('/api/internal/stars', internalStarRoutes);
+  app.use('/api/rewards', rewardRoutes);
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', service: 'progress-service' });
   });
