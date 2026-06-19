@@ -9,12 +9,25 @@ const mongoose = require('mongoose');
 
 let mongoServer;
 
+const createMongoServer = async () => {
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await MongoMemoryServer.create();
+    } catch (error) {
+      lastError = error;
+      if (!/Port "\d+" already in use/.test(error.message) || attempt === 3) throw error;
+    }
+  }
+  throw lastError;
+};
+
 // 增加测试超时时间
 jest.setTimeout(30000);
 
 // 在所有测试开始前启动内存数据库
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await createMongoServer();
   const mongoUri = mongoServer.getUri();
   await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
@@ -26,7 +39,7 @@ beforeAll(async () => {
 // 在所有测试结束后关闭连接
 afterAll(async () => {
   await mongoose.disconnect();
-  await mongoServer.stop();
+  if (mongoServer) await mongoServer.stop();
 });
 
 // 在每个测试前清理数据库
