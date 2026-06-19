@@ -28,8 +28,8 @@ spec:
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: jwt-secret
-              key: JWT_SECRET
+              name: family-growth-secrets
+              key: jwt-secret
         - name: MONGO_URI
           value: "mongodb://mongo:27017/learning-tracker?replicaSet=rs0"
         - name: GATEWAY_IDENTITY_SECRET
