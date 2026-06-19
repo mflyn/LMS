@@ -11,6 +11,8 @@
 - [ADR-0005: 幂等星星流水](decisions/0005-idempotent-star-ledger.md)
 - [ADR-0006: Gateway 签名身份信封](decisions/0006-signed-gateway-identity-envelope.md)
 
+Task 5 implementation details are specified in [Family Growth Task 5 Design](../superpowers/specs/2026-06-19-family-growth-task5-design.md).
+
 ## 1. 架构目标
 
 家庭成长跟踪第一阶段的目标是把现有学校级 LMS 收敛为一个轻量、稳定、可演示的家庭成长闭环：
@@ -109,6 +111,7 @@ client JWT
 - 下游 `authenticateGateway` 必须先验签再构造 `req.user`，不能仅凭 `x-user-*` 信任调用者。
 - nonce 在签名有效期内只能使用一次；签名篡改、时间戳超过 5 分钟或 nonce 重放都返回 `401`。
 - 内部命令接口使用独立服务凭据，不能接受普通家长或孩子 token。
+- Task 5 星星发放接口使用至少 32 字节的独立共享服务令牌并做恒定时间比较；该接口不经过 gateway，令牌不得复用 JWT 或 gateway 身份密钥。
 - 网络隔离是纵深防御，不能替代请求级服务认证；未来可以等价替换为 mTLS 或下游直接验证 JWT。
 
 ## 4. 核心域模型

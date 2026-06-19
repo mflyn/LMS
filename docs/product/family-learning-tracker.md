@@ -819,7 +819,9 @@
 | `FR-NOTIFY-001` | 派生家庭提醒 | 7 | 7 | mvp | planned | 家长拥有孩子或孩子本人登录 | 查询家庭提醒 | 返回今日任务、未完成、复习、锻炼、习惯和周报提醒；部分源失败时声明 `meta.partial` 和不可用来源。 |
 | `NFR-SEC-001` | 家庭数据授权 | 3 | 4 | baseline | implemented | 任意家庭数据请求 | 携带身份和资源参数 | 服务端从认证身份及资源归属推导 familyId；请求中的 familyId 不能单独授权；跨家庭访问返回 `403`。 |
 | `NFR-SEC-002` | 网关身份信封 | 4 | 4 | baseline | implemented | 请求经过 gateway 或直接访问下游 | 转发或验证身份 | gateway 删除客户端身份头并签名方法、路径、用户、角色、时间戳和 nonce；下游拒绝伪造、篡改、过期和重放请求。 |
+| `NFR-SEC-003` | 内部服务命令认证 | 5 | 5 | mvp | planned | homework-service 调用星星发放命令 | 提交任务确认来源 | 内部接口不经 gateway，对至少 32 字节的独立服务令牌做恒定时间比较；缺失或错误凭据返回 `401 INVALID_SERVICE_CREDENTIAL`，普通用户 token 不能授权。 |
 | `NFR-DATA-001` | 家庭数据归属 | 3 | 4 | baseline | implemented | 创建或查询孩子数据 | 写入或读取记录 | 每条孩子数据同时保存 familyId 和 childId；列表与详情查询都包含两者的归属约束。 |
+| `NFR-DATA-002` | 星星和奖励一致性 | 5 | 5 | mvp | planned | 确认任务或兑换奖励 | 首次执行、并发执行或重试 | 任务确认以 taskId 幂等发放一条 earn；兑换在副本集事务中检查余额、写 spend 并更新奖励；任何失败不产生重复或半完成结果。 |
 | `NFR-TIME-001` | 日期与时区一致性 | 4 | 4 | baseline | implemented | 处理业务日期或事件时间 | 创建任务或按日期查询 | 业务日期使用家庭时区的 `YYYY-MM-DD`；事件时间使用 UTC ISO 8601；跨午夜和周边界结果确定。 |
 | `NFR-COMPAT-001` | 学校版兼容 | 3 | 4 | baseline | implemented | 家庭版能力上线或回滚 | 启用/停用家庭路由 | 旧学校模型和路由不被删除且不进入家庭 MVP UI；回滚可停用家庭路由而不删除两类数据。 |
 
