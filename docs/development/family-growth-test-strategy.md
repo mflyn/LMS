@@ -1,8 +1,8 @@
 # 家庭成长跟踪测试策略
 
-**Document status:** APPROVED
-**Baseline candidate:** FGT-MVP-1
-**Quality gate:** Task 4.5
+**Document status:** READY_FOR_USER_REVIEW
+**Baseline candidate:** FGT-MVP-1.3
+**Quality gate:** Task 5 completion gate
 
 ## 1. 目标
 
@@ -70,6 +70,66 @@ git diff --check
 
 The first three targeted commands must pass after remediation. `npm run test:nocoverage` may retain only failures already classified in `docs/development/family-tracker-test-baseline.md`; new family-branch failures block approval.
 
-## 7. Evidence Recording
+## 7. Task 5 Test Scope
 
-For each run, `docs/development/family-growth-design-review.md` records command, date, exit code, suite/test counts and relevant warning or failure IDs. Evidence from a previous commit is not sufficient after code changes; remediation requires fresh targeted and regression runs.
+Task 5 adds these mandatory suites:
+
+| Suite | Test file | Required evidence |
+| --- | --- | --- |
+| GrowthLog model/routes | `progress-service/__tests__/growthLogs.test.js` | five dimensions, LocalDate, field authorization, filters, pagination, family and sibling isolation |
+| KnowledgePoint model/routes | `progress-service/__tests__/knowledgePoints.test.js` | conditional subject/area rules, uniqueness, mastery updates, filters and role isolation |
+| Internal stars and ledger | `progress-service/__tests__/internalStars.test.js` | service credential, parent/family validation, first award, replay, concurrency and balance |
+| Internal award client | `homework-service/__tests__/starAwardClient.test.js` | missing/short credential rejection, request header, payload, timeout and failure mapping |
+| Rewards and transactions | `progress-service/__tests__/rewards.test.js` | creation, independent pagination, balance, transaction rollback, replay, key conflict and concurrent overspend prevention |
+| Task confirmation saga | `homework-service/__tests__/growthTasks.test.js` | atomic pending transition, timeout, retry convergence, already-awarded replay and concurrent confirmation |
+| Gateway exposure | `gateway/__tests__/familyTask5Routes.test.js` | three public prefixes proxied and internal prefix not exposed |
+| Configuration | service startup suites | missing/short internal token fails before listen; valid token starts |
+
+Every case is defined in `docs/development/family-growth-task5-test-cases.md`. Test names include their case ID so evidence can be extracted mechanically.
+
+## 8. Task 5 Environment and Data
+
+- All progress-service Task 5 suites use the same real `MongoMemoryReplSet` lifecycle. This preserves one connection while providing transaction capability.
+- Reward transaction evidence must come from that replica set; a standalone-memory-server pass is not transaction evidence.
+- The fixed fixture contains family A with parent A, child A1 and sibling A2, plus family B with parent B and child B1.
+- Tests set `INTERNAL_SERVICE_TOKEN` to a 32-character minimum non-production value before importing Task 5 server modules.
+- Tests use signed gateway identity headers for public routes. Raw `x-user-id` and `x-user-role` headers are not accepted as family-route authentication evidence.
+- Each test cleans only collections it owns and never starts an extra Mongo server inside a suite that already uses the shared setup.
+
+## 9. Task 5 Entry and Exit Criteria
+
+Entry requires:
+
+- Task 5 design status `APPROVED`.
+- No open design BLOCKER or MAJOR finding.
+- Numbered test cases map every Task 5 functional and non-functional requirement.
+- The v1.2 regression baseline is recorded.
+
+Exit requires:
+
+- Every `TC-T5-*` case has an executable automated test and passes.
+- Every new production function was introduced after a test failed for the expected missing behavior.
+- Progress, homework, gateway, Task 3/4 regression and configuration suites pass.
+- Reward concurrency tests prove two different redemptions cannot overspend one balance.
+- The internal award route rejects missing, invalid and ordinary user credentials and is absent from gateway routing.
+- `npm run test:nocoverage` completes and introduces no new family-branch failure relative to v1.2.
+- `git diff --check` passes and generated test artifacts are absent.
+
+## 10. Task 5 Verification Commands
+
+```bash
+npm test --prefix backend/services/progress-service -- --runInBand growthLogs knowledgePoints internalStars rewards
+npm test --prefix backend/services/homework-service -- --runInBand growthTasks
+npm test --prefix backend/services/homework-service -- --runInBand starAwardClient
+npx jest --config backend/jest.config.js --selectProjects family-common progress-service --runInBand --coverage=false
+npm test --prefix backend/gateway -- --runInBand familyTask5Routes
+npm test --prefix backend/services/user-service -- --runInBand family children
+npm run test:nocoverage
+git diff --check
+```
+
+The first six commands must exit 0. The full command may exit 1 only for failures already classified in the v1.2 legacy baseline; suite and test deltas plus all family project results must be recorded.
+
+## 11. Evidence Recording
+
+For each Task 5 run, `docs/development/family-growth-task5-gate.md` records command, date, exit code, suite/test counts and relevant warning or failure IDs. Evidence from a previous commit is not sufficient after code changes; remediation requires fresh targeted and regression runs.

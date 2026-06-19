@@ -21,17 +21,17 @@ Conformance values are `COVERED`, `PARTIAL`, `GAP`, and `PLANNED_TASK_5_PLUS`. T
 | `FR-TASK-004` | 4 | 4 | 10.4 | GrowthTask state machine | task complete | `growthTasks.js` | own-child and cross-family completion tests pass | COVERED | closed `FGT-T4-006` |
 | `FR-TASK-005` | 4 | 4 | 10.4 | GrowthTask state machine | task confirm | `growthTasks.js` | role and cross-family confirmation tests pass | COVERED | closed `FGT-T4-006` |
 | `FR-TASK-006` | 4 | 4 | 10.4 | ADR-0004 | task edit/delete | `GrowthTask.js`, `growthTasks.js` | repeat rejection and delete/archive tests pass | COVERED | closed `FGT-T4-002`, `FGT-T4-006` |
-| `FR-LOG-001` | 5 | 5 | 10.4 | 4.4 | growth logs | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
-| `FR-POINT-001` | 5 | 5 | 10.4 | 4.5 | knowledge points | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
+| `FR-LOG-001` | 5 | 5 | 10.4 | 4.4, Task 5 design 4.1/5 | growth logs | `progress-service` planned | `TC-T5-LOG-001`-`010` designed | PLANNED_TASK_5_PLUS | none |
+| `FR-POINT-001` | 5 | 5 | 10.4 | 4.5, Task 5 design 4.2/5 | knowledge points | `progress-service` planned | `TC-T5-POINT-001`-`008` designed | PLANNED_TASK_5_PLUS | none |
 | `FR-MISTAKE-001` | 6 | 6 | 10.4 | 4.6 | mistakes | `analytics-service` planned | planned Task 6 | PLANNED_TASK_5_PLUS | none |
 | `FR-REPORT-001` | 6 | 6 | 10.4 | 4.7, ADR-0001 | weekly reports | `analytics-service` planned | planned Task 6 | PLANNED_TASK_5_PLUS | none |
-| `FR-REWARD-001` | 5 | 5 | 10.4 | 4.8, ADR-0005 | task confirm/stars | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
-| `FR-REWARD-002` | 5 | 5 | 10.4 | 4.8, ADR-0005 | rewards | `progress-service` planned | planned Task 5 | PLANNED_TASK_5_PLUS | none |
+| `FR-REWARD-001` | 5 | 5 | 10.4 | 4.8, ADR-0005, Task 5 design 6/7 | task confirm/stars | `progress-service` and `homework-service` planned | `TC-T5-STAR-003`-`005`, `TC-T5-SAGA-001`-`006` designed | PLANNED_TASK_5_PLUS | none |
+| `FR-REWARD-002` | 5 | 5 | 10.4 | 4.8, ADR-0005, Task 5 design 8 | rewards | `progress-service` planned | `TC-T5-REWARD-001`-`011` designed | PLANNED_TASK_5_PLUS | none |
 | `FR-NOTIFY-001` | 7 | 7 | 10.4 | 3.1, ADR-0001 | notifications | `notification-service` planned | planned Task 7 | PLANNED_TASK_5_PLUS | none |
 | `NFR-SEC-001` | 3 | 4 | 10.4 | 5/6, ADR-0002 | all family APIs | family controllers/routes | every Task 3/4 cross-family operation passes | COVERED | closed `FGT-T4-006` |
 | `NFR-SEC-002` | 4 | 4 | 10.4 | 3.3, ADR-0006 | gateway envelope | `gateway/server.js`, `common/middleware/auth.js` | forged/tampered/expired/replayed/valid/secret tests pass | COVERED | closed `FGT-GW-001`-`FGT-GW-004`, `FGT-FR-001`, `FGT-FR-003` |
-| `NFR-SEC-003` | 5 | 5 | 10.4 | Task 5 design section 6 | internal star award | `progress-service` and `homework-service` planned | planned Task 5 service credential cases | PLANNED_TASK_5_PLUS | none |
+| `NFR-SEC-003` | 5 | 5 | 10.4 | Task 5 design section 6 | internal star award | `progress-service` and `homework-service` planned | `TC-T5-STAR-001/002/006`, `TC-T5-GW-002` designed | PLANNED_TASK_5_PLUS | none |
 | `NFR-DATA-001` | 3 | 4 | 10.4 | 4/5, ADR-0002 | all child data APIs | Family/User/GrowthTask | family-first IDs and indexes verified | COVERED | closed `FGT-T4-004` |
-| `NFR-DATA-002` | 5 | 5 | 10.4 | Task 5 design sections 7/8, ADR-0005 | task award and reward redemption | `progress-service` and `homework-service` planned | planned Task 5 idempotency and transaction cases | PLANNED_TASK_5_PLUS | none |
+| `NFR-DATA-002` | 5 | 5 | 10.4 | Task 5 design sections 7/8, ADR-0005 | task award and reward redemption | `progress-service` and `homework-service` planned | `TC-T5-STAR-003`-`005`, `TC-T5-REWARD-005`-`011`, `TC-T5-SAGA-001`-`005` designed | PLANNED_TASK_5_PLUS | none |
 | `NFR-TIME-001` | 4 | 4 | 10.4 | 3.2, ADR-0003 | family/task dates | `Family.js`, `GrowthTask.js`, routes | IANA timezone and LocalDate boundary tests pass | COVERED | closed `FGT-T3-001`, `FGT-T4-001` |
 | `NFR-COMPAT-001` | 3 | 4 | 10.4 | 7 | legacy and family routes | legacy plus new route modules | baseline full suite | COVERED | no deletion observed |

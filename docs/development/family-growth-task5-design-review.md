@@ -2,7 +2,7 @@
 
 **Review ID:** FGT-T5-DR-2026-06-19
 **Baseline candidate:** FGT-MVP-1.3
-**Status:** READY_FOR_USER_REVIEW
+**Status:** APPROVED
 **Scope:** Product requirements, architecture, detailed design, API contract, and traceability for Task 5
 
 ## Review Criteria
@@ -49,4 +49,11 @@ Results: no placeholders found; `git diff --check` passed.
 
 ## Decision
 
-There are no open BLOCKER or MAJOR design findings. The written design may proceed to test strategy and test-case design only after the product owner reviews and approves this baseline candidate.
+There are no open BLOCKER or MAJOR design findings. Product owner approval was recorded on 2026-06-19; the baseline candidate may proceed to test strategy and test-case design.
+
+## Sign-off
+
+| Role | Name | Decision | Date |
+| --- | --- | --- | --- |
+| Product owner | linmingfeng | APPROVED | 2026-06-19 |
+| Technical reviewer | Codex | APPROVED | 2026-06-19 |

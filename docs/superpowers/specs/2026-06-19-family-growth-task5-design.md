@@ -1,6 +1,6 @@
 # Family Growth Task 5 Design
 
-**Document status:** READY_FOR_USER_REVIEW
+**Document status:** APPROVED
 **Baseline candidate:** FGT-MVP-1.3
 **Scope:** Growth logs, knowledge and ability points, stars, and rewards
 **Requirements:** `FR-LOG-001`, `FR-POINT-001`, `FR-REWARD-001`, `FR-REWARD-002`, `NFR-SEC-001`, `NFR-SEC-003`, `NFR-DATA-001`, `NFR-DATA-002`, `NFR-TIME-001`
