@@ -6,6 +6,7 @@ const Family = require('../../../common/models/Family');
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { formatLocalDate, getWeekRange } = require('../../../common/utils/familyDate');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
+const { logFamilyOperation } = require('../../../common/utils/familyAudit');
 const defaultStarAwardClient = require('../services/starAwardClient');
 
 const DIMENSIONS = ['moral', 'academic', 'physical', 'artistic', 'labor'];
@@ -362,6 +363,11 @@ router.patch('/:taskId/confirm', authenticateGateway, async (req, res) => {
     }
 
     if (confirmation.status === 'confirmed' && confirmation.starAwardState === 'awarded') {
+      logFamilyOperation(req, {
+        operation: 'task.confirm', result: 'already_awarded',
+        familyId: confirmation.familyId.toString(), childId: confirmation.childId.toString(),
+        taskId: confirmation._id.toString()
+      });
       return res.json({ success: true, data: { task: taskView(confirmation) } });
     }
     if (confirmation.status !== 'confirmed' || confirmation.starAwardState !== 'pending') {
@@ -377,6 +383,11 @@ router.patch('/:taskId/confirm', authenticateGateway, async (req, res) => {
         confirmedByParentId: req.user.id.toString()
       });
     } catch (error) {
+      logFamilyOperation(req, {
+        operation: 'task.confirm', result: 'star_award_pending',
+        familyId: confirmation.familyId.toString(), childId: confirmation.childId.toString(),
+        taskId: confirmation._id.toString()
+      });
       return sendError(res, 503, 'Star award is pending', 'STAR_AWARD_PENDING');
     }
 
@@ -388,14 +399,30 @@ router.patch('/:taskId/confirm', authenticateGateway, async (req, res) => {
         { new: true, runValidators: true }
       );
     } catch (error) {
+      logFamilyOperation(req, {
+        operation: 'task.confirm', result: 'star_state_pending',
+        familyId: confirmation.familyId.toString(), childId: confirmation.childId.toString(),
+        taskId: confirmation._id.toString()
+      });
       return sendError(res, 503, 'Star award is pending', 'STAR_AWARD_PENDING');
     }
     if (!awardedTask) {
       awardedTask = await GrowthTask.findById(confirmation._id);
       if (!awardedTask || awardedTask.starAwardState !== 'awarded') {
+        logFamilyOperation(req, {
+          operation: 'task.confirm', result: 'star_state_pending',
+          familyId: confirmation.familyId.toString(), childId: confirmation.childId.toString(),
+          taskId: confirmation._id.toString()
+        });
         return sendError(res, 503, 'Star award is pending', 'STAR_AWARD_PENDING');
       }
     }
+
+    logFamilyOperation(req, {
+      operation: 'task.confirm', result: starAward.awarded ? 'awarded' : 'replayed',
+      familyId: awardedTask.familyId.toString(), childId: awardedTask.childId.toString(),
+      taskId: awardedTask._id.toString()
+    });
 
     return res.json({
       success: true,

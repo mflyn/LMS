@@ -2,6 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 describe('progress-service startup boundary', () => {
+  test('uses standard deployment database and port variables', () => {
+    const config = require('../config');
+
+    expect(config.db.uri).toBe(process.env.MONGO_URI);
+    expect(config.server.port).toBe(3002);
+  });
+
   test('TC-T5-STAR-002 validates the internal service token before startup', () => {
     const { validateInternalServiceToken } = require('../config');
 

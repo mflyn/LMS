@@ -10,6 +10,9 @@ const domainError = (code, message, status = 409) => {
   return error;
 };
 
+const isRetryableTransactionError = (error) => error.code === 11000
+  || (typeof error.hasErrorLabel === 'function' && error.hasErrorLabel('TransientTransactionError'));
+
 const calculateBalance = async ({ familyId, childId, session } = {}) => {
   const aggregation = StarLedgerEntry.aggregate([
     { $match: { familyId, childId } },
@@ -127,8 +130,7 @@ const redeemReward = async (options) => {
       return await runRedemptionTransaction({ ...options, session });
     } catch (error) {
       lastError = error;
-      const retryableDuplicate = error.code === 11000;
-      if (!retryableDuplicate || attempt === 3) throw error;
+      if (!isRetryableTransactionError(error) || attempt === 3) throw error;
     } finally {
       await session.endSession();
     }
@@ -136,4 +138,4 @@ const redeemReward = async (options) => {
   throw lastError;
 };
 
-module.exports = { awardTaskStar, calculateBalance, redeemReward };
+module.exports = { awardTaskStar, calculateBalance, isRetryableTransactionError, redeemReward };

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const KnowledgePoint = require('../models/KnowledgePoint');
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
+const { logFamilyOperation } = require('../../../common/utils/familyAudit');
 const { requireParentChild, resolveChildAccess } = require('../services/growthAccess');
 
 const router = express.Router();
@@ -54,6 +55,10 @@ router.post('/', authenticateGateway, async (req, res) => {
       masteryLevel: req.body.masteryLevel,
       createdByParentId: req.user.id,
       updatedByParentId: req.user.id
+    });
+    logFamilyOperation(req, {
+      operation: 'knowledge_point.create', result: 'created', familyId: point.familyId.toString(),
+      childId: point.childId.toString(), knowledgePointId: point._id.toString()
     });
     return res.status(201).json({ success: true, data: { knowledgePoint: pointView(point) } });
   } catch (error) {
@@ -132,6 +137,10 @@ router.patch('/:knowledgePointId', authenticateGateway, async (req, res) => {
     });
     point.updatedByParentId = req.user.id;
     await point.save();
+    logFamilyOperation(req, {
+      operation: 'knowledge_point.update', result: 'updated', familyId: point.familyId.toString(),
+      childId: point.childId.toString(), knowledgePointId: point._id.toString()
+    });
     return res.json({ success: true, data: { knowledgePoint: pointView(point) } });
   } catch (error) {
     if (error.name === 'ValidationError' || error.name === 'CastError') {

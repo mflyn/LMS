@@ -64,4 +64,18 @@ describe('Task 5 star award client', () => {
       status: 503
     });
   });
+
+  test('TC-T5-STAR-002 rejects an incomplete success response', async () => {
+    const { createStarAwardClient } = require('../services/starAwardClient');
+    const client = createStarAwardClient({
+      axiosInstance: { post: jest.fn().mockResolvedValue({ data: { success: true, data: {} } }) },
+      progressServiceUrl: 'http://progress-service:3002',
+      internalServiceToken: 'test-internal-service-token-32-bytes'
+    });
+
+    await expect(client.awardTaskStar({ taskId: 'task-1' })).rejects.toMatchObject({
+      code: 'STAR_AWARD_PENDING',
+      status: 503
+    });
+  });
 });

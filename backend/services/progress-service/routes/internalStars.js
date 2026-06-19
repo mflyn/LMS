@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Family = require('../../../common/models/Family');
 const User = require('../../../common/models/User');
 const { sendFamilyError } = require('../../../common/utils/familyResponse');
+const { logFamilyOperation } = require('../../../common/utils/familyAudit');
 const { createServiceCredentialMiddleware } = require('../middleware/serviceCredential');
 const { awardTaskStar } = require('../services/starLedgerService');
 
@@ -30,6 +31,10 @@ router.post('/award', createServiceCredentialMiddleware(), async (req, res) => {
       familyId: family._id,
       childId: child._id,
       taskId
+    });
+    logFamilyOperation(req, {
+      operation: 'star.award', result: result.awarded ? 'awarded' : 'replayed',
+      familyId: family._id.toString(), childId: child._id.toString(), taskId
     });
     return res.json({
       success: true,

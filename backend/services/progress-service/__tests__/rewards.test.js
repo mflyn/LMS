@@ -36,6 +36,16 @@ describe('Task 5 rewards', () => {
     await Promise.all([Reward.syncIndexes(), StarLedgerEntry.syncIndexes(), StarLedgerGuard.syncIndexes()]);
   });
 
+  test('classifies only serialization failures for outer transaction retry', () => {
+    const { isRetryableTransactionError } = require('../services/starLedgerService');
+
+    expect(isRetryableTransactionError({ code: 11000 })).toBe(true);
+    expect(isRetryableTransactionError({
+      hasErrorLabel: (label) => label === 'TransientTransactionError'
+    })).toBe(true);
+    expect(isRetryableTransactionError({ code: 'INSUFFICIENT_STARS' })).toBe(false);
+  });
+
   test('TC-T5-REWARD-002 validates title and positive integer star cost', async () => {
     const base = {
       familyId: new mongoose.Types.ObjectId(),

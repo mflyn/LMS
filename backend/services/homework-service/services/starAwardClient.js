@@ -37,10 +37,14 @@ const createStarAwardClient = ({
           payload,
           { headers: { 'x-service-token': internalServiceToken }, timeout }
         );
-        if (!response || !response.data || response.data.success !== true || !response.data.data) {
+        const data = response && response.data && response.data.data;
+        if (!response || response.data.success !== true || !data
+          || typeof data.awarded !== 'boolean'
+          || typeof data.ledgerEntryId !== 'string' || !data.ledgerEntryId
+          || !Number.isInteger(data.starBalance) || data.starBalance < 0) {
           throw new Error('Invalid star award response');
         }
-        return response.data.data;
+        return data;
       } catch (error) {
         throw pendingError(error);
       }

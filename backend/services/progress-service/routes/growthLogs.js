@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const GrowthLog = require('../models/GrowthLog');
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
+const { logFamilyOperation } = require('../../../common/utils/familyAudit');
 const { resolveChildAccess } = require('../services/growthAccess');
 
 const router = express.Router();
@@ -80,6 +81,10 @@ router.post('/', authenticateGateway, async (req, res) => {
       childId,
       createdBy: req.user.id,
       updatedBy: req.user.id
+    });
+    logFamilyOperation(req, {
+      operation: 'growth_log.create', result: 'created', familyId: log.familyId.toString(),
+      childId: log.childId.toString(), logId: log._id.toString()
     });
     return res.status(201).json({ success: true, data: { log: logView(log) } });
   } catch (error) {
@@ -165,6 +170,10 @@ router.patch('/:logId', authenticateGateway, async (req, res) => {
     });
     log.updatedBy = req.user.id;
     await log.save();
+    logFamilyOperation(req, {
+      operation: 'growth_log.update', result: 'updated', familyId: log.familyId.toString(),
+      childId: log.childId.toString(), logId: log._id.toString()
+    });
     return res.json({ success: true, data: { log: logView(log) } });
   } catch (error) {
     if (error.name === 'ValidationError' || error.name === 'CastError') {

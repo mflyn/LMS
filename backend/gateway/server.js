@@ -105,7 +105,7 @@ app.get('/health', (req, res) => {
 
 app.use(errorHandler);
 
-const PORT = process.env.GATEWAY_PORT || config.port || 5000; // 网关通常在不同端口
+const PORT = Number(process.env.PORT || process.env.GATEWAY_PORT || config.port || 5000);
 
 const startServer = () => app.listen(PORT, () => {
   logger.info(`API Gateway service running on port ${PORT}`);
@@ -118,3 +118,4 @@ if (require.main === module) {
 module.exports = app;
 module.exports.authenticateToken = authenticateToken;
 module.exports.startServer = startServer;
+module.exports.port = PORT;

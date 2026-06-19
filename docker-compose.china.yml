@@ -10,6 +10,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - USER_SERVICE_URL=http://user-service:3001
       - PROGRESS_SERVICE_URL=http://progress-service:3002

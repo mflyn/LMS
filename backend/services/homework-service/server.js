@@ -78,6 +78,9 @@ const growthTaskRoutes = require('./routes/growthTasks');
 // 为简化，暂时先不在 server.js 全局应用，而是期望在 routes/homework.js 中按需应用
 app.use('/api/homework', homeworkRoutes);
 app.use('/api/growth-tasks', growthTaskRoutes);
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', service: 'homework-service' });
+});
 
 // 使用共享的错误处理中间件
 app.use(errorHandler);

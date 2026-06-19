@@ -110,6 +110,13 @@ const createTask = async (parent, child, overrides = {}) => {
 };
 
 describe('growth task routes', () => {
+  test('deployment health probe returns service status', async () => {
+    const response = await request(app).get('/health');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ status: 'ok', service: 'homework-service' });
+  });
+
   test.each([
     ['academic', { subject: '数学', area: '分数计算', title: '完成分数练习' }],
     ['physical', { area: '跳绳', title: '跳绳 500 个', taskType: 'exercise', targetAmount: 500, unit: 'count' }],

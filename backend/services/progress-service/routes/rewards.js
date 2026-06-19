@@ -4,6 +4,7 @@ const Reward = require('../models/Reward');
 const StarLedgerEntry = require('../models/StarLedgerEntry');
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { sendFamilyError } = require('../../../common/utils/familyResponse');
+const { logFamilyOperation } = require('../../../common/utils/familyAudit');
 const { requireParentChild, resolveChildAccess } = require('../services/growthAccess');
 const { calculateBalance, redeemReward } = require('../services/starLedgerService');
 
@@ -61,6 +62,10 @@ router.post('/', authenticateGateway, async (req, res) => {
       title,
       requiredStars,
       createdByParentId: req.user.id
+    });
+    logFamilyOperation(req, {
+      operation: 'reward.create', result: 'created', familyId: reward.familyId.toString(),
+      childId: reward.childId.toString(), rewardId: reward._id.toString()
     });
     return res.status(201).json({ success: true, data: { reward: rewardView(reward) } });
   } catch (error) {
@@ -145,6 +150,11 @@ router.patch('/:rewardId/redeem', authenticateGateway, async (req, res) => {
       rewardId: reward._id,
       parentId: req.user.id,
       idempotencyKey
+    });
+    logFamilyOperation(req, {
+      operation: 'reward.redeem', result: result.replayed ? 'replayed' : 'redeemed',
+      familyId: reward.familyId.toString(), childId: reward.childId.toString(),
+      rewardId: reward._id.toString()
     });
     return res.json({
       success: true,
