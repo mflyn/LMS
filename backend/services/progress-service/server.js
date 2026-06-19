@@ -4,6 +4,7 @@ const cors = require('cors');
 const config = require('./config');
 const progressRoutes = require('./routes/progress');
 const reportRoutes = require('./routes/reports');
+const growthLogRoutes = require('./routes/growthLogs');
 const { errorHandler, requestTracker } = require('../../common/middleware/errorHandler');
 const { createLogger } = require('../../common/config/logger');
 
@@ -19,6 +20,7 @@ const createApp = () => {
   app.use(requestTracker);
   app.use('/api/progress', progressRoutes);
   app.use('/api/reports', reportRoutes);
+  app.use('/api/growth-logs', growthLogRoutes);
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', service: 'progress-service' });
   });
