@@ -503,6 +503,8 @@ are satisfied.
 
 ### Task 5: Add Growth Logs, Ability Points and Rewards
 
+**Status:** TECHNICAL_GATE_PASSED_PENDING_PRODUCT_APPROVAL
+
 **Files:**
 
 - Create: `backend/services/progress-service/models/GrowthLog.js`
@@ -524,21 +526,21 @@ are satisfied.
 - Modify: `docker-compose.china.yml`
 - Modify: `deployment/kubernetes/mongo-deployment.yaml`
 
-- [ ] **Step 1: Write tests for growth logs**
+- [x] **Step 1: Write tests for growth logs**
 
   Tests must prove parents and children can create/update allowed fields, dimensions `moral|academic|physical|artistic|labor` are accepted, and cross-family access is denied.
 
   Creation and update must share the same role field whitelist. A child submitting `parentNote`, ownership or audit fields must receive `403 FIELD_ACCESS_DENIED` rather than silent field removal.
 
-- [ ] **Step 2: Write tests for knowledge and ability points**
+- [x] **Step 2: Write tests for knowledge and ability points**
 
   Tests must prove a parent can create and update a child's academic knowledge point, physical ability point, artistic practice point, labor skill point and moral habit point, and list by dimension plus subject or area.
 
-- [ ] **Step 3: Write tests for stars and rewards**
+- [x] **Step 3: Write tests for stars and rewards**
 
   Tests must prove a parent can create rewards; first task confirmation creates exactly one 1-star `earn` ledger entry even when retried; balance is derived from the ledger; redemption atomically creates one `spend` entry and updates reward status; insufficient balance returns `409`; and only a parent can confirm redemption. The internal award route must reject ordinary user tokens.
 
-- [ ] **Step 4: Implement models and routes**
+- [x] **Step 4: Implement models and routes**
 
   Use `/api/growth-logs`, `/api/knowledge-points`, and `/api/rewards` as the public route prefixes. Mount `/api/internal/stars/award` only inside the service network and require a service credential; do not proxy it through gateway.
 
@@ -546,11 +548,11 @@ are satisfied.
 
   Run MongoDB as replica set `rs0` in Compose and Kubernetes and add `replicaSet=rs0` to service connection strings. Startup must reject standalone MongoDB when reward redemption is enabled. Compose initialization must be idempotent; Kubernetes must use a stable StatefulSet identity plus an idempotent initialization Job.
 
-- [ ] **Step 5: Wire gateway**
+- [x] **Step 5: Wire gateway**
 
   Proxy the three route prefixes to `progress-service`.
 
-- [ ] **Step 6: Run targeted tests**
+- [x] **Step 6: Run targeted tests**
 
   ```bash
   npm test --prefix backend/services/progress-service -- --runInBand growthLogs knowledgePoints rewards
@@ -559,7 +561,7 @@ are satisfied.
 
   Expected: new progress-service tests pass.
 
-- [ ] **Step 7: Commit progress domain**
+- [x] **Step 7: Commit progress domain**
 
   ```bash
   git add backend/services/progress-service backend/services/homework-service/routes/growthTasks.js backend/services/homework-service/__tests__/growthTasks.test.js backend/gateway/server.js
