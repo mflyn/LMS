@@ -48,4 +48,55 @@ describe('progress-service startup boundary', () => {
     await expect(startServer({ app, port: 4321, connect })).resolves.toBe(server);
     expect(calls).toEqual(['connect', 'listen:4321']);
   });
+
+  test.each([
+    ['standalone', { isWritablePrimary: true, maxWireVersion: 17, logicalSessionTimeoutMinutes: 30 }],
+    ['secondary', {
+      setName: 'rs0', isWritablePrimary: false, secondary: true,
+      maxWireVersion: 17, logicalSessionTimeoutMinutes: 30
+    }],
+    ['old replica set', {
+      setName: 'rs0', isWritablePrimary: true,
+      maxWireVersion: 6, logicalSessionTimeoutMinutes: 30
+    }]
+  ])('rejects a %s topology before startup', async (_name, hello) => {
+    const { assertTransactionCapability } = require('../server');
+    const connection = {
+      db: { admin: () => ({ command: jest.fn().mockResolvedValue(hello) }) }
+    };
+
+    await expect(assertTransactionCapability(connection))
+      .rejects.toThrow('transaction-capable writable replica-set primary');
+  });
+
+  test('accepts a transaction-capable writable replica-set primary', async () => {
+    const { assertTransactionCapability } = require('../server');
+    const command = jest.fn().mockResolvedValue({
+      setName: 'rs0', isWritablePrimary: true,
+      maxWireVersion: 17, logicalSessionTimeoutMinutes: 30
+    });
+
+    await expect(assertTransactionCapability({ db: { admin: () => ({ command }) } }))
+      .resolves.toMatchObject({ setName: 'rs0', isWritablePrimary: true });
+    expect(command).toHaveBeenCalledWith({ hello: 1 });
+  });
+
+  test('connectDatabase verifies transaction capability after connecting', async () => {
+    const command = jest.fn().mockResolvedValue({
+      setName: 'rs0', isWritablePrimary: true,
+      maxWireVersion: 17, logicalSessionTimeoutMinutes: 30
+    });
+    const connection = { readyState: 0, db: { admin: () => ({ command }) } };
+    const mongooseInstance = {
+      connection,
+      connect: jest.fn().mockImplementation(async () => {
+        connection.readyState = 1;
+      })
+    };
+    const { connectDatabase } = require('../server');
+
+    await expect(connectDatabase({ mongooseInstance, mongoURI: 'mongodb://example/test' }))
+      .resolves.toBe(connection);
+    expect(command).toHaveBeenCalledWith({ hello: 1 });
+  });
 });

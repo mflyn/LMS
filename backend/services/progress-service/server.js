@@ -13,6 +13,21 @@ const { createLogger } = require('../../common/config/logger');
 
 const logger = createLogger('progress-service');
 
+const assertTransactionCapability = async (connection) => {
+  const hello = await connection.db.admin().command({ hello: 1 });
+  const transactionReady = Boolean(hello.setName)
+    && hello.isWritablePrimary === true
+    && Number.isInteger(hello.maxWireVersion)
+    && hello.maxWireVersion >= 7
+    && Number.isFinite(hello.logicalSessionTimeoutMinutes);
+
+  if (!transactionReady) {
+    throw new Error('progress-service requires a transaction-capable writable replica-set primary');
+  }
+
+  return hello;
+};
+
 const createApp = () => {
   const app = express();
   app.locals.logger = logger;
@@ -39,12 +54,12 @@ const connectDatabase = async ({
   mongooseInstance = mongoose,
   mongoURI = config.db.uri
 } = {}) => {
-  if (mongooseInstance.connection.readyState !== 0) {
-    return mongooseInstance.connection;
+  if (mongooseInstance.connection.readyState === 0) {
+    await mongooseInstance.connect(mongoURI, config.db.options);
   }
 
-  await mongooseInstance.connect(mongoURI, config.db.options);
-  logger.info('MongoDB connected');
+  const hello = await assertTransactionCapability(mongooseInstance.connection);
+  logger.info('MongoDB connected with transaction support', { replicaSet: hello.setName });
   return mongooseInstance.connection;
 };
 
@@ -69,6 +84,7 @@ if (require.main === module) {
 }
 
 module.exports = app;
+module.exports.assertTransactionCapability = assertTransactionCapability;
 module.exports.connectDatabase = connectDatabase;
 module.exports.createApp = createApp;
 module.exports.startServer = startServer;
