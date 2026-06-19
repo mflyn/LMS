@@ -4,7 +4,9 @@
 **Candidate commit:** `55d48090b1beb22c072779772b53d797ce29c674`
 **Executed at:** 2026-06-19 (Asia/Shanghai)
 **Technical result:** PASS_WITH_CLASSIFIED_LEGACY_FAILURES
-**Product approval:** PENDING
+**Product approval:** APPROVED
+**Approved by:** linmingfeng
+**Approved at:** 2026-06-19 (Asia/Shanghai)
 
 ## Required Commands
 
@@ -56,4 +58,4 @@ The root log contains no failed `growthTasks`, `starAwardClient`, `growthLogs`, 
 
 ## Decision
 
-The technical Task 5 gate passes. All implementation-review findings are closed, and the candidate is ready for product-owner approval and immutable v1.3 baseline tagging. No tag is created before that approval.
+The technical Task 5 gate passes. All implementation-review findings are closed, and product owner linmingfeng approved the gate on 2026-06-19. The candidate is authorized for immutable v1.3 baseline tagging.

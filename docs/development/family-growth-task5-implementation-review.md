@@ -41,4 +41,4 @@
 
 ## Decision
 
-All implementation-review findings are closed. The documented final gate passed on candidate `55d48090`; immutable baseline tagging remains subject to product-owner approval.
+All implementation-review findings are closed. The documented final gate passed on candidate `55d48090`, and product owner linmingfeng approved immutable v1.3 baseline tagging on 2026-06-19.

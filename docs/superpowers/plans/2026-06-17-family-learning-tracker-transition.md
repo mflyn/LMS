@@ -503,7 +503,7 @@ are satisfied.
 
 ### Task 5: Add Growth Logs, Ability Points and Rewards
 
-**Status:** TECHNICAL_GATE_PASSED_PENDING_PRODUCT_APPROVAL
+**Status:** COMPLETE
 
 **Files:**
 
