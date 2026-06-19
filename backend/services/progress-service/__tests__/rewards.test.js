@@ -186,13 +186,33 @@ describe('Task 5 rewards', () => {
     const f = await createTask5Fixtures();
     const reward = await createReward(f, 1);
     const path = `/api/rewards/${reward._id}/redeem`;
-    for (const key of [null, '   ', 'x'.repeat(129)]) {
+    for (const key of [null, '   ', '\u00a0\u00a0', 'x'.repeat(129)]) {
       let call = request(app).patch(path).set(f.headers(f.parentA, 'PATCH', path));
       if (key) call = call.set('Idempotency-Key', key);
       const response = await call.send();
       expect(response.status).toBe(400);
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
     }
+  });
+
+  test('normalizes the idempotency key before validation and persistence', async () => {
+    const f = await createTask5Fixtures();
+    await seedStars(f, 5);
+    const reward = await createReward(f, 3);
+    const path = `/api/rewards/${reward._id}/redeem`;
+    const first = await request(app).patch(path)
+      .set(f.headers(f.parentA, 'PATCH', path))
+      .set('Idempotency-Key', '\u00a0normalized-key\u00a0')
+      .send();
+    const replay = await request(app).patch(path)
+      .set(f.headers(f.parentA, 'PATCH', path))
+      .set('Idempotency-Key', 'normalized-key')
+      .send();
+
+    expect(first.status).toBe(200);
+    expect(replay.status).toBe(200);
+    expect(replay.body.data.ledgerEntryId).toBe(first.body.data.ledgerEntryId);
+    expect(await StarLedgerEntry.countDocuments({ type: 'spend' })).toBe(1);
   });
 
   test('TC-T5-REWARD-010 transaction rollback removes an inserted spend', async () => {

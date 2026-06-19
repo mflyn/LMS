@@ -134,7 +134,7 @@ router.patch('/:rewardId/redeem', authenticateGateway, async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.rewardId)) {
       return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid rewardId');
     }
-    const idempotencyKey = req.get('Idempotency-Key');
+    const idempotencyKey = req.get('Idempotency-Key')?.trim();
     if (!idempotencyKey || idempotencyKey.length > 128) {
       return sendError(res, 400, 'VALIDATION_ERROR', 'Idempotency-Key is required and must not exceed 128 characters');
     }
