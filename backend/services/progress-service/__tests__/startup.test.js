@@ -2,6 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 describe('progress-service startup boundary', () => {
+  test('TC-T5-STAR-002 validates the internal service token before startup', () => {
+    const { validateInternalServiceToken } = require('../config');
+
+    expect(() => validateInternalServiceToken('')).toThrow('INTERNAL_SERVICE_TOKEN');
+    expect(() => validateInternalServiceToken('short')).toThrow('INTERNAL_SERVICE_TOKEN');
+    expect(validateInternalServiceToken('t'.repeat(32))).toBe('t'.repeat(32));
+  });
+
   test('importing the server does not connect to MongoDB or listen on a port', () => {
     const connectSpy = jest.spyOn(mongoose, 'connect');
     const listenSpy = jest.spyOn(express.application, 'listen');

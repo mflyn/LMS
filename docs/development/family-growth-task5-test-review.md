@@ -2,7 +2,7 @@
 
 **Review ID:** FGT-T5-TR-2026-06-19
 **Baseline candidate:** FGT-MVP-1.3
-**Status:** READY_FOR_USER_REVIEW
+**Status:** APPROVED
 **Scope:** Test strategy, numbered cases, traceability, and TDD implementation plan
 
 ## Review Criteria
@@ -54,4 +54,11 @@ Expected and observed before sign-off: 46 unique IDs, no placeholder matches, an
 
 ## Decision
 
-No BLOCKER, MAJOR, or MINOR test-design finding remains open. Test code and production implementation may begin only after product-owner review of the written test package.
+No BLOCKER, MAJOR, or MINOR test-design finding remains open. Product owner approval was recorded on 2026-06-19; TDD implementation may begin.
+
+## Sign-off
+
+| Role | Name | Decision | Date |
+| --- | --- | --- | --- |
+| Product owner | linmingfeng | APPROVED | 2026-06-19 |
+| Technical reviewer | Codex | APPROVED | 2026-06-19 |

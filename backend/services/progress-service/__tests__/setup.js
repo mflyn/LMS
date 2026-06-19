@@ -1,4 +1,7 @@
-const { MongoMemoryServer } = require('mongodb-memory-server');
+process.env.INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'test-internal-service-token-32-bytes';
+process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET || 'test-gateway-identity-secret-32-bytes-long';
+
+const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 
 let mongoServer;
@@ -8,19 +11,18 @@ jest.setTimeout(30000);
 
 // 在所有测试开始前启动内存数据库
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: { count: 1, storageEngine: 'wiredTiger' }
   });
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri);
   console.log(`MongoDB successfully connected to ${mongoUri}`);
 });
 
 // 在所有测试结束后关闭连接
 afterAll(async () => {
   await mongoose.disconnect();
-  await mongoServer.stop();
+  if (mongoServer) await mongoServer.stop();
 });
 
 // 在每个测试前清理数据库

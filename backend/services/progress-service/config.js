@@ -2,6 +2,13 @@
  * 进度服务配置文件
  */
 
+const validateInternalServiceToken = (value) => {
+  if (typeof value !== 'string' || value.length < 32) {
+    throw new Error('INTERNAL_SERVICE_TOKEN must contain at least 32 characters');
+  }
+  return value;
+};
+
 module.exports = {
   // 数据库配置
   db: {
@@ -16,6 +23,8 @@ module.exports = {
   server: {
     port: process.env.PROGRESS_SERVICE_PORT || 3005
   },
+
+  internalServiceToken: validateInternalServiceToken(process.env.INTERNAL_SERVICE_TOKEN),
   
   // JWT配置
   jwt: {
@@ -41,3 +50,5 @@ module.exports = {
     file: 'logs/progress-service.log'
   }
 };
+
+module.exports.validateInternalServiceToken = validateInternalServiceToken;

@@ -1,6 +1,6 @@
 # 家庭成长跟踪测试策略
 
-**Document status:** READY_FOR_USER_REVIEW
+**Document status:** APPROVED
 **Baseline candidate:** FGT-MVP-1.3
 **Quality gate:** Task 5 completion gate
 

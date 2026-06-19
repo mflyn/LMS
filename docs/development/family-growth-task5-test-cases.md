@@ -1,6 +1,6 @@
 # Task 5 Numbered Test Cases
 
-**Document status:** READY_FOR_USER_REVIEW
+**Document status:** APPROVED
 **Baseline candidate:** FGT-MVP-1.3
 
 Test names must begin with the case ID. Unless stated otherwise, database cases use family A/parent A/child A1/sibling A2 and family B/parent B/child B1 with signed identities.
