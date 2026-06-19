@@ -59,7 +59,7 @@ describe('progress-service startup boundary', () => {
       setName: 'rs0', isWritablePrimary: true,
       maxWireVersion: 6, logicalSessionTimeoutMinutes: 30
     }]
-  ])('rejects a %s topology before startup', async (_name, hello) => {
+  ])('TC-T5-DEPLOY-003 rejects a %s topology before startup', async (_name, hello) => {
     const { assertTransactionCapability } = require('../server');
     const connection = {
       db: { admin: () => ({ command: jest.fn().mockResolvedValue(hello) }) }
@@ -69,7 +69,7 @@ describe('progress-service startup boundary', () => {
       .rejects.toThrow('transaction-capable writable replica-set primary');
   });
 
-  test('accepts a transaction-capable writable replica-set primary', async () => {
+  test('TC-T5-DEPLOY-003 accepts a transaction-capable writable replica-set primary', async () => {
     const { assertTransactionCapability } = require('../server');
     const command = jest.fn().mockResolvedValue({
       setName: 'rs0', isWritablePrimary: true,
@@ -81,7 +81,7 @@ describe('progress-service startup boundary', () => {
     expect(command).toHaveBeenCalledWith({ hello: 1 });
   });
 
-  test('connectDatabase verifies transaction capability after connecting', async () => {
+  test('TC-T5-DEPLOY-003 connectDatabase verifies transaction capability after connecting', async () => {
     const command = jest.fn().mockResolvedValue({
       setName: 'rs0', isWritablePrimary: true,
       maxWireVersion: 17, logicalSessionTimeoutMinutes: 30

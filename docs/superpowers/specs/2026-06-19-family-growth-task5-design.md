@@ -198,7 +198,7 @@ The award client uses `PROGRESS_SERVICE_URL`, `INTERNAL_SERVICE_TOKEN`, and a 30
 
 ## 8. Reward Redemption Transaction
 
-Redemption requires a non-empty `Idempotency-Key` header of at most 128 characters. Within one MongoDB transaction:
+Redemption trims `Idempotency-Key` before validation, requires the normalized value to contain 1-128 characters, and uses that same normalized value for lookup and persistence. Within one MongoDB transaction:
 
 1. Read reward by `familyId + childId + rewardId`.
 2. If an entry with the idempotency key exists for this reward, return the stored successful result; if it belongs to another operation, return `409 IDEMPOTENCY_KEY_REUSED`.
@@ -244,6 +244,9 @@ Repository deployment manifests are part of the Task 5 gate:
 - Root and China Compose files start MongoDB with `--replSet rs0 --bind_ip_all`, run an idempotent one-shot `rs.initiate()` initializer, wait for primary readiness, and connect every service with `replicaSet=rs0`.
 - Kubernetes uses a single-replica StatefulSet with stable DNS for the MVP, an idempotent initialization Job, readiness based on `db.hello().isWritablePrimary`, and service connection strings with `replicaSet=rs0`.
 - The legacy monolithic deployment Compose must either use the same replica-set contract or be explicitly documented as not supporting Task 5 rewards; it may not appear as a supported family-growth deployment while using standalone MongoDB.
+- Gateway and user-service must receive the same externally supplied `JWT_SECRET`; no signing or verification service may use a committed fallback secret.
+- Kubernetes deployment creates or rotates `family-growth-secrets` from an external secret manager before applying workloads. JWT, gateway identity and internal service credentials are independent, at least 32 characters, and no rendered Secret file is committed.
+- progress-service runs `hello` after connecting and starts only on a transaction-capable writable replica-set primary.
 - Production must use a managed or multi-member replica set. The single-node layouts are only for local demo and non-HA staging.
 
 Rollback disables the three public gateway routes and the internal award client. Existing logs, points, rewards, and ledger entries are retained. An already confirmed task with `starAwardState=pending` remains recoverable when Task 5 is re-enabled.

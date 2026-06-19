@@ -195,7 +195,7 @@ describe('Task 5 rewards', () => {
     }
   });
 
-  test('normalizes the idempotency key before validation and persistence', async () => {
+  test('TC-T5-REWARD-012 normalizes the idempotency key before validation and persistence', async () => {
     const f = await createTask5Fixtures();
     await seedStars(f, 5);
     const reward = await createReward(f, 3);

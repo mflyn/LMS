@@ -19,7 +19,7 @@ const jsonBlocks = (markdown) => Array.from(
 );
 
 describe('family learning API examples', () => {
-  test('knowledge point update response reflects the requested mastery level', () => {
+  test('TC-T5-CONTRACT-001 knowledge point update response reflects the requested mastery level', () => {
     const [request, response] = jsonBlocks(section(
       '### 5.3 更新知识点或能力点',
       '## 6. Mistakes'

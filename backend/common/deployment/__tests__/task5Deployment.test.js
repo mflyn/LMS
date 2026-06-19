@@ -9,6 +9,14 @@ const readYaml = (relativePath) => yaml.load(
   fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8')
 );
 
+const readDeployment = (relativePath) => {
+  const documents = [];
+  yaml.loadAll(fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8'), (document) => {
+    if (document) documents.push(document);
+  });
+  return documents.find((document) => document.kind === 'Deployment');
+};
+
 const environmentMap = (entries) => Object.fromEntries(
   entries.map((entry) => {
     const separator = entry.indexOf('=');
@@ -17,7 +25,7 @@ const environmentMap = (entries) => Object.fromEntries(
 );
 
 describe('Task 5 deployment contracts', () => {
-  test('root regression isolates family Mongo suites from legacy projects', () => {
+  test('TC-T5-REG-003 root regression isolates family Mongo suites from legacy projects', () => {
     const packageJson = require('../../../../package.json');
 
     expect(packageJson.scripts['test:nocoverage'])
@@ -31,7 +39,7 @@ describe('Task 5 deployment contracts', () => {
   });
 
   test.each(['docker-compose.yml', 'docker-compose.china.yml'])(
-    '%s uses the same externally supplied JWT secret for signing and verification',
+    'TC-T5-DEPLOY-001 %s uses the same externally supplied JWT secret for signing and verification',
     (composePath) => {
       const compose = readYaml(composePath);
       const gatewayEnvironment = environmentMap(compose.services.gateway.environment);
@@ -42,7 +50,7 @@ describe('Task 5 deployment contracts', () => {
     }
   );
 
-  test('external family growth Secret workflow renders every required key without writing a file', () => {
+  test('TC-T5-DEPLOY-002 external Secret workflow renders required keys without writing a file', () => {
     const script = path.join(repositoryRoot, 'deployment/kubernetes/create-family-growth-secrets.sh');
     const output = execFileSync(script, ['--dry-run'], {
       cwd: repositoryRoot,
@@ -68,5 +76,23 @@ describe('Task 5 deployment contracts', () => {
     ]);
     expect(fs.existsSync(path.join(repositoryRoot, 'deployment/kubernetes/family-growth-secrets.yaml')))
       .toBe(false);
+  });
+
+  test.each([
+    ['gateway-deployment.yaml', ['JWT_SECRET', 'GATEWAY_IDENTITY_SECRET']],
+    ['user-service-deployment.yaml', ['JWT_SECRET', 'GATEWAY_IDENTITY_SECRET']],
+    ['progress-service-deployment.yaml', ['JWT_SECRET', 'GATEWAY_IDENTITY_SECRET', 'INTERNAL_SERVICE_TOKEN']],
+    ['homework-service-deployment.yaml', ['JWT_SECRET', 'GATEWAY_IDENTITY_SECRET', 'INTERNAL_SERVICE_TOKEN']],
+    ['interaction-service-deployment.yaml', ['GATEWAY_IDENTITY_SECRET']],
+    ['resource-service-deployment.yaml', ['GATEWAY_IDENTITY_SECRET']]
+  ])('TC-T5-DEPLOY-002 %s resolves required external Secret keys', (file, names) => {
+    const deployment = readDeployment(`deployment/kubernetes/${file}`);
+    const environment = Object.fromEntries(
+      deployment.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry])
+    );
+
+    for (const name of names) {
+      expect(environment[name].valueFrom.secretKeyRef.name).toBe('family-growth-secrets');
+    }
   });
 });

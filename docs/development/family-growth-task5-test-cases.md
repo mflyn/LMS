@@ -57,9 +57,10 @@ Test names must begin with the case ID. Unless stated otherwise, database cases 
 | `TC-T5-REWARD-006` | `FR-REWARD-002`, `NFR-DATA-002` | transaction | Balance is below cost. | `409 INSUFFICIENT_STARS`; no spend and reward remains active. | `rewards.test.js` |
 | `TC-T5-REWARD-007` | `FR-REWARD-002`, `NFR-DATA-002` | idempotency | Repeat successful redemption with same key. | Original success returned; one spend only. | `rewards.test.js` |
 | `TC-T5-REWARD-008` | `FR-REWARD-002`, `NFR-DATA-002` | idempotency | Reuse successful key for another reward. | `409 IDEMPOTENCY_KEY_REUSED`; second reward active. | `rewards.test.js` |
-| `TC-T5-REWARD-009` | `FR-REWARD-002` | contract | Omit, empty or overlong Idempotency-Key. | `400 VALIDATION_ERROR`; no mutation. | `rewards.test.js` |
+| `TC-T5-REWARD-009` | `FR-REWARD-002` | contract | Omit, whitespace-only or overlong Idempotency-Key. | `400 VALIDATION_ERROR`; no mutation. | `rewards.test.js` |
 | `TC-T5-REWARD-010` | `NFR-DATA-002` | transaction | Force error after spend insert but before reward update. | Transaction aborts: no spend and active reward. | `rewards.test.js` |
 | `TC-T5-REWARD-011` | `NFR-DATA-002` | concurrency | Balance funds only one of two different rewards; redeem concurrently. | Exactly one redemption/spend succeeds; other returns insufficient/state conflict; balance never negative. | `rewards.test.js` |
+| `TC-T5-REWARD-012` | `FR-REWARD-002`, `NFR-DATA-002` | idempotency | Redeem with surrounding Unicode whitespace, then replay with the normalized key. | Both return the same success and ledger ID; exactly one spend exists. | `rewards.test.js` |
 
 ## GrowthTask Confirmation Saga
 
@@ -80,17 +81,23 @@ Test names must begin with the case ID. Unless stated otherwise, database cases 
 | `TC-T5-GW-002` | `NFR-SEC-003` | gateway | Request `/api/internal/stars/award` through gateway. | No proxy exists; request returns gateway 404. | `familyTask5Routes.test.js` |
 | `TC-T5-REG-001` | Task 5 gate | regression | Run the first six commands in test strategy section 10 after Task 5. | All targeted family suites pass. | `family-growth-task5-gate.md` |
 | `TC-T5-REG-002` | Task 5 gate | regression | Run exact `npm run test:nocoverage` and compare with v1.2. | No new family-branch failure; all deltas classified. | `family-growth-task5-gate.md` |
+| `TC-T5-REG-003` | Task 5 gate | stability | Run the isolated family regression twice on one commit. | Both runs exit 0 with identical suite/test totals and no leaked process. | `task5Deployment.test.js`, `family-growth-task5-v1.3-remediation-gate.md` |
+| `TC-T5-DEPLOY-001` | `NFR-SEC-002` | deployment | Parse root and China Compose signing/verification environments. | Gateway and user-service use the same required external JWT secret. | `task5Deployment.test.js` |
+| `TC-T5-DEPLOY-002` | `NFR-SEC-003` | deployment | Render the external Kubernetes Secret workflow with test values. | Required independent keys render; no credential file is written or committed. | `task5Deployment.test.js` |
+| `TC-T5-DEPLOY-003` | `NFR-DATA-002` | startup | Connect to standalone, secondary, old replica set, and transaction-ready primary topologies. | Only the transaction-capable writable primary permits startup. | `startup.test.js` |
+| `TC-T5-CONTRACT-001` | `FR-POINT-001` | documentation | Parse the knowledge-point update request and response examples. | Response mastery equals the requested updated value. | `apiExamples.test.js` |
 
 ## Coverage Summary
 
 | Requirement | Cases |
 | --- | --- |
 | `FR-LOG-001` | `TC-T5-LOG-001` through `TC-T5-LOG-010` |
-| `FR-POINT-001` | `TC-T5-POINT-001` through `TC-T5-POINT-008` |
+| `FR-POINT-001` | `TC-T5-POINT-001` through `TC-T5-POINT-008`, `TC-T5-CONTRACT-001` |
 | `FR-REWARD-001` | `TC-T5-STAR-003` through `TC-T5-STAR-005`, `TC-T5-SAGA-001` through `TC-T5-SAGA-006`, `TC-T5-REWARD-004` |
-| `FR-REWARD-002` | `TC-T5-REWARD-001` through `TC-T5-REWARD-011` |
+| `FR-REWARD-002` | `TC-T5-REWARD-001` through `TC-T5-REWARD-012` |
 | `NFR-SEC-001` | cross-family and sibling cases in every route suite |
-| `NFR-SEC-003` | `TC-T5-STAR-001`, `TC-T5-STAR-002`, `TC-T5-STAR-006`, `TC-T5-GW-002` |
+| `NFR-SEC-002` | `TC-T5-DEPLOY-001` plus gateway identity suites from the approved baseline |
+| `NFR-SEC-003` | `TC-T5-STAR-001`, `TC-T5-STAR-002`, `TC-T5-STAR-006`, `TC-T5-GW-002`, `TC-T5-DEPLOY-002` |
 | `NFR-DATA-001` | all model ownership and route query cases |
-| `NFR-DATA-002` | star replay/concurrency, saga recovery and all redemption transaction cases |
+| `NFR-DATA-002` | star replay/concurrency, saga recovery, all redemption transaction cases, `TC-T5-DEPLOY-003` |
 | `NFR-TIME-001` | `TC-T5-LOG-001`, `TC-T5-LOG-002`, `TC-T5-LOG-008` |

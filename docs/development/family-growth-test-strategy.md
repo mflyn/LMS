@@ -112,7 +112,8 @@ Exit requires:
 - Progress, homework, gateway, Task 3/4 regression and configuration suites pass.
 - Reward concurrency tests prove two different redemptions cannot overspend one balance.
 - The internal award route rejects missing, invalid and ordinary user credentials and is absent from gateway routing.
-- `npm run test:nocoverage` completes and introduces no new family-branch failure relative to v1.2.
+- Two consecutive `npm run test:family-regression` executions on the same commit exit 0 with identical totals.
+- `npm run test:nocoverage` runs the isolated family regression before legacy projects and introduces no new family-branch failure relative to v1.2.
 - `git diff --check` passes and generated test artifacts are absent.
 
 ## 10. Task 5 Verification Commands
@@ -124,11 +125,13 @@ npm test --prefix backend/services/homework-service -- --runInBand starAwardClie
 npx jest --config backend/jest.config.js --selectProjects family-common progress-service --runInBand --coverage=false
 npm test --prefix backend/gateway -- --runInBand familyTask5Routes
 npm test --prefix backend/services/user-service -- --runInBand family children
+npm run test:family-regression
+npm run test:family-regression
 npm run test:nocoverage
 git diff --check
 ```
 
-The first six commands must exit 0. The full command may exit 1 only for failures already classified in the v1.2 legacy baseline; suite and test deltas plus all family project results must be recorded.
+The first eight commands must exit 0. `npm run test:nocoverage` first reruns those family projects in an isolated serial process, then runs only `progress-legacy` and `legacy`; it may exit 1 only for failures already classified in the v1.2 legacy baseline. Both family stability runs, the isolated family phase inside the full command, legacy suite/test deltas, and process exit must be recorded.
 
 ## 11. Evidence Recording
 

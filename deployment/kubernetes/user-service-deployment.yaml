@@ -32,6 +32,11 @@ spec:
             secretKeyRef:
               name: family-growth-secrets
               key: jwt-secret
+        - name: GATEWAY_IDENTITY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: gateway-identity-secret
         resources:
           limits:
             cpu: "300m"
