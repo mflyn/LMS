@@ -1,7 +1,7 @@
 # Task 5 v1.3 Remediation Review
 
 **Review ID:** FGT-T5-RR-2026-06-19
-**Status:** IMPLEMENTATION_REVIEW_APPROVED_PENDING_GATE
+**Status:** GATE_PASSED_PENDING_PRODUCT_APPROVAL
 **Baseline under review:** `family-growth-baseline-v1.3`
 **Scope:** Six reported post-baseline findings plus one deployment dependency found during remediation review
 
@@ -29,4 +29,4 @@
 
 ## Decision
 
-All remediation review findings are closed. The change set may enter the Task 5 remediation gate. A corrected immutable baseline requires fresh gate evidence and explicit product-owner approval; the existing v1.3 tag must not move.
+All remediation review findings are closed, and the Task 5 remediation gate passed on candidate `0eb011f2`. A corrected immutable baseline requires explicit product-owner approval; the existing v1.3 tag must not move.
