@@ -25,11 +25,5 @@
     "nodemon": "^2.0.22",
     "supertest": "^6.3.0",
     "mongodb-memory-server": "^8.12.2"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "coveragePathIgnorePatterns": ["/node_modules/"],
-    "testMatch": ["**/__tests__/**/*.test.js"],
-    "setupFilesAfterEnv": ["./__tests__/setup.js"]
   }
 }

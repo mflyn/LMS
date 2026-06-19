@@ -90,7 +90,7 @@ const growthTaskSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'completed', 'confirmed', 'archived'],
+    enum: ['pending', 'completed', 'confirmed', 'cancelled', 'archived'],
     default: 'pending',
     index: true
   },
@@ -112,13 +112,21 @@ const growthTaskSchema = new Schema({
     trim: true,
     default: ''
   },
+  starAwardState: {
+    type: String,
+    enum: ['not_applicable', 'pending', 'awarded'],
+    default: 'not_applicable',
+    required: true
+  },
   attachments: [{
     name: String,
     url: String,
     type: String
   }],
   completedAt: Date,
-  confirmedAt: Date
+  confirmedAt: Date,
+  confirmedByParentId: { type: Schema.Types.ObjectId, ref: 'User' },
+  cancelledAt: Date
 }, {
   timestamps: true
 });

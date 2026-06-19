@@ -6,10 +6,10 @@ const Family = require('../../../common/models/Family');
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { formatLocalDate, getWeekRange } = require('../../../common/utils/familyDate');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
+const defaultStarAwardClient = require('../services/starAwardClient');
 
-const router = express.Router();
 const DIMENSIONS = ['moral', 'academic', 'physical', 'artistic', 'labor'];
-const STATUSES = ['pending', 'completed', 'confirmed', 'archived'];
+const STATUSES = ['pending', 'completed', 'confirmed', 'cancelled', 'archived'];
 
 const statusCodes = {
   400: 'VALIDATION_ERROR',
@@ -48,6 +48,9 @@ const taskView = (task) => ({
   attachments: task.attachments,
   completedAt: task.completedAt,
   confirmedAt: task.confirmedAt,
+  confirmedByParentId: task.confirmedByParentId ? task.confirmedByParentId.toString() : undefined,
+  starAwardState: task.starAwardState,
+  cancelledAt: task.cancelledAt,
   parentConfirmed: task.status === 'confirmed'
 });
 
@@ -117,6 +120,9 @@ const getDateRangeForScope = (scope, timezone, now = new Date(Date.now())) => {
   return null;
 };
 
+const createGrowthTaskRouter = ({ awardTaskStar = defaultStarAwardClient.awardTaskStar } = {}) => {
+  const router = express.Router();
+
 router.post('/', authenticateGateway, async (req, res) => {
   try {
     if (req.user.role !== 'parent') {
@@ -124,6 +130,10 @@ router.post('/', authenticateGateway, async (req, res) => {
     }
     if (Object.prototype.hasOwnProperty.call(req.body, 'repeatRule')) {
       return sendError(res, 400, 'repeatRule is not supported in the MVP', 'REPEAT_RULE_NOT_SUPPORTED');
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'attachments')
+      || Object.prototype.hasOwnProperty.call(req.body, 'attachmentMediaIds')) {
+      return sendError(res, 400, 'Private media is not enabled yet', 'MEDIA_NOT_ENABLED');
     }
 
     const { childId, dimension, title, taskType, dueDate } = req.body;
@@ -150,8 +160,7 @@ router.post('/', authenticateGateway, async (req, res) => {
       estimatedMinutes: req.body.estimatedMinutes,
       targetAmount: req.body.targetAmount,
       unit: req.body.unit,
-      priority: req.body.priority,
-      attachments: req.body.attachments
+      priority: req.body.priority
     });
 
     return res.status(201).json({
@@ -278,7 +287,7 @@ router.patch('/:taskId/complete', authenticateGateway, async (req, res) => {
     if (!access || access.familyId.toString() !== task.familyId.toString()) {
       return sendError(res, 403, 'Cannot complete this task');
     }
-    if (task.status === 'confirmed' || task.status === 'archived') {
+    if (task.status === 'confirmed' || task.status === 'cancelled' || task.status === 'archived') {
       return sendError(res, 409, 'Task can no longer be completed');
     }
 
@@ -328,18 +337,69 @@ router.patch('/:taskId/confirm', authenticateGateway, async (req, res) => {
     if (!ownership || ownership.family._id.toString() !== task.familyId.toString()) {
       return sendError(res, 403, 'Cannot confirm another family task');
     }
-    if (task.status !== 'completed') {
+    let confirmation = task;
+    if (task.status === 'completed' && (!task.starAwardState || task.starAwardState === 'not_applicable')) {
+      confirmation = await GrowthTask.findOneAndUpdate(
+        {
+          _id: task._id,
+          familyId: task.familyId,
+          childId: task.childId,
+          status: 'completed',
+          starAwardState: { $in: ['not_applicable', null] }
+        },
+        {
+          $set: {
+            status: 'confirmed',
+            parentFeedback: req.body.parentFeedback || '',
+            confirmedAt: new Date(),
+            confirmedByParentId: req.user.id,
+            starAwardState: 'pending'
+          }
+        },
+        { new: true, runValidators: true }
+      );
+      if (!confirmation) confirmation = await GrowthTask.findById(task._id);
+    }
+
+    if (confirmation.status === 'confirmed' && confirmation.starAwardState === 'awarded') {
+      return res.json({ success: true, data: { task: taskView(confirmation) } });
+    }
+    if (confirmation.status !== 'confirmed' || confirmation.starAwardState !== 'pending') {
       return sendError(res, 409, 'Only completed tasks can be confirmed');
     }
 
-    task.status = 'confirmed';
-    task.parentFeedback = req.body.parentFeedback || '';
-    task.confirmedAt = new Date();
-    await task.save();
+    let starAward;
+    try {
+      starAward = await awardTaskStar({
+        familyId: confirmation.familyId.toString(),
+        childId: confirmation.childId.toString(),
+        taskId: confirmation._id.toString(),
+        confirmedByParentId: req.user.id.toString()
+      });
+    } catch (error) {
+      return sendError(res, 503, 'Star award is pending', 'STAR_AWARD_PENDING');
+    }
+
+    let awardedTask;
+    try {
+      awardedTask = await GrowthTask.findOneAndUpdate(
+        { _id: confirmation._id, status: 'confirmed', starAwardState: 'pending' },
+        { $set: { starAwardState: 'awarded' } },
+        { new: true, runValidators: true }
+      );
+    } catch (error) {
+      return sendError(res, 503, 'Star award is pending', 'STAR_AWARD_PENDING');
+    }
+    if (!awardedTask) {
+      awardedTask = await GrowthTask.findById(confirmation._id);
+      if (!awardedTask || awardedTask.starAwardState !== 'awarded') {
+        return sendError(res, 503, 'Star award is pending', 'STAR_AWARD_PENDING');
+      }
+    }
 
     return res.json({
       success: true,
-      data: { task: taskView(task) }
+      data: { task: taskView(awardedTask), starAward }
     });
   } catch (error) {
     return sendError(res, 500, error.message);
@@ -354,6 +414,10 @@ router.patch('/:taskId', authenticateGateway, async (req, res) => {
     if (Object.prototype.hasOwnProperty.call(req.body, 'repeatRule')) {
       return sendError(res, 400, 'repeatRule is not supported in the MVP', 'REPEAT_RULE_NOT_SUPPORTED');
     }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'attachments')
+      || Object.prototype.hasOwnProperty.call(req.body, 'attachmentMediaIds')) {
+      return sendError(res, 400, 'Private media is not enabled yet', 'MEDIA_NOT_ENABLED');
+    }
     if (!mongoose.Types.ObjectId.isValid(req.params.taskId)) {
       return sendError(res, 400, 'Invalid taskId');
     }
@@ -367,6 +431,9 @@ router.patch('/:taskId', authenticateGateway, async (req, res) => {
     if (!ownership || ownership.family._id.toString() !== task.familyId.toString()) {
       return sendError(res, 403, 'Cannot edit another family task');
     }
+    if (task.status !== 'pending') {
+      return sendError(res, 409, 'Only pending tasks can be edited');
+    }
 
     const allowedFields = [
       'dimension',
@@ -379,8 +446,7 @@ router.patch('/:taskId', authenticateGateway, async (req, res) => {
       'estimatedMinutes',
       'targetAmount',
       'unit',
-      'priority',
-      'attachments'
+      'priority'
     ];
     allowedFields.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(req.body, field)) {
@@ -421,8 +487,20 @@ router.delete('/:taskId', authenticateGateway, async (req, res) => {
     }
 
     if (task.status === 'pending') {
-      await task.deleteOne();
-      return res.json({ success: true, data: { deleted: true } });
+      task.status = 'cancelled';
+      task.cancelledAt = new Date();
+      await task.save();
+      return res.json({
+        success: true,
+        data: { deleted: false, task: taskView(task) }
+      });
+    }
+
+    if (task.status === 'cancelled' || task.status === 'archived') {
+      return res.json({
+        success: true,
+        data: { deleted: false, task: taskView(task) }
+      });
     }
 
     task.status = 'archived';
@@ -436,7 +514,12 @@ router.delete('/:taskId', authenticateGateway, async (req, res) => {
   }
 });
 
+  return router;
+};
+
+const router = createGrowthTaskRouter();
 module.exports = router;
+module.exports.createGrowthTaskRouter = createGrowthTaskRouter;
 module.exports.assertParentOwnsChild = assertParentOwnsChild;
 module.exports.assertUserCanAccessChild = assertUserCanAccessChild;
 module.exports.getDateRangeForScope = getDateRangeForScope;

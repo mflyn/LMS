@@ -2,9 +2,16 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-for-growth-task-tests';
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/growth-task-test';
 
+jest.mock('../services/starAwardClient', () => ({
+  awardTaskStar: jest.fn().mockResolvedValue({ awarded: true, ledgerEntryId: 'ledger-default', starBalance: 1 })
+}));
+
 const request = require('supertest');
+const express = require('express');
 const mongoose = require('mongoose');
 const app = require('../server');
+const GrowthTask = require('../models/GrowthTask');
+const { createGrowthTaskRouter } = require('../routes/growthTasks');
 const User = require('../../../common/models/User');
 const Family = require('../../../common/models/Family');
 const { createIdentityHeaders } = require('../../../common/middleware/gatewayIdentity');
@@ -83,6 +90,13 @@ const taskPayload = (child, overrides = {}) => ({
   priority: 'medium',
   ...overrides
 });
+
+const sagaApp = (awardTaskStar) => {
+  const testApp = express();
+  testApp.use(express.json());
+  testApp.use('/api/growth-tasks', createGrowthTaskRouter({ awardTaskStar }));
+  return testApp;
+};
 
 const createTask = async (parent, child, overrides = {}) => {
   const response = await request(app)
@@ -320,6 +334,21 @@ describe('growth task routes', () => {
     expect(editResponse.body.error.code).toBe('REPEAT_RULE_NOT_SUPPORTED');
   });
 
+  test('rejects unverified attachment input until private media is enabled', async () => {
+    const { parent, child } = await createFamilyFixture('媒体');
+    for (const attachmentInput of [
+      { attachments: [{ url: 'https://public.example/child.jpg' }] },
+      { attachmentMediaIds: ['507f1f77bcf86cd799439011'] }
+    ]) {
+      const response = await request(app)
+        .post('/api/growth-tasks')
+        .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
+        .send(taskPayload(child, attachmentInput));
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('MEDIA_NOT_ENABLED');
+    }
+  });
+
   test('validates status and paginates task lists', async () => {
     const { parent, child } = await createFamilyFixture('分页');
     await createTask(parent, child, { title: '任务一' });
@@ -366,14 +395,28 @@ describe('growth task routes', () => {
     }
   });
 
-  test('deletes pending tasks and archives completed tasks', async () => {
+  test('soft-cancels pending tasks and archives completed tasks', async () => {
     const { parent, child } = await createFamilyFixture('归档');
     const pending = await createTask(parent, child, { title: '待删除' });
     const pendingEndpoint = `/api/growth-tasks/${pending.taskId}`;
     const deleted = await request(app)
       .delete(pendingEndpoint)
       .set(userHeaders(parent, 'DELETE', pendingEndpoint));
-    expect(deleted.body.data.deleted).toBe(true);
+    expect(deleted.body.data.deleted).toBe(false);
+    expect(deleted.body.data.task.status).toBe('cancelled');
+    const retained = await GrowthTask.findById(pending.taskId);
+    expect(retained.status).toBe('cancelled');
+    const cancelledReplay = await request(app)
+      .delete(pendingEndpoint)
+      .set(userHeaders(parent, 'DELETE', pendingEndpoint));
+    expect(cancelledReplay.body.data.task.status).toBe('cancelled');
+
+    const editCancelled = await request(app)
+      .patch(pendingEndpoint)
+      .set(userHeaders(parent, 'PATCH', pendingEndpoint))
+      .send({ title: '不得改写已取消任务' });
+    expect(editCancelled.status).toBe(409);
+    expect(editCancelled.body.error.code).toBe('TASK_STATE_CONFLICT');
 
     const completed = await createTask(parent, child, { title: '待归档' });
     const completeEndpoint = `/api/growth-tasks/${completed.taskId}/complete`;
@@ -387,5 +430,92 @@ describe('growth task routes', () => {
       .delete(completedEndpoint)
       .set(userHeaders(parent, 'DELETE', completedEndpoint));
     expect(archived.body.data.task.status).toBe('archived');
+  });
+
+  test('TC-T5-SAGA-001 confirms a completed task and awards its star', async () => {
+    const { parent, family, child } = await createFamilyFixture('发星成功');
+    const created = await createTask(parent, child);
+    await GrowthTask.findByIdAndUpdate(created.taskId, { status: 'completed', completedAt: new Date() });
+    const awardTaskStar = jest.fn().mockResolvedValue({ awarded: true, ledgerEntryId: 'ledger-1', starBalance: 1 });
+    const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
+    const response = await request(sagaApp(awardTaskStar)).patch(endpoint)
+      .set(userHeaders(parent, 'PATCH', endpoint)).send({ parentFeedback: '做得好' });
+    expect(response.status).toBe(200);
+    expect(response.body.data.task).toEqual(expect.objectContaining({ status: 'confirmed', starAwardState: 'awarded' }));
+    expect(awardTaskStar).toHaveBeenCalledWith({
+      familyId: family._id.toString(), childId: child._id.toString(), taskId: created.taskId,
+      confirmedByParentId: parent._id.toString()
+    });
+  });
+
+  test('TC-T5-SAGA-002 leaves a recoverable pending task when award fails', async () => {
+    const { parent, child } = await createFamilyFixture('发星失败');
+    const created = await createTask(parent, child);
+    await GrowthTask.findByIdAndUpdate(created.taskId, { status: 'completed', completedAt: new Date() });
+    const error = Object.assign(new Error('timeout'), { code: 'STAR_AWARD_PENDING', status: 503 });
+    const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
+    const response = await request(sagaApp(jest.fn().mockRejectedValue(error))).patch(endpoint)
+      .set(userHeaders(parent, 'PATCH', endpoint)).send({ parentFeedback: '保留反馈' });
+    expect(response.status).toBe(503);
+    expect(response.body.error.code).toBe('STAR_AWARD_PENDING');
+    expect(await GrowthTask.findById(created.taskId)).toMatchObject({ status: 'confirmed', starAwardState: 'pending' });
+  });
+
+  test('TC-T5-SAGA-003 retries pending award without changing confirmation fields', async () => {
+    const { parent, child } = await createFamilyFixture('发星重试');
+    const created = await createTask(parent, child);
+    const confirmedAt = new Date('2030-01-02T03:04:05.000Z');
+    await GrowthTask.findByIdAndUpdate(created.taskId, {
+      status: 'confirmed', starAwardState: 'pending', confirmedAt, parentFeedback: '原反馈'
+    });
+    const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
+    const response = await request(sagaApp(jest.fn().mockResolvedValue({ awarded: false, ledgerEntryId: 'ledger-1', starBalance: 1 })))
+      .patch(endpoint).set(userHeaders(parent, 'PATCH', endpoint)).send({ parentFeedback: '不得覆盖' });
+    expect(response.status).toBe(200);
+    expect(response.body.data.task).toEqual(expect.objectContaining({ starAwardState: 'awarded', parentFeedback: '原反馈' }));
+    expect(new Date(response.body.data.task.confirmedAt)).toEqual(confirmedAt);
+  });
+
+  test('TC-T5-SAGA-004 returns an awarded confirmation without another call', async () => {
+    const { parent, child } = await createFamilyFixture('发星幂等');
+    const created = await createTask(parent, child);
+    await GrowthTask.findByIdAndUpdate(created.taskId, { status: 'confirmed', starAwardState: 'awarded', confirmedAt: new Date() });
+    const awardTaskStar = jest.fn();
+    const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
+    const response = await request(sagaApp(awardTaskStar)).patch(endpoint)
+      .set(userHeaders(parent, 'PATCH', endpoint)).send({});
+    expect(response.status).toBe(200);
+    expect(awardTaskStar).not.toHaveBeenCalled();
+  });
+
+  test('TC-T5-SAGA-005 concurrent confirmations converge to awarded', async () => {
+    const { parent, child } = await createFamilyFixture('并发确认');
+    const created = await createTask(parent, child);
+    await GrowthTask.findByIdAndUpdate(created.taskId, { status: 'completed', completedAt: new Date() });
+    const awardTaskStar = jest.fn().mockResolvedValue({ awarded: true, ledgerEntryId: 'ledger-1', starBalance: 1 });
+    const testApp = sagaApp(awardTaskStar);
+    const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
+    const execute = () => request(testApp).patch(endpoint)
+      .set(userHeaders(parent, 'PATCH', endpoint)).send({ parentFeedback: '并发反馈' });
+    const responses = await Promise.all([execute(), execute()]);
+    expect(responses.map((item) => item.status)).toEqual([200, 200]);
+    expect((await GrowthTask.findById(created.taskId)).starAwardState).toBe('awarded');
+  });
+
+  test('TC-T5-SAGA-006 rejects invalid state and another family without awarding', async () => {
+    const first = await createFamilyFixture('非法状态');
+    const second = await createFamilyFixture('越权确认');
+    const created = await createTask(first.parent, first.child);
+    const awardTaskStar = jest.fn();
+    const testApp = sagaApp(awardTaskStar);
+    const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
+    const invalidState = await request(testApp).patch(endpoint)
+      .set(userHeaders(first.parent, 'PATCH', endpoint)).send({});
+    const forbidden = await request(testApp).patch(endpoint)
+      .set(userHeaders(second.parent, 'PATCH', endpoint)).send({});
+    expect(invalidState.status).toBe(409);
+    expect(invalidState.body.error.code).toBe('TASK_STATE_CONFLICT');
+    expect(forbidden.status).toBe(403);
+    expect(awardTaskStar).not.toHaveBeenCalled();
   });
 });
