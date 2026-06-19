@@ -1,15 +1,17 @@
 # 家庭成长跟踪基线清单 v1.3
 
 **baselineId:** FGT-MVP-1.3
-**status:** GATE_PASSED_PENDING_PRODUCT_APPROVAL
+**status:** APPROVED
 **supersedes:** FGT-MVP-1.2
-**candidateCommit:** 7205a0dcc8d1d846cc33925dfae11b8de78cc21a
+**candidateCommit:** a8741ee8483b6f659e5241f39cd62e40826116ff
 **statusUpdatedAt:** 2026-06-19
 **owner:** linmingfeng
 **technicalReviewer:** Codex
-**plannedTag:** `family-growth-baseline-v1.3`
+**productApprover:** linmingfeng
+**productApprovedAt:** 2026-06-19 (Asia/Shanghai)
+**baselineTag:** `family-growth-baseline-v1.3`
 
-本清单不记录自身哈希。`candidateCommit` 包含 Task 5 代码、全部评审修订和最终门禁证据；下表哈希均从该提交生成。产品负责人批准前不得创建计划中的不可变标签。
+本清单不记录自身哈希。`candidateCommit` 包含 Task 5 代码、全部评审修订、最终门禁证据和产品批准记录；下表哈希均从该提交生成。产品负责人已批准创建不可变基线标签。
 
 | Artifact | SHA-256 | Status |
 | --- | --- | --- |
@@ -22,8 +24,8 @@
 | `docs/development/family-growth-test-strategy.md` | `fd0f54d0e8a3f8e75dbb2537df218a23c269e5e0cdaaff5bc5c31135131d7d66` | APPROVED |
 | `docs/development/family-growth-task5-test-cases.md` | `2369cfe21c27c52bdd4d4a25246ba0093d64b5c073c17d43bb7bb2f850acb807` | VERIFIED |
 | `docs/development/family-growth-requirement-traceability.md` | `fb9cc927c9352eb7bd2e92aebff022e062f56ec66ffd5636edb71d027c41c690` | COVERED |
-| `docs/development/family-growth-task5-implementation-review.md` | `08a02dbd0b7fdf03029995b5acb4b0b1566a687a7e7a353d8b0f0284345104db` | APPROVED |
-| `docs/development/family-growth-task5-gate.md` | `cfd70ae252abf002b8369dd332f8a7b9a2f3cdb979b925683dd678c307d83868` | PASSED |
+| `docs/development/family-growth-task5-implementation-review.md` | `b6a5703c67c7cc3cada0f6dec0ad136c485fec1bc83ae42b6e046196a3a0d70a` | APPROVED |
+| `docs/development/family-growth-task5-gate.md` | `3347c020ff9ad66e262a5a1fdacee733eac90cf0509e188f225b6021abf2d5f0` | APPROVED |
 
 ## Gate Summary
 
@@ -38,4 +40,3 @@
 
 - Root legacy projects retain classified school-era failures; no new family failure is present.
 - Repository single-node Mongo replica-set manifests are non-HA demo/staging layouts; production requires managed or multi-member topology.
-- Baseline tag and final `APPROVED` status require explicit product-owner approval.
