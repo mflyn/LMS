@@ -4,7 +4,7 @@
 
 **Goal:** Add the approved private-media metadata models and an atomic private filesystem store that validates, decodes, re-encodes, and strips metadata from JPEG, PNG, and WebP images.
 
-**Architecture:** `MediaAsset` and `MediaReference` remain resource-service-owned Mongoose models with family-first indexes. `privateMediaStore` is a filesystem adapter injected with its root, clock/key generator, and fs implementation; it validates the original in-memory buffer, uses Sharp to decode and re-encode it, then atomically renames a mode-0600 temporary object beneath a mode-0700 private root. HTTP authorization, signed URLs, deletion policy, and reference commands remain Phase 2B/2C work.
+**Architecture:** `MediaAsset` and `MediaReference` remain resource-service-owned Mongoose models with family-first indexes. `privateMediaStore` is a filesystem adapter injected with its root, key generator, and fs implementation; it validates the original in-memory buffer, uses Sharp to decode and re-encode it, then atomically publishes a mode-0600 temporary object with a no-clobber hard link beneath a mode-0700 private root. HTTP authorization, signed URLs, deletion policy, and reference commands remain Phase 2B/2C work.
 
 **Tech Stack:** Node.js 18.17+, Mongoose 8.14.1, Sharp 0.33.5, Jest 29 family project
 
@@ -18,7 +18,7 @@
 - Create: `backend/services/resource-service/__tests__/mediaModels.test.js`
 - Modify: `backend/services/resource-service/jest.family.config.js`
 
-- [ ] **Step 1: Write failing model tests**
+- [x] **Step 1: Write failing model tests**
 
 The tests instantiate documents without a database and assert schema validation plus exact indexes:
 
@@ -43,7 +43,7 @@ test('uses family-first asset and reference unique indexes', () => {
 });
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaModels
@@ -51,7 +51,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL because both model modules do not exist.
 
-- [ ] **Step 3: Implement schemas and constants**
+- [x] **Step 3: Implement schemas and constants**
 
 `MediaAsset` exports `MEDIA_PURPOSES`, `MEDIA_MIME_TYPES`, and `MAX_MEDIA_BYTES`. It enforces `familyId`, nullable child only for avatar, positive size through 10 MiB, random internal key, active/deleted status, and deletedAt consistency. `MediaReference` exports resource/field enums, uses `prepared|bound|released`, and includes `leaseExpiresAt` and `releasedAt`.
 
@@ -66,7 +66,7 @@ mediaReferenceSchema.index(
 );
 ```
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaModels
@@ -82,7 +82,7 @@ Expected: all model cases pass.
 - Modify: `backend/services/resource-service/package.json`
 - Modify: `backend/services/resource-service/package-lock.json`
 
-- [ ] **Step 1: Add the Node-18-compatible image dependency**
+- [x] **Step 1: Add the Node-18-compatible image dependency**
 
 ```bash
 npm install --prefix backend/services/resource-service --save-exact sharp@0.33.5
@@ -90,7 +90,7 @@ npm install --prefix backend/services/resource-service --save-exact sharp@0.33.5
 
 Expected: package and lock record Sharp 0.33.5 as a production dependency.
 
-- [ ] **Step 2: Write failing validation and privacy tests**
+- [x] **Step 2: Write failing validation and privacy tests**
 
 Generate fixtures at runtime with Sharp. Include valid JPEG/PNG/WebP, EXIF-bearing JPEG/WebP, empty/corrupt/spoofed input, and a buffer over 10 MiB.
 
@@ -112,7 +112,7 @@ test.each([Buffer.alloc(0), Buffer.from('not an image'), Buffer.alloc(MAX_MEDIA_
 );
 ```
 
-- [ ] **Step 3: Run RED**
+- [x] **Step 3: Run RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand privateMediaStore
@@ -120,9 +120,9 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL because `privateMediaStore` does not exist.
 
-- [ ] **Step 4: Implement the sanitizer and private store**
+- [x] **Step 4: Implement the sanitizer and private store**
 
-Export `sanitizeImage`, `createPrivateMediaStore`, and `MAX_MEDIA_BYTES`. `write` sanitizes before any filesystem write, writes `<key>.tmp`, chmods 0600, and renames to `<key>`; any error removes the temporary path. `read` and `remove` accept only UUID storage keys resolved beneath the configured root.
+Export `sanitizeImage`, `createPrivateMediaStore`, and `MAX_MEDIA_BYTES`. `write` sanitizes before any filesystem write, writes `<key>.tmp`, chmods 0600, and uses `link(temp, key)` for atomic no-clobber publication; any error removes temporary and partially published paths. `read` and `remove` accept only UUID storage keys resolved beneath the configured root.
 
 ```js
 const sanitizeImage = async (input) => {
@@ -136,7 +136,7 @@ const sanitizeImage = async (input) => {
 };
 ```
 
-- [ ] **Step 5: Run GREEN and the Phase 2A gate**
+- [x] **Step 5: Run GREEN and the Phase 2A gate**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaModels privateMediaStore task6Startup
@@ -146,7 +146,7 @@ git diff --check
 
 Expected: all focused cases and all family projects pass.
 
-- [ ] **Step 6: Commit Phase 2A**
+- [x] **Step 6: Commit Phase 2A**
 
 ```bash
 git add backend/services/resource-service/models/MediaAsset.js \
