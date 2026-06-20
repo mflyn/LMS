@@ -5,6 +5,7 @@ const {
   errorHandler,
   handleUncaughtException,
   handleUnhandledRejection,
+  notFoundHandler,
   requestTracker
 } = require('../errorHandler');
 
@@ -101,6 +102,36 @@ describe('shared error middleware', () => {
     expect(req.requestId).toEqual(expect.any(String));
     expect(res.setHeader).toHaveBeenCalledWith('X-Request-ID', req.requestId);
     expect(next).toHaveBeenCalledWith();
+  });
+
+  test('TC-T6-MEDIA-015 request and error logs omit signed media query values', () => {
+    const mediaPath = '/api/media/6656875da7f86a0012c2a111/content';
+    req.originalUrl = `${mediaPath}?expires=1&nonce=secret-nonce&signature=secret-signature`;
+    let finishHandler;
+    res.on.mockImplementation((event, handler) => {
+      if (event === 'finish') finishHandler = handler;
+    });
+
+    requestTracker(req, res, next);
+    finishHandler();
+    errorHandler(new BadRequestError('invalid capability'), req, res, next);
+
+    const logger = req.app.locals.logger;
+    expect(logger.info).toHaveBeenCalledWith(`请求开始: GET ${mediaPath}`, expect.objectContaining({ url: mediaPath }));
+    expect(logger.info).toHaveBeenCalledWith(`请求完成: GET ${mediaPath} 200`, expect.objectContaining({ url: mediaPath }));
+    expect(logger.warn).toHaveBeenCalledWith('操作错误', expect.objectContaining({ url: mediaPath }));
+    expect(JSON.stringify([logger.info.mock.calls, logger.warn.mock.calls])).not.toMatch(/secret-nonce|secret-signature/);
+  });
+
+  test('TC-T6-MEDIA-015 not-found errors omit signed media query values', () => {
+    const mediaPath = '/api/media/6656875da7f86a0012c2a111/content';
+    req.originalUrl = `${mediaPath}?expires=1&nonce=secret-nonce&signature=secret-signature`;
+
+    notFoundHandler(req, res, next);
+
+    const error = next.mock.calls[0][0];
+    expect(error.message).toBe(`路由 ${mediaPath} 不存在`);
+    expect(error.message).not.toMatch(/secret-nonce|secret-signature/);
   });
 
   test('catchAsync forwards rejected promises', async () => {

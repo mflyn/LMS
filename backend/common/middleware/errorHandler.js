@@ -7,6 +7,7 @@
 const { v4: uuidv4 } = require('uuid');
 const { createLogger } = require('../config/logger');
 const { AppError } = require('./errorTypes');
+const { redactUrlForLogs } = require('../utils/logRedaction');
 
 const defaultLogger = createLogger('error-handler');
 
@@ -20,16 +21,17 @@ const defaultLogger = createLogger('error-handler');
 const requestTracker = (req, res, next) => {
   req.requestId = req.requestId || uuidv4();
   req.startTime = Date.now();
+  const safeUrl = redactUrlForLogs(req.originalUrl);
   
   // 在响应头中添加请求ID
   res.setHeader('X-Request-ID', req.requestId);
   
   // 记录请求开始日志
   if (req.app && req.app.locals.logger) {
-    req.app.locals.logger.info(`请求开始: ${req.method} ${req.originalUrl}`, {
+    req.app.locals.logger.info(`请求开始: ${req.method} ${safeUrl}`, {
       requestId: req.requestId,
       method: req.method,
-      url: req.originalUrl,
+      url: safeUrl,
       ip: req.ip,
       userAgent: req.get('user-agent'),
       userId: req.user ? req.user.id : 'anonymous',
@@ -43,10 +45,10 @@ const requestTracker = (req, res, next) => {
     const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
     
     if (req.app && req.app.locals.logger) {
-      req.app.locals.logger[logLevel](`请求完成: ${req.method} ${req.originalUrl} ${res.statusCode}`, {
+      req.app.locals.logger[logLevel](`请求完成: ${req.method} ${safeUrl} ${res.statusCode}`, {
         requestId: req.requestId,
         method: req.method,
-        url: req.originalUrl,
+        url: safeUrl,
         status: res.statusCode,
         duration: `${duration}ms`,
         ip: req.ip,
@@ -123,6 +125,7 @@ const sendContractError = (err, req, res) => {
   const message = isOperational ? err.message : '服务器内部错误';
   const code = isOperational && err.code ? err.code : 'INTERNAL_ERROR';
   const details = isOperational && Array.isArray(err.details) ? err.details : [];
+  const safeUrl = redactUrlForLogs(req.originalUrl);
 
   // 记录所有错误到日志
   if (isOperational) {
@@ -130,7 +133,7 @@ const sendContractError = (err, req, res) => {
       requestId: req.requestId,
       error: err.message,
       statusCode: err.statusCode,
-      url: req.originalUrl,
+      url: safeUrl,
       method: req.method,
       ip: req.ip,
       userAgent: req.get('user-agent')
@@ -140,7 +143,7 @@ const sendContractError = (err, req, res) => {
       requestId: req.requestId,
       error: err.message,
       stack: err.stack,
-      url: req.originalUrl,
+      url: safeUrl,
       method: req.method,
       ip: req.ip,
       userAgent: req.get('user-agent')
@@ -195,7 +198,7 @@ const catchAsync = (fn) => {
  * 404错误处理中间件
  */
 const notFoundHandler = (req, res, next) => {
-  const err = new AppError(`路由 ${req.originalUrl} 不存在`, 404);
+  const err = new AppError(`路由 ${redactUrlForLogs(req.originalUrl)} 不存在`, 404);
   next(err);
 };
 

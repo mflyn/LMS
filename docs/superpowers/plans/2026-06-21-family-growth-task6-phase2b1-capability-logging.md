@@ -17,7 +17,7 @@
 - Create: `backend/services/resource-service/__tests__/mediaCapability.test.js`
 - Modify: `backend/services/resource-service/jest.family.config.js`
 
-- [ ] **Step 1: Write failing capability tests**
+- [x] **Step 1: Write failing capability tests**
 
 ```js
 const service = createMediaCapabilityService({
@@ -44,7 +44,7 @@ test.each(['path', 'mediaId', 'expires', 'nonce', 'signature'])(
 
 Also cover expired capabilities, expiry beyond configured maximum, malformed media ID/nonce/signature, secrets shorter than 32 characters, and access ages outside `1..300`.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaCapability
@@ -52,7 +52,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL because `mediaCapability` does not exist.
 
-- [ ] **Step 3: Implement issue and verify**
+- [x] **Step 3: Implement issue and verify**
 
 Canonical payload:
 
@@ -66,7 +66,7 @@ GET
 
 `issue` returns only `{ url, expiresAt }`. `verify` validates all fields before computing SHA-256 HMAC and compares equal-length hex buffers with `crypto.timingSafeEqual`. Every malformed, expired, overlong, or mismatched capability throws operational `400 VALIDATION_ERROR` without exposing which signed component failed.
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaCapability
@@ -82,7 +82,7 @@ Expected: all capability cases pass.
 - Modify: `backend/common/middleware/errorHandler.js`
 - Modify: `backend/common/middleware/__tests__/errorHandler.test.js`
 
-- [ ] **Step 1: Write failing pure and middleware tests**
+- [x] **Step 1: Write failing pure and middleware tests**
 
 ```js
 test('TC-T6-MEDIA-015 removes the complete query from signed content URLs', () => {
@@ -106,7 +106,7 @@ test('request and error middleware never log a signed media query', () => {
 
 The middleware assertion inspects logger mock calls, including message strings and metadata URLs, before and after `finish`.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```bash
 npx jest --config backend/jest.family-common.config.js --runInBand logRedaction errorHandler
@@ -114,7 +114,7 @@ npx jest --config backend/jest.family-common.config.js --runInBand logRedaction 
 
 Expected: FAIL because the sanitizer is absent and middleware logs `req.originalUrl` verbatim.
 
-- [ ] **Step 3: Implement and apply redaction**
+- [x] **Step 3: Implement and apply redaction**
 
 `redactUrlForLogs` uses `new URL(value, 'http://local')`, returns pathname only for the signed-content path pattern, and replaces case-insensitive `signature|nonce|token|access_token|credential|secret` values with `[REDACTED]`. Malformed URLs fall back to the path before `?`.
 
@@ -125,7 +125,7 @@ const safeUrl = redactUrlForLogs(req.originalUrl);
 logger.info(`请求开始: ${req.method} ${safeUrl}`, { url: safeUrl });
 ```
 
-- [ ] **Step 4: Run GREEN and regression**
+- [x] **Step 4: Run GREEN and regression**
 
 ```bash
 npx jest --config backend/jest.family-common.config.js --runInBand logRedaction errorHandler
@@ -136,7 +136,7 @@ git diff --check
 
 Expected: focused tests and all family projects pass.
 
-- [ ] **Step 5: Commit Phase 2B1**
+- [x] **Step 5: Commit Phase 2B1**
 
 ```bash
 git add backend/services/resource-service/services/mediaCapability.js \
