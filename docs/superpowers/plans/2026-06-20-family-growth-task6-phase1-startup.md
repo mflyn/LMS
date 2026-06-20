@@ -1,6 +1,6 @@
 # Task 6 Phase 1 Startup Foundation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Make resource-service and analytics-service import-safe, explicitly started, transaction-checked where required, and included in the family regression gate.
 
@@ -16,7 +16,7 @@
 - Create: `backend/services/resource-service/__tests__/task6Startup.test.js`
 - Create: `backend/services/analytics-service/__tests__/task6Startup.test.js`
 
-- [ ] **Step 1: Write resource-service failing tests**
+- [x] **Step 1: Write resource-service failing tests**
 
 Test the exported contract and inject a fake app/connect function:
 
@@ -43,7 +43,7 @@ test('startServer connects before listening', async () => {
 });
 ```
 
-- [ ] **Step 2: Write analytics-service failing tests**
+- [x] **Step 2: Write analytics-service failing tests**
 
 ```js
 test('TC-T6-REG-001 importing analytics server has no startup side effects', () => {
@@ -62,7 +62,7 @@ test('rejects standalone MongoDB before listening', async () => {
 });
 ```
 
-- [ ] **Step 3: Run tests and verify RED**
+- [x] **Step 3: Run tests and verify RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand task6Startup
@@ -80,7 +80,7 @@ Expected: both commands fail because the family configs and startup exports do n
 - Modify: `backend/services/resource-service/package-lock.json`
 - Create: `backend/services/resource-service/jest.family.config.js`
 
-- [ ] **Step 1: Export an injectable app factory**
+- [x] **Step 1: Export an injectable app factory**
 
 Keep existing public resource routes, but construct middleware inside this function and use the real shared error handler in tests and production:
 
@@ -107,7 +107,7 @@ module.exports.createApp = createApp;
 
 Do not call `mongoose.connect`, `listen`, `mkdirSync`, or register a private media static route from `app.js`.
 
-- [ ] **Step 2: Export explicit database and server lifecycle functions**
+- [x] **Step 2: Export explicit database and server lifecycle functions**
 
 ```js
 const connectDatabase = async ({ mongooseInstance = mongoose, mongoURI = process.env.MONGO_URI } = {}) => {
@@ -125,7 +125,7 @@ if (require.main === module) startServer().catch(handleStartupFailure);
 
 Export the default app plus `createApp`, `connectDatabase`, and `startServer`. Move `mongoose` from devDependencies to dependencies because production startup requires it.
 
-- [ ] **Step 3: Add the focused family Jest project**
+- [x] **Step 3: Add the focused family Jest project**
 
 ```js
 module.exports = {
@@ -138,7 +138,7 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 4: Run resource tests and verify GREEN**
+- [x] **Step 4: Run resource tests and verify GREEN**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand task6Startup
@@ -151,9 +151,16 @@ Expected: PASS with no open handle or network connection.
 **Files:**
 - Create: `backend/services/analytics-service/app.js`
 - Modify: `backend/services/analytics-service/server.js`
+- Modify: `backend/services/analytics-service/routes/behavior.js`
+- Modify: `backend/services/analytics-service/routes/long-term-trends.js`
+- Modify: `backend/services/analytics-service/routes/performance.js`
+- Modify: `backend/services/analytics-service/routes/progress.js`
+- Modify: `backend/services/analytics-service/routes/reports.js`
+- Modify: `backend/services/analytics-service/routes/trends.js`
+- Modify: `backend/services/analytics-service/routes/user-behavior.js`
 - Create: `backend/services/analytics-service/jest.family.config.js`
 
-- [ ] **Step 1: Move Express construction to `createApp`**
+- [x] **Step 1: Move Express construction to `createApp`**
 
 ```js
 const createApp = ({ logger = createLogger('analytics-service'), io = null } = {}) => {
@@ -179,7 +186,7 @@ const createApp = ({ logger = createLogger('analytics-service'), io = null } = {
 
 Use the shared logger/error contract. Do not create file transports or directories during import.
 
-- [ ] **Step 2: Add topology verification and explicit HTTP/Socket.IO startup**
+- [x] **Step 2: Add topology verification and explicit HTTP/Socket.IO startup**
 
 ```js
 const assertTransactionCapability = async (connection) => {
@@ -203,7 +210,7 @@ const startServer = async ({ port = Number(process.env.PORT || 3006), connect = 
 
 Only `startServer` creates Socket.IO and listens. Export the default app and all lifecycle functions.
 
-- [ ] **Step 3: Add the focused family Jest project**
+- [x] **Step 3: Add the focused family Jest project**
 
 ```js
 module.exports = {
@@ -216,7 +223,7 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 4: Run analytics tests and verify GREEN**
+- [x] **Step 4: Run analytics tests and verify GREEN**
 
 ```bash
 npx jest --config backend/services/analytics-service/jest.family.config.js --runInBand task6Startup
@@ -228,9 +235,10 @@ Expected: PASS; standalone topology is rejected and import opens no handle.
 
 **Files:**
 - Modify: `backend/jest.config.js`
+- Modify: `backend/common/deployment/__tests__/task5Deployment.test.js`
 - Modify: `package.json`
 
-- [ ] **Step 1: Register focused family projects**
+- [x] **Step 1: Register focused family projects**
 
 Add these projects:
 
@@ -241,7 +249,7 @@ Add these projects:
 
 Change `test:family-regression` to select `resource-family analytics-family` in addition to the existing family projects and keep `--runInBand`.
 
-- [ ] **Step 2: Run the Phase 1 gate**
+- [x] **Step 2: Run the Phase 1 gate**
 
 ```bash
 npm run test:family-regression -- --runInBand
@@ -250,7 +258,7 @@ git diff --check
 
 Expected: all family projects pass; no import-time ports, connections, process exits, or whitespace errors.
 
-- [ ] **Step 3: Commit Phase 1**
+- [x] **Step 3: Commit Phase 1**
 
 ```bash
 git add package.json backend/jest.config.js \
@@ -262,7 +270,15 @@ git add package.json backend/jest.config.js \
   backend/services/resource-service/__tests__/task6Startup.test.js \
   backend/services/analytics-service/app.js \
   backend/services/analytics-service/server.js \
+  backend/services/analytics-service/routes/behavior.js \
+  backend/services/analytics-service/routes/long-term-trends.js \
+  backend/services/analytics-service/routes/performance.js \
+  backend/services/analytics-service/routes/progress.js \
+  backend/services/analytics-service/routes/reports.js \
+  backend/services/analytics-service/routes/trends.js \
+  backend/services/analytics-service/routes/user-behavior.js \
   backend/services/analytics-service/jest.family.config.js \
-  backend/services/analytics-service/__tests__/task6Startup.test.js
+  backend/services/analytics-service/__tests__/task6Startup.test.js \
+  backend/common/deployment/__tests__/task5Deployment.test.js
 git commit -m "refactor: isolate task 6 service startup"
 ```

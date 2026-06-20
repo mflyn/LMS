@@ -11,7 +11,7 @@
     "test:integration": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.integration.test.js'",
     "test:e2e": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.e2e.test.js'",
     "test:nocoverage": "npm run test:family-regression && npm run test:legacy-regression",
-    "test:family-regression": "jest --config=backend/jest.config.js --coverage=false --selectProjects family-common user-service homework-service progress-service --runInBand",
+    "test:family-regression": "jest --config=backend/jest.config.js --coverage=false --selectProjects family-common user-service homework-service progress-service resource-family analytics-family --runInBand",
     "test:legacy-regression": "jest --config=backend/jest.config.js --coverage=false --selectProjects progress-legacy legacy",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
