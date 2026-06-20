@@ -3,6 +3,9 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
   || 'test-gateway-identity-secret-32-bytes-long';
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
+const express = require('express');
+const request = require('supertest');
+
 const mockConnect = jest.fn().mockResolvedValue(undefined);
 const mockListen = jest.fn((port, callback) => {
   if (callback) callback();
@@ -29,9 +32,26 @@ jest.mock('../app', () => mockApp);
 describe('resource-service Task 6 startup contract', () => {
   test('actual app factory constructs without database or listener startup', () => {
     const appModule = jest.requireActual('../app');
+    const FamilyUser = jest.requireActual('../models/FamilyUser');
+    const actualApp = appModule.createApp({ logger: mockLogger });
 
     expect(appModule.createApp).toEqual(expect.any(Function));
-    expect(appModule.createApp({ logger: mockLogger })).toEqual(expect.objectContaining({ listen: expect.any(Function) }));
+    expect(actualApp).toEqual(expect.objectContaining({ listen: expect.any(Function) }));
+    expect(actualApp.locals.userModel).toBe(FamilyUser);
+    expect(mockConnect).not.toHaveBeenCalled();
+    expect(mockListen).not.toHaveBeenCalled();
+  });
+
+  test('media router can be injected without database or listener startup', async () => {
+    const appModule = jest.requireActual('../app');
+    const mediaRouter = express.Router();
+    mediaRouter.get('/probe', (req, res) => res.status(200).json({ mounted: true }));
+
+    const actualApp = appModule.createApp({ logger: mockLogger, mediaRouter });
+    const response = await request(actualApp).get('/api/media/probe');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ mounted: true });
     expect(mockConnect).not.toHaveBeenCalled();
     expect(mockListen).not.toHaveBeenCalled();
   });

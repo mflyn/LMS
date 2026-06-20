@@ -3,6 +3,12 @@ process.env.JWT_SECRET = 'test-jwt-secret-at-least-32-characters';
 process.env.GATEWAY_IDENTITY_SECRET = 'test-gateway-identity-secret-32-bytes-long';
 process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/auth-middleware-test';
 
+const mockDefaultUserFindOne = jest.fn();
+
+jest.mock('../../models/User', () => ({
+  findOne: (...args) => mockDefaultUserFindOne(...args)
+}));
+
 const jwt = require('jsonwebtoken');
 const { generateToken, authenticateJWT, authenticateGateway, checkRole } = require('../auth');
 // Corrected path for authConfig assuming __tests__ is a sibling to files it tests, and config is one level up from common
@@ -46,6 +52,7 @@ describe('Auth Middleware', () => {
   beforeEach(() => {
     // Reset mocks for each test
     mockReq = {
+      app: { locals: {} },
       method: 'GET',
       originalUrl: '/api/test',
       headers: {},
@@ -69,6 +76,8 @@ describe('Auth Middleware', () => {
     }
     mockReq.header.mockClear();
     resetIdentityNonceStore();
+    mockDefaultUserFindOne.mockReset();
+    mockDefaultUserFindOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
   });
 
   describe('generateToken', () => {
@@ -183,6 +192,29 @@ describe('Auth Middleware', () => {
       authenticateGateway(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+    });
+
+    it('uses the service-injected user model for child token validation', async () => {
+      const childId = '6656875da7f86a0012c2a301';
+      const familyId = '6656875da7f86a0012c2a101';
+      const select = jest.fn().mockResolvedValue({ childProfile: { tokenVersion: 3 } });
+      const injectedFindOne = jest.fn().mockReturnValue({ select });
+      mockReq.app.locals.userModel = { findOne: injectedFindOne };
+      mockReq.headers = createIdentityHeaders({
+        method: mockReq.method,
+        originalUrl: mockReq.originalUrl,
+        user: { id: childId, childId, familyId, role: 'student', tokenVersion: 3 },
+        secret: gatewayIdentitySecret,
+        nonce: 'auth-test-injected-model'
+      });
+
+      await authenticateGateway(mockReq, mockRes, mockNext);
+
+      expect(injectedFindOne).toHaveBeenCalledWith({ _id: childId, role: 'student', familyId });
+      expect(select).toHaveBeenCalledWith('childProfile.tokenVersion');
+      expect(mockDefaultUserFindOne).not.toHaveBeenCalled();
+      expect(mockReq.user).toEqual(expect.objectContaining({ id: childId, childId, familyId }));
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
     it('should call next with UnauthorizedError if x-user-id header is missing', () => {

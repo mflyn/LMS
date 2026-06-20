@@ -14,12 +14,15 @@
 
 **Files:**
 - Create: `backend/services/resource-service/middleware/privateMediaUpload.js`
+- Create: `backend/services/resource-service/models/FamilyUser.js`
 - Create: `backend/services/resource-service/services/mediaService.js`
 - Create: `backend/services/resource-service/routes/media.js`
 - Create: `backend/services/resource-service/__tests__/familyMedia.test.js`
+- Modify: `backend/common/middleware/auth.js`
+- Modify: `backend/common/middleware/__tests__/auth.test.js`
 - Modify: `backend/services/resource-service/jest.family.config.js`
 
-- [ ] **Step 1: Write failing upload route tests**
+- [x] **Step 1: Write failing upload route tests**
 
 Build one test application with the real `authenticateGateway`, `MediaAsset`, `privateMediaStore`, and a Mongo memory database. Insert parent A, child A1, sibling A2, and family-B child B1 into the users collection; sign every protected request with `createIdentityHeaders`.
 
@@ -53,15 +56,15 @@ Also prove:
 - a forced `MediaAsset.create` failure removes the newly written private object.
 - stored JPEG/WebP bytes are decodable and contain no EXIF metadata.
 
-- [ ] **Step 2: Run upload RED**
+- [x] **Step 2: Run upload RED**
 
 ```bash
-npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia --testNamePattern='MEDIA-00[1-5]|persistence failure'
+npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia --testNamePattern='MEDIA-00[1-5]|removes the private object'
 ```
 
 Expected: FAIL because the private media router, upload middleware, and service do not exist.
 
-- [ ] **Step 3: Implement bounded temporary upload middleware**
+- [x] **Step 3: Implement bounded temporary upload middleware**
 
 `createPrivateMediaUpload` must use Multer disk storage with an opaque random filename under `<PRIVATE_MEDIA_ROOT>/.incoming`, create/chmod that directory as `0700`, enforce `fileSize=10 MiB`, and translate Multer `LIMIT_FILE_SIZE`, missing file, and multipart errors into operational `400 VALIDATION_ERROR` errors. It must never use or persist `file.originalname`.
 
@@ -76,7 +79,7 @@ const createPrivateMediaUpload = ({ privateRoot, fsPromises, randomUUID } = {}) 
 
 The route executes `removeTemporary(req.file.path)` in `finally`, including authorization, decode, persistence, and response failures.
 
-- [ ] **Step 4: Implement upload authorization and persistence**
+- [x] **Step 4: Implement upload authorization and persistence**
 
 `createMediaService` accepts injected `MediaAssetModel`, `UserModel`, `mediaStore`, `capabilityService`, and `now`. Its `upload` method:
 
@@ -97,7 +100,11 @@ must:
 
 Use stable errors: malformed input `400 VALIDATION_ERROR`; family, sibling, role, or child-scope denial `403 CHILD_ACCESS_DENIED`.
 
-- [ ] **Step 5: Implement upload route and run GREEN**
+- [x] **Step 4a: Keep gateway child validation on the service database connection**
+
+The repository contains a service-local Mongoose dependency while the shared `User` model resolves the root dependency. Add a minimal `FamilyUser` model on resource-service's own Mongoose connection and make `authenticateGateway` prefer `req.app.locals.userModel` for child token-version validation, retaining the shared model as the default for other services. Cover the injection behavior in the common auth middleware tests and set `app.locals.userModel = FamilyUser` in resource-service.
+
+- [x] **Step 5: Implement upload route and run GREEN**
 
 The router must mount protected upload as:
 
@@ -121,7 +128,7 @@ router.post('/', authenticate, upload.singleImage, asyncHandler(async (req, res)
 Run:
 
 ```bash
-npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia --testNamePattern='MEDIA-00[1-5]|persistence failure'
+npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia --testNamePattern='MEDIA-00[1-5]|removes the private object'
 ```
 
 Expected: all upload, authorization, cleanup, and privacy cases pass.
@@ -133,7 +140,7 @@ Expected: all upload, authorization, cleanup, and privacy cases pass.
 - Modify: `backend/services/resource-service/routes/media.js`
 - Modify: `backend/services/resource-service/__tests__/familyMedia.test.js`
 
-- [ ] **Step 1: Write failing access/content tests**
+- [x] **Step 1: Write failing access/content tests**
 
 Add cases that persist sanitized media through the upload route and then prove:
 
@@ -158,7 +165,7 @@ Content-Type: persisted mimeType
 
 Independently tamper path, media ID, expiry, nonce, and signature and use an expired capability; every altered request returns `400 VALIDATION_ERROR` and no bytes. `TC-T6-MEDIA-008` must return `403 CHILD_ACCESS_DENIED` for family B, sibling A2, and a child requesting a family-scoped avatar. Missing/deleted owner access returns `404 RESOURCE_NOT_FOUND`.
 
-- [ ] **Step 2: Run access/content RED**
+- [x] **Step 2: Run access/content RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia --testNamePattern='MEDIA-00[6-8]'
@@ -166,7 +173,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL because access grant and content handlers are absent.
 
-- [ ] **Step 3: Implement service access policy and content lookup**
+- [x] **Step 3: Implement service access policy and content lookup**
 
 Add:
 
@@ -179,7 +186,7 @@ readContent({ mediaId, path, expires, nonce, signature })
 
 `readContent` first calls `capabilityService.verify` with every signed field, then loads `{ _id: mediaId, status: 'active' }`, reads only `storageKey` from the private store, and returns `{ bytes, mimeType }`. It never returns or redirects to a storage path.
 
-- [ ] **Step 4: Implement route order and security headers**
+- [x] **Step 4: Implement route order and security headers**
 
 Mount `GET /:mediaId/content` before `router.use(authenticate)`. Mount `GET /:mediaId/access` after authentication, set `Cache-Control: no-store`, and return:
 
@@ -189,7 +196,7 @@ Mount `GET /:mediaId/content` before `router.use(authenticate)`. Mount `GET /:me
 
 The content route sets the four approved response headers and sends the exact bytes. It must not log the signed URL; shared request/error middleware handles query redaction.
 
-- [ ] **Step 5: Run access/content GREEN**
+- [x] **Step 5: Run access/content GREEN**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia --testNamePattern='MEDIA-00[6-8]'
@@ -206,13 +213,13 @@ Expected: all capability, stream, header, and scope cases pass.
 - Modify: `backend/services/resource-service/__tests__/familyMedia.test.js`
 - Modify: `backend/services/resource-service/__tests__/task6Startup.test.js`
 
-- [ ] **Step 1: Write failing delete and mounting tests**
+- [x] **Step 1: Write failing delete and mounting tests**
 
 `TC-T6-MEDIA-009` must delete an owned active asset twice and expect `204` both times, one immutable `deletedAt`, retained private bytes, and immediate `404 RESOURCE_NOT_FOUND` from both access-grant and a previously issued content URL. Add cross-family, sibling, and child-to-family-avatar delete attempts expecting `403 CHILD_ACCESS_DENIED`.
 
 Extend the startup test to inject a media router into `createApp` and assert it is reachable without database connection or listener startup.
 
-- [ ] **Step 2: Run delete/mount RED**
+- [x] **Step 2: Run delete/mount RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia task6Startup --testNamePattern='MEDIA-009|media router'
@@ -220,7 +227,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL because delete and app mounting are absent.
 
-- [ ] **Step 3: Implement atomic idempotent soft delete**
+- [x] **Step 3: Implement atomic idempotent soft delete**
 
 Add:
 
@@ -230,11 +237,11 @@ deleteMedia({ identity, mediaId })
 
 Load the asset regardless of status so an authorized retry remains `204`; apply the same family/child/family-scoped-avatar policy as access. For the first delete, use an atomic predicate `{ _id: mediaId, status: 'active' }` and `$set: { status: 'deleted', deletedAt: new Date(now()) }`. Never remove private bytes here. Phase 2C will extend this transaction to release only prepared references while retaining bound references.
 
-- [ ] **Step 4: Mount the injected media router**
+- [x] **Step 4: Mount the injected media router**
 
 Extend `createApp` with an optional `mediaRouter` dependency and mount it at `/api/media` before legacy resource routes. Do not construct environment-bound media dependencies at module import time. Phase 5 will create the production router from validated environment configuration and add gateway/deployment routing.
 
-- [ ] **Step 5: Run Phase 2B2 regression**
+- [x] **Step 5: Run Phase 2B2 regression**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia task6Startup
@@ -244,16 +251,19 @@ git diff --check
 
 Expected: the complete resource-family suite and all six family regression projects pass with no open handles or formatting errors.
 
-- [ ] **Step 6: Commit Phase 2B2**
+- [x] **Step 6: Commit Phase 2B2**
 
 ```bash
 git add backend/services/resource-service/middleware/privateMediaUpload.js \
+  backend/services/resource-service/models/FamilyUser.js \
   backend/services/resource-service/services/mediaService.js \
   backend/services/resource-service/routes/media.js \
   backend/services/resource-service/__tests__/familyMedia.test.js \
   backend/services/resource-service/__tests__/task6Startup.test.js \
   backend/services/resource-service/jest.family.config.js \
   backend/services/resource-service/app.js \
+  backend/common/middleware/auth.js \
+  backend/common/middleware/__tests__/auth.test.js \
   docs/superpowers/plans/2026-06-21-family-growth-task6-phase2b2-media-api.md
 git commit -m "feat: add private media API"
 ```

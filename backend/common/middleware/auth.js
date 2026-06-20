@@ -80,7 +80,9 @@ const authenticateGateway = async (req, res, next) => {
         invalid.code = 'INVALID_IDENTITY_ENVELOPE';
         throw invalid;
       }
-      const User = require('../models/User');
+      const User = req.app && req.app.locals && req.app.locals.userModel
+        ? req.app.locals.userModel
+        : require('../models/User');
       const child = await User.findOne({
         _id: identity.childId,
         role: 'student',

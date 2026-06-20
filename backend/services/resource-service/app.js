@@ -7,6 +7,7 @@ const { errorHandler, requestTracker } = require('../../common/middleware/errorH
 const resourcesRouter = require('./routes/resources');
 const recommendationsRouter = require('./routes/recommendations');
 const collectionsRouter = require('./routes/collections');
+const FamilyUser = require('./models/FamilyUser');
 
 const LEGACY_UPLOAD_ROOT = path.join(__dirname, 'uploads');
 
@@ -39,16 +40,22 @@ const createLegacyUpload = () => multer({
   }
 });
 
-const createApp = ({ logger = createLogger('resource-service') } = {}) => {
+const createApp = ({
+  logger = createLogger('resource-service'),
+  mediaRouter = null,
+  userModel = FamilyUser
+} = {}) => {
   const app = express();
   app.locals.logger = logger;
   app.locals.serviceName = 'resource-service';
   app.locals.upload = createLegacyUpload();
+  app.locals.userModel = userModel;
 
   app.use(cors());
   app.use(express.json());
   app.use(requestTracker);
   app.use('/uploads', express.static(LEGACY_UPLOAD_ROOT));
+  if (mediaRouter) app.use('/api/media', mediaRouter);
   app.use('/api/recommendations', recommendationsRouter);
   app.use('/api/resources/collections', collectionsRouter);
   app.use('/api/resources', resourcesRouter);
