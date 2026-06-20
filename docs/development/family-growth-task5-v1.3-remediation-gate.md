@@ -1,8 +1,8 @@
 # Task 5 v1.3 Remediation Gate Evidence
 
-**Gate ID:** FGT-T5-RG-2026-06-19
-**Candidate commit:** `0eb011f21b6cf9ad7f66f0455db9a96cbe8e09ac`
-**Executed at:** 2026-06-19 (Asia/Shanghai)
+**Gate ID:** FGT-T5-RG-2026-06-20
+**Candidate commit:** `4b2c2ea5b2b8fdb881f3dd60d1b50a68dddd7cc9`
+**Executed at:** 2026-06-20 (Asia/Shanghai)
 **Technical result:** PASS_WITH_CLASSIFIED_LEGACY_FAILURES
 **Product approval:** PENDING
 
@@ -25,14 +25,14 @@ The exact `npm run test:family-regression` command ran twice on the same candida
 
 | Run | Exit | Elapsed | Result |
 | --- | ---: | ---: | --- |
-| 1 | 0 | 56 s | 28 suites, 237 tests passed |
-| 2 | 0 | 57 s | 28 suites, 237 tests passed |
+| 1 | 0 | 60.584 s | 28 suites, 237 tests passed |
+| 2 | 0 | 60.422 s | 28 suites, 237 tests passed |
 
 Both processes exited normally. No MongoMemory process remained after the runs.
 
 ## Root Regression
 
-`npm run test:nocoverage` exited 1 after 112 seconds, with two explicit phases:
+`npm run test:nocoverage` exited 1 with two explicit phases:
 
 | Phase | Suites | Tests | Result |
 | --- | --- | --- | --- |
@@ -48,13 +48,19 @@ Compared with the approved v1.3 gate, failed suites and tests are unchanged. Pas
 | Root Compose parse with three required external secrets | PASS |
 | China Compose parse with the same values | PASS |
 | Kubernetes Kustomize rendering | PASS |
-| External `family-growth-secrets` client dry-run | PASS; all three keys present |
+| External `family-growth-secrets` client dry-run | PASS; status-only output contains no credential or Base64 value |
 | Numbered Task 5 catalog | 52 distinct cases |
 | Committed fallback credential scan | none found |
 | Generated resource-test files | removed |
 | MongoMemory child processes after gate | none |
 | `git diff --check` and worktree cleanliness | PASS |
 
+## Diagnostic Runs
+
+- The first sandboxed progress run failed before tests because local port binding returned `EPERM`; the same command was rerun outside the network sandbox.
+- The first outside-sandbox progress run reported one failed test, but direct tool output truncation did not retain the test identity. It is not counted as passing evidence.
+- The diagnostic rerun passed 5 suites and 48 tests. It was followed by a 21-suite common/progress pass, two 28-suite family passes, and the 28-suite family phase inside the exact root command.
+
 ## Decision
 
-The Task 5 v1.3 remediation technical gate passes. All seven remediation review findings are closed, every new regression case passed, and the candidate is ready for product-owner approval as corrected baseline v1.3.1. The immutable v1.3 tag remains unchanged, and no v1.3.1 tag is created before approval.
+The Task 5 v1.3 remediation technical gate passes. All eight remediation review findings are closed, the secret dry-run non-disclosure regression passed, and the candidate is ready for product-owner approval as corrected baseline v1.3.1. The immutable v1.3 tag remains unchanged, and no v1.3.1 tag is created before approval.
