@@ -83,7 +83,7 @@ Test names must begin with the case ID. Unless stated otherwise, database cases 
 | `TC-T5-REG-002` | Task 5 gate | regression | Run exact `npm run test:nocoverage` and compare with v1.2. | No new family-branch failure; all deltas classified. | `family-growth-task5-gate.md` |
 | `TC-T5-REG-003` | Task 5 gate | stability | Run the isolated family regression twice on one commit. | Both runs exit 0 with identical suite/test totals and no leaked process. | `task5Deployment.test.js`, `family-growth-task5-v1.3-remediation-gate.md` |
 | `TC-T5-DEPLOY-001` | `NFR-SEC-002` | deployment | Parse root and China Compose signing/verification environments. | Gateway and user-service use the same required external JWT secret. | `task5Deployment.test.js` |
-| `TC-T5-DEPLOY-002` | `NFR-SEC-003` | deployment | Render the external Kubernetes Secret workflow with test values. | Required independent keys render; no credential file is written or committed. | `task5Deployment.test.js` |
+| `TC-T5-DEPLOY-002` | `NFR-SEC-003` | deployment | Validate the external Kubernetes Secret workflow with real-shaped test values. | Input and manifest structure validate; dry-run emits no credential or Base64 value and writes no file. | `task5Deployment.test.js` |
 | `TC-T5-DEPLOY-003` | `NFR-DATA-002` | startup | Connect to standalone, secondary, old replica set, and transaction-ready primary topologies. | Only the transaction-capable writable primary permits startup. | `startup.test.js` |
 | `TC-T5-CONTRACT-001` | `FR-POINT-001` | documentation | Parse the knowledge-point update request and response examples. | Response mastery equals the requested updated value. | `apiExamples.test.js` |
 

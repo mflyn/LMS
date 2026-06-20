@@ -50,30 +50,27 @@ describe('Task 5 deployment contracts', () => {
     }
   );
 
-  test('TC-T5-DEPLOY-002 external Secret workflow renders required keys without writing a file', () => {
+  test('TC-T5-DEPLOY-002 Secret dry-run validates without exposing credentials', () => {
     const script = path.join(repositoryRoot, 'deployment/kubernetes/create-family-growth-secrets.sh');
+    const credentials = {
+      JWT_SECRET: 'dry-run-jwt-secret-value-123456789',
+      GATEWAY_IDENTITY_SECRET: 'dry-run-gateway-secret-value-12345',
+      INTERNAL_SERVICE_TOKEN: 'dry-run-internal-token-value-123456'
+    };
     const output = execFileSync(script, ['--dry-run'], {
       cwd: repositoryRoot,
       encoding: 'utf8',
       env: {
         ...process.env,
-        JWT_SECRET: 'j'.repeat(32),
-        GATEWAY_IDENTITY_SECRET: 'g'.repeat(32),
-        INTERNAL_SERVICE_TOKEN: 'i'.repeat(32)
+        ...credentials
       }
     });
-    const secret = yaml.load(output);
 
-    expect(secret).toMatchObject({
-      apiVersion: 'v1',
-      kind: 'Secret',
-      metadata: { name: 'family-growth-secrets' }
-    });
-    expect(Object.keys(secret.data).sort()).toEqual([
-      'gateway-identity-secret',
-      'internal-service-token',
-      'jwt-secret'
-    ]);
+    expect(output).toBe('family-growth-secrets validation passed for namespace default\n');
+    for (const credential of Object.values(credentials)) {
+      expect(output).not.toContain(credential);
+      expect(output).not.toContain(Buffer.from(credential).toString('base64'));
+    }
     expect(fs.existsSync(path.join(repositoryRoot, 'deployment/kubernetes/family-growth-secrets.yaml')))
       .toBe(false);
   });
