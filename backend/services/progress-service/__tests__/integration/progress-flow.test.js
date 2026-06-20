@@ -137,15 +137,15 @@ describe('进度服务集成测试', () => {
     ];
     
     // 模拟教师认证
-    const headers = {
+    const headers = () => ({
       'x-user-id': teacherId.toString(),
       'x-user-role': 'teacher'
-    };
+    });
     
     // 批量更新进度
     const batchUpdateResponse = await request(app)
       .post('/api/progress/batch-update')
-      .set(headers)
+      .set(headers())
       .send({
         students: studentIds.map(id => id.toString()),
         subject: subjectId,
@@ -164,7 +164,7 @@ describe('进度服务集成测试', () => {
     for (const id of studentIds) {
       const checkResponse = await request(app)
         .get(`/api/progress/${id}`)
-        .set(headers);
+        .set(headers());
       
       expect(checkResponse.status).toBe(200);
       expect(checkResponse.body.progress[0].chapter).toBe('第二章');

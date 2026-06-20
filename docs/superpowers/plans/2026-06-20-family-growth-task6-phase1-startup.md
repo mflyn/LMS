@@ -159,6 +159,7 @@ Expected: PASS with no open handle or network connection.
 - Modify: `backend/services/analytics-service/routes/trends.js`
 - Modify: `backend/services/analytics-service/routes/user-behavior.js`
 - Create: `backend/services/analytics-service/jest.family.config.js`
+- Modify: `backend/services/analytics-service/__tests__/server.test.js`
 
 - [x] **Step 1: Move Express construction to `createApp`**
 
@@ -236,6 +237,7 @@ Expected: PASS; standalone topology is rejected and import opens no handle.
 **Files:**
 - Modify: `backend/jest.config.js`
 - Modify: `backend/common/deployment/__tests__/task5Deployment.test.js`
+- Modify: `backend/services/progress-service/__tests__/integration/progress-flow.test.js`
 - Modify: `package.json`
 
 - [x] **Step 1: Register focused family projects**
