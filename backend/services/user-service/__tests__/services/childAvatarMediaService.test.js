@@ -6,8 +6,67 @@ const {
   buildChildProfilePatch,
   entriesToMongoSet
 } = require('../../services/childProfilePatch');
+const { createChildAvatarMediaService } = require('../../services/childAvatarMediaService');
 
+const OPERATION_A = '8a9dc72a-558b-4818-b388-677862431377';
+const MEDIA_A = '0123456789abcdef01234567';
 const MEDIA_B = 'ABCDEF0123456789ABCDEF01';
+const HIDDEN_AVATAR_STATE = [
+  '+childProfile.avatarMediaBindingOperationId',
+  '+childProfile.mediaBindingOperationId',
+  '+childProfile.avatarMediaPendingId',
+  '+childProfile.avatarMediaPreviousId',
+  '+childProfile.avatarMediaPreviousBindingOperationId',
+  '+childProfile.mediaBindingPhase',
+  '+childProfile.mediaPendingProfilePatch'
+].join(' ');
+
+let childSequence = 0;
+
+const createChild = async () => {
+  childSequence += 1;
+  return User.create({
+    username: `bindingchild${childSequence}`,
+    password: 'child123',
+    email: `bindingchild${childSequence}@example.com`,
+    name: '原名字',
+    role: 'student',
+    familyId: new mongoose.Types.ObjectId(),
+    childProfile: { nickname: '原名字', school: '原学校', grade: 3 }
+  });
+};
+
+const loadInternal = (childId) => User.findById(childId).select(HIDDEN_AVATAR_STATE);
+
+const pendingError = () => Object.assign(new Error('Media reference operation is pending'), {
+  status: 503,
+  code: 'MEDIA_REFERENCE_PENDING',
+  details: []
+});
+
+const createHarness = ({ UserModel = User, prepare, commit } = {}) => {
+  const mediaReferenceClient = {
+    prepare: jest.fn(prepare || (async () => [{ mediaId: MEDIA_A, field: 'avatarMediaId', state: 'prepared' }])),
+    commit: jest.fn(commit || (async () => [{ mediaId: MEDIA_A, field: 'avatarMediaId', state: 'bound' }])),
+    unbind: jest.fn()
+  };
+  const randomUUID = jest.fn(() => OPERATION_A);
+  const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  const service = createChildAvatarMediaService({
+    UserModel,
+    mediaReferenceClient,
+    randomUUID,
+    logger
+  });
+  return { service, mediaReferenceClient, randomUUID, logger };
+};
+
+const mutation = (child, profilePatch = []) => ({
+  child,
+  familyId: child.familyId.toString(),
+  requestedAvatarMediaId: MEDIA_A,
+  profilePatch
+});
 
 const expectValidationError = (action) => {
   let caught;
@@ -153,5 +212,164 @@ describe('TC-T6-MEDIA-018A unsafe Child profile input', () => {
     expectValidationError(() => entriesToMongoSet([
       { path: 'childProfile.$where', value: 'unsafe' }
     ]));
+  });
+});
+
+describe('TC-T6-MEDIA-016E initial Child avatar binding', () => {
+  test('claims before prepare and exposes the avatar only after commit', async () => {
+    const child = await createChild();
+    const { service, mediaReferenceClient, randomUUID } = createHarness({
+      prepare: async (command) => {
+        const duringPrepare = await loadInternal(child._id);
+        expect(duringPrepare.childProfile.mediaReferenceState).toBe('pending');
+        expect(duringPrepare.childProfile.avatarMediaId).toBeNull();
+        expect(duringPrepare.childProfile.avatarMediaPendingId.toString()).toBe(MEDIA_A);
+        expect(service.publicAvatarMediaId(duringPrepare)).toBeNull();
+        return [{ mediaId: MEDIA_A, field: 'avatarMediaId', state: 'prepared' }];
+      }
+    });
+
+    const result = await service.mutate(mutation(child, [
+      { path: 'name', value: '新名字' },
+      { path: 'childProfile.nickname', value: '新名字' }
+    ]));
+
+    const command = {
+      familyId: child.familyId.toString(),
+      childId: child._id.toString(),
+      resourceType: 'child',
+      resourceId: child._id.toString(),
+      operationId: OPERATION_A,
+      references: [{ mediaId: MEDIA_A, field: 'avatarMediaId' }]
+    };
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledWith(command);
+    expect(mediaReferenceClient.commit).toHaveBeenCalledWith(command);
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+    expect(service.publicAvatarMediaId(result)).toBe(MEDIA_A);
+
+    const stored = await loadInternal(child._id);
+    expect(stored.name).toBe('新名字');
+    expect(stored.childProfile.nickname).toBe('新名字');
+    expect(stored.childProfile.mediaReferenceState).toBe('bound');
+    expect(stored.childProfile.avatarMediaId.toString()).toBe(MEDIA_A);
+    expect(stored.childProfile.avatarMediaBindingOperationId).toBe(OPERATION_A);
+    expect(stored.childProfile.mediaBindingOperationId).toBeNull();
+    expect(stored.childProfile.mediaBindingPhase).toBeNull();
+  });
+
+  test('same bound avatar is a media no-op while ordinary fields still update', async () => {
+    const child = await createChild();
+    const { service, mediaReferenceClient, randomUUID } = createHarness();
+    await service.mutate(mutation(child));
+    mediaReferenceClient.prepare.mockClear();
+    mediaReferenceClient.commit.mockClear();
+
+    const result = await service.mutate(mutation(child, [
+      { path: 'childProfile.school', value: '新学校' }
+    ]));
+
+    expect(result.childProfile.school).toBe('新学校');
+    expect(mediaReferenceClient.prepare).not.toHaveBeenCalled();
+    expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('TC-T6-MEDIA-016F stable prepare rejection', () => {
+  test('clears untouched intent and preserves the prior profile', async () => {
+    const child = await createChild();
+    const stable = Object.assign(new Error('Media not found'), {
+      status: 404,
+      code: 'RESOURCE_NOT_FOUND',
+      details: []
+    });
+    const { service, mediaReferenceClient } = createHarness({
+      prepare: async () => { throw stable; }
+    });
+
+    await expect(service.mutate(mutation(child, [
+      { path: 'name', value: '不应保存' },
+      { path: 'childProfile.nickname', value: '不应保存' }
+    ]))).rejects.toBe(stable);
+
+    const stored = await loadInternal(child._id);
+    expect(stored.name).toBe('原名字');
+    expect(stored.childProfile.mediaReferenceState).toBe('none');
+    expect(stored.childProfile.avatarMediaId).toBeNull();
+    expect(stored.childProfile.mediaBindingOperationId).toBeNull();
+    expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
+  });
+});
+
+describe('TC-T6-MEDIA-016G initial binding recovery', () => {
+  test.each(['prepare', 'commit'])('reuses the durable operation after a lost %s response', async (failedMethod) => {
+    const child = await createChild();
+    let failed = false;
+    const behavior = async () => {
+      if (!failed) {
+        failed = true;
+        throw pendingError();
+      }
+      return [{ mediaId: MEDIA_A, field: 'avatarMediaId', state: 'bound' }];
+    };
+    const { service, mediaReferenceClient, randomUUID } = createHarness({
+      ...(failedMethod === 'prepare' ? { prepare: behavior } : { commit: behavior })
+    });
+
+    await expect(service.mutate(mutation(child, [
+      { path: 'childProfile.school', value: '恢复后学校' }
+    ]))).rejects.toMatchObject({
+      status: 503,
+      code: 'MEDIA_REFERENCE_PENDING',
+      details: { resourceId: child._id.toString() }
+    });
+
+    const pending = await loadInternal(child._id);
+    expect(pending.childProfile.mediaBindingOperationId).toBe(OPERATION_A);
+    expect(pending.childProfile.avatarMediaId).toBeNull();
+
+    const recovered = await service.resume(child._id);
+    expect(service.publicAvatarMediaId(recovered)).toBe(MEDIA_A);
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(2);
+    expect(mediaReferenceClient.commit).toHaveBeenCalledTimes(failedMethod === 'prepare' ? 1 : 2);
+    expect((await User.findById(child._id)).childProfile.school).toBe('恢复后学校');
+  });
+
+  test.each([
+    ['before persistence', false],
+    ['after persistence', true]
+  ])('recovers when the owner switch response is lost %s', async (label, persistFirst) => {
+    const child = await createChild();
+    let loseSwitchResponse = true;
+    const UserModel = {
+      findById: (...args) => User.findById(...args),
+      findOneAndUpdate: (filter, update, options) => {
+        const isSwitch = update.$set
+          && update.$set['childProfile.mediaReferenceState'] === 'bound';
+        if (!isSwitch || !loseSwitchResponse) return User.findOneAndUpdate(filter, update, options);
+        loseSwitchResponse = false;
+        if (!persistFirst) return Promise.reject(new Error('owner switch unavailable'));
+        return User.findOneAndUpdate(filter, update, options)
+          .then(() => { throw new Error('owner switch response lost'); });
+      }
+    };
+    const { service, randomUUID } = createHarness({ UserModel });
+
+    if (persistFirst) {
+      const result = await service.mutate(mutation(child));
+      expect(service.publicAvatarMediaId(result)).toBe(MEDIA_A);
+    } else {
+      await expect(service.mutate(mutation(child))).rejects.toMatchObject({
+        status: 503,
+        code: 'MEDIA_REFERENCE_PENDING',
+        details: { resourceId: child._id.toString() }
+      });
+      const result = await service.resume(child._id);
+      expect(service.publicAvatarMediaId(result)).toBe(MEDIA_A);
+    }
+
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+    expect((await loadInternal(child._id)).childProfile.mediaReferenceState).toBe('bound');
   });
 });
