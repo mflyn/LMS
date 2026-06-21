@@ -311,6 +311,22 @@ describe('TC-T6-MEDIA-016F stable prepare rejection', () => {
     expect(stored.childProfile.mediaBindingOperationId).toBeNull();
     expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
   });
+
+  test.each([
+    [400, 'VALIDATION_ERROR'],
+    [403, 'CHILD_ACCESS_DENIED'],
+    [404, 'RESOURCE_NOT_FOUND'],
+    [409, 'RESOURCE_CONFLICT']
+  ])('preserves stable %i %s and clears the intent', async (status, code) => {
+    const child = await createChild();
+    const stable = Object.assign(new Error('Stable media rejection'), { status, code, details: [] });
+    const { service } = createHarness({ prepare: async () => { throw stable; } });
+
+    await expect(service.mutate(mutation(child))).rejects.toBe(stable);
+    const stored = await loadInternal(child._id);
+    expect(stored.childProfile.mediaReferenceState).toBe('none');
+    expect(stored.childProfile.mediaBindingOperationId).toBeNull();
+  });
 });
 
 describe('TC-T6-MEDIA-016G initial binding recovery', () => {
@@ -450,6 +466,30 @@ describe('TC-T6-MEDIA-016H replacement ordering and recovery', () => {
     expect(mediaReferenceClient.commit).toHaveBeenCalledTimes(1);
     expect(mediaReferenceClient.unbind).toHaveBeenCalledTimes(2);
   });
+
+  test('recognizes replacement finalization when its database response is lost', async () => {
+    const child = await createChild();
+    await bindAvatar(child);
+    let loseFinalize = true;
+    const UserModel = {
+      findById: (...args) => User.findById(...args),
+      findOneAndUpdate: (filter, update, options) => {
+        const finalizing = update.$set
+          && update.$set['childProfile.mediaReferenceState'] === 'bound'
+          && update.$unset
+          && filter['childProfile.mediaBindingPhase'] === 'unbinding';
+        if (!finalizing || !loseFinalize) return User.findOneAndUpdate(filter, update, options);
+        loseFinalize = false;
+        return User.findOneAndUpdate(filter, update, options)
+          .then(() => { throw new Error('finalize response lost'); });
+      }
+    };
+    const { service } = createHarness({ UserModel, operationId: OPERATION_B });
+
+    const result = await service.mutate(mutation(child, [], MEDIA_B));
+    expect(service.publicAvatarMediaId(result)).toBe(MEDIA_B);
+    expect(result.childProfile.mediaReferenceState).toBe('bound');
+  });
 });
 
 describe('TC-T6-MEDIA-016I avatar removal', () => {
@@ -489,6 +529,33 @@ describe('TC-T6-MEDIA-016I avatar removal', () => {
     expect(result.childProfile.school).toBe('新学校');
     expect(randomUUID).not.toHaveBeenCalled();
     expect(mediaReferenceClient.unbind).not.toHaveBeenCalled();
+  });
+
+  test('retains removal intent when finalization fails and resumes it', async () => {
+    const child = await createChild();
+    await bindAvatar(child);
+    let failFinalize = true;
+    const UserModel = {
+      findById: (...args) => User.findById(...args),
+      findOneAndUpdate: (filter, update, options) => {
+        const finalizing = update.$set
+          && update.$set['childProfile.mediaReferenceState'] === 'none'
+          && filter['childProfile.mediaBindingPhase'] === 'unbinding';
+        if (finalizing && failFinalize) {
+          failFinalize = false;
+          return Promise.reject(new Error('finalize unavailable'));
+        }
+        return User.findOneAndUpdate(filter, update, options);
+      }
+    };
+    const { service } = createHarness({ UserModel, operationId: OPERATION_B });
+
+    await expect(service.mutate(mutation(child, [], null))).rejects.toMatchObject({
+      code: 'MEDIA_REFERENCE_PENDING'
+    });
+    expect(service.publicAvatarMediaId(await loadInternal(child._id))).toBeNull();
+    const result = await service.resume(child._id);
+    expect(result.childProfile.mediaReferenceState).toBe('none');
   });
 });
 

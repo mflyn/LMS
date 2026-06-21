@@ -49,8 +49,9 @@ const fixture = async () => {
   return { parent, child, familyId };
 };
 
-const appFor = (childAvatarMediaService) => {
+const appFor = (childAvatarMediaService, logger = null) => {
   const app = express();
+  if (logger) app.locals.logger = logger;
   app.use(express.json());
   app.use('/api', createRoutes({ childAvatarMediaService }));
   app.use(errorHandler);
@@ -180,5 +181,62 @@ describe('Child avatar media HTTP contract', () => {
       .send({ avatarMediaId: MEDIA_A });
     expect(response.status).toBe(403);
     expect(service.mutate).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ['pending', Object.assign(new Error('Media reference operation is pending'), {
+      status: 503,
+      code: 'MEDIA_REFERENCE_PENDING',
+      details: { resourceId: 'approved-resource-id' },
+      credential: 'secret-token-sentinel',
+      profilePatch: 'private-profile-sentinel'
+    })],
+    ['database', new Error('private-database-sentinel')]
+  ])('TC-T6-MEDIA-018B %s errors redact private response and audit data', async (label, failure) => {
+    const { parent, child } = await fixture();
+    if (failure.details) failure.details.resourceId = child._id.toString();
+    const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const service = {
+      mutate: jest.fn(async () => { throw failure; }),
+      resume: jest.fn(),
+      publicAvatarMediaId: jest.fn(() => null)
+    };
+    const path = `/api/children/${child._id}`;
+    const response = await request(appFor(service, logger))
+      .patch(path)
+      .set(headers(parentIdentity(parent), 'PATCH', path))
+      .send({ avatarMediaId: MEDIA_A, school: 'private-profile-sentinel' });
+
+    const serialized = JSON.stringify({ response: response.body, logs: logger.info.mock.calls });
+    expect(serialized).not.toContain('secret-token-sentinel');
+    expect(serialized).not.toContain('private-profile-sentinel');
+    expect(serialized).not.toContain('private-database-sentinel');
+    expect(logger.info).toHaveBeenCalledWith('Family operation', expect.objectContaining({
+      operation: 'child.avatar.update',
+      familyId: child.familyId.toString(),
+      childId: child._id.toString(),
+      mediaIds: [MEDIA_A]
+    }));
+    expect(response.body.error.code).toBe(label === 'pending'
+      ? 'MEDIA_REFERENCE_PENDING'
+      : 'INTERNAL_ERROR');
+  });
+
+  test('TC-T6-MEDIA-016M legacy avatar is omitted and route import has no connection side effect', async () => {
+    const { parent, child } = await fixture();
+    await User.findByIdAndUpdate(child._id, {
+      $set: { avatar: 'https://legacy.example/root.png', 'childProfile.avatar': 'https://legacy.example/profile.png' }
+    });
+    const connect = jest.spyOn(mongoose, 'connect');
+    jest.isolateModules(() => require('../../routes'));
+    expect(connect).not.toHaveBeenCalled();
+    connect.mockRestore();
+
+    const response = await request(appFor(null))
+      .get('/api/children')
+      .set(headers(parentIdentity(parent), 'GET', '/api/children'));
+    expect(response.status).toBe(200);
+    expect(response.body.data.items[0].avatar).toBeUndefined();
+    expect(response.body.data.items[0].avatarMediaId).toBeNull();
   });
 });
