@@ -5,6 +5,8 @@ const Family = require('../../../common/models/Family');
 const { generateToken } = require('../../../common/middleware/auth');
 const { isValidTimeZone } = require('../../../common/utils/familyDate');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
+const { logFamilyOperation } = require('../../../common/utils/familyAudit');
+const { applyEntries, buildChildProfilePatch } = require('../services/childProfilePatch');
 
 const PIN_WINDOW_MS = 15 * 60 * 1000;
 const PIN_MAX_FAILURES = 5;
@@ -35,15 +37,18 @@ const familyView = (family) => ({
   updatedAt: family.updatedAt
 });
 
-const childView = (child) => {
+const childView = (child, childAvatarMediaService = null) => {
   const profile = child.childProfile || {};
+  const avatarMediaId = childAvatarMediaService
+    ? childAvatarMediaService.publicAvatarMediaId(child)
+    : (profile.avatarMediaId ? profile.avatarMediaId.toString() : null);
   return {
     childId: child._id.toString(),
     familyId: child.familyId ? child.familyId.toString() : undefined,
     name: child.name,
     grade: profile.grade || child.grade,
     school: profile.school,
-    avatar: profile.avatar || child.avatar,
+    avatarMediaId,
     textbookVersion: profile.textbookVersion,
     interests: profile.interests || [],
     weakSubjects: profile.weakSubjects || [],
@@ -111,7 +116,7 @@ const getMyFamily = async (req, res) => {
     const orderedChildren = family.childIds
       .map((id) => childById.get(id.toString()))
       .filter(Boolean)
-      .map(childView);
+      .map((child) => childView(child));
 
     return res.json({
       success: true,
@@ -276,7 +281,7 @@ const listChildren = async (req, res) => {
     const items = pagedIds
       .map((id) => childById.get(id.toString()))
       .filter(Boolean)
-      .map(childView);
+      .map((child) => childView(child));
 
     return res.json({
       success: true,
@@ -292,7 +297,7 @@ const listChildren = async (req, res) => {
   }
 };
 
-const getChild = async (req, res) => {
+const createGetChild = (childAvatarMediaService) => async (req, res) => {
   try {
     const { childId } = req.params;
     if (!isObjectId(childId)) {
@@ -304,8 +309,11 @@ const getChild = async (req, res) => {
         return sendError(res, 403, 'Children can only access their own profile');
       }
       const child = await User.findById(childId);
-      return child
-        ? res.json({ success: true, data: { child: childView(child) } })
+      const resumed = child && childAvatarMediaService
+        ? await childAvatarMediaService.resume(child)
+        : child;
+      return resumed
+        ? res.json({ success: true, data: { child: childView(resumed, childAvatarMediaService) } })
         : sendError(res, 404, 'Child not found');
     }
 
@@ -319,13 +327,18 @@ const getChild = async (req, res) => {
       return sendError(res, 403, 'Cannot access another family child');
     }
 
-    return res.json({ success: true, data: { child: childView(child) } });
+    const resumed = childAvatarMediaService ? await childAvatarMediaService.resume(child) : child;
+    return res.json({ success: true, data: { child: childView(resumed, childAvatarMediaService) } });
   } catch (error) {
-    return sendError(res, 500, error.message);
+    if (error.status && error.code) {
+      return sendFamilyError(res, error.status, error.code, error.message, error.details || []);
+    }
+    return sendError(res, 500, 'Internal server error');
   }
 };
 
-const updateChild = async (req, res) => {
+const createUpdateChild = (childAvatarMediaService) => async (req, res) => {
+  let avatarAudit;
   try {
     if (!requireParent(req, res)) return;
 
@@ -335,40 +348,49 @@ const updateChild = async (req, res) => {
       return sendError(res, 403, 'Cannot update another family child');
     }
 
-    const allowedProfileFields = [
-      'school',
-      'grade',
-      'textbookVersion',
-      'interests',
-      'weakSubjects',
-      'sportsPreferences',
-      'artInterests',
-      'laborHabits',
-      'moralGoals'
-    ];
-
-    if (req.body.name) {
-      child.name = req.body.name.trim();
-      child.childProfile.nickname = child.name;
+    const patch = buildChildProfilePatch(req.body);
+    if (patch.hasAvatarMutation && !childAvatarMediaService) {
+      return sendFamilyError(res, 400, 'MEDIA_NOT_ENABLED', 'Avatar media is not enabled');
     }
-    if (req.body.grade) {
-      child.grade = req.body.grade;
+    if (patch.hasAvatarMutation) {
+      avatarAudit = {
+        operation: 'child.avatar.update',
+        familyId: family._id.toString(),
+        childId: child._id.toString(),
+        mediaIds: patch.requestedAvatarMediaId ? [patch.requestedAvatarMediaId] : []
+      };
     }
 
-    allowedProfileFields.forEach((field) => {
-      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-        child.childProfile[field] = req.body[field];
-      }
-    });
-
-    await child.save();
+    let updatedChild;
+    if (childAvatarMediaService && patch.hasAvatarMutation) {
+      updatedChild = await childAvatarMediaService.mutate({
+        child,
+        familyId: family._id.toString(),
+        requestedAvatarMediaId: patch.requestedAvatarMediaId,
+        profilePatch: patch.entries
+      });
+      logFamilyOperation(req, {
+        ...avatarAudit,
+        result: 'success',
+      });
+    } else {
+      applyEntries(child, patch.entries);
+      await child.save();
+      updatedChild = child;
+    }
 
     return res.json({
       success: true,
-      data: { child: childView(child) }
+      data: { child: childView(updatedChild, childAvatarMediaService) }
     });
   } catch (error) {
-    return sendError(res, 500, error.message);
+    if (avatarAudit) {
+      logFamilyOperation(req, { ...avatarAudit, result: error.code || 'error' });
+    }
+    if (error.status && error.code) {
+      return sendFamilyError(res, error.status, error.code, error.message, error.details || []);
+    }
+    return sendError(res, 500, 'Internal server error');
   }
 };
 
@@ -456,14 +478,19 @@ const childPinLogin = async (req, res) => {
   }
 };
 
-module.exports = {
+const createFamilyController = ({ childAvatarMediaService = null } = {}) => ({
   getMyFamily,
   createFamily,
   updateFamily,
   createChild,
   listChildren,
-  getChild,
-  updateChild,
+  getChild: createGetChild(childAvatarMediaService),
+  updateChild: createUpdateChild(childAvatarMediaService),
   setChildPin,
   childPinLogin
+});
+
+module.exports = {
+  ...createFamilyController(),
+  createFamilyController
 };

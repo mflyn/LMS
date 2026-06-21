@@ -6,13 +6,21 @@ const authRoutes = require('./auth');
 const userRoutes = require('./user');
 const studentRoutes = require('./student');
 const familyRoutes = require('./family');
-const childrenRoutes = require('./children');
+const { createChildrenRouter } = require('./children');
+const { createFamilyController } = require('../controllers/familyController');
 
-// 使用路由
-router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
-router.use('/students', studentRoutes);
-router.use('/families', familyRoutes);
-router.use('/children', childrenRoutes);
+const createRoutes = ({ childAvatarMediaService = null } = {}) => {
+  const composed = express.Router();
+  const controller = createFamilyController({ childAvatarMediaService });
+  composed.use('/auth', authRoutes);
+  composed.use('/users', userRoutes);
+  composed.use('/students', studentRoutes);
+  composed.use('/families', familyRoutes);
+  composed.use('/children', createChildrenRouter({ controller }));
+  return composed;
+};
+
+router.use(createRoutes());
 
 module.exports = router;
+module.exports.createRoutes = createRoutes;
