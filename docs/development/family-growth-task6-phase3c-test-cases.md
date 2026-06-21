@@ -1,6 +1,6 @@
 # Task 6 Phase 3C GrowthTask Attachment Test Design and Numbered Cases
 
-**Document status:** WRITTEN REVIEW PENDING
+**Document status:** APPROVED
 **Parent catalog:** `docs/development/family-growth-task6-test-cases.md`
 **Detailed design:** `docs/superpowers/specs/2026-06-22-family-growth-task6-phase3c-task-attachments-design.md`
 **Refined parent cases:** `TC-T6-MEDIA-017`, `TC-T6-MEDIA-018`
