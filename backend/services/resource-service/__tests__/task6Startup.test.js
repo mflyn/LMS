@@ -56,6 +56,20 @@ describe('resource-service Task 6 startup contract', () => {
     expect(mockListen).not.toHaveBeenCalled();
   });
 
+  test('internal media reference router can be injected without startup side effects', async () => {
+    const appModule = jest.requireActual('../app');
+    const internalMediaRouter = express.Router();
+    internalMediaRouter.post('/probe', (req, res) => res.status(200).json({ internal: true }));
+
+    const actualApp = appModule.createApp({ logger: mockLogger, internalMediaRouter });
+    const response = await request(actualApp).post('/api/internal/media/references/probe');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ internal: true });
+    expect(mockConnect).not.toHaveBeenCalled();
+    expect(mockListen).not.toHaveBeenCalled();
+  });
+
   test('TC-T6-REG-001 importing resource server has no startup side effects', () => {
     const serverModule = require('../server');
 

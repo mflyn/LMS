@@ -26,10 +26,12 @@ const validObjectId = (value) => typeof value === 'string' && mongoose.Types.Obj
 
 const createMediaService = ({
   MediaAssetModel = MediaAsset,
+  MediaReferenceModel,
   UserModel,
   capabilityService,
   mediaStore,
-  now = Date.now
+  now = Date.now,
+  transactionRunner
 } = {}) => {
   if (!MediaAssetModel || typeof MediaAssetModel.create !== 'function') {
     throw new Error('MediaAssetModel is required');
@@ -44,6 +46,10 @@ const createMediaService = ({
     || typeof capabilityService.verify !== 'function') {
     throw new Error('capabilityService is required');
   }
+  if (!MediaReferenceModel || typeof MediaReferenceModel.updateMany !== 'function') {
+    throw new Error('MediaReferenceModel is required');
+  }
+  if (typeof transactionRunner !== 'function') throw new Error('transactionRunner is required');
 
   const assertIdentity = (identity) => {
     if (!identity || !validObjectId(String(identity.id || ''))
@@ -152,15 +158,28 @@ const createMediaService = ({
 
   const deleteMedia = async ({ identity, mediaId } = {}) => {
     assertMediaId(mediaId);
-    const asset = await MediaAssetModel.findById(mediaId).lean();
-    if (!asset) throw notFound();
-    authorizeAsset(identity, asset);
-    if (asset.status === 'deleted') return;
+    return transactionRunner(async (session) => {
+      const assetQuery = MediaAssetModel.findById(mediaId);
+      const asset = await (session ? assetQuery.session(session) : assetQuery).lean();
+      if (!asset) throw notFound();
+      authorizeAsset(identity, asset);
+      if (asset.status === 'deleted') return;
 
-    await MediaAssetModel.findOneAndUpdate(
-      { _id: mediaId, status: 'active' },
-      { $set: { status: 'deleted', deletedAt: new Date(Number(now())) } }
-    );
+      const deletedAt = new Date(Number(now()));
+      const updateQuery = MediaAssetModel.findOneAndUpdate(
+        { _id: mediaId, status: 'active' },
+        { $set: { status: 'deleted', deletedAt } },
+        { new: true }
+      );
+      const deleted = await (session ? updateQuery.session(session) : updateQuery);
+      if (!deleted) return;
+
+      const referenceQuery = MediaReferenceModel.updateMany(
+        { mediaId, state: 'prepared' },
+        { $set: { state: 'released', leaseExpiresAt: null, releasedAt: deletedAt } }
+      );
+      await (session ? referenceQuery.session(session) : referenceQuery);
+    });
   };
 
   return { deleteMedia, issueAccess, readContent, upload };

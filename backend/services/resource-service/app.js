@@ -41,6 +41,7 @@ const createLegacyUpload = () => multer({
 });
 
 const createApp = ({
+  internalMediaRouter = null,
   logger = createLogger('resource-service'),
   mediaRouter = null,
   userModel = FamilyUser
@@ -55,6 +56,9 @@ const createApp = ({
   app.use(express.json());
   app.use(requestTracker);
   app.use('/uploads', express.static(LEGACY_UPLOAD_ROOT));
+  if (internalMediaRouter) {
+    app.use('/api/internal/media/references', internalMediaRouter);
+  }
   if (mediaRouter) app.use('/api/media', mediaRouter);
   app.use('/api/recommendations', recommendationsRouter);
   app.use('/api/resources/collections', collectionsRouter);

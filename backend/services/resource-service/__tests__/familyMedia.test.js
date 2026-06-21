@@ -10,13 +10,17 @@ const os = require('os');
 const path = require('path');
 const request = require('supertest');
 const sharp = require('sharp');
-const { MongoMemoryServer } = require('../../../../node_modules/mongodb-memory-server');
+const { MongoMemoryReplSet } = require('../../../../node_modules/mongodb-memory-server');
 
 const { createIdentityHeaders, resetIdentityNonceStore } = require('../../../common/middleware/gatewayIdentity');
 const { authenticateGateway } = require('../../../common/middleware/auth');
+const { errorHandler } = require('../../../common/middleware/errorHandler');
 const FamilyUser = require('../models/FamilyUser');
 const MediaAsset = require('../models/MediaAsset');
+const MediaReference = require('../models/MediaReference');
 const { createMediaCapabilityService } = require('../services/mediaCapability');
+const { createMediaReferenceService } = require('../services/mediaReferenceService');
+const { createMongoTransactionRunner } = require('../services/mongoTransaction');
 const { createPrivateMediaStore, MAX_MEDIA_BYTES } = require('../services/privateMediaStore');
 
 jest.setTimeout(30000);
@@ -65,6 +69,7 @@ let mongoServer;
 let privateRoot;
 let upload;
 let nowMs = FIXED_NOW;
+let referenceService;
 
 const image = async (format, withMetadata = false) => {
   let pipeline = sharp({
@@ -122,19 +127,6 @@ const privateObjectNames = async () => {
 
 const incomingNames = async () => fs.readdir(path.join(privateRoot, '.incoming')).catch(() => []);
 
-const testErrorHandler = (error, req, res, next) => {
-  if (res.headersSent) return next(error);
-  const statusCode = error.statusCode || 500;
-  return res.status(statusCode).json({
-    success: false,
-    error: {
-      code: error.code || 'INTERNAL_ERROR',
-      message: statusCode >= 500 ? '服务器内部错误' : error.message,
-      details: Array.isArray(error.details) ? error.details : []
-    }
-  });
-};
-
 const insertIdentityFixtures = async () => {
   await FamilyUser.collection.insertMany([
     {
@@ -190,12 +182,22 @@ const buildApp = ({ MediaAssetModel = MediaAsset } = {}) => {
     now: () => nowMs,
     randomUUID: () => CAPABILITY_NONCE
   });
+  const transactionRunner = createMongoTransactionRunner(mongoose.connection);
+  const localReferenceService = createMediaReferenceService({
+    MediaAssetModel,
+    MediaReferenceModel: MediaReference,
+    leaseSeconds: 900,
+    now: () => nowMs,
+    transactionRunner
+  });
   const mediaService = createMediaService({
     capabilityService,
     MediaAssetModel,
+    MediaReferenceModel: MediaReference,
     UserModel: FamilyUser,
     mediaStore,
-    now: () => nowMs
+    now: () => nowMs,
+    transactionRunner
   });
   const router = createMediaRouter({
     authenticate: authenticateGateway,
@@ -208,16 +210,18 @@ const buildApp = ({ MediaAssetModel = MediaAsset } = {}) => {
   testApp.locals.serviceName = 'resource-service-test';
   testApp.locals.userModel = FamilyUser;
   testApp.use('/api/media', router);
-  testApp.use(testErrorHandler);
-  return { app: testApp, upload: localUpload };
+  testApp.use(errorHandler);
+  return { app: testApp, referenceService: localReferenceService, upload: localUpload };
 };
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: { count: 1, storageEngine: 'wiredTiger' }
+  });
   await mongoose.connect(mongoServer.getUri());
   privateRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'family-media-api-'));
   mediaStore = createPrivateMediaStore({ root: privateRoot });
-  ({ app, upload } = buildApp());
+  ({ app, referenceService, upload } = buildApp());
 });
 
 beforeEach(async () => {
@@ -539,6 +543,20 @@ describe('Task 6 private media access API', () => {
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('RESOURCE_NOT_FOUND');
   });
+
+  test('production error envelope is returned by the shared handler', async () => {
+    const response = await signedGet(parentA, '/api/media/not-an-object-id/access');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid mediaId',
+        details: []
+      }
+    });
+  });
 });
 
 describe('Task 6 private media delete API', () => {
@@ -554,7 +572,33 @@ describe('Task 6 private media delete API', () => {
 
   test('TC-T6-MEDIA-009 soft delete is idempotent and immediately denies access and content', async () => {
     const asset = await uploadMedia();
+    const preparedOperation = '9bf7c3f3-cc6d-41fe-95b5-b2832aafd394';
+    const boundOperation = 'acf8d404-dd7e-42af-a6c6-c3943bb0e405';
     const originalBytes = await mediaStore.read(asset.storageKey);
+    await MediaReference.create([
+      {
+        familyId: FAMILY_A_ID,
+        childId: CHILD_A1_ID,
+        mediaId: asset._id,
+        resourceType: 'family_mistake',
+        resourceId: new mongoose.Types.ObjectId(),
+        field: 'questionMediaId',
+        operationId: preparedOperation,
+        state: 'prepared',
+        leaseExpiresAt: new Date(FIXED_NOW + 900_000)
+      },
+      {
+        familyId: FAMILY_A_ID,
+        childId: CHILD_A1_ID,
+        mediaId: asset._id,
+        resourceType: 'family_mistake',
+        resourceId: new mongoose.Types.ObjectId(),
+        field: 'childAnswerMediaId',
+        operationId: boundOperation,
+        state: 'bound',
+        leaseExpiresAt: null
+      }
+    ]);
     resetIdentityNonceStore();
     const access = await signedGet(parentA, `/api/media/${asset._id}/access`);
     const contentUrl = access.body.data.access.url;
@@ -569,12 +613,27 @@ describe('Task 6 private media delete API', () => {
     expect(deleted.status).toBe('deleted');
     expect(deleted.deletedAt).toEqual(new Date(FIXED_NOW));
     expect(await mediaStore.read(asset.storageKey)).toEqual(originalBytes);
+    const prepared = await MediaReference.findOne({ operationId: preparedOperation }).lean();
+    const bound = await MediaReference.findOne({ operationId: boundOperation }).lean();
+    expect(prepared.state).toBe('released');
+    expect(prepared.releasedAt).toEqual(new Date(FIXED_NOW));
+    expect(bound.state).toBe('bound');
+    await expect(referenceService.prepare({
+      familyId: FAMILY_A_ID.toString(),
+      childId: CHILD_A1_ID.toString(),
+      resourceType: 'family_mistake',
+      resourceId: prepared.resourceId.toString(),
+      operationId: preparedOperation,
+      references: [{ mediaId: asset._id.toString(), field: 'questionMediaId' }]
+    })).rejects.toMatchObject({ statusCode: 404, code: 'RESOURCE_NOT_FOUND' });
 
     nowMs += 60_000;
     resetIdentityNonceStore();
     const secondDelete = await signedDelete(parentA, deletePath);
     expect(secondDelete.status).toBe(204);
     expect((await MediaAsset.findById(asset._id).lean()).deletedAt).toEqual(new Date(FIXED_NOW));
+    expect((await MediaReference.findOne({ operationId: preparedOperation }).lean()).releasedAt)
+      .toEqual(new Date(FIXED_NOW));
 
     resetIdentityNonceStore();
     const deniedAccess = await signedGet(parentA, `/api/media/${asset._id}/access`);

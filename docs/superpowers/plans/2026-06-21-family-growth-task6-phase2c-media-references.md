@@ -44,11 +44,11 @@ Success returns `200 { success: true, data: { references: [...] } }`; each item 
 - Modify: `backend/services/resource-service/jest.family.config.js`
 - Modify: `backend/services/resource-service/__tests__/familyMedia.test.js`
 
-- [ ] **Step 1: Add a failing real-handler assertion**
+- [x] **Step 1: Add a failing real-handler assertion**
 
 Remove `testErrorHandler` from `familyMedia.test.js`, mount the shared `errorHandler`, and assert one invalid media request returns the approved production envelope. Add a Jest module mapping for `uuid` to its Node CommonJS entry so resource-family resolves the same runtime branch as production.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia --testNamePattern='production error envelope'
@@ -56,7 +56,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL before the mapping because Jest resolves the browser ESM export, then pass only after the Node CJS mapping is configured.
 
-- [ ] **Step 3: Run the complete existing media API suite**
+- [x] **Step 3: Run the complete existing media API suite**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand familyMedia
@@ -74,7 +74,7 @@ Expected: all existing media API cases pass through the real shared error handle
 - Create: `backend/services/resource-service/__tests__/mediaReferences.test.js`
 - Modify: `backend/services/resource-service/jest.family.config.js`
 
-- [ ] **Step 1: Write failing credential and state-machine tests**
+- [x] **Step 1: Write failing credential and state-machine tests**
 
 Use one `MongoMemoryReplSet`, the real `MediaAsset`/`MediaReference` models, the shared error handler, and Supertest. Cover:
 
@@ -84,7 +84,7 @@ Use one `MongoMemoryReplSet`, the real `MediaAsset`/`MediaReference` models, the
 - same reference with a different unexpired prepared operation returns `409 RESOURCE_CONFLICT`.
 - a released reference can be prepared by a new operation, but replaying its released operation cannot resurrect it.
 
-- [ ] **Step 2: Run state-machine RED**
+- [x] **Step 2: Run state-machine RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaReferences --testNamePattern='MEDIA-01[1-2]|atomic|conflict|resurrect'
@@ -92,15 +92,15 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL because credential middleware, service, and internal routes do not exist.
 
-- [ ] **Step 3: Implement constant-time service credential**
+- [x] **Step 3: Implement constant-time service credential**
 
 `createMediaReferenceCredential(expectedToken)` validates a configured token of at least 32 characters, hashes supplied and expected values to equal-length SHA-256 buffers, compares with `crypto.timingSafeEqual`, reads only `x-service-token`, and passes `401 INVALID_SERVICE_CREDENTIAL` to the shared error handler without logging either value.
 
-- [ ] **Step 4: Implement transaction runner and command validation**
+- [x] **Step 4: Implement transaction runner and command validation**
 
 `createMongoTransactionRunner(connection)` starts one session, executes `withTransaction`, returns the callback result, and always ends the session. The reference service validates all IDs, UUID operation ID, resource type/field pairs, and a non-empty bounded references array before starting writes.
 
-- [ ] **Step 5: Implement prepare/commit/unbind**
+- [x] **Step 5: Implement prepare/commit/unbind**
 
 `createMediaReferenceService` exposes:
 
@@ -118,7 +118,7 @@ Commit changes only matching non-expired prepared rows to `bound` and clears the
 
 Unbind requires the original binding/preparation operation ID, changes matching prepared or bound rows to `released`, clears the lease, and sets `releasedAt` once. Released replay preserves the original timestamp; a missing row is an idempotent no-op result.
 
-- [ ] **Step 6: Implement internal-only routes and run GREEN**
+- [x] **Step 6: Implement internal-only routes and run GREEN**
 
 Mount `POST /prepare`, `/commit`, and `/unbind` behind the credential middleware. Log only operation name/result plus familyId, childId, resource type/ID, and media IDs.
 
@@ -136,15 +136,15 @@ Expected: all credential and state-machine cases pass.
 - Modify: `backend/services/resource-service/services/mediaReferenceService.js`
 - Modify: `backend/services/resource-service/services/mediaService.js`
 
-- [ ] **Step 1: Write failing validation and reclamation tests**
+- [x] **Step 1: Write failing validation and reclamation tests**
 
 Cover `TC-T6-MEDIA-013` for missing/deleted media (`404 RESOURCE_NOT_FOUND`), wrong family/child (`403 CHILD_ACCESS_DENIED`), and wrong field purpose (`400 MEDIA_PURPOSE_MISMATCH`) with no partial batch rows. Cover `TC-T6-MEDIA-014` by reclaiming only expired prepared rows while retaining live prepared, bound, and released rows.
 
-- [ ] **Step 2: Write failing transactional delete test**
+- [x] **Step 2: Write failing transactional delete test**
 
 Replace the existing family-media test database with a one-node `MongoMemoryReplSet`, then extend `TC-T6-MEDIA-009`: create one prepared and one bound reference for the same media, delete twice, and prove the first delete atomically releases only prepared rows, preserves bound rows and bytes, rejects every new prepare, and keeps the second delete side-effect free.
 
-- [ ] **Step 3: Run RED**
+- [x] **Step 3: Run RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaReferences familyMedia --testNamePattern='MEDIA-009|MEDIA-01[3-4]'
@@ -152,15 +152,15 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: validation/reclamation and delete-reference assertions fail before integration.
 
-- [ ] **Step 4: Implement stable validation and lease reclamation**
+- [x] **Step 4: Implement stable validation and lease reclamation**
 
 Run prepare validation for the whole normalized batch before creating any row. `reclaimExpiredPrepared` deletes only `state=prepared, leaseExpiresAt<=now` rows, in bounded batches, and is idempotent.
 
-- [ ] **Step 5: Integrate transactional delete**
+- [x] **Step 5: Integrate transactional delete**
 
 Inject the transaction runner and `MediaReferenceModel` into `mediaService`. Within one transaction, authorize the asset, atomically set the first `deletedAt`, and update only prepared references to `released` with that same timestamp. Never release bound references and never remove bytes during soft delete.
 
-- [ ] **Step 6: Run GREEN**
+- [x] **Step 6: Run GREEN**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaReferences familyMedia --testNamePattern='MEDIA-009|MEDIA-01[3-4]'
@@ -175,7 +175,7 @@ Expected: all scope, purpose, reclamation, and deletion cases pass.
 - Create: `backend/services/resource-service/__tests__/mediaCleanup.test.js`
 - Modify: `backend/services/resource-service/jest.family.config.js`
 
-- [ ] **Step 1: Write failing retention-boundary tests**
+- [x] **Step 1: Write failing retention-boundary tests**
 
 `TC-T6-MEDIA-010` creates deleted assets covering:
 
@@ -188,7 +188,7 @@ Expected: all scope, purpose, reclamation, and deletion cases pass.
 
 Assert cleanup requires no bound reference and 30 full days after both deletion and latest release; eligible cleanup removes bytes, `MediaAsset`, and released-reference metadata only.
 
-- [ ] **Step 2: Run cleanup RED**
+- [x] **Step 2: Run cleanup RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaCleanup
@@ -196,11 +196,11 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL because `mediaCleanupService` does not exist.
 
-- [ ] **Step 3: Implement bounded idempotent cleanup**
+- [x] **Step 3: Implement bounded idempotent cleanup**
 
 `cleanupDeletedMedia({ limit = 100 })` selects `status=deleted, deletedAt<=cutoff`, rejects invalid limits, skips any bound reference, checks the latest `releasedAt<=cutoff`, removes the private object idempotently, conditionally deletes the still-eligible asset, and then removes released reference rows. Return only counts and cleaned media IDs; never return storage keys.
 
-- [ ] **Step 4: Run cleanup GREEN**
+- [x] **Step 4: Run cleanup GREEN**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaCleanup
@@ -216,11 +216,11 @@ Expected: all independent deletion/release boundaries and replay cases pass.
 - Create: `backend/services/resource-service/__tests__/familyMediaPrivacy.test.js`
 - Modify: `backend/services/resource-service/jest.family.config.js`
 
-- [ ] **Step 1: Add failing app-mount and privacy tests**
+- [x] **Step 1: Add failing app-mount and privacy tests**
 
 Inject `internalMediaRouter` into `createApp`, mount it at `/api/internal/media/references`, and prove construction/import still causes no database connection or listener. Capture upload/access/content/prepare/commit/unbind/delete logs for `TC-T6-MEDIA-015`; assert no bytes, original filename, EXIF, temporary/storage key, signed URL/query, or service credential appears.
 
-- [ ] **Step 2: Run mount/privacy RED**
+- [x] **Step 2: Run mount/privacy RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand task6Startup familyMediaPrivacy
@@ -228,7 +228,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: app-mount and complete privacy-flow assertions fail before wiring.
 
-- [ ] **Step 3: Mount only by explicit injection and run GREEN**
+- [x] **Step 3: Mount only by explicit injection and run GREEN**
 
 Add optional `internalMediaRouter` to `createApp`; do not create environment-bound services during import. Phase 5 will construct production routers from validated environment and will keep this internal prefix out of gateway routes.
 
@@ -238,7 +238,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: startup isolation and privacy flow pass.
 
-- [ ] **Step 4: Run Phase 2C regression**
+- [x] **Step 4: Run Phase 2C regression**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand
@@ -248,7 +248,7 @@ git diff --check
 
 Expected: resource-family and all six family projects pass with no open handles or formatting errors.
 
-- [ ] **Step 5: Commit Phase 2C**
+- [x] **Step 5: Commit Phase 2C**
 
 ```bash
 git add backend/services/resource-service \
