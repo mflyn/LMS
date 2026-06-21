@@ -95,7 +95,7 @@ The suffix cases refine existing approved `TC-T6-MEDIA-012`, `016`, and `017`; t
 - Modify: `backend/services/resource-service/models/MediaReference.js`
 - Modify: `backend/services/resource-service/__tests__/mediaModels.test.js`
 
-- [ ] **Step 1: Write the failing model tests**
+- [x] **Step 1: Write the failing model tests**
 
 Add `TC-T6-MEDIA-012A model stores release operation independently` and assert:
 
@@ -119,7 +119,7 @@ expect(reference.releaseOperationId).toBe(releaseOperationId);
 
 Also prove malformed `releaseOperationId` fails validation and prepared/bound rows reject a non-null release operation.
 
-- [ ] **Step 2: Run model RED**
+- [x] **Step 2: Run model RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaModels --testNamePattern='MEDIA-012A'
@@ -127,7 +127,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: FAIL because `releaseOperationId` is not defined and strict model persistence omits it.
 
-- [ ] **Step 3: Add the model field and invariant**
+- [x] **Step 3: Add the model field and invariant**
 
 Add after `operationId`:
 
@@ -150,7 +150,7 @@ releaseOperationId: {
 
 Do not make it required for historical released rows; the service fills it for every new unbind.
 
-- [ ] **Step 4: Run model GREEN**
+- [x] **Step 4: Run model GREEN**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaModels --testNamePattern='MEDIA-012A'
@@ -158,7 +158,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: the new model tests pass.
 
-- [ ] **Step 5: Commit the model contract**
+- [x] **Step 5: Commit the model contract**
 
 ```bash
 git add backend/services/resource-service/models/MediaReference.js backend/services/resource-service/__tests__/mediaModels.test.js

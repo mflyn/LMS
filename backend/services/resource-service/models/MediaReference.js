@@ -33,6 +33,24 @@ const mediaReferenceSchema = new Schema({
     required: true,
     validate: { validator: (value) => OPERATION_ID_PATTERN.test(value), message: 'operationId must be a UUID' }
   },
+  releaseOperationId: {
+    type: String,
+    default: null,
+    validate: [
+      {
+        validator(value) {
+          return value == null || OPERATION_ID_PATTERN.test(value);
+        },
+        message: 'releaseOperationId must be a UUID'
+      },
+      {
+        validator(value) {
+          return this.state === 'released' || value == null;
+        },
+        message: 'releaseOperationId is only valid for released references'
+      }
+    ]
+  },
   state: { type: String, enum: MEDIA_REFERENCE_STATES, default: 'prepared', required: true },
   leaseExpiresAt: {
     type: Date,

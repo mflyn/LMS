@@ -103,4 +103,38 @@ describe('Task 6 media models', () => {
       field: 1
     })[1]).toEqual(expect.objectContaining({ unique: true }));
   });
+
+  test('TC-T6-MEDIA-012A stores release operation independently and constrains its state', async () => {
+    loadModels();
+    const bindOperationId = '5dc38fc9-ee29-4dba-9181-df49f66b9050';
+    const releaseOperationId = '8a9dc72a-558b-4818-b388-677862431377';
+    const releasedAt = new Date('2026-06-21T00:00:00.000Z');
+    const released = new MediaReference({
+      familyId: ids.familyId,
+      childId: ids.childId,
+      mediaId: ids.mediaId,
+      resourceType: 'child',
+      resourceId: ids.childId,
+      field: 'avatarMediaId',
+      operationId: bindOperationId,
+      releaseOperationId,
+      state: 'released',
+      releasedAt
+    });
+
+    await expect(released.validate()).resolves.toBeUndefined();
+    expect(released.operationId).toBe(bindOperationId);
+    expect(released.releaseOperationId).toBe(releaseOperationId);
+
+    await expect(new MediaReference({
+      ...released.toObject(),
+      releaseOperationId: 'not-a-uuid'
+    }).validate()).rejects.toThrow('releaseOperationId must be a UUID');
+
+    await expect(new MediaReference({
+      ...released.toObject(),
+      state: 'bound',
+      releasedAt: null
+    }).validate()).rejects.toThrow('releaseOperationId is only valid for released references');
+  });
 });
