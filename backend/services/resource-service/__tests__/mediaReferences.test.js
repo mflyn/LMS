@@ -24,6 +24,8 @@ const OTHER_CHILD_ID = new mongoose.Types.ObjectId('6656875da7f86a0012c2a302');
 const RESOURCE_ID = new mongoose.Types.ObjectId('6656875da7f86a0012c2a501');
 const OPERATION_1 = '5dc38fc9-ee29-4dba-9181-df49f66b9050';
 const OPERATION_2 = '6ec49fd0-ff3a-4ecb-a292-ef50f77ca061';
+const OPERATION_3 = '7fd5a1e1-aa4b-4fdc-b393-f061088db172';
+const OPERATION_4 = '8ae6b2f2-bb5c-40ed-84a4-a172199ec283';
 const FIXED_NOW = Date.parse('2026-06-21T00:00:00.000Z');
 const LEASE_EXPIRES_AT = new Date(FIXED_NOW + 900_000).toISOString();
 
@@ -52,6 +54,18 @@ const commandFor = (asset, overrides = {}) => ({
   operationId: OPERATION_1,
   references: [{ mediaId: asset._id.toString(), field: 'questionMediaId' }],
   ...overrides
+});
+
+const unbindCommandFor = (command, {
+  operationId = command.operationId,
+  bindingOperationId = command.operationId
+} = {}) => ({
+  ...command,
+  operationId,
+  references: command.references.map((reference) => ({
+    ...reference,
+    bindingOperationId
+  }))
 });
 
 const postCommand = (action, command, token = SERVICE_TOKEN) => {
@@ -155,10 +169,11 @@ describe('Task 6 media reference state machine', () => {
     expect(committed.body.data.references[0]).toEqual(expect.objectContaining({ state: 'bound' }));
     expect(committedReplay.body.data.references[0]).toEqual(committed.body.data.references[0]);
 
-    const unbound = await postCommand('unbind', command);
+    const unbindCommand = unbindCommandFor(command);
+    const unbound = await postCommand('unbind', unbindCommand);
     const releasedAt = unbound.body.data.references[0].releasedAt;
     nowMs += 60_000;
-    const unboundReplay = await postCommand('unbind', command);
+    const unboundReplay = await postCommand('unbind', unbindCommand);
     expect(unbound.status).toBe(200);
     expect(unbound.body.data.references[0]).toEqual(expect.objectContaining({ state: 'released' }));
     expect(unboundReplay.body.data.references[0].releasedAt).toBe(releasedAt);
@@ -211,7 +226,7 @@ describe('Task 6 media reference state machine', () => {
     const asset = await createAsset('mistake_question');
     const first = commandFor(asset);
     await postCommand('prepare', first);
-    await postCommand('unbind', first);
+    await postCommand('unbind', unbindCommandFor(first));
 
     const replay = await postCommand('prepare', first);
     expect(replay.status).toBe(200);
@@ -221,6 +236,180 @@ describe('Task 6 media reference state machine', () => {
     expect(second.status).toBe(200);
     expect(second.body.data.references[0].state).toBe('prepared');
     expect(await MediaReference.countDocuments()).toBe(1);
+  });
+
+  test('TC-T6-MEDIA-012A replacement operation releases an older binding idempotently', async () => {
+    const asset = await createAsset('mistake_question');
+    const bindCommand = commandFor(asset);
+    await postCommand('prepare', bindCommand);
+    await postCommand('commit', bindCommand);
+    const releaseCommand = unbindCommandFor(bindCommand, {
+      operationId: OPERATION_2,
+      bindingOperationId: OPERATION_1
+    });
+
+    const first = await postCommand('unbind', releaseCommand);
+    const replay = await postCommand('unbind', releaseCommand);
+    nowMs += 60_000;
+    const competing = await postCommand('unbind', {
+      ...releaseCommand,
+      operationId: OPERATION_3
+    });
+
+    expect(first.status).toBe(200);
+    expect(replay.status).toBe(200);
+    expect(competing.status).toBe(200);
+    expect(replay.body.data.references[0].releasedAt)
+      .toBe(first.body.data.references[0].releasedAt);
+    expect(competing.body.data.references[0].releasedAt)
+      .toBe(first.body.data.references[0].releasedAt);
+    const stored = await MediaReference.findOne().lean();
+    expect(stored.operationId).toBe(OPERATION_1);
+    expect(stored.releaseOperationId).toBe(OPERATION_2);
+  });
+
+  test('TC-T6-MEDIA-012B delayed unbind cannot release a newer binding generation', async () => {
+    const asset = await createAsset('mistake_question');
+    const first = commandFor(asset);
+    await postCommand('prepare', first);
+    await postCommand('commit', first);
+    await postCommand('unbind', unbindCommandFor(first, {
+      operationId: OPERATION_2,
+      bindingOperationId: OPERATION_1
+    }));
+
+    const rebound = commandFor(asset, { operationId: OPERATION_3 });
+    expect((await postCommand('prepare', rebound)).status).toBe(200);
+    expect((await postCommand('commit', rebound)).status).toBe(200);
+
+    const delayed = await postCommand('unbind', unbindCommandFor(first, {
+      operationId: OPERATION_4,
+      bindingOperationId: OPERATION_1
+    }));
+    const wrongPrepare = await postCommand('prepare', commandFor(asset, { operationId: OPERATION_2 }));
+    const wrongCommit = await postCommand('commit', commandFor(asset, { operationId: OPERATION_2 }));
+
+    expect(delayed.status).toBe(409);
+    expect(delayed.body.error.code).toBe('RESOURCE_CONFLICT');
+    expect(wrongPrepare.status).toBe(409);
+    expect(wrongCommit.status).toBe(409);
+    expect(await MediaReference.findOne().lean()).toEqual(expect.objectContaining({
+      operationId: OPERATION_3,
+      releaseOperationId: null,
+      state: 'bound'
+    }));
+  });
+
+  test('TC-T6-MEDIA-012C old replay stays released and mixed-generation unbind rolls back', async () => {
+    const question = await createAsset('mistake_question');
+    const answer = await createAsset('mistake_answer');
+    const questionCommand = commandFor(question);
+    const answerCommand = commandFor(answer, {
+      operationId: OPERATION_2,
+      references: [{ mediaId: answer._id.toString(), field: 'childAnswerMediaId' }]
+    });
+    await postCommand('prepare', questionCommand);
+    await postCommand('commit', questionCommand);
+    await postCommand('prepare', answerCommand);
+    await postCommand('commit', answerCommand);
+
+    const originalSave = MediaReference.prototype.save;
+    let saveCalls = 0;
+    const saveSpy = jest.spyOn(MediaReference.prototype, 'save').mockImplementation(function save(...args) {
+      saveCalls += 1;
+      if (saveCalls === 2) return Promise.reject(new Error('forced second release failure'));
+      return originalSave.apply(this, args);
+    });
+    const mixedRelease = {
+      ...commandFor(question),
+      operationId: OPERATION_3,
+      references: [
+        {
+          mediaId: question._id.toString(),
+          field: 'questionMediaId',
+          bindingOperationId: OPERATION_1
+        },
+        {
+          mediaId: answer._id.toString(),
+          field: 'childAnswerMediaId',
+          bindingOperationId: OPERATION_2
+        }
+      ]
+    };
+
+    try {
+      await expect(referenceService.unbind(mixedRelease))
+        .rejects.toThrow('forced second release failure');
+    } finally {
+      saveSpy.mockRestore();
+    }
+
+    const rows = await MediaReference.find().sort({ field: 1 }).lean();
+    expect(rows).toHaveLength(2);
+    expect(rows.every((row) => row.state === 'bound')).toBe(true);
+    expect(rows.map((row) => row.operationId).sort()).toEqual([OPERATION_1, OPERATION_2].sort());
+    expect(rows.every((row) => row.releaseOperationId == null)).toBe(true);
+
+    expect((await postCommand('unbind', unbindCommandFor(questionCommand, {
+      operationId: OPERATION_3,
+      bindingOperationId: OPERATION_1
+    }))).status).toBe(200);
+    const oldReplay = await postCommand('prepare', questionCommand);
+    expect(oldReplay.status).toBe(200);
+    expect(oldReplay.body.data.references[0].state).toBe('released');
+    const reactivated = await postCommand('prepare', commandFor(question, {
+      operationId: OPERATION_4
+    }));
+    expect(reactivated.status).toBe(200);
+    expect(reactivated.body.data.references[0].state).toBe('prepared');
+    expect(await MediaReference.findOne({ mediaId: question._id }).lean())
+      .toEqual(expect.objectContaining({
+        operationId: OPERATION_4,
+        releaseOperationId: null,
+        state: 'prepared'
+      }));
+  });
+
+  test('TC-T6-MEDIA-012C validates binding generation fields by action and identity', async () => {
+    const asset = await createAsset('mistake_question');
+    const command = commandFor(asset);
+    const unexpectedGeneration = {
+      ...command,
+      references: command.references.map((reference) => ({
+        ...reference,
+        bindingOperationId: OPERATION_1
+      }))
+    };
+
+    expect((await postCommand('prepare', unexpectedGeneration)).status).toBe(400);
+    expect(await MediaReference.countDocuments()).toBe(0);
+    expect((await postCommand('prepare', command)).status).toBe(200);
+    expect((await postCommand('commit', unexpectedGeneration)).status).toBe(400);
+
+    const missingGeneration = await postCommand('unbind', command);
+    expect(missingGeneration.status).toBe(400);
+    const malformedGeneration = await postCommand('unbind', {
+      ...command,
+      references: command.references.map((reference) => ({
+        ...reference,
+        bindingOperationId: 'not-a-uuid'
+      }))
+    });
+    expect(malformedGeneration.status).toBe(400);
+
+    const duplicateConflict = await postCommand('unbind', {
+      ...command,
+      operationId: OPERATION_3,
+      references: [
+        { ...command.references[0], bindingOperationId: OPERATION_1 },
+        { ...command.references[0], bindingOperationId: OPERATION_2 }
+      ]
+    });
+    expect(duplicateConflict.status).toBe(400);
+    expect(await MediaReference.findOne().lean()).toEqual(expect.objectContaining({
+      operationId: OPERATION_1,
+      state: 'prepared'
+    }));
   });
 });
 

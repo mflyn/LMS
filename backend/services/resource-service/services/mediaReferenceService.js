@@ -40,9 +40,10 @@ const serializeReference = (reference) => {
   return result;
 };
 
-const normalizeCommand = (command = {}) => {
+const normalizeCommand = (command = {}, action) => {
   const { familyId, childId, resourceType, resourceId, operationId } = command;
-  if (![familyId, childId, resourceId].every((value) => validObjectId(String(value || '')))
+  if (!['prepare', 'commit', 'unbind'].includes(action)
+    || ![familyId, childId, resourceId].every((value) => validObjectId(String(value || '')))
     || !MediaReference.MEDIA_RESOURCE_TYPES.includes(resourceType)
     || typeof operationId !== 'string'
     || !OPERATION_ID_PATTERN.test(operationId)
@@ -61,7 +62,31 @@ const normalizeCommand = (command = {}) => {
       || !MediaReference.MEDIA_RESOURCE_FIELDS[resourceType].includes(field)) {
       throw validationError('Invalid media reference identity');
     }
-    normalized.set(`${field}:${mediaId}`, { mediaId, field });
+    const hasBindingOperation = Object.prototype.hasOwnProperty.call(
+      reference || {},
+      'bindingOperationId'
+    );
+    if (action === 'unbind') {
+      if (!hasBindingOperation
+        || typeof reference.bindingOperationId !== 'string'
+        || !OPERATION_ID_PATTERN.test(reference.bindingOperationId)) {
+        throw validationError('Invalid binding operation');
+      }
+    } else if (hasBindingOperation) {
+      throw validationError('bindingOperationId is only valid for unbind');
+    }
+
+    const key = `${field}:${mediaId}`;
+    const normalizedReference = {
+      mediaId,
+      field,
+      ...(action === 'unbind' ? { bindingOperationId: reference.bindingOperationId } : {})
+    };
+    const existing = normalized.get(key);
+    if (existing && existing.bindingOperationId !== normalizedReference.bindingOperationId) {
+      throw validationError('Conflicting binding operations for one reference');
+    }
+    normalized.set(key, normalizedReference);
   });
 
   return {
@@ -117,7 +142,7 @@ const createMediaReferenceService = ({
   };
 
   const prepare = async (input) => {
-    const command = normalizeCommand(input);
+    const command = normalizeCommand(input, 'prepare');
     return transactionRunner(async (session) => {
       await validateAssets(command, session);
       const current = new Date(Number(now()));
@@ -136,7 +161,7 @@ const createMediaReferenceService = ({
             releasedAt: null
           }], { session });
         } else if (row.state === 'bound') {
-          // The exact reference identity is already usable.
+          if (row.operationId !== command.operationId) throw conflict();
         } else if (row.state === 'released' && row.operationId === command.operationId) {
           // Replaying a released operation must not resurrect it.
         } else if (row.state === 'prepared'
@@ -150,6 +175,7 @@ const createMediaReferenceService = ({
           row.state = 'prepared';
           row.leaseExpiresAt = leaseExpiresAt;
           row.releasedAt = null;
+          row.releaseOperationId = null;
           await row.save({ session });
         }
         results.push(serializeReference(row));
@@ -159,7 +185,7 @@ const createMediaReferenceService = ({
   };
 
   const commit = async (input) => {
-    const command = normalizeCommand(input);
+    const command = normalizeCommand(input, 'commit');
     return transactionRunner(async (session) => {
       const current = new Date(Number(now()));
       const results = [];
@@ -167,6 +193,7 @@ const createMediaReferenceService = ({
         const row = await withSession(MediaReferenceModel.findOne(referenceQuery(command, reference)), session);
         if (!row) throw notFound();
         if (row.state === 'bound') {
+          if (row.operationId !== command.operationId) throw conflict();
           results.push(serializeReference(row));
           continue;
         }
@@ -179,6 +206,7 @@ const createMediaReferenceService = ({
         row.state = 'bound';
         row.leaseExpiresAt = null;
         row.releasedAt = null;
+        row.releaseOperationId = null;
         await row.save({ session });
         results.push(serializeReference(row));
       }
@@ -187,21 +215,27 @@ const createMediaReferenceService = ({
   };
 
   const unbind = async (input) => {
-    const command = normalizeCommand(input);
+    const command = normalizeCommand(input, 'unbind');
     return transactionRunner(async (session) => {
       const releasedAt = new Date(Number(now()));
-      const results = [];
+      const rows = [];
       for (const reference of command.references) {
         const row = await withSession(MediaReferenceModel.findOne(referenceQuery(command, reference)), session);
+        if (row && row.operationId !== reference.bindingOperationId) throw conflict();
+        rows.push({ reference, row });
+      }
+
+      const results = [];
+      for (const { reference, row } of rows) {
         if (!row) {
           results.push({ mediaId: reference.mediaId, field: reference.field, state: 'released' });
           continue;
         }
-        if (row.operationId !== command.operationId) throw conflict();
         if (row.state !== 'released') {
           row.state = 'released';
           row.leaseExpiresAt = null;
           row.releasedAt = releasedAt;
+          row.releaseOperationId = command.operationId;
           await row.save({ session });
         }
         results.push(serializeReference(row));

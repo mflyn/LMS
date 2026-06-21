@@ -179,10 +179,19 @@ test('TC-T6-MEDIA-015 complete media flow logs approved identifiers only', async
     references: [{ mediaId, field: 'questionMediaId' }]
   };
   for (const action of ['prepare', 'commit', 'unbind']) {
+    const payload = action === 'unbind'
+      ? {
+        ...command,
+        references: command.references.map((reference) => ({
+          ...reference,
+          bindingOperationId: OPERATION_ID
+        }))
+      }
+      : command;
     const response = await request(app)
       .post(`/api/internal/media/references/${action}`)
       .set('x-service-token', SERVICE_TOKEN)
-      .send(command);
+      .send(payload);
     expect(response.status).toBe(200);
   }
 

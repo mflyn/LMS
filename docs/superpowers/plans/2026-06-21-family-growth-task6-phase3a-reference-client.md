@@ -171,7 +171,7 @@ git commit -m "fix: separate media release idempotency"
 - Modify: `backend/services/resource-service/services/mediaReferenceService.js`
 - Modify: `backend/services/resource-service/__tests__/mediaReferences.test.js`
 
-- [ ] **Step 1: Write failing replacement and replay tests**
+- [x] **Step 1: Write failing replacement and replay tests**
 
 Add these exact cases using real models and the existing replica-set fixture:
 
@@ -203,7 +203,7 @@ Add `TC-T6-MEDIA-012B`: release generation A, bind the same identity as generati
 
 Also assert prepare and commit operation B against a live bound generation A return `409 RESOURCE_CONFLICT`; a consumer must diff sets and must not claim an unchanged reference as a new generation.
 
-- [ ] **Step 2: Run service RED**
+- [x] **Step 2: Run service RED**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaReferences --testNamePattern='MEDIA-012[ABC]'
@@ -211,7 +211,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: the replacement release conflicts and the new release metadata assertions fail.
 
-- [ ] **Step 3: Implement corrected unbind semantics**
+- [x] **Step 3: Implement corrected unbind semantics**
 
 Change normalization to be action-aware. For unbind only, require and validate a UUID `bindingOperationId` on every normalized reference. Prepare and commit reject that server-only field:
 
@@ -271,7 +271,7 @@ for (const { row } of rows) {
 
 An already released row for the same `bindingOperationId` is an idempotent no-op, including a competing release operation. Preserve its original `operationId`, `releaseOperationId`, and `releasedAt`. A missing row remains a no-op result. Any existing row from a different generation returns `409 RESOURCE_CONFLICT`. Validate all expectations before the first write so a mixed-generation mismatch leaves the whole batch unchanged.
 
-- [ ] **Step 4: Preserve bind generations and distinguish reactivation**
+- [x] **Step 4: Preserve bind generations and distinguish reactivation**
 
 Prepare and commit remain generation-scoped: an already-bound row is idempotent only when its `operationId` matches the command, otherwise it conflicts:
 
@@ -300,7 +300,7 @@ if (row.state === 'released' && row.operationId === command.operationId) {
 
 Every transition to prepared or bound must leave `releaseOperationId=null`. Extend `serializeReference` only if tests need release-operation diagnostics internally; public/internal success responses continue omitting operation IDs.
 
-- [ ] **Step 5: Run service GREEN and existing reference regression**
+- [x] **Step 5: Run service GREEN and existing reference regression**
 
 ```bash
 npx jest --config backend/services/resource-service/jest.family.config.js --runInBand mediaReferences mediaCleanup familyMedia
@@ -308,7 +308,7 @@ npx jest --config backend/services/resource-service/jest.family.config.js --runI
 
 Expected: all existing reference, cleanup, and delete tests plus `012A-C` pass.
 
-- [ ] **Step 6: Commit the service correction**
+- [x] **Step 6: Commit the service correction**
 
 ```bash
 git add backend/services/resource-service/services/mediaReferenceService.js backend/services/resource-service/__tests__/mediaReferences.test.js
