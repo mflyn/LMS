@@ -1,6 +1,6 @@
 # Task 6 Phase 3B Child Avatar Test Design and Numbered Cases
 
-**Document status:** REVIEW_PENDING
+**Document status:** APPROVED
 **Parent catalog:** `docs/development/family-growth-task6-test-cases.md`
 **Detailed design:** `docs/superpowers/specs/2026-06-21-family-growth-task6-phase3b-child-avatar-design.md`
 **Refined parent cases:** `TC-T6-MEDIA-016`, `TC-T6-MEDIA-018`

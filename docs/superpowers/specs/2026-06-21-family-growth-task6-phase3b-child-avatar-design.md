@@ -1,6 +1,6 @@
 # Task 6 Phase 3B Child Avatar Consumer Detailed Design
 
-**Document status:** REVIEW_PENDING
+**Document status:** APPROVED
 **Parent design:** `docs/superpowers/specs/2026-06-20-family-growth-task6-design.md`
 **Reference addendum:** `docs/superpowers/specs/2026-06-21-family-growth-task6-phase3a-reference-release-design.md`
 **Scope:** `Child.avatarMediaId` ownership, recovery, authorization, and public representation

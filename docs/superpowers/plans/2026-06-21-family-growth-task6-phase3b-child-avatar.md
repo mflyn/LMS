@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Document status:** REVIEW_PENDING
+**Document status:** COMPLETED
 **Design:** `docs/superpowers/specs/2026-06-21-family-growth-task6-phase3b-child-avatar-design.md`
 **Test cases:** `docs/development/family-growth-task6-phase3b-test-cases.md`
 
@@ -35,7 +35,7 @@
 - Modify: `backend/common/models/User.js`
 - Create: `backend/services/user-service/__tests__/models/User.mediaReferences.test.js`
 
-- [ ] **Step 1: Write `TC-T6-MEDIA-016D` failing model tests**
+- [x] **Step 1: Write `TC-T6-MEDIA-016D` failing model tests**
 
 Create real-model tests for legacy defaults, valid `none|pending|bound` documents, hidden-field selection, malformed UUIDs, incomplete ID/generation pairs, invalid phase/state combinations, and non-canonical pending patch paths. Use fixed IDs and assert hidden fields require explicit selection:
 
@@ -56,7 +56,7 @@ const internal = await User.findById(child._id).select(hidden).lean();
 expect(internal.childProfile.mediaBindingOperationId).toBe(OPERATION_A);
 ```
 
-- [ ] **Step 2: Run model RED**
+- [x] **Step 2: Run model RED**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand User.mediaReferences
@@ -64,7 +64,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand User.
 
 Expected: FAIL because the avatar media state paths do not exist.
 
-- [ ] **Step 3: Add the schema fields and document validator**
+- [x] **Step 3: Add the schema fields and document validator**
 
 Add the design fields under `childProfile`. Use the existing ObjectId type, UUID pattern, `select: false` for all internal paths, and `mediaReferenceState` default `none`. Define the pending patch entry as a strict sub-schema:
 
@@ -87,7 +87,7 @@ const childPendingPatchSchema = new Schema({
 
 Add a `pre('validate')` invariant helper that treats missing legacy state as `none`, requires every patch entry to own a `value` property (including an explicit null), requires ID/generation pairs together, requires pending operation/phase metadata only in `pending`, and rejects pending metadata in `none|bound`. The helper must accept `avatarMediaPendingId=null` during removal because `mediaReferenceState=pending` distinguishes removal from no intent.
 
-- [ ] **Step 4: Run model GREEN and existing model regression**
+- [x] **Step 4: Run model GREEN and existing model regression**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand User.mediaReferences User.test
@@ -95,7 +95,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand User.
 
 Expected: new model tests and the non-ignored User model suite pass.
 
-- [ ] **Step 5: Commit the model contract**
+- [x] **Step 5: Commit the model contract**
 
 ```bash
 git add backend/common/models/User.js backend/services/user-service/__tests__/models/User.mediaReferences.test.js
@@ -108,7 +108,7 @@ git commit -m "feat: add child avatar media state"
 - Create: `backend/services/user-service/services/childProfilePatch.js`
 - Create: `backend/services/user-service/__tests__/services/childAvatarMediaService.test.js`
 
-- [ ] **Step 1: Write failing patch-builder cases from `016J` and `018A`**
+- [x] **Step 1: Write failing patch-builder cases from `016J` and `018A`**
 
 Assert that a valid body produces fixed update entries and mirrors, that falsy valid values are retained, and that unknown/dotted/nested/internal/raw-avatar keys fail with `400 VALIDATION_ERROR`:
 
@@ -130,7 +130,7 @@ expect(buildChildProfilePatch({
 
 Cover `avatar`, `childProfile`, `$set`, dotted keys, arrays/objects for `avatarMediaId`, malformed ObjectIds, and every internal field name.
 
-- [ ] **Step 2: Run patch-builder RED**
+- [x] **Step 2: Run patch-builder RED**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand childAvatarMediaService --testNamePattern='016J|018A'
@@ -138,7 +138,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand child
 
 Expected: FAIL because `childProfilePatch` does not exist.
 
-- [ ] **Step 3: Implement strict parsing and canonical entries**
+- [x] **Step 3: Implement strict parsing and canonical entries**
 
 Export `buildChildProfilePatch(body)`, `entriesToMongoSet(entries)`, and `applyEntries(document, entries)`. Start by rejecting any key outside this exact public set:
 
@@ -152,7 +152,7 @@ const PUBLIC_FIELDS = new Set([
 
 Validate `avatarMediaId` with `/^[0-9a-f]{24}$/i` or null. Trim and require non-empty `name`; preserve Mongoose validation for field types/ranges. Build paths only from a constant field map, never from request keys. Created errors carry only `status=400`, `code=VALIDATION_ERROR`, and a fixed message.
 
-- [ ] **Step 4: Run patch-builder GREEN**
+- [x] **Step 4: Run patch-builder GREEN**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand childAvatarMediaService --testNamePattern='016J|018A'
@@ -160,7 +160,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand child
 
 Expected: canonical mapping and unsafe-input tests pass.
 
-- [ ] **Step 5: Commit the patch boundary**
+- [x] **Step 5: Commit the patch boundary**
 
 ```bash
 git add backend/services/user-service/services/childProfilePatch.js backend/services/user-service/__tests__/services/childAvatarMediaService.test.js
@@ -173,7 +173,7 @@ git commit -m "feat: validate child profile patches"
 - Create: `backend/services/user-service/services/childAvatarMediaService.js`
 - Modify: `backend/services/user-service/__tests__/services/childAvatarMediaService.test.js`
 
-- [ ] **Step 1: Write failing `016E`, `016F`, and initial-set `016G` service cases**
+- [x] **Step 1: Write failing `016E`, `016F`, and initial-set `016G` service cases**
 
 Use the real User model, fixed UUID generator, and injected media client. Prove exact prepare/commit commands, public invisibility while binding, stable prepare rollback, lost prepare/commit responses, failed post-commit CAS, and a CAS that persists but whose wrapper throws after success.
 
@@ -190,7 +190,7 @@ expect(mediaClient.prepare).toHaveBeenCalledWith({
 
 Assert every uncertain failure is `503 MEDIA_REFERENCE_PENDING` with `{ resourceId: childId }`, while stable prepare errors clear the intent and leave the ordinary patch unchanged.
 
-- [ ] **Step 2: Run initial-binding RED**
+- [x] **Step 2: Run initial-binding RED**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand childAvatarMediaService --testNamePattern='016E|016F|016G'
@@ -198,7 +198,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand child
 
 Expected: FAIL because `createChildAvatarMediaService` does not exist.
 
-- [ ] **Step 3: Implement service construction, claim, and error primitives**
+- [x] **Step 3: Implement service construction, claim, and error primitives**
 
 Export `createChildAvatarMediaService({ UserModel, mediaReferenceClient, randomUUID, logger })`. Validate all dependencies at construction. Define fixed helpers:
 
@@ -215,17 +215,17 @@ const conflict = () => Object.assign(
 
 The first `findOneAndUpdate` filters `_id`, `familyId`, `role: 'student'`, observed `__v`, and `mediaReferenceState: { $ne: 'pending' }`; it sets the stored operation, pending target, previous pair, phase, and canonical patch and increments `__v`. All internal reads explicitly select every hidden state path.
 
-- [ ] **Step 4: Implement binding resume and safe convergence**
+- [x] **Step 4: Implement binding resume and safe convergence**
 
 For `phase=binding`, always replay prepare then commit with the stored command. After commit, CAS by `_id`, pending state, exact operation, and phase. Apply `mediaPendingProfilePatch` in the same `$set` that makes the new public avatar/generation current. If no previous pair exists, clear pending metadata and set bound; otherwise retain previous pair and move to unbinding.
 
 Stable errors are terminal only when prepare fails in the current attempt before commit is invoked: CAS-clear the untouched intent and rethrow the sanitized error. Every uncertain remote or owner-transition result reloads the Child; return it if already converged, otherwise throw `pending(childId)`. Never attach the caught database/client error or log patch values.
 
-- [ ] **Step 5: Implement `mutate`, `resume`, and stable no-op**
+- [x] **Step 5: Implement `mutate`, `resume`, and stable no-op**
 
 `resume(childOrId)` reloads hidden state and dispatches by phase. `mutate` resumes an existing intent first, compares normalized requested/current IDs, applies ordinary entries directly for a stable no-op, otherwise claims and resumes the new intent. Export `publicAvatarMediaId(child)` to return a string only when a public bound ID is present.
 
-- [ ] **Step 6: Run initial-binding GREEN**
+- [x] **Step 6: Run initial-binding GREEN**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand childAvatarMediaService --testNamePattern='016E|016F|016G|016J'
@@ -233,7 +233,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand child
 
 Expected: initial set, stable rejection, recovery, no-op, and atomic profile patch cases pass.
 
-- [ ] **Step 7: Commit initial binding**
+- [x] **Step 7: Commit initial binding**
 
 ```bash
 git add backend/services/user-service/services/childAvatarMediaService.js backend/services/user-service/__tests__/services/childAvatarMediaService.test.js
@@ -246,7 +246,7 @@ git commit -m "feat: bind child avatar media"
 - Modify: `backend/services/user-service/services/childAvatarMediaService.js`
 - Modify: `backend/services/user-service/__tests__/services/childAvatarMediaService.test.js`
 
-- [ ] **Step 1: Write failing `016H` and `016I` ordering/recovery cases**
+- [x] **Step 1: Write failing `016H` and `016I` ordering/recovery cases**
 
 Record a chronological event list around prepare, commit, owner switch, unbind, and finalize. Assert replacement keeps A public until B commit, switches to B before unbinding A, and sends:
 
@@ -267,7 +267,7 @@ Record a chronological event list around prepare, commit, owner switch, unbind, 
 
 Removal must set the public pair to null before unbind. Force each unbind/finalize uncertainty once and prove replay convergence.
 
-- [ ] **Step 2: Run replacement/removal RED**
+- [x] **Step 2: Run replacement/removal RED**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand childAvatarMediaService --testNamePattern='016H|016I'
@@ -275,21 +275,21 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand child
 
 Expected: FAIL because unbinding phase and removal are incomplete.
 
-- [ ] **Step 3: Implement checked unbind and removal transitions**
+- [x] **Step 3: Implement checked unbind and removal transitions**
 
 In replacement, the post-commit CAS sets the new public ID and generation, applies pending entries, and changes phase to unbinding while preserving the previous pair. In removal, the initial claim atomically nulls the public pair, applies entries, and starts at unbinding. Unbinding calls the exact command above, then CAS-finalizes to bound for replacement or none for removal and unsets all pending/previous/patch fields.
 
 Any unbind error retains the intent and returns pending. A reload that shows the operation already finalized returns the converged Child. Never classify a post-prepare `400/403/404/409` as safe intent cleanup.
 
-- [ ] **Step 4: Write failing deterministic `016K` concurrency cases**
+- [x] **Step 4: Write failing deterministic `016K` concurrency cases**
 
 Use deferred promises around claim/resume calls. Race identical targets, different targets, and a non-avatar patch. Assert one operation UUID is persisted, identical callers converge, different target returns conflict after helping recovery, and the non-avatar update applies only after pending recovery.
 
-- [ ] **Step 5: Implement CAS-loser behavior**
+- [x] **Step 5: Implement CAS-loser behavior**
 
 When the claim returns null, reload hidden state. If its pending target equals the requested target, resume that operation and return the converged Child. If it differs, resume the winner and then throw `RESOURCE_CONFLICT`. For a non-avatar mutation, resume first and apply its canonical entries with an observed-version CAS so it cannot overwrite media state.
 
-- [ ] **Step 6: Run complete service GREEN**
+- [x] **Step 6: Run complete service GREEN**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand childAvatarMediaService
@@ -297,7 +297,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand child
 
 Expected: all `016E-K` and service-level `018A` tests pass without timing sleeps or retries.
 
-- [ ] **Step 7: Commit the complete state machine**
+- [x] **Step 7: Commit the complete state machine**
 
 ```bash
 git add backend/services/user-service/services/childAvatarMediaService.js backend/services/user-service/__tests__/services/childAvatarMediaService.test.js
@@ -313,11 +313,11 @@ git commit -m "feat: recover child avatar replacement"
 - Create: `backend/services/user-service/__tests__/routes/childMediaReferences.test.js`
 - Modify: `backend/services/user-service/__tests__/routes/children.test.js`
 
-- [ ] **Step 1: Write failing route cases `016E`, `016F`, `016G`, `016I`, `016L`, `018A`, `018B`, and `016M`**
+- [x] **Step 1: Write failing route cases `016E`, `016F`, `016G`, `016I`, `016L`, `018A`, `018B`, and `016M`**
 
 Mount `createRoutes({ childAvatarMediaService })` in Express with the production `errorHandler`. Cover parent set/replay/remove, another-family and child-token denial, disabled `MEDIA_NOT_ENABLED`, all unsafe fields, stable/pending envelopes, detail recovery, list no-remote behavior, internal-field omission, audit redaction, and existing Child/PIN/pagination behavior. Add an import test that asserts constructing default routes does not call Mongo or the media client.
 
-- [ ] **Step 2: Run route RED**
+- [x] **Step 2: Run route RED**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand childMediaReferences children family
@@ -325,7 +325,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand child
 
 Expected: FAIL because route factories, injection, and `avatarMediaId` contract are absent.
 
-- [ ] **Step 3: Add backward-compatible router factories**
+- [x] **Step 3: Add backward-compatible router factories**
 
 In `children.js`, export the existing default router and attach `createChildrenRouter`. In `routes/index.js`, export the default router and attach `createRoutes`. Factory construction is synchronous and side-effect free:
 
@@ -343,13 +343,13 @@ const createChildrenRouter = ({ familyController }) => {
 
 `createRoutes` obtains `createFamilyController({ childAvatarMediaService })` and injects it only into the Child router; auth/user/student/family route behavior remains unchanged.
 
-- [ ] **Step 4: Refactor the family controller around an injected service**
+- [x] **Step 4: Refactor the family controller around an injected service**
 
 Export `createFamilyController({ childAvatarMediaService = null } = {})` plus the backward-compatible default handlers. `childView` removes legacy `avatar` and returns `avatarMediaId` only from `publicAvatarMediaId` or the stored public ID. `getChild` resumes pending state before a detail response for both authorized parent and self child. `listChildren` never resumes and never calls resource-service.
 
 `updateChild` uses `buildChildProfilePatch`. An avatar mutation with no service returns `400 MEDIA_NOT_ENABLED`; non-avatar patches continue to work. Map known service errors with `sendFamilyError(res, status, code, message, details)`. Emit `logFamilyOperation` for avatar success, pending, stable rejection, and conflict with only operation/result/family/child/media IDs. Unknown errors return fixed `500 INTERNAL_ERROR` text and log only approved IDs/result, never `error.message`, patch values, operations, generations, credentials, or Axios objects.
 
-- [ ] **Step 5: Run route GREEN**
+- [x] **Step 5: Run route GREEN**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand childMediaReferences children family
@@ -357,7 +357,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand child
 
 Expected: all Phase 3B route cases and existing Child/family cases pass with the production error envelope.
 
-- [ ] **Step 6: Commit public integration**
+- [x] **Step 6: Commit public integration**
 
 ```bash
 git add backend/services/user-service/controllers/familyController.js \
@@ -374,7 +374,7 @@ git commit -m "feat: expose child avatar media references"
 - Modify after successful execution: `docs/superpowers/plans/2026-06-21-family-growth-task6-phase3b-child-avatar.md`
 - Create after approval evidence: `docs/development/family-growth-task6-phase3b-review.md`
 
-- [ ] **Step 1: Run focused tests**
+- [x] **Step 1: Run focused tests**
 
 ```bash
 npx jest --config backend/services/user-service/jest.config.js --runInBand \
@@ -383,7 +383,7 @@ npx jest --config backend/services/user-service/jest.config.js --runInBand \
 
 Expected: all selected suites pass with zero failed tests and no open-handle or forced-exit warning.
 
-- [ ] **Step 2: Run the family regression twice**
+- [x] **Step 2: Run the family regression twice**
 
 ```bash
 npm run test:family-regression
@@ -392,7 +392,7 @@ npm run test:family-regression
 
 Expected: both runs pass all six family projects with identical suite and test totals.
 
-- [ ] **Step 3: Audit implementation and public-field safety**
+- [x] **Step 3: Audit implementation and public-field safety**
 
 ```bash
 git diff --check
@@ -410,7 +410,7 @@ rg -n '[T]ODO|[T]BD|testErrorHandler|process\.exit' \
 
 Expected: no whitespace errors, placeholders, test-only error handler, or process termination in the scoped files.
 
-- [ ] **Step 4: Record evidence and commit only documentation**
+- [x] **Step 4: Record evidence and commit only documentation**
 
 Mark executed checkboxes, add exact suite/test totals and commit hashes under an `Execution Evidence` section, create the review record with requirement/case/commit traceability, then commit only those documents:
 
@@ -419,6 +419,22 @@ git add docs/superpowers/plans/2026-06-21-family-growth-task6-phase3b-child-avat
   docs/development/family-growth-task6-phase3b-review.md
 git commit -m "docs: complete child avatar media phase"
 ```
+
+## Execution Evidence
+
+**Implementation commits:** `0e3b7a29`, `46f774cb`, `9d0e20e7`, `687259fa`, `25b524d9`
+**Evidence completion commit:** `19f65777`
+**Verified:** 2026-06-22
+
+| Gate | Result |
+| --- | --- |
+| Phase 3B focused user-service gate | 7 suites, 124 tests passed |
+| Family regression run 1 | 43 suites, 441 tests passed |
+| Family regression run 2 | 43 suites, 441 tests passed |
+| Stable totals | Both full runs: 43 suites, 441 tests |
+| Diff, placeholder, process-exit, and case-ID audit | Exit 0; no prohibited matches or duplicate case IDs |
+
+Before the two counted full runs, one diagnostic run reported a single `socket hang up` in `progress-service/__tests__/server.test.js`. The isolated suite then passed three consecutive runs (1 suite, 7 tests each), and the two required complete family regressions passed consecutively with identical totals. No production change was made for the non-reproducible diagnostic failure.
 
 ## Review Gate
 
