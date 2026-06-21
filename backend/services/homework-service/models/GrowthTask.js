@@ -2,6 +2,30 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const { LOCAL_DATE_PATTERN } = require('../../../common/utils/familyDate');
 
+const OPERATION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_ATTACHMENT_MEDIA = 100;
+
+const attachmentBindingSchema = new Schema({
+  mediaId: { type: Schema.Types.ObjectId, required: true },
+  bindingOperationId: { type: String, required: true, match: OPERATION_ID_PATTERN }
+}, { _id: false, strict: 'throw' });
+
+const pendingTaskPatchSchema = new Schema({
+  path: {
+    type: String,
+    required: true,
+    enum: [
+      'dimension', 'area', 'subject', 'title', 'taskType', 'description',
+      'dueDate', 'estimatedMinutes', 'targetAmount', 'unit', 'priority'
+    ]
+  },
+  value: { type: Schema.Types.Mixed }
+}, { _id: false, strict: 'throw' });
+
+const hasAtMostAttachmentLimit = (entries) => (
+  entries == null || entries.length <= MAX_ATTACHMENT_MEDIA
+);
+
 const growthTaskSchema = new Schema({
   childId: {
     type: Schema.Types.ObjectId,
@@ -123,6 +147,66 @@ const growthTaskSchema = new Schema({
     url: String,
     type: String
   }],
+  attachmentMediaIds: {
+    type: [{ type: Schema.Types.ObjectId }],
+    default: [],
+    validate: {
+      validator: hasAtMostAttachmentLimit,
+      message: `attachmentMediaIds cannot exceed ${MAX_ATTACHMENT_MEDIA} entries`
+    }
+  },
+  attachmentMediaBindings: {
+    type: [attachmentBindingSchema],
+    default: undefined,
+    select: false
+  },
+  mediaReferenceState: {
+    type: String,
+    enum: ['none', 'pending', 'bound'],
+    default: 'none'
+  },
+  mediaBindingOperationId: {
+    type: String,
+    match: OPERATION_ID_PATTERN,
+    select: false
+  },
+  attachmentMediaPendingIds: {
+    type: [{ type: Schema.Types.ObjectId }],
+    default: undefined,
+    select: false,
+    validate: {
+      validator: hasAtMostAttachmentLimit,
+      message: `attachmentMediaPendingIds cannot exceed ${MAX_ATTACHMENT_MEDIA} entries`
+    }
+  },
+  attachmentMediaPreviousBindings: {
+    type: [attachmentBindingSchema],
+    default: undefined,
+    select: false,
+    validate: {
+      validator: hasAtMostAttachmentLimit,
+      message: `attachmentMediaPreviousBindings cannot exceed ${MAX_ATTACHMENT_MEDIA} entries`
+    }
+  },
+  mediaBindingPhase: {
+    type: String,
+    enum: ['binding', 'unbinding'],
+    select: false
+  },
+  mediaPendingTaskPatch: {
+    type: [pendingTaskPatchSchema],
+    default: undefined,
+    select: false
+  },
+  mediaMutationKind: {
+    type: String,
+    enum: ['create', 'patch'],
+    select: false
+  },
+  mediaRemoteOutcomeUncertain: {
+    type: Boolean,
+    select: false
+  },
   completedAt: Date,
   confirmedAt: Date,
   confirmedByParentId: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -133,6 +217,96 @@ const growthTaskSchema = new Schema({
 
 growthTaskSchema.index({ familyId: 1, childId: 1, dueDate: 1 });
 growthTaskSchema.index({ familyId: 1, childId: 1, dimension: 1, status: 1 });
+
+growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next) {
+  const publicIds = this.attachmentMediaIds || [];
+  const currentBindings = this.attachmentMediaBindings || [];
+  const state = this.mediaReferenceState || 'none';
+  const pendingMetadata = [
+    this.mediaBindingOperationId,
+    this.attachmentMediaPendingIds,
+    this.attachmentMediaPreviousBindings,
+    this.mediaBindingPhase,
+    this.mediaPendingTaskPatch,
+    this.mediaMutationKind,
+    this.mediaRemoteOutcomeUncertain
+  ];
+  const mediaIdStrings = (entries) => entries.map((entry) => String(entry.mediaId ?? entry));
+  const hasUniqueIds = (entries) => {
+    const ids = mediaIdStrings(entries);
+    return new Set(ids).size === ids.length;
+  };
+  const bindingsMatchIds = (ids, bindings) => (
+    ids.length === bindings.length
+    && ids.every((id, index) => String(id) === String(bindings[index].mediaId))
+  );
+  const bindingsMatch = (left, right) => (
+    left.length === right.length
+    && left.every((entry, index) => (
+      String(entry.mediaId) === String(right[index].mediaId)
+      && entry.bindingOperationId === right[index].bindingOperationId
+    ))
+  );
+  const invalidate = (message) => this.invalidate('mediaReferenceState', message);
+
+  if (!hasUniqueIds(publicIds)
+    || !hasUniqueIds(currentBindings)
+    || !bindingsMatchIds(publicIds, currentBindings)) {
+    invalidate('public attachment IDs and current bindings must be unique and ordered identically');
+  }
+
+  if (state === 'none') {
+    if (publicIds.length > 0 || currentBindings.length > 0 || pendingMetadata.some((value) => value != null)) {
+      invalidate('none media state cannot contain attachments or pending metadata');
+    }
+    return next();
+  }
+
+  if (state === 'bound') {
+    if (publicIds.length === 0 || pendingMetadata.some((value) => value != null)) {
+      invalidate('bound media state requires attachments and cannot contain pending metadata');
+    }
+    return next();
+  }
+
+  if (state === 'pending') {
+    const pendingIds = this.attachmentMediaPendingIds;
+    const previousBindings = this.attachmentMediaPreviousBindings;
+    const hasCompleteMetadata = (
+      typeof this.mediaBindingOperationId === 'string'
+      && typeof this.mediaMutationKind === 'string'
+      && typeof this.mediaBindingPhase === 'string'
+      && Array.isArray(pendingIds)
+      && Array.isArray(previousBindings)
+      && typeof this.mediaRemoteOutcomeUncertain === 'boolean'
+    );
+
+    if (!hasCompleteMetadata) {
+      invalidate('pending media state requires complete recovery metadata');
+      return next();
+    }
+    if (!hasUniqueIds(pendingIds) || !hasUniqueIds(previousBindings)) {
+      invalidate('pending and previous attachment IDs must be unique');
+    }
+    if (this.mediaBindingPhase === 'binding'
+      && !bindingsMatch(currentBindings, previousBindings)) {
+      invalidate('binding phase must leave the previous public bindings current');
+    }
+    if (this.mediaBindingPhase === 'unbinding'
+      && (!bindingsMatchIds(pendingIds, currentBindings)
+        || pendingIds.some((id, index) => String(id) !== String(publicIds[index])))) {
+      invalidate('unbinding phase must expose the desired attachment bindings');
+    }
+    if (this.mediaPendingTaskPatch
+      && this.mediaPendingTaskPatch.some((entry) => (
+        !Object.prototype.hasOwnProperty.call(entry._doc, 'value')
+      ))) {
+      invalidate('every pending task patch entry must own a value');
+    }
+  }
+
+  return next();
+});
 
 module.exports = mongoose.models.GrowthTask
   || mongoose.model('GrowthTask', growthTaskSchema);
