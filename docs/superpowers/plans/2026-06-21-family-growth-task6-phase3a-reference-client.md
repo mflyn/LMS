@@ -321,7 +321,7 @@ git commit -m "fix: support replacement media unbind"
 - Create: `backend/common/services/mediaReferenceClient.js`
 - Create: `backend/common/services/__tests__/mediaReferenceClient.test.js`
 
-- [ ] **Step 1: Write failing configuration and request tests**
+- [x] **Step 1: Write failing configuration and request tests**
 
 Create tests for `TC-T6-MEDIA-016A` covering all three methods. For example:
 
@@ -346,7 +346,7 @@ expect(axiosInstance.post).toHaveBeenCalledWith(
 
 Assert blank URL, token shorter than 32, and non-integer/zero timeout fail before Axios is called. The client sends business commands unchanged; resource-service remains the command-schema authority.
 
-- [ ] **Step 2: Run client RED**
+- [x] **Step 2: Run client RED**
 
 ```bash
 npx jest --config backend/jest.family-common.config.js --runInBand mediaReferenceClient
@@ -354,7 +354,7 @@ npx jest --config backend/jest.family-common.config.js --runInBand mediaReferenc
 
 Expected: FAIL because the client module does not exist.
 
-- [ ] **Step 3: Implement configuration and exact requests**
+- [x] **Step 3: Implement configuration and exact requests**
 
 Export:
 
@@ -365,7 +365,7 @@ validateMediaReferenceClientConfig(options)
 
 Normalize only trailing slashes from `resourceServiceUrl`. Do not log, stringify, or include `serviceToken` in any created error. Each method posts the caller's command unchanged to its fixed action path.
 
-- [ ] **Step 4: Write failing response/error-classification tests**
+- [x] **Step 4: Write failing response/error-classification tests**
 
 For `TC-T6-MEDIA-016B/C`, assert:
 
@@ -373,7 +373,7 @@ For `TC-T6-MEDIA-016B/C`, assert:
 - `500/503`, timeout, connection reset, absent response, `success!==true`, missing `data.references`, or malformed reference item becomes status `503`, code `MEDIA_REFERENCE_PENDING`;
 - no produced error message or enumerable error field contains the service token or full Axios request config.
 
-- [ ] **Step 5: Implement strict response validation and error translation**
+- [x] **Step 5: Implement strict response validation and error translation**
 
 Accept only an array whose items contain valid ObjectId strings, approved field/state values, and optional ISO timestamps. Preserve stable resource errors with a new sanitized error object:
 
@@ -396,7 +396,7 @@ error.details = [];
 
 Do not attach the original Axios error as an enumerable property.
 
-- [ ] **Step 6: Run client GREEN**
+- [x] **Step 6: Run client GREEN**
 
 ```bash
 npx jest --config backend/jest.family-common.config.js --runInBand mediaReferenceClient
@@ -404,7 +404,7 @@ npx jest --config backend/jest.family-common.config.js --runInBand mediaReferenc
 
 Expected: all config, request, stable remote error, retryable failure, malformed response, and secret-safety cases pass.
 
-- [ ] **Step 7: Commit the shared client**
+- [x] **Step 7: Commit the shared client**
 
 ```bash
 git add backend/common/services/mediaReferenceClient.js backend/common/services/__tests__/mediaReferenceClient.test.js
