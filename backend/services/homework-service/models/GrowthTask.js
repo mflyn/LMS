@@ -163,7 +163,8 @@ const growthTaskSchema = new Schema({
   mediaReferenceState: {
     type: String,
     enum: ['none', 'pending', 'bound'],
-    default: 'none'
+    default: 'none',
+    required: true
   },
   mediaBindingOperationId: {
     type: String,
@@ -221,7 +222,7 @@ growthTaskSchema.index({ familyId: 1, childId: 1, dimension: 1, status: 1 });
 growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next) {
   const publicIds = this.attachmentMediaIds || [];
   const currentBindings = this.attachmentMediaBindings || [];
-  const state = this.mediaReferenceState || 'none';
+  const state = this.mediaReferenceState;
   const pendingMetadata = [
     this.mediaBindingOperationId,
     this.attachmentMediaPendingIds,
@@ -296,6 +297,22 @@ growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next)
       && (!bindingsMatchIds(pendingIds, currentBindings)
         || pendingIds.some((id, index) => String(id) !== String(publicIds[index])))) {
       invalidate('unbinding phase must expose the desired attachment bindings');
+    }
+    if (this.mediaBindingPhase === 'unbinding') {
+      const previousOperationByMediaId = new Map(previousBindings.map((entry) => (
+        [String(entry.mediaId), entry.bindingOperationId]
+      )));
+      const hasValidGenerationProvenance = currentBindings.every((entry) => {
+        const id = String(entry.mediaId);
+        const expectedOperationId = previousOperationByMediaId.has(id)
+          ? previousOperationByMediaId.get(id)
+          : this.mediaBindingOperationId;
+        return entry.bindingOperationId === expectedOperationId;
+      });
+
+      if (!hasValidGenerationProvenance) {
+        invalidate('unbinding phase bindings must preserve their generation provenance');
+      }
     }
     if (this.mediaPendingTaskPatch
       && this.mediaPendingTaskPatch.some((entry) => (

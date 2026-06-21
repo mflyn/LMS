@@ -22,6 +22,11 @@ const binding = (id, operationId = OPERATION_A) => ({
   bindingOperationId: operationId
 });
 
+const bindingValues = (entries) => entries.map((entry) => ({
+  mediaId: String(entry.mediaId),
+  bindingOperationId: entry.bindingOperationId
+}));
+
 const taskFields = (overrides = {}) => ({
   childId: mediaId(),
   familyId: mediaId(),
@@ -64,6 +69,10 @@ describe('TC-T6-MEDIA-017A GrowthTask media persistence invariants', () => {
     }
   });
 
+  test('rejects an explicit null media reference state', async () => {
+    await expectInvalid({ mediaReferenceState: null });
+  });
+
   test('persists stable bound state and hides binding generations by default', async () => {
     const first = mediaId();
     const second = mediaId();
@@ -79,10 +88,7 @@ describe('TC-T6-MEDIA-017A GrowthTask media persistence invariants', () => {
     expect(publicTask.attachmentMediaBindings).toBeUndefined();
 
     const internalTask = await GrowthTask.findById(task._id).select(HIDDEN_MEDIA_PATHS).lean();
-    expect(internalTask.attachmentMediaBindings.map((entry) => ({
-      mediaId: String(entry.mediaId),
-      bindingOperationId: entry.bindingOperationId
-    }))).toEqual([
+    expect(bindingValues(internalTask.attachmentMediaBindings)).toEqual([
       { mediaId: String(first), bindingOperationId: OPERATION_A },
       { mediaId: String(second), bindingOperationId: OPERATION_B }
     ]);
@@ -147,9 +153,50 @@ describe('TC-T6-MEDIA-017A GrowthTask media persistence invariants', () => {
     }
 
     const internalTask = await GrowthTask.findById(task._id).select(HIDDEN_MEDIA_PATHS).lean();
+    expect(bindingValues(internalTask.attachmentMediaBindings)).toEqual(bindingValues(state.attachmentMediaBindings));
     expect(internalTask.mediaBindingOperationId).toBe(state.mediaBindingOperationId);
+    expect(internalTask.attachmentMediaPendingIds.map(String)).toEqual(state.attachmentMediaPendingIds.map(String));
+    expect(bindingValues(internalTask.attachmentMediaPreviousBindings))
+      .toEqual(bindingValues(state.attachmentMediaPreviousBindings));
+    expect(internalTask.mediaBindingPhase).toBe(state.mediaBindingPhase);
+    expect(internalTask.mediaPendingTaskPatch).toEqual(state.mediaPendingTaskPatch);
     expect(internalTask.mediaMutationKind).toBe(state.mediaMutationKind);
     expect(internalTask.mediaRemoteOutcomeUncertain).toBe(state.mediaRemoteOutcomeUncertain);
+  });
+
+  test('rejects unbinding that changes the generation of a previously bound desired media ID', async () => {
+    const retained = mediaId();
+
+    await expectInvalid({
+      attachmentMediaIds: [retained],
+      attachmentMediaBindings: [binding(retained, OPERATION_B)],
+      mediaReferenceState: 'pending',
+      mediaBindingOperationId: OPERATION_B,
+      attachmentMediaPendingIds: [retained],
+      attachmentMediaPreviousBindings: [binding(retained, OPERATION_A)],
+      mediaBindingPhase: 'unbinding',
+      mediaPendingTaskPatch: [],
+      mediaMutationKind: 'patch',
+      mediaRemoteOutcomeUncertain: false
+    });
+  });
+
+  test('rejects unbinding when a newly added desired media ID lacks the current operation generation', async () => {
+    const removed = mediaId();
+    const added = mediaId();
+
+    await expectInvalid({
+      attachmentMediaIds: [added],
+      attachmentMediaBindings: [binding(added, OPERATION_A)],
+      mediaReferenceState: 'pending',
+      mediaBindingOperationId: OPERATION_B,
+      attachmentMediaPendingIds: [added],
+      attachmentMediaPreviousBindings: [binding(removed, OPERATION_A)],
+      mediaBindingPhase: 'unbinding',
+      mediaPendingTaskPatch: [],
+      mediaMutationKind: 'patch',
+      mediaRemoteOutcomeUncertain: false
+    });
   });
 
   test('rejects duplicate public IDs and current bindings that differ by ID or order', async () => {
