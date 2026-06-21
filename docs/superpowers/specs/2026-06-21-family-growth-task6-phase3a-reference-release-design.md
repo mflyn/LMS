@@ -1,6 +1,6 @@
 # Task 6 Phase 3A Media Reference Release Design Addendum
 
-**Document status:** REVIEW_PENDING
+**Document status:** APPROVED
 **Parent design:** `docs/superpowers/specs/2026-06-20-family-growth-task6-design.md`
 **Scope:** Media-reference release generation and shared internal client only
 **Requirements:** `FR-MEDIA-001`, `NFR-DATA-001`, `NFR-SEC-001`

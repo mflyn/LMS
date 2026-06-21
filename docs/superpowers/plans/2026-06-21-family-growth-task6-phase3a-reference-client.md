@@ -1,6 +1,6 @@
 # Task 6 Phase 3A Reference Release and Client Implementation Plan
 
-**Document status:** REVIEW_PENDING
+**Document status:** APPROVED
 **Design:** `docs/superpowers/specs/2026-06-21-family-growth-task6-phase3a-reference-release-design.md`
 **Test cases:** `docs/development/family-growth-task6-phase3a-test-cases.md`
 

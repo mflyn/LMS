@@ -1,6 +1,6 @@
 # Task 6 Phase 3A Numbered Test Addendum
 
-**Document status:** REVIEW_PENDING
+**Document status:** APPROVED
 **Parent catalog:** `docs/development/family-growth-task6-test-cases.md`
 **Design addendum:** `docs/superpowers/specs/2026-06-21-family-growth-task6-phase3a-reference-release-design.md`
 
