@@ -2,6 +2,31 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const bcrypt = require('bcryptjs');
 
+const OPERATION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const PENDING_PROFILE_PATHS = [
+  'name',
+  'grade',
+  'childProfile.nickname',
+  'childProfile.grade',
+  'childProfile.school',
+  'childProfile.textbookVersion',
+  'childProfile.interests',
+  'childProfile.weakSubjects',
+  'childProfile.sportsPreferences',
+  'childProfile.artInterests',
+  'childProfile.laborHabits',
+  'childProfile.moralGoals'
+];
+
+const childPendingPatchSchema = new Schema({
+  path: {
+    type: String,
+    required: true,
+    enum: PENDING_PROFILE_PATHS
+  },
+  value: Schema.Types.Mixed
+}, { _id: false, strict: 'throw' });
+
 /**
  * 用户模型
  * 用于存储系统中所有用户的基本信息和认证数据
@@ -115,6 +140,53 @@ const userSchema = new Schema({
       type: String,
       trim: true
     },
+    avatarMediaId: {
+      type: Schema.Types.ObjectId,
+      default: null
+    },
+    avatarMediaBindingOperationId: {
+      type: String,
+      default: null,
+      select: false,
+      match: [OPERATION_ID_PATTERN, 'avatarMediaBindingOperationId must be a UUID']
+    },
+    mediaReferenceState: {
+      type: String,
+      enum: ['none', 'pending', 'bound'],
+      default: 'none'
+    },
+    mediaBindingOperationId: {
+      type: String,
+      default: null,
+      select: false,
+      match: [OPERATION_ID_PATTERN, 'mediaBindingOperationId must be a UUID']
+    },
+    avatarMediaPendingId: {
+      type: Schema.Types.ObjectId,
+      select: false
+    },
+    avatarMediaPreviousId: {
+      type: Schema.Types.ObjectId,
+      default: null,
+      select: false
+    },
+    avatarMediaPreviousBindingOperationId: {
+      type: String,
+      default: null,
+      select: false,
+      match: [OPERATION_ID_PATTERN, 'avatarMediaPreviousBindingOperationId must be a UUID']
+    },
+    mediaBindingPhase: {
+      type: String,
+      enum: ['binding', 'unbinding'],
+      default: null,
+      select: false
+    },
+    mediaPendingProfilePatch: {
+      type: [childPendingPatchSchema],
+      default: null,
+      select: false
+    },
     textbookVersion: {
       type: String,
       trim: true
@@ -198,6 +270,85 @@ const userSchema = new Schema({
 userSchema.index({ role: 1 });
 userSchema.index({ class: 1, role: 1 });
 userSchema.index({ familyId: 1, role: 1 });
+
+const hasValue = (value) => value !== null && value !== undefined;
+const sameId = (left, right) => String(left || '') === String(right || '');
+
+userSchema.pre('validate', function(next) {
+  const profile = this.childProfile;
+  if (!profile) return next();
+
+  const state = profile.mediaReferenceState || 'none';
+  const hasAvatar = hasValue(profile.avatarMediaId);
+  const hasAvatarGeneration = hasValue(profile.avatarMediaBindingOperationId);
+  const hasOperation = hasValue(profile.mediaBindingOperationId);
+  const hasPrevious = hasValue(profile.avatarMediaPreviousId);
+  const hasPreviousGeneration = hasValue(profile.avatarMediaPreviousBindingOperationId);
+  const hasPhase = hasValue(profile.mediaBindingPhase);
+  const profileObject = profile.toObject({ minimize: false });
+  const hasPendingTarget = Object.prototype.hasOwnProperty.call(profileObject, 'avatarMediaPendingId')
+    && profileObject.avatarMediaPendingId !== undefined;
+  const hasPatch = profile.mediaPendingProfilePatch !== null
+    && profile.mediaPendingProfilePatch !== undefined;
+  const hasPendingMetadata = hasOperation || hasPendingTarget || hasPrevious
+    || hasPreviousGeneration || hasPhase || hasPatch;
+  const invalidate = (message) => {
+    this.invalidate('childProfile.mediaReferenceState', message);
+  };
+
+  if (hasAvatar !== hasAvatarGeneration) {
+    invalidate('avatarMediaId and its binding operation must be set together');
+  }
+  if (hasPrevious !== hasPreviousGeneration) {
+    invalidate('previous avatar and its binding operation must be set together');
+  }
+
+  if (state === 'none') {
+    if (hasAvatar || hasPendingMetadata) invalidate('none state cannot contain media metadata');
+    return next();
+  }
+
+  if (state === 'bound') {
+    if (!hasAvatar || !hasAvatarGeneration || hasPendingMetadata) {
+      invalidate('bound state requires only a public avatar generation');
+    }
+    return next();
+  }
+
+  if (!hasOperation || !hasPhase || !hasPendingTarget) {
+    invalidate('pending state requires operation, phase, and target');
+  }
+  if (hasPatch && profile.mediaPendingProfilePatch.some((entry) => (
+    !Object.prototype.hasOwnProperty.call(entry.toObject({ minimize: false }), 'value')
+  ))) {
+    invalidate('pending profile patch entries require a value');
+  }
+
+  if (profile.mediaBindingPhase === 'binding') {
+    if (hasPrevious && (!hasAvatar
+      || !sameId(profile.avatarMediaId, profile.avatarMediaPreviousId)
+      || profile.avatarMediaBindingOperationId !== profile.avatarMediaPreviousBindingOperationId)) {
+      invalidate('binding phase must retain the previous public avatar generation');
+    }
+    if (hasAvatar && !hasPrevious) {
+      invalidate('binding phase public avatar requires previous metadata');
+    }
+  }
+
+  if (profile.mediaBindingPhase === 'unbinding') {
+    if (!hasPrevious) invalidate('unbinding phase requires previous metadata');
+    if (hasValue(profile.avatarMediaPendingId)) {
+      if (!sameId(profile.avatarMediaId, profile.avatarMediaPendingId)
+        || profile.avatarMediaBindingOperationId !== profile.mediaBindingOperationId) {
+        invalidate('unbinding replacement must expose the committed target generation');
+      }
+    } else if (hasAvatar) {
+      invalidate('unbinding removal cannot expose an avatar');
+    }
+  }
+
+  next();
+});
 
 // 验证用户必须提供邮箱或手机号之一
 userSchema.pre('validate', function(next) {
