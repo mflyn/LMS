@@ -121,6 +121,70 @@ const createChildAvatarMediaService = ({
     && child.childProfile.avatarMediaBindingOperationId === operationId
   );
 
+  const convergedUnbinding = (child, operationId, targetId) => {
+    if (!child) return false;
+    if (targetId === null) {
+      return child.childProfile.mediaReferenceState === 'none'
+        && !child.childProfile.avatarMediaId;
+    }
+    return convergedInitialBinding(child, operationId, targetId);
+  };
+
+  const resumeUnbinding = async (child) => {
+    const operationId = child.childProfile.mediaBindingOperationId;
+    const targetId = normalizeId(child.childProfile.avatarMediaPendingId);
+    const command = {
+      familyId: String(child.familyId),
+      childId: String(child._id),
+      resourceType: 'child',
+      resourceId: String(child._id),
+      operationId,
+      references: [{
+        mediaId: String(child.childProfile.avatarMediaPreviousId),
+        field: 'avatarMediaId',
+        bindingOperationId: child.childProfile.avatarMediaPreviousBindingOperationId
+      }]
+    };
+
+    try {
+      await mediaReferenceClient.unbind(command);
+    } catch (error) {
+      throw pendingError(child._id);
+    }
+
+    let finalized;
+    try {
+      finalized = await update({
+        _id: child._id,
+        'childProfile.mediaReferenceState': 'pending',
+        'childProfile.mediaBindingOperationId': operationId,
+        'childProfile.mediaBindingPhase': 'unbinding'
+      }, {
+        $set: {
+          'childProfile.mediaReferenceState': targetId === null ? 'none' : 'bound'
+        },
+        $unset: {
+          'childProfile.mediaBindingOperationId': '',
+          'childProfile.avatarMediaPendingId': '',
+          'childProfile.avatarMediaPreviousId': '',
+          'childProfile.avatarMediaPreviousBindingOperationId': '',
+          'childProfile.mediaBindingPhase': '',
+          'childProfile.mediaPendingProfilePatch': ''
+        },
+        $inc: { __v: 1 }
+      });
+    } catch (error) {
+      const reloaded = await load(child._id).catch(() => null);
+      if (convergedUnbinding(reloaded, operationId, targetId)) return reloaded;
+      throw pendingError(child._id);
+    }
+
+    if (finalized) return finalized;
+    const reloaded = await load(child._id).catch(() => null);
+    if (convergedUnbinding(reloaded, operationId, targetId)) return reloaded;
+    throw pendingError(child._id);
+  };
+
   const resumeBinding = async (child) => {
     const operationId = child.childProfile.mediaBindingOperationId;
     const targetId = normalizeId(child.childProfile.avatarMediaPendingId);
@@ -185,7 +249,7 @@ const createChildAvatarMediaService = ({
     }
 
     if (switched && !hasPrevious) return switched;
-    if (switched && hasPrevious) throw pendingError(child._id);
+    if (switched && hasPrevious) return resumeUnbinding(switched);
     const reloaded = await load(child._id).catch(() => null);
     if (convergedInitialBinding(reloaded, operationId, targetId)) return reloaded;
     throw pendingError(child._id);
@@ -196,6 +260,7 @@ const createChildAvatarMediaService = ({
     if (!child) throw conflictError();
     if (child.childProfile.mediaReferenceState !== 'pending') return child;
     if (child.childProfile.mediaBindingPhase === 'binding') return resumeBinding(child);
+    if (child.childProfile.mediaBindingPhase === 'unbinding') return resumeUnbinding(child);
     throw pendingError(child._id);
   };
 
@@ -235,6 +300,29 @@ const createChildAvatarMediaService = ({
     $inc: { __v: 1 }
   });
 
+  const claimRemoval = (child, familyId, profilePatch, operationId) => update({
+    _id: child._id,
+    familyId,
+    role: 'student',
+    __v: child.__v,
+    'childProfile.mediaReferenceState': { $ne: 'pending' }
+  }, {
+    $set: {
+      ...entriesToMongoSet(profilePatch),
+      'childProfile.avatarMediaId': null,
+      'childProfile.avatarMediaBindingOperationId': null,
+      'childProfile.mediaReferenceState': 'pending',
+      'childProfile.mediaBindingOperationId': operationId,
+      'childProfile.avatarMediaPendingId': null,
+      'childProfile.avatarMediaPreviousId': child.childProfile.avatarMediaId,
+      'childProfile.avatarMediaPreviousBindingOperationId':
+        child.childProfile.avatarMediaBindingOperationId,
+      'childProfile.mediaBindingPhase': 'unbinding',
+      'childProfile.mediaPendingProfilePatch': profilePatch
+    },
+    $inc: { __v: 1 }
+  });
+
   const mutate = async ({
     child: childOrId,
     familyId,
@@ -243,14 +331,28 @@ const createChildAvatarMediaService = ({
   }) => {
     let child = await load(childOrId);
     if (!child || normalizeId(child.familyId) !== normalizeId(familyId)) throw conflictError();
-    if (child.childProfile.mediaReferenceState === 'pending') child = await resume(child);
+    if (child.childProfile.mediaReferenceState === 'pending') {
+      const pendingTarget = normalizeId(child.childProfile.avatarMediaPendingId);
+      const profileOnly = requestedAvatarMediaId === undefined;
+      const differentTarget = !profileOnly
+        && pendingTarget !== normalizeId(requestedAvatarMediaId);
+      child = await resume(child);
+      if (differentTarget) throw conflictError();
+      if (profileOnly) return applyNoOpPatch(child, profilePatch);
+    }
+
+    if (requestedAvatarMediaId === undefined) return applyNoOpPatch(child, profilePatch);
 
     if (normalizeId(child.childProfile.avatarMediaId) === normalizeId(requestedAvatarMediaId)) {
       return applyNoOpPatch(child, profilePatch);
     }
-    if (requestedAvatarMediaId === null) throw conflictError();
 
     const operationId = randomUUID();
+    if (requestedAvatarMediaId === null) {
+      const claimedRemoval = await claimRemoval(child, familyId, profilePatch, operationId);
+      if (claimedRemoval) return resumeUnbinding(claimedRemoval);
+      throw conflictError();
+    }
     const claimed = await claim(
       child,
       familyId,

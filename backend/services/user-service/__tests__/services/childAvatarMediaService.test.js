@@ -9,8 +9,9 @@ const {
 const { createChildAvatarMediaService } = require('../../services/childAvatarMediaService');
 
 const OPERATION_A = '8a9dc72a-558b-4818-b388-677862431377';
+const OPERATION_B = '56c18cc8-9977-4bb7-b70a-2a358dff5e4e';
 const MEDIA_A = '0123456789abcdef01234567';
-const MEDIA_B = 'ABCDEF0123456789ABCDEF01';
+const MEDIA_B = 'abcdef0123456789abcdef01';
 const HIDDEN_AVATAR_STATE = [
   '+childProfile.avatarMediaBindingOperationId',
   '+childProfile.mediaBindingOperationId',
@@ -44,13 +45,13 @@ const pendingError = () => Object.assign(new Error('Media reference operation is
   details: []
 });
 
-const createHarness = ({ UserModel = User, prepare, commit } = {}) => {
+const createHarness = ({ UserModel = User, prepare, commit, unbind, operationId = OPERATION_A } = {}) => {
   const mediaReferenceClient = {
     prepare: jest.fn(prepare || (async () => [{ mediaId: MEDIA_A, field: 'avatarMediaId', state: 'prepared' }])),
     commit: jest.fn(commit || (async () => [{ mediaId: MEDIA_A, field: 'avatarMediaId', state: 'bound' }])),
-    unbind: jest.fn()
+    unbind: jest.fn(unbind || (async () => [{ mediaId: MEDIA_A, field: 'avatarMediaId', state: 'released' }]))
   };
-  const randomUUID = jest.fn(() => OPERATION_A);
+  const randomUUID = jest.fn(() => operationId);
   const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
   const service = createChildAvatarMediaService({
     UserModel,
@@ -61,12 +62,23 @@ const createHarness = ({ UserModel = User, prepare, commit } = {}) => {
   return { service, mediaReferenceClient, randomUUID, logger };
 };
 
-const mutation = (child, profilePatch = []) => ({
+const mutation = (child, profilePatch = [], ...requested) => ({
   child,
   familyId: child.familyId.toString(),
-  requestedAvatarMediaId: MEDIA_A,
+  requestedAvatarMediaId: requested.length ? requested[0] : MEDIA_A,
   profilePatch
 });
+
+const bindAvatar = async (child, mediaId = MEDIA_A, operationId = OPERATION_A) => {
+  await User.findByIdAndUpdate(child._id, {
+    $set: {
+      'childProfile.avatarMediaId': mediaId,
+      'childProfile.avatarMediaBindingOperationId': operationId,
+      'childProfile.mediaReferenceState': 'bound'
+    }
+  });
+  return loadInternal(child._id);
+};
 
 const expectValidationError = (action) => {
   let caught;
@@ -371,5 +383,180 @@ describe('TC-T6-MEDIA-016G initial binding recovery', () => {
 
     expect(randomUUID).toHaveBeenCalledTimes(1);
     expect((await loadInternal(child._id)).childProfile.mediaReferenceState).toBe('bound');
+  });
+});
+
+describe('TC-T6-MEDIA-016H replacement ordering and recovery', () => {
+  test('commits the new generation before switching public state and checked unbind', async () => {
+    const child = await createChild();
+    await bindAvatar(child);
+    const events = [];
+    const { service, mediaReferenceClient } = createHarness({
+      operationId: OPERATION_B,
+      prepare: async () => { events.push('prepare'); return []; },
+      commit: async () => {
+        expect((await loadInternal(child._id)).childProfile.avatarMediaId.toString()).toBe(MEDIA_A);
+        events.push('commit');
+        return [];
+      },
+      unbind: async () => {
+        const switched = await loadInternal(child._id);
+        expect(switched.childProfile.avatarMediaId.toString()).toBe(MEDIA_B);
+        expect(switched.childProfile.mediaBindingPhase).toBe('unbinding');
+        events.push('unbind');
+        return [];
+      }
+    });
+
+    const result = await service.mutate(mutation(child, [], MEDIA_B));
+
+    expect(events).toEqual(['prepare', 'commit', 'unbind']);
+    expect(service.publicAvatarMediaId(result)).toBe(MEDIA_B);
+    expect(mediaReferenceClient.unbind).toHaveBeenCalledWith({
+      familyId: child.familyId.toString(),
+      childId: child._id.toString(),
+      resourceType: 'child',
+      resourceId: child._id.toString(),
+      operationId: OPERATION_B,
+      references: [{
+        mediaId: MEDIA_A,
+        field: 'avatarMediaId',
+        bindingOperationId: OPERATION_A
+      }]
+    });
+    expect((await loadInternal(child._id)).childProfile.mediaReferenceState).toBe('bound');
+  });
+
+  test('resumes unbind without replaying prepare or commit', async () => {
+    const child = await createChild();
+    await bindAvatar(child);
+    let failed = false;
+    const { service, mediaReferenceClient } = createHarness({
+      operationId: OPERATION_B,
+      unbind: async () => {
+        if (!failed) { failed = true; throw pendingError(); }
+        return [];
+      }
+    });
+
+    await expect(service.mutate(mutation(child, [], MEDIA_B))).rejects.toMatchObject({
+      code: 'MEDIA_REFERENCE_PENDING'
+    });
+    expect(service.publicAvatarMediaId(await loadInternal(child._id))).toBe(MEDIA_B);
+
+    const result = await service.resume(child._id);
+    expect(service.publicAvatarMediaId(result)).toBe(MEDIA_B);
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(1);
+    expect(mediaReferenceClient.commit).toHaveBeenCalledTimes(1);
+    expect(mediaReferenceClient.unbind).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('TC-T6-MEDIA-016I avatar removal', () => {
+  test('hides the public avatar before checked unbind and converges to none', async () => {
+    const child = await createChild();
+    await bindAvatar(child);
+    const { service, mediaReferenceClient } = createHarness({
+      operationId: OPERATION_B,
+      unbind: async () => {
+        const removing = await loadInternal(child._id);
+        expect(service.publicAvatarMediaId(removing)).toBeNull();
+        expect(removing.childProfile.mediaBindingPhase).toBe('unbinding');
+        return [];
+      }
+    });
+
+    const result = await service.mutate(mutation(child, [], null));
+
+    expect(service.publicAvatarMediaId(result)).toBeNull();
+    expect(result.childProfile.mediaReferenceState).toBe('none');
+    expect(mediaReferenceClient.prepare).not.toHaveBeenCalled();
+    expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
+    expect(mediaReferenceClient.unbind).toHaveBeenCalledWith(expect.objectContaining({
+      operationId: OPERATION_B,
+      references: [{ mediaId: MEDIA_A, field: 'avatarMediaId', bindingOperationId: OPERATION_A }]
+    }));
+  });
+
+  test('already-null removal is a media no-op', async () => {
+    const child = await createChild();
+    const { service, mediaReferenceClient, randomUUID } = createHarness();
+
+    const result = await service.mutate(mutation(child, [
+      { path: 'childProfile.school', value: '新学校' }
+    ], null));
+
+    expect(result.childProfile.school).toBe('新学校');
+    expect(randomUUID).not.toHaveBeenCalled();
+    expect(mediaReferenceClient.unbind).not.toHaveBeenCalled();
+  });
+});
+
+describe('TC-T6-MEDIA-016K deterministic concurrent claims', () => {
+  test('identical requests share one durable generation', async () => {
+    const child = await createChild();
+    let releasePrepare;
+    const gate = new Promise((resolve) => { releasePrepare = resolve; });
+    let prepareCalls = 0;
+    const { service, randomUUID } = createHarness({
+      prepare: async () => { prepareCalls += 1; await gate; return []; }
+    });
+
+    const first = service.mutate(mutation(child));
+    while (prepareCalls < 1) await new Promise((resolve) => setImmediate(resolve));
+    const second = service.mutate(mutation(child));
+    while (prepareCalls < 2) await new Promise((resolve) => setImmediate(resolve));
+    releasePrepare();
+
+    const results = await Promise.all([first, second]);
+    expect(results.map((result) => service.publicAvatarMediaId(result))).toEqual([MEDIA_A, MEDIA_A]);
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+  });
+
+  test('a different target helps the pending winner then returns conflict', async () => {
+    const child = await createChild();
+    let releasePrepare;
+    const gate = new Promise((resolve) => { releasePrepare = resolve; });
+    let prepareCalls = 0;
+    const { service } = createHarness({
+      prepare: async () => { prepareCalls += 1; await gate; return []; }
+    });
+
+    const first = service.mutate(mutation(child));
+    while (prepareCalls < 1) await new Promise((resolve) => setImmediate(resolve));
+    const different = service.mutate(mutation(child, [], MEDIA_B));
+    const differentResult = expect(different).rejects.toMatchObject({
+      status: 409,
+      code: 'RESOURCE_CONFLICT'
+    });
+    while (prepareCalls < 2) await new Promise((resolve) => setImmediate(resolve));
+    releasePrepare();
+
+    await expect(first).resolves.toEqual(expect.anything());
+    await differentResult;
+    expect(service.publicAvatarMediaId(await loadInternal(child._id))).toBe(MEDIA_A);
+  });
+
+  test('a non-avatar patch resumes pending work before applying fields', async () => {
+    const child = await createChild();
+    let releasePrepare;
+    const gate = new Promise((resolve) => { releasePrepare = resolve; });
+    let prepareCalls = 0;
+    const { service } = createHarness({
+      prepare: async () => { prepareCalls += 1; await gate; return []; }
+    });
+
+    const first = service.mutate(mutation(child));
+    while (prepareCalls < 1) await new Promise((resolve) => setImmediate(resolve));
+    const profileOnly = service.mutate(mutation(child, [
+      { path: 'childProfile.school', value: '并发学校' }
+    ], undefined));
+    while (prepareCalls < 2) await new Promise((resolve) => setImmediate(resolve));
+    releasePrepare();
+
+    await Promise.all([first, profileOnly]);
+    const stored = await loadInternal(child._id);
+    expect(stored.childProfile.school).toBe('并发学校');
+    expect(service.publicAvatarMediaId(stored)).toBe(MEDIA_A);
   });
 });
