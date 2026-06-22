@@ -34,7 +34,7 @@
 - Modify: `backend/services/homework-service/models/GrowthTask.js`
 - Create: `backend/services/homework-service/__tests__/models/GrowthTask.mediaReferences.test.js`
 
-- [ ] **Step 1: Write failing `TC-T6-MEDIA-017A` model tests**
+- [x] **Step 1: Write failing `TC-T6-MEDIA-017A` model tests**
 
 Use the real model to cover legacy none, stable bound, create pending, patch binding, and patch unbinding states. Explicitly select hidden fields and assert ordinary queries omit them:
 
@@ -58,7 +58,7 @@ expect(internalTask.mediaBindingOperationId).toBe(OPERATION_A);
 
 Reject duplicate public IDs, binding arrays that differ in ID or order, malformed UUIDs/ObjectIds, incomplete pending state, internal metadata on stable state, invalid phase/kind, and non-canonical pending paths.
 
-- [ ] **Step 2: Run model RED**
+- [x] **Step 2: Run model RED**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand GrowthTask.mediaReferences
@@ -66,7 +66,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand G
 
 Expected: FAIL because GrowthTask has no attachment media state.
 
-- [ ] **Step 3: Add strict sub-schemas and fields**
+- [x] **Step 3: Add strict sub-schemas and fields**
 
 Define reusable strict sub-schemas and additive owner fields:
 
@@ -93,11 +93,11 @@ const pendingTaskPatchSchema = new Schema({
 
 Add `attachmentMediaIds`, `attachmentMediaBindings`, `mediaReferenceState`, `mediaBindingOperationId`, `attachmentMediaPendingIds`, `attachmentMediaPreviousBindings`, `mediaBindingPhase`, `mediaPendingTaskPatch`, `mediaMutationKind`, and `mediaRemoteOutcomeUncertain`. Mark every field except public IDs/state as `select:false`. Model validation limits public, pending, and previous arrays to 100 entries so internal callers cannot bypass the resource-service command bound.
 
-- [ ] **Step 4: Add one document invariant validator**
+- [x] **Step 4: Add one document invariant validator**
 
 Normalize missing legacy state to `none`; require public IDs and binding entries to be unique and ordered identically; require stable none/bound metadata rules; require complete pending metadata; require explicit `value` ownership on each pending patch entry. Do not infer generations from IDs.
 
-- [ ] **Step 5: Run model GREEN and existing task model tests**
+- [x] **Step 5: Run model GREEN and existing task model tests**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -106,7 +106,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: all matching suites pass with no validation warning.
 
-- [ ] **Step 6: Commit model contract**
+- [x] **Step 6: Commit model contract**
 
 ```bash
 git add backend/services/homework-service/models/GrowthTask.js \
