@@ -43,6 +43,45 @@ const expectInvalid = async (overrides) => {
   await expect(task.validate()).rejects.toMatchObject({ name: 'ValidationError' });
 };
 
+const nonArrayState = (field, shape) => {
+  const id = mediaId();
+  const scalar = field.includes('Ids') ? String(id) : 'not-an-array';
+  const object = field.includes('Bindings')
+    ? binding(id)
+    : field === 'mediaPendingTaskPatch'
+      ? { path: 'title', value: 'Updated title' }
+      : { value: String(id) };
+  const value = shape === 'null' ? null : shape === 'scalar' ? scalar : object;
+
+  if (field === 'attachmentMediaIds') {
+    return {
+      attachmentMediaIds: value,
+      attachmentMediaBindings: shape === 'scalar' ? [binding(id)] : [],
+      mediaReferenceState: shape === 'scalar' ? 'bound' : 'none'
+    };
+  }
+  if (field === 'attachmentMediaBindings') {
+    return {
+      attachmentMediaIds: shape === 'object' ? [id] : [],
+      attachmentMediaBindings: value,
+      mediaReferenceState: shape === 'object' ? 'bound' : 'none'
+    };
+  }
+
+  return {
+    attachmentMediaIds: [],
+    attachmentMediaBindings: [],
+    mediaReferenceState: 'pending',
+    mediaBindingOperationId: OPERATION_A,
+    attachmentMediaPendingIds: field === 'attachmentMediaPendingIds' ? value : [],
+    attachmentMediaPreviousBindings: field === 'attachmentMediaPreviousBindings' ? value : [],
+    mediaBindingPhase: field === 'attachmentMediaPreviousBindings' ? 'unbinding' : 'binding',
+    mediaPendingTaskPatch: field === 'mediaPendingTaskPatch' ? value : [],
+    mediaMutationKind: 'patch',
+    mediaRemoteOutcomeUncertain: false
+  };
+};
+
 describe('TC-T6-MEDIA-017A GrowthTask media persistence invariants', () => {
   test('treats a legacy task without media fields as stable none', async () => {
     const legacy = taskFields();
@@ -210,6 +249,31 @@ describe('TC-T6-MEDIA-017A GrowthTask media persistence invariants', () => {
       mediaBindingPhase: 'binding',
       mediaMutationKind: 'create',
       mediaRemoteOutcomeUncertain: false
+    });
+  });
+
+  describe.each([
+    'attachmentMediaIds',
+    'attachmentMediaBindings',
+    'attachmentMediaPendingIds',
+    'attachmentMediaPreviousBindings',
+    'mediaPendingTaskPatch'
+  ])('%s array input shape', (field) => {
+    test.each(['null', 'scalar', 'object'])('rejects direct %s input before array casting', async (shape) => {
+      const task = new GrowthTask(taskFields(nonArrayState(field, shape)));
+      let validationError;
+
+      try {
+        await task.validate();
+      } catch (error) {
+        validationError = error;
+      }
+
+      expect(validationError).toMatchObject({ name: 'ValidationError' });
+      expect(validationError.errors[field]).toMatchObject({
+        name: 'CastError',
+        kind: 'Array'
+      });
     });
   });
 

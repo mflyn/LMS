@@ -26,6 +26,11 @@ const hasAtMostAttachmentLimit = (entries) => (
   entries == null || entries.length <= MAX_ATTACHMENT_MEDIA
 );
 
+const requireArrayInput = (path, { allowUndefined = false } = {}) => (value) => {
+  if (Array.isArray(value) || (allowUndefined && value === undefined)) return value;
+  throw new mongoose.Error.CastError('Array', value, path);
+};
+
 const growthTaskSchema = new Schema({
   childId: {
     type: Schema.Types.ObjectId,
@@ -150,6 +155,7 @@ const growthTaskSchema = new Schema({
   attachmentMediaIds: {
     type: [{ type: Schema.Types.ObjectId }],
     default: [],
+    set: requireArrayInput('attachmentMediaIds'),
     validate: {
       validator: hasAtMostAttachmentLimit,
       message: `attachmentMediaIds cannot exceed ${MAX_ATTACHMENT_MEDIA} entries`
@@ -158,6 +164,7 @@ const growthTaskSchema = new Schema({
   attachmentMediaBindings: {
     type: [attachmentBindingSchema],
     default: undefined,
+    set: requireArrayInput('attachmentMediaBindings', { allowUndefined: true }),
     select: false
   },
   mediaReferenceState: {
@@ -174,6 +181,7 @@ const growthTaskSchema = new Schema({
   attachmentMediaPendingIds: {
     type: [{ type: Schema.Types.ObjectId }],
     default: undefined,
+    set: requireArrayInput('attachmentMediaPendingIds', { allowUndefined: true }),
     select: false,
     validate: {
       validator: hasAtMostAttachmentLimit,
@@ -183,6 +191,7 @@ const growthTaskSchema = new Schema({
   attachmentMediaPreviousBindings: {
     type: [attachmentBindingSchema],
     default: undefined,
+    set: requireArrayInput('attachmentMediaPreviousBindings', { allowUndefined: true }),
     select: false,
     validate: {
       validator: hasAtMostAttachmentLimit,
@@ -197,6 +206,7 @@ const growthTaskSchema = new Schema({
   mediaPendingTaskPatch: {
     type: [pendingTaskPatchSchema],
     default: undefined,
+    set: requireArrayInput('mediaPendingTaskPatch', { allowUndefined: true }),
     select: false
   },
   mediaMutationKind: {
