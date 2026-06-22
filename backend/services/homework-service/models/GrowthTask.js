@@ -153,7 +153,7 @@ const growthTaskSchema = new Schema({
     type: String
   }],
   attachmentMediaIds: {
-    type: [{ type: Schema.Types.ObjectId }],
+    type: [{ type: Schema.Types.ObjectId, required: true }],
     default: [],
     set: requireArrayInput('attachmentMediaIds'),
     validate: {
@@ -179,7 +179,7 @@ const growthTaskSchema = new Schema({
     select: false
   },
   attachmentMediaPendingIds: {
-    type: [{ type: Schema.Types.ObjectId }],
+    type: [{ type: Schema.Types.ObjectId, required: true }],
     default: undefined,
     set: requireArrayInput('attachmentMediaPendingIds', { allowUndefined: true }),
     select: false,
@@ -259,6 +259,26 @@ growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next)
     ))
   );
   const invalidate = (message) => this.invalidate('mediaReferenceState', message);
+  const hasValidMediaIds = (entries) => entries.every((entry) => (
+    entry instanceof mongoose.Types.ObjectId
+  ));
+  const hasValidBindings = (entries) => entries.every((entry) => (
+    entry != null
+    && typeof entry === 'object'
+    && entry.mediaId instanceof mongoose.Types.ObjectId
+    && typeof entry.bindingOperationId === 'string'
+  ));
+  const hasValidPendingPatch = (entries) => entries.every((entry) => (
+    entry != null
+    && typeof entry === 'object'
+    && entry._doc != null
+    && typeof entry._doc === 'object'
+  ));
+
+  if (!hasValidMediaIds(publicIds) || !hasValidBindings(currentBindings)) {
+    invalidate('public attachment media arrays contain malformed entries');
+    return next();
+  }
 
   if (!hasUniqueIds(publicIds)
     || !hasUniqueIds(currentBindings)
@@ -297,6 +317,12 @@ growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next)
       invalidate('pending media state requires complete recovery metadata');
       return next();
     }
+    if (!hasValidMediaIds(pendingIds)
+      || !hasValidBindings(previousBindings)
+      || !hasValidPendingPatch(this.mediaPendingTaskPatch)) {
+      invalidate('pending attachment media arrays contain malformed entries');
+      return next();
+    }
     if (!hasUniqueIds(pendingIds) || !hasUniqueIds(previousBindings)) {
       invalidate('pending and previous attachment IDs must be unique');
     }
@@ -325,10 +351,9 @@ growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next)
         invalidate('unbinding phase bindings must preserve their generation provenance');
       }
     }
-    if (this.mediaPendingTaskPatch
-      && this.mediaPendingTaskPatch.some((entry) => (
-        !Object.prototype.hasOwnProperty.call(entry._doc, 'value')
-      ))) {
+    if (this.mediaPendingTaskPatch.some((entry) => (
+      !Object.prototype.hasOwnProperty.call(entry._doc, 'value')
+    ))) {
       invalidate('every pending task patch entry must own a value');
     }
   }

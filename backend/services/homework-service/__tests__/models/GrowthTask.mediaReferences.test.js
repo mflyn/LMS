@@ -82,6 +82,42 @@ const nonArrayState = (field, shape) => {
   };
 };
 
+const malformedElementState = (field, member) => {
+  const id = mediaId();
+
+  if (field === 'attachmentMediaIds') {
+    return {
+      attachmentMediaIds: [id, member],
+      attachmentMediaBindings: [binding(id)],
+      mediaReferenceState: 'bound'
+    };
+  }
+  if (field === 'attachmentMediaBindings') {
+    return {
+      attachmentMediaIds: [id],
+      attachmentMediaBindings: [binding(id), member],
+      mediaReferenceState: 'bound'
+    };
+  }
+
+  return {
+    attachmentMediaIds: field === 'attachmentMediaPreviousBindings' ? [id] : [],
+    attachmentMediaBindings: field === 'attachmentMediaPreviousBindings' ? [binding(id)] : [],
+    mediaReferenceState: 'pending',
+    mediaBindingOperationId: OPERATION_A,
+    attachmentMediaPendingIds: field === 'attachmentMediaPendingIds' ? [id, member] : [],
+    attachmentMediaPreviousBindings: field === 'attachmentMediaPreviousBindings'
+      ? [binding(id), member]
+      : [],
+    mediaBindingPhase: 'binding',
+    mediaPendingTaskPatch: field === 'mediaPendingTaskPatch'
+      ? [{ path: 'title', value: 'Updated title' }, member]
+      : [],
+    mediaMutationKind: 'patch',
+    mediaRemoteOutcomeUncertain: false
+  };
+};
+
 describe('TC-T6-MEDIA-017A GrowthTask media persistence invariants', () => {
   test('treats a legacy task without media fields as stable none', async () => {
     const legacy = taskFields();
@@ -274,6 +310,23 @@ describe('TC-T6-MEDIA-017A GrowthTask media persistence invariants', () => {
         name: 'CastError',
         kind: 'Array'
       });
+    });
+  });
+
+  describe.each([
+    'attachmentMediaIds',
+    'attachmentMediaBindings',
+    'attachmentMediaPendingIds',
+    'attachmentMediaPreviousBindings',
+    'mediaPendingTaskPatch'
+  ])('%s member shape', (field) => {
+    test.each([
+      ['null', null],
+      ['undefined', undefined]
+    ])('rejects a %s member with ValidationError', async (_label, member) => {
+      const task = new GrowthTask(taskFields(malformedElementState(field, member)));
+
+      await expect(task.validate()).rejects.toMatchObject({ name: 'ValidationError' });
     });
   });
 
