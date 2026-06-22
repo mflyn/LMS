@@ -199,6 +199,20 @@ describe('TC-T6-MEDIA-017A GrowthTask media persistence invariants', () => {
     });
   });
 
+  test('rejects pending state without an explicit pending task patch array', async () => {
+    await expectInvalid({
+      attachmentMediaIds: [],
+      attachmentMediaBindings: [],
+      mediaReferenceState: 'pending',
+      mediaBindingOperationId: OPERATION_A,
+      attachmentMediaPendingIds: [],
+      attachmentMediaPreviousBindings: [],
+      mediaBindingPhase: 'binding',
+      mediaMutationKind: 'create',
+      mediaRemoteOutcomeUncertain: false
+    });
+  });
+
   test('rejects duplicate public IDs and current bindings that differ by ID or order', async () => {
     const first = mediaId();
     const second = mediaId();

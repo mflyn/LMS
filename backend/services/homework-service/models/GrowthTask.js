@@ -279,6 +279,7 @@ growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next)
       && typeof this.mediaBindingPhase === 'string'
       && Array.isArray(pendingIds)
       && Array.isArray(previousBindings)
+      && Array.isArray(this.mediaPendingTaskPatch)
       && typeof this.mediaRemoteOutcomeUncertain === 'boolean'
     );
 
