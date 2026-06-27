@@ -342,19 +342,21 @@ describe('growth task routes', () => {
     expect(editResponse.body.error.code).toBe('REPEAT_RULE_NOT_SUPPORTED');
   });
 
-  test('rejects unverified attachment input until private media is enabled', async () => {
+  test('rejects private media when disabled and rejects legacy attachments', async () => {
     const { parent, child } = await createFamilyFixture('媒体');
-    for (const attachmentInput of [
-      { attachments: [{ url: 'https://public.example/child.jpg' }] },
-      { attachmentMediaIds: ['507f1f77bcf86cd799439011'] }
-    ]) {
-      const response = await request(app)
-        .post('/api/growth-tasks')
-        .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
-        .send(taskPayload(child, attachmentInput));
-      expect(response.status).toBe(400);
-      expect(response.body.error.code).toBe('MEDIA_NOT_ENABLED');
-    }
+    const legacy = await request(app)
+      .post('/api/growth-tasks')
+      .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
+      .send(taskPayload(child, { attachments: [{ url: 'https://public.example/child.jpg' }] }));
+    expect(legacy.status).toBe(400);
+    expect(legacy.body.error.code).toBe('VALIDATION_ERROR');
+
+    const privateMedia = await request(app)
+      .post('/api/growth-tasks')
+      .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
+      .send(taskPayload(child, { attachmentMediaIds: ['507f1f77bcf86cd799439011'] }));
+    expect(privateMedia.status).toBe(400);
+    expect(privateMedia.body.error.code).toBe('MEDIA_NOT_ENABLED');
   });
 
   test('validates status and paginates task lists', async () => {

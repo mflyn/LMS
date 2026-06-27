@@ -8,6 +8,10 @@ const { formatLocalDate, getWeekRange } = require('../../../common/utils/familyD
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
 const { logFamilyOperation } = require('../../../common/utils/familyAudit');
 const defaultStarAwardClient = require('../services/starAwardClient');
+const {
+  parseGrowthTaskCreate,
+  parseGrowthTaskPatch
+} = require('../services/growthTaskPatch');
 
 const DIMENSIONS = ['moral', 'academic', 'physical', 'artistic', 'labor'];
 const STATUSES = ['pending', 'completed', 'confirmed', 'cancelled', 'archived'];
@@ -19,13 +23,58 @@ const statusCodes = {
   404: 'RESOURCE_NOT_FOUND',
   409: 'TASK_STATE_CONFLICT'
 };
-const sendError = (res, status, message, code = statusCodes[status] || 'INTERNAL_ERROR') => (
-  sendFamilyError(res, status, code, message)
+const sendError = (res, status, message, code = statusCodes[status] || 'INTERNAL_ERROR', details = []) => (
+  sendFamilyError(res, status, code, message, details)
 );
 const sendMediaRecoveryError = (res, error) => {
   if (!error || !error.status || !error.code) return false;
   sendFamilyError(res, error.status, error.code, error.message, error.details || []);
   return true;
+};
+
+const safeObjectIdString = (value) => {
+  if (!value) return undefined;
+  const stringValue = value.toString();
+  return mongoose.Types.ObjectId.isValid(stringValue) ? stringValue : undefined;
+};
+
+const mediaAuditResultForError = (error) => {
+  if (!error || !error.code) return null;
+  if (error.code === 'MEDIA_REFERENCE_PENDING') return 'pending';
+  if (error.code === 'MEDIA_REFERENCE_CONFLICT' || error.code === 'TASK_STATE_CONFLICT') return 'conflict';
+  if (error.code.startsWith('MEDIA_REFERENCE_')) return 'rejected';
+  return null;
+};
+
+const mediaErrorTaskId = (error) => {
+  const resourceId = error && error.details && !Array.isArray(error.details)
+    ? error.details.resourceId
+    : undefined;
+  return safeObjectIdString(resourceId);
+};
+
+const logAttachmentMediaAudit = (req, context, result, overrides = {}) => {
+  if (!context) return;
+  const taskId = safeObjectIdString(overrides.taskId || context.taskId);
+  const event = {
+    operation: context.operation,
+    result,
+    familyId: context.familyId,
+    childId: context.childId,
+    mediaIds: overrides.mediaIds || context.mediaIds || []
+  };
+  if (taskId) {
+    event.taskId = taskId;
+  }
+  logFamilyOperation(req, event);
+};
+
+const logAttachmentMediaError = (req, context, error) => {
+  const result = mediaAuditResultForError(error);
+  if (!result) return;
+  logAttachmentMediaAudit(req, context, result, {
+    taskId: mediaErrorTaskId(error)
+  });
 };
 
 const taskView = (task) => ({
@@ -51,7 +100,7 @@ const taskView = (task) => ({
   needsHelp: task.needsHelp,
   childNote: task.childNote,
   parentFeedback: task.parentFeedback,
-  attachments: task.attachments,
+  attachmentMediaIds: (task.attachmentMediaIds || []).map((id) => id.toString()),
   completedAt: task.completedAt,
   confirmedAt: task.confirmedAt,
   confirmedByParentId: task.confirmedByParentId ? task.confirmedByParentId.toString() : undefined,
@@ -128,7 +177,7 @@ const getDateRangeForScope = (scope, timezone, now = new Date(Date.now())) => {
 
 const createGrowthTaskRouter = ({
   awardTaskStar = defaultStarAwardClient.awardTaskStar,
-  attachmentMediaService
+  attachmentMediaService = null
 } = {}) => {
   const router = express.Router();
   const resumePendingAttachmentMedia = async (task) => {
@@ -139,6 +188,7 @@ const createGrowthTaskRouter = ({
   };
 
 router.post('/', authenticateGateway, async (req, res) => {
+  let attachmentAuditContext;
   try {
     if (req.user.role !== 'parent') {
       return sendError(res, 403, 'Only parents can create growth tasks');
@@ -146,47 +196,54 @@ router.post('/', authenticateGateway, async (req, res) => {
     if (Object.prototype.hasOwnProperty.call(req.body, 'repeatRule')) {
       return sendError(res, 400, 'repeatRule is not supported in the MVP', 'REPEAT_RULE_NOT_SUPPORTED');
     }
-    if (Object.prototype.hasOwnProperty.call(req.body, 'attachments')
-      || Object.prototype.hasOwnProperty.call(req.body, 'attachmentMediaIds')) {
+    const parsed = parseGrowthTaskCreate(req.body);
+    if (parsed.hasAttachmentMutation && !attachmentMediaService) {
       return sendError(res, 400, 'Private media is not enabled yet', 'MEDIA_NOT_ENABLED');
     }
 
-    const { childId, dimension, title, taskType, dueDate } = req.body;
-    if (!childId || !DIMENSIONS.includes(dimension) || !title || !taskType || !dueDate) {
-      return sendError(res, 400, 'childId, dimension, title, taskType and dueDate are required');
-    }
-
-    const ownership = await assertParentOwnsChild(req.user.id, childId);
+    const ownership = await assertParentOwnsChild(req.user.id, parsed.taskInput.childId);
     if (!ownership) {
       return sendError(res, 403, 'Cannot create a task for another family child');
     }
 
-    const task = await GrowthTask.create({
-      childId,
+    const taskInput = {
+      ...parsed.taskInput,
       familyId: ownership.family._id,
-      createdByParentId: req.user.id,
-      dimension,
-      area: req.body.area,
-      subject: req.body.subject,
-      title,
-      taskType,
-      description: req.body.description,
-      dueDate,
-      estimatedMinutes: req.body.estimatedMinutes,
-      targetAmount: req.body.targetAmount,
-      unit: req.body.unit,
-      priority: req.body.priority
-    });
+      createdByParentId: req.user.id
+    };
+    if (parsed.hasAttachmentMutation) {
+      attachmentAuditContext = {
+        operation: 'task.attachments.create',
+        familyId: ownership.family._id.toString(),
+        childId: ownership.child._id.toString(),
+        mediaIds: parsed.attachmentMediaIds || []
+      };
+    }
+    const task = attachmentMediaService
+      ? await attachmentMediaService.create({
+        taskInput,
+        attachmentMediaIds: parsed.attachmentMediaIds || []
+      })
+      : await GrowthTask.create(taskInput);
+
+    if (parsed.hasAttachmentMutation) {
+      logAttachmentMediaAudit(req, attachmentAuditContext, 'bound', {
+        taskId: task._id.toString(),
+        mediaIds: (task.attachmentMediaIds || []).map((id) => id.toString())
+      });
+    }
 
     return res.status(201).json({
       success: true,
       data: { task: taskView(task) }
     });
   } catch (error) {
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return sendError(res, 400, error.message);
+    logAttachmentMediaError(req, attachmentAuditContext, error);
+    if (sendMediaRecoveryError(res, error)) return undefined;
+    if (error.name === 'ValidationError' || error.name === 'CastError' || error.code === 'VALIDATION_ERROR') {
+      return sendError(res, 400, error.message, error.code || 'VALIDATION_ERROR', error.details || []);
     }
-    return sendError(res, 500, error.message);
+    return sendError(res, 500, 'Failed to create growth task');
   }
 });
 
@@ -278,11 +335,13 @@ router.get('/:taskId', authenticateGateway, async (req, res) => {
       return sendError(res, 403, 'Cannot access this task');
     }
 
+    const activeTask = await resumePendingAttachmentMedia(task);
     return res.json({
       success: true,
-      data: { task: taskView(task) }
+      data: { task: taskView(activeTask) }
     });
   } catch (error) {
+    if (sendMediaRecoveryError(res, error)) return undefined;
     return sendError(res, 500, error.message);
   }
 });
@@ -452,6 +511,7 @@ router.patch('/:taskId/confirm', authenticateGateway, async (req, res) => {
 });
 
 router.patch('/:taskId', authenticateGateway, async (req, res) => {
+  let attachmentAuditContext;
   try {
     if (req.user.role !== 'parent') {
       return sendError(res, 403, 'Only parents can edit growth tasks');
@@ -459,8 +519,8 @@ router.patch('/:taskId', authenticateGateway, async (req, res) => {
     if (Object.prototype.hasOwnProperty.call(req.body, 'repeatRule')) {
       return sendError(res, 400, 'repeatRule is not supported in the MVP', 'REPEAT_RULE_NOT_SUPPORTED');
     }
-    if (Object.prototype.hasOwnProperty.call(req.body, 'attachments')
-      || Object.prototype.hasOwnProperty.call(req.body, 'attachmentMediaIds')) {
+    const parsed = parseGrowthTaskPatch(req.body);
+    if (parsed.hasAttachmentMutation && !attachmentMediaService) {
       return sendError(res, 400, 'Private media is not enabled yet', 'MEDIA_NOT_ENABLED');
     }
     if (!mongoose.Types.ObjectId.isValid(req.params.taskId)) {
@@ -480,35 +540,49 @@ router.patch('/:taskId', authenticateGateway, async (req, res) => {
       return sendError(res, 409, 'Only pending tasks can be edited');
     }
 
-    const allowedFields = [
-      'dimension',
-      'area',
-      'subject',
-      'title',
-      'taskType',
-      'description',
-      'dueDate',
-      'estimatedMinutes',
-      'targetAmount',
-      'unit',
-      'priority'
-    ];
-    allowedFields.forEach((field) => {
-      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-        task[field] = req.body[field];
-      }
-    });
-    await task.save();
+    if (parsed.hasAttachmentMutation) {
+      attachmentAuditContext = {
+        operation: 'task.attachments.patch',
+        familyId: task.familyId.toString(),
+        childId: task.childId.toString(),
+        taskId: task._id.toString(),
+        mediaIds: parsed.attachmentMediaIds || []
+      };
+    }
+
+    let updatedTask;
+    if (attachmentMediaService) {
+      updatedTask = await attachmentMediaService.mutate({
+        task,
+        taskPatch: parsed.entries,
+        attachmentMediaIds: parsed.attachmentMediaIds
+      });
+    } else {
+      parsed.entries.forEach((entry) => {
+        task[entry.path] = entry.value;
+      });
+      await task.save();
+      updatedTask = task;
+    }
+
+    if (parsed.hasAttachmentMutation) {
+      logAttachmentMediaAudit(req, attachmentAuditContext, 'bound', {
+        taskId: task._id.toString(),
+        mediaIds: (updatedTask.attachmentMediaIds || []).map((id) => id.toString())
+      });
+    }
 
     return res.json({
       success: true,
-      data: { task: taskView(task) }
+      data: { task: taskView(updatedTask) }
     });
   } catch (error) {
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return sendError(res, 400, error.message);
+    logAttachmentMediaError(req, attachmentAuditContext, error);
+    if (sendMediaRecoveryError(res, error)) return undefined;
+    if (error.name === 'ValidationError' || error.name === 'CastError' || error.code === 'VALIDATION_ERROR') {
+      return sendError(res, 400, error.message, error.code || 'VALIDATION_ERROR', error.details || []);
     }
-    return sendError(res, 500, error.message);
+    return sendError(res, 500, 'Failed to update growth task');
   }
 });
 
