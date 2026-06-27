@@ -375,21 +375,40 @@ describe('TC-T6-MEDIA-017B GrowthTask attachment create binding', () => {
 });
 
 describe('TC-T6-MEDIA-017D GrowthTask attachment rollback boundary', () => {
-  test('deletes the first-attempt pending owner and returns the stable prepare rejection', async () => {
-    const stable = stableMediaError(404);
+  test('deletes the first-attempt pending owner and returns a sanitized stable prepare rejection', async () => {
+    const stable = Object.assign(stableMediaError(404), {
+      config: { headers: { authorization: 'Bearer private-token' } },
+      response: { data: { secret: 'private-response' } },
+      details: [{ private: 'raw-media-details' }]
+    });
     const { service, mediaReferenceClient } = createHarness({
       prepare: async () => { throw stable; }
     });
 
-    await expect(service.create({
-      taskInput: createTaskInput(),
-      attachmentMediaIds: [MEDIA_A, MEDIA_B]
-    })).rejects.toBe(stable);
+    let caught;
+    try {
+      await service.create({
+        taskInput: createTaskInput(),
+        attachmentMediaIds: [MEDIA_A, MEDIA_B]
+      });
+    } catch (error) {
+      caught = error;
+    }
 
     const taskId = mediaReferenceClient.prepare.mock.calls[0][0].resourceId;
     expectRequiredCommand(mediaReferenceClient, taskId);
     expect(await GrowthTask.findById(taskId)).toBeNull();
     expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
+    expect(caught).toBeInstanceOf(Error);
+    expect(caught).not.toBe(stable);
+    expect(caught.message).toBe('Media not found');
+    expect(caught.status).toBe(404);
+    expect(caught.code).toBe('RESOURCE_NOT_FOUND');
+    expect(caught.details).toEqual([]);
+    expect(Object.keys(caught).sort()).toEqual(['code', 'details', 'status']);
+    expect(caught).not.toHaveProperty('config');
+    expect(caught).not.toHaveProperty('response');
+    expect(JSON.stringify(caught)).not.toContain('private');
   });
 
   test('keeps an uncertain owner and returns pending when first-attempt rollback cannot confirm deletion', async () => {

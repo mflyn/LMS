@@ -22,6 +22,15 @@ const conflictError = () => Object.assign(
   { status: 409, code: 'RESOURCE_CONFLICT', details: [] }
 );
 
+const stableMediaError = (error) => Object.assign(
+  new Error(typeof error.message === 'string' ? error.message : 'Media reference rejected'),
+  {
+    status: error.status,
+    code: typeof error.code === 'string' ? error.code : 'MEDIA_REFERENCE_REJECTED',
+    details: []
+  }
+);
+
 const normalizeId = (value) => String(value).toLowerCase();
 const idsEqual = (left, right) => normalizeId(left) === normalizeId(right);
 
@@ -128,7 +137,7 @@ const createGrowthTaskAttachmentMediaService = ({
     } catch (error) {
       throw pendingError(task._id);
     }
-    if (deleted && deleted.deletedCount === 1) throw stableError;
+    if (deleted && deleted.deletedCount === 1) throw stableMediaError(stableError);
     throw pendingError(task._id);
   };
 
