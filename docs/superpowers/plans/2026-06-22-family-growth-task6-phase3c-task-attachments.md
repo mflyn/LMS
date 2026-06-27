@@ -120,7 +120,7 @@ git commit -m "feat: add growth task attachment state"
 - Create: `backend/services/homework-service/services/growthTaskPatch.js`
 - Create: `backend/services/homework-service/__tests__/services/growthTaskAttachmentMediaService.test.js`
 
-- [ ] **Step 1: Write failing parser cases from `017H`, `017I`, and `018C`**
+- [x] **Step 1: Write failing parser cases from `017H`, `017I`, and `018C`**
 
 Assert first-occurrence normalization, exact create/patch whitelists, canonical entries, empty-array removal, maximum input length, and rejection of unknown/raw/internal input:
 
@@ -141,7 +141,7 @@ expect(parseGrowthTaskPatch({
 
 Cover `attachments`, URLs, objects, `null`, scalars, 101 entries, `$set`, dotted keys, wrappers, ownership/status fields, and every hidden media field.
 
-- [ ] **Step 2: Run parser RED**
+- [x] **Step 2: Run parser RED**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -150,7 +150,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: FAIL because `growthTaskPatch` does not exist.
 
-- [ ] **Step 3: Implement constants and normalization**
+- [x] **Step 3: Implement constants and normalization**
 
 Export `parseGrowthTaskCreate`, `parseGrowthTaskPatch`, `entriesToMongoSet`, and `normalizeAttachmentMediaIds`. Reject any key outside fixed sets before building paths:
 
@@ -166,7 +166,7 @@ const EDITABLE_PATHS = new Set([...PATCH_FIELDS].filter((field) => field !== 'at
 
 Validate the input array length before deduplication, validate each 24-hex ID, lowercase IDs for equality, and preserve first occurrence. Build paths from `EDITABLE_PATHS` only; never copy request keys into a Mongo update.
 
-- [ ] **Step 4: Run parser GREEN**
+- [x] **Step 4: Run parser GREEN**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -175,7 +175,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: parser and normalization cases pass.
 
-- [ ] **Step 5: Commit request boundary**
+- [x] **Step 5: Commit request boundary**
 
 ```bash
 git add backend/services/homework-service/services/growthTaskPatch.js \
