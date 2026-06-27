@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { entriesToMongoSet } = require('./growthTaskPatch');
 
 const HIDDEN_GROWTH_TASK_MEDIA_STATE = [
   '+attachmentMediaBindings',
@@ -23,7 +24,7 @@ const conflictError = () => Object.assign(
 );
 
 const stableMediaError = (error) => Object.assign(
-  new Error(typeof error.message === 'string' ? error.message : 'Media reference rejected'),
+  new Error('Media reference rejected'),
   {
     status: error.status,
     code: typeof error.code === 'string' ? error.code : 'MEDIA_REFERENCE_REJECTED',
@@ -61,7 +62,7 @@ const createGrowthTaskAttachmentMediaService = ({
     throw new Error('GrowthTaskModel is required');
   }
   if (!mediaReferenceClient
-    || ['prepare', 'commit'].some((method) => typeof mediaReferenceClient[method] !== 'function')) {
+    || ['prepare', 'commit', 'unbind'].some((method) => typeof mediaReferenceClient[method] !== 'function')) {
     throw new Error('mediaReferenceClient is required');
   }
   if (typeof randomUUID !== 'function') throw new Error('randomUUID is required');
@@ -87,17 +88,36 @@ const createGrowthTaskAttachmentMediaService = ({
     { new: true, runValidators: true }
   ));
 
-  const commandFor = (task) => ({
+  const commandForReferences = (task, references) => ({
     familyId: String(task.familyId),
     childId: String(task.childId),
     resourceType: 'growth_task',
     resourceId: String(task._id),
     operationId: task.mediaBindingOperationId,
-    references: (task.attachmentMediaPendingIds || []).map((mediaId) => ({
+    references
+  });
+
+  const commandFor = (task) => commandForReferences(
+    task,
+    (task.attachmentMediaPendingIds || []).map((mediaId) => ({
       mediaId: String(mediaId),
       field: 'attachmentMediaIds'
     }))
-  });
+  );
+
+  const commandForAdditionIds = (task, additionIds) => commandForReferences(
+    task,
+    additionIds.map((mediaId) => ({ mediaId, field: 'attachmentMediaIds' }))
+  );
+
+  const commandForRemovalBindings = (task, removalBindings) => commandForReferences(
+    task,
+    removalBindings.map((binding) => ({
+      mediaId: String(binding.mediaId),
+      field: 'attachmentMediaIds',
+      bindingOperationId: binding.bindingOperationId
+    }))
+  );
 
   const assertValidClientEnvelope = (value, command, expectedState) => {
     if (!Array.isArray(value)) throw new Error('invalid media reference response');
@@ -136,6 +156,43 @@ const createGrowthTaskAttachmentMediaService = ({
         idsEqual(bindings[index].mediaId, id)
         && bindings[index].bindingOperationId === operationId
       ));
+  };
+
+  const stringIds = (ids = []) => ids.map(String);
+
+  const bindingDtos = (bindings = []) => bindings.map((binding) => ({
+    mediaId: String(binding.mediaId),
+    bindingOperationId: binding.bindingOperationId
+  }));
+
+  const sameOrder = (left = [], right = []) => (
+    left.length === right.length && left.every((id, index) => idsEqual(id, right[index]))
+  );
+
+  const sameSet = (left = [], right = []) => (
+    left.length === right.length && left.every((id) => right.some((candidate) => idsEqual(id, candidate)))
+  );
+
+  const mediaStateForIds = (desiredIds) => (desiredIds.length ? 'bound' : 'none');
+
+  const pendingPatchEntries = (task) => (task.mediaPendingTaskPatch || []).map((entry) => ({
+    path: entry.path,
+    value: Object.prototype.hasOwnProperty.call(entry, 'value') ? entry.value : entry._doc.value
+  }));
+
+  const finalUnset = () => ({
+    mediaBindingOperationId: '',
+    attachmentMediaPendingIds: '',
+    attachmentMediaPreviousBindings: '',
+    mediaBindingPhase: '',
+    mediaPendingTaskPatch: '',
+    mediaMutationKind: '',
+    mediaRemoteOutcomeUncertain: ''
+  });
+
+  const convergedPatch = (task, desiredIds) => {
+    if (!task || task.mediaReferenceState !== mediaStateForIds(desiredIds)) return false;
+    return sameOrder(stringIds(task.attachmentMediaIds || []), desiredIds);
   };
 
   const rollbackCreateOnStablePrepare = async (task, stableError) => {
@@ -251,6 +308,197 @@ const createGrowthTaskAttachmentMediaService = ({
     return marked;
   };
 
+  const markPatchRemoteOutcomeUncertain = async (task) => {
+    let marked;
+    try {
+      marked = await update({
+        _id: task._id,
+        familyId: task.familyId,
+        childId: task.childId,
+        __v: task.__v,
+        status: 'pending',
+        mediaReferenceState: 'pending',
+        mediaBindingOperationId: task.mediaBindingOperationId,
+        mediaMutationKind: 'patch',
+        mediaBindingPhase: 'binding',
+        mediaRemoteOutcomeUncertain: false
+      }, {
+        $set: { mediaRemoteOutcomeUncertain: true },
+        $inc: { __v: 1 }
+      });
+    } catch (error) {
+      throw pendingError(task._id);
+    }
+    if (!marked) throw pendingError(task._id);
+    return marked;
+  };
+
+  const clearPatchIntentOnStablePrepare = async (task, stableError) => {
+    const publicIds = stringIds(task.attachmentMediaIds || []);
+    let cleared;
+    try {
+      cleared = await update({
+        _id: task._id,
+        familyId: task.familyId,
+        childId: task.childId,
+        __v: task.__v,
+        status: 'pending',
+        mediaReferenceState: 'pending',
+        mediaBindingOperationId: task.mediaBindingOperationId,
+        mediaMutationKind: 'patch',
+        mediaBindingPhase: 'binding',
+        mediaRemoteOutcomeUncertain: true
+      }, {
+        $set: { mediaReferenceState: mediaStateForIds(publicIds) },
+        $unset: finalUnset(),
+        $inc: { __v: 1 }
+      });
+    } catch (error) {
+      throw pendingError(task._id);
+    }
+    if (cleared) throw stableMediaError(stableError);
+    throw pendingError(task._id);
+  };
+
+  const additionIdsFor = (task) => {
+    const previousIds = bindingDtos(task.attachmentMediaPreviousBindings || [])
+      .map((binding) => binding.mediaId);
+    return stringIds(task.attachmentMediaPendingIds || [])
+      .filter((id) => !previousIds.some((previousId) => idsEqual(previousId, id)));
+  };
+
+  const removalBindingsFor = (task) => {
+    const desiredIds = stringIds(task.attachmentMediaPendingIds || []);
+    return bindingDtos(task.attachmentMediaPreviousBindings || [])
+      .filter((binding) => !desiredIds.some((id) => idsEqual(id, binding.mediaId)));
+  };
+
+  const desiredBindingsFor = (task) => {
+    const operationId = task.mediaBindingOperationId;
+    const previousById = new Map(bindingDtos(task.attachmentMediaPreviousBindings || [])
+      .map((binding) => [normalizeId(binding.mediaId), binding]));
+    return stringIds(task.attachmentMediaPendingIds || []).map((mediaId) => {
+      const previous = previousById.get(normalizeId(mediaId));
+      return previous || { mediaId, bindingOperationId: operationId };
+    });
+  };
+
+  const finalizePatch = async (task) => {
+    const desiredIds = stringIds(task.attachmentMediaPendingIds || []);
+    let finalized;
+    try {
+      finalized = await update({
+        _id: task._id,
+        familyId: task.familyId,
+        childId: task.childId,
+        __v: task.__v,
+        status: 'pending',
+        mediaReferenceState: 'pending',
+        mediaBindingOperationId: task.mediaBindingOperationId,
+        mediaMutationKind: 'patch',
+        mediaBindingPhase: 'unbinding'
+      }, {
+        $set: { mediaReferenceState: mediaStateForIds(desiredIds) },
+        $unset: finalUnset(),
+        $inc: { __v: 1 }
+      });
+    } catch (error) {
+      const reloaded = await load(task._id).catch(() => null);
+      if (convergedPatch(reloaded, desiredIds)) return reloaded;
+      throw pendingError(task._id);
+    }
+    if (finalized) return finalized;
+    const reloaded = await load(task._id).catch(() => null);
+    if (convergedPatch(reloaded, desiredIds)) return reloaded;
+    throw pendingError(task._id);
+  };
+
+  const resumePatchUnbinding = async (task) => {
+    const removals = removalBindingsFor(task);
+    if (removals.length === 0) return finalizePatch(task);
+    const command = commandForRemovalBindings(task, removals);
+    try {
+      assertValidClientEnvelope(await mediaReferenceClient.unbind(command), command, 'released');
+    } catch (error) {
+      throw pendingError(task._id);
+    }
+    return finalizePatch(task);
+  };
+
+  const publishPatchBinding = async (task) => {
+    const desiredIds = stringIds(task.attachmentMediaPendingIds || []);
+    const removals = removalBindingsFor(task);
+    const desiredBindings = desiredBindingsFor(task);
+    const taskPatchSet = entriesToMongoSet(pendingPatchEntries(task));
+    const nextPhase = removals.length ? 'unbinding' : undefined;
+    const setDocument = {
+      ...taskPatchSet,
+      attachmentMediaIds: desiredIds,
+      attachmentMediaBindings: desiredBindings,
+      mediaReferenceState: removals.length ? 'pending' : mediaStateForIds(desiredIds)
+    };
+    if (nextPhase) setDocument.mediaBindingPhase = nextPhase;
+
+    const updateDocument = {
+      $set: setDocument,
+      $inc: { __v: 1 }
+    };
+    if (!removals.length) updateDocument.$unset = finalUnset();
+
+    let published;
+    try {
+      published = await update({
+        _id: task._id,
+        familyId: task.familyId,
+        childId: task.childId,
+        __v: task.__v,
+        status: 'pending',
+        mediaReferenceState: 'pending',
+        mediaBindingOperationId: task.mediaBindingOperationId,
+        mediaMutationKind: 'patch',
+        mediaBindingPhase: 'binding'
+      }, updateDocument);
+    } catch (error) {
+      const reloaded = await load(task._id).catch(() => null);
+      if (reloaded && reloaded.mediaBindingPhase === 'unbinding') return resumePatchUnbinding(reloaded);
+      if (convergedPatch(reloaded, desiredIds)) return reloaded;
+      throw pendingError(task._id);
+    }
+    if (!published) {
+      const reloaded = await load(task._id).catch(() => null);
+      if (reloaded && reloaded.mediaBindingPhase === 'unbinding') return resumePatchUnbinding(reloaded);
+      if (convergedPatch(reloaded, desiredIds)) return reloaded;
+      throw pendingError(task._id);
+    }
+    if (removals.length) return resumePatchUnbinding(published);
+    return published;
+  };
+
+  const resumePatchBinding = async (task, { allowFirstStableClear = false } = {}) => {
+    let current = task;
+    const additions = additionIdsFor(current);
+    if (additions.length) {
+      if (current.mediaRemoteOutcomeUncertain !== true) {
+        current = await markPatchRemoteOutcomeUncertain(current);
+      }
+      const command = commandForAdditionIds(current, additions);
+      try {
+        assertValidClientEnvelope(await mediaReferenceClient.prepare(command), command, 'prepared');
+      } catch (error) {
+        if (allowFirstStableClear && STABLE_PREPARE_STATUSES.has(error && error.status)) {
+          return clearPatchIntentOnStablePrepare(current, error);
+        }
+        throw pendingError(current._id);
+      }
+      try {
+        assertValidClientEnvelope(await mediaReferenceClient.commit(command), command, 'bound');
+      } catch (error) {
+        throw pendingError(current._id);
+      }
+    }
+    return publishPatchBinding(current);
+  };
+
   const resume = async (taskOrId) => {
     const task = await load(taskOrId);
     if (!task) throw conflictError();
@@ -261,7 +509,105 @@ const createGrowthTaskAttachmentMediaService = ({
         : task;
       return resumeBinding(resumableTask);
     }
+    if (task.mediaMutationKind === 'patch' && task.mediaBindingPhase === 'binding') {
+      return resumePatchBinding(task);
+    }
+    if (task.mediaMutationKind === 'patch' && task.mediaBindingPhase === 'unbinding') {
+      return resumePatchUnbinding(task);
+    }
     throw pendingError(task._id);
+  };
+
+  const applyStablePatch = async (task, taskPatch = [], attachmentSet) => {
+    const setDocument = {
+      ...entriesToMongoSet(taskPatch),
+      ...(attachmentSet || {})
+    };
+    if (Object.keys(setDocument).length === 0) return load(task._id);
+    let patched;
+    try {
+      patched = await update({
+        _id: task._id,
+        familyId: task.familyId,
+        childId: task.childId,
+        __v: task.__v,
+        status: 'pending',
+        mediaReferenceState: task.mediaReferenceState
+      }, {
+        $set: setDocument,
+        $inc: { __v: 1 }
+      });
+    } catch (error) {
+      throw conflictError();
+    }
+    if (!patched) throw conflictError();
+    return patched;
+  };
+
+  const claimPatch = async (task, taskPatch, desiredIds) => {
+    const operationId = randomUUID();
+    const previousBindings = bindingDtos(task.attachmentMediaBindings || []);
+    let claimed;
+    try {
+      claimed = await update({
+        _id: task._id,
+        familyId: task.familyId,
+        childId: task.childId,
+        __v: task.__v,
+        status: 'pending',
+        mediaReferenceState: task.mediaReferenceState
+      }, {
+        $set: {
+          mediaReferenceState: 'pending',
+          mediaBindingOperationId: operationId,
+          attachmentMediaPendingIds: desiredIds,
+          attachmentMediaPreviousBindings: previousBindings,
+          mediaBindingPhase: 'binding',
+          mediaPendingTaskPatch: taskPatch,
+          mediaMutationKind: 'patch',
+          mediaRemoteOutcomeUncertain: false
+        },
+        $inc: { __v: 1 }
+      });
+    } catch (error) {
+      const reloaded = await load(task._id).catch(() => null);
+      if (reloaded
+        && reloaded.mediaReferenceState === 'pending'
+        && reloaded.mediaBindingOperationId === operationId
+        && reloaded.mediaMutationKind === 'patch') {
+        return reloaded;
+      }
+      throw pendingError(task._id);
+    }
+    if (!claimed) throw conflictError();
+    return claimed;
+  };
+
+  const mutate = async ({ task, taskPatch = [], attachmentMediaIds } = {}) => {
+    const current = await resume(task);
+    const publicIds = stringIds(current.attachmentMediaIds || []);
+    const bindings = bindingDtos(current.attachmentMediaBindings || []);
+
+    if (attachmentMediaIds === undefined) {
+      return applyStablePatch(current, taskPatch);
+    }
+
+    const desiredIds = normalizeAttachmentMediaIds(attachmentMediaIds);
+    if (sameOrder(publicIds, desiredIds)) {
+      return applyStablePatch(current, taskPatch);
+    }
+
+    if (sameSet(publicIds, desiredIds)) {
+      const byId = new Map(bindings.map((binding) => [normalizeId(binding.mediaId), binding]));
+      const reorderedBindings = desiredIds.map((id) => byId.get(normalizeId(id)));
+      return applyStablePatch(current, taskPatch, {
+        attachmentMediaIds: desiredIds,
+        attachmentMediaBindings: reorderedBindings
+      });
+    }
+
+    const claimed = await claimPatch(current, taskPatch, desiredIds);
+    return resumePatchBinding(claimed, { allowFirstStableClear: true });
   };
 
   const create = async ({ taskInput, attachmentMediaIds = [] } = {}) => {
@@ -293,7 +639,7 @@ const createGrowthTaskAttachmentMediaService = ({
     (task && task.attachmentMediaIds ? task.attachmentMediaIds : []).map(String)
   );
 
-  return { create, resume, publicAttachmentMediaIds };
+  return { create, mutate, resume, publicAttachmentMediaIds };
 };
 
 module.exports = { createGrowthTaskAttachmentMediaService };
