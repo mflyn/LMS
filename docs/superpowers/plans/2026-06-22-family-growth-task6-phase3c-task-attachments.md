@@ -340,11 +340,11 @@ git commit -m "feat: recover growth task attachment changes"
 - Modify: `backend/services/homework-service/__tests__/services/growthTaskAttachmentMediaService.test.js`
 - Create: `backend/services/homework-service/__tests__/growthTaskMediaReferences.test.js`
 
-- [ ] **Step 1: Write failing `017J` and `017K` concurrency/read cases**
+- [x] **Step 1: Write failing `017J` and `017K` concurrency/read cases**
 
 Use barriers around the first owner claim and remote call. Race identical arrays, different arrays, non-attachment patch, complete, and delete. Add safe-view assertions for create binding, patch binding, and unbinding.
 
-- [ ] **Step 2: Run concurrency RED**
+- [x] **Step 2: Run concurrency RED**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -354,19 +354,19 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: FAIL because CAS-loser policy and HTTP lifecycle recovery are absent.
 
-- [ ] **Step 3: Implement CAS-loser policy**
+- [x] **Step 3: Implement CAS-loser policy**
 
 When claim returns null, reload hidden state. If pending desired IDs equal the request, resume the winner and return convergence. If they differ, resume the winner and throw `RESOURCE_CONFLICT`. Profile-only patch resumes first, reloads, then applies its own observed-version CAS.
 
-- [ ] **Step 4: Add service-level public view helper**
+- [x] **Step 4: Add service-level public view helper**
 
 Export `publicAttachmentMediaIds(task)` as normalized strings from public `attachmentMediaIds` only. It never reads pending IDs. Binding therefore returns old/empty public IDs and unbinding returns desired public IDs.
 
-- [ ] **Step 5: Add route-test fixture and lifecycle expectations**
+- [x] **Step 5: Add route-test fixture and lifecycle expectations**
 
 Mount `createGrowthTaskRouter({ attachmentMediaService, awardTaskStar })` with `express.json()` and production `errorHandler`. Assert complete/confirm/delete call resume before status changes and return pending without mutation when recovery cannot converge.
 
-- [ ] **Step 6: Run concurrency GREEN**
+- [x] **Step 6: Run concurrency GREEN**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -376,7 +376,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: deterministic barrier cases pass; no timing sleep is present.
 
-- [ ] **Step 7: Commit concurrency and lifecycle safeguards**
+- [x] **Step 7: Commit concurrency and lifecycle safeguards**
 
 ```bash
 git add backend/services/homework-service/services/growthTaskAttachmentMediaService.js \
