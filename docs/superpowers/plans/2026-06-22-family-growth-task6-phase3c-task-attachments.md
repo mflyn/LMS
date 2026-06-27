@@ -392,11 +392,11 @@ git commit -m "feat: serialize growth task attachment recovery"
 - Modify: `backend/services/homework-service/__tests__/growthTaskMediaReferences.test.js`
 - Modify: `backend/services/homework-service/__tests__/growthTasks.test.js`
 
-- [ ] **Step 1: Write remaining route RED cases**
+- [x] **Step 1: Write remaining route RED cases**
 
 Add route tests `017B`, `017C`, `017D`, `017E`, `017G`, `017H`, `017I`, `017M`, `018C`, and `018D`: valid create/patch, stable rollback, pending envelope, disabled mode, authorization, unsafe body rejection, detail resume, list no-remote behavior, hidden-field omission, privacy logging, legacy view omission, import side-effect checks, and preservation of `repeatRule -> 400 REPEAT_RULE_NOT_SUPPORTED`.
 
-- [ ] **Step 2: Run route RED**
+- [x] **Step 2: Run route RED**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -405,7 +405,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: FAIL because the router still rejects every `attachmentMediaIds` request and returns legacy `attachments`.
 
-- [ ] **Step 3: Extend the router factory without changing the default contract**
+- [x] **Step 3: Extend the router factory without changing the default contract**
 
 Use:
 
@@ -418,15 +418,15 @@ const createGrowthTaskRouter = ({
 
 Default composition returns `400 MEDIA_NOT_ENABLED` only when `attachmentMediaIds` is supplied. Legacy `attachments` is always `400 VALIDATION_ERROR`; non-media requests continue unchanged.
 
-- [ ] **Step 4: Integrate create and patch**
+- [x] **Step 4: Integrate create and patch**
 
 Before strict parsing, retain the existing explicit `repeatRule` check and its `400 REPEAT_RULE_NOT_SUPPORTED` error. Parse all other bodies strictly, derive family/child ownership first, and call the service only after authorization. Create returns `201` only after convergence. Patch remains parent-only and pending-task-only. Known service errors preserve sanitized status/code/message/details; unknown errors return fixed production `500` text.
 
-- [ ] **Step 5: Integrate detail/list and status transitions**
+- [x] **Step 5: Integrate detail/list and status transitions**
 
 Detail loads hidden state only after scoped authorization, resumes one pending task, then returns `taskView`. List does not select hidden state and makes no remote calls. Complete, confirm, and delete load hidden state, resume before changing status, and stop on pending/conflict.
 
-- [ ] **Step 6: Make `taskView` media-safe**
+- [x] **Step 6: Make `taskView` media-safe**
 
 Remove `attachments` from the family view and add only:
 
@@ -436,11 +436,11 @@ attachmentMediaIds: (task.attachmentMediaIds || []).map((id) => id.toString())
 
 Never spread a Mongoose object and never include hidden state, media metadata, operations, generations, URLs, or storage fields.
 
-- [ ] **Step 7: Add sanitized audit events**
+- [x] **Step 7: Add sanitized audit events**
 
 Use `logFamilyOperation` for create/patch attachment success, pending, stable rejection, and conflict with only operation/result/family/child/task/media IDs. Do not log `error.message`, task patch values, descriptions, operation UUIDs, generation UUIDs, credentials, or Axios objects.
 
-- [ ] **Step 8: Run route and existing GrowthTask GREEN**
+- [x] **Step 8: Run route and existing GrowthTask GREEN**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -449,7 +449,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: all Phase 3C route cases and existing GrowthTask lifecycle tests pass.
 
-- [ ] **Step 9: Commit HTTP integration**
+- [x] **Step 9: Commit HTTP integration**
 
 ```bash
 git add backend/services/homework-service/routes/growthTasks.js \
