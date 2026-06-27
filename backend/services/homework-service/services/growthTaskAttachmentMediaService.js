@@ -82,11 +82,21 @@ const createGrowthTaskAttachmentMediaService = ({
     return selectHidden(GrowthTaskModel.findById(taskId));
   };
 
-  const update = (filter, updateDocument) => selectHidden(GrowthTaskModel.findOneAndUpdate(
-    filter,
-    updateDocument,
-    { new: true, runValidators: true }
-  ));
+  const update = async (filter, updateDocument) => {
+    const result = GrowthTaskModel.findOneAndUpdate(
+      filter,
+      updateDocument,
+      { new: true, runValidators: true }
+    );
+    if (result && typeof result.select === 'function') {
+      return result.select(HIDDEN_GROWTH_TASK_MEDIA_STATE);
+    }
+    const resolved = await result;
+    if (resolved && resolved._id) {
+      return selectHidden(GrowthTaskModel.findById(resolved._id));
+    }
+    return resolved;
+  };
 
   const commandForReferences = (task, references) => ({
     familyId: String(task.familyId),
@@ -544,6 +554,17 @@ const createGrowthTaskAttachmentMediaService = ({
     return patched;
   };
 
+  const resolvePendingAttachmentRequest = async (task, desiredIds) => {
+    const pendingTask = task && task.mediaReferenceState === 'pending'
+      ? task
+      : await load(task._id);
+    if (!pendingTask || pendingTask.mediaReferenceState !== 'pending') throw conflictError();
+    const pendingIds = stringIds(pendingTask.attachmentMediaPendingIds || []);
+    const converged = await resume(pendingTask);
+    if (sameOrder(pendingIds, desiredIds)) return converged;
+    throw conflictError();
+  };
+
   const claimPatch = async (task, taskPatch, desiredIds) => {
     const operationId = randomUUID();
     const previousBindings = bindingDtos(task.attachmentMediaBindings || []);
@@ -579,12 +600,19 @@ const createGrowthTaskAttachmentMediaService = ({
       }
       throw pendingError(task._id);
     }
-    if (!claimed) throw conflictError();
+    if (!claimed) return resolvePendingAttachmentRequest(task, desiredIds);
     return claimed;
   };
 
   const mutate = async ({ task, taskPatch = [], attachmentMediaIds } = {}) => {
-    const current = await resume(task);
+    const initial = await load(task);
+    if (!initial) throw conflictError();
+    if (initial.mediaReferenceState === 'pending' && attachmentMediaIds !== undefined) {
+      const desiredIds = normalizeAttachmentMediaIds(attachmentMediaIds);
+      return resolvePendingAttachmentRequest(initial, desiredIds);
+    }
+
+    const current = await resume(initial);
     const publicIds = stringIds(current.attachmentMediaIds || []);
     const bindings = bindingDtos(current.attachmentMediaBindings || []);
 
@@ -607,6 +635,7 @@ const createGrowthTaskAttachmentMediaService = ({
     }
 
     const claimed = await claimPatch(current, taskPatch, desiredIds);
+    if (claimed.mediaReferenceState !== 'pending') return claimed;
     return resumePatchBinding(claimed, { allowFirstStableClear: true });
   };
 

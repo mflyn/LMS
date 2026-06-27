@@ -1277,3 +1277,168 @@ describe('TC-T6-MEDIA-017L GrowthTask attachment checked batch unbind safety', (
     expect(stored.attachmentMediaIds).toEqual([]);
   });
 });
+
+describe('TC-T6-MEDIA-017J GrowthTask attachment public view helper', () => {
+  test('returns only public attachment IDs while create binding is pending', async () => {
+    const { service } = createHarness();
+    const task = await GrowthTask.create({
+      ...createTaskInput(),
+      attachmentMediaIds: [],
+      attachmentMediaBindings: [],
+      mediaReferenceState: 'pending',
+      mediaBindingOperationId: OPERATION_A,
+      attachmentMediaPendingIds: [MEDIA_A, MEDIA_B],
+      attachmentMediaPreviousBindings: [],
+      mediaBindingPhase: 'binding',
+      mediaPendingTaskPatch: [],
+      mediaMutationKind: 'create',
+      mediaRemoteOutcomeUncertain: true
+    });
+
+    expect(service.publicAttachmentMediaIds(task)).toEqual([]);
+  });
+
+  test('returns desired public IDs while patch unbinding is pending without exposing previous bindings', async () => {
+    const { service } = createHarness();
+    const task = await GrowthTask.create({
+      ...createTaskInput(),
+      attachmentMediaIds: [MEDIA_B, MEDIA_C],
+      attachmentMediaBindings: [
+        { mediaId: MEDIA_B, bindingOperationId: OPERATION_B },
+        { mediaId: MEDIA_C, bindingOperationId: OPERATION_A }
+      ],
+      mediaReferenceState: 'pending',
+      mediaBindingOperationId: OPERATION_A,
+      attachmentMediaPendingIds: [MEDIA_B, MEDIA_C],
+      attachmentMediaPreviousBindings: [
+        { mediaId: MEDIA_A, bindingOperationId: OPERATION_B },
+        { mediaId: MEDIA_B, bindingOperationId: OPERATION_B }
+      ],
+      mediaBindingPhase: 'unbinding',
+      mediaPendingTaskPatch: [],
+      mediaMutationKind: 'patch',
+      mediaRemoteOutcomeUncertain: true
+    });
+
+    expect(service.publicAttachmentMediaIds(task)).toEqual([MEDIA_B, MEDIA_C]);
+  });
+});
+
+describe('TC-T6-MEDIA-017K GrowthTask attachment service concurrency', () => {
+  test('identical CAS loser helps the winner and returns one converged operation', async () => {
+    const task = await createBoundTask({ ids: [MEDIA_A] });
+    let firstClaim = true;
+    const GrowthTaskModel = {
+      create: (...args) => GrowthTask.create(...args),
+      findById: (...args) => GrowthTask.findById(...args),
+      deleteOne: (...args) => GrowthTask.deleteOne(...args),
+      findOneAndUpdate: async (filter, update, options) => {
+        const isClaim = update.$set && update.$set.mediaMutationKind === 'patch';
+        if (isClaim && firstClaim) {
+          firstClaim = false;
+          await GrowthTask.findOneAndUpdate(filter, update, options);
+          return null;
+        }
+        return GrowthTask.findOneAndUpdate(filter, update, options);
+      }
+    };
+    const { service, mediaReferenceClient, randomUUID } = createHarness({
+      GrowthTaskModel,
+      prepare: async (command) => boundEnvelope(command, 'prepared'),
+      commit: async (command) => boundEnvelope(command, 'bound')
+    });
+
+    const result = await service.mutate({
+      task,
+      taskPatch: [],
+      attachmentMediaIds: [MEDIA_A, MEDIA_B]
+    });
+
+    expect(result.mediaReferenceState).toBe('bound');
+    expect(result.attachmentMediaIds.map(String)).toEqual([MEDIA_A.toLowerCase(), MEDIA_B]);
+    expect(bindingValues(result.attachmentMediaBindings)).toEqual([
+      { mediaId: MEDIA_A.toLowerCase(), bindingOperationId: OPERATION_B },
+      { mediaId: MEDIA_B, bindingOperationId: OPERATION_A }
+    ]);
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(1);
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+  });
+
+  test('different CAS loser helps pending winner then returns resource conflict', async () => {
+    const task = await createBoundTask({ ids: [MEDIA_A] });
+    await GrowthTask.findOneAndUpdate(
+      { _id: task._id },
+      {
+        $set: {
+          mediaReferenceState: 'pending',
+          mediaBindingOperationId: OPERATION_A,
+          attachmentMediaPendingIds: [MEDIA_A, MEDIA_B],
+          attachmentMediaPreviousBindings: [{ mediaId: MEDIA_A, bindingOperationId: OPERATION_B }],
+          mediaBindingPhase: 'binding',
+          mediaPendingTaskPatch: [],
+          mediaMutationKind: 'patch',
+          mediaRemoteOutcomeUncertain: false
+        },
+        $inc: { __v: 1 }
+      },
+      { runValidators: true }
+    );
+    const fresh = await loadInternalTask(task._id);
+    const { service, mediaReferenceClient, randomUUID } = createHarness({
+      operationId: OPERATION_C,
+      prepare: async (command) => boundEnvelope(command, 'prepared'),
+      commit: async (command) => boundEnvelope(command, 'bound')
+    });
+
+    await expect(service.mutate({
+      task: fresh,
+      taskPatch: [],
+      attachmentMediaIds: [MEDIA_A, MEDIA_C]
+    })).rejects.toMatchObject({
+      status: 409,
+      code: 'RESOURCE_CONFLICT'
+    });
+
+    const stored = await loadInternalTask(task._id);
+    expect(stored.mediaReferenceState).toBe('bound');
+    expect(stored.attachmentMediaIds.map(String)).toEqual([MEDIA_A.toLowerCase(), MEDIA_B]);
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(1);
+    expect(randomUUID).not.toHaveBeenCalled();
+  });
+
+  test('non-attachment patch resumes pending media first and applies against refreshed version', async () => {
+    const task = await createBoundTask({ ids: [MEDIA_A], overrides: { description: 'old' } });
+    await GrowthTask.findOneAndUpdate(
+      { _id: task._id },
+      {
+        $set: {
+          mediaReferenceState: 'pending',
+          mediaBindingOperationId: OPERATION_A,
+          attachmentMediaPendingIds: [MEDIA_A, MEDIA_B],
+          attachmentMediaPreviousBindings: [{ mediaId: MEDIA_A, bindingOperationId: OPERATION_B }],
+          mediaBindingPhase: 'binding',
+          mediaPendingTaskPatch: [],
+          mediaMutationKind: 'patch',
+          mediaRemoteOutcomeUncertain: false
+        },
+        $inc: { __v: 1 }
+      },
+      { runValidators: true }
+    );
+    const stale = await loadInternalTask(task._id);
+    const { service, mediaReferenceClient, randomUUID } = createHarness({
+      prepare: async (command) => boundEnvelope(command, 'prepared'),
+      commit: async (command) => boundEnvelope(command, 'bound')
+    });
+
+    const result = await service.mutate({
+      task: stale,
+      taskPatch: [{ path: 'description', value: 'after resume' }]
+    });
+
+    expect(result.description).toBe('after resume');
+    expect(result.attachmentMediaIds.map(String)).toEqual([MEDIA_A.toLowerCase(), MEDIA_B]);
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(1);
+    expect(randomUUID).not.toHaveBeenCalled();
+  });
+});
