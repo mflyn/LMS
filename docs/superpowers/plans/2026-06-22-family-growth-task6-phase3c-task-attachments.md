@@ -270,7 +270,7 @@ git commit -m "feat: bind growth task attachments"
 - Modify: `backend/services/homework-service/services/growthTaskAttachmentMediaService.js`
 - Modify: `backend/services/homework-service/__tests__/services/growthTaskAttachmentMediaService.test.js`
 
-- [ ] **Step 1: Write failing `017F`, `017G`, `017H`, `017I`, and `017L` cases**
+- [x] **Step 1: Write failing `017F`, `017G`, `017H`, `017I`, and `017L` cases**
 
 Record prepare, commit, publication, unbind, and finalization events. For `[A,B] -> [B,C]`, assert prepare/commit contains only C and unbind contains only A with its previous generation:
 
@@ -291,7 +291,7 @@ expect(mediaReferenceClient.unbind).toHaveBeenCalledWith({
 
 Cover clear-all, replay, reorder-only, identical order, 100-ID boundary, combined ordinary patch, direct stable rejection, and every publication/unbind/finalization uncertainty.
 
-- [ ] **Step 2: Run patch RED**
+- [x] **Step 2: Run patch RED**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -300,23 +300,23 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: FAIL because patch, ordered differences, and checked unbind are absent.
 
-- [ ] **Step 3: Implement stable no-op and reorder-only publication**
+- [x] **Step 3: Implement stable no-op and reorder-only publication**
 
 `mutate({ task, taskPatch, attachmentMediaIds })` resumes an existing intent first. Omitted attachments apply only canonical entries with observed-version CAS. Identical IDs/order do the same. Set-equal reorder updates public IDs and reorders current binding entries by ID with no media call.
 
-- [ ] **Step 4: Implement patch claim and binding**
+- [x] **Step 4: Implement patch claim and binding**
 
 Compute additions/removals/unchanged from normalized IDs. CAS-claim the desired list, complete previous binding snapshot, canonical patch, random operation, patch kind, false uncertainty flag, and binding phase while leaving public fields unchanged. If additions exist, set uncertainty before prepare, then replay prepare/commit additions only.
 
-- [ ] **Step 5: Implement atomic public publication**
+- [x] **Step 5: Implement atomic public publication**
 
 Build desired bindings from unchanged previous entries plus `{mediaId, bindingOperationId: currentOperation}` for each addition. One CAS publishes desired IDs/bindings and canonical task entries. It either finalizes stable bound/none or moves to unbinding with previous snapshot intact.
 
-- [ ] **Step 6: Implement checked batch unbind and finalization**
+- [x] **Step 6: Implement checked batch unbind and finalization**
 
 Derive removals from previous bindings absent from desired IDs. Send one unbind command with every expected generation. On success, CAS-finalize and clear pending fields. Any failure retains intent and returns pending; reload recognizes already-finalized state. Never send an empty media command.
 
-- [ ] **Step 7: Run full service GREEN**
+- [x] **Step 7: Run full service GREEN**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -325,7 +325,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: `017B`, `017D-I`, and `017L` service cases pass without sleep or retry wrappers.
 
-- [ ] **Step 8: Commit complete mutation state machine**
+- [x] **Step 8: Commit complete mutation state machine**
 
 ```bash
 git add backend/services/homework-service/services/growthTaskAttachmentMediaService.js \
