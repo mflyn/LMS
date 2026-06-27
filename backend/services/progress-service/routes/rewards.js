@@ -42,6 +42,39 @@ const ledgerView = (entry) => ({
   createdAt: entry.createdAt
 });
 
+const replayRedeemedReward = async ({ req, res, rewardId, idempotencyKey }) => {
+  const entry = await StarLedgerEntry.findOne({
+    type: 'spend',
+    sourceType: 'reward_redemption',
+    sourceId: rewardId,
+    idempotencyKey
+  });
+  if (!entry) return sendError(res, 404, 'RESOURCE_NOT_FOUND', 'Reward not found');
+
+  const access = await requireParentChild(req.user, entry.childId.toString());
+  if (!access || access.familyId.toString() !== entry.familyId.toString()) {
+    return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this reward');
+  }
+
+  const starBalance = await calculateBalance({ familyId: entry.familyId, childId: entry.childId });
+  logFamilyOperation(req, {
+    operation: 'reward.redeem', result: 'replayed',
+    familyId: entry.familyId.toString(), childId: entry.childId.toString(),
+    rewardId
+  });
+  return res.json({
+    success: true,
+    data: {
+      rewardId,
+      status: 'redeemed',
+      spentStars: entry.amount,
+      starBalance,
+      ledgerEntryId: entry._id.toString(),
+      redeemedAt: entry.createdAt
+    }
+  });
+};
+
 router.post('/', authenticateGateway, async (req, res) => {
   try {
     if (req.user.role !== 'parent') {
@@ -139,7 +172,14 @@ router.patch('/:rewardId/redeem', authenticateGateway, async (req, res) => {
       return sendError(res, 400, 'VALIDATION_ERROR', 'Idempotency-Key is required and must not exceed 128 characters');
     }
     const reward = await Reward.findById(req.params.rewardId);
-    if (!reward) return sendError(res, 404, 'RESOURCE_NOT_FOUND', 'Reward not found');
+    if (!reward) {
+      return replayRedeemedReward({
+        req,
+        res,
+        rewardId: req.params.rewardId,
+        idempotencyKey
+      });
+    }
     const access = await requireParentChild(req.user, reward.childId.toString());
     if (!access || access.familyId.toString() !== reward.familyId.toString()) {
       return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this reward');

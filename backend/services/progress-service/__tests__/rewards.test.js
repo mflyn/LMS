@@ -166,6 +166,33 @@ describe('Task 5 rewards', () => {
     expect(await StarLedgerEntry.countDocuments({ type: 'spend' })).toBe(1);
   });
 
+  test('TC-T5-REWARD-007B same idempotency key replays from ledger if reward lookup misses', async () => {
+    const f = await createTask5Fixtures();
+    await seedStars(f, 5);
+    const reward = await createReward(f, 3);
+    const path = `/api/rewards/${reward._id}/redeem`;
+    const first = await request(app).patch(path)
+      .set(f.headers(f.parentA, 'PATCH', path))
+      .set('Idempotency-Key', 'same-success-after-missing-reward')
+      .send();
+    expect(first.status).toBe(200);
+
+    await Reward.deleteOne({ _id: reward._id });
+
+    const replay = await request(app).patch(path)
+      .set(f.headers(f.parentA, 'PATCH', path))
+      .set('Idempotency-Key', 'same-success-after-missing-reward')
+      .send();
+    expect(replay.status).toBe(200);
+    expect(replay.body.data).toEqual(expect.objectContaining({
+      rewardId: reward._id.toString(),
+      status: 'redeemed',
+      spentStars: 3,
+      ledgerEntryId: first.body.data.ledgerEntryId
+    }));
+    expect(await StarLedgerEntry.countDocuments({ type: 'spend' })).toBe(1);
+  });
+
   test('TC-T5-REWARD-008 key reuse for another reward is rejected', async () => {
     const f = await createTask5Fixtures();
     await seedStars(f, 10);
