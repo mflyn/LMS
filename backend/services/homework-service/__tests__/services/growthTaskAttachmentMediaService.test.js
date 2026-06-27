@@ -1,3 +1,7 @@
+const GrowthTask = require('../../models/GrowthTask');
+const {
+  createGrowthTaskAttachmentMediaService
+} = require('../../services/growthTaskAttachmentMediaService');
 const {
   parseGrowthTaskCreate,
   parseGrowthTaskPatch,
@@ -7,6 +11,20 @@ const {
 
 const MEDIA_A = 'AAAAAAAAAAAAAAAAAAAAAAAA';
 const MEDIA_B = 'bbbbbbbbbbbbbbbbbbbbbbbb';
+const FAMILY_A = '111111111111111111111111';
+const CHILD_A = '222222222222222222222222';
+const PARENT_A = '333333333333333333333333';
+const OPERATION_A = '9bf7c3f3-cc6d-41fe-95b5-b2832aafd394';
+const HIDDEN_GROWTH_TASK_MEDIA_STATE = [
+  '+attachmentMediaBindings',
+  '+mediaBindingOperationId',
+  '+attachmentMediaPendingIds',
+  '+attachmentMediaPreviousBindings',
+  '+mediaBindingPhase',
+  '+mediaPendingTaskPatch',
+  '+mediaMutationKind',
+  '+mediaRemoteOutcomeUncertain'
+].join(' ');
 
 const requiredCreateFields = (overrides = {}) => ({
   childId: '111111111111111111111111',
@@ -16,6 +34,84 @@ const requiredCreateFields = (overrides = {}) => ({
   dueDate: '2026-06-23',
   ...overrides
 });
+
+const createTaskInput = (overrides = {}) => ({
+  childId: CHILD_A,
+  familyId: FAMILY_A,
+  createdByParentId: PARENT_A,
+  dimension: 'academic',
+  title: '阅读',
+  taskType: 'practice',
+  dueDate: '2026-06-23',
+  ...overrides
+});
+
+const loadInternalTask = (taskId) => (
+  GrowthTask.findById(taskId).select(HIDDEN_GROWTH_TASK_MEDIA_STATE)
+);
+
+const pendingClientError = () => Object.assign(new Error('network unavailable'), {
+  status: 503,
+  code: 'UPSTREAM_UNAVAILABLE',
+  details: { private: true }
+});
+
+const stableMediaError = (status = 404) => Object.assign(new Error('Media not found'), {
+  status,
+  code: 'RESOURCE_NOT_FOUND',
+  details: []
+});
+
+const createHarness = ({
+  GrowthTaskModel = GrowthTask,
+  prepare,
+  commit,
+  operationId = OPERATION_A
+} = {}) => {
+  const mediaReferenceClient = {
+    prepare: jest.fn(prepare || (async () => [
+      { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'prepared' },
+      { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
+    ])),
+    commit: jest.fn(commit || (async () => [
+      { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+      { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'bound' }
+    ]))
+  };
+  const randomUUID = jest.fn(() => operationId);
+  const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  const service = createGrowthTaskAttachmentMediaService({
+    GrowthTaskModel,
+    mediaReferenceClient,
+    randomUUID,
+    logger
+  });
+  return { service, mediaReferenceClient, randomUUID, logger };
+};
+
+const expectRequiredCommand = (mediaReferenceClient, taskId) => {
+  const command = {
+    familyId: FAMILY_A,
+    childId: CHILD_A,
+    resourceType: 'growth_task',
+    resourceId: taskId,
+    operationId: OPERATION_A,
+    references: [
+      { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds' },
+      { mediaId: MEDIA_B, field: 'attachmentMediaIds' }
+    ]
+  };
+  expect(mediaReferenceClient.prepare).toHaveBeenCalledWith(command);
+  return command;
+};
+
+const expectPendingError = async (promise, taskId) => {
+  await expect(promise).rejects.toMatchObject({
+    status: 503,
+    code: 'MEDIA_REFERENCE_PENDING',
+    details: { resourceId: String(taskId) }
+  });
+};
 
 const expectValidationError = (operation) => {
   let error;
@@ -203,5 +299,294 @@ describe('TC-T6-MEDIA-018C strict request contract', () => {
       expectValidationError(() => parseGrowthTaskPatch(body));
       expectValidationError(() => parseGrowthTaskCreate(body));
     }
+  });
+});
+
+describe('TC-T6-MEDIA-017B GrowthTask attachment create binding', () => {
+  test('creates an unexposed pending owner, sends the exact prepare command, and publishes after commit', async () => {
+    let taskId;
+    const events = [];
+    const { service, mediaReferenceClient, randomUUID } = createHarness({
+      prepare: async (command) => {
+        taskId = command.resourceId;
+        const duringPrepare = await loadInternalTask(taskId);
+        expect(duringPrepare.mediaReferenceState).toBe('pending');
+        expect(duringPrepare.attachmentMediaIds).toEqual([]);
+        expect(duringPrepare.attachmentMediaPendingIds.map(String)).toEqual([
+          MEDIA_A.toLowerCase(),
+          MEDIA_B
+        ]);
+        expect(duringPrepare.mediaBindingPhase).toBe('binding');
+        expect(duringPrepare.mediaMutationKind).toBe('create');
+        expect(duringPrepare.mediaRemoteOutcomeUncertain).toBe(true);
+        events.push('prepare');
+        return [];
+      },
+      commit: async () => {
+        const duringCommit = await loadInternalTask(taskId);
+        expect(duringCommit.attachmentMediaIds).toEqual([]);
+        events.push('commit');
+        return [];
+      }
+    });
+
+    const result = await service.create({
+      taskInput: createTaskInput(),
+      attachmentMediaIds: [MEDIA_A, MEDIA_B]
+    });
+
+    const command = expectRequiredCommand(mediaReferenceClient, result._id.toString());
+    expect(mediaReferenceClient.commit).toHaveBeenCalledWith(command);
+    expect(events).toEqual(['prepare', 'commit']);
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+    expect(result.mediaReferenceState).toBe('bound');
+    expect(result.attachmentMediaIds.map(String)).toEqual([MEDIA_A.toLowerCase(), MEDIA_B]);
+    expect(result.attachmentMediaBindings.map((entry) => ({
+      mediaId: String(entry.mediaId),
+      bindingOperationId: entry.bindingOperationId
+    }))).toEqual([
+      { mediaId: MEDIA_A.toLowerCase(), bindingOperationId: OPERATION_A },
+      { mediaId: MEDIA_B, bindingOperationId: OPERATION_A }
+    ]);
+
+    const stored = await loadInternalTask(result._id);
+    expect(stored.mediaBindingOperationId).toBeUndefined();
+    expect(stored.attachmentMediaPendingIds).toBeUndefined();
+    expect(stored.attachmentMediaPreviousBindings).toBeUndefined();
+    expect(stored.mediaBindingPhase).toBeUndefined();
+    expect(stored.mediaMutationKind).toBeUndefined();
+    expect(stored.mediaRemoteOutcomeUncertain).toBeUndefined();
+  });
+
+  test('creates without attachments through ordinary owner create and sends no media command', async () => {
+    const { service, mediaReferenceClient, randomUUID } = createHarness();
+
+    const result = await service.create({
+      taskInput: createTaskInput({ title: '无附件' }),
+      attachmentMediaIds: []
+    });
+
+    expect(result.mediaReferenceState).toBe('none');
+    expect(result.attachmentMediaIds).toEqual([]);
+    expect(mediaReferenceClient.prepare).not.toHaveBeenCalled();
+    expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
+    expect(randomUUID).not.toHaveBeenCalled();
+  });
+});
+
+describe('TC-T6-MEDIA-017D GrowthTask attachment rollback boundary', () => {
+  test('deletes the first-attempt pending owner and returns the stable prepare rejection', async () => {
+    const stable = stableMediaError(404);
+    const { service, mediaReferenceClient } = createHarness({
+      prepare: async () => { throw stable; }
+    });
+
+    await expect(service.create({
+      taskInput: createTaskInput(),
+      attachmentMediaIds: [MEDIA_A, MEDIA_B]
+    })).rejects.toBe(stable);
+
+    const taskId = mediaReferenceClient.prepare.mock.calls[0][0].resourceId;
+    expectRequiredCommand(mediaReferenceClient, taskId);
+    expect(await GrowthTask.findById(taskId)).toBeNull();
+    expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
+  });
+
+  test('keeps an uncertain owner and returns pending when first-attempt rollback cannot confirm deletion', async () => {
+    const stable = stableMediaError(409);
+    let taskId;
+    const GrowthTaskModel = {
+      create: (...args) => GrowthTask.create(...args),
+      findById: (...args) => GrowthTask.findById(...args),
+      findOneAndUpdate: (...args) => GrowthTask.findOneAndUpdate(...args),
+      deleteOne: jest.fn(async (filter) => {
+        taskId = filter._id;
+        return { deletedCount: 0 };
+      })
+    };
+    const { service } = createHarness({
+      GrowthTaskModel,
+      prepare: async () => { throw stable; }
+    });
+
+    await expect(service.create({
+      taskInput: createTaskInput(),
+      attachmentMediaIds: [MEDIA_A, MEDIA_B]
+    })).rejects.toMatchObject({
+      status: 503,
+      code: 'MEDIA_REFERENCE_PENDING'
+    });
+
+    const stored = await loadInternalTask(taskId);
+    expect(stored.mediaReferenceState).toBe('pending');
+    expect(stored.mediaRemoteOutcomeUncertain).toBe(true);
+  });
+
+  test('resume never deletes a pending owner after a stable prepare rejection', async () => {
+    const stable = stableMediaError(403);
+    const { service } = createHarness({ prepare: async () => { throw pendingClientError(); } });
+
+    await expect(service.create({
+      taskInput: createTaskInput(),
+      attachmentMediaIds: [MEDIA_A, MEDIA_B]
+    })).rejects.toMatchObject({ code: 'MEDIA_REFERENCE_PENDING' });
+    const taskId = (await GrowthTask.findOne({ title: '阅读' }))._id.toString();
+
+    const GrowthTaskModel = {
+      create: (...args) => GrowthTask.create(...args),
+      findById: (...args) => GrowthTask.findById(...args),
+      findOneAndUpdate: (...args) => GrowthTask.findOneAndUpdate(...args),
+      deleteOne: jest.fn((...args) => GrowthTask.deleteOne(...args))
+    };
+    const resumedHarness = createHarness({
+      GrowthTaskModel,
+      prepare: async () => { throw stable; }
+    });
+
+    await expectPendingError(resumedHarness.service.resume(taskId), taskId);
+    expect(GrowthTaskModel.deleteOne).not.toHaveBeenCalled();
+    expect(await GrowthTask.findById(taskId)).not.toBeNull();
+  });
+});
+
+describe('TC-T6-MEDIA-017E GrowthTask attachment recovery', () => {
+  test.each(['prepare', 'commit'])('reuses the durable operation after a lost %s response', async (failedMethod) => {
+    let failed = false;
+    const behavior = async () => {
+      if (!failed) {
+        failed = true;
+        throw pendingClientError();
+      }
+      return [];
+    };
+    const { service, mediaReferenceClient, randomUUID } = createHarness({
+      ...(failedMethod === 'prepare' ? { prepare: behavior } : { commit: behavior })
+    });
+
+    await expect(service.create({
+      taskInput: createTaskInput(),
+      attachmentMediaIds: [MEDIA_A, MEDIA_B]
+    })).rejects.toMatchObject({ code: 'MEDIA_REFERENCE_PENDING' });
+
+    const pending = await GrowthTask.findOne({ title: '阅读' }).select(HIDDEN_GROWTH_TASK_MEDIA_STATE);
+    expect(pending.mediaBindingOperationId).toBe(OPERATION_A);
+    expect(pending.attachmentMediaIds).toEqual([]);
+
+    const recovered = await service.resume(pending._id);
+    expect(recovered.mediaReferenceState).toBe('bound');
+    expect(recovered.attachmentMediaIds.map(String)).toEqual([MEDIA_A.toLowerCase(), MEDIA_B]);
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(2);
+    expect(mediaReferenceClient.commit).toHaveBeenCalledTimes(failedMethod === 'prepare' ? 1 : 2);
+  });
+
+  test('retains pending owner and sanitizes commit failure', async () => {
+    const rawCommitError = Object.assign(new Error('raw commit failure'), {
+      status: 500,
+      code: 'RAW_COMMIT',
+      config: { secret: 'do-not-leak' },
+      response: { data: { token: 'do-not-leak' } }
+    });
+    const { service } = createHarness({
+      commit: async () => { throw rawCommitError; }
+    });
+
+    let caught;
+    try {
+      await service.create({
+        taskInput: createTaskInput(),
+        attachmentMediaIds: [MEDIA_A, MEDIA_B]
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toMatchObject({
+      status: 503,
+      code: 'MEDIA_REFERENCE_PENDING'
+    });
+    expect(caught).not.toHaveProperty('config');
+    expect(caught).not.toHaveProperty('response');
+    expect(await GrowthTask.findOne({ title: '阅读' })).not.toBeNull();
+  });
+
+  test.each([
+    ['before persistence', false],
+    ['after persistence', true]
+  ])('recovers when the owner publication response is lost %s', async (label, persistFirst) => {
+    let losePublishResponse = true;
+    const GrowthTaskModel = {
+      create: (...args) => GrowthTask.create(...args),
+      findById: (...args) => GrowthTask.findById(...args),
+      deleteOne: (...args) => GrowthTask.deleteOne(...args),
+      findOneAndUpdate: (filter, update, options) => {
+        const isPublish = update.$set
+          && update.$set.mediaReferenceState === 'bound'
+          && update.$unset
+          && filter.mediaBindingPhase === 'binding';
+        if (!isPublish || !losePublishResponse) {
+          return GrowthTask.findOneAndUpdate(filter, update, options);
+        }
+        losePublishResponse = false;
+        if (!persistFirst) return Promise.reject(new Error('owner publish unavailable'));
+        return GrowthTask.findOneAndUpdate(filter, update, options)
+          .then(() => { throw new Error('owner publish response lost'); });
+      }
+    };
+    const { service } = createHarness({ GrowthTaskModel });
+
+    if (persistFirst) {
+      const result = await service.create({
+        taskInput: createTaskInput(),
+        attachmentMediaIds: [MEDIA_A, MEDIA_B]
+      });
+      expect(result.mediaReferenceState).toBe('bound');
+    } else {
+      await expect(service.create({
+        taskInput: createTaskInput(),
+        attachmentMediaIds: [MEDIA_A, MEDIA_B]
+      })).rejects.toMatchObject({ code: 'MEDIA_REFERENCE_PENDING' });
+
+      const pending = await GrowthTask.findOne({ title: '阅读' });
+      const result = await service.resume(pending._id);
+      expect(result.mediaReferenceState).toBe('bound');
+    }
+  });
+
+  test('crash after uncertainty marker before prepare is recoverable without a duplicate task or operation', async () => {
+    let failAfterUncertaintyMarker = true;
+    const GrowthTaskModel = {
+      create: (...args) => GrowthTask.create(...args),
+      findById: (...args) => GrowthTask.findById(...args),
+      deleteOne: (...args) => GrowthTask.deleteOne(...args),
+      findOneAndUpdate: (filter, update, options) => {
+        const markingUncertain = update.$set
+          && update.$set.mediaRemoteOutcomeUncertain === true
+          && filter.mediaRemoteOutcomeUncertain === false;
+        if (markingUncertain && failAfterUncertaintyMarker) {
+          failAfterUncertaintyMarker = false;
+          return GrowthTask.findOneAndUpdate(filter, update, options)
+            .then(() => { throw new Error('crash after marker'); });
+        }
+        return GrowthTask.findOneAndUpdate(filter, update, options);
+      }
+    };
+    const { service, mediaReferenceClient, randomUUID } = createHarness({ GrowthTaskModel });
+
+    await expect(service.create({
+      taskInput: createTaskInput(),
+      attachmentMediaIds: [MEDIA_A, MEDIA_B]
+    })).rejects.toMatchObject({ code: 'MEDIA_REFERENCE_PENDING' });
+
+    expect(mediaReferenceClient.prepare).not.toHaveBeenCalled();
+    const pendingTasks = await GrowthTask.find({ title: '阅读' }).select(HIDDEN_GROWTH_TASK_MEDIA_STATE);
+    expect(pendingTasks).toHaveLength(1);
+    expect(pendingTasks[0].mediaRemoteOutcomeUncertain).toBe(true);
+
+    const recovered = await service.resume(pendingTasks[0]._id);
+    expect(recovered.mediaReferenceState).toBe('bound');
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(1);
+    expect(randomUUID).toHaveBeenCalledTimes(1);
+    expect(await GrowthTask.countDocuments({ title: '阅读' })).toBe(1);
   });
 });
