@@ -11,6 +11,7 @@ const {
 
 const MEDIA_A = 'AAAAAAAAAAAAAAAAAAAAAAAA';
 const MEDIA_B = 'bbbbbbbbbbbbbbbbbbbbbbbb';
+const MEDIA_C = 'cccccccccccccccccccccccc';
 const FAMILY_A = '111111111111111111111111';
 const CHILD_A = '222222222222222222222222';
 const PARENT_A = '333333333333333333333333';
@@ -378,6 +379,33 @@ describe('TC-T6-MEDIA-017B GrowthTask attachment create binding', () => {
     expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
     expect(randomUUID).not.toHaveBeenCalled();
   });
+
+  test('accepts sorted media-service envelopes while preserving requested public order', async () => {
+    const { service, mediaReferenceClient } = createHarness({
+      prepare: async () => [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'prepared' },
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
+      ],
+      commit: async () => [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'bound' }
+      ]
+    });
+
+    const result = await service.create({
+      taskInput: createTaskInput(),
+      attachmentMediaIds: [MEDIA_B, MEDIA_A]
+    });
+
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledWith(expect.objectContaining({
+      references: [
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds' },
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds' }
+      ]
+    }));
+    expect(result.mediaReferenceState).toBe('bound');
+    expect(result.attachmentMediaIds.map(String)).toEqual([MEDIA_B, MEDIA_A.toLowerCase()]);
+  });
 });
 
 describe('TC-T6-MEDIA-017D GrowthTask attachment rollback boundary', () => {
@@ -673,8 +701,8 @@ describe('TC-T6-MEDIA-017E GrowthTask attachment recovery', () => {
     ['empty prepare response', { prepare: [] }],
     ['prepare response with wrong mediaId', {
       prepare: [
-        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' },
-        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'prepared' }
+        { mediaId: MEDIA_C, field: 'attachmentMediaIds', state: 'prepared' },
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
       ]
     }],
     ['prepare response with wrong field', {

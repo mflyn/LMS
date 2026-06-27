@@ -102,15 +102,23 @@ const createGrowthTaskAttachmentMediaService = ({
   const assertValidClientEnvelope = (value, command, expectedState) => {
     if (!Array.isArray(value)) throw new Error('invalid media reference response');
     if (value.length !== command.references.length) throw new Error('invalid media reference response');
-    value.forEach((entry, index) => {
-      const reference = command.references[index];
+    const pending = new Map(command.references.map((reference) => [
+      `${reference.field}:${normalizeId(reference.mediaId)}`,
+      reference
+    ]));
+    value.forEach((entry) => {
+      const key = entry && `${entry.field}:${normalizeId(entry.mediaId)}`;
+      const reference = pending.get(key);
       if (!entry
+        || !reference
         || !idsEqual(entry.mediaId, reference.mediaId)
         || entry.field !== reference.field
         || entry.state !== expectedState) {
         throw new Error('invalid media reference response');
       }
+      pending.delete(key);
     });
+    if (pending.size !== 0) throw new Error('invalid media reference response');
   };
 
   const convergedCreateBinding = (task, operationId, desiredIds) => {
