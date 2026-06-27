@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Document status:** READY FOR EXECUTION
+**Document status:** COMPLETED
 **Design:** `docs/superpowers/specs/2026-06-22-family-growth-task6-phase3c-task-attachments-design.md`
 **Test cases:** `docs/development/family-growth-task6-phase3c-test-cases.md`
 
@@ -464,7 +464,7 @@ git commit -m "feat: expose growth task media attachments"
 - Modify after successful execution: `docs/superpowers/plans/2026-06-22-family-growth-task6-phase3c-task-attachments.md`
 - Create after evidence passes: `docs/development/family-growth-task6-phase3c-review.md`
 
-- [ ] **Step 1: Run the fixed focused gate**
+- [x] **Step 1: Run the fixed focused gate**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -476,7 +476,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: all matching suites and tests pass once with no open-handle warning.
 
-- [ ] **Step 2: Run the full family regression twice consecutively**
+- [x] **Step 2: Run the full family regression twice consecutively**
 
 ```bash
 npm run test:family-regression
@@ -485,7 +485,7 @@ npm run test:family-regression
 
 Expected: both runs exit 0 with identical suite/test totals. A failed run followed by a pass does not satisfy the gate; restart the two-run sequence after fixing the cause.
 
-- [ ] **Step 3: Run static evidence checks**
+- [x] **Step 3: Run static evidence checks**
 
 ```bash
 git diff --check
@@ -498,15 +498,15 @@ rg -n "TC-T6-MEDIA-(017[A-M]|018[C-D])" \
 
 Expected: no whitespace errors, focused/skipped tests, route-local test error handler, new forced exit, or missing numbered case IDs. Review any existing `process.exit` match by scope; do not suppress it blindly.
 
-- [ ] **Step 4: Audit every acceptance criterion against evidence**
+- [x] **Step 4: Audit every acceptance criterion against evidence**
 
 Create a traceability table mapping design sections and all `017A-M`/`018C-D` cases to executable test names, implementation commits, and gate output. Confirm list/detail visibility, stable versus uncertain errors, batch generations, canonical updates, lifecycle exclusion, privacy, and regression evidence directly.
 
-- [ ] **Step 5: Write the formal Phase 3C review record**
+- [x] **Step 5: Write the formal Phase 3C review record**
 
 Create `docs/development/family-growth-task6-phase3c-review.md` with reviewed artifacts, criteria, findings/resolutions, traceability, exact focused totals, both full-regression totals, static audit result, decision, and sign-off. Do not mark it approved while any finding or gate is open.
 
-- [ ] **Step 6: Mark this plan completed and commit evidence**
+- [x] **Step 6: Mark this plan completed and commit evidence**
 
 Change `Document status` to `COMPLETED`, mark checkboxes only for steps supported by current evidence, then commit:
 
