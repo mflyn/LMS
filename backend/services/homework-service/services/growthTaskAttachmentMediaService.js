@@ -99,8 +99,18 @@ const createGrowthTaskAttachmentMediaService = ({
     }))
   });
 
-  const assertValidClientEnvelope = (value) => {
+  const assertValidClientEnvelope = (value, command, expectedState) => {
     if (!Array.isArray(value)) throw new Error('invalid media reference response');
+    if (value.length !== command.references.length) throw new Error('invalid media reference response');
+    value.forEach((entry, index) => {
+      const reference = command.references[index];
+      if (!entry
+        || !idsEqual(entry.mediaId, reference.mediaId)
+        || entry.field !== reference.field
+        || entry.state !== expectedState) {
+        throw new Error('invalid media reference response');
+      }
+    });
   };
 
   const convergedCreateBinding = (task, operationId, desiredIds) => {
@@ -192,7 +202,7 @@ const createGrowthTaskAttachmentMediaService = ({
     const command = commandFor(task);
 
     try {
-      assertValidClientEnvelope(await mediaReferenceClient.prepare(command));
+      assertValidClientEnvelope(await mediaReferenceClient.prepare(command), command, 'prepared');
     } catch (error) {
       if (allowFirstRollback && STABLE_PREPARE_STATUSES.has(error && error.status)) {
         return rollbackCreateOnStablePrepare(task, error);
@@ -201,7 +211,7 @@ const createGrowthTaskAttachmentMediaService = ({
     }
 
     try {
-      assertValidClientEnvelope(await mediaReferenceClient.commit(command));
+      assertValidClientEnvelope(await mediaReferenceClient.commit(command), command, 'bound');
     } catch (error) {
       throw pendingError(task._id);
     }
@@ -238,7 +248,10 @@ const createGrowthTaskAttachmentMediaService = ({
     if (!task) throw conflictError();
     if (task.mediaReferenceState !== 'pending') return task;
     if (task.mediaMutationKind === 'create' && task.mediaBindingPhase === 'binding') {
-      return resumeBinding(task);
+      const resumableTask = task.mediaRemoteOutcomeUncertain !== true
+        ? await markRemoteOutcomeUncertain(task)
+        : task;
+      return resumeBinding(resumableTask);
     }
     throw pendingError(task._id);
   };

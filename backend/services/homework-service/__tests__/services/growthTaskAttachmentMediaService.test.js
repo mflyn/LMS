@@ -320,13 +320,19 @@ describe('TC-T6-MEDIA-017B GrowthTask attachment create binding', () => {
         expect(duringPrepare.mediaMutationKind).toBe('create');
         expect(duringPrepare.mediaRemoteOutcomeUncertain).toBe(true);
         events.push('prepare');
-        return [];
+        return [
+          { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'prepared' },
+          { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
+        ];
       },
       commit: async () => {
         const duringCommit = await loadInternalTask(taskId);
         expect(duringCommit.attachmentMediaIds).toEqual([]);
         events.push('commit');
-        return [];
+        return [
+          { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+          { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'bound' }
+        ];
       }
     });
 
@@ -471,12 +477,21 @@ describe('TC-T6-MEDIA-017D GrowthTask attachment rollback boundary', () => {
 describe('TC-T6-MEDIA-017E GrowthTask attachment recovery', () => {
   test.each(['prepare', 'commit'])('reuses the durable operation after a lost %s response', async (failedMethod) => {
     let failed = false;
+    const successEnvelope = failedMethod === 'prepare'
+      ? [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'prepared' },
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
+      ]
+      : [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'bound' }
+      ];
     const behavior = async () => {
       if (!failed) {
         failed = true;
         throw pendingClientError();
       }
-      return [];
+      return successEnvelope;
     };
     const { service, mediaReferenceClient, randomUUID } = createHarness({
       ...(failedMethod === 'prepare' ? { prepare: behavior } : { commit: behavior })
@@ -607,5 +622,117 @@ describe('TC-T6-MEDIA-017E GrowthTask attachment recovery', () => {
     expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(1);
     expect(randomUUID).toHaveBeenCalledTimes(1);
     expect(await GrowthTask.countDocuments({ title: '阅读' })).toBe(1);
+  });
+
+  test('resume marks uncertainty before prepare and never rolls back on a stable prepare response', async () => {
+    const task = await GrowthTask.create({
+      ...createTaskInput({ attachmentMediaIds: [] }),
+      attachmentMediaBindings: [],
+      mediaReferenceState: 'pending',
+      mediaBindingOperationId: OPERATION_A,
+      attachmentMediaPendingIds: [MEDIA_A.toLowerCase(), MEDIA_B],
+      attachmentMediaPreviousBindings: [],
+      mediaBindingPhase: 'binding',
+      mediaPendingTaskPatch: [],
+      mediaMutationKind: 'create',
+      mediaRemoteOutcomeUncertain: false
+    });
+    const initialVersion = task.__v;
+    let versionDuringPrepare;
+    let uncertaintyDuringPrepare;
+    const stable = stableMediaError(409);
+    const GrowthTaskModel = {
+      create: (...args) => GrowthTask.create(...args),
+      findById: (...args) => GrowthTask.findById(...args),
+      findOneAndUpdate: (...args) => GrowthTask.findOneAndUpdate(...args),
+      deleteOne: jest.fn((...args) => GrowthTask.deleteOne(...args))
+    };
+    const { service, mediaReferenceClient } = createHarness({
+      GrowthTaskModel,
+      prepare: async (command) => {
+        const duringPrepare = await loadInternalTask(command.resourceId);
+        versionDuringPrepare = duringPrepare.__v;
+        uncertaintyDuringPrepare = duringPrepare.mediaRemoteOutcomeUncertain;
+        throw stable;
+      }
+    });
+
+    await expectPendingError(service.resume(task._id), task._id);
+
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledTimes(1);
+    expect(versionDuringPrepare).toBe(initialVersion + 1);
+    expect(uncertaintyDuringPrepare).toBe(true);
+    expect(GrowthTaskModel.deleteOne).not.toHaveBeenCalled();
+    const stored = await loadInternalTask(task._id);
+    expect(stored.mediaReferenceState).toBe('pending');
+    expect(stored.mediaRemoteOutcomeUncertain).toBe(true);
+    expect(stored.__v).toBe(initialVersion + 1);
+  });
+
+  test.each([
+    ['empty prepare response', { prepare: [] }],
+    ['prepare response with wrong mediaId', {
+      prepare: [
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' },
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'prepared' }
+      ]
+    }],
+    ['prepare response with wrong field', {
+      prepare: [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'otherField', state: 'prepared' },
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
+      ]
+    }],
+    ['prepare response with wrong state', {
+      prepare: [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
+      ]
+    }],
+    ['empty commit response', { commit: [] }],
+    ['commit response with wrong mediaId', {
+      commit: [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' }
+      ]
+    }],
+    ['commit response with wrong field', {
+      commit: [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+        { mediaId: MEDIA_B, field: 'otherField', state: 'bound' }
+      ]
+    }],
+    ['commit response with wrong state', {
+      commit: [
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+        { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
+      ]
+    }]
+  ])('does not publish after malformed successful %s', async (_label, envelopes) => {
+    const validPrepare = [
+      { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'prepared' },
+      { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
+    ];
+    const validCommit = [
+      { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+      { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'bound' }
+    ];
+    const { service } = createHarness({
+      prepare: async () => envelopes.prepare || validPrepare,
+      commit: async () => envelopes.commit || validCommit
+    });
+
+    await expect(service.create({
+      taskInput: createTaskInput(),
+      attachmentMediaIds: [MEDIA_A, MEDIA_B]
+    })).rejects.toMatchObject({
+      status: 503,
+      code: 'MEDIA_REFERENCE_PENDING'
+    });
+
+    const stored = await loadInternalTask((await GrowthTask.findOne({ title: '阅读' }))._id);
+    expect(stored.mediaReferenceState).toBe('pending');
+    expect(stored.attachmentMediaIds).toEqual([]);
+    expect(stored.mediaBindingOperationId).toBe(OPERATION_A);
   });
 });
