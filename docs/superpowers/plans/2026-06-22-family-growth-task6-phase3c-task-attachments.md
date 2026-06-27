@@ -189,7 +189,7 @@ git commit -m "feat: validate growth task attachment input"
 - Create: `backend/services/homework-service/services/growthTaskAttachmentMediaService.js`
 - Modify: `backend/services/homework-service/__tests__/services/growthTaskAttachmentMediaService.test.js`
 
-- [ ] **Step 1: Write failing `017B`, `017D`, and `017E` service cases**
+- [x] **Step 1: Write failing `017B`, `017D`, and `017E` service cases**
 
 Use the real model, fixed UUID generator, and injected media client. Assert exact create command:
 
@@ -209,7 +209,7 @@ expect(mediaReferenceClient.prepare).toHaveBeenCalledWith({
 
 Cover direct stable first-prepare rejection, confirmed and uncertain task deletion, lost prepare/commit responses, commit failure, failed/lost owner publication, and crash after uncertainty marker before prepare.
 
-- [ ] **Step 2: Run create RED**
+- [x] **Step 2: Run create RED**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -218,7 +218,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: FAIL because the attachment service does not exist.
 
-- [ ] **Step 3: Implement service construction and fixed errors**
+- [x] **Step 3: Implement service construction and fixed errors**
 
 Export `createGrowthTaskAttachmentMediaService({ GrowthTaskModel, mediaReferenceClient, randomUUID, logger })`. Validate every dependency and define sanitized errors:
 
@@ -235,19 +235,19 @@ const conflictError = () => Object.assign(
 
 Internal loads explicitly select all hidden paths. No caught client/database object is attached to an outward error.
 
-- [ ] **Step 4: Implement owner-first create claim**
+- [x] **Step 4: Implement owner-first create claim**
 
 `create({ taskInput, attachmentMediaIds })` uses ordinary `GrowthTask.create` for an empty desired list. For a non-empty list, preallocate `_id` and save empty public IDs/bindings plus pending desired IDs, empty previous bindings, `mutationKind=create`, `phase=binding`, `mediaRemoteOutcomeUncertain=false`, and one random operation.
 
-- [ ] **Step 5: Implement first-attempt rollback boundary**
+- [x] **Step 5: Implement first-attempt rollback boundary**
 
 Before prepare, CAS-set `mediaRemoteOutcomeUncertain=true` and increment `__v`. The same in-process first attempt may delete on a direct stable prepare response using `_id`, family/child IDs, operation, kind, state, phase, and version. Return the stable error only when `deletedCount===1`; otherwise return pending. A resumed attempt never deletes from a stable response.
 
-- [ ] **Step 6: Implement create binding resume**
+- [x] **Step 6: Implement create binding resume**
 
 Replay prepare and commit for all desired IDs. After commit, CAS-publish IDs and bindings in desired order, set stable bound, clear all hidden intent fields, and increment `__v`. If a transition throws or returns no row, reload: return an already-converged task, otherwise throw pending.
 
-- [ ] **Step 7: Run create GREEN**
+- [x] **Step 7: Run create GREEN**
 
 ```bash
 npx jest --config backend/services/homework-service/jest.config.js --runInBand \
@@ -256,7 +256,7 @@ npx jest --config backend/services/homework-service/jest.config.js --runInBand \
 
 Expected: create, rollback, uncertainty, and recovery cases pass with no duplicate task/reference.
 
-- [ ] **Step 8: Commit create recovery**
+- [x] **Step 8: Commit create recovery**
 
 ```bash
 git add backend/services/homework-service/services/growthTaskAttachmentMediaService.js \
