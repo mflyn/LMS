@@ -22,6 +22,11 @@ const statusCodes = {
 const sendError = (res, status, message, code = statusCodes[status] || 'INTERNAL_ERROR') => (
   sendFamilyError(res, status, code, message)
 );
+const sendMediaRecoveryError = (res, error) => {
+  if (!error || !error.status || !error.code) return false;
+  sendFamilyError(res, error.status, error.code, error.message, error.details || []);
+  return true;
+};
 
 const taskView = (task) => ({
   taskId: task._id.toString(),
@@ -121,8 +126,17 @@ const getDateRangeForScope = (scope, timezone, now = new Date(Date.now())) => {
   return null;
 };
 
-const createGrowthTaskRouter = ({ awardTaskStar = defaultStarAwardClient.awardTaskStar } = {}) => {
+const createGrowthTaskRouter = ({
+  awardTaskStar = defaultStarAwardClient.awardTaskStar,
+  attachmentMediaService
+} = {}) => {
   const router = express.Router();
+  const resumePendingAttachmentMedia = async (task) => {
+    if (!attachmentMediaService || !task || task.mediaReferenceState !== 'pending') {
+      return task;
+    }
+    return attachmentMediaService.resume(task._id.toString());
+  };
 
 router.post('/', authenticateGateway, async (req, res) => {
   try {
@@ -288,7 +302,8 @@ router.patch('/:taskId/complete', authenticateGateway, async (req, res) => {
     if (!access || access.familyId.toString() !== task.familyId.toString()) {
       return sendError(res, 403, 'Cannot complete this task');
     }
-    if (task.status === 'confirmed' || task.status === 'cancelled' || task.status === 'archived') {
+    const activeTask = await resumePendingAttachmentMedia(task);
+    if (activeTask.status === 'confirmed' || activeTask.status === 'cancelled' || activeTask.status === 'archived') {
       return sendError(res, 409, 'Task can no longer be completed');
     }
 
@@ -301,18 +316,19 @@ router.patch('/:taskId/complete', authenticateGateway, async (req, res) => {
     ];
     allowedFields.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-        task[field] = req.body[field];
+        activeTask[field] = req.body[field];
       }
     });
-    task.status = 'completed';
-    task.completedAt = new Date();
-    await task.save();
+    activeTask.status = 'completed';
+    activeTask.completedAt = new Date();
+    await activeTask.save();
 
     return res.json({
       success: true,
-      data: { task: taskView(task) }
+      data: { task: taskView(activeTask) }
     });
   } catch (error) {
+    if (sendMediaRecoveryError(res, error)) return undefined;
     if (error.name === 'ValidationError') {
       return sendError(res, 400, error.message);
     }
@@ -338,13 +354,14 @@ router.patch('/:taskId/confirm', authenticateGateway, async (req, res) => {
     if (!ownership || ownership.family._id.toString() !== task.familyId.toString()) {
       return sendError(res, 403, 'Cannot confirm another family task');
     }
-    let confirmation = task;
-    if (task.status === 'completed' && (!task.starAwardState || task.starAwardState === 'not_applicable')) {
+    const activeTask = await resumePendingAttachmentMedia(task);
+    let confirmation = activeTask;
+    if (activeTask.status === 'completed' && (!activeTask.starAwardState || activeTask.starAwardState === 'not_applicable')) {
       confirmation = await GrowthTask.findOneAndUpdate(
         {
-          _id: task._id,
-          familyId: task.familyId,
-          childId: task.childId,
+          _id: activeTask._id,
+          familyId: activeTask.familyId,
+          childId: activeTask.childId,
           status: 'completed',
           starAwardState: { $in: ['not_applicable', null] }
         },
@@ -359,7 +376,7 @@ router.patch('/:taskId/confirm', authenticateGateway, async (req, res) => {
         },
         { new: true, runValidators: true }
       );
-      if (!confirmation) confirmation = await GrowthTask.findById(task._id);
+      if (!confirmation) confirmation = await GrowthTask.findById(activeTask._id);
     }
 
     if (confirmation.status === 'confirmed' && confirmation.starAwardState === 'awarded') {
@@ -429,6 +446,7 @@ router.patch('/:taskId/confirm', authenticateGateway, async (req, res) => {
       data: { task: taskView(awardedTask), starAward }
     });
   } catch (error) {
+    if (sendMediaRecoveryError(res, error)) return undefined;
     return sendError(res, 500, error.message);
   }
 });
@@ -513,30 +531,32 @@ router.delete('/:taskId', authenticateGateway, async (req, res) => {
       return sendError(res, 403, 'Cannot delete another family task');
     }
 
-    if (task.status === 'pending') {
-      task.status = 'cancelled';
-      task.cancelledAt = new Date();
-      await task.save();
+    const activeTask = await resumePendingAttachmentMedia(task);
+    if (activeTask.status === 'pending') {
+      activeTask.status = 'cancelled';
+      activeTask.cancelledAt = new Date();
+      await activeTask.save();
       return res.json({
         success: true,
-        data: { deleted: false, task: taskView(task) }
+        data: { deleted: false, task: taskView(activeTask) }
       });
     }
 
-    if (task.status === 'cancelled' || task.status === 'archived') {
+    if (activeTask.status === 'cancelled' || activeTask.status === 'archived') {
       return res.json({
         success: true,
-        data: { deleted: false, task: taskView(task) }
+        data: { deleted: false, task: taskView(activeTask) }
       });
     }
 
-    task.status = 'archived';
-    await task.save();
+    activeTask.status = 'archived';
+    await activeTask.save();
     return res.json({
       success: true,
-      data: { task: taskView(task) }
+      data: { task: taskView(activeTask) }
     });
   } catch (error) {
+    if (sendMediaRecoveryError(res, error)) return undefined;
     return sendError(res, 500, error.message);
   }
 });
