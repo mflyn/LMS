@@ -43,6 +43,7 @@ const seedProjectionSources = async () => {
       dueDate: '2026-06-24',
       estimatedMinutes: 20,
       actualMinutes: 18,
+      cancelledAt: new Date('2026-06-30T00:00:00.000Z'),
       createdAt: new Date('2026-06-23T00:00:00.000Z')
     },
     {
@@ -158,7 +159,12 @@ describe('family read repository', () => {
     const repository = createFamilyReadRepository({ connection, timeoutMs: 20 });
 
     await expect(repository.listTaskProjection(scoped())).resolves.toEqual([
-      expect.objectContaining({ taskId: '666000000000000000000001', dimension: 'physical', title: '连续跳绳' })
+      expect.objectContaining({
+        taskId: '666000000000000000000001',
+        dimension: 'physical',
+        title: '连续跳绳',
+        cancelledAt: new Date('2026-06-30T00:00:00.000Z')
+      })
     ]);
     await expect(repository.listGrowthLogProjection(scoped())).resolves.toEqual([
       expect.objectContaining({ logId: '666000000000000000000011', dimension: 'labor', content: '整理房间' })

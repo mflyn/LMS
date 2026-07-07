@@ -17,6 +17,7 @@ const taskProjection = {
   actualMinutes: 1,
   completedAt: 1,
   confirmedAt: 1,
+  cancelledAt: 1,
   createdAt: 1,
   updatedAt: 1
 };
@@ -195,7 +196,8 @@ const createFamilyReadRepository = ({ connection, timeoutMs = DEFAULT_TIMEOUT_MS
       estimatedMinutes: row.estimatedMinutes,
       actualMinutes: row.actualMinutes,
       completedAt: row.completedAt,
-      confirmedAt: row.confirmedAt
+      confirmedAt: row.confirmedAt,
+      cancelledAt: row.cancelledAt
     }));
   };
 
