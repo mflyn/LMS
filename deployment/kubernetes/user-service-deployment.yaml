@@ -37,6 +37,13 @@ spec:
             secretKeyRef:
               name: family-growth-secrets
               key: gateway-identity-secret
+        - name: RESOURCE_SERVICE_URL
+          value: "http://resource-service:3005"
+        - name: MEDIA_REFERENCE_SERVICE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: media-reference-service-token
         resources:
           limits:
             cpu: "300m"

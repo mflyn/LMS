@@ -69,6 +69,12 @@ if (config.serviceHosts.analytics) {
   app.use('/api/analytics', authenticateToken, proxy(config.serviceHosts.analytics, {
     proxyReqPathResolver: (req) => `/api/analytics${req.url}`
   }));
+
+  ['/api/mistakes', '/api/reports/weekly'].forEach((prefix) => {
+    app.use(prefix, authenticateToken, proxy(config.serviceHosts.analytics, {
+      proxyReqPathResolver: (req) => `${prefix}${req.url}`
+    }));
+  });
 }
 
 if (config.serviceHosts.homework) {
@@ -99,6 +105,12 @@ if (config.serviceHosts.notification) {
       proxyReqPathResolver: (req) => `${prefix}${req.url}`
     }));
   });
+}
+
+if (config.serviceHosts.resource) {
+  app.use('/api/media', authenticateToken, proxy(config.serviceHosts.resource, {
+    proxyReqPathResolver: (req) => `/api/media${req.url}`
+  }));
 }
 
 // (其他之前定义的代理路由，如 progress, interaction, notification, resource, analytics)

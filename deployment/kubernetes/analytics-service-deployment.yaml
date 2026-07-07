@@ -27,6 +27,20 @@ spec:
           value: "3006"
         - name: MONGO_URI
           value: "mongodb://mongo:27017/learning-tracker?replicaSet=rs0"
+        - name: GATEWAY_IDENTITY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: gateway-identity-secret
+        - name: RESOURCE_SERVICE_URL
+          value: "http://resource-service:3005"
+        - name: MEDIA_REFERENCE_SERVICE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: media-reference-service-token
+        - name: REPORT_HISTORY_AVAILABLE_FROM
+          value: "2026-06-01"
         resources:
           limits:
             cpu: "400m"

@@ -39,6 +39,8 @@ spec:
               key: gateway-identity-secret
         - name: PROGRESS_SERVICE_URL
           value: "http://progress-service:3002"
+        - name: RESOURCE_SERVICE_URL
+          value: "http://resource-service:3005"
         - name: STAR_AWARD_TIMEOUT_MS
           value: "3000"
         - name: INTERNAL_SERVICE_TOKEN
@@ -46,6 +48,11 @@ spec:
             secretKeyRef:
               name: family-growth-secrets
               key: internal-service-token
+        - name: MEDIA_REFERENCE_SERVICE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: media-reference-service-token
         resources:
           limits:
             cpu: "300m"

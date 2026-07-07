@@ -32,6 +32,16 @@ spec:
             secretKeyRef:
               name: family-growth-secrets
               key: gateway-identity-secret
+        - name: PRIVATE_MEDIA_ROOT
+          value: "/var/lib/family-growth/private-media"
+        - name: MEDIA_REFERENCE_SERVICE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: media-reference-service-token
+        volumeMounts:
+        - name: private-media
+          mountPath: /var/lib/family-growth/private-media
         resources:
           limits:
             cpu: "300m"
@@ -51,6 +61,10 @@ spec:
             port: 3005
           initialDelaySeconds: 5
           periodSeconds: 5
+      volumes:
+      - name: private-media
+        persistentVolumeClaim:
+          claimName: resource-private-media
 ---
 apiVersion: v1
 kind: Service
@@ -63,3 +77,14 @@ spec:
   - port: 3005
     targetPort: 3005
   type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: resource-private-media
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi

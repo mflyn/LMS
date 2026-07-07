@@ -38,6 +38,8 @@ services:
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
+      - RESOURCE_SERVICE_URL=http://resource-service:3005
+      - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:?set MEDIA_REFERENCE_SERVICE_TOKEN}
     depends_on:
       - mongo
     networks:
@@ -75,6 +77,8 @@ services:
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN}
       - PROGRESS_SERVICE_URL=http://progress-service:3002
       - STAR_AWARD_TIMEOUT_MS=${STAR_AWARD_TIMEOUT_MS:-3000}
+      - RESOURCE_SERVICE_URL=http://resource-service:3005
+      - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:?set MEDIA_REFERENCE_SERVICE_TOKEN}
     depends_on:
       mongo:
         condition: service_healthy
@@ -106,8 +110,10 @@ services:
       - PORT=3005
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
+      - PRIVATE_MEDIA_ROOT=/var/lib/family-growth/private-media
+      - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:?set MEDIA_REFERENCE_SERVICE_TOKEN}
     volumes:
-      - resource-data:/app/uploads
+      - resource-data:/var/lib/family-growth/private-media
     depends_on:
       - mongo
     networks:
@@ -121,6 +127,10 @@ services:
       - NODE_ENV=production
       - PORT=3006
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
+      - RESOURCE_SERVICE_URL=http://resource-service:3005
+      - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:?set MEDIA_REFERENCE_SERVICE_TOKEN}
+      - REPORT_HISTORY_AVAILABLE_FROM=2026-06-01
     depends_on:
       - mongo
     networks:

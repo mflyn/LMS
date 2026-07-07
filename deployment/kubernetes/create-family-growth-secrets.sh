@@ -9,7 +9,7 @@ if [[ "$mode" != "apply" && "$mode" != "--dry-run" ]]; then
   exit 2
 fi
 
-for variable in JWT_SECRET GATEWAY_IDENTITY_SECRET INTERNAL_SERVICE_TOKEN; do
+for variable in JWT_SECRET GATEWAY_IDENTITY_SECRET INTERNAL_SERVICE_TOKEN MEDIA_REFERENCE_SERVICE_TOKEN; do
   value="${!variable:-}"
   if [[ ${#value} -lt 32 || "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
     echo "$variable must be at least 32 characters and contain no line breaks" >&2
@@ -30,6 +30,7 @@ render_secret() {
     "jwt-secret=$JWT_SECRET" \
     "gateway-identity-secret=$GATEWAY_IDENTITY_SECRET" \
     "internal-service-token=$INTERNAL_SERVICE_TOKEN" \
+    "media-reference-service-token=$MEDIA_REFERENCE_SERVICE_TOKEN" \
     | create_secret_manifest
 }
 
@@ -38,6 +39,7 @@ validate_secret_structure() {
     'jwt-secret=dry-run-placeholder-jwt-secret' \
     'gateway-identity-secret=dry-run-placeholder-gateway-secret' \
     'internal-service-token=dry-run-placeholder-internal-token' \
+    'media-reference-service-token=dry-run-placeholder-media-reference-token' \
     | create_secret_manifest >/dev/null
   printf 'family-growth-secrets validation passed for namespace %s\n' "$namespace"
 }

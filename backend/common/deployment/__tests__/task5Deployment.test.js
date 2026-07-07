@@ -55,7 +55,8 @@ describe('Task 5 deployment contracts', () => {
     const credentials = {
       JWT_SECRET: 'dry-run-jwt-secret-value-123456789',
       GATEWAY_IDENTITY_SECRET: 'dry-run-gateway-secret-value-12345',
-      INTERNAL_SERVICE_TOKEN: 'dry-run-internal-token-value-123456'
+      INTERNAL_SERVICE_TOKEN: 'dry-run-internal-token-value-123456',
+      MEDIA_REFERENCE_SERVICE_TOKEN: 'dry-run-media-reference-token-123456'
     };
     const output = execFileSync(script, ['--dry-run'], {
       cwd: repositoryRoot,
