@@ -10,13 +10,14 @@ const behaviorRouter = require('./routes/behavior');
 const integrationRouter = require('./routes/integration');
 const performanceRouter = require('./routes/performance');
 const { createFamilyMistakesRouter } = require('./routes/familyMistakes');
+const { createWeeklyReportsRouter } = require('./routes/weeklyReports');
 
 const createApp = ({
   logger = createLogger('analytics-service'),
   io = null,
   familyMistakeMediaService = null,
   familyMistakesRouter = createFamilyMistakesRouter({ familyMistakeMediaService }),
-  weeklyReportsRouter = null
+  weeklyReportsRouter = createWeeklyReportsRouter()
 } = {}) => {
   const app = express();
   app.locals.logger = logger;

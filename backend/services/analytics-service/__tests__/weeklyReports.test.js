@@ -1,11 +1,32 @@
+const request = require('supertest');
+
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-at-least-32-characters-long';
+process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
+  || 'test-gateway-identity-secret-32-bytes-long';
+process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
+
 const WeeklyReport = require('../models/WeeklyReport');
 const { createWeeklyReportService } = require('../services/weeklyReportService');
+const { createApp } = require('../app');
 
 const {
+  CHILD_A2_ID,
   CHILD_A1_ID,
+  CHILD_B1_ID,
+  FAMILY_B_ID,
   FAMILY_A_ID,
-  parentA
+  PARENT_A_ID,
+  PARENT_B_ID,
+  childA1,
+  childA2,
+  childB1,
+  parentA,
+  parentB,
+  resetIdentityNonceStore,
+  signedHeaders
 } = require('./helpers/familyAnalyticsFixtures');
+const Family = require('../../../common/models/Family');
+const User = require('../../../common/models/User');
 
 const WEEK_START = '2026-06-22';
 const WEEK_END = '2026-06-28';
@@ -97,6 +118,110 @@ const makeTasks = ({ planned, completed, dimension = 'academic', dueDate = WEEK_
   completedAt: index < completed ? date('2026-06-24T00:00:00.000Z') : undefined,
   status: index < completed ? 'completed' : 'pending'
 }));
+
+const seedFamilies = async () => {
+  resetIdentityNonceStore();
+  await User.create([
+    {
+      _id: PARENT_A_ID,
+      username: 'parenta',
+      password: 'parent123',
+      email: 'parenta@example.com',
+      name: 'Parent A',
+      role: 'parent',
+      familyId: FAMILY_A_ID,
+      children: [CHILD_A1_ID, CHILD_A2_ID]
+    },
+    {
+      _id: PARENT_B_ID,
+      username: 'parentb',
+      password: 'parent123',
+      email: 'parentb@example.com',
+      name: 'Parent B',
+      role: 'parent',
+      familyId: FAMILY_B_ID,
+      children: [CHILD_B1_ID]
+    },
+    {
+      _id: CHILD_A1_ID,
+      username: 'childa1',
+      password: 'child123',
+      email: 'childa1@example.com',
+      name: 'Child A1',
+      role: 'student',
+      familyId: FAMILY_A_ID,
+      childProfile: { tokenVersion: 0 }
+    },
+    {
+      _id: CHILD_A2_ID,
+      username: 'childa2',
+      password: 'child123',
+      email: 'childa2@example.com',
+      name: 'Child A2',
+      role: 'student',
+      familyId: FAMILY_A_ID,
+      childProfile: { tokenVersion: 0 }
+    },
+    {
+      _id: CHILD_B1_ID,
+      username: 'childb1',
+      password: 'child123',
+      email: 'childb1@example.com',
+      name: 'Child B1',
+      role: 'student',
+      familyId: FAMILY_B_ID,
+      childProfile: { tokenVersion: 0 }
+    }
+  ]);
+  await Family.create([
+    {
+      _id: FAMILY_A_ID,
+      familyName: 'Family A',
+      timezone: 'Asia/Shanghai',
+      ownerParentId: PARENT_A_ID,
+      memberParentIds: [PARENT_A_ID],
+      childIds: [CHILD_A1_ID, CHILD_A2_ID]
+    },
+    {
+      _id: FAMILY_B_ID,
+      familyName: 'Family B',
+      timezone: 'America/Los_Angeles',
+      ownerParentId: PARENT_B_ID,
+      memberParentIds: [PARENT_B_ID],
+      childIds: [CHILD_B1_ID]
+    }
+  ]);
+};
+
+const weeklyPath = (query = {}) => {
+  const params = new URLSearchParams(query);
+  return `/api/reports/weekly${params.toString() ? `?${params.toString()}` : ''}`;
+};
+
+const seedFrozenReport = (overrides = {}) => WeeklyReport.create({
+  familyId: FAMILY_A_ID,
+  childId: CHILD_A1_ID,
+  weekStart: WEEK_START,
+  weekEnd: WEEK_END,
+  timezone: 'Asia/Shanghai',
+  statistics: {
+    recordDays: 2,
+    taskCompletionRate: 50,
+    dimensionTaskStats: {
+      moral: { planned: 0, completed: 0, durationMinutes: 0 },
+      academic: { planned: 2, completed: 1, durationMinutes: 60 },
+      physical: { planned: 0, completed: 0, durationMinutes: 0 },
+      artistic: { planned: 0, completed: 0, durationMinutes: 0 },
+      labor: { planned: 0, completed: 0, durationMinutes: 0 }
+    }
+  },
+  generatedSuggestion: '保持数学错题复习。',
+  nextWeekSuggestion: '保持数学错题复习。',
+  sourceCutoffAt: date('2026-06-28T16:00:00.000Z'),
+  generatedAt: date('2026-06-30T00:00:00.000Z'),
+  frozen: true,
+  ...overrides
+});
 
 describe('Task 6 weekly reports service', () => {
   test('TC-T6-REPORT-001 validates Monday weekStart and computes timezone-specific cutoff', async () => {
@@ -360,5 +485,114 @@ describe('Task 6 weekly reports service', () => {
     await expect(readReport(makeService({ repository })))
       .rejects.toMatchObject({ code: 'AGGREGATION_UNAVAILABLE', status: 503 });
     expect(await WeeklyReport.countDocuments()).toBe(0);
+  });
+});
+
+describe('Task 6 weekly reports routes', () => {
+  beforeEach(async () => {
+    await seedFamilies();
+  });
+
+  test('TC-T6-REPORT-016 authorizes parent and own child reads while denying cross-family and sibling access', async () => {
+    const app = createApp();
+    const parentPath = weeklyPath({ childId: CHILD_A1_ID, weekStart: WEEK_START });
+    const childPath = weeklyPath({ weekStart: WEEK_START });
+    const siblingPath = weeklyPath({ childId: CHILD_A1_ID, weekStart: WEEK_START });
+
+    const parentResponse = await request(app)
+      .get(parentPath)
+      .set(signedHeaders(parentA(), 'GET', parentPath))
+      .expect(200);
+    expect(parentResponse.body.success).toBe(true);
+    expect(parentResponse.body.data.report.childId).toBe(CHILD_A1_ID);
+
+    const childResponse = await request(app)
+      .get(childPath)
+      .set(signedHeaders(childA1(), 'GET', childPath))
+      .expect(200);
+    expect(childResponse.body.data.report.childId).toBe(CHILD_A1_ID);
+
+    const parentBDenied = await request(app)
+      .get(parentPath)
+      .set(signedHeaders(parentB(), 'GET', parentPath))
+      .expect(403);
+    expect(parentBDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
+
+    const siblingDenied = await request(app)
+      .get(siblingPath)
+      .set(signedHeaders(childA2(), 'GET', siblingPath))
+      .expect(403);
+    expect(siblingDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
+
+    const childBDenied = await request(app)
+      .get(parentPath)
+      .set(signedHeaders(childB1(), 'GET', parentPath))
+      .expect(403);
+    expect(childBDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
+  });
+
+  test('TC-T6-REPORT-017 restricts feedback to parents and rejects forbidden fields or unknown reports', async () => {
+    const app = createApp();
+    const report = await seedFrozenReport();
+    const feedbackPath = `/api/reports/weekly/${report._id}/feedback`;
+
+    const parentResponse = await request(app)
+      .patch(feedbackPath)
+      .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
+      .send({
+        parentNote: '本周复盘很认真',
+        nextWeekSuggestion: '下周继续整理错题'
+      })
+      .expect(200);
+    expect(parentResponse.body.data.report.parentNote).toBe('本周复盘很认真');
+    expect(parentResponse.body.data.report.nextWeekSuggestion).toBe('下周继续整理错题');
+
+    const childDenied = await request(app)
+      .patch(feedbackPath)
+      .set(signedHeaders(childA1(), 'PATCH', feedbackPath))
+      .send({ parentNote: 'not allowed' })
+      .expect(403);
+    expect(childDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
+
+    const forbidden = await request(app)
+      .patch(feedbackPath)
+      .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
+      .send({ statistics: { taskCompletionRate: 100 } })
+      .expect(403);
+    expect(forbidden.body.error.code).toBe('FIELD_ACCESS_DENIED');
+
+    const unknownPath = '/api/reports/weekly/665000000000000000009999/feedback';
+    const missing = await request(app)
+      .patch(unknownPath)
+      .set(signedHeaders(parentA(), 'PATCH', unknownPath))
+      .send({ parentNote: 'missing' })
+      .expect(404);
+    expect(missing.body.error.code).toBe('RESOURCE_NOT_FOUND');
+  });
+
+  test('TC-T6-REPORT-018 repeated feedback updates never mutate frozen snapshot fields', async () => {
+    const app = createApp();
+    const report = await seedFrozenReport();
+    const feedbackPath = `/api/reports/weekly/${report._id}/feedback`;
+    const original = report.toObject();
+
+    await request(app)
+      .patch(feedbackPath)
+      .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
+      .send({ parentNote: '第一次反馈' })
+      .expect(200);
+    const second = await request(app)
+      .patch(feedbackPath)
+      .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
+      .send({ parentNote: '第二次反馈', nextWeekSuggestion: '新的家庭建议' })
+      .expect(200);
+
+    expect(second.body.data.report.parentNote).toBe('第二次反馈');
+    expect(second.body.data.report.nextWeekSuggestion).toBe('新的家庭建议');
+    expect(second.body.data.report.statistics).toEqual(original.statistics);
+    expect(second.body.data.report.generatedSuggestion).toBe(original.generatedSuggestion);
+    expect(second.body.data.report.sourceCutoffAt).toBe(original.sourceCutoffAt.toISOString());
+    expect(second.body.data.report.generatedAt).toBe(original.generatedAt.toISOString());
+    expect(second.body.data.report.frozen).toBe(true);
   });
 });
