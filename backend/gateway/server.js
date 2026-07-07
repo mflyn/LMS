@@ -93,6 +93,14 @@ if (config.serviceHosts.progress) {
   });
 }
 
+if (config.serviceHosts.notification) {
+  ['/api/notifications/family', '/api/notifications/settings'].forEach((prefix) => {
+    app.use(prefix, authenticateToken, proxy(config.serviceHosts.notification, {
+      proxyReqPathResolver: (req) => `${prefix}${req.url}`
+    }));
+  });
+}
+
 // (其他之前定义的代理路由，如 progress, interaction, notification, resource, analytics)
 // ... 如果这些服务存在并且需要通过网关暴露 ...
 // app.use('/api/progress', authenticateToken, proxy(config.serviceHosts.progress, { proxyReqPathResolver: (req) => `/api/progress${req.url}` }));
