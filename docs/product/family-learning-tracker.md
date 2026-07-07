@@ -839,7 +839,7 @@
 
 ### 10.4 MVP Requirements and Acceptance Criteria
 
-`plannedTask` 表示首次计划实现该需求的任务，`gateAtTask` 表示最晚必须完成验证的任务门禁。批准后如需调整任务编号，必须在评审记录中说明原因和批准人，不能通过直接调大任务编号掩盖延期。
+`plannedTask` 表示首次计划实现该需求的任务，`gateAtTask` 表示最晚必须完成验证的任务门禁。批准后如需调整任务编号，必须在评审记录中说明原因和批准人，不能通过直接调大任务编号掩盖延期。`implementationStatus=partial` 表示该需求已在可验收子范围内有代码和测试证据，但仍有同一需求下的剩余验收项未完成，不能视为最终门禁通过。
 
 | ID | Title | plannedTask | gateAtTask | deliveryPhase | implementationStatus | Actor and precondition | Trigger | Observable acceptance, failure and authorization boundary |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -861,8 +861,8 @@
 | `FR-POINT-001` | 管理知识与能力点 | 5 | 5 | mvp | implemented | 家长拥有目标孩子 | 创建、更新或查询能力点 | 支持智育知识、体育能力、美育练习、劳动技能和德育习惯，并可按维度及科目/领域筛选。 |
 | `FR-MISTAKE-001` | 管理智育错题 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 创建、订正或查询错题 | 只接受 academic 维度；记录错因、知识点、订正和复习日期；跨家庭返回 `403`。 |
 | `FR-REPORT-001` | 生成成长周报 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 查询周一开始的自然周 | 按 5.7 固定公式汇总五育任务、GrowthLog 时长、错题和反馈；历史周不受周末后的取消或补完成影响；必需数据源失败返回 `503 AGGREGATION_UNAVAILABLE`。 |
-| `FR-MEDIA-001` | 上传和读取私有图片 | 6 | 6 | mvp | planned | 家长拥有孩子或孩子本人登录 | 上传头像、任务、错题或成长证据并请求读取 | 只接受允许的 purpose、MIME 和 10 MiB 上限；去除 EXIF；返回 mediaId 和短时效授权 URL；跨家庭和非法引用返回 `403`。 |
-| `FR-MEDIA-002` | 删除和清理私有图片 | 6 | 6 | mvp | planned | 家长拥有媒体或孩子拥有本人媒体 | 删除媒体 | 标记 deleted 后立即不可读取和新建引用；解除引用后保留 30 天清理；审计记录不包含原图内容或授权 URL。 |
+| `FR-MEDIA-001` | 上传和读取私有图片 | 6 | 6 | mvp | partial | 家长拥有孩子或孩子本人登录 | 上传头像、任务、错题或成长证据并请求读取 | 媒体上传/读取、孩子头像和 GrowthTask 附件已有子阶段证据；错题 question/answer 媒体引用、gateway Task 6 前缀和最终 Task 6 门禁仍纳入 `2026-07-07-family-growth-task6-mistakes-weekly-reports.md`。 |
+| `FR-MEDIA-002` | 删除和清理私有图片 | 6 | 6 | mvp | partial | 家长拥有媒体或孩子拥有本人媒体 | 删除媒体 | 媒体软删除、访问失效、引用保留和 30 天清理已有资源服务证据；错题媒体替换/移除与最终 Task 6 部署门禁仍纳入 `2026-07-07-family-growth-task6-mistakes-weekly-reports.md`。 |
 | `FR-REWARD-001` | 确认任务发放星星 | 5 | 5 | mvp | implemented | 家长首次确认已完成任务 | 确认任务或重试确认 | 以 taskId 幂等写入一条 1 星 earn 流水；重复确认不重复发放；暂时失败保留 pending 并返回 `503`。 |
 | `FR-REWARD-002` | 兑换家庭奖励 | 5 | 5 | mvp | implemented | 家长拥有孩子且余额充足 | 使用幂等键确认兑换 | 在事务中写 spend 流水并更新奖励；余额不足返回 `409 INSUFFICIENT_STARS`；重试不能重复扣减。 |
 | `FR-NOTIFY-001` | 派生家庭提醒 | 7 | 7 | mvp | planned | 家长拥有孩子或孩子本人登录 | 查询家庭提醒 | 返回今日任务、未完成、复习、锻炼、习惯和周报提醒；部分源失败时声明 `meta.partial` 和不可用来源。 |
@@ -875,7 +875,7 @@
 | `NFR-SEC-003` | 内部服务命令认证 | 5 | 5 | mvp | implemented | homework-service 调用星星发放命令 | 提交任务确认来源 | 内部接口不经 gateway，对至少 32 字节的独立服务令牌做恒定时间比较；缺失或错误凭据返回 `401 INVALID_SERVICE_CREDENTIAL`，普通用户 token 不能授权。 |
 | `NFR-DATA-001` | 家庭数据归属 | 3 | 4 | baseline | implemented | 创建或查询孩子数据 | 写入或读取记录 | 每条孩子数据同时保存 familyId 和 childId；列表与详情查询都包含两者的归属约束。 |
 | `NFR-DATA-002` | 星星和奖励一致性 | 5 | 5 | mvp | implemented | 确认任务或兑换奖励 | 首次执行、并发执行或重试 | 任务确认以 taskId 幂等发放一条 earn；兑换在副本集事务中检查余额、写 spend 并更新奖励；任何失败不产生重复或半完成结果。 |
-| `NFR-PRIVACY-001` | 未成年人媒体隐私 | 6 | 6 | mvp | planned | 上传、读取或删除孩子媒体 | 任一媒体操作 | 对象默认私有、授权 URL 短时效、移除 EXIF、日志脱敏、按 familyId+childId 授权，并执行软删除和 30 天清理策略。 |
+| `NFR-PRIVACY-001` | 未成年人媒体隐私 | 6 | 6 | mvp | partial | 上传、读取或删除孩子媒体 | 任一媒体操作 | 已完成媒体核心、日志脱敏、孩子头像和 GrowthTask 附件隐私证据；错题媒体隐私、Task 6 部署检查和最终门禁仍纳入 `2026-07-07-family-growth-task6-mistakes-weekly-reports.md`。 |
 | `NFR-TIME-001` | 日期与时区一致性 | 4 | 4 | baseline | implemented | 处理业务日期或事件时间 | 创建任务或按日期查询 | 业务日期使用家庭时区的 `YYYY-MM-DD`；事件时间使用 UTC ISO 8601；跨午夜和周边界结果确定。 |
 | `NFR-COMPAT-001` | 学校版兼容 | 3 | 4 | baseline | implemented | 家庭版能力上线或回滚 | 启用/停用家庭路由 | 旧学校模型和路由不被删除且不进入家庭 MVP UI；回滚可停用家庭路由而不删除两类数据。 |
 
