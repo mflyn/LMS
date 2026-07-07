@@ -11,6 +11,7 @@ const FamilyMistakeStateEvent = require('../models/FamilyMistakeStateEvent');
 const {
   FamilyMistakePatchError,
   parseFamilyMistakeInput,
+  splitMediaPatch,
   stateChangedBy
 } = require('../services/familyMistakePatch');
 
@@ -19,6 +20,11 @@ const REVIEW_STATUSES = ['pending', 'reviewed', 'mastered'];
 const LOCAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const sendError = (res, status, code, message, details) => sendFamilyError(res, status, code, message, details);
+const sendServiceError = (res, error) => {
+  if (!error || !error.status || !error.code) return false;
+  sendFamilyError(res, error.status, error.code, error.message, error.details || []);
+  return true;
+};
 
 const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -141,6 +147,7 @@ const withValidationErrors = (res, error) => {
 const createFamilyMistakesRouter = ({
   MistakeModel = FamilyMistake,
   StateEventModel = FamilyMistakeStateEvent,
+  familyMistakeMediaService = null,
   now = () => new Date()
 } = {}) => {
   const router = express.Router();
@@ -156,25 +163,40 @@ const createFamilyMistakesRouter = ({
         role: req.user.role,
         operation: 'create'
       });
-      const childId = req.user.role === 'student' ? req.user.childId || req.user.id : data.childId;
-      if (!childId || !data.subject || !data.reason) {
+      const { mistakePatch: mistakeInput, mediaPatch, hasMediaMutation } = splitMediaPatch(data);
+      if (hasMediaMutation && !familyMistakeMediaService) {
+        return sendError(res, 400, 'MEDIA_NOT_ENABLED', 'Private media is not enabled yet');
+      }
+
+      const childId = req.user.role === 'student' ? req.user.childId || req.user.id : mistakeInput.childId;
+      if (!childId || !mistakeInput.subject || !mistakeInput.reason) {
         return sendError(res, 400, 'VALIDATION_ERROR', 'childId, subject and reason are required');
       }
-      if (req.user.role === 'student' && data.childId && data.childId.toString() !== childId.toString()) {
+      if (req.user.role === 'student' && mistakeInput.childId && mistakeInput.childId.toString() !== childId.toString()) {
         return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot create a mistake for another child');
       }
 
       const access = await resolveChildAccess(req.user, childId);
       if (!access) return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this child');
 
-      delete data.childId;
-      const mistake = await MistakeModel.create({
-        ...data,
+      delete mistakeInput.childId;
+      const sourceInput = {
+        ...mistakeInput,
         familyId: access.familyId,
         childId,
         createdBy: req.user.id,
         updatedBy: req.user.id
-      });
+      };
+
+      if (hasMediaMutation) {
+        const mistake = await familyMistakeMediaService.create({
+          mistakeInput: sourceInput,
+          mediaPatch
+        });
+        return res.status(201).json({ success: true, data: { mistake: mistakeView(mistake) } });
+      }
+
+      const mistake = await MistakeModel.create(sourceInput);
 
       try {
         await StateEventModel.create({
@@ -272,14 +294,19 @@ const createFamilyMistakesRouter = ({
       if (!isObjectId(req.params.mistakeId)) {
         return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid mistakeId');
       }
-      const mistake = await MistakeModel.findById(req.params.mistakeId);
+      const mistake = await MistakeModel.findById(req.params.mistakeId)
+        .select('+mediaReferenceState +mediaBindingOperationId +mediaPendingPatch');
       if (!mistake) return sendError(res, 404, 'RESOURCE_NOT_FOUND', 'Mistake not found');
       const access = await resolveChildAccess(req.user, mistake.childId.toString());
       if (!access || access.familyId.toString() !== mistake.familyId.toString()) {
         return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this mistake');
       }
-      return res.json({ success: true, data: { mistake: mistakeView(mistake) } });
+      const viewSource = familyMistakeMediaService && mistake.mediaReferenceState === 'pending'
+        ? await familyMistakeMediaService.resume(mistake._id.toString())
+        : mistake;
+      return res.json({ success: true, data: { mistake: mistakeView(viewSource) } });
     } catch (error) {
+      if (sendServiceError(res, error)) return undefined;
       return sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error');
     }
   });
@@ -301,9 +328,22 @@ const createFamilyMistakesRouter = ({
         role: req.user.role,
         operation: 'patch'
       });
-      const changedState = stateChangedBy(data);
-      Object.keys(data).forEach((field) => {
-        mistake[field] = data[field];
+      const { mistakePatch, mediaPatch, hasMediaMutation } = splitMediaPatch(data);
+      if (hasMediaMutation && !familyMistakeMediaService) {
+        return sendError(res, 400, 'MEDIA_NOT_ENABLED', 'Private media is not enabled yet');
+      }
+      if (hasMediaMutation) {
+        const updatedMistake = await familyMistakeMediaService.mutate({
+          mistake,
+          mistakePatch,
+          mediaPatch
+        });
+        return res.json({ success: true, data: { mistake: mistakeView(updatedMistake) } });
+      }
+
+      const changedState = stateChangedBy(mistakePatch);
+      Object.keys(mistakePatch).forEach((field) => {
+        mistake[field] = mistakePatch[field];
       });
       mistake.updatedBy = req.user.id;
       await mistake.validate({ validateModifiedOnly: true });
@@ -335,6 +375,7 @@ const createFamilyMistakesRouter = ({
 
       return res.json({ success: true, data: { mistake: mistakeView(mistake) } });
     } catch (error) {
+      if (sendServiceError(res, error)) return undefined;
       const handled = withValidationErrors(res, error);
       if (handled) return handled;
       return sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error');

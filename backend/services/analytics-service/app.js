@@ -14,7 +14,8 @@ const { createFamilyMistakesRouter } = require('./routes/familyMistakes');
 const createApp = ({
   logger = createLogger('analytics-service'),
   io = null,
-  familyMistakesRouter = createFamilyMistakesRouter(),
+  familyMistakeMediaService = null,
+  familyMistakesRouter = createFamilyMistakesRouter({ familyMistakeMediaService }),
   weeklyReportsRouter = null
 } = {}) => {
   const app = express();

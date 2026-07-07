@@ -40,6 +40,7 @@ const CHILD_PATCH_FIELDS = [
 
 const STATE_FIELDS = ['reviewed', 'mastered', 'reviewReminderDate'];
 const MEDIA_FIELDS = ['questionMediaId', 'childAnswerMediaId'];
+const MEDIA_ID_PATTERN = /^[0-9a-f]{24}$/i;
 
 class FamilyMistakePatchError extends Error {
   constructor(code, message, status = 400) {
@@ -83,6 +84,33 @@ const parseFamilyMistakeInput = ({ body = {}, role, operation }) => {
   return data;
 };
 
+const assertValidMediaPatch = (mediaPatch) => {
+  Object.entries(mediaPatch).forEach(([field, value]) => {
+    if (value !== null && value !== undefined
+      && (typeof value !== 'string' || !MEDIA_ID_PATTERN.test(value))) {
+      throw new FamilyMistakePatchError('VALIDATION_ERROR', `Invalid ${field}`, 400);
+    }
+  });
+};
+
+const splitMediaPatch = (data) => {
+  const mediaPatch = {};
+  const mistakePatch = {};
+  Object.entries(data).forEach(([field, value]) => {
+    if (MEDIA_FIELDS.includes(field)) {
+      mediaPatch[field] = value;
+    } else {
+      mistakePatch[field] = value;
+    }
+  });
+  assertValidMediaPatch(mediaPatch);
+  return {
+    mistakePatch,
+    mediaPatch,
+    hasMediaMutation: Object.keys(mediaPatch).length > 0
+  };
+};
+
 const stateChangedBy = (data) => STATE_FIELDS.some((field) => hasOwn(data, field));
 
 const mediaPatchEntriesFor = (data) => MEDIA_FIELDS
@@ -99,5 +127,6 @@ module.exports = {
   STATE_FIELDS,
   mediaPatchEntriesFor,
   parseFamilyMistakeInput,
+  splitMediaPatch,
   stateChangedBy
 };
