@@ -10,7 +10,12 @@ const behaviorRouter = require('./routes/behavior');
 const integrationRouter = require('./routes/integration');
 const performanceRouter = require('./routes/performance');
 
-const createApp = ({ logger = createLogger('analytics-service'), io = null } = {}) => {
+const createApp = ({
+  logger = createLogger('analytics-service'),
+  io = null,
+  familyMistakesRouter = null,
+  weeklyReportsRouter = null
+} = {}) => {
   const app = express();
   app.locals.logger = logger;
   app.locals.serviceName = 'analytics-service';
@@ -19,6 +24,8 @@ const createApp = ({ logger = createLogger('analytics-service'), io = null } = {
   app.use(cors());
   app.use(express.json());
   app.use(requestTracker);
+  if (familyMistakesRouter) app.use('/api/mistakes', familyMistakesRouter);
+  if (weeklyReportsRouter) app.use('/api/reports/weekly', weeklyReportsRouter);
   app.use('/api/analytics/progress', progressRouter);
   app.use('/api/analytics/reports', reportsRouter);
   app.use('/api/analytics/trends', trendsRouter);

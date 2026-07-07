@@ -3,32 +3,41 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
   || 'test-gateway-identity-secret-32-bytes-long';
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
+const express = require('express');
+const request = require('supertest');
+
 const mockConnect = jest.fn().mockResolvedValue(undefined);
 const mockListen = jest.fn();
 const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-const mockApp = { locals: { logger: mockLogger } };
-mockApp.createApp = jest.fn(() => mockApp);
 
 jest.mock('mongoose', () => {
   const actual = jest.requireActual('mongoose');
   actual.connect = mockConnect;
   return actual;
 });
-jest.mock('http', () => ({
-  createServer: jest.fn(() => ({ listen: mockListen, on: jest.fn() }))
-}));
 jest.mock('socket.io', () => jest.fn(() => ({ on: jest.fn() })), { virtual: true });
-jest.mock('fs', () => ({ existsSync: jest.fn(() => true), mkdirSync: jest.fn() }));
 jest.mock('../../../common/config/logger', () => ({ createLogger: jest.fn(() => mockLogger) }));
-jest.mock('../../../common/middleware/errorHandler', () => ({
-  AppError: class AppError extends Error {},
-  catchAsync: (handler) => handler,
-  errorHandler: jest.fn((error, req, res, next) => next(error)),
-  requestTracker: jest.fn((req, res, next) => next())
-}));
-jest.mock('../app', () => mockApp, { virtual: true });
 
 describe('analytics-service Task 6 startup contract', () => {
+  test('TC-T6-REG-001 mounts injected Task 6 routers without import-time IO', async () => {
+    const appModule = jest.requireActual('../app');
+    const familyMistakesRouter = express.Router();
+    const weeklyReportsRouter = express.Router();
+    familyMistakesRouter.get('/probe', (req, res) => res.json({ ok: 'mistakes' }));
+    weeklyReportsRouter.get('/probe', (req, res) => res.json({ ok: 'reports' }));
+
+    const app = appModule.createApp({
+      logger: mockLogger,
+      familyMistakesRouter,
+      weeklyReportsRouter
+    });
+
+    await request(app).get('/api/mistakes/probe').expect(200, { ok: 'mistakes' });
+    await request(app).get('/api/reports/weekly/probe').expect(200, { ok: 'reports' });
+    expect(mockConnect).not.toHaveBeenCalled();
+    expect(mockListen).not.toHaveBeenCalled();
+  });
+
   test('actual app factory constructs without database, socket, or listener startup', () => {
     const appModule = jest.requireActual('../app');
 
