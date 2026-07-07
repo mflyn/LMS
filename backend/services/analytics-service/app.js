@@ -9,11 +9,12 @@ const longTermTrendsRouter = require('./routes/long-term-trends');
 const behaviorRouter = require('./routes/behavior');
 const integrationRouter = require('./routes/integration');
 const performanceRouter = require('./routes/performance');
+const { createFamilyMistakesRouter } = require('./routes/familyMistakes');
 
 const createApp = ({
   logger = createLogger('analytics-service'),
   io = null,
-  familyMistakesRouter = null,
+  familyMistakesRouter = createFamilyMistakesRouter(),
   weeklyReportsRouter = null
 } = {}) => {
   const app = express();
