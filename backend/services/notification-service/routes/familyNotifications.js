@@ -3,8 +3,12 @@ const mongoose = require('mongoose');
 
 const ReminderSettings = require('../models/ReminderSettings');
 const Family = require('../../../common/models/Family');
+const User = require('../../../common/models/User');
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { sendFamilyError } = require('../../../common/utils/familyResponse');
+const { LOCAL_DATE_PATTERN, formatLocalDate } = require('../../../common/utils/familyDate');
+const { deriveFamilyReminders } = require('../services/familyReminderService');
+const { createFamilyNotificationSourceRepository } = require('../services/familyNotificationSourceRepository');
 
 const SWITCH_FIELDS = [
   'taskReminderEnabled',
@@ -46,6 +50,13 @@ const findParentFamily = (parentId) => Family.findOne({
   ]
 });
 
+const assertValidLocalDate = (localDate) => {
+  if (!LOCAL_DATE_PATTERN.test(localDate || '')) return false;
+  const [year, month, day] = localDate.split('-').map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return parsed.toISOString().slice(0, 10) === localDate;
+};
+
 const resolveFamilyId = async (user, requestedFamilyId) => {
   if (!user || !['parent', 'student'].includes(user.role)) return null;
 
@@ -64,6 +75,34 @@ const resolveFamilyId = async (user, requestedFamilyId) => {
   }
 
   return identityFamilyId.toString();
+};
+
+const resolveChildAccess = async (user, childId) => {
+  if (!user || !mongoose.Types.ObjectId.isValid(childId)) return null;
+
+  if (user.role === 'student') {
+    const identityChildId = (user.childId || user.id || '').toString();
+    if (identityChildId !== childId.toString()) return null;
+    const child = await User.findOne({ _id: childId, role: 'student' });
+    if (!child || !child.familyId) return null;
+    const family = await Family.findOne({ _id: child.familyId, childIds: child._id });
+    return family ? { family, child } : null;
+  }
+
+  if (user.role === 'parent') {
+    const family = await findParentFamily(user.id);
+    if (!family || !family.childIds.some((id) => id.toString() === childId.toString())) {
+      return null;
+    }
+    const child = await User.findOne({
+      _id: childId,
+      role: 'student',
+      familyId: family._id
+    });
+    return child ? { family, child } : null;
+  }
+
+  return null;
 };
 
 const getOrCreateSettings = async (SettingsModel, familyId) => {
@@ -124,9 +163,49 @@ const parsePatch = (body) => {
 };
 
 const createFamilyNotificationsRouter = ({
-  ReminderSettingsModel = ReminderSettings
+  ReminderSettingsModel = ReminderSettings,
+  sourceRepository = createFamilyNotificationSourceRepository(),
+  now = () => new Date()
 } = {}) => {
   const router = express.Router();
+
+  router.get('/family', authenticateGateway, async (req, res) => {
+    try {
+      const childId = req.query.childId;
+      if (!childId) {
+        return sendError(res, 400, 'VALIDATION_ERROR', 'childId is required');
+      }
+      if (req.query.date && !assertValidLocalDate(req.query.date)) {
+        return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid date');
+      }
+
+      const access = await resolveChildAccess(req.user, childId);
+      if (!access) {
+        return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this child reminders');
+      }
+
+      const familyId = access.family._id.toString();
+      const settings = await getOrCreateSettings(ReminderSettingsModel, familyId);
+      const timezone = access.family.timezone || 'Asia/Shanghai';
+      const localDate = req.query.date || formatLocalDate(now(), timezone);
+      const result = await deriveFamilyReminders({
+        childId: access.child._id.toString(),
+        familyId,
+        settings,
+        sourceRepository,
+        timezone,
+        date: localDate,
+        now
+      });
+
+      return res.json({ success: true, data: result });
+    } catch (error) {
+      if (error.name === 'ValidationError' || error.name === 'CastError') {
+        return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+      }
+      return sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error');
+    }
+  });
 
   router.get('/settings', authenticateGateway, async (req, res) => {
     try {

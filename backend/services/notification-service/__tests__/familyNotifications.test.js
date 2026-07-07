@@ -10,6 +10,7 @@ const request = require('supertest');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const User = require('../../../common/models/User');
 const Family = require('../../../common/models/Family');
+const { errorHandler } = require('../../../common/middleware/errorHandler');
 const {
   createIdentityHeaders,
   resetIdentityNonceStore
@@ -39,7 +40,7 @@ const signedHeaders = (user, method, originalUrl) => createIdentityHeaders({
   secret: process.env.GATEWAY_IDENTITY_SECRET
 });
 
-const createFamilyFixture = async (label) => {
+const createFamilyFixture = async (label, overrides = {}) => {
   const fixtureId = unique('f').slice(0, 9);
   const parent = await User.create({
     username: `p${fixtureId}`,
@@ -51,6 +52,7 @@ const createFamilyFixture = async (label) => {
 
   const family = await Family.create({
     familyName: `${label}家庭`,
+    timezone: overrides.timezone || 'Asia/Shanghai',
     ownerParentId: parent._id,
     memberParentIds: [parent._id],
     childIds: []
@@ -79,12 +81,21 @@ const createFamilyFixture = async (label) => {
   return { parent, family, child };
 };
 
+const buildSourceRepository = (overrides = {}) => ({
+  getTasks: jest.fn().mockResolvedValue([]),
+  getMistakes: jest.fn().mockResolvedValue([]),
+  getLogs: jest.fn().mockResolvedValue([]),
+  hasWeeklyReport: jest.fn().mockResolvedValue(true),
+  ...overrides
+});
+
 const buildFamilyNotificationApp = (routerOptions = {}) => {
   const { createFamilyNotificationsRouter } = require('../routes/familyNotifications');
   const app = express();
   app.locals.logger = silentLogger;
   app.use(express.json());
   app.use('/api/notifications', createFamilyNotificationsRouter(routerOptions));
+  app.use(errorHandler);
   return app;
 };
 
@@ -273,5 +284,155 @@ describe('Task 7 family notifications', () => {
       .set(signedHeaders(familyA.child, 'GET', `/api/notifications/settings?familyId=${familyB.family._id}`));
     expect(readOther.status).toBe(403);
     expect(readOther.body.error.code).toBe('CHILD_ACCESS_DENIED');
+  });
+
+  test('TC-T7-NOTIFY-001/002/003/004/006 derives task, overdue, mistake, dimension and weekly reminders', async () => {
+    const { parent, child } = await createFamilyFixture('notifyAll');
+    const settingsApp = buildFamilyNotificationApp();
+    await request(settingsApp)
+      .patch('/api/notifications/settings')
+      .set(signedHeaders(parent, 'PATCH', '/api/notifications/settings'))
+      .send({ weeklyReportDay: 2 });
+    const sourceRepository = buildSourceRepository({
+      getTasks: jest.fn().mockResolvedValue([
+        { taskId: 'task-today-1', childId: child._id.toString(), dimension: 'academic', title: '数学练习', dueDate: '2026-07-07', status: 'pending' },
+        { taskId: 'task-overdue-1', childId: child._id.toString(), dimension: 'academic', title: '英语背诵', dueDate: '2026-07-06', status: 'pending' }
+      ]),
+      getMistakes: jest.fn().mockResolvedValue([
+        { mistakeId: 'mistake-1', childId: child._id.toString(), subject: '数学', knowledgePoint: '分数', reviewReminderDate: '2026-07-07', mastered: false }
+      ]),
+      getLogs: jest.fn().mockResolvedValue([]),
+      hasWeeklyReport: jest.fn().mockResolvedValue(false)
+    });
+    const app = buildFamilyNotificationApp({ sourceRepository });
+    const path = `/api/notifications/family?childId=${child._id}&date=2026-07-07`;
+
+    const response = await request(app)
+      .get(path)
+      .set(signedHeaders(parent, 'GET', path));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.items.map((item) => item.type)).toEqual([
+      'task_today',
+      'task_overdue',
+      'mistake_review',
+      'dimension_physical',
+      'dimension_moral',
+      'dimension_labor',
+      'weekly_report'
+    ]);
+    expect(response.body.data.meta).toEqual(expect.objectContaining({
+      localDate: '2026-07-07',
+      partial: false,
+      unavailableSources: []
+    }));
+  });
+
+  test('TC-T7-NOTIFY-005/007/008 suppresses completed dimensions, dedupes sources and honors disabled categories', async () => {
+    const { parent, child } = await createFamilyFixture('notifyFiltered');
+    const settingsApp = buildFamilyNotificationApp();
+    await request(settingsApp)
+      .patch('/api/notifications/settings')
+      .set(signedHeaders(parent, 'PATCH', '/api/notifications/settings'))
+      .send({
+        overdueReminderEnabled: false,
+        mistakeReviewReminderEnabled: false,
+        weeklyReportReminderEnabled: false
+      });
+
+    const sourceRepository = buildSourceRepository({
+      getTasks: jest.fn().mockResolvedValue([
+        { taskId: 'task-dupe', childId: child._id.toString(), dimension: 'physical', title: '跳绳', dueDate: '2026-07-07', status: 'pending' },
+        { taskId: 'task-dupe', childId: child._id.toString(), dimension: 'physical', title: '跳绳重复', dueDate: '2026-07-07', status: 'pending' },
+        { taskId: 'task-overdue-disabled', childId: child._id.toString(), dimension: 'academic', title: '禁用逾期', dueDate: '2026-07-06', status: 'pending' }
+      ]),
+      getMistakes: jest.fn().mockResolvedValue([
+        { mistakeId: 'mistake-disabled', childId: child._id.toString(), reviewReminderDate: '2026-07-07', mastered: false }
+      ]),
+      getLogs: jest.fn().mockResolvedValue([
+        { logId: 'labor-log', childId: child._id.toString(), dimension: 'labor', date: '2026-07-07' }
+      ]),
+      hasWeeklyReport: jest.fn().mockResolvedValue(false)
+    });
+    const app = buildFamilyNotificationApp({ sourceRepository });
+    const path = `/api/notifications/family?childId=${child._id}&date=2026-07-07`;
+
+    const response = await request(app)
+      .get(path)
+      .set(signedHeaders(parent, 'GET', path));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.items.map((item) => item.type)).toEqual([
+      'task_today',
+      'dimension_moral'
+    ]);
+    expect(response.body.data.items.filter((item) => item.sourceId === 'task-dupe')).toHaveLength(1);
+  });
+
+  test('TC-T7-NOTIFY-009 derives omitted date from family timezone', async () => {
+    const { parent, child } = await createFamilyFixture('notifyTimezone', { timezone: 'America/Los_Angeles' });
+    const sourceRepository = buildSourceRepository();
+    const app = buildFamilyNotificationApp({
+      sourceRepository,
+      now: () => new Date('2026-07-07T06:30:00.000Z')
+    });
+    const path = `/api/notifications/family?childId=${child._id}`;
+
+    const response = await request(app)
+      .get(path)
+      .set(signedHeaders(parent, 'GET', path));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.meta.localDate).toBe('2026-07-06');
+  });
+
+  test('TC-T7-NOTIFY-010 denies sibling, other-family and anonymous access', async () => {
+    const familyA = await createFamilyFixture('notifyAccessA');
+    const familyB = await createFamilyFixture('notifyAccessB');
+    const sourceRepository = buildSourceRepository();
+    const app = buildFamilyNotificationApp({ sourceRepository });
+    const otherChildPath = `/api/notifications/family?childId=${familyB.child._id}&date=2026-07-07`;
+
+    const parentOther = await request(app)
+      .get(otherChildPath)
+      .set(signedHeaders(familyA.parent, 'GET', otherChildPath));
+    expect(parentOther.status).toBe(403);
+    expect(parentOther.body.error.code).toBe('CHILD_ACCESS_DENIED');
+
+    const childOther = await request(app)
+      .get(otherChildPath)
+      .set(signedHeaders(familyA.child, 'GET', otherChildPath));
+    expect(childOther.status).toBe(403);
+    expect(childOther.body.error.code).toBe('CHILD_ACCESS_DENIED');
+
+    const anonymous = await request(app).get(otherChildPath);
+    expect(anonymous.status).toBe(401);
+    expect(anonymous.body.error.code).toBe('INVALID_IDENTITY_ENVELOPE');
+  });
+
+  test('TC-T7-NOTIFY-011/012 returns partial reminders without leaking source failure details', async () => {
+    const { parent, child } = await createFamilyFixture('notifyPartial');
+    const sourceRepository = buildSourceRepository({
+      getTasks: jest.fn().mockResolvedValue([
+        { taskId: 'task-today', childId: child._id.toString(), dimension: 'academic', title: '数学练习', dueDate: '2026-07-07', status: 'pending' }
+      ]),
+      getMistakes: jest.fn().mockRejectedValue(new Error('database password leaked in stack')),
+      getLogs: jest.fn().mockResolvedValue([]),
+      hasWeeklyReport: jest.fn().mockResolvedValue(true)
+    });
+    const app = buildFamilyNotificationApp({ sourceRepository });
+    const path = `/api/notifications/family?childId=${child._id}&date=2026-07-07`;
+
+    const response = await request(app)
+      .get(path)
+      .set(signedHeaders(parent, 'GET', path));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.items.map((item) => item.type)).toContain('task_today');
+    expect(response.body.data.meta).toEqual(expect.objectContaining({
+      partial: true,
+      unavailableSources: ['mistakes']
+    }));
+    expect(JSON.stringify(response.body)).not.toContain('database password');
   });
 });
