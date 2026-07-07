@@ -19,9 +19,14 @@ const {
 } = require('./helpers/familyAnalyticsFixtures');
 const { createApp } = require('../app');
 const FamilyMistake = require('../models/FamilyMistake');
+const FamilyMistakeStateEvent = require('../models/FamilyMistakeStateEvent');
+const { createFamilyMistakeMediaService } = require('../services/familyMistakeMediaService');
 
 const QUESTION_MEDIA_A1 = 'aaaaaaaaaaaaaaaaaaaaaaaa';
 const ANSWER_MEDIA_A1 = 'bbbbbbbbbbbbbbbbbbbbbbbb';
+const QUESTION_MEDIA_A1_REPLACEMENT = 'cccccccccccccccccccccccc';
+const OPERATION_A = '11111111-1111-4111-8111-111111111111';
+const OPERATION_B = '22222222-2222-4222-8222-222222222222';
 
 const mistakePath = (suffix = '') => `/api/mistakes${suffix}`;
 
@@ -188,5 +193,255 @@ describe('Task 6 family mistake media route contract', () => {
       expect(response.status).toBeGreaterThanOrEqual(400);
       expect(familyMistakeMediaService.create).not.toHaveBeenCalled();
     }
+  });
+});
+
+describe('Task 6 family mistake media owner-state service', () => {
+  test('TC-T6-MISTAKE-010 create commit failure leaves a resumable pending owner', async () => {
+    const mediaReferenceClient = {
+      prepare: jest.fn().mockResolvedValue([
+        { mediaId: QUESTION_MEDIA_A1, field: 'questionMediaId', state: 'prepared' }
+      ]),
+      commit: jest.fn()
+        .mockRejectedValueOnce(Object.assign(new Error('remote timeout'), {
+          status: 503,
+          code: 'MEDIA_REFERENCE_PENDING',
+          details: []
+        }))
+        .mockResolvedValueOnce([
+          { mediaId: QUESTION_MEDIA_A1, field: 'questionMediaId', state: 'bound' }
+        ]),
+      unbind: jest.fn()
+    };
+    const service = createFamilyMistakeMediaService({
+      FamilyMistakeModel: FamilyMistake,
+      FamilyMistakeStateEventModel: FamilyMistakeStateEvent,
+      mediaReferenceClient,
+      randomUUID: () => OPERATION_A
+    });
+    const app = createApp({ familyMistakeMediaService: service });
+    const path = mistakePath();
+
+    const createResponse = await request(app)
+      .post(path)
+      .set(signedHeaders(parentA(), 'POST', path))
+      .send(basePayload({ questionMediaId: QUESTION_MEDIA_A1 }));
+
+    expect(createResponse.status).toBe(503);
+    expect(createResponse.body.error).toMatchObject({
+      code: 'MEDIA_REFERENCE_PENDING',
+      details: { resourceId: expect.any(String) }
+    });
+    const pending = await FamilyMistake.findById(createResponse.body.error.details.resourceId)
+      .select('+mediaReferenceState +mediaBindingOperationId +mediaPendingPatch');
+    expect(pending.mediaReferenceState).toBe('pending');
+    expect(pending.questionMediaId).toBeUndefined();
+
+    const detailPath = mistakePath(`/${pending._id}`);
+    const detailResponse = await request(app)
+      .get(detailPath)
+      .set(signedHeaders(parentA(), 'GET', detailPath));
+
+    expect(detailResponse.status).toBe(200);
+    expect(detailResponse.body.data.mistake.questionMediaId).toBe(QUESTION_MEDIA_A1);
+    expect(await FamilyMistakeStateEvent.countDocuments({ mistakeId: pending._id })).toBe(1);
+  });
+
+  test('TC-T6-MISTAKE-009 stable media rejection rolls back the created mistake', async () => {
+    const mediaReferenceClient = {
+      prepare: jest.fn().mockRejectedValue(Object.assign(new Error('Media scope does not match'), {
+        status: 403,
+        code: 'CHILD_ACCESS_DENIED',
+        details: [{ field: 'questionMediaId' }]
+      })),
+      commit: jest.fn(),
+      unbind: jest.fn()
+    };
+    const service = createFamilyMistakeMediaService({
+      FamilyMistakeModel: FamilyMistake,
+      FamilyMistakeStateEventModel: FamilyMistakeStateEvent,
+      mediaReferenceClient,
+      randomUUID: () => OPERATION_A
+    });
+    const app = createApp({ familyMistakeMediaService: service });
+    const path = mistakePath();
+
+    const response = await request(app)
+      .post(path)
+      .set(signedHeaders(parentA(), 'POST', path))
+      .send(basePayload({ questionMediaId: QUESTION_MEDIA_A1 }));
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toMatchObject({
+      code: 'CHILD_ACCESS_DENIED',
+      details: [{ field: 'questionMediaId' }]
+    });
+    expect(await FamilyMistake.countDocuments()).toBe(0);
+    expect(await FamilyMistakeStateEvent.countDocuments()).toBe(0);
+    expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
+  });
+
+  test('TC-T6-MISTAKE-011 replaces and removes question media with checked unbind', async () => {
+    const boundMistake = await FamilyMistake.create({
+      ...basePayload({ questionMediaId: QUESTION_MEDIA_A1 }),
+      familyId: FAMILY_A_ID,
+      createdBy: PARENT_A_ID,
+      updatedBy: PARENT_A_ID,
+      mediaReferenceState: 'bound',
+      mediaReferenceBindings: [{
+        field: 'questionMediaId',
+        mediaId: QUESTION_MEDIA_A1,
+        bindingOperationId: OPERATION_A
+      }]
+    });
+    const mediaReferenceClient = {
+      prepare: jest.fn().mockResolvedValue([
+        { mediaId: QUESTION_MEDIA_A1_REPLACEMENT, field: 'questionMediaId', state: 'prepared' }
+      ]),
+      commit: jest.fn().mockResolvedValue([
+        { mediaId: QUESTION_MEDIA_A1_REPLACEMENT, field: 'questionMediaId', state: 'bound' }
+      ]),
+      unbind: jest.fn().mockResolvedValue([
+        { mediaId: QUESTION_MEDIA_A1, field: 'questionMediaId', state: 'released' }
+      ])
+    };
+    const service = createFamilyMistakeMediaService({
+      FamilyMistakeModel: FamilyMistake,
+      FamilyMistakeStateEventModel: FamilyMistakeStateEvent,
+      mediaReferenceClient,
+      randomUUID: () => OPERATION_B
+    });
+    const app = createApp({ familyMistakeMediaService: service });
+    const patchPath = mistakePath(`/${boundMistake._id}`);
+
+    const replaceResponse = await request(app)
+      .patch(patchPath)
+      .set(signedHeaders(parentA(), 'PATCH', patchPath))
+      .send({ questionMediaId: QUESTION_MEDIA_A1_REPLACEMENT });
+
+    expect(replaceResponse.status).toBe(200);
+    expect(replaceResponse.body.data.mistake.questionMediaId).toBe(QUESTION_MEDIA_A1_REPLACEMENT);
+    expect(mediaReferenceClient.prepare).toHaveBeenCalledWith(expect.objectContaining({
+      operationId: OPERATION_B,
+      references: [{ mediaId: QUESTION_MEDIA_A1_REPLACEMENT, field: 'questionMediaId' }]
+    }));
+    expect(mediaReferenceClient.unbind).toHaveBeenCalledWith(expect.objectContaining({
+      references: [{
+        mediaId: QUESTION_MEDIA_A1,
+        field: 'questionMediaId',
+        bindingOperationId: OPERATION_A
+      }]
+    }));
+
+    mediaReferenceClient.prepare.mockClear();
+    mediaReferenceClient.commit.mockClear();
+    mediaReferenceClient.unbind.mockResolvedValueOnce([
+      { mediaId: QUESTION_MEDIA_A1_REPLACEMENT, field: 'questionMediaId', state: 'released' }
+    ]);
+
+    const removeResponse = await request(app)
+      .patch(patchPath)
+      .set(signedHeaders(parentA(), 'PATCH', patchPath))
+      .send({ questionMediaId: null });
+
+    expect(removeResponse.status).toBe(200);
+    expect(removeResponse.body.data.mistake.questionMediaId).toBeUndefined();
+    expect(mediaReferenceClient.prepare).not.toHaveBeenCalled();
+    expect(mediaReferenceClient.commit).not.toHaveBeenCalled();
+    expect(mediaReferenceClient.unbind).toHaveBeenLastCalledWith(expect.objectContaining({
+      references: [{
+        mediaId: QUESTION_MEDIA_A1_REPLACEMENT,
+        field: 'questionMediaId',
+        bindingOperationId: OPERATION_B
+      }]
+    }));
+  });
+
+  test('TC-T6-MISTAKE-010 patch commit failure leaves a resumable pending owner', async () => {
+    const boundMistake = await FamilyMistake.create({
+      ...basePayload({ questionMediaId: QUESTION_MEDIA_A1 }),
+      familyId: FAMILY_A_ID,
+      createdBy: PARENT_A_ID,
+      updatedBy: PARENT_A_ID,
+      mediaReferenceState: 'bound',
+      mediaReferenceBindings: [{
+        field: 'questionMediaId',
+        mediaId: QUESTION_MEDIA_A1,
+        bindingOperationId: OPERATION_A
+      }]
+    });
+    const mediaReferenceClient = {
+      prepare: jest.fn().mockResolvedValue([
+        { mediaId: QUESTION_MEDIA_A1_REPLACEMENT, field: 'questionMediaId', state: 'prepared' }
+      ]),
+      commit: jest.fn()
+        .mockRejectedValueOnce(Object.assign(new Error('remote timeout'), {
+          status: 503,
+          code: 'MEDIA_REFERENCE_PENDING',
+          details: []
+        }))
+        .mockResolvedValueOnce([
+          { mediaId: QUESTION_MEDIA_A1_REPLACEMENT, field: 'questionMediaId', state: 'bound' }
+        ]),
+      unbind: jest.fn().mockResolvedValue([
+        { mediaId: QUESTION_MEDIA_A1, field: 'questionMediaId', state: 'released' }
+      ])
+    };
+    const service = createFamilyMistakeMediaService({
+      FamilyMistakeModel: FamilyMistake,
+      FamilyMistakeStateEventModel: FamilyMistakeStateEvent,
+      mediaReferenceClient,
+      randomUUID: () => OPERATION_B
+    });
+    const app = createApp({ familyMistakeMediaService: service });
+    const patchPath = mistakePath(`/${boundMistake._id}`);
+
+    const patchResponse = await request(app)
+      .patch(patchPath)
+      .set(signedHeaders(parentA(), 'PATCH', patchPath))
+      .send({ questionMediaId: QUESTION_MEDIA_A1_REPLACEMENT });
+
+    expect(patchResponse.status).toBe(503);
+    expect(patchResponse.body.error).toMatchObject({
+      code: 'MEDIA_REFERENCE_PENDING',
+      details: { resourceId: boundMistake._id.toString() }
+    });
+    const pending = await FamilyMistake.findById(boundMistake._id)
+      .select('+mediaReferenceState +mediaBindingOperationId +mediaPendingPatch +mediaPreviousBindings');
+    expect(pending.mediaReferenceState).toBe('pending');
+    expect(pending.mediaBindingOperationId).toBe(OPERATION_B);
+    expect(pending.mediaPendingPatch.map((entry) => ({
+      path: entry.path,
+      value: entry.value && entry.value.toString()
+    }))).toEqual([
+      { path: 'questionMediaId', value: QUESTION_MEDIA_A1_REPLACEMENT },
+      { path: 'childAnswerMediaId', value: null }
+    ]);
+    expect(pending.mediaPreviousBindings.map((binding) => ({
+      field: binding.field,
+      mediaId: binding.mediaId.toString(),
+      bindingOperationId: binding.bindingOperationId
+    }))).toEqual([
+      {
+        field: 'questionMediaId',
+        mediaId: QUESTION_MEDIA_A1,
+        bindingOperationId: OPERATION_A
+      }
+    ]);
+
+    const detailPath = mistakePath(`/${boundMistake._id}`);
+    const detailResponse = await request(app)
+      .get(detailPath)
+      .set(signedHeaders(parentA(), 'GET', detailPath));
+
+    expect(detailResponse.status).toBe(200);
+    expect(detailResponse.body.data.mistake.questionMediaId).toBe(QUESTION_MEDIA_A1_REPLACEMENT);
+    expect(mediaReferenceClient.unbind).toHaveBeenCalledWith(expect.objectContaining({
+      references: [{
+        mediaId: QUESTION_MEDIA_A1,
+        field: 'questionMediaId',
+        bindingOperationId: OPERATION_A
+      }]
+    }));
   });
 });

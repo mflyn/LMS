@@ -1,7 +1,12 @@
 const http = require('http');
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const appModule = require('./app');
 const { createLogger } = require('../../common/config/logger');
+const { createMediaReferenceClient } = require('../../common/services/mediaReferenceClient');
+const FamilyMistake = require('./models/FamilyMistake');
+const FamilyMistakeStateEvent = require('./models/FamilyMistakeStateEvent');
+const { createFamilyMistakeMediaService } = require('./services/familyMistakeMediaService');
 
 const logger = createLogger('analytics-service');
 const createApp = appModule.createApp;
@@ -44,21 +49,45 @@ const createSocketServer = (server, socketLogger = logger) => {
   return io;
 };
 
+const createTask6MediaDependencies = ({
+  env = process.env,
+  mediaReferenceClientFactory = createMediaReferenceClient,
+  randomUUID = crypto.randomUUID
+} = {}) => {
+  const mediaReferenceClient = mediaReferenceClientFactory({
+    resourceServiceUrl: env.RESOURCE_SERVICE_URL,
+    serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN,
+    timeout: Number(env.MEDIA_REFERENCE_TIMEOUT_MS || 3000)
+  });
+
+  return {
+    familyMistakeMediaService: createFamilyMistakeMediaService({
+      FamilyMistakeModel: FamilyMistake,
+      FamilyMistakeStateEventModel: FamilyMistakeStateEvent,
+      mediaReferenceClient,
+      randomUUID
+    })
+  };
+};
+
 const startServer = async ({
   port = Number(process.env.PORT || 3006),
   connect = connectDatabase,
   createHttpServer = http.createServer,
-  createIo = createSocketServer
+  createIo = createSocketServer,
+  createTask6Dependencies = createTask6MediaDependencies
 } = {}) => {
   await connect();
-  const app = createApp();
+  const app = createApp(createTask6Dependencies());
   const server = createHttpServer(app);
   app.locals.io = createIo(server, logger);
   await new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, resolve);
   });
-  logger.info('Analytics service started', { port });
+  if (logger && typeof logger.info === 'function') {
+    logger.info('Analytics service started', { port });
+  }
   return server;
 };
 
@@ -76,4 +105,5 @@ module.exports.assertTransactionCapability = assertTransactionCapability;
 module.exports.connectDatabase = connectDatabase;
 module.exports.createApp = createApp;
 module.exports.createSocketServer = createSocketServer;
+module.exports.createTask6MediaDependencies = createTask6MediaDependencies;
 module.exports.startServer = startServer;

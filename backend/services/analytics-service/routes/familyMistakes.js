@@ -216,6 +216,7 @@ const createFamilyMistakesRouter = ({
 
       return res.status(201).json({ success: true, data: { mistake: mistakeView(mistake) } });
     } catch (error) {
+      if (sendServiceError(res, error)) return undefined;
       const handled = withValidationErrors(res, error);
       if (handled) return handled;
       return sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error');

@@ -25,6 +25,23 @@ const pendingPatchSchema = new Schema({
   }
 }, { _id: false, strict: 'throw' });
 
+const mediaBindingSchema = new Schema({
+  field: {
+    type: String,
+    required: true,
+    enum: ['questionMediaId', 'childAnswerMediaId']
+  },
+  mediaId: {
+    type: Schema.Types.ObjectId,
+    required: true
+  },
+  bindingOperationId: {
+    type: String,
+    required: true,
+    match: OPERATION_ID_PATTERN
+  }
+}, { _id: false, strict: 'throw' });
+
 const familyMistakeSchema = new Schema({
   familyId: {
     type: Schema.Types.ObjectId,
@@ -121,6 +138,21 @@ const familyMistakeSchema = new Schema({
   mediaPendingPatch: {
     type: [pendingPatchSchema],
     default: undefined,
+    select: false
+  },
+  mediaReferenceBindings: {
+    type: [mediaBindingSchema],
+    default: undefined,
+    select: false
+  },
+  mediaPreviousBindings: {
+    type: [mediaBindingSchema],
+    default: undefined,
+    select: false
+  },
+  mediaMutationKind: {
+    type: String,
+    enum: ['create', 'patch'],
     select: false
   },
   createdBy: {

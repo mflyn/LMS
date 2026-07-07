@@ -9,6 +9,11 @@ const request = require('supertest');
 const mockConnect = jest.fn().mockResolvedValue(undefined);
 const mockListen = jest.fn();
 const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+const mockCreateMediaReferenceClient = jest.fn(() => ({
+  prepare: jest.fn(),
+  commit: jest.fn(),
+  unbind: jest.fn()
+}));
 
 jest.mock('mongoose', () => {
   const actual = jest.requireActual('mongoose');
@@ -17,6 +22,9 @@ jest.mock('mongoose', () => {
 });
 jest.mock('socket.io', () => jest.fn(() => ({ on: jest.fn() })), { virtual: true });
 jest.mock('../../../common/config/logger', () => ({ createLogger: jest.fn(() => mockLogger) }));
+jest.mock('../../../common/services/mediaReferenceClient', () => ({
+  createMediaReferenceClient: (...args) => mockCreateMediaReferenceClient(...args)
+}));
 
 describe('analytics-service Task 6 startup contract', () => {
   test('TC-T6-REG-001 mounts injected Task 6 routers without import-time IO', async () => {
@@ -69,5 +77,46 @@ describe('analytics-service Task 6 startup contract', () => {
 
     await expect(serverModule.assertTransactionCapability(connection))
       .rejects.toThrow('transaction-capable writable replica-set primary');
+  });
+
+  test('startServer wires family mistake media service after Mongo transaction gate', async () => {
+    process.env.RESOURCE_SERVICE_URL = 'http://resource-service:3004';
+    process.env.MEDIA_REFERENCE_SERVICE_TOKEN = 'test-media-reference-token-32-chars';
+    process.env.MEDIA_REFERENCE_TIMEOUT_MS = '1234';
+    const events = [];
+    const serverModule = require('../server');
+    const server = {
+      once: jest.fn(),
+      listen: jest.fn((port, resolve) => {
+        events.push('listen');
+        resolve();
+      })
+    };
+    const connect = jest.fn(async () => {
+      events.push('connect');
+    });
+    mockCreateMediaReferenceClient.mockImplementationOnce((options) => {
+      events.push('media-client');
+      return {
+        prepare: jest.fn(),
+        commit: jest.fn(),
+        unbind: jest.fn(),
+        options
+      };
+    });
+
+    await serverModule.startServer({
+      port: 0,
+      connect,
+      createHttpServer: jest.fn(() => server),
+      createIo: jest.fn(() => ({ on: jest.fn() }))
+    });
+
+    expect(events).toEqual(['connect', 'media-client', 'listen']);
+    expect(mockCreateMediaReferenceClient).toHaveBeenCalledWith({
+      resourceServiceUrl: 'http://resource-service:3004',
+      serviceToken: 'test-media-reference-token-32-chars',
+      timeout: 1234
+    });
   });
 });
