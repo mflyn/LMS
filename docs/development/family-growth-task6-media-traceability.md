@@ -1,12 +1,12 @@
 # Task 6 Media Capability Traceability
 
-**Document status:** CURRENT PARTIAL
-**Review date:** 2026-07-07
-**Scope:** Task 6 media capabilities across resource-service, common client, Child avatar, GrowthTask attachments, and remaining FamilyMistake/gateway/deployment work.
+**Document status:** COVERED
+**Review date:** 2026-07-08
+**Scope:** Task 6 media capabilities across resource-service, common client, Child avatar, GrowthTask attachments, FamilyMistake media, gateway, deployment, and final gate evidence.
 
 ## Decision
 
-Task 6 media capability is **partial, not final-gate complete**.
+Task 6 media capability is **covered and final-gate complete** on code candidate `bcaaea2a`.
 
 The following sub-scopes have executable evidence:
 
@@ -14,15 +14,12 @@ The following sub-scopes have executable evidence:
 - Shared internal media-reference client in `backend/common/services/mediaReferenceClient.js`.
 - Child avatar media consumer in `user-service`.
 - GrowthTask attachment media consumer in `homework-service`.
-
-The following sub-scopes remain open and are assigned to `docs/superpowers/plans/2026-07-07-family-growth-task6-mistakes-weekly-reports.md`:
-
-- FamilyMistake `questionMediaId` and `childAnswerMediaId` binding, replacement, removal, recovery, and privacy tests.
-- Gateway Task 6 public media signed-content proxy test.
-- Task 6 deployment checks for private volume, secret wiring, and report-history configuration.
+- FamilyMistake `questionMediaId` and `childAnswerMediaId` binding, replacement, removal, recovery, and privacy behavior in `analytics-service`.
+- Gateway public signed media content proxy and internal media reference route exclusion.
+- Task 6 deployment checks for private volume, external secret wiring, least-service media token exposure, and report-history configuration.
 - Final Task 6 implementation review and gate evidence.
 
-Because these open items are still required by the approved Task 6 catalog, `FR-MEDIA-001`, `FR-MEDIA-002`, and `NFR-PRIVACY-001` remain `PARTIAL`.
+`FR-MEDIA-001`, `FR-MEDIA-002`, and `NFR-PRIVACY-001` are now `COVERED`.
 
 ## Current Evidence Sources
 
@@ -33,7 +30,9 @@ Because these open items are still required by the approved Task 6 catalog, `FR-
 | Shared reference client | `backend/common/services/__tests__/mediaReferenceClient.test.js`; review record `docs/development/family-growth-task6-phase3a-review.md` |
 | Child avatar consumer | `backend/services/user-service/__tests__/models/User.mediaReferences.test.js`, `services/childAvatarMediaService.test.js`, `routes/childMediaReferences.test.js`; review record `docs/development/family-growth-task6-phase3b-review.md` |
 | GrowthTask attachment consumer | `backend/services/homework-service/__tests__/models/GrowthTask.mediaReferences.test.js`, `services/growthTaskAttachmentMediaService.test.js`, `growthTaskMediaReferences.test.js`; review record `docs/development/family-growth-task6-phase3c-review.md` |
-| Remaining implementation plan | `docs/superpowers/plans/2026-07-07-family-growth-task6-mistakes-weekly-reports.md` |
+| FamilyMistake media consumer | `backend/services/analytics-service/__tests__/familyMistakeMediaSaga.test.js`, `familyMistakes.test.js`; review record `docs/development/family-growth-task6-implementation-review.md` |
+| Gateway and deployment closure | `backend/gateway/__tests__/familyTask6Routes.test.js`, `backend/common/deployment/__tests__/task6Deployment.test.js` |
+| Final Task 6 gate | `docs/development/family-growth-task6-gate.md` |
 
 ## Media Case Matrix
 
@@ -47,7 +46,7 @@ Because these open items are still required by the approved Task 6 catalog, `FR-
 | `TC-T6-MEDIA-006` | COVERED | `mediaCapability.test.js`, `familyMedia.test.js`; access grants are short-lived and omit storage metadata. |
 | `TC-T6-MEDIA-007` | COVERED | `mediaCapability.test.js`, `familyMedia.test.js`; signed-content path, ID, expiry, nonce, signature, and expiration tampering are rejected. |
 | `TC-T6-MEDIA-008` | COVERED | `familyMedia.test.js`; cross-family, sibling, and child-to-family-avatar access attempts are denied without metadata disclosure. |
-| `TC-T6-MEDIA-009` | PARTIAL | Resource-side soft delete/access denial/new-prepare rejection is covered by `familyMedia.test.js`; FamilyMistake replacement/removal interaction remains covered by `TC-T6-MISTAKE-011`. |
+| `TC-T6-MEDIA-009` | COVERED | Resource-side soft delete/access denial/new-prepare rejection is covered by `familyMedia.test.js`; FamilyMistake replacement/removal interaction is covered by `TC-T6-MISTAKE-011`. |
 | `TC-T6-MEDIA-010` | COVERED | `mediaCleanup.test.js`; deletion age, latest-release age, bound-reference retention, and idempotent cleanup are covered. |
 | `TC-T6-MEDIA-011` | COVERED | `mediaReferences.test.js`; absent, short, invalid, and valid service credentials are covered. |
 | `TC-T6-MEDIA-012` | COVERED | `mediaModels.test.js`, `mediaReferences.test.js`; prepare/commit/unbind replay and single-row convergence are covered. |
@@ -87,27 +86,27 @@ Because these open items are still required by the approved Task 6 catalog, `FR-
 | `TC-T6-MEDIA-018B` | COVERED | `childMediaReferences.test.js`; Child avatar response and audit privacy are covered. |
 | `TC-T6-MEDIA-018C` | COVERED | `growthTaskAttachmentMediaService.test.js`, `growthTaskMediaReferences.test.js`; unsafe GrowthTask media inputs and internal fields are rejected. |
 | `TC-T6-MEDIA-018D` | COVERED | `growthTaskMediaReferences.test.js`; GrowthTask response and audit privacy are covered. |
-| `TC-T6-MEDIA-018` FamilyMistake portion | PENDING | FamilyMistake must reject raw URLs/media objects/internal binding fields and expose only approved media IDs; assigned to `2026-07-07-family-growth-task6-mistakes-weekly-reports.md` Task 4. |
+| `TC-T6-MEDIA-018` FamilyMistake portion | COVERED | `familyMistakeMediaSaga.test.js`; FamilyMistake rejects raw URLs/media objects/internal binding fields and exposes only approved media IDs. |
 
-## Related Pending Media Requirements
+## Related Closed Media Requirements
 
-| Case | Status | Required evidence |
+| Case | Status | Evidence |
 | --- | --- | --- |
-| `TC-T6-MISTAKE-009` | PENDING | FamilyMistake create/update with wrong-purpose, deleted, sibling, cross-family, or missing media returns stable errors and commits no mutation. |
-| `TC-T6-MISTAKE-010` | PENDING | FamilyMistake pending media commit can be resumed by read or patch without duplicate references. |
-| `TC-T6-MISTAKE-011` | PENDING | FamilyMistake question/answer media replacement and removal commit new binding before idempotent old unbind. |
-| `TC-T6-MISTAKE-012` | PENDING | FamilyMistake persistence failure after prepare performs best-effort unbind or lets lease reclaim. |
-| `TC-T6-GW-003` | PENDING | Gateway proxies signed media content URL without JWT only for the approved public content path. |
-| `TC-T6-REG-002` | PENDING | Compose/Kubernetes private volume, external secret wiring, non-static media root, and Task 6 configuration checks pass. |
+| `TC-T6-MISTAKE-009` | COVERED | FamilyMistake create/update media validation, stable errors, rollback, and disabled-mode behavior pass in `familyMistakeMediaSaga.test.js`. |
+| `TC-T6-MISTAKE-010` | COVERED | FamilyMistake pending media commit resumes by read or patch without duplicate references in `familyMistakeMediaSaga.test.js`. |
+| `TC-T6-MISTAKE-011` | COVERED | FamilyMistake question media replacement/removal commits new binding before idempotent old unbind in `familyMistakeMediaSaga.test.js`. |
+| `TC-T6-MISTAKE-012` | COVERED | FamilyMistake persistence failure after prepare is covered by stable rollback and lease/recovery behavior in `familyMistakeMediaSaga.test.js`. |
+| `TC-T6-GW-003` | COVERED | Gateway proxies signed media content URL without JWT only for `/api/media/:mediaId/content`; resource-service validates capability. |
+| `TC-T6-REG-002` | COVERED | Compose/Kubernetes private volume, external secret wiring, non-static media root, least-service token exposure, and report history configuration pass in `task6Deployment.test.js`. |
 
 ## Requirement Rollup
 
 | Requirement | Current conformance | Reason |
 | --- | --- | --- |
-| `FR-MEDIA-001` | PARTIAL | Upload/access/reference protocol and Child/GrowthTask consumers are covered; FamilyMistake consumer, gateway signed-content proxy, and final gate remain open. |
-| `FR-MEDIA-002` | PARTIAL | Resource delete/cleanup is covered; FamilyMistake media replacement/removal unbind remains open. |
-| `NFR-PRIVACY-001` | PARTIAL | Core media, Child avatar, and GrowthTask privacy are covered; FamilyMistake privacy and deployment evidence remain open. |
+| `FR-MEDIA-001` | COVERED | Upload/access/reference protocol, Child/GrowthTask/FamilyMistake consumers, gateway signed-content proxy, deployment checks, and final gate pass. |
+| `FR-MEDIA-002` | COVERED | Resource delete/cleanup and FamilyMistake media replacement/removal unbind pass. |
+| `NFR-PRIVACY-001` | COVERED | Core media, Child avatar, GrowthTask, FamilyMistake privacy, gateway signed content, deployment secret handling, and final gate pass. |
 
 ## Closure Rule
 
-Do not change these rows to `COVERED` until all pending rows above pass on the final candidate commit and are recorded in `docs/development/family-growth-task6-gate.md` and `docs/development/family-growth-task6-implementation-review.md`.
+All pending rows above passed on code candidate `bcaaea2a` and are recorded in `docs/development/family-growth-task6-gate.md` and `docs/development/family-growth-task6-implementation-review.md`. New Task 6 media regressions must update this document and rerun the final gate.

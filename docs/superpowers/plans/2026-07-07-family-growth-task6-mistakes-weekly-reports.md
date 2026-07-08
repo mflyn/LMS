@@ -738,7 +738,7 @@ Expected: gateway and deployment tests pass without committed secret values.
 - Modify: `docs/product/family-learning-tracker.md`
 - Modify: `docs/superpowers/plans/2026-07-07-family-growth-task6-mistakes-weekly-reports.md`
 
-- [ ] **Step 1: Run targeted Task 6 suites**
+- [x] **Step 1: Run targeted Task 6 suites**
 
 Run:
 
@@ -754,7 +754,7 @@ npm test --prefix backend/gateway -- --runInBand familyTask6Routes
 
 Expected: every command exits 0. Record suite/test counts in `family-growth-task6-gate.md`.
 
-- [ ] **Step 2: Run full family regression twice from the same commit**
+- [x] **Step 2: Run full family regression twice from the same commit**
 
 Run twice:
 
@@ -764,7 +764,7 @@ npm run test:family-regression
 
 Expected: both runs exit 0 with identical passing suite/test totals and no leaked-handle warning.
 
-- [ ] **Step 3: Run root baseline command and compare**
+- [x] **Step 3: Run root baseline command and compare**
 
 Run:
 
@@ -774,7 +774,7 @@ npm run test:nocoverage
 
 Expected: command completes; any legacy failures match the approved baseline category and no Task 3-6 family project fails.
 
-- [ ] **Step 4: Run static evidence checks**
+- [x] **Step 4: Run static evidence checks**
 
 Run:
 
@@ -788,7 +788,7 @@ rg -n "TC-T6-(MISTAKE|REPORT|REPO|GW|REG)-" \
 
 Expected: whitespace check passes; no Task 6 test-control violation is present; every required case ID appears in executable tests.
 
-- [ ] **Step 5: Write implementation review and gate evidence**
+- [x] **Step 5: Write implementation review and gate evidence**
 
 Record final commands, exit codes, suite/test counts, review findings, and remediations. The review must explicitly close:
 
@@ -803,11 +803,11 @@ NFR-SEC-001
 NFR-TIME-001
 ```
 
-- [ ] **Step 6: Update traceability only after evidence is current**
+- [x] **Step 6: Update traceability only after evidence is current**
 
 Change Task 6 rows to `COVERED` only after Step 1 through Step 5 pass on the final candidate commit.
 
-- [ ] **Step 7: Mark this plan completed and commit documentation**
+- [x] **Step 7: Mark this plan completed and commit documentation**
 
 Run:
 
@@ -818,11 +818,25 @@ git commit -m "docs: record task6 final gate evidence"
 
 Expected: final Task 6 artifacts are current and no required Task 6 row remains partial/planned.
 
+## Execution Evidence
+
+**Code candidate:** `bcaaea2a`
+**Gate evidence:** `docs/development/family-growth-task6-gate.md`
+**Implementation review:** `docs/development/family-growth-task6-implementation-review.md`
+
+| Gate | Result |
+| --- | --- |
+| Targeted Task 6 suites | Resource 7/82, User 7/124, Homework 4/210, Progress 4/38, Analytics 4/39, Common 2/7, Gateway 1/3 all passed. |
+| Family regression stability | `npm run test:family-regression` passed twice with identical totals: 51 suites, 645 tests. |
+| Root baseline | `npm run test:nocoverage` exited 1 with family phase passing 51 suites/645 tests and classified legacy phase at 200 failed/33 passed suites, 942 failed/329 passed/18 skipped tests. |
+| Static checks | `git diff --check` passed; skip/only scan had no test-control violation; extended case scan found required Task 6 case IDs. |
+| Traceability | `FR-MISTAKE-001`, `FR-REPORT-001`, `FR-MEDIA-001`, `FR-MEDIA-002`, `NFR-PRIVACY-001`, `NFR-DATA-001`, `NFR-SEC-001`, and `NFR-TIME-001` are covered. |
+
 ## Review Checklist Before Coding
 
-- [ ] Product owner confirms this split keeps Task 6 backend scope before Task 7 notification work.
-- [ ] The media traceability update remains `PARTIAL` until FamilyMistake media and gateway/deployment cases pass.
-- [ ] No frontend or notification work is included in this plan.
-- [ ] Every Task 6 requirement has a task and final gate step.
-- [ ] Every route test uses production error handling and signed gateway identity.
-- [ ] Every state history test uses a replica-set transaction lifecycle.
+- [x] Product owner confirms this split keeps Task 6 backend scope before Task 7 notification work.
+- [x] The media traceability update remains `PARTIAL` until FamilyMistake media and gateway/deployment cases pass.
+- [x] No frontend or notification work is included in this plan.
+- [x] Every Task 6 requirement has a task and final gate step.
+- [x] Every route test uses production error handling and signed gateway identity.
+- [x] Every state history test uses a replica-set transaction lifecycle.
