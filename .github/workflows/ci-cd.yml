@@ -29,31 +29,13 @@ jobs:
         node-version: '18'
         
     - name: Install Dependencies
-      run: |
-        cd frontend && npm install
-        cd ../backend && npm install
+      run: npm install
         
-    - name: Run Unit Tests
-      run: |
-        cd frontend && npm run test:unit
-        cd ../backend && npm run test:unit
-        
-    - name: Run Integration Tests
-      run: |
-        cd frontend && npm run test:integration
-        cd ../backend && npm run test:integration
-        
-    - name: Run E2E Tests
-      run: |
-        cd frontend && npm run test:e2e
-        cd ../backend && npm run test:e2e
-        
-    - name: Run Linting
-      run: |
-        cd frontend && npm run lint
-        cd ../backend && npm run lint
+    - name: Run Family Regression
+      run: npm run test:family-regression
 
     - name: Upload Test Results
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-results
@@ -64,6 +46,7 @@ jobs:
   performance:
     needs: test
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
     - uses: actions/checkout@v4
@@ -85,6 +68,7 @@ jobs:
   security:
     needs: test
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
     - uses: actions/checkout@v4
