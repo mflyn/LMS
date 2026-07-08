@@ -44,4 +44,23 @@ describe('Task 6 gateway routes', () => {
       && (path === '/api/internal/media/references' || path.startsWith('/api/internal/media/references/'))))
       .toBe(false);
   });
+
+  test('TC-T6-GW-003 proxies signed media content without requiring JWT', () => {
+    const contentRegistrationIndex = mockUse.mock.calls.findIndex(([path]) => path === '/api/media/:mediaId/content');
+    const mediaRegistrationIndex = mockUse.mock.calls.findIndex(([path]) => path === '/api/media');
+    const contentRegistration = mockUse.mock.calls[contentRegistrationIndex];
+
+    expect(contentRegistrationIndex).toBeGreaterThanOrEqual(0);
+    expect(mediaRegistrationIndex).toBeGreaterThan(contentRegistrationIndex);
+    expect(contentRegistration).toHaveLength(2);
+    expect(contentRegistration[1]).toEqual(expect.objectContaining({
+      target: 'http://resource-service:3005',
+      proxy: true
+    }));
+    expect(contentRegistration[1].options.proxyReqPathResolver({
+      originalUrl: '/api/media/6656875da7f86a0012c2a201/content?expires=1&nonce=n&signature=s',
+      url: '?expires=1&nonce=n&signature=s',
+      params: { mediaId: '6656875da7f86a0012c2a201' }
+    })).toBe('/api/media/6656875da7f86a0012c2a201/content?expires=1&nonce=n&signature=s');
+  });
 });

@@ -45,6 +45,29 @@ const deploymentEnvironment = (file) => (
 const secretKey = (entry) => entry.valueFrom && entry.valueFrom.secretKeyRef;
 
 describe('Task 6 deployment contracts', () => {
+  test('TC-T6-REG-004 legacy regression excludes Task 6 family suites', () => {
+    const legacyJestConfig = require('../../../jest.legacy.config');
+    const ignoredPaths = legacyJestConfig.testPathIgnorePatterns.join('\n');
+
+    for (const familySuitePath of [
+      'services/resource-service/__tests__/task6Startup.test.js',
+      'services/resource-service/__tests__/familyMedia.test.js',
+      'services/resource-service/__tests__/familyMediaPrivacy.test.js',
+      'services/resource-service/__tests__/mediaReferences.test.js',
+      'services/resource-service/__tests__/mediaCleanup.test.js',
+      'services/resource-service/__tests__/privateMediaStore.test.js',
+      'services/resource-service/__tests__/mediaCapability.test.js',
+      'services/resource-service/__tests__/mediaModels.test.js',
+      'services/analytics-service/__tests__/task6Startup.test.js',
+      'services/analytics-service/__tests__/server.test.js',
+      'services/analytics-service/__tests__/familyMistakes.test.js',
+      'services/analytics-service/__tests__/familyMistakeMediaSaga.test.js',
+      'services/analytics-service/__tests__/weeklyReports.test.js'
+    ]) {
+      expect(ignoredPaths).toContain(familySuitePath);
+    }
+  });
+
   test('TC-T6-REG-002 docker compose wires Task 6 media and report configuration without literal secrets', () => {
     const resourceEnvironment = composeEnvironment('resource-service');
     const userEnvironment = composeEnvironment('user-service');

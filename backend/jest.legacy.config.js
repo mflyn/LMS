@@ -9,7 +9,20 @@ module.exports = {
     '<rootDir>/gateway/',
     '<rootDir>/services/user-service/',
     '<rootDir>/services/homework-service/',
-    '<rootDir>/services/progress-service/'
+    '<rootDir>/services/progress-service/',
+    '<rootDir>/services/resource-service/__tests__/task6Startup.test.js',
+    '<rootDir>/services/resource-service/__tests__/familyMedia.test.js',
+    '<rootDir>/services/resource-service/__tests__/familyMediaPrivacy.test.js',
+    '<rootDir>/services/resource-service/__tests__/mediaReferences.test.js',
+    '<rootDir>/services/resource-service/__tests__/mediaCleanup.test.js',
+    '<rootDir>/services/resource-service/__tests__/privateMediaStore.test.js',
+    '<rootDir>/services/resource-service/__tests__/mediaCapability.test.js',
+    '<rootDir>/services/resource-service/__tests__/mediaModels.test.js',
+    '<rootDir>/services/analytics-service/__tests__/task6Startup.test.js',
+    '<rootDir>/services/analytics-service/__tests__/server.test.js',
+    '<rootDir>/services/analytics-service/__tests__/familyMistakes.test.js',
+    '<rootDir>/services/analytics-service/__tests__/familyMistakeMediaSaga.test.js',
+    '<rootDir>/services/analytics-service/__tests__/weeklyReports.test.js'
   ],
   setupFilesAfterEnv: [
     '<rootDir>/jest.setup.js',

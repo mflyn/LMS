@@ -108,6 +108,11 @@ if (config.serviceHosts.notification) {
 }
 
 if (config.serviceHosts.resource) {
+  app.use('/api/media/:mediaId/content', proxy(config.serviceHosts.resource, {
+    proxyReqPathResolver: (req) => req.originalUrl
+      || `/api/media/${req.params.mediaId}/content${req.url}`
+  }));
+
   app.use('/api/media', authenticateToken, proxy(config.serviceHosts.resource, {
     proxyReqPathResolver: (req) => `/api/media${req.url}`
   }));
