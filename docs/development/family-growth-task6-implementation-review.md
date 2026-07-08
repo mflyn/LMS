@@ -62,4 +62,4 @@ See `docs/development/family-growth-task6-gate.md` for exact commands, exit code
 
 ## Decision
 
-Task 6 backend implementation is technically approved. Mistakes, weekly reports, mistake media references, gateway/deployment wiring, and final regression evidence are complete on code candidate `bcaaea2a`. Product-owner approval is still required before creating an immutable Task 6 baseline tag.
+Task 6 backend implementation is approved. Mistakes, weekly reports, mistake media references, gateway/deployment wiring, and final regression evidence are complete on code candidate `bcaaea2a`. Product-owner approval was recorded on 2026-07-08, and the immutable Task 6 baseline tag is `family-growth-baseline-v1.4`.

@@ -1,15 +1,16 @@
 # 家庭成长跟踪修订基线清单 v1.3.1
 
 **baselineId:** FGT-MVP-1.3.1
-**status:** GATE_PASSED_PENDING_PRODUCT_APPROVAL
+**status:** SUPERSEDED_BY_FGT_MVP_1.4
 **supersedes:** FGT-MVP-1.3
 **candidateCommit:** 0233bf0e15b3d29f77ae5fece8a9573b46a283b4
 **statusUpdatedAt:** 2026-06-20
 **owner:** linmingfeng
 **technicalReviewer:** Codex
 **plannedTag:** `family-growth-baseline-v1.3.1`
+**supersededBy:** FGT-MVP-1.4
 
-本清单不记录自身哈希。`candidateCommit` 包含 Task 5 v1.3 修订代码、评审记录和最终技术门禁证据；下表哈希均从该提交生成。现有 `family-growth-baseline-v1.3` 标签保持不变，产品负责人批准前不得创建 v1.3.1 标签。
+本清单不记录自身哈希。`candidateCommit` 包含 Task 5 v1.3 修订代码、评审记录和最终技术门禁证据；下表哈希均从该提交生成。现有 `family-growth-baseline-v1.3` 标签保持不变，v1.3.1 不再单独创建标签；其修订内容随 Task 6 交付一并进入 `FGT-MVP-1.4` 基线。
 
 | Artifact | SHA-256 | Status |
 | --- | --- | --- |
@@ -52,4 +53,4 @@
 
 - Root legacy projects retain classified school-era failures; no new family failure is present.
 - Repository single-node Mongo replica-set manifests are non-HA demo/staging layouts; production requires managed or multi-member topology.
-- The corrected immutable v1.3.1 tag and final `APPROVED` status require explicit product-owner approval.
+- The corrected v1.3.1 candidate has been absorbed by `FGT-MVP-1.4`; no separate v1.3.1 tag is created.

@@ -4,7 +4,9 @@
 **Code candidate commit:** `bcaaea2a`
 **Executed at:** 2026-07-08 (Asia/Shanghai)
 **Technical result:** PASS_WITH_CLASSIFIED_LEGACY_FAILURES
-**Product approval:** PENDING
+**Product approval:** APPROVED
+**Product approved by:** linmingfeng
+**Product approved at:** 2026-07-08 (Asia/Shanghai)
 
 ## Targeted Commands
 
@@ -69,4 +71,4 @@ An additional full Task 6 media case scan confirmed `TC-T6-MEDIA-*` coverage acr
 
 ## Decision
 
-The Task 6 technical gate passes on code candidate `bcaaea2a`. All Task 6 backend scope for mistakes, weekly reports, mistake media references, gateway/deployment wiring, and regression evidence is implemented and verified. Product approval is still required before marking a product baseline tag.
+The Task 6 technical gate passes on code candidate `bcaaea2a`. All Task 6 backend scope for mistakes, weekly reports, mistake media references, gateway/deployment wiring, and regression evidence is implemented and verified. Product approval was recorded on 2026-07-08, and the approved baseline is frozen as `family-growth-baseline-v1.4`.
