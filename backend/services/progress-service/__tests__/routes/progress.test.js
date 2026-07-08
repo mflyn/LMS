@@ -1,7 +1,6 @@
 const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 const progressRouter = require('../../routes/progress');
 const Progress = require('../../models/Progress');
 
@@ -26,24 +25,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/progress', progressRouter);
-
-// 使用内存数据库进行测试
-let mongoServer;
-
-beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
-});
 
 describe('进度路由测试', () => {
   beforeEach(async () => {
@@ -107,7 +88,10 @@ describe('进度路由测试', () => {
 
       // 验证响应
       expect(response.status).toBe(403);
-      expect(response.body).toHaveProperty('message', '权限不足');
+      expect(response.body.error).toEqual(expect.objectContaining({
+        code: 'ACCESS_DENIED',
+        message: '权限不足'
+      }));
     });
 
     it('学生应该能够查看自己的进度', async () => {
@@ -241,7 +225,10 @@ describe('进度路由测试', () => {
 
       // 验证响应
       expect(response.status).toBe(403);
-      expect(response.body).toHaveProperty('message', '权限不足');
+      expect(response.body.error).toEqual(expect.objectContaining({
+        code: 'ACCESS_DENIED',
+        message: '权限不足'
+      }));
 
       // 验证数据库中没有记录
       const progress = await Progress.findOne({ student: mockStudentId });

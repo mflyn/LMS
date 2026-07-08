@@ -26,12 +26,12 @@ spec:
         - name: PORT
           value: "5002"
         - name: MONGO_URI
-          value: "mongodb://mongo:27017/learning-tracker"
+          value: "mongodb://mongo:27017/learning-tracker?replicaSet=rs0"
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: jwt-secret
-              key: JWT_SECRET
+              name: family-growth-secrets
+              key: jwt-secret
         resources:
           limits:
             cpu: "300m"

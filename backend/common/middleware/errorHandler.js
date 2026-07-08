@@ -5,8 +5,11 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('../config/logger');
+const { createLogger } = require('../config/logger');
 const { AppError } = require('./errorTypes');
+const { redactUrlForLogs } = require('../utils/logRedaction');
+
+const defaultLogger = createLogger('error-handler');
 
 /**
  * 请求跟踪中间件
@@ -18,16 +21,17 @@ const { AppError } = require('./errorTypes');
 const requestTracker = (req, res, next) => {
   req.requestId = req.requestId || uuidv4();
   req.startTime = Date.now();
+  const safeUrl = redactUrlForLogs(req.originalUrl);
   
   // 在响应头中添加请求ID
   res.setHeader('X-Request-ID', req.requestId);
   
   // 记录请求开始日志
   if (req.app && req.app.locals.logger) {
-    req.app.locals.logger.info(`请求开始: ${req.method} ${req.originalUrl}`, {
+    req.app.locals.logger.info(`请求开始: ${req.method} ${safeUrl}`, {
       requestId: req.requestId,
       method: req.method,
-      url: req.originalUrl,
+      url: safeUrl,
       ip: req.ip,
       userAgent: req.get('user-agent'),
       userId: req.user ? req.user.id : 'anonymous',
@@ -41,10 +45,10 @@ const requestTracker = (req, res, next) => {
     const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
     
     if (req.app && req.app.locals.logger) {
-      req.app.locals.logger[logLevel](`请求完成: ${req.method} ${req.originalUrl} ${res.statusCode}`, {
+      req.app.locals.logger[logLevel](`请求完成: ${req.method} ${safeUrl} ${res.statusCode}`, {
         requestId: req.requestId,
         method: req.method,
-        url: req.originalUrl,
+        url: safeUrl,
         status: res.statusCode,
         duration: `${duration}ms`,
         ip: req.ip,
@@ -86,7 +90,10 @@ const handleMongoError = (err) => {
     statusCode = 400;
   }
 
-  return new AppError(message, statusCode);
+  const code = statusCode === 409
+    ? 'RESOURCE_CONFLICT'
+    : statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR';
+  return new AppError(message, statusCode, code, statusCode < 500);
 };
 
 /**
@@ -101,7 +108,7 @@ const handleJWTError = (err) => {
     message = '令牌已过期';
   }
   
-  return new AppError(message, 401);
+  return new AppError(message, 401, 'UNAUTHENTICATED');
 };
 
 /**
@@ -109,53 +116,24 @@ const handleJWTError = (err) => {
  */
 const handleJoiError = (err) => {
   const message = err.details.map(detail => detail.message).join(', ');
-  return new AppError(message, 400);
+  return new AppError(message, 400, 'VALIDATION_ERROR', true, err.details || []);
 };
 
-/**
- * 开发环境错误响应
- */
-const sendErrorDev = (err, req, res) => {
-  const error = {
-    status: err.status || 'error',
-    error: err,
-    message: err.message,
-    stack: err.stack,
-    requestId: req.requestId,
-    timestamp: new Date().toISOString()
-  };
-
-  logger.error('开发环境错误详情', {
-    requestId: req.requestId,
-    error: err.message,
-    stack: err.stack,
-    url: req.originalUrl,
-    method: req.method,
-    ip: req.ip,
-    userAgent: req.get('user-agent')
-  });
-
-  res.status(err.statusCode).json(error);
-};
-
-/**
- * 生产环境错误响应
- */
-const sendErrorProd = (err, req, res) => {
-  const error = {
-    status: err.status || 'error',
-    message: err.isOperational ? err.message : '服务器内部错误',
-    requestId: req.requestId,
-    timestamp: new Date().toISOString()
-  };
+const sendContractError = (err, req, res) => {
+  const logger = req.app && req.app.locals.logger ? req.app.locals.logger : defaultLogger;
+  const isOperational = Boolean(err.isOperational);
+  const message = isOperational ? err.message : '服务器内部错误';
+  const code = isOperational && err.code ? err.code : 'INTERNAL_ERROR';
+  const details = isOperational && Array.isArray(err.details) ? err.details : [];
+  const safeUrl = redactUrlForLogs(req.originalUrl);
 
   // 记录所有错误到日志
-  if (err.isOperational) {
+  if (isOperational) {
     logger.warn('操作错误', {
       requestId: req.requestId,
       error: err.message,
       statusCode: err.statusCode,
-      url: req.originalUrl,
+      url: safeUrl,
       method: req.method,
       ip: req.ip,
       userAgent: req.get('user-agent')
@@ -165,14 +143,17 @@ const sendErrorProd = (err, req, res) => {
       requestId: req.requestId,
       error: err.message,
       stack: err.stack,
-      url: req.originalUrl,
+      url: safeUrl,
       method: req.method,
       ip: req.ip,
       userAgent: req.get('user-agent')
     });
   }
 
-  res.status(err.statusCode).json(error);
+  res.status(err.statusCode).json({
+    success: false,
+    error: { code, message, details }
+  });
 };
 
 /**
@@ -189,23 +170,18 @@ const errorHandler = (err, req, res, next) => {
 
   // 处理特定类型的错误
   if (err.name === 'CastError' || err.name === 'ValidationError' || err.code === 11000) {
-    error = handleMongoError(error);
+    error = handleMongoError(err);
   }
   
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    error = handleJWTError(error);
+    error = handleJWTError(err);
   }
   
   if (err.isJoi) {
-    error = handleJoiError(error);
+    error = handleJoiError(err);
   }
 
-  // 根据环境发送不同的错误响应
-  if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(error, req, res);
-  } else {
-    sendErrorProd(error, req, res);
-  }
+  sendContractError(error, req, res);
 };
 
 /**
@@ -222,37 +198,35 @@ const catchAsync = (fn) => {
  * 404错误处理中间件
  */
 const notFoundHandler = (req, res, next) => {
-  const err = new AppError(`路由 ${req.originalUrl} 不存在`, 404);
+  const err = new AppError(`路由 ${redactUrlForLogs(req.originalUrl)} 不存在`, 404);
   next(err);
 };
 
 /**
  * 未捕获异常处理器
  */
-const handleUncaughtException = () => {
-  process.on('uncaughtException', (err) => {
+const handleUncaughtException = (logger = defaultLogger, processObject = process) => {
+  processObject.on('uncaughtException', (err) => {
     logger.error('未捕获异常', {
       error: err.message,
       stack: err.stack
     });
-    
-    // 优雅关闭服务器
-    process.exit(1);
+
+    processObject.exit(1);
   });
 };
 
 /**
  * 未处理的Promise拒绝处理器
  */
-const handleUnhandledRejection = () => {
-  process.on('unhandledRejection', (reason, promise) => {
+const handleUnhandledRejection = (logger = defaultLogger, processObject = process) => {
+  processObject.on('unhandledRejection', (reason, promise) => {
     logger.error('未处理的Promise拒绝', {
-      reason: reason.toString(),
-      promise: promise.toString()
+      reason: String(reason),
+      promise: String(promise)
     });
-    
-    // 优雅关闭服务器
-    process.exit(1);
+
+    processObject.exit(1);
   });
 };
 

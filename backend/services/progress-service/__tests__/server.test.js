@@ -20,7 +20,10 @@ describe('Progress Service 服务器测试', () => {
       const response = await request(app).get('/api/progress/123');
       
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('message', '未认证');
+      expect(response.body.error).toEqual(expect.objectContaining({
+        code: 'UNAUTHENTICATED',
+        message: '未认证'
+      }));
     });
     
     it('有用户信息时应该通过认证', async () => {
@@ -50,7 +53,10 @@ describe('Progress Service 服务器测试', () => {
         });
       
       expect(response.status).toBe(403);
-      expect(response.body).toHaveProperty('message', '权限不足');
+      expect(response.body.error).toEqual(expect.objectContaining({
+        code: 'ACCESS_DENIED',
+        message: '权限不足'
+      }));
     });
     
     it('角色匹配时应该通过检查', async () => {
@@ -83,8 +89,15 @@ describe('Progress Service 服务器测试', () => {
           // 缺少必要字段
         });
       
-      expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('message', '服务器内部错误');
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: expect.any(String),
+          details: []
+        }
+      });
     });
   });
   

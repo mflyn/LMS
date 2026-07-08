@@ -7,7 +7,10 @@
 const jwt = require('jsonwebtoken');
 const { configManager } = require('../config');
 const { UnauthorizedError, ForbiddenError } = require('./errorTypes');
-const { logger } = require('../config/logger');
+const { createLogger } = require('../config/logger');
+const { verifyIdentityEnvelope } = require('./gatewayIdentity');
+
+const logger = createLogger('auth-middleware');
 
 /**
  * JWT认证中间件
@@ -62,36 +65,55 @@ const authenticateJWT = (req, res, next) => {
  * 验证请求头中的x-user-id和x-user-role
  * 适用于通过API网关转发的请求
  */
-const authenticateGateway = (req, res, next) => {
-  if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
-    logger.warn('网关认证失败 - 缺少用户标识头', {
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-      url: req.originalUrl,
-      headers: {
-        'x-user-id': req.headers['x-user-id'],
-        'x-user-role': req.headers['x-user-role']
-      }
+const authenticateGateway = async (req, res, next) => {
+  try {
+    const identity = verifyIdentityEnvelope({
+      method: req.method,
+      originalUrl: req.originalUrl,
+      headers: req.headers,
+      secret: process.env.GATEWAY_IDENTITY_SECRET
     });
-    
-    return next(new UnauthorizedError('User identification headers (x-user-id, x-user-role) are missing or incomplete. Ensure API Gateway is configured correctly.'));
+
+    if (identity.role === 'student') {
+      if (!identity.childId || !identity.familyId || !Number.isInteger(identity.tokenVersion)) {
+        const invalid = new Error('INVALID_IDENTITY_ENVELOPE');
+        invalid.code = 'INVALID_IDENTITY_ENVELOPE';
+        throw invalid;
+      }
+      const User = req.app && req.app.locals && req.app.locals.userModel
+        ? req.app.locals.userModel
+        : require('../models/User');
+      const child = await User.findOne({
+        _id: identity.childId,
+        role: 'student',
+        familyId: identity.familyId
+      }).select('childProfile.tokenVersion');
+      if (!child || child.childProfile.tokenVersion !== identity.tokenVersion) {
+        const stale = new Error('STALE_CHILD_TOKEN');
+        stale.code = 'STALE_CHILD_TOKEN';
+        throw stale;
+      }
+    }
+
+    req.user = identity;
+
+    logger.debug('网关认证成功', {
+      userId: req.user.id,
+      role: req.user.role,
+      ip: req.ip,
+      url: req.originalUrl
+    });
+    return next();
+  } catch (error) {
+    logger.warn('网关身份信封验证失败', {
+      code: error.code || 'INVALID_IDENTITY_ENVELOPE',
+      ip: req.ip,
+      url: req.originalUrl
+    });
+    const authError = new UnauthorizedError('Invalid gateway identity envelope');
+    authError.code = error.code || 'INVALID_IDENTITY_ENVELOPE';
+    return next(authError);
   }
-  
-  req.user = {
-    id: req.headers['x-user-id'],
-    role: req.headers['x-user-role']
-    // Potentially include other user details if gateway provides them
-  };
-  
-  // 记录网关认证成功日志
-  logger.debug('网关认证成功', {
-    userId: req.user.id,
-    role: req.user.role,
-    ip: req.ip,
-    url: req.originalUrl
-  });
-  
-  next();
 };
 
 /**
@@ -145,26 +167,30 @@ const checkRole = (roles) => {
  * @param {String} type - 令牌类型 ('access' | 'refresh')
  * @returns {String} - JWT令牌
  */
-const generateToken = (user, type = 'access') => {
+const generateToken = (user, type = 'access', options = {}) => {
   const payload = {
     id: user._id || user.id,
     role: user.role,
-    username: user.username,
+    username: user.username
   };
+  ['familyId', 'childId', 'tokenVersion'].forEach((field) => {
+    if (user[field] !== undefined) payload[field] = user[field];
+  });
   
   const jwtSecret = configManager.get('JWT_SECRET');
   const tokenExpiration = type === 'refresh' 
     ? configManager.get('JWT_REFRESH_TOKEN_EXPIRATION') 
     : configManager.get('JWT_TOKEN_EXPIRATION');
 
-  const token = jwt.sign(payload, jwtSecret, { expiresIn: tokenExpiration });
+  const effectiveExpiration = options.expiresIn || tokenExpiration;
+  const token = jwt.sign(payload, jwtSecret, { expiresIn: effectiveExpiration });
   
   // 记录令牌生成日志
   logger.debug('JWT令牌生成', {
     userId: payload.id,
     role: payload.role,
     type: type,
-    expiresIn: tokenExpiration
+    expiresIn: effectiveExpiration
   });
   
   return token;

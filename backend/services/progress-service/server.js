@@ -1,76 +1,90 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const Progress = require('./models/Progress');
-const Report = require('./models/Report');
 const config = require('./config');
+const progressRoutes = require('./routes/progress');
+const reportRoutes = require('./routes/reports');
+const growthLogRoutes = require('./routes/growthLogs');
+const knowledgePointRoutes = require('./routes/knowledgePoints');
+const internalStarRoutes = require('./routes/internalStars');
+const rewardRoutes = require('./routes/rewards');
+const { errorHandler, requestTracker } = require('../../common/middleware/errorHandler');
+const { createLogger } = require('../../common/config/logger');
 
-const app = express();
+const logger = createLogger('progress-service');
 
-// 中间件
-app.use(cors());
-app.use(express.json());
+const assertTransactionCapability = async (connection) => {
+  const hello = await connection.db.admin().command({ hello: 1 });
+  const transactionReady = Boolean(hello.setName)
+    && hello.isWritablePrimary === true
+    && Number.isInteger(hello.maxWireVersion)
+    && hello.maxWireVersion >= 7
+    && Number.isFinite(hello.logicalSessionTimeoutMinutes);
 
-// 连接数据库
-mongoose.connect(config.mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB连接成功'))
-.catch(err => console.error('MongoDB连接失败:', err));
-
-// 认证中间件
-const authenticateToken = (req, res, next) => {
-  // 从请求头获取用户信息（由API网关添加）
-  if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
-    return res.status(401).json({ message: '未认证' });
+  if (!transactionReady) {
+    throw new Error('progress-service requires a transaction-capable writable replica-set primary');
   }
-  
-  req.user = {
-    id: req.headers['x-user-id'],
-    role: req.headers['x-user-role']
-  };
-  
-  next();
+
+  return hello;
 };
 
-// 角色检查中间件
-const checkRole = (roles) => {
-  return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: '未认证' });
-    
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: '权限不足' });
-    }
-    
-    next();
-  };
-};
+const createApp = () => {
+  const app = express();
+  app.locals.logger = logger;
+  app.locals.serviceName = 'progress-service';
 
-// 导入路由
-const routes = require('./routes');
-
-// 使用路由
-app.use('/api/progress', routes);
-
-// 健康检查路由
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'progress-service' });
-});
-
-// 错误处理中间件
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    message: '服务器内部错误',
-    error: process.env.NODE_ENV === 'production' ? {} : err.message
+  app.use(cors());
+  app.use(express.json());
+  app.use(requestTracker);
+  app.use('/api/progress', progressRoutes);
+  app.use('/api/reports', reportRoutes);
+  app.use('/api/growth-logs', growthLogRoutes);
+  app.use('/api/knowledge-points', knowledgePointRoutes);
+  app.use('/api/internal/stars', internalStarRoutes);
+  app.use('/api/rewards', rewardRoutes);
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', service: 'progress-service' });
   });
-});
+  app.use(errorHandler);
 
-// 启动服务器
-const PORT = process.env.PORT || 5003;
-app.listen(PORT, () => {
-  console.log(`学习进度服务运行在端口 ${PORT}`);
-});
+  return app;
+};
+
+const connectDatabase = async ({
+  mongooseInstance = mongoose,
+  mongoURI = config.db.uri
+} = {}) => {
+  if (mongooseInstance.connection.readyState === 0) {
+    await mongooseInstance.connect(mongoURI, config.db.options);
+  }
+
+  const hello = await assertTransactionCapability(mongooseInstance.connection);
+  logger.info('MongoDB connected with transaction support', { replicaSet: hello.setName });
+  return mongooseInstance.connection;
+};
+
+const startServer = async ({
+  app = createApp(),
+  port = config.server.port,
+  connect = connectDatabase
+} = {}) => {
+  await connect();
+  return app.listen(port, () => {
+    logger.info(`Progress service running on port ${port}`);
+  });
+};
+
+const app = createApp();
+
+if (require.main === module) {
+  startServer({ app }).catch((error) => {
+    logger.error('Progress service failed to start', { error: error.message, stack: error.stack });
+    process.exitCode = 1;
+  });
+}
 
 module.exports = app;
+module.exports.assertTransactionCapability = assertTransactionCapability;
+module.exports.connectDatabase = connectDatabase;
+module.exports.createApp = createApp;
+module.exports.startServer = startServer;

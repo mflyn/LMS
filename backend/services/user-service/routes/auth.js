@@ -1,5 +1,6 @@
 const express = require('express');
 const authController = require('../controllers/authController');
+const familyController = require('../controllers/familyController');
 const { authenticateJWT } = require('../../../common/middleware/auth'); // Import JWT authentication middleware
 // Removed local validator import: const { validate, registrationValidationRules, ... } = require('../middleware/validators/authValidators');
 const {
@@ -23,6 +24,8 @@ router.post('/login',
   validate, 
   authController.login
 );
+
+router.post('/child-pin-login', familyController.childPinLogin);
 
 router.post('/change-password',
   authenticateJWT, 

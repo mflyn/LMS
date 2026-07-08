@@ -66,6 +66,8 @@ const configSchema = Joi.object({
   RATE_LIMIT_WINDOW_MS: Joi.number().default(15 * 60 * 1000), // 15分钟
   RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100),
   CORS_ORIGIN: Joi.string().default('*'),
+  INTERNAL_SERVICE_TOKEN: Joi.string().min(32).optional(),
+  STAR_AWARD_TIMEOUT_MS: Joi.number().integer().positive().default(3000),
   
   // 监控配置
   ENABLE_METRICS: Joi.boolean().default(false),
@@ -108,6 +110,9 @@ class ConfigManager {
       console.log(`✅ 配置加载成功 (环境: ${this.config.NODE_ENV})`);
     } catch (error) {
       console.error('❌ 配置加载失败:', error.message);
+      if (process.env.NODE_ENV === 'test') {
+        throw error;
+      }
       process.exit(1);
     }
   }
@@ -380,7 +385,7 @@ class ConfigManager {
 const configManager = new ConfigManager();
 
 // 导出配置管理器和便捷方法
-module.exports = {
+const exportedConfig = {
   configManager,
   
   // 便捷方法
@@ -388,12 +393,14 @@ module.exports = {
   getAll: () => configManager.getAll(),
   getServiceConfig: (serviceName) => configManager.getServiceConfig(serviceName),
   validateRequired: (keys) => configManager.validateRequiredConfig(keys),
-  
-  // 向后兼容的导出
-  auth: require('./auth'),
-  db: require('./db'),
-  logger: require('./logger')
 };
+
+module.exports = exportedConfig;
+
+// 向后兼容的导出
+exportedConfig.auth = require('./auth');
+exportedConfig.db = require('./db');
+exportedConfig.logger = require('./logger');
 
 // 进程退出时清理资源
 process.on('SIGINT', () => {

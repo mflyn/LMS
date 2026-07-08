@@ -2,10 +2,19 @@
  * 进度服务配置文件
  */
 
+const validateInternalServiceToken = (value) => {
+  if (typeof value !== 'string' || value.length < 32) {
+    throw new Error('INTERNAL_SERVICE_TOKEN must contain at least 32 characters');
+  }
+  return value;
+};
+
 module.exports = {
   // 数据库配置
   db: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/learning-management-system',
+    uri: process.env.MONGO_URI
+      || process.env.MONGODB_URI
+      || 'mongodb://localhost:27017/learning-management-system',
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true
@@ -14,8 +23,10 @@ module.exports = {
   
   // 服务器配置
   server: {
-    port: process.env.PROGRESS_SERVICE_PORT || 3005
+    port: Number(process.env.PORT || process.env.PROGRESS_SERVICE_PORT || 3002)
   },
+
+  internalServiceToken: validateInternalServiceToken(process.env.INTERNAL_SERVICE_TOKEN),
   
   // JWT配置
   jwt: {
@@ -41,3 +52,5 @@ module.exports = {
     file: 'logs/progress-service.log'
   }
 };
+
+module.exports.validateInternalServiceToken = validateInternalServiceToken;

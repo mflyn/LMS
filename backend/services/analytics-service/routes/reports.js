@@ -2,21 +2,8 @@ const express = require('express');
 const router = express.Router();
 const StudentPerformanceTrend = require('../models/StudentPerformanceTrend');
 const MistakeRecord = require('../models/MistakeRecord');
-const winston = require('winston');
-
-// 获取日志记录器实例
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
-  ],
-});
+const { createLogger } = require('../../../common/config/logger');
+const logger = createLogger('analytics-service');
 
 // 生成学生个性化学习报告
 router.get('/student/:studentId', async (req, res) => {

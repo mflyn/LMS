@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 前端服务
   frontend:
@@ -27,7 +25,7 @@ services:
       - redis
       - rabbitmq
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/education
+      - MONGODB_URI=mongodb://mongodb:27017/education?replicaSet=rs0
       - REDIS_URI=redis://redis:6379
       - RABBITMQ_URI=amqp://rabbitmq:5672
       - JWT_SECRET=your-secret-key
@@ -38,12 +36,32 @@ services:
   # MongoDB 数据库
   mongodb:
     image: mongo:6.0
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  mongodb-init:
+    image: mongo:6.0
+    depends_on:
+      - mongodb
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        until mongosh --host mongodb:27017 --quiet --eval "db.adminCommand('ping').ok"; do sleep 2; done;
+        mongosh --host mongodb:27017 --quiet --eval "try { rs.status() } catch (error) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }";
+        until mongosh --host mongodb:27017 --quiet --eval "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"; do sleep 2; done
+    networks:
+      - app-network
+    restart: "no"
 
   # Redis 缓存
   redis:
@@ -127,4 +145,4 @@ volumes:
 
 networks:
   app-network:
-    driver: bridge 
+    driver: bridge

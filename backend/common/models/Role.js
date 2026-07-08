@@ -11,8 +11,7 @@ const roleSchema = new Schema({
     required: true,
     unique: true,
     trim: true,
-    enum: ['admin', 'teacher', 'student', 'parent', 'superadmin'],
-    index: true
+    enum: ['admin', 'teacher', 'student', 'parent', 'superadmin']
   },
   description: {
     type: String,
@@ -40,7 +39,6 @@ const roleSchema = new Schema({
 });
 
 // 创建索引
-roleSchema.index({ name: 1 }, { unique: true });
 roleSchema.index({ isActive: 1 });
 
 // 静态方法：根据角色名查找角色
@@ -55,4 +53,4 @@ roleSchema.statics.getActiveRoles = function() {
 
 const Role = mongoose.model('Role', roleSchema);
 
-module.exports = Role; 
+module.exports = Role;

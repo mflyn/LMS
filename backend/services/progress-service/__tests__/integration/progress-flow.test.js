@@ -8,18 +8,22 @@ describe('进度服务集成测试', () => {
   let teacherId;
   let subjectId;
   
-  beforeAll(async () => {
+  beforeEach(async () => {
     // 创建测试ID
     studentId = new mongoose.Types.ObjectId();
     teacherId = new mongoose.Types.ObjectId();
     subjectId = new mongoose.Types.ObjectId();
     
-    // 清理测试数据
-    await Progress.deleteMany({});
-  });
-  
-  afterAll(async () => {
-    await mongoose.connection.close();
+    await Progress.create({
+      student: studentId,
+      subject: subjectId,
+      chapter: '第一章',
+      section: '1.2',
+      completionRate: 85,
+      status: 'in_progress',
+      createdBy: teacherId,
+      updatedBy: teacherId
+    });
   });
   
   it('教师应该能够创建和更新学生进度', async () => {
@@ -102,7 +106,10 @@ describe('进度服务集成测试', () => {
       .set(headers);
     
     expect(response.status).toBe(403);
-    expect(response.body).toHaveProperty('message', '权限不足');
+    expect(response.body.error).toEqual(expect.objectContaining({
+      code: 'ACCESS_DENIED',
+      message: '权限不足'
+    }));
   });
   
   it('教师应该能够查看所有学生的进度', async () => {
@@ -130,15 +137,15 @@ describe('进度服务集成测试', () => {
     ];
     
     // 模拟教师认证
-    const headers = {
+    const headers = () => ({
       'x-user-id': teacherId.toString(),
       'x-user-role': 'teacher'
-    };
+    });
     
     // 批量更新进度
     const batchUpdateResponse = await request(app)
       .post('/api/progress/batch-update')
-      .set(headers)
+      .set(headers())
       .send({
         students: studentIds.map(id => id.toString()),
         subject: subjectId,
@@ -157,7 +164,7 @@ describe('进度服务集成测试', () => {
     for (const id of studentIds) {
       const checkResponse = await request(app)
         .get(`/api/progress/${id}`)
-        .set(headers);
+        .set(headers());
       
       expect(checkResponse.status).toBe(200);
       expect(checkResponse.body.progress[0].chapter).toBe('第二章');

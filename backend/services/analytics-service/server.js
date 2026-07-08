@@ -1,121 +1,109 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const winston = require('winston');
-const fs = require('fs');
 const http = require('http');
-const socketIo = require('socket.io');
+const crypto = require('crypto');
+const mongoose = require('mongoose');
+const appModule = require('./app');
+const { createLogger } = require('../../common/config/logger');
+const { createMediaReferenceClient } = require('../../common/services/mediaReferenceClient');
+const FamilyMistake = require('./models/FamilyMistake');
+const FamilyMistakeStateEvent = require('./models/FamilyMistakeStateEvent');
+const { createFamilyMistakeMediaService } = require('./services/familyMistakeMediaService');
 
-// 加载环境变量
-dotenv.config();
+const logger = createLogger('analytics-service');
+const createApp = appModule.createApp;
 
-// 创建Express应用和HTTP服务器
-const app = express();
-const server = http.createServer(app);
+const assertTransactionCapability = async (connection) => {
+  const hello = await connection.db.admin().command({ hello: 1 });
+  const transactionReady = Boolean(hello.setName)
+    && hello.isWritablePrimary === true
+    && Number.isInteger(hello.maxWireVersion)
+    && hello.maxWireVersion >= 7
+    && Number.isFinite(hello.logicalSessionTimeoutMinutes);
 
-// 创建Socket.IO实例
-const io = socketIo(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+  if (!transactionReady) {
+    throw new Error('analytics-service requires a transaction-capable writable replica-set primary');
   }
-});
 
-// 配置日志记录器
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
-  ],
-});
+  return hello;
+};
 
-// 确保日志目录存在
-if (!fs.existsSync('logs')) {
-  fs.mkdirSync('logs', { recursive: true });
+const connectDatabase = async ({
+  mongooseInstance = mongoose,
+  mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker'
+} = {}) => {
+  if (mongooseInstance.connection.readyState === 0) {
+    await mongooseInstance.connect(mongoURI);
+  }
+  const hello = await assertTransactionCapability(mongooseInstance.connection);
+  logger.info('Analytics MongoDB connected with transaction support', { replicaSet: hello.setName });
+  return mongooseInstance.connection;
+};
+
+const createSocketServer = (server, socketLogger = logger) => {
+  const socketIo = require('socket.io');
+  const io = socketIo(server, { cors: { origin: '*', methods: ['GET', 'POST'] } });
+  io.on('connection', (socket) => {
+    socketLogger.info('Analytics WebSocket connected');
+    socket.on('join', (userId) => socket.join(userId));
+    socket.on('disconnect', () => socketLogger.info('Analytics WebSocket disconnected'));
+  });
+  return io;
+};
+
+const createTask6MediaDependencies = ({
+  env = process.env,
+  mediaReferenceClientFactory = createMediaReferenceClient,
+  randomUUID = crypto.randomUUID
+} = {}) => {
+  const mediaReferenceClient = mediaReferenceClientFactory({
+    resourceServiceUrl: env.RESOURCE_SERVICE_URL,
+    serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN,
+    timeout: Number(env.MEDIA_REFERENCE_TIMEOUT_MS || 3000)
+  });
+
+  return {
+    familyMistakeMediaService: createFamilyMistakeMediaService({
+      FamilyMistakeModel: FamilyMistake,
+      FamilyMistakeStateEventModel: FamilyMistakeStateEvent,
+      mediaReferenceClient,
+      randomUUID
+    })
+  };
+};
+
+const startServer = async ({
+  port = Number(process.env.PORT || 3006),
+  connect = connectDatabase,
+  createHttpServer = http.createServer,
+  createIo = createSocketServer,
+  createTask6Dependencies = createTask6MediaDependencies
+} = {}) => {
+  await connect();
+  const app = createApp(createTask6Dependencies());
+  const server = createHttpServer(app);
+  app.locals.io = createIo(server, logger);
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, resolve);
+  });
+  if (logger && typeof logger.info === 'function') {
+    logger.info('Analytics service started', { port });
+  }
+  return server;
+};
+
+const app = createApp();
+
+if (require.main === module) {
+  startServer().catch((error) => {
+    logger.error('Analytics service failed to start', { error: error.message, stack: error.stack });
+    process.exitCode = 1;
+  });
 }
 
-// 中间件
-app.use(cors());
-app.use(express.json());
-
-// 请求日志中间件
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url}`);
-  next();
-});
-
-// 连接到MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  logger.info('MongoDB连接成功');
-})
-.catch((err) => {
-  logger.error('MongoDB连接失败:', err.message);
-});
-
-// 导入路由模块
-const progressRouter = require('./routes/progress');
-const reportsRouter = require('./routes/reports');
-const trendsRouter = require('./routes/trends');
-const longTermTrendsRouter = require('./routes/long-term-trends');
-const behaviorRouter = require('./routes/behavior');
-const integrationRouter = require('./routes/integration');
-const performanceRouter = require('./routes/performance');
-
-// 使用路由模块
-app.use('/api/analytics/progress', progressRouter);
-app.use('/api/analytics/reports', reportsRouter);
-app.use('/api/analytics/trends', trendsRouter);
-app.use('/api/analytics/long-term-trends', longTermTrendsRouter);
-app.use('/api/analytics/behavior', behaviorRouter);
-app.use('/api/analytics/performance', performanceRouter);
-app.use('/api/analytics', integrationRouter);
-
-// 健康检查路由
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'analytics-service' });
-});
-
-// 错误处理中间件
-app.use((err, req, res, next) => {
-  logger.error(err.stack);
-  res.status(500).json({
-    message: '服务器内部错误',
-    error: process.env.NODE_ENV === 'production' ? {} : err.message
-  });
-});
-
-// Socket.IO连接处理
-io.on('connection', (socket) => {
-  logger.info('新的WebSocket连接');
-
-  socket.on('join', (userId) => {
-    socket.join(userId);
-    logger.info(`用户 ${userId} 加入了数据分析频道`);
-  });
-
-  socket.on('disconnect', () => {
-    logger.info('WebSocket连接断开');
-  });
-});
-
-// 将Socket.IO实例添加到app对象，以便在路由中使用
-app.locals.io = io;
-
-// 启动服务器
-const PORT = process.env.PORT || 5007;
-server.listen(PORT, () => {
-  logger.info(`数据分析服务运行在端口 ${PORT}`);
-});
-
 module.exports = app;
+module.exports.assertTransactionCapability = assertTransactionCapability;
+module.exports.connectDatabase = connectDatabase;
+module.exports.createApp = createApp;
+module.exports.createSocketServer = createSocketServer;
+module.exports.createTask6MediaDependencies = createTask6MediaDependencies;
+module.exports.startServer = startServer;

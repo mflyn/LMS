@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const Progress = require('../models/Progress');
 
+const sendError = (res, status, code, message) => res.status(status).json({
+  success: false,
+  error: { code, message, details: [] }
+});
+
 // 认证中间件
 const authenticateToken = (req, res, next) => {
   // 从请求头获取用户信息（由API网关添加）
   if (!req.headers['x-user-id'] || !req.headers['x-user-role']) {
-    return res.status(401).json({ message: '未认证' });
+    return sendError(res, 401, 'UNAUTHENTICATED', '未认证');
   }
 
   req.user = {
@@ -20,10 +25,10 @@ const authenticateToken = (req, res, next) => {
 // 角色检查中间件
 const checkRole = (roles) => {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: '未认证' });
+    if (!req.user) return sendError(res, 401, 'UNAUTHENTICATED', '未认证');
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: '权限不足' });
+      return sendError(res, 403, 'ACCESS_DENIED', '权限不足');
     }
 
     next();
@@ -31,11 +36,11 @@ const checkRole = (roles) => {
 };
 
 // 获取学生学习进度
-router.get('/:studentId', authenticateToken, async (req, res) => {
+router.get('/:studentId', authenticateToken, async (req, res, next) => {
   try {
     // 检查权限：只有学生本人、其家长、教师或管理员可以查看
     if (req.user.role === 'student' && req.user.id !== req.params.studentId) {
-      return res.status(403).json({ message: '权限不足' });
+      return sendError(res, 403, 'ACCESS_DENIED', '权限不足');
     }
 
     let progress;
@@ -52,13 +57,12 @@ router.get('/:studentId', authenticateToken, async (req, res) => {
 
     res.json({ progress });
   } catch (error) {
-    console.error('获取学习进度错误:', error);
-    res.status(500).json({ message: '服务器错误' });
+    next(error);
   }
 });
 
 // 更新学习进度
-router.post('/update', authenticateToken, checkRole(['teacher', 'admin']), async (req, res) => {
+router.post('/update', authenticateToken, checkRole(['teacher', 'admin']), async (req, res, next) => {
   try {
     const { student, subject, chapter, section, completionRate, status, comments } = req.body;
 
@@ -93,8 +97,35 @@ router.post('/update', authenticateToken, checkRole(['teacher', 'admin']), async
 
     res.json({ message: '学习进度已更新', progress });
   } catch (error) {
-    console.error('更新学习进度错误:', error);
-    res.status(500).json({ message: '服务器错误' });
+    next(error);
+  }
+});
+
+router.post('/batch-update', authenticateToken, checkRole(['teacher', 'admin']), async (req, res, next) => {
+  try {
+    const { students, subject, chapter, section, completionRate, status, comments } = req.body;
+    if (!Array.isArray(students) || students.length === 0) {
+      return sendError(res, 400, 'VALIDATION_ERROR', 'students must be a non-empty array');
+    }
+
+    await Promise.all(students.map(async (student) => {
+      const progress = await Progress.findOne({ student, subject }) || new Progress({ student, subject });
+      Object.assign(progress, {
+        chapter,
+        section,
+        completionRate,
+        status,
+        comments,
+        createdBy: progress.createdBy || req.user.id,
+        updatedBy: req.user.id,
+        updatedAt: Date.now()
+      });
+      await progress.save();
+    }));
+
+    return res.json({ message: '批量更新成功', updatedCount: students.length });
+  } catch (error) {
+    return next(error);
   }
 });
 

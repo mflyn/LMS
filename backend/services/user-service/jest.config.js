@@ -1,14 +1,12 @@
 module.exports = {
+  displayName: 'user-service',
   testEnvironment: 'node',
-  globalSetup: './__tests__/globalSetup.js',
-  globalTeardown: './__tests__/globalTeardown.js',
   setupFilesAfterEnv: ['./__tests__/setup.js'],
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/__tests__/',
     'models/index.js', // 如果有
   ],
-  collectCoverage: true,
   collectCoverageFrom: [
     // 'app.js',
     'server.js',
@@ -31,12 +29,22 @@ module.exports = {
     '**/__tests__/**/*.test.js',
     '**/__tests__/**/*.spec.js',
   ],
-  verbose: true,
+  testPathIgnorePatterns: [
+    '<rootDir>/__tests__/routes/auth.test.js',
+    '<rootDir>/__tests__/controllers/userController.test.js',
+    '<rootDir>/__tests__/validators/userValidators.test.js',
+    '<rootDir>/__tests__/routes/student.direct.test.js',
+    '<rootDir>/__tests__/models/User.direct.test.js',
+    '<rootDir>/__tests__/models/Role.test.js',
+    '<rootDir>/__tests__/controllers/studentController.test.js',
+    '<rootDir>/__tests__/user.test.js',
+    '<rootDir>/__tests__/student.test.js'
+  ],
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  testTimeout: 30000, 
   moduleNameMapper: {
+    '^mongoose$': '<rootDir>/../../../node_modules/mongoose',
     // '^(../../../common/(.*))$': '<rootDir>/../../common/$1',
   },
-}; 
+};

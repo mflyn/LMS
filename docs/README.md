@@ -15,6 +15,7 @@ docs/
 │   └── error-handling.md # 错误处理规范
 ├── api/              # API 文档
 │   ├── overview.md   # API 概述
+│   ├── family-learning-tracker-api.md # 家庭成长跟踪 API 契约
 │   ├── auth.md       # 认证授权
 │   ├── endpoints/    # 接口文档
 │   ├── errors.md     # 错误码说明
@@ -26,10 +27,13 @@ docs/
 │   ├── monitoring.md # 监控告警
 │   └── troubleshooting.md # 故障处理
 ├── architecture/     # 架构文档
+│   ├── family-learning-tracker-architecture.md # 家庭成长跟踪架构设计
 │   ├── system.md     # 系统架构
 │   ├── data-flow.md  # 数据流说明
 │   ├── performance.md # 性能架构
 │   └── security.md   # 安全架构
+├── product/          # 产品需求与规划文档
+│   └── family-learning-tracker.md # 家庭版成长跟踪产品需求与功能边界
 ├── user-guide/       # 用户指南
 │   ├── features.md   # 功能说明
 │   ├── operations.md # 操作指南
@@ -40,6 +44,12 @@ docs/
     ├── component.md  # 组件文档模板
     └── guide.md      # 指南文档模板
 ```
+
+## 重点产品文档
+
+- [家庭版成长跟踪产品需求与功能边界](./product/family-learning-tracker.md)：说明从学校级学习管理系统收敛到家庭成长跟踪软件后的产品定位、德智体美劳核心闭环、MVP 功能、暂缓功能和后续扩展路线。
+- [家庭成长跟踪架构设计](./architecture/family-learning-tracker-architecture.md)：说明第一阶段服务映射、核心模型、数据归属、权限规则、前端信息架构和本地演示部署边界。
+- [家庭成长跟踪 API 契约](./api/family-learning-tracker-api.md)：定义家长、孩子、成长任务、成长记录、错题、周报、奖励和提醒的首轮 API 契约。
 
 ## 文档类型
 
@@ -480,4 +490,4 @@ docs/
    - 每周检查
    - 每月更新
    - 季度审查
-   - 年度总结 
+   - 年度总结

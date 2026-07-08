@@ -1,8 +1,22 @@
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'test-jwt-secret-at-least-32-characters';
+process.env.GATEWAY_IDENTITY_SECRET = 'test-gateway-identity-secret-32-bytes-long';
+process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/auth-middleware-test';
+
+const mockDefaultUserFindOne = jest.fn();
+
+jest.mock('../../models/User', () => ({
+  findOne: (...args) => mockDefaultUserFindOne(...args)
+}));
+
 const jwt = require('jsonwebtoken');
 const { generateToken, authenticateJWT, authenticateGateway, checkRole } = require('../auth');
 // Corrected path for authConfig assuming __tests__ is a sibling to files it tests, and config is one level up from common
 const authConfig = require('../../config/auth'); 
 const { UnauthorizedError, ForbiddenError } = require('../errorTypes');
+const { createIdentityHeaders, resetIdentityNonceStore } = require('../gatewayIdentity');
+
+const gatewayIdentitySecret = process.env.GATEWAY_IDENTITY_SECRET;
 
 // Mocking jsonwebtoken
 jest.mock('jsonwebtoken', () => ({
@@ -20,6 +34,15 @@ jest.mock('../../config/auth', () => ({
   refreshTokenExpiration: '7d', // Provide a mock refresh token expiration
 }));
 
+jest.mock('../../config/logger', () => ({
+  createLogger: () => ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn()
+  })
+}));
+
 
 describe('Auth Middleware', () => {
   let mockReq;
@@ -29,8 +52,12 @@ describe('Auth Middleware', () => {
   beforeEach(() => {
     // Reset mocks for each test
     mockReq = {
+      app: { locals: {} },
+      method: 'GET',
+      originalUrl: '/api/test',
       headers: {},
       header: jest.fn(name => mockReq.headers[name.toLowerCase()]), // Express's req.header() is case-insensitive
+      get: jest.fn(name => mockReq.headers[name.toLowerCase()]),
       user: null, 
     };
     mockRes = {
@@ -48,6 +75,9 @@ describe('Auth Middleware', () => {
         jwt.verify.mockClear();
     }
     mockReq.header.mockClear();
+    resetIdentityNonceStore();
+    mockDefaultUserFindOne.mockReset();
+    mockDefaultUserFindOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
   });
 
   describe('generateToken', () => {
@@ -60,8 +90,8 @@ describe('Auth Middleware', () => {
 
       expect(jwt.sign).toHaveBeenCalledWith(
         { id: 'userId123', role: 'user', username: 'testuser' },
-        'testsecret', // from mocked authConfig
-        { expiresIn: '1h' } // from mocked authConfig
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
       );
       expect(token).toBe(expectedToken);
     });
@@ -74,7 +104,7 @@ describe('Auth Middleware', () => {
       
       expect(jwt.sign).toHaveBeenCalledWith(
         { id: 'userId123', role: 'user', username: 'testuser' },
-        'testsecret',
+        process.env.JWT_SECRET,
         { expiresIn: '7d' }  // refreshTokenExpiration from mocked config
       );
     });
@@ -91,7 +121,7 @@ describe('Auth Middleware', () => {
 
       authenticateJWT(mockReq, mockRes, mockNext);
 
-      expect(jwt.verify).toHaveBeenCalledWith('validtokenstring', 'testsecret', expect.any(Function));
+      expect(jwt.verify).toHaveBeenCalledWith('validtokenstring', process.env.JWT_SECRET, expect.any(Function));
       expect(mockReq.user).toEqual(decodedPayload);
       expect(mockNext).toHaveBeenCalledWith();
       expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
@@ -139,15 +169,52 @@ describe('Auth Middleware', () => {
   });
 
   describe('authenticateGateway', () => {
-    it('should call next() and set req.user if x-user-id and x-user-role headers are present', () => {
-      mockReq.headers['x-user-id'] = 'gatewayUserId';
-      mockReq.headers['x-user-role'] = 'admin';
+    it('should call next() and set req.user if the gateway identity envelope is valid', () => {
+      mockReq.headers = createIdentityHeaders({
+        method: mockReq.method,
+        originalUrl: mockReq.originalUrl,
+        user: { id: 'gatewayUserId', role: 'admin' },
+        secret: gatewayIdentitySecret,
+        nonce: 'auth-test-valid'
+      });
 
       authenticateGateway(mockReq, mockRes, mockNext);
       
       expect(mockReq.user).toEqual({ id: 'gatewayUserId', role: 'admin' });
       expect(mockNext).toHaveBeenCalledWith();
       expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
+    });
+
+    it('should reject unsigned x-user headers', () => {
+      mockReq.headers['x-user-id'] = 'forgedUserId';
+      mockReq.headers['x-user-role'] = 'admin';
+
+      authenticateGateway(mockReq, mockRes, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+    });
+
+    it('uses the service-injected user model for child token validation', async () => {
+      const childId = '6656875da7f86a0012c2a301';
+      const familyId = '6656875da7f86a0012c2a101';
+      const select = jest.fn().mockResolvedValue({ childProfile: { tokenVersion: 3 } });
+      const injectedFindOne = jest.fn().mockReturnValue({ select });
+      mockReq.app.locals.userModel = { findOne: injectedFindOne };
+      mockReq.headers = createIdentityHeaders({
+        method: mockReq.method,
+        originalUrl: mockReq.originalUrl,
+        user: { id: childId, childId, familyId, role: 'student', tokenVersion: 3 },
+        secret: gatewayIdentitySecret,
+        nonce: 'auth-test-injected-model'
+      });
+
+      await authenticateGateway(mockReq, mockRes, mockNext);
+
+      expect(injectedFindOne).toHaveBeenCalledWith({ _id: childId, role: 'student', familyId });
+      expect(select).toHaveBeenCalledWith('childProfile.tokenVersion');
+      expect(mockDefaultUserFindOne).not.toHaveBeenCalled();
+      expect(mockReq.user).toEqual(expect.objectContaining({ id: childId, childId, familyId }));
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
     it('should call next with UnauthorizedError if x-user-id header is missing', () => {
@@ -157,7 +224,7 @@ describe('Auth Middleware', () => {
       authenticateGateway(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('User identification headers (x-user-id, x-user-role) are missing or incomplete. Ensure API Gateway is configured correctly.');
+      expect(error.message).toBe('Invalid gateway identity envelope');
       expect(error.statusCode).toBe(401);
     });
 
@@ -168,7 +235,7 @@ describe('Auth Middleware', () => {
       authenticateGateway(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = mockNext.mock.calls[0][0];
-      expect(error.message).toBe('User identification headers (x-user-id, x-user-role) are missing or incomplete. Ensure API Gateway is configured correctly.');
+      expect(error.message).toBe('Invalid gateway identity envelope');
       expect(error.statusCode).toBe(401);
     });
   });
@@ -230,4 +297,4 @@ describe('Auth Middleware', () => {
       expect(error.statusCode).toBe(401);
     });
   });
-}); 
+});

@@ -26,12 +26,24 @@ spec:
         - name: PORT
           value: "3001"
         - name: MONGO_URI
-          value: "mongodb://mongo:27017/learning-tracker"
+          value: "mongodb://mongo:27017/learning-tracker?replicaSet=rs0"
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: jwt-secret
-              key: JWT_SECRET
+              name: family-growth-secrets
+              key: jwt-secret
+        - name: GATEWAY_IDENTITY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: gateway-identity-secret
+        - name: RESOURCE_SERVICE_URL
+          value: "http://resource-service:3005"
+        - name: MEDIA_REFERENCE_SERVICE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: media-reference-service-token
         resources:
           limits:
             cpu: "300m"
