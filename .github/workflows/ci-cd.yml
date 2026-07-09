@@ -2,14 +2,80 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_performance:
+        description: Run k6 performance tests
+        required: true
+        type: boolean
+        default: false
+      performance_script:
+        description: k6 script path
+        required: true
+        type: string
+        default: tests/performance/k6.config.js
+      run_security:
+        description: Run ZAP security scan
+        required: true
+        type: boolean
+        default: false
+      security_target_url:
+        description: Target URL for ZAP scan; required when run_security is true
+        required: false
+        type: string
+        default: ''
+      security_config:
+        description: ZAP config file path
+        required: true
+        type: string
+        default: tests/security/zap-config.yaml
+      build_images:
+        description: Build and push supported Docker images
+        required: true
+        type: boolean
+        default: false
+      image_registry:
+        description: Container registry host
+        required: true
+        type: string
+        default: docker.io
+      image_namespace:
+        description: Container image namespace or organization
+        required: true
+        type: string
+        default: learning-tracker
+      image_tag:
+        description: Image tag; defaults to commit SHA when empty
+        required: false
+        type: string
+        default: ''
+      deploy_environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        default: none
+        options:
+          - none
+          - staging
+          - production
+      kubernetes_namespace:
+        description: Kubernetes namespace for deployment
+        required: true
+        type: string
+        default: family-growth
+
+env:
+  NODE_VERSION: '18'
+  EFFECTIVE_IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
 
 jobs:
   test:
+    name: Family Regression
     runs-on: ubuntu-latest
-    
+
     services:
       mongodb:
         image: mongo:6.0
@@ -19,131 +85,203 @@ jobs:
         image: redis:7.0
         ports:
           - 6379:6379
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        
-    - name: Install Dependencies
-      run: npm install
-        
-    - name: Run Family Regression
-      run: npm run test:family-regression
 
-    - name: Upload Test Results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: |
-          frontend/test-results
-          backend/test-results
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Family Regression
+        run: npm run test:family-regression
 
   performance:
+    name: Performance Test
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_performance }}
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install k6
-      run: |
-        curl https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -L | tar xvz --strip-components=1
-    
-    - name: Run Performance Tests
-      run: |
-        ./k6 run tests/performance/k6.config.js
-        
-    - name: Upload Performance Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-results
-        path: performance-results
+      - uses: actions/checkout@v4
+
+      - name: Validate k6 Script
+        run: |
+          set -euo pipefail
+          script="${{ inputs.performance_script }}"
+          if [ ! -s "$script" ]; then
+            echo "::error::Performance script '$script' is missing or empty."
+            exit 1
+          fi
+          if ! grep -Eq 'export[[:space:]]+default[[:space:]]+function|export[[:space:]]+default[[:space:]]+async[[:space:]]+function' "$script"; then
+            echo "::error::Performance script '$script' must export a k6 default function."
+            exit 1
+          fi
+
+      - name: Install k6
+        run: |
+          curl -sSL https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz \
+            | tar xz --strip-components=1 k6-v0.45.0-linux-amd64/k6
+
+      - name: Run k6
+        run: |
+          mkdir -p performance-results
+          ./k6 run "${{ inputs.performance_script }}" \
+            --summary-export performance-results/summary.json
+
+      - name: Upload Performance Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: performance-results
 
   security:
+    name: Security Scan
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_security }}
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: ZAP Scan
-      uses: zaproxy/action-full-scan@v0.9.0
-      with:
-        target: 'http://education-system.com'
-        config_file: './tests/security/zap-config.yaml'
-        
-    - name: Upload Security Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: security-reports
-        path: security-reports
+      - uses: actions/checkout@v4
+
+      - name: Validate ZAP Inputs
+        run: |
+          set -euo pipefail
+          target="${{ inputs.security_target_url }}"
+          config="${{ inputs.security_config }}"
+          if [ -z "$target" ]; then
+            echo "::error::security_target_url is required when run_security is true."
+            exit 1
+          fi
+          if printf '%s' "$target" | grep -Eq 'education-system\.com|example\.com'; then
+            echo "::error::security_target_url must be a real environment URL, not a placeholder."
+            exit 1
+          fi
+          if [ ! -f "$config" ]; then
+            echo "::error::ZAP config '$config' does not exist."
+            exit 1
+          fi
+          mkdir -p security-reports
+
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.9.0
+        with:
+          target: ${{ inputs.security_target_url }}
+          config_file: ${{ inputs.security_config }}
+
+      - name: Upload Security Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: security-reports
 
   build:
-    needs: [test, performance, security]
+    name: Build Supported Images
+    needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_images }}
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_TOKEN }}
-        
-    - name: Build and push Frontend
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        push: true
-        tags: education-system/frontend:latest
-        
-    - name: Build and push Backend
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        push: true
-        tags: education-system/backend:latest
+      - uses: actions/checkout@v4
+
+      - name: Validate Image Inputs
+        env:
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME || secrets.DOCKER_HUB_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD || secrets.DOCKER_HUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${{ inputs.image_registry }}" ] || [ -z "${{ inputs.image_namespace }}" ]; then
+            echo "::error::image_registry and image_namespace are required when build_images is true."
+            exit 1
+          fi
+          if [ -z "$REGISTRY_USERNAME" ] || [ -z "$REGISTRY_PASSWORD" ]; then
+            echo "::error::REGISTRY_USERNAME/REGISTRY_PASSWORD or DOCKER_HUB_USERNAME/DOCKER_HUB_TOKEN secrets are required when build_images is true."
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.image_registry }}
+          username: ${{ secrets.REGISTRY_USERNAME || secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD || secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and Push Web Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend/web
+          push: true
+          tags: ${{ inputs.image_registry }}/${{ inputs.image_namespace }}/family-web:${{ env.EFFECTIVE_IMAGE_TAG }}
+
+      - name: Build and Push Gateway Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/gateway
+          push: true
+          tags: ${{ inputs.image_registry }}/${{ inputs.image_namespace }}/gateway:${{ env.EFFECTIVE_IMAGE_TAG }}
 
   deploy:
-    needs: build
+    name: Deploy to Kubernetes
+    needs:
+      - test
+      - build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+    if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.deploy_environment != 'none' && needs.test.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    environment: ${{ inputs.deploy_environment }}
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-        
-    - name: Configure kubectl
-      run: |
-        echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
-        export KUBECONFIG=kubeconfig.yaml
-        
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl apply -f deployment/kubernetes/config/
-        kubectl rollout restart deployment frontend -n education-system
-        kubectl rollout restart deployment backend -n education-system
-        
-    - name: Verify Deployment
-      run: |
-        kubectl get pods -n education-system
-        kubectl get services -n education-system
-        
-    - name: Clean up
-      run: rm kubeconfig.yaml
+      - uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: latest
+
+      - name: Configure kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          set -euo pipefail
+          if [ -z "$KUBE_CONFIG" ]; then
+            echo "::error::KUBE_CONFIG secret is required for deployment."
+            exit 1
+          fi
+          kubeconfig="$RUNNER_TEMP/kubeconfig.yaml"
+          printf '%s' "$KUBE_CONFIG" > "$kubeconfig"
+          chmod 600 "$kubeconfig"
+          echo "KUBECONFIG=$kubeconfig" >> "$GITHUB_ENV"
+
+      - name: Deploy Manifests
+        run: |
+          set -euo pipefail
+          namespace="${{ inputs.kubernetes_namespace }}"
+          kubectl create namespace "$namespace" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -k deployment/kubernetes --namespace "$namespace"
+
+      - name: Set Release Images
+        run: |
+          set -euo pipefail
+          namespace="${{ inputs.kubernetes_namespace }}"
+          registry="${{ inputs.image_registry }}"
+          image_namespace="${{ inputs.image_namespace }}"
+          tag="${{ env.EFFECTIVE_IMAGE_TAG }}"
+          for app in gateway user-service progress-service homework-service interaction-service resource-service analytics-service notification-service data-service; do
+            kubectl set image "deployment/$app" "$app=$registry/$image_namespace/$app:$tag" --namespace "$namespace"
+          done
+
+      - name: Verify Rollout
+        run: |
+          set -euo pipefail
+          namespace="${{ inputs.kubernetes_namespace }}"
+          for app in gateway user-service progress-service homework-service interaction-service resource-service analytics-service notification-service data-service; do
+            kubectl rollout status "deployment/$app" --namespace "$namespace" --timeout=180s
+          done
