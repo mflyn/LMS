@@ -9,7 +9,7 @@ module.exports = {
   moduleNameMapper: {
     '^axios$': '<rootDir>/node_modules/axios/index.js',
     '^joi$': '<rootDir>/node_modules/joi/lib/index.js',
-    '^uuid$': '<rootDir>/node_modules/uuid/dist/index.js'
+    '^uuid$': '<rootDir>/../../../node_modules/uuid/dist/cjs/index.js'
   },
   clearMocks: true,
   restoreMocks: true
