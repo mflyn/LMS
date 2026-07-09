@@ -1,101 +1,31 @@
-# 服务模块
+# Backend Services
 
-## 目录说明
-本目录包含系统的各个服务模块，每个服务模块负责特定的业务功能。
+This directory contains both accepted family-growth MVP services and legacy school-oriented services retained for compatibility. The family-growth source of truth is the product/API/architecture documentation under `docs/`, not old service boilerplate.
 
-## 目录结构
+## Current Service Inventory
+
+| Service | Family-growth status | Current role |
+| --- | --- | --- |
+| `user-service` | active | Parent auth, family, children, child PIN login and child profile media references. |
+| `homework-service` | active | Five-dimension `GrowthTask` APIs; legacy homework routes remain. |
+| `progress-service` | active | Growth logs, knowledge points, star ledger and rewards; legacy progress routes remain. |
+| `analytics-service` | active | Family mistakes and deterministic weekly reports; legacy analytics routes remain. |
+| `resource-service` | active | Private media and media reference tracking; legacy resource routes remain. |
+| `notification-service` | active | Read-time family reminders and reminder settings; legacy notification records remain. |
+| `interaction-service` | compatibility only | Old messages, announcements and meetings; not required by Task 1-7 family MVP gates. |
+| `data-service` | legacy only | Old school data entry routes; not part of the current family MVP path. |
+| `auth-service` | legacy/experimental | Standalone auth service; accepted family auth lives in `user-service`. |
+
+## Family Regression
+
+Run the accepted family backend gate from the repository root:
+
+```bash
+npm run test:family-regression
 ```
-services/
-├── auth-service/       # 认证服务
-│   ├── controllers/   # 控制器
-│   ├── routes/        # 路由
-│   ├── services/      # 服务逻辑
-│   └── tests/         # 测试文件
-├── data-service/      # 数据服务
-│   ├── controllers/   # 控制器
-│   ├── routes/        # 路由
-│   ├── services/      # 服务逻辑
-│   └── tests/         # 测试文件
-└── resource-service/  # 资源服务
-    ├── controllers/   # 控制器
-    ├── routes/        # 路由
-    ├── services/      # 服务逻辑
-    └── tests/         # 测试文件
-```
 
-## 服务模块说明
+The root CI workflow installs dependencies with `npm ci` before running this gate.
 
-### 认证服务 (auth-service)
-- 用户注册
-- 用户登录
-- 密码管理
-- 权限控制
-- 会话管理
+## Documentation Rule
 
-### 数据服务 (data-service)
-- 成绩管理
-- 作业管理
-- 课堂表现
-- 错题记录
-- 数据分析
-
-### 资源服务 (resource-service)
-- 资源上传
-- 资源下载
-- 资源管理
-- 资源分享
-- 资源统计
-
-## 服务模块规范
-
-### 目录结构规范
-1. controllers/: 处理请求和响应
-2. routes/: 定义 API 路由
-3. services/: 实现业务逻辑
-4. tests/: 包含测试文件
-
-### 代码规范
-1. 使用 ES6+ 语法
-2. 遵循 RESTful API 设计规范
-3. 实现适当的错误处理
-4. 添加必要的注释
-5. 编写单元测试
-
-### API 设计规范
-1. 使用统一的响应格式
-2. 实现适当的参数验证
-3. 添加必要的安全措施
-4. 提供清晰的错误消息
-5. 实现分页和过滤
-
-## 开发流程
-1. 创建新的服务模块
-2. 实现基本的目录结构
-3. 定义数据模型
-4. 实现业务逻辑
-5. 编写 API 路由
-6. 添加控制器
-7. 编写测试用例
-8. 进行代码审查
-9. 部署和测试
-
-## 测试要求
-1. 单元测试覆盖率 > 80%
-2. 包含集成测试
-3. 测试错误处理
-4. 测试边界条件
-5. 测试性能要求
-
-## 部署要求
-1. 独立的错误处理
-2. 适当的日志记录
-3. 性能监控
-4. 安全措施
-5. 备份策略
-
-## 注意事项
-1. 保持服务模块的独立性
-2. 注意服务之间的通信
-3. 考虑服务的可扩展性
-4. 实现适当的缓存策略
-5. 定期进行性能优化 
+Service README files should describe current implemented surfaces and explicitly label retained legacy surfaces. Do not document future capabilities such as AI analytics, push delivery, S3 storage, school administration or rich classroom workflows as if they were implemented.
