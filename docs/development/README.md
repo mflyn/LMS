@@ -15,6 +15,12 @@
 - [版本控制](#版本控制)
 - [文档规范](#文档规范)
 
+## 家庭成长基线
+
+- [Task 7 / FGT-MVP-1.5 基线清单](./family-growth-baseline-v1.5-manifest.md)
+- [Task 7 通知服务门禁](./family-growth-task7-gate.md)
+- [Task 7 通知服务测试设计与用例](./family-growth-task7-test-cases.md)
+
 ## 开发环境搭建
 
 ### 系统要求
