@@ -20,6 +20,7 @@
 - [Task 7 / FGT-MVP-1.5 基线清单](./family-growth-baseline-v1.5-manifest.md)
 - [Task 7 通知服务门禁](./family-growth-task7-gate.md)
 - [Task 7 通知服务测试设计与用例](./family-growth-task7-test-cases.md)
+- [Task 7 代码评审修复记录](./family-growth-task7-code-review-remediation.md)
 - [Task 8-11 前端与端到端设计基线](../superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md)
 
 ## 开发环境搭建

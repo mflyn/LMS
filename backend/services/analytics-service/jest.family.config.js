@@ -6,6 +6,11 @@ module.exports = {
     '<rootDir>/__tests__/task6Startup.test.js',
     '<rootDir>/__tests__/server.test.js'
   ],
+  moduleNameMapper: {
+    '^axios$': '<rootDir>/../../../node_modules/axios/dist/node/axios.cjs',
+    '^joi$': '<rootDir>/../../../node_modules/joi/lib/index.js',
+    '^uuid$': '<rootDir>/../../../node_modules/uuid/dist/cjs/index.js'
+  },
   clearMocks: true,
   restoreMocks: true
 };

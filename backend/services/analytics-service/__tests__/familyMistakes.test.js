@@ -392,4 +392,28 @@ describe('Task 6 family mistakes', () => {
     const unchanged = await FamilyMistake.findById(mistake._id);
     expect(unchanged.reviewed).toBe(false);
   });
+
+  test('TC-T6-MISTAKE-014 writes state events only after the patched source state is persisted', async () => {
+    const app = createApp();
+    const mistake = await seedMistake();
+    const originalCreate = FamilyMistakeStateEvent.create;
+    const createSpy = jest.fn(async (event) => {
+      const persisted = await FamilyMistake.findById(mistake._id).lean();
+      expect(persisted.reviewed).toBe(true);
+      return originalCreate.call(FamilyMistakeStateEvent, event);
+    });
+    FamilyMistakeStateEvent.create = createSpy;
+
+    const patchPath = mistakePath(`/${mistake._id}`);
+    const response = await request(app)
+      .patch(patchPath)
+      .set(signedHeaders(parentA(), 'PATCH', patchPath))
+      .send({ reviewed: true });
+    FamilyMistakeStateEvent.create = originalCreate;
+
+    expect(response.status).toBe(200);
+    expect(createSpy).toHaveBeenCalledTimes(1);
+    const events = await FamilyMistakeStateEvent.find({ mistakeId: mistake._id });
+    expect(events).toHaveLength(1);
+  });
 });

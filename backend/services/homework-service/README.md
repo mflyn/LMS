@@ -25,6 +25,15 @@ The growth-task routes use signed gateway identity. Parent and child actions are
 
 Task confirmation calls the progress service through the internal star-award command. Attachment handling uses the resource-service media reference contract; it does not use MinIO.
 
+Star-award calls are bounded and retry only transient failures:
+
+- `STAR_AWARD_TIMEOUT_MS`, default `3000`
+- `STAR_AWARD_RETRY_ATTEMPTS`, default `1`
+- `STAR_AWARD_RETRY_BACKOFF_MS`, default `100`
+- `STAR_AWARD_MAX_RETRY_BACKOFF_MS`, default `1000`
+
+Exhausted attempts continue to return `503 STAR_AWARD_PENDING`.
+
 ## Legacy Surface Still Present
 
 - `routes/homework.js`

@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const routes = require('./routes');
-const { errorHandler, requestTracker } = require('../../common/middleware/errorHandler');
+const { errorHandler, requestTracker, requestTimeout } = require('../../common/middleware/errorHandler');
 const { createLogger } = require('../../common/config/logger');
 
 const createApp = ({
@@ -16,6 +16,7 @@ const createApp = ({
   app.use(cors());
   app.use(express.json());
   app.use(requestTracker);
+  app.use(requestTimeout());
 
   if (familyNotificationsRouter) {
     app.use('/api/notifications/family', familyNotificationsRouter);

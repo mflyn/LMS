@@ -1,4 +1,4 @@
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-at-least-32-characters-long';
+process.env.JWT_SECRET = 'test-jwt-secret-at-least-32-characters-long';
 process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
   || 'test-gateway-identity-secret-32-bytes-long';
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
@@ -13,19 +13,20 @@ const mockListen = jest.fn((port, callback) => {
 });
 const mockLogger = { info: jest.fn(), error: jest.fn() };
 const mockApp = { listen: mockListen, locals: { logger: mockLogger } };
-mockApp.createApp = jest.fn(() => mockApp);
+mockApp.createApp = () => mockApp;
 
 jest.mock('mongoose', () => {
   const actual = jest.requireActual('mongoose');
   actual.connect = mockConnect;
   return actual;
 });
-jest.mock('../../../common/config/logger', () => ({ createLogger: jest.fn(() => mockLogger) }));
+jest.mock('../../../common/config/logger', () => ({ createLogger: () => mockLogger }));
 jest.mock('../../../common/middleware/errorHandler', () => ({
   AppError: class AppError extends Error {},
   catchAsync: (handler) => handler,
   errorHandler: jest.fn((error, req, res, next) => next(error)),
-  requestTracker: jest.fn((req, res, next) => next())
+  requestTracker: (req, res, next) => next(),
+  requestTimeout: () => (req, res, next) => next()
 }));
 jest.mock('../app', () => mockApp);
 

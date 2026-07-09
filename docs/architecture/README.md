@@ -12,6 +12,7 @@ This directory contains the architecture baseline for the family-growth MVP.
 - [ADR 0005: idempotent star ledger](./decisions/0005-idempotent-star-ledger.md)
 - [ADR 0006: signed gateway identity envelope](./decisions/0006-signed-gateway-identity-envelope.md)
 - [ADR 0007: stable weekly report history](./decisions/0007-stable-weekly-report-history.md)
+- [Task 7 code review remediation and database boundary plan](../development/family-growth-task7-code-review-remediation.md)
 
 ## Current Architecture Scope
 

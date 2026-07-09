@@ -10,5 +10,9 @@ module.exports = {
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
+  moduleNameMapper: {
+    '^axios$': '<rootDir>/../../../node_modules/axios/dist/node/axios.cjs',
+    '^joi$': '<rootDir>/../../../node_modules/joi/lib/index.js'
+  },
   setupFilesAfterEnv: ['./jest.setup.js']
 };

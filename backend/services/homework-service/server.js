@@ -6,7 +6,14 @@ const winston = require('winston');
 const amqp = require('amqplib');
 
 // 导入共享错误处理和日志相关
-const { errorHandler, AppError, catchAsync, setupUncaughtExceptionHandler, requestTracker } = require('../../common/middleware/errorHandler');
+const {
+  errorHandler,
+  AppError,
+  catchAsync,
+  setupUncaughtExceptionHandler,
+  requestTracker,
+  requestTimeout
+} = require('../../common/middleware/errorHandler');
 const { authenticateGateway, checkRole } = require('../../common/middleware/auth'); // 预先导入，路由会用到
 const { validate } = require('../../common/middleware/requestValidator'); // 预先导入，路由会用到
 
@@ -17,7 +24,10 @@ const { validateClientConfig } = require('./services/starAwardClient');
 validateClientConfig({
   progressServiceUrl: process.env.PROGRESS_SERVICE_URL || 'http://progress-service:3002',
   internalServiceToken: process.env.INTERNAL_SERVICE_TOKEN,
-  timeout: Number(process.env.STAR_AWARD_TIMEOUT_MS || 3000)
+  timeout: Number(process.env.STAR_AWARD_TIMEOUT_MS || 3000),
+  retryAttempts: Number(process.env.STAR_AWARD_RETRY_ATTEMPTS || 1),
+  retryBackoffMs: Number(process.env.STAR_AWARD_RETRY_BACKOFF_MS || 100),
+  maxRetryBackoffMs: Number(process.env.STAR_AWARD_MAX_RETRY_BACKOFF_MS || 1000)
 });
 
 // 创建Express应用
@@ -52,6 +62,7 @@ app.use(express.json());
 
 // 使用共享的请求追踪中间件
 app.use(requestTracker);
+app.use(requestTimeout());
 
 // 连接到MongoDB
 if (process.env.NODE_ENV !== 'test') {

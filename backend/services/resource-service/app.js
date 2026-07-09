@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const { createLogger } = require('../../common/config/logger');
-const { errorHandler, requestTracker } = require('../../common/middleware/errorHandler');
+const { errorHandler, requestTracker, requestTimeout } = require('../../common/middleware/errorHandler');
 const resourcesRouter = require('./routes/resources');
 const recommendationsRouter = require('./routes/recommendations');
 const collectionsRouter = require('./routes/collections');
@@ -55,6 +55,7 @@ const createApp = ({
   app.use(cors());
   app.use(express.json());
   app.use(requestTracker);
+  app.use(requestTimeout());
   app.use('/uploads', express.static(LEGACY_UPLOAD_ROOT));
   if (internalMediaRouter) {
     app.use('/api/internal/media/references', internalMediaRouter);

@@ -8,7 +8,7 @@ const growthLogRoutes = require('./routes/growthLogs');
 const knowledgePointRoutes = require('./routes/knowledgePoints');
 const internalStarRoutes = require('./routes/internalStars');
 const rewardRoutes = require('./routes/rewards');
-const { errorHandler, requestTracker } = require('../../common/middleware/errorHandler');
+const { errorHandler, requestTracker, requestTimeout } = require('../../common/middleware/errorHandler');
 const { createLogger } = require('../../common/config/logger');
 
 const logger = createLogger('progress-service');
@@ -36,6 +36,7 @@ const createApp = () => {
   app.use(cors());
   app.use(express.json());
   app.use(requestTracker);
+  app.use(requestTimeout());
   app.use('/api/progress', progressRoutes);
   app.use('/api/reports', reportRoutes);
   app.use('/api/growth-logs', growthLogRoutes);
