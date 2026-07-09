@@ -10,17 +10,19 @@
     "test:watch": "jest --config jest.config.js --watch"
   },
   "dependencies": {
+    "axios": "^0.27.2",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.21.2",
+    "joi": "^17.13.4",
     "mongoose": "^6.13.8",
     "socket.io": "^4.8.1",
     "winston": "^3.17.0"
   },
   "devDependencies": {
     "jest": "^27.5.1",
+    "mongodb-memory-server": "^7.3.6",
     "nodemon": "^2.0.14",
-    "supertest": "^6.3.4",
-    "mongodb-memory-server": "^7.3.6"
+    "supertest": "^6.3.4"
   }
 }

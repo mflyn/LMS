@@ -1,6 +1,9 @@
 require('dotenv').config({ path: '.env.test' }); // 加载测试环境变量
 
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+
+let setupMongoServer;
 
 // 注册所有模型
 const ResourceSchema = require('../models/Resource').schema;
@@ -38,6 +41,17 @@ try {
 } catch (e) {
   mongoose.model('User', UserSchema);
 }
+
+beforeAll(async () => {
+  if (mongoose.connection.readyState !== 0) return;
+  setupMongoServer = await MongoMemoryServer.create();
+  await mongoose.connect(setupMongoServer.getUri());
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  if (setupMongoServer) await setupMongoServer.stop();
+});
 
 // beforeEach 用于在每个测试用例运行前清理数据
 beforeEach(async () => {

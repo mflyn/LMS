@@ -65,6 +65,55 @@ describe('Task 5 star award client', () => {
     });
   });
 
+  test('TC-T5-STAR-002 retries transient outbound failures with bounded backoff', async () => {
+    const { createStarAwardClient } = require('../services/starAwardClient');
+    const axiosInstance = {
+      post: jest.fn()
+        .mockRejectedValueOnce(Object.assign(new Error('temporary outage'), { code: 'ECONNRESET' }))
+        .mockResolvedValueOnce({
+          data: { success: true, data: { awarded: false, ledgerEntryId: 'ledger-retry', starBalance: 2 } }
+        })
+    };
+    const sleep = jest.fn().mockResolvedValue();
+    const client = createStarAwardClient({
+      axiosInstance,
+      progressServiceUrl: 'http://progress-service:3003',
+      internalServiceToken: 'test-internal-service-token-32-bytes',
+      retryAttempts: 1,
+      retryBackoffMs: 250,
+      maxRetryBackoffMs: 250,
+      sleep
+    });
+
+    await expect(client.awardTaskStar({ taskId: 'task-1' })).resolves.toEqual({
+      awarded: false,
+      ledgerEntryId: 'ledger-retry',
+      starBalance: 2
+    });
+    expect(axiosInstance.post).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledWith(250);
+  });
+
+  test('TC-T5-STAR-002 does not retry malformed success responses', async () => {
+    const { createStarAwardClient } = require('../services/starAwardClient');
+    const axiosInstance = {
+      post: jest.fn().mockResolvedValue({ data: { success: true, data: {} } })
+    };
+    const client = createStarAwardClient({
+      axiosInstance,
+      progressServiceUrl: 'http://progress-service:3003',
+      internalServiceToken: 'test-internal-service-token-32-bytes',
+      retryAttempts: 2,
+      sleep: jest.fn().mockResolvedValue()
+    });
+
+    await expect(client.awardTaskStar({ taskId: 'task-1' })).rejects.toMatchObject({
+      code: 'STAR_AWARD_PENDING',
+      status: 503
+    });
+    expect(axiosInstance.post).toHaveBeenCalledTimes(1);
+  });
+
   test('TC-T5-STAR-002 rejects an incomplete success response', async () => {
     const { createStarAwardClient } = require('../services/starAwardClient');
     const client = createStarAwardClient({

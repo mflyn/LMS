@@ -1,10 +1,8 @@
 const crypto = require('crypto');
 const express = require('express');
-const mongoose = require('mongoose');
 
 const { authenticateGateway } = require('../../../common/middleware/auth');
-const Family = require('../../../common/models/Family');
-const User = require('../../../common/models/User');
+const { isObjectId, resolveChildAccess } = require('../../../common/utils/familyAccess');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
 const FamilyMistake = require('../models/FamilyMistake');
 const FamilyMistakeStateEvent = require('../models/FamilyMistakeStateEvent');
@@ -25,8 +23,6 @@ const sendServiceError = (res, error) => {
   sendFamilyError(res, error.status, error.code, error.message, error.details || []);
   return true;
 };
-
-const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 const booleanFromQuery = (value) => {
   if (value === undefined) return undefined;
@@ -83,31 +79,6 @@ const applyReviewReminderRange = (filter, from, to) => {
     if (from !== undefined) filter.reviewReminderDate.$gte = from;
     if (to !== undefined) filter.reviewReminderDate.$lte = to;
   }
-};
-
-const resolveChildAccess = async (identity, childId) => {
-  if (!identity || !isObjectId(childId)) return null;
-
-  if (identity.role === 'student') {
-    const identityChildId = identity.childId || identity.id;
-    if (!isObjectId(identityChildId) || identityChildId.toString() !== childId.toString()) return null;
-    if (identity.id && identity.id.toString() !== childId.toString()) return null;
-
-    const child = await User.findOne({ _id: childId, role: 'student' });
-    if (!child || !child.familyId) return null;
-    if (identity.familyId && child.familyId.toString() !== identity.familyId.toString()) return null;
-    return { familyId: child.familyId, child };
-  }
-
-  if (identity.role !== 'parent' || !isObjectId(identity.id)) return null;
-  const family = await Family.findOne({
-    $or: [{ ownerParentId: identity.id }, { memberParentIds: identity.id }],
-    childIds: childId
-  });
-  if (!family) return null;
-
-  const child = await User.findOne({ _id: childId, role: 'student', familyId: family._id });
-  return child ? { familyId: family._id, family, child } : null;
 };
 
 const mistakeView = (mistake) => ({
@@ -343,16 +314,21 @@ const createFamilyMistakesRouter = ({
       }
 
       const changedState = stateChangedBy(mistakePatch);
+      const previousValues = Object.keys(mistakePatch).reduce((snapshot, field) => ({
+        ...snapshot,
+        [field]: mistake[field]
+      }), {});
+      const previousUpdatedBy = mistake.updatedBy;
       Object.keys(mistakePatch).forEach((field) => {
         mistake[field] = mistakePatch[field];
       });
       mistake.updatedBy = req.user.id;
       await mistake.validate({ validateModifiedOnly: true });
+      await mistake.save({ validateModifiedOnly: true });
 
-      let stateEvent;
       if (changedState) {
         try {
-          stateEvent = await StateEventModel.create({
+          await StateEventModel.create({
             familyId: mistake.familyId,
             childId: mistake.childId,
             mistakeId: mistake._id,
@@ -363,15 +339,13 @@ const createFamilyMistakesRouter = ({
             operationId: crypto.randomUUID()
           });
         } catch (error) {
+          Object.keys(previousValues).forEach((field) => {
+            mistake[field] = previousValues[field];
+          });
+          mistake.updatedBy = previousUpdatedBy;
+          await mistake.save({ validateModifiedOnly: true }).catch(() => undefined);
           return sendError(res, 503, 'STATE_EVENT_UNAVAILABLE', 'Mistake state event store is unavailable');
         }
-      }
-
-      try {
-        await mistake.save({ validateModifiedOnly: true });
-      } catch (error) {
-        if (stateEvent && stateEvent._id) await StateEventModel.deleteOne({ _id: stateEvent._id });
-        throw error;
       }
 
       return res.json({ success: true, data: { mistake: mistakeView(mistake) } });

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { createLogger } = require('../../common/config/logger');
-const { errorHandler, requestTracker } = require('../../common/middleware/errorHandler');
+const { errorHandler, requestTracker, requestTimeout } = require('../../common/middleware/errorHandler');
 const progressRouter = require('./routes/progress');
 const reportsRouter = require('./routes/reports');
 const trendsRouter = require('./routes/trends');
@@ -27,6 +27,7 @@ const createApp = ({
   app.use(cors());
   app.use(express.json());
   app.use(requestTracker);
+  app.use(requestTimeout());
   if (familyMistakesRouter) app.use('/api/mistakes', familyMistakesRouter);
   if (weeklyReportsRouter) app.use('/api/reports/weekly', weeklyReportsRouter);
   app.use('/api/analytics/progress', progressRouter);

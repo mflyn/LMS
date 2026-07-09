@@ -21,6 +21,8 @@ The family routes use signed gateway identity. Parents can read and patch settin
 
 Reminders are derived on read from bounded source repositories. If one source fails, available reminders still return with `meta.partial=true` and approved source names only.
 
+Source MongoDB reads apply `maxTimeMS`; configure it with `NOTIFICATION_SOURCE_MAX_TIME_MS`, default `3000`.
+
 ## Legacy Surface Still Present
 
 - `models/Notification.js`

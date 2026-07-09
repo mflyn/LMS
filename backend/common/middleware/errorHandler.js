@@ -67,6 +67,39 @@ const requestTracker = (req, res, next) => {
   next();
 };
 
+const requestTimeout = ({ timeoutMs = Number(process.env.REQUEST_TIMEOUT_MS || 15000) } = {}) => {
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1) {
+    throw new Error('REQUEST_TIMEOUT_MS must be a positive integer');
+  }
+
+  return (req, res, next) => {
+    let timedOut = false;
+    const onTimeout = () => {
+      if (timedOut || res.headersSent) return;
+      timedOut = true;
+      req.timedOut = true;
+      const error = new AppError('Request timed out', 408, 'REQUEST_TIMEOUT', true);
+      sendContractError(error, req, res);
+    };
+
+    if (typeof req.setTimeout === 'function') req.setTimeout(timeoutMs, onTimeout);
+    if (typeof res.setTimeout === 'function') res.setTimeout(timeoutMs, onTimeout);
+    next();
+  };
+};
+
+const isMongoConnectivityError = (err) => [
+  'MongoNetworkError',
+  'MongoServerSelectionError',
+  'MongoTimeoutError',
+  'MongooseServerSelectionError'
+].includes(err.name) || [
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ETIMEDOUT',
+  'ENOTFOUND'
+].includes(err.code);
+
 /**
  * 处理MongoDB错误
  */
@@ -88,12 +121,16 @@ const handleMongoError = (err) => {
     // 无效的ObjectId
     message = '无效的资源ID';
     statusCode = 400;
+  } else if (isMongoConnectivityError(err)) {
+    message = '数据库暂时不可用';
+    statusCode = 503;
   }
 
   const code = statusCode === 409
     ? 'RESOURCE_CONFLICT'
-    : statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR';
-  return new AppError(message, statusCode, code, statusCode < 500);
+    : statusCode === 400 ? 'VALIDATION_ERROR'
+      : statusCode === 503 ? 'DATABASE_UNAVAILABLE' : 'INTERNAL_ERROR';
+  return new AppError(message, statusCode, code, statusCode !== 500);
 };
 
 /**
@@ -169,7 +206,10 @@ const errorHandler = (err, req, res, next) => {
   error.message = err.message;
 
   // 处理特定类型的错误
-  if (err.name === 'CastError' || err.name === 'ValidationError' || err.code === 11000) {
+  if (err.name === 'CastError'
+    || err.name === 'ValidationError'
+    || err.code === 11000
+    || isMongoConnectivityError(err)) {
     error = handleMongoError(err);
   }
   
@@ -235,6 +275,7 @@ module.exports = {
   catchAsync,
   notFoundHandler,
   requestTracker,
+  requestTimeout,
   AppError,
   handleUncaughtException,
   handleUnhandledRejection,

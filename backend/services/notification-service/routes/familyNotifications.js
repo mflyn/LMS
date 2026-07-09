@@ -1,11 +1,9 @@
 const express = require('express');
-const mongoose = require('mongoose');
 
 const ReminderSettings = require('../models/ReminderSettings');
-const Family = require('../../../common/models/Family');
-const User = require('../../../common/models/User');
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { sendFamilyError } = require('../../../common/utils/familyResponse');
+const { resolveChildAccess, resolveFamilyAccess } = require('../../../common/utils/familyAccess');
 const { LOCAL_DATE_PATTERN, formatLocalDate } = require('../../../common/utils/familyDate');
 const { deriveFamilyReminders } = require('../services/familyReminderService');
 const { createFamilyNotificationSourceRepository } = require('../services/familyNotificationSourceRepository');
@@ -43,66 +41,11 @@ const settingsView = (settings) => ({
   updatedAt: settings.updatedAt
 });
 
-const findParentFamily = (parentId) => Family.findOne({
-  $or: [
-    { ownerParentId: parentId },
-    { memberParentIds: parentId }
-  ]
-});
-
 const assertValidLocalDate = (localDate) => {
   if (!LOCAL_DATE_PATTERN.test(localDate || '')) return false;
   const [year, month, day] = localDate.split('-').map(Number);
   const parsed = new Date(Date.UTC(year, month - 1, day));
   return parsed.toISOString().slice(0, 10) === localDate;
-};
-
-const resolveFamilyId = async (user, requestedFamilyId) => {
-  if (!user || !['parent', 'student'].includes(user.role)) return null;
-
-  let identityFamilyId = user.familyId;
-  if (!identityFamilyId && user.role === 'parent') {
-    const family = await findParentFamily(user.id);
-    identityFamilyId = family ? family._id.toString() : undefined;
-  }
-
-  if (!identityFamilyId || !mongoose.Types.ObjectId.isValid(identityFamilyId)) {
-    return null;
-  }
-
-  if (requestedFamilyId && requestedFamilyId.toString() !== identityFamilyId.toString()) {
-    return null;
-  }
-
-  return identityFamilyId.toString();
-};
-
-const resolveChildAccess = async (user, childId) => {
-  if (!user || !mongoose.Types.ObjectId.isValid(childId)) return null;
-
-  if (user.role === 'student') {
-    const identityChildId = (user.childId || user.id || '').toString();
-    if (identityChildId !== childId.toString()) return null;
-    const child = await User.findOne({ _id: childId, role: 'student' });
-    if (!child || !child.familyId) return null;
-    const family = await Family.findOne({ _id: child.familyId, childIds: child._id });
-    return family ? { family, child } : null;
-  }
-
-  if (user.role === 'parent') {
-    const family = await findParentFamily(user.id);
-    if (!family || !family.childIds.some((id) => id.toString() === childId.toString())) {
-      return null;
-    }
-    const child = await User.findOne({
-      _id: childId,
-      role: 'student',
-      familyId: family._id
-    });
-    return child ? { family, child } : null;
-  }
-
-  return null;
 };
 
 const getOrCreateSettings = async (SettingsModel, familyId) => {
@@ -209,11 +152,12 @@ const createFamilyNotificationsRouter = ({
 
   router.get('/settings', authenticateGateway, async (req, res) => {
     try {
-      const familyId = await resolveFamilyId(req.user, req.query.familyId);
-      if (!familyId) {
+      const access = await resolveFamilyAccess(req.user, req.query.familyId);
+      if (!access) {
         return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this family reminder settings');
       }
 
+      const familyId = access.familyId;
       const settings = await getOrCreateSettings(ReminderSettingsModel, familyId);
       return res.json({ success: true, data: { settings: settingsView(settings) } });
     } catch (error) {
@@ -230,11 +174,12 @@ const createFamilyNotificationsRouter = ({
         return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Only parents can update reminder settings');
       }
 
-      const familyId = await resolveFamilyId(req.user);
-      if (!familyId) {
+      const access = await resolveFamilyAccess(req.user);
+      if (!access) {
         return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this family reminder settings');
       }
 
+      const familyId = access.familyId;
       let patch;
       try {
         patch = parsePatch(req.body || {});

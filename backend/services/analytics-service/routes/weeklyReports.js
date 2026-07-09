@@ -2,10 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const { authenticateGateway } = require('../../../common/middleware/auth');
-const Family = require('../../../common/models/Family');
-const User = require('../../../common/models/User');
 const { createFamilyReadRepository } = require('../../../common/repositories/familyReadRepository');
 const { logFamilyOperation } = require('../../../common/utils/familyAudit');
+const { isObjectId, resolveChildAccess } = require('../../../common/utils/familyAccess');
 const { sendFamilyError } = require('../../../common/utils/familyResponse');
 const WeeklyReport = require('../models/WeeklyReport');
 const { createWeeklyReportService, WeeklyReportError } = require('../services/weeklyReportService');
@@ -24,8 +23,6 @@ const FORBIDDEN_FEEDBACK_FIELDS = [
 ];
 
 const sendError = (res, status, code, message, details) => sendFamilyError(res, status, code, message, details);
-const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
-
 const objectIdString = (value) => (value ? value.toString() : undefined);
 
 const reportView = (report) => ({
@@ -47,32 +44,6 @@ const reportView = (report) => ({
   createdAt: report.createdAt,
   updatedAt: report.updatedAt
 });
-
-const resolveChildAccess = async (identity, requestedChildId) => {
-  if (!identity) return null;
-
-  if (identity.role === 'student') {
-    const identityChildId = identity.childId || identity.id;
-    if (!isObjectId(identityChildId)) return null;
-    if (requestedChildId && requestedChildId.toString() !== identityChildId.toString()) return null;
-    if (identity.id && identity.id.toString() !== identityChildId.toString()) return null;
-
-    const child = await User.findOne({ _id: identityChildId, role: 'student' });
-    if (!child || !child.familyId) return null;
-    if (identity.familyId && child.familyId.toString() !== identity.familyId.toString()) return null;
-    const family = await Family.findOne({ _id: child.familyId, childIds: child._id });
-    return family ? { familyId: family._id, family, child } : null;
-  }
-
-  if (identity.role !== 'parent' || !isObjectId(identity.id) || !isObjectId(requestedChildId)) return null;
-  const family = await Family.findOne({
-    $or: [{ ownerParentId: identity.id }, { memberParentIds: identity.id }],
-    childIds: requestedChildId
-  });
-  if (!family) return null;
-  const child = await User.findOne({ _id: requestedChildId, role: 'student', familyId: family._id });
-  return child ? { familyId: family._id, family, child } : null;
-};
 
 const sendServiceError = (res, error) => {
   if (error instanceof WeeklyReportError || (error && error.status && error.code)) {

@@ -7,7 +7,7 @@ const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize'); // For NoSQL injection protection
 
 // 共享模块导入
-const { requestTracker, errorHandler } = require('./middleware/errorHandler');
+const { requestTracker, requestTimeout, errorHandler } = require('./middleware/errorHandler');
 const { auditLogger } = require('./middleware/auditLogger'); // Assuming auditLogger is correctly exported
 const { sanitizeInput } = require('./middleware/requestValidator'); // For HTML sanitization
 const { createLogger } = require('./config/logger');
@@ -125,6 +125,7 @@ function createBaseApp(options = {}) {
 
   // 5. 请求追踪和上下文中间件 (应该在日志和业务逻辑之前)
   app.use(requestTracker); // 来自 errorHandler.js
+  app.use(requestTimeout({ timeoutMs: options.requestTimeoutMs || Number(process.env.REQUEST_TIMEOUT_MS || 15000) }));
 
   // 6. 审计日志 (如果需要全局应用)
   // app.use(auditLogger(options.auditLogOptions || {})); // auditLogger 可以接受选项
@@ -139,4 +140,4 @@ function createBaseApp(options = {}) {
   return app;
 }
 
-module.exports = createBaseApp; 
+module.exports = createBaseApp;

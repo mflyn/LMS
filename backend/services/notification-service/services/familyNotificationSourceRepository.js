@@ -4,6 +4,7 @@ const MistakeRecord = require('../../analytics-service/models/MistakeRecord');
 const Report = require('../../progress-service/models/Report');
 
 const toDate = (localDate) => new Date(`${localDate}T00:00:00.000Z`);
+const DEFAULT_MAX_TIME_MS = 3000;
 
 const taskView = (task) => ({
   taskId: task._id.toString(),
@@ -30,46 +31,67 @@ const mistakeView = (mistake) => ({
   reviewReminderDate: mistake.reviewReminderDate || undefined
 });
 
-const createFamilyNotificationSourceRepository = () => ({
-  async getTasks({ familyId, childId, localDate }) {
-    const tasks = await GrowthTask.find({
-      familyId,
-      childId,
-      status: { $nin: ['completed', 'confirmed', 'cancelled', 'archived'] },
-      dueDate: { $lte: localDate }
-    }).sort({ dueDate: 1, createdAt: 1 });
-    return tasks.map(taskView);
-  },
+const withMaxTime = (query, maxTimeMS) => (
+  query && typeof query.maxTimeMS === 'function' ? query.maxTimeMS(maxTimeMS) : query
+);
 
-  async getMistakes({ childId }) {
-    const mistakes = await MistakeRecord.find({
-      student: childId,
-      mastered: false
-    }).sort({ createdAt: 1 });
-    return mistakes.map(mistakeView);
-  },
-
-  async getLogs({ familyId, childId, localDate }) {
-    const logs = await GrowthLog.find({
-      familyId,
-      childId,
-      date: localDate
-    }).sort({ createdAt: 1 });
-    return logs.map(logView);
-  },
-
-  async hasWeeklyReport({ childId, weekStart, weekEnd }) {
-    const report = await Report.findOne({
-      student: childId,
-      period: 'week',
-      startDate: { $lte: toDate(weekStart) },
-      endDate: { $gte: toDate(weekEnd) },
-      status: { $in: ['draft', 'published'] }
-    }).select('_id');
-    return Boolean(report);
+const createFamilyNotificationSourceRepository = ({
+  models = {},
+  maxTimeMS = Number(process.env.NOTIFICATION_SOURCE_MAX_TIME_MS || DEFAULT_MAX_TIME_MS)
+} = {}) => {
+  if (!Number.isInteger(maxTimeMS) || maxTimeMS < 1) {
+    throw new Error('NOTIFICATION_SOURCE_MAX_TIME_MS must be a positive integer');
   }
-});
+
+  const {
+    GrowthTaskModel = GrowthTask,
+    MistakeRecordModel = MistakeRecord,
+    GrowthLogModel = GrowthLog,
+    ReportModel = Report
+  } = models;
+
+  return {
+    async getTasks({ familyId, childId, localDate }) {
+      const tasks = await withMaxTime(GrowthTaskModel.find({
+        familyId,
+        childId,
+        status: { $nin: ['completed', 'confirmed', 'cancelled', 'archived'] },
+        dueDate: { $lte: localDate }
+      }).sort({ dueDate: 1, createdAt: 1 }), maxTimeMS);
+      return tasks.map(taskView);
+    },
+
+    async getMistakes({ childId }) {
+      const mistakes = await withMaxTime(MistakeRecordModel.find({
+        student: childId,
+        mastered: false
+      }).sort({ createdAt: 1 }), maxTimeMS);
+      return mistakes.map(mistakeView);
+    },
+
+    async getLogs({ familyId, childId, localDate }) {
+      const logs = await withMaxTime(GrowthLogModel.find({
+        familyId,
+        childId,
+        date: localDate
+      }).sort({ createdAt: 1 }), maxTimeMS);
+      return logs.map(logView);
+    },
+
+    async hasWeeklyReport({ childId, weekStart, weekEnd }) {
+      const report = await withMaxTime(ReportModel.findOne({
+        student: childId,
+        period: 'week',
+        startDate: { $lte: toDate(weekStart) },
+        endDate: { $gte: toDate(weekEnd) },
+        status: { $in: ['draft', 'published'] }
+      }).select('_id'), maxTimeMS);
+      return Boolean(report);
+    }
+  };
+};
 
 module.exports = {
-  createFamilyNotificationSourceRepository
+  createFamilyNotificationSourceRepository,
+  withMaxTime
 };

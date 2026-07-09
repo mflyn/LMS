@@ -6,6 +6,7 @@ const {
   handleUncaughtException,
   handleUnhandledRejection,
   notFoundHandler,
+  requestTimeout,
   requestTracker
 } = require('../errorHandler');
 
@@ -95,6 +96,19 @@ describe('shared error middleware', () => {
     });
   });
 
+  test('normalizes MongoDB connectivity errors to a stable unavailable contract', () => {
+    const error = new Error('connection timed out to db.internal');
+    error.name = 'MongoNetworkError';
+
+    errorHandler(error, req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: { code: 'DATABASE_UNAVAILABLE', message: '数据库暂时不可用', details: [] }
+    });
+  });
+
   test('requestTracker adds a request id and continues', () => {
     req.requestId = undefined;
     requestTracker(req, res, next);
@@ -102,6 +116,31 @@ describe('shared error middleware', () => {
     expect(req.requestId).toEqual(expect.any(String));
     expect(res.setHeader).toHaveBeenCalledWith('X-Request-ID', req.requestId);
     expect(next).toHaveBeenCalledWith();
+  });
+
+  test('requestTimeout sends one bounded timeout response when the request stalls', () => {
+    const timeout = requestTimeout({ timeoutMs: 25 });
+    req.setTimeout = jest.fn((ms, handler) => {
+      expect(ms).toBe(25);
+      req.timeoutHandler = handler;
+    });
+    res.setTimeout = jest.fn((ms, handler) => {
+      expect(ms).toBe(25);
+      res.timeoutHandler = handler;
+    });
+    res.headersSent = false;
+
+    timeout(req, res, next);
+    req.timeoutHandler();
+    res.timeoutHandler();
+
+    expect(next).toHaveBeenCalledWith();
+    expect(res.status).toHaveBeenCalledTimes(1);
+    expect(res.status).toHaveBeenCalledWith(408);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: { code: 'REQUEST_TIMEOUT', message: 'Request timed out', details: [] }
+    });
   });
 
   test('TC-T6-MEDIA-015 request and error logs omit signed media query values', () => {
