@@ -100,6 +100,12 @@ jobs:
       - name: Run Family Regression
         run: npm run test:family-regression
 
+      - name: Frontend Smoke
+        run: |
+          cd frontend/web
+          npm ci
+          npm run test:ci
+
   performance:
     name: Performance Test
     needs: test
