@@ -1,6 +1,6 @@
 # Task 8 Parent Web Shell Gate Record
 
-**Status:** READY FOR PR REVIEW
+**Status:** PASSED
 **Date:** 2026-07-10
 **Scope:** `FR-UI-001` parent Web shell only. Task 9 business pages, Task 10 child entry, and Task 11 E2E remain out of scope.
 **Design:** `docs/superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md`
@@ -41,4 +41,9 @@ The local Web application was inspected in the in-app browser at `/login` on a d
 
 ## Exit Criteria
 
-This gate may be marked passed only after the final diff check, implementation review, PR CI, and merge to `main` all succeed.
+All exit criteria have succeeded:
+
+- Final implementation diff check completed with no whitespace errors.
+- The implementation review findings were remediated and covered by the final 7-suite frontend test run.
+- PR [#6](https://github.com/mflyn/LMS/pull/6) passed the required `Family Regression` CI check.
+- PR #6 was squash-merged to `main` as `6e5803e8c0e937889aad49f94bac66c4d8b6b995` on 2026-07-10.
