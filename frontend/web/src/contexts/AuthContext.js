@@ -1,148 +1,104 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { message } from 'antd';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import {
+  clearParentSession,
+  loadParentSession,
+  PARENT_SESSION_EXPIRED_EVENT,
+  saveParentSession
+} from '../services/familySession';
 
-// 创建认证上下文
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-// 认证提供者组件
+const authPayload = (response) => response?.data?.data || response?.data;
+
+const createParentSession = (payload) => {
+  if (!payload?.token || payload?.user?.role !== 'parent') return null;
+
+  return {
+    token: payload.token,
+    user: {
+      id: payload.user.id,
+      name: payload.user.name,
+      role: 'parent'
+    }
+  };
+};
+
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [session, setSession] = useState(loadParentSession);
+  const [error, setError] = useState(null);
 
-  // 初始化时检查本地存储中的令牌
-  useEffect(() => {
-    const checkAuth = async () => {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        try {
-          // 设置axios默认请求头
-          axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-          
-          // 验证令牌并获取用户信息
-          const response = await axios.get('/api/users/profile');
-          setCurrentUser(response.data.user);
-          setUserRole(response.data.user.role);
-          setToken(storedToken);
-        } catch (error) {
-          console.error('验证令牌失败:', error);
-          // 令牌无效，清除本地存储
-          localStorage.removeItem('token');
-          setCurrentUser(null);
-          setUserRole(null);
-          setToken(null);
-        }
-      }
-      setLoading(false);
-    };
+  const acceptParentSession = useCallback((payload) => {
+    const nextSession = createParentSession(payload);
+    if (!nextSession) {
+      clearParentSession();
+      setSession(null);
+      setError('该账号不能进入家长端');
+      return false;
+    }
 
-    checkAuth();
+    setSession(saveParentSession(nextSession));
+    setError(null);
+    return true;
   }, []);
 
-  // 登录函数（用户名登录）
-  const login = async (username, password, role) => {
+  const login = useCallback(async (username, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { username, password, role });
-      const { token, user } = response.data.data;
-      
-      // 保存令牌到本地存储
-      localStorage.setItem('token', token);
-      
-      // 设置axios默认请求头
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // 更新状态
-      setCurrentUser(user);
-      setUserRole(user.role);
-      setToken(token);
-      
-      message.success('登录成功！');
-      return true;
-    } catch (error) {
-      console.error('登录失败:', error);
-      message.error(error.response?.data?.message || '登录失败，请检查用户名和密码');
+      const response = await axios.post('/api/auth/login', { username, password });
+      return acceptParentSession(authPayload(response));
+    } catch (requestError) {
+      clearParentSession();
+      setSession(null);
+      setError(requestError?.response?.data?.error?.message || '登录失败，请检查账号和密码');
       return false;
     }
-  };
+  }, [acceptParentSession]);
 
-  // 邮箱或手机号登录函数
-  const loginWithEmailOrPhone = async (identifier, password) => {
+  const register = useCallback(async (registration) => {
     try {
-      const response = await axios.post('/api/auth/login-email-phone', { identifier, password });
-      const { token, user } = response.data.data;
-      
-      // 保存令牌到本地存储
-      localStorage.setItem('token', token);
-      
-      // 设置axios默认请求头
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // 更新状态
-      setCurrentUser(user);
-      setUserRole(user.role);
-      setToken(token);
-      
-      message.success('登录成功！');
-      return true;
-    } catch (error) {
-      console.error('登录失败:', error);
-      message.error(error.response?.data?.message || '登录失败，请检查邮箱/手机号和密码');
+      const response = await axios.post('/api/auth/register', {
+        ...registration,
+        role: 'parent'
+      });
+      return acceptParentSession(authPayload(response));
+    } catch (requestError) {
+      setError(requestError?.response?.data?.error?.message || '注册失败，请稍后再试');
       return false;
     }
-  };
+  }, [acceptParentSession]);
 
-  // 注册函数
-  const register = async (userData) => {
-    try {
-      const response = await axios.post('/api/auth/register', userData);
-      message.success('注册成功！请登录');
-      return true;
-    } catch (error) {
-      console.error('注册失败:', error);
-      message.error(error.response?.data?.message || '注册失败，请稍后再试');
-      return false;
-    }
-  };
+  const logout = useCallback(() => {
+    clearParentSession();
+    setSession(null);
+    setError(null);
+  }, []);
 
-  // 登出函数
-  const logout = () => {
-    // 清除本地存储中的令牌
-    localStorage.removeItem('token');
-    
-    // 清除axios默认请求头
-    delete axios.defaults.headers.common['Authorization'];
-    
-    // 更新状态
-    setCurrentUser(null);
-    setUserRole(null);
-    setToken(null);
-    
-    message.success('已成功登出！');
-  };
+  useEffect(() => {
+    window.addEventListener(PARENT_SESSION_EXPIRED_EVENT, logout);
+    return () => window.removeEventListener(PARENT_SESSION_EXPIRED_EVENT, logout);
+  }, [logout]);
 
-  // 提供上下文值
-  const value = {
-    currentUser,
-    userRole,
-    loading,
-    token,
+  const value = useMemo(() => ({
+    status: session ? 'authenticated' : 'anonymous',
+    user: session?.user || null,
+    token: session?.token || null,
+    error,
     login,
-    loginWithEmailOrPhone,
     register,
     logout,
-    isAuthenticated: !!token,
-  };
+    currentUser: session?.user || null,
+    userRole: session?.user?.role || null,
+    isAuthenticated: Boolean(session),
+    loading: false
+  }), [session, error, login, register, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 自定义钩子，方便在组件中使用认证上下文
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth必须在AuthProvider内部使用');
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 };

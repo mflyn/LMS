@@ -1,0 +1,119 @@
+:root {
+  --family-ink: #1c2733;
+  --family-muted: #667085;
+  --family-border: #d9e1e8;
+  --family-surface: #ffffff;
+  --family-canvas: #f4f7f9;
+  --family-primary: #176b5b;
+  --family-primary-dark: #115346;
+  --family-accent: #d97706;
+  --family-danger: #b42318;
+}
+
+* { box-sizing: border-box; }
+
+button, input, select { font: inherit; }
+
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+  outline: 3px solid #f0b85c;
+  outline-offset: 2px;
+}
+
+.family-auth-page, .family-route-state {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--family-canvas);
+}
+
+.family-auth-panel {
+  width: min(100%, 460px);
+  padding: 32px;
+  border: 1px solid var(--family-border);
+  border-radius: 8px;
+  background: var(--family-surface);
+  box-shadow: 0 12px 30px rgba(28, 39, 51, 0.08);
+}
+
+.family-auth-panel h1, .family-page h1 { margin: 0 0 12px; color: var(--family-ink); }
+.family-auth-panel p, .family-page p { color: var(--family-muted); line-height: 1.6; }
+.family-eyebrow { margin: 0 0 8px; color: var(--family-primary) !important; font-size: 14px; font-weight: 700; }
+
+.family-auth-panel form { display: grid; gap: 8px; margin-top: 24px; }
+.family-auth-panel label { color: var(--family-ink); font-weight: 600; }
+.family-auth-panel input, .family-child-selector select {
+  min-height: 42px;
+  border: 1px solid var(--family-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--family-ink);
+  background: var(--family-surface);
+}
+
+.family-field-hint { margin: -2px 0 8px; font-size: 14px; }
+.family-form-error { color: var(--family-danger) !important; margin: 4px 0 !important; }
+.family-auth-footer { margin: 24px 0 0; }
+.family-auth-footer a { color: var(--family-primary); font-weight: 700; }
+
+.family-button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.family-button.primary { color: #fff; background: var(--family-primary); }
+.family-button.primary:hover { background: var(--family-primary-dark); }
+.family-button.secondary { color: var(--family-ink); border-color: var(--family-border); background: var(--family-surface); }
+.family-button:disabled { cursor: wait; opacity: 0.65; }
+
+.family-shell { min-height: 100vh; background: var(--family-canvas); color: var(--family-ink); }
+.family-header {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--family-border);
+  background: var(--family-surface);
+}
+.family-header strong { font-size: 18px; }
+.family-header-actions { display: flex; align-items: center; gap: 12px; }
+.family-user-name { color: var(--family-muted); }
+.family-child-selector { display: flex; align-items: center; gap: 8px; color: var(--family-muted); font-size: 14px; }
+.family-child-selector select { min-width: 116px; }
+
+.family-layout { display: grid; grid-template-columns: 208px minmax(0, 1fr); min-height: calc(100vh - 69px); }
+.family-navigation { display: grid; align-content: start; gap: 4px; padding: 16px 12px; border-right: 1px solid var(--family-border); background: var(--family-surface); }
+.family-navigation a { padding: 10px 12px; border-radius: 6px; color: var(--family-ink); text-decoration: none; }
+.family-navigation a:hover, .family-navigation a.is-active { color: var(--family-primary-dark); background: #e6f3ef; font-weight: 700; }
+.family-content { min-width: 0; padding: 32px; }
+.family-page { max-width: 840px; }
+.family-state { max-width: 520px; padding: 24px; border: 1px solid var(--family-border); border-radius: 8px; background: var(--family-surface); }
+.family-mobile-nav-toggle { display: none; }
+
+@media (max-width: 767px) {
+  .family-header { align-items: flex-start; padding: 16px; }
+  .family-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .family-user-name { display: none; }
+  .family-layout { display: block; min-height: calc(100vh - 89px); }
+  .family-mobile-nav-toggle {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 16px;
+    min-height: 42px;
+    border: 1px solid var(--family-border);
+    border-radius: 6px;
+    color: var(--family-ink);
+    background: var(--family-surface);
+  }
+  .family-navigation { display: none; border: 0; border-bottom: 1px solid var(--family-border); }
+  .family-navigation.is-open { display: grid; }
+  .family-content { padding: 24px 16px; }
+  .family-auth-page, .family-route-state { padding: 16px; }
+  .family-auth-panel { padding: 24px; }
+}

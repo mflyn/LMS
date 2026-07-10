@@ -1,9 +1,14 @@
 # Family Growth Task 8-11 Frontend and E2E Design Baseline
 
-**Document status:** BASELINE CANDIDATE
+**Document status:** APPROVED FOR TASK 8 IMPLEMENTATION
 **Date:** 2026-07-09
 **Scope:** Task 8 parent web shell, Task 9 parent MVP pages, Task 10 child web entry, Task 11 end-to-end MVP flow
 **Requirements:** `FR-UI-001`, `FR-UI-002`, `FR-FLOW-001`
+
+Task 8 implementation and test cases are defined in
+`docs/superpowers/plans/2026-07-10-family-growth-task8-parent-shell.md` and
+`docs/development/family-growth-task8-test-cases.md`. The Task 9-11 sections
+remain design input only and are not part of the Task 8 delivery gate.
 
 ## 1. Current-State Assessment
 

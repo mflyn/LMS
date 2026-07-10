@@ -22,6 +22,9 @@
 - [Task 7 通知服务测试设计与用例](./family-growth-task7-test-cases.md)
 - [Task 7 代码评审修复记录](./family-growth-task7-code-review-remediation.md)
 - [Task 8-11 前端与端到端设计基线](../superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md)
+- [Task 8 家长 Web 应用壳实施计划](../superpowers/plans/2026-07-10-family-growth-task8-parent-shell.md)
+- [Task 8 家长 Web 应用壳测试设计与用例](./family-growth-task8-test-cases.md)
+- [Task 8 家长 Web 应用壳门禁记录](./family-growth-task8-gate.md)
 
 ## 开发环境搭建
 
