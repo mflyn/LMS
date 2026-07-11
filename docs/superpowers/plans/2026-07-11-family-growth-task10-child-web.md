@@ -16,7 +16,7 @@
 - Modify: `frontend/web/src/services/familySession.js`
 - Create: `frontend/web/src/__tests__/child/childSession.test.js`
 
-- [ ] **Step 1: Write failing storage-isolation tests**
+- [x] **Step 1: Write failing storage-isolation tests**
 
 Cover valid save/load, malformed session rejection, child-only clear, and expiry event. The key assertion is:
 
@@ -27,17 +27,17 @@ expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
 expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parentSnapshot);
 ```
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `cd frontend/web && npm test -- --runInBand src/__tests__/child/childSession.test.js`
 
 Expected: FAIL because child session functions and expiry event are not exported.
 
-- [ ] **Step 3: Implement validated child session functions**
+- [x] **Step 3: Implement validated child session functions**
 
 Add `loadChildSession`, `saveChildSession`, `clearChildSession`, `expireChildSession`, and `CHILD_SESSION_EXPIRED_EVENT`. Validate token plus `childId`, `familyId`, and name. Never read or clear parent storage.
 
-- [ ] **Step 4: Verify green**
+- [x] **Step 4: Verify green**
 
 Run the Task 1 test command and existing `src/__tests__/family/familySession.test.js`.
 
