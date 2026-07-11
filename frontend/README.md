@@ -1,6 +1,8 @@
 # Frontend Workspace
 
-This workspace currently contains the legacy/school-oriented web client under `frontend/web`. The family-growth MVP frontend has not been accepted yet; Task 8 must first replace the visible shell and navigation with the family parent shell described in `docs/superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md`.
+`frontend/web` contains the accepted family-growth parent and child Web clients. The
+legacy school tests remain isolated from the default family test entry point; school
+navigation is not part of either family shell.
 
 ## Current Layout
 
@@ -33,24 +35,36 @@ frontend/
 - Zustand stores.
 - Axios and Socket.IO client dependencies.
 
-The existing `frontend/web/src/config/menuConfig.js` still contains school-era menu entries such as courses, classes, grades, teacher/admin sections and home-school communication. Those entries are not part of the family MVP acceptance baseline.
+The parent application uses `/app/*`; the child application uses `/child/*`. Parent
+and child sessions, providers, route guards, navigation, and API clients are isolated.
+The child client derives its identity from the validated child session and does not
+accept a caller-selected sibling ID.
 
 ## Useful Commands
 
 Run these from `frontend/web`:
 
 ```bash
-npm install
+npm ci
 npm start
-npm test
+npm run test:ci
 npm run build
 ```
 
-## Family MVP Frontend Direction
+Run the legacy school tests only when explicitly maintaining that baseline:
 
-- Task 8: parent web shell, family setup redirect, selected-child context and route guards.
-- Task 9: parent MVP pages over the approved family API.
-- Task 10: child PIN login and simplified child routes.
-- Task 11: full browser E2E family-growth acceptance flow.
+```bash
+npm run test:legacy
+```
 
-Do not add new family UI to the old teacher/admin navigation. Build or migrate into the family shell first.
+## Family MVP Baseline
+
+- Task 8 delivered the parent shell, family setup redirect, selected-child context,
+  and parent route guard.
+- Task 9 delivered all seven parent workflows over the approved public API.
+- Task 10 delivered child PIN login, child-only routes, Today and task completion,
+  mistake review, achievements, profile, logout, and responsive navigation.
+- Task 11 remains responsible for the automated cross-role browser E2E flow.
+
+New family UI must remain inside the appropriate parent or child shell and preserve
+the session/API boundary between them.
