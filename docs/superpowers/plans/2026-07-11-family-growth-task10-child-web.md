@@ -193,7 +193,7 @@ Cover approved fields, zero numeric values, measurable unit display, completed r
 
 Convert only non-empty numeric strings; preserve zero. On `409`, reload and show `任务状态已变化，已重新加载。`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/web/src/pages/child/ChildTodayPage.js frontend/web/src/pages/child/ChildTaskPage.js frontend/web/src/__tests__/child/ChildTodayTasks.test.js
@@ -206,19 +206,19 @@ git commit -m "feat: add child task completion flow"
 - Create: `frontend/web/src/pages/child/ChildMistakesPage.js`
 - Create: `frontend/web/src/__tests__/child/ChildMistakes.test.js`
 
-- [ ] **Step 1: Write failing mistake tests**
+- [x] **Step 1: Write failing mistake tests**
 
 Cover own non-mastered list, explanation preservation, still-learning patch, mastered patch/removal, stable failure, and absence of parent-only fields.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run the ChildMistakes suite.
 
-- [ ] **Step 3: Implement review page**
+- [x] **Step 3: Implement review page**
 
 Keep an explanation draft keyed by mistake ID. Replace rows from server responses; filter mastered results from the active list only after success.
 
-- [ ] **Step 4: Verify green**
+- [x] **Step 4: Verify green**
 
 Run ChildMistakes and child API suites.
 

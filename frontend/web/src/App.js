@@ -25,6 +25,7 @@ import RewardsPage from './pages/family/RewardsPage';
 import ChildPinLoginPage from './pages/child/ChildPinLoginPage';
 import ChildTodayPage from './pages/child/ChildTodayPage';
 import ChildTaskPage from './pages/child/ChildTaskPage';
+import ChildMistakesPage from './pages/child/ChildMistakesPage';
 
 const ParentFamilyBoundary = () => (
   <FamilyProvider>
@@ -59,7 +60,7 @@ const AppRoutes = () => (
         <Route index element={<Navigate to="today" replace />} />
         <Route path="today" element={<ChildTodayPage />} />
         <Route path="tasks/:taskId" element={<ChildTaskPage />} />
-        <Route path="mistakes" element={<ChildPlaceholder title="错题" />} />
+        <Route path="mistakes" element={<ChildMistakesPage />} />
         <Route path="achievements" element={<ChildPlaceholder title="成就" />} />
         <Route path="me" element={<ChildPlaceholder title="我的" />} />
       </Route>
