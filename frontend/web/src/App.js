@@ -23,6 +23,8 @@ import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
 import RewardsPage from './pages/family/RewardsPage';
 import ChildPinLoginPage from './pages/child/ChildPinLoginPage';
+import ChildTodayPage from './pages/child/ChildTodayPage';
+import ChildTaskPage from './pages/child/ChildTaskPage';
 
 const ParentFamilyBoundary = () => (
   <FamilyProvider>
@@ -55,8 +57,8 @@ const AppRoutes = () => (
     <Route element={<ChildRoute />}>
       <Route path="/child" element={<ChildShell />}>
         <Route index element={<Navigate to="today" replace />} />
-        <Route path="today" element={<ChildPlaceholder title="今天" />} />
-        <Route path="tasks/:taskId" element={<ChildPlaceholder title="任务详情" />} />
+        <Route path="today" element={<ChildTodayPage />} />
+        <Route path="tasks/:taskId" element={<ChildTaskPage />} />
         <Route path="mistakes" element={<ChildPlaceholder title="错题" />} />
         <Route path="achievements" element={<ChildPlaceholder title="成就" />} />
         <Route path="me" element={<ChildPlaceholder title="我的" />} />

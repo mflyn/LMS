@@ -163,7 +163,7 @@ Use visible labels, `inputMode="numeric"`, pattern `[0-9]{4,6}`, and `autoComple
 
 Run ChildLogin and ChildNavigation suites.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/web/src/pages/child/ChildPinLoginPage.js frontend/web/src/__tests__/child/ChildLogin.test.js frontend/web/src/App.js
@@ -177,19 +177,19 @@ git commit -m "feat: add child PIN login"
 - Create: `frontend/web/src/pages/child/ChildTaskPage.js`
 - Create: `frontend/web/src/__tests__/child/ChildTodayTasks.test.js`
 
-- [ ] **Step 1: Write failing Today tests**
+- [x] **Step 1: Write failing Today tests**
 
 Cover five dimensions, task status copy, pending task links, reminder partial data, and independent stable/retryable failures.
 
-- [ ] **Step 2: Verify Today red, implement, and verify green**
+- [x] **Step 2: Verify Today red, implement, and verify green**
 
 Load tasks and reminders independently through `useChildDataResource`. Use server data only and preserve partial-source labels.
 
-- [ ] **Step 3: Write failing completion tests**
+- [x] **Step 3: Write failing completion tests**
 
 Cover approved fields, zero numeric values, measurable unit display, completed response replacement, in-flight disable, `409` reload, and terminal-state form suppression.
 
-- [ ] **Step 4: Verify completion red, implement, and verify green**
+- [x] **Step 4: Verify completion red, implement, and verify green**
 
 Convert only non-empty numeric strings; preserve zero. On `409`, reload and show `任务状态已变化，已重新加载。`.
 
