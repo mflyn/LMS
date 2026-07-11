@@ -171,8 +171,11 @@ describe('family parent navigation', () => {
     fireEvent.change(screen.getByLabelText('家庭名称'), { target: { value: '小明的家' } });
     fireEvent.click(screen.getByRole('button', { name: '创建家庭' }));
 
-    await waitFor(() => expect(createFamily).toHaveBeenCalledWith({ familyName: '小明的家' }));
-    expect(await screen.findByRole('heading', { name: '今日成长' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(createFamily).toHaveBeenCalledWith({ familyName: '小明的家' });
+      expect(getMyFamily).toHaveBeenCalledTimes(2);
+      expect(screen.getByRole('heading', { name: '今日成长' })).toBeInTheDocument();
+    }, { timeout: 5000 });
   });
 
   test('redirects legacy school URLs through the protected family entry', async () => {
