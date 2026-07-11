@@ -280,7 +280,7 @@ Expected: compiled successfully with no new ESLint warnings.
 
 Run the approved flow against a local deterministic API stub at desktop and 360px. Verify URL/title, meaningful DOM, no framework overlay, console health, target interactions, screenshot evidence, and `scrollWidth === clientWidth`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/web/src/child-shell.css frontend/web/src/App.js frontend/web/src/components/child frontend/web/src/pages/child
@@ -295,17 +295,20 @@ git commit -m "style: finish responsive child entry"
 - Modify: `frontend/README.md`
 - Create: `docs/development/family-growth-task10-gate.md`
 
-- [ ] **Step 1: Run all local gates**
+- [x] **Step 1: Run all local gates**
 
 ```bash
 cd frontend/web && npm run test:ci
 cd frontend/web && npm run build
 npm run test:family-regression
 git diff --check
-bash scripts/check-git-clean.sh
+test -z "$(git status --porcelain --untracked-files=all)"
 ```
 
-Expected: 0 failed suites/tests, successful build, clean generated-artifact check.
+Result: frontend `20` suites / `130` tests passed, family regression `52` suites /
+`652` tests passed, the production build compiled successfully, desktop and 360px
+browser checks passed without console errors or horizontal overflow, and the
+tracked/untracked worktree check was clean before this plan-record update.
 
 - [ ] **Step 2: Update requirements and traceability**
 
