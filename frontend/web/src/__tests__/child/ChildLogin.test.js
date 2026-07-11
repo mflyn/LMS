@@ -1,10 +1,14 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../../App';
-import { childPinLogin } from '../../services/childApi';
+import { childPinLogin, listOwnReminders, listOwnTasks } from '../../services/childApi';
 import { CHILD_SESSION_KEY } from '../../services/familySession';
 
-jest.mock('../../services/childApi', () => ({ childPinLogin: jest.fn() }));
+jest.mock('../../services/childApi', () => ({
+  childPinLogin: jest.fn(),
+  listOwnReminders: jest.fn(),
+  listOwnTasks: jest.fn()
+}));
 
 const openLogin = () => {
   window.history.pushState({}, 'route', '/child/login');
@@ -21,6 +25,8 @@ describe('child PIN login', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    listOwnTasks.mockResolvedValue({ items: [], total: 0 });
+    listOwnReminders.mockResolvedValue({ items: [], meta: { partial: false, unavailableSources: [] } });
   });
 
   test('validates a numeric 4-to-6 digit PIN before calling the server', () => {

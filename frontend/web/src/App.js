@@ -26,14 +26,14 @@ import ChildPinLoginPage from './pages/child/ChildPinLoginPage';
 import ChildTodayPage from './pages/child/ChildTodayPage';
 import ChildTaskPage from './pages/child/ChildTaskPage';
 import ChildMistakesPage from './pages/child/ChildMistakesPage';
+import ChildAchievementsPage from './pages/child/ChildAchievementsPage';
+import ChildProfilePage from './pages/child/ChildProfilePage';
 
 const ParentFamilyBoundary = () => (
   <FamilyProvider>
     <Outlet />
   </FamilyProvider>
 );
-
-const ChildPlaceholder = ({ title }) => <section><h1>{title}</h1></section>;
 
 const AppRoutes = () => (
   <Routes>
@@ -61,8 +61,8 @@ const AppRoutes = () => (
         <Route path="today" element={<ChildTodayPage />} />
         <Route path="tasks/:taskId" element={<ChildTaskPage />} />
         <Route path="mistakes" element={<ChildMistakesPage />} />
-        <Route path="achievements" element={<ChildPlaceholder title="成就" />} />
-        <Route path="me" element={<ChildPlaceholder title="我的" />} />
+        <Route path="achievements" element={<ChildAchievementsPage />} />
+        <Route path="me" element={<ChildProfilePage />} />
       </Route>
     </Route>
     {LEGACY_SCHOOL_PATHS.map((path) => (

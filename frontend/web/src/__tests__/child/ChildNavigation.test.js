@@ -5,13 +5,18 @@ import App from '../../App';
 import ChildRoute from '../../components/child/ChildRoute';
 import { ChildAuthProvider, useChildAuth } from '../../contexts/ChildAuthContext';
 import { getMyFamily } from '../../services/familyApi';
+import { listOwnReminders, listOwnTasks } from '../../services/childApi';
 import {
   CHILD_SESSION_KEY,
   PARENT_SESSION_KEY,
   saveChildSession
 } from '../../services/familySession';
 
-jest.mock('../../services/childApi', () => ({ childPinLogin: jest.fn() }));
+jest.mock('../../services/childApi', () => ({
+  childPinLogin: jest.fn(),
+  listOwnReminders: jest.fn(),
+  listOwnTasks: jest.fn()
+}));
 jest.mock('../../services/familyApi', () => ({
   getMyFamily: jest.fn(),
   createFamily: jest.fn(),
@@ -53,6 +58,8 @@ describe('child authentication and route isolation', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    listOwnTasks.mockResolvedValue({ items: [], total: 0 });
+    listOwnReminders.mockResolvedValue({ items: [], meta: { partial: false, unavailableSources: [] } });
   });
 
   test('redirects an unauthenticated child route and preserves its intended destination', () => {

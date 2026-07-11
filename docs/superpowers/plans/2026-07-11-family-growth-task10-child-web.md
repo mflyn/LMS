@@ -222,7 +222,7 @@ Keep an explanation draft keyed by mistake ID. Replace rows from server response
 
 Run ChildMistakes and child API suites.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/web/src/pages/child/ChildMistakesPage.js frontend/web/src/__tests__/child/ChildMistakes.test.js
@@ -236,19 +236,19 @@ git commit -m "feat: add child mistake review"
 - Create: `frontend/web/src/pages/child/ChildProfilePage.js`
 - Create: `frontend/web/src/__tests__/child/ChildAchievementsProfile.test.js`
 
-- [ ] **Step 1: Write failing achievements/profile tests**
+- [x] **Step 1: Write failing achievements/profile tests**
 
 Cover rewards, ledger, star balance, confirmed tasks, independent failure rows, complete/sparse profile rendering, and logout isolation.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run the ChildAchievementsProfile suite.
 
-- [ ] **Step 3: Implement achievements**
+- [x] **Step 3: Implement achievements**
 
 Load rewards and confirmed tasks independently. Render reward items without command buttons and ledger entries with signed amount semantics.
 
-- [ ] **Step 4: Implement profile/logout**
+- [x] **Step 4: Implement profile/logout**
 
 Render only the returned child profile. Logout calls child context, replaces to `/child/login`, and leaves parent storage untouched.
 
