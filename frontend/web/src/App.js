@@ -1,14 +1,17 @@
 import React from 'react';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import './index.css';
 import './family-shell.css';
 import { AuthProvider } from './contexts/AuthContext';
+import { ChildAuthProvider } from './contexts/ChildAuthContext';
 import { FamilyProvider } from './contexts/FamilyContext';
 import { LEGACY_SCHOOL_PATHS } from './config/familyNavigation';
 import ParentRoute from './components/family/ParentRoute';
 import FamilyShell from './components/family/FamilyShell';
+import ChildRoute from './components/child/ChildRoute';
+import ChildShell from './components/child/ChildShell';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import FamilySetupPage from './pages/family/FamilySetupPage';
@@ -20,21 +23,42 @@ import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
 import RewardsPage from './pages/family/RewardsPage';
 
+const ParentFamilyBoundary = () => (
+  <FamilyProvider>
+    <Outlet />
+  </FamilyProvider>
+);
+
+const ChildPlaceholder = ({ title }) => <section><h1>{title}</h1></section>;
+
 const AppRoutes = () => (
   <Routes>
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route element={<ParentRoute />}>
-      <Route path="/family/setup" element={<FamilySetupPage />} />
-      <Route path="/app" element={<FamilyShell />}>
+      <Route element={<ParentFamilyBoundary />}>
+        <Route path="/family/setup" element={<FamilySetupPage />} />
+        <Route path="/app" element={<FamilyShell />}>
+          <Route index element={<Navigate to="today" replace />} />
+          <Route path="today" element={<TodayPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="logs" element={<GrowthLogsPage />} />
+          <Route path="mistakes" element={<MistakesPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="reminders" element={<RemindersPage />} />
+          <Route path="rewards" element={<RewardsPage />} />
+        </Route>
+      </Route>
+    </Route>
+    <Route path="/child/login" element={<ChildPlaceholder title="孩子登录" />} />
+    <Route element={<ChildRoute />}>
+      <Route path="/child" element={<ChildShell />}>
         <Route index element={<Navigate to="today" replace />} />
-        <Route path="today" element={<TodayPage />} />
-        <Route path="tasks" element={<TasksPage />} />
-        <Route path="logs" element={<GrowthLogsPage />} />
-        <Route path="mistakes" element={<MistakesPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="reminders" element={<RemindersPage />} />
-        <Route path="rewards" element={<RewardsPage />} />
+        <Route path="today" element={<ChildPlaceholder title="今天" />} />
+        <Route path="tasks/:taskId" element={<ChildPlaceholder title="任务详情" />} />
+        <Route path="mistakes" element={<ChildPlaceholder title="错题" />} />
+        <Route path="achievements" element={<ChildPlaceholder title="成就" />} />
+        <Route path="me" element={<ChildPlaceholder title="我的" />} />
       </Route>
     </Route>
     {LEGACY_SCHOOL_PATHS.map((path) => (
@@ -48,11 +72,11 @@ const AppRoutes = () => (
 const App = () => (
   <ConfigProvider locale={zhCN}>
     <AuthProvider>
-      <FamilyProvider>
+      <ChildAuthProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AppRoutes />
         </BrowserRouter>
-      </FamilyProvider>
+      </ChildAuthProvider>
     </AuthProvider>
   </ConfigProvider>
 );

@@ -95,7 +95,7 @@ Test loading, empty, ready, partial, stable error, retryable error, reload, and 
 
 Use one `AbortController` per load and the same retry classification as the parent resource layer without depending on `FamilyContext`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/web/src/services/childApi.js frontend/web/src/hooks/useChildDataResource.js frontend/web/src/__tests__/child
@@ -112,25 +112,25 @@ git commit -m "feat: add child API boundary"
 - Modify: `frontend/web/src/App.js`
 - Create: `frontend/web/src/__tests__/child/ChildNavigation.test.js`
 
-- [ ] **Step 1: Write failing route tests**
+- [x] **Step 1: Write failing route tests**
 
 Cover unauthenticated redirect, refresh persistence, parent-only rejection from child routes, child-only rejection from parent routes, intended-destination return, four child navigation links, and child-only logout storage effects.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `cd frontend/web && npm test -- --runInBand src/__tests__/child/ChildNavigation.test.js`
 
 Expected: FAIL because child provider/routes do not exist.
 
-- [ ] **Step 3: Implement provider and guards**
+- [x] **Step 3: Implement provider and guards**
 
 `ChildAuthProvider` owns login, logout, stored session, public login errors, and expiry-event recovery. `ChildRoute` renders an `Outlet` only for an authenticated child. Move `FamilyProvider` into the parent route boundary so child pages never trigger parent-family reads.
 
-- [ ] **Step 4: Implement child shell**
+- [x] **Step 4: Implement child shell**
 
 Render only 今天、错题、成就、我的 and a child identity header. Use `NavLink` active state and an `Outlet`; do not reuse school navigation.
 
-- [ ] **Step 5: Verify green and parent regression**
+- [x] **Step 5: Verify green and parent regression**
 
 Run ChildNavigation plus `FamilyNavigation.test.js` and `AuthContext.test.js`.
 
