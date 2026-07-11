@@ -1,6 +1,6 @@
 # Task 9 Parent MVP Pages Test Design and Cases
 
-**Document status:** CANDIDATE FOR REVIEW
+**Document status:** APPROVED / LOCAL EXECUTION PASSED
 **Date:** 2026-07-10
 **Design:** `docs/superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md`
 **Scope:** Parent pages only; Task 10 child portal and Task 11 cross-role E2E are excluded.
@@ -15,7 +15,7 @@ Frontend integration tests use a parent session for family A, children A1 and A2
 | --- | --- | --- | --- |
 | `TC-T9-API-001` | Query selected-child list endpoints. | Parent token is sent per request; `childId` is selected child; no global authorization or UI family ID. | `familyApi.task9.test.js` |
 | `TC-T9-API-002` | Pass abort signal to list request. | Wrapper forwards signal and abort does not become a page error. | `familyApi.task9.test.js`, `useChildResource.test.js` |
-| `TC-T9-SCOPE-001` | Switch A1 to A2 while A1 query is pending. | A1 request is aborted and A1 records clear before A2 data renders. | `useChildResource.test.js` |
+| `TC-T9-SCOPE-001` | Switch A1 to A2 while an A1 query or mutation is pending. | A1 read is aborted; A1 records clear; a late A1 mutation response is discarded before A2 data renders. | `useChildResource.test.js`, `Task9LogsMistakes.test.js` |
 | `TC-T9-AUTH-001` | Receive `401` from Task 9 method. | Existing expiry event clears parent session and route returns to login. | `familyApi.task9.test.js`, `FamilyNavigation.test.js` |
 
 ## Today and Tasks
@@ -28,7 +28,7 @@ Frontend integration tests use a parent session for family A, children A1 and A2
 | `TC-T9-TASK-002` | Filter tasks by dimension/status. | List contains only matching selected-child records. | `Task9TodayTasks.test.js` |
 | `TC-T9-TASK-003` | Parent completes and confirms a task. | Actual values and feedback are sent; confirmed task and award state replace prior state once. | `Task9TodayTasks.test.js` |
 | `TC-T9-TASK-004` | Cancel pending or archive completed task. | Returned state replaces item; conflict triggers reload, not a blind transition. | `Task9TodayTasks.test.js` |
-| `TC-T9-MEDIA-001` | Attach and view a task image. | Upload purpose is `task_attachment`; mutation stores media ID; view requests signed access. | `familyApi.task9.test.js`, `Task9TodayTasks.test.js` |
+| `TC-T9-MEDIA-001` | Attach, view, or cancel a task image draft. | Upload purpose is `task_attachment`; mutation stores media ID; view requests signed access; cancelled unbound draft is soft-deleted. | `familyApi.task9.test.js`, `Task9TodayTasks.test.js` |
 
 ## Logs and Mistakes
 
@@ -59,6 +59,7 @@ Frontend integration tests use a parent session for family A, children A1 and A2
 | `TC-T9-SMOKE-001` | Parent creates, completes, and confirms task against homework-service. | `pending -> completed -> confirmed`, `starAwardState=awarded`, and one internal award call. | Existing `TC-T5-SAGA-001` in `growthTasks.test.js` |
 | `TC-T9-UX-001` | Operate routes at desktop and 360px. | Child switch, forms, report/reminder/reward access, focus, and primary controls have no horizontal page overflow. | Browser inspection and Task 9 gate |
 | `TC-T9-REG-001` | Run frontend/build/family regression/diff checks. | Commands exit zero and default frontend path excludes legacy school tests. | Task 9 gate and CI |
+| `TC-T9-A11Y-001` | Open and close a page dialog using the keyboard. | Focus enters and stays in the dialog, Escape closes it, and focus returns to the opener. | `Task9TodayTasks.test.js`, browser inspection |
 
 ## Traceability
 

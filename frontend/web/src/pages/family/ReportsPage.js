@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import { useFamily } from '../../contexts/FamilyContext';
-import { useChildResource } from '../../hooks/useChildResource';
+import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { getWeeklyReport, updateWeeklyReportFeedback } from '../../services/familyApi';
 
 const DIMENSIONS = [
@@ -32,6 +32,7 @@ const ReportsPage = () => {
     [weekStart]
   );
   const resource = useChildResource({ load });
+  const mutationGuard = useChildMutationGuard();
   const report = resource.data?.report;
   const [feedback, setFeedback] = useState({ parentNote: '', nextWeekSuggestion: '' });
   const [busy, setBusy] = useState(false);
@@ -47,16 +48,19 @@ const ReportsPage = () => {
 
   const saveFeedback = async (event) => {
     event.preventDefault();
+    const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
     try {
       const result = await updateWeeklyReportFeedback(report.reportId, feedback);
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       setFeedback({
         parentNote: result.report.parentNote || '',
         nextWeekSuggestion: result.report.nextWeekSuggestion || ''
       });
       setMessage('周报反馈已保存。');
     } catch (saveError) {
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       setError(messageFor(saveError));
     } finally {
       setBusy(false);
@@ -74,6 +78,7 @@ const ReportsPage = () => {
       </div>
       {resource.state === 'loading' && <FamilyDataState state="loading" />}
       {resource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={resource.reload} />}
+      {resource.state === 'error' && <FamilyDataState state="error" error={resource.error} />}
       {report && (
         <>
           <div className="family-metric-grid">
@@ -83,7 +88,7 @@ const ReportsPage = () => {
             <article><span>新增错题</span><strong>{stats.mistakeCount ?? '—'}</strong></article>
           </div>
           <div className="family-section-grid">
-            <section className="family-panel"><h2>五育投入</h2><ul className="family-list">{DIMENSIONS.map(([value, label]) => { const task = stats.dimensionTaskStats?.[value]; const duration = stats.dimensionDurations?.[value] || 0; return <li key={value}><strong>{label}</strong><span>{task ? `${task.completed}/${task.total} 个任务` : '暂无任务'} · {duration} 分钟</span></li>; })}</ul></section>
+            <section className="family-panel"><h2>五育投入</h2><ul className="family-list">{DIMENSIONS.map(([value, label]) => { const task = stats.dimensionTaskStats?.[value]; const duration = stats.dimensionDurations?.[value] || 0; return <li key={value}><strong>{label}</strong><span>{task ? `${task.completed}/${task.planned} 个任务` : '暂无任务'} · {duration} 分钟</span></li>; })}</ul></section>
             <section className="family-panel"><h2>建议复习</h2>{stats.reviewKnowledgePoints?.length ? <ul className="family-list">{stats.reviewKnowledgePoints.map((point) => <li key={point}>{point}</li>)}</ul> : <p>本周暂无待复习知识点。</p>}<h2>系统建议</h2><p>{report.generatedSuggestion || '暂无建议。'}</p></section>
           </div>
           <form className="family-panel family-feedback-form" onSubmit={saveFeedback}>

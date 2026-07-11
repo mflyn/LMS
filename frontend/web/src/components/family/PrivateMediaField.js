@@ -15,6 +15,8 @@ const PrivateMediaField = ({
   purpose,
   value,
   onChange,
+  onUploaded,
+  onRemoved,
   uploadPrivateMedia = requestPrivateMediaUpload,
   getPrivateMediaAccess = requestPrivateMediaAccess
 }) => {
@@ -43,6 +45,7 @@ const PrivateMediaField = ({
       const result = await uploadPrivateMedia({ childId, purpose, file });
       const mediaId = result?.media?.mediaId || result?.mediaId;
       if (!mediaId) throw new Error('上传响应缺少 mediaId');
+      onUploaded?.(mediaId, value);
       onChange(mediaId);
     } catch (uploadError) {
       setError(apiMessage(uploadError));
@@ -70,6 +73,7 @@ const PrivateMediaField = ({
   const remove = () => {
     setSignedUrl('');
     setError('');
+    onRemoved?.(value);
     onChange(null);
   };
 

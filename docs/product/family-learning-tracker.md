@@ -766,7 +766,7 @@
 - `mistakeReviewReminderEnabled`
 - `dimensionReminderEnabled`
 - `weeklyReportReminderEnabled`
-- `quietHoursStart`、`quietHoursEnd`，家庭本地时间 `HH:mm`
+- `quietHours.start`、`quietHours.end`，两项成对提交，使用家庭本地时间 `HH:mm`
 - `updatedByParentId`
 
 提醒设置每个家庭唯一。第一阶段提醒仍按读取时派生，不发送推送；所有“今天”和周报日判断使用家庭 IANA 时区。
@@ -867,7 +867,7 @@
 | `FR-REWARD-002` | 兑换家庭奖励 | 5 | 5 | mvp | implemented | 家长拥有孩子且余额充足 | 使用幂等键确认兑换 | 在事务中写 spend 流水并更新奖励；余额不足返回 `409 INSUFFICIENT_STARS`；重试不能重复扣减。 |
 | `FR-NOTIFY-001` | 派生家庭提醒 | 7 | 7 | mvp | implemented | 家长拥有孩子或孩子本人登录 | 查询家庭提醒 | 返回今日任务、未完成、复习、锻炼、习惯和周报提醒；部分源失败时声明 `meta.partial` 和不可用来源。 |
 | `FR-NOTIFY-002` | 配置家庭提醒 | 7 | 7 | mvp | implemented | 家长属于目标家庭 | 读取或更新提醒设置 | 保存各提醒开关、ISO 周报日和安静时段；孩子只读；日期判断使用家庭时区；同一提醒类型、孩子和 LocalDate 只返回一条。 |
-| `FR-UI-001` | 家长 Web 应用壳 | 8 | 9 | mvp | planned | 家长已登录或需要初始化家庭 | 导航、刷新、切换孩子和加载页面 | 受保护路由、家庭初始化、统一孩子上下文、加载/空/错误/部分降级状态均按 10.3 验收；学校版入口不出现在家庭导航。 |
+| `FR-UI-001` | 家长 Web 应用壳 | 8 | 9 | mvp | implemented | 家长已登录或需要初始化家庭 | 导航、刷新、切换孩子和加载页面 | 受保护路由、家庭初始化、统一孩子上下文、加载/空/错误/部分降级状态均按 10.3 验收；学校版入口不出现在家庭导航；Task 8 壳层与 Task 9 七个家长工作流已通过本地门禁。 |
 | `FR-UI-002` | 孩子简化 Web 入口 | 10 | 10 | mvp | planned | 孩子具有有效 PIN | 登录、导航、完成任务和退出 | 只展示本人数据和允许动作；家长路由不可达；PIN 失败和过期 token 显示可恢复状态；退出清除 token。 |
 | `FR-FLOW-001` | 家庭成长端到端闭环 | 11 | 11 | mvp | planned | 空白家庭账号 | 执行第一阶段演示流程 | 自动化覆盖 10.3 所述完整闭环、跨角色切换、图片私有访问、周报确定性、提醒去重及星星兑换幂等。 |
 | `NFR-SEC-001` | 家庭数据授权 | 3 | 4 | baseline | implemented | 任意家庭数据请求 | 携带身份和资源参数 | 服务端从认证身份及资源归属推导 familyId；请求中的 familyId 不能单独授权；跨家庭访问返回 `403`。 |

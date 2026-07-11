@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FamilyDataState from '../../components/family/FamilyDataState';
+import FamilyDialog from '../../components/family/FamilyDialog';
 import PrivateMediaField from '../../components/family/PrivateMediaField';
 import { useFamily } from '../../contexts/FamilyContext';
-import { useChildResource } from '../../hooks/useChildResource';
+import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
+import { useDraftMedia } from '../../hooks/useDraftMedia';
 import {
   cancelOrArchiveGrowthTask,
   completeGrowthTask,
@@ -54,6 +56,8 @@ const TasksPage = () => {
     [filters]
   );
   const resource = useChildResource({ load });
+  const mutationGuard = useChildMutationGuard();
+  const mediaDrafts = useDraftMedia();
   const [items, setItems] = useState([]);
   const [editor, setEditor] = useState(null);
   const [form, setForm] = useState(emptyForm());
@@ -69,11 +73,18 @@ const TasksPage = () => {
   }, [resource.data, resource.state]);
 
   useEffect(() => {
+    mediaDrafts.cancel();
     setEditor(null);
     setAction(null);
     setMessage('');
     setError('');
-  }, [selectedChildId]);
+    setBusy(false);
+  }, [mediaDrafts, selectedChildId]);
+
+  const closeEditor = () => {
+    mediaDrafts.cancel();
+    setEditor(null);
+  };
 
   const replaceTask = (nextTask) => {
     setItems((current) => {
@@ -98,6 +109,7 @@ const TasksPage = () => {
 
   const saveTask = async (event) => {
     event.preventDefault();
+    const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
     setMessage('');
@@ -119,10 +131,13 @@ const TasksPage = () => {
       const result = editor.mode === 'create'
         ? await createGrowthTask({ childId: selectedChildId, ...payload })
         : await updateGrowthTask(editor.task.taskId, payload);
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
+      mediaDrafts.commit();
       replaceTask(result.task);
       setEditor(null);
       setMessage(editor.mode === 'create' ? '任务已创建。' : '任务已更新。');
     } catch (taskError) {
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       if (errorCode(taskError) === 'TASK_STATE_CONFLICT') {
         setEditor(null);
         setMessage('任务状态已变化，已重新加载。');
@@ -137,6 +152,7 @@ const TasksPage = () => {
 
   const submitAction = async (event) => {
     event.preventDefault();
+    const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
     try {
@@ -154,11 +170,13 @@ const TasksPage = () => {
       } else {
         result = await cancelOrArchiveGrowthTask(action.task.taskId);
       }
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       replaceTask(result.task);
       setAction(null);
       if (result.starAward?.amount) setMessage(`已发放 ${result.starAward.amount} 颗星`);
       else setMessage('任务状态已更新。');
     } catch (taskError) {
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       if (errorCode(taskError) === 'TASK_STATE_CONFLICT') {
         setAction(null);
         setMessage('任务状态已变化，已重新加载。');
@@ -181,7 +199,7 @@ const TasksPage = () => {
     <section className="family-page family-page-wide" aria-labelledby="tasks-page-title">
       <div className="family-page-heading">
         <div><p className="family-eyebrow">{selectedChild.name}的成长安排</p><h1 id="tasks-page-title">任务</h1></div>
-        <button type="button" className="family-button primary" onClick={openCreate}>新建任务</button>
+        <button type="button" className="family-button primary" disabled={resource.state === 'loading'} onClick={openCreate}>新建任务</button>
       </div>
 
       <div className="family-filter-bar" aria-label="任务筛选">
@@ -194,7 +212,8 @@ const TasksPage = () => {
       {error && <p className="family-form-error" role="alert">{error}</p>}
       {resource.state === 'loading' && <FamilyDataState state="loading" />}
       {resource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={resource.reload} />}
-      {resource.state !== 'loading' && resource.state !== 'retryable_error' && items.length === 0 && <p className="family-empty-copy">暂无成长任务</p>}
+      {resource.state === 'error' && <FamilyDataState state="error" error={resource.error} />}
+      {!['loading', 'retryable_error', 'error'].includes(resource.state) && items.length === 0 && <p className="family-empty-copy">暂无成长任务</p>}
 
       <div className="family-record-list">
         {items.map((item) => (
@@ -205,19 +224,19 @@ const TasksPage = () => {
               <p>{item.area} · 截止 {item.dueDate}</p>
             </div>
             <div className="family-inline-actions">
-              {item.status === 'pending' && <button type="button" className="family-button secondary" aria-label={`编辑 ${item.title}`} onClick={() => openEdit(item)}>编辑</button>}
-              {item.status === 'pending' && <button type="button" className="family-button secondary" aria-label={`完成 ${item.title}`} onClick={() => openAction('complete', item)}>完成</button>}
-              {item.status === 'completed' && <button type="button" className="family-button primary" aria-label={`确认 ${item.title}`} onClick={() => openAction('confirm', item)}>确认</button>}
-              {!['cancelled', 'archived'].includes(item.status) && <button type="button" className="family-button secondary" aria-label={`${item.status === 'pending' ? '取消' : '归档'} ${item.title}`} onClick={() => openAction('remove', item)}>{item.status === 'pending' ? '取消' : '归档'}</button>}
+              {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.title}`} onClick={() => openEdit(item)}>编辑</button>}
+              {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`完成 ${item.title}`} onClick={() => openAction('complete', item)}>完成</button>}
+              {item.status === 'completed' && <button type="button" className="family-button primary" disabled={resource.state === 'loading'} aria-label={`确认 ${item.title}`} onClick={() => openAction('confirm', item)}>确认</button>}
+              {!['cancelled', 'archived'].includes(item.status) && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`${item.status === 'pending' ? '取消' : '归档'} ${item.title}`} onClick={() => openAction('remove', item)}>{item.status === 'pending' ? '取消' : '归档'}</button>}
             </div>
           </article>
         ))}
       </div>
 
       {editor && (
-        <section className="family-dialog" role="dialog" aria-modal="true" aria-labelledby="task-editor-title">
+        <FamilyDialog labelledBy="task-editor-title" onClose={closeEditor}>
           <form onSubmit={saveTask}>
-            <div className="family-page-heading"><h2 id="task-editor-title">{editor.mode === 'create' ? '新建任务' : '编辑任务'}</h2><button type="button" className="family-button secondary" onClick={() => setEditor(null)}>关闭</button></div>
+            <div className="family-page-heading"><h2 id="task-editor-title">{editor.mode === 'create' ? '新建任务' : '编辑任务'}</h2><button type="button" className="family-button secondary" onClick={closeEditor}>关闭</button></div>
             <div className="family-form-grid">
               <label>成长维度<select value={form.dimension} onChange={(event) => setForm((value) => ({ ...value, dimension: event.target.value }))}>{DIMENSIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
               {form.dimension === 'academic' && <label>学科<input required value={form.subject} onChange={(event) => setForm((value) => ({ ...value, subject: event.target.value }))} /></label>}
@@ -231,21 +250,21 @@ const TasksPage = () => {
               <label>优先级<select value={form.priority} onChange={(event) => setForm((value) => ({ ...value, priority: event.target.value }))}><option value="low">低</option><option value="medium">中</option><option value="high">高</option></select></label>
             </div>
             <label className="family-field-wide">说明<textarea value={form.description} onChange={(event) => setForm((value) => ({ ...value, description: event.target.value }))} /></label>
-            <PrivateMediaField label="任务附件" childId={selectedChildId} purpose="task_attachment" value={form.attachmentMediaIds[0] || null} onChange={(mediaId) => setForm((value) => ({ ...value, attachmentMediaIds: mediaId ? [mediaId] : [] }))} />
-            <button type="submit" className="family-button primary" disabled={busy}>保存任务</button>
+            <PrivateMediaField label="任务附件" childId={selectedChildId} purpose="task_attachment" value={form.attachmentMediaIds[0] || null} onUploaded={mediaDrafts.replace} onRemoved={mediaDrafts.remove} onChange={(mediaId) => setForm((value) => ({ ...value, attachmentMediaIds: mediaId ? [mediaId] : [] }))} />
+            <button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>保存任务</button>
           </form>
-        </section>
+        </FamilyDialog>
       )}
 
       {action && (
-        <section className="family-dialog" role="dialog" aria-modal="true" aria-labelledby="task-action-title">
+        <FamilyDialog labelledBy="task-action-title" onClose={() => setAction(null)}>
           <form onSubmit={submitAction}>
             <div className="family-page-heading"><h2 id="task-action-title">{action.type === 'complete' ? '记录完成' : action.type === 'confirm' ? '家长确认' : action.task.status === 'pending' ? '取消任务' : '归档任务'}</h2><button type="button" className="family-button secondary" onClick={() => setAction(null)}>关闭</button></div>
             {action.type === 'complete' && <div className="family-form-grid"><label>实际用时（分钟）<input type="number" min="0" value={actionForm.actualMinutes} onChange={(event) => setActionForm((value) => ({ ...value, actualMinutes: event.target.value }))} /></label><label>实际数量<input type="number" min="0" value={actionForm.actualAmount} onChange={(event) => setActionForm((value) => ({ ...value, actualAmount: event.target.value }))} /></label><label>难度<select value={actionForm.difficulty} onChange={(event) => setActionForm((value) => ({ ...value, difficulty: event.target.value }))}><option value="easy">简单</option><option value="normal">适中</option><option value="hard">困难</option></select></label><label className="family-checkbox"><input type="checkbox" checked={actionForm.needsHelp} onChange={(event) => setActionForm((value) => ({ ...value, needsHelp: event.target.checked }))} />需要帮助</label><label className="family-field-wide">孩子备注<textarea value={actionForm.childNote} onChange={(event) => setActionForm((value) => ({ ...value, childNote: event.target.value }))} /></label></div>}
             {action.type === 'confirm' && <label>家长反馈<textarea aria-label="家长反馈" value={actionForm.parentFeedback} onChange={(event) => setActionForm((value) => ({ ...value, parentFeedback: event.target.value }))} /></label>}
-            <button type="submit" className="family-button primary" disabled={busy}>{action.type === 'complete' ? '提交完成记录' : action.type === 'confirm' ? '确认并发放星星' : `确认${action.task.status === 'pending' ? '取消' : '归档'}`}</button>
+            <button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>{action.type === 'complete' ? '提交完成记录' : action.type === 'confirm' ? '确认并发放星星' : `确认${action.task.status === 'pending' ? '取消' : '归档'}`}</button>
           </form>
-        </section>
+        </FamilyDialog>
       )}
     </section>
   );

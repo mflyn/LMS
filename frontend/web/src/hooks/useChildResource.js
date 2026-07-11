@@ -24,6 +24,10 @@ const isEmpty = (data) => data === null
   || (Array.isArray(data?.items) && data.items.length === 0);
 
 const isAbortError = (error) => error?.name === 'AbortError' || error?.code === 'ERR_CANCELED';
+const isRetryableError = (error) => {
+  const status = error?.response?.status;
+  return status === undefined || status === 408 || status === 429 || status >= 500;
+};
 
 export const useChildResource = ({ load, enabled = true, initialData = null }) => {
   const { selectedChildId, childScopeVersion } = useFamily();
@@ -93,7 +97,7 @@ export const useChildResource = ({ load, enabled = true, initialData = null }) =
 
         setResource({
           ...emptyState(initialDataRef.current),
-          state: 'retryable_error',
+          state: isRetryableError(error) ? 'retryable_error' : 'error',
           error
         });
       });
@@ -111,4 +115,18 @@ export const useChildResource = ({ load, enabled = true, initialData = null }) =
   }, []);
 
   return { ...resource, reload };
+};
+
+export const useChildMutationGuard = () => {
+  const { selectedChildId, childScopeVersion } = useFamily();
+  const scopeRef = useRef({ selectedChildId, childScopeVersion });
+  scopeRef.current = { selectedChildId, childScopeVersion };
+
+  const captureScope = useCallback(() => ({ ...scopeRef.current }), []);
+  const isCurrentScope = useCallback((scope) => (
+    scope?.selectedChildId === scopeRef.current.selectedChildId
+    && scope?.childScopeVersion === scopeRef.current.childScopeVersion
+  ), []);
+
+  return { captureScope, isCurrentScope };
 };

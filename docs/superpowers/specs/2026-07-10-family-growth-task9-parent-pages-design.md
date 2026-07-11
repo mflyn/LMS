@@ -1,6 +1,6 @@
 # Family Growth Task 9 Parent MVP Pages Design
 
-**Document status:** APPROVED FOR TASK 9 IMPLEMENTATION PLANNING
+**Document status:** IMPLEMENTED / LOCAL GATE PASSED
 **Date:** 2026-07-10
 **Scope:** Task 9 parent MVP pages only
 **Requirements:** `FR-UI-001`, `FR-TASK-001` to `006`, `FR-LOG-001`, `FR-MISTAKE-001`, `FR-REPORT-001`, `FR-NOTIFY-001` to `002`, `FR-REWARD-001` to `002`, `FR-MEDIA-001` to `002`, `NFR-SEC-001`, `NFR-PRIVACY-001`, `NFR-TIME-001`
@@ -18,7 +18,7 @@ This task does not add a child Web experience, change service authorization, int
 
 `FamilyContext` remains the only owner of the selected child. A new frontend resource layer will build every request from `selectedChildId`, add an `AbortController` to each request, and register cancellation with `registerChildScopeReset`. A switch synchronously aborts old-child requests and erases their records before the next child is exposed. Abort errors are ignored; `401` delegates to existing parent-session expiry; stable `400`, `403`, `409`, and `503` responses remain visible in-page.
 
-The resource layer returns exactly `loading`, `empty`, `ready`, `partial`, and `retryable_error`. It does not add a query-cache dependency. This keeps page forms local while preserving the Task 8 child-isolation contract.
+The resource layer returns `loading`, `empty`, `ready`, `partial`, `error`, and `retryable_error`. Stable `4xx` read errors remain visible without a retry action; network errors, `408`, `429`, and `5xx` are retryable. It does not add a query-cache dependency. This keeps page forms local while preserving the Task 8 child-isolation contract. Mutations capture the selected child ID and scope version and discard responses after a child switch.
 
 ### 2.2 API Client
 
@@ -33,6 +33,7 @@ Task attachments and mistake images follow one private-media sequence:
 3. Store only returned `mediaId` in task or mistake mutations; never a public URL.
 4. Request `GET /api/media/:mediaId/access` before rendering; do not persist the short-lived URL or log it.
 5. Keep failed forms editable and show the stable error response.
+6. Track newly uploaded media as form drafts. Cancelled forms soft-delete unbound drafts; replacing persisted media deletes the old asset only after the business mutation succeeds.
 
 `growth_evidence` is not a standalone Task 9 upload action because the approved GrowthLog API has no media-reference field. The UI will not create orphan media assets.
 

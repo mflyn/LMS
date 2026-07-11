@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FamilyDataState from '../../components/family/FamilyDataState';
+import FamilyDialog from '../../components/family/FamilyDialog';
 import { useFamily } from '../../contexts/FamilyContext';
-import { useChildResource } from '../../hooks/useChildResource';
+import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { createGrowthLog, listGrowthLogs, updateGrowthLog } from '../../services/familyApi';
 
 const DIMENSIONS = [
@@ -25,6 +26,7 @@ const GrowthLogsPage = () => {
     [filters]
   );
   const resource = useChildResource({ load });
+  const mutationGuard = useChildMutationGuard();
   const [items, setItems] = useState([]);
   const [editor, setEditor] = useState(null);
   const [form, setForm] = useState(blankLog());
@@ -39,6 +41,7 @@ const GrowthLogsPage = () => {
     setEditor(null);
     setError('');
     setMessage('');
+    setBusy(false);
   }, [selectedChildId]);
 
   const openEditor = (log) => {
@@ -49,6 +52,7 @@ const GrowthLogsPage = () => {
 
   const save = async (event) => {
     event.preventDefault();
+    const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
     const payload = {
@@ -71,12 +75,14 @@ const GrowthLogsPage = () => {
       const result = editor.mode === 'create'
         ? await createGrowthLog({ childId: selectedChildId, ...payload })
         : await updateGrowthLog(editor.log.logId, payload);
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       setItems((current) => editor.mode === 'create'
         ? [result.log, ...current]
         : current.map((item) => (item.logId === result.log.logId ? result.log : item)));
       setMessage(editor.mode === 'create' ? '成长记录已保存。' : '成长记录已更新。');
       setEditor(null);
     } catch (saveError) {
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       setError(messageFor(saveError));
     } finally {
       setBusy(false);
@@ -89,7 +95,7 @@ const GrowthLogsPage = () => {
     <section className="family-page family-page-wide" aria-labelledby="growth-logs-title">
       <div className="family-page-heading">
         <div><p className="family-eyebrow">{selectedChild.name}的每日成长</p><h1 id="growth-logs-title">记录</h1></div>
-        <button type="button" className="family-button primary" onClick={() => openEditor(null)}>记录成长</button>
+        <button type="button" className="family-button primary" disabled={resource.state === 'loading'} onClick={() => openEditor(null)}>记录成长</button>
       </div>
       <div className="family-filter-bar" aria-label="成长记录筛选">
         <label>开始日期<input type="date" value={filters.from} onChange={(event) => setFilters((value) => ({ ...value, from: event.target.value }))} /></label>
@@ -100,7 +106,8 @@ const GrowthLogsPage = () => {
       {error && <p className="family-form-error" role="alert">{error}</p>}
       {resource.state === 'loading' && <FamilyDataState state="loading" />}
       {resource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={resource.reload} />}
-      {resource.state !== 'loading' && resource.state !== 'retryable_error' && items.length === 0 && <p className="family-empty-copy">暂无成长记录</p>}
+      {resource.state === 'error' && <FamilyDataState state="error" error={resource.error} />}
+      {!['loading', 'retryable_error', 'error'].includes(resource.state) && items.length === 0 && <p className="family-empty-copy">暂无成长记录</p>}
       <div className="family-record-list">
         {items.map((item) => (
           <article className="family-record" key={item.logId}>
@@ -109,12 +116,12 @@ const GrowthLogsPage = () => {
               <h2>{item.content}</h2>
               <p>{item.subject || item.area || '综合成长'}{item.durationMinutes != null ? ` · ${item.durationMinutes} 分钟` : ''}</p>
             </div>
-            <button type="button" className="family-button secondary" aria-label={`编辑 ${item.content}`} onClick={() => openEditor(item)}>编辑</button>
+            <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.content}`} onClick={() => openEditor(item)}>编辑</button>
           </article>
         ))}
       </div>
       {editor && (
-        <section className="family-dialog" role="dialog" aria-modal="true" aria-labelledby="growth-log-editor-title">
+        <FamilyDialog labelledBy="growth-log-editor-title" onClose={() => setEditor(null)}>
           <form onSubmit={save}>
             <div className="family-page-heading"><h2 id="growth-log-editor-title">{editor.mode === 'create' ? '记录成长' : '编辑成长记录'}</h2><button type="button" className="family-button secondary" onClick={() => setEditor(null)}>关闭</button></div>
             <div className="family-form-grid">
@@ -133,9 +140,9 @@ const GrowthLogsPage = () => {
             <label className="family-field-wide">记录内容<textarea required value={form.content} onChange={(event) => setForm((value) => ({ ...value, content: event.target.value }))} /></label>
             <label className="family-field-wide">孩子自评<textarea value={form.childReflection} onChange={(event) => setForm((value) => ({ ...value, childReflection: event.target.value }))} /></label>
             <label className="family-field-wide">家长备注<textarea value={form.parentNote} onChange={(event) => setForm((value) => ({ ...value, parentNote: event.target.value }))} /></label>
-            <button type="submit" className="family-button primary" disabled={busy}>保存成长记录</button>
+            <button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>保存成长记录</button>
           </form>
-        </section>
+        </FamilyDialog>
       )}
     </section>
   );

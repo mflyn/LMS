@@ -61,21 +61,23 @@ const TodayPage = () => {
   const resources = [tasks, report, mistakes, reminders];
   const loading = resources.every((resource) => resource.state === 'loading');
   const failedSources = [
-    tasks.state === 'retryable_error' && 'growth_tasks',
-    report.state === 'retryable_error' && 'weekly_report',
-    mistakes.state === 'retryable_error' && 'mistakes',
-    reminders.state === 'retryable_error' && 'reminders',
+    ['retryable_error', 'error'].includes(tasks.state) && 'growth_tasks',
+    ['retryable_error', 'error'].includes(report.state) && 'weekly_report',
+    ['retryable_error', 'error'].includes(mistakes.state) && 'mistakes',
+    ['retryable_error', 'error'].includes(reminders.state) && 'reminders',
     ...(reminders.unavailableSources || [])
   ].filter(Boolean);
-  const allFailed = resources.every((resource) => resource.state === 'retryable_error');
+  const allFailed = resources.every((resource) => ['retryable_error', 'error'].includes(resource.state));
+  const stableError = resources.find((resource) => resource.state === 'error');
   const reloadAll = () => resources.forEach((resource) => resource.reload());
 
   if (!selectedChild) return <FamilyDataState state="empty" />;
   if (loading) return <FamilyDataState state="loading" />;
+  if (allFailed && stableError) return <FamilyDataState state="error" error={stableError.error} />;
   if (allFailed) return <FamilyDataState state="retryable_error" onRetry={reloadAll} />;
 
   const taskItems = tasks.data?.items || [];
-  const weekly = report.data?.report;
+  const weekly = report.data?.report?.statistics;
   const pendingMistakes = mistakes.data?.total ?? mistakes.data?.items?.length;
   const reminderItems = reminders.data?.items || [];
 
@@ -96,6 +98,7 @@ const TodayPage = () => {
       {failedSources.length > 0 && (
         <FamilyDataState state="partial" unavailableSources={[...new Set(failedSources)]} />
       )}
+      {stableError && <FamilyDataState state="error" error={stableError.error} />}
 
       <div className="family-metric-grid">
         <article><span>今日任务</span><strong>{tasks.data ? taskItems.length : '—'}</strong></article>

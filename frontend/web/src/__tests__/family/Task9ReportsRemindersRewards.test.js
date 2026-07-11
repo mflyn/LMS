@@ -46,7 +46,7 @@ const report = {
     totalDurationMinutes: 320,
     taskCompletionRate: 80,
     mistakeCount: 2,
-    dimensionTaskStats: { physical: { completed: 2, total: 3 } },
+    dimensionTaskStats: { physical: { completed: 2, planned: 3 } },
     dimensionDurations: { physical: 80 },
     reviewKnowledgePoints: ['分数计算']
   },
@@ -79,6 +79,7 @@ describe('Task 9 reports', () => {
     expect(await screen.findByText('80%')).toBeInTheDocument();
     expect(screen.getByText('320 分钟')).toBeInTheDocument();
     expect(screen.getByText('分数计算')).toBeInTheDocument();
+    expect(screen.getByText(/2\/3 个任务/)).toBeInTheDocument();
     await user.type(screen.getByLabelText('家长寄语'), '本周坚持得很好');
     await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
 
@@ -157,5 +158,20 @@ describe('Task 9 rewards', () => {
     await waitFor(() => expect(redeemReward).toHaveBeenCalledTimes(2));
     expect(redeemReward.mock.calls[0][1]).toBe(redeemReward.mock.calls[1][1]);
     expect(await screen.findByText('12')).toBeInTheDocument();
+  });
+
+  test('keeps an active reward unchanged when balance is insufficient', async () => {
+    const user = userEvent.setup();
+    redeemReward.mockRejectedValueOnce({
+      response: { status: 409, data: { error: { code: 'INSUFFICIENT_STARS', message: '星星余额不足' } } }
+    });
+    renderPage(<RewardsPage />);
+
+    await user.click(await screen.findByRole('button', { name: '兑换 周末家庭活动' }));
+    await user.click(screen.getByRole('button', { name: '确认兑换' }));
+
+    expect(await screen.findByText('星星余额不足')).toBeInTheDocument();
+    expect(screen.getByText('30 颗星 · 可兑换')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '重试兑换' })).toBeInTheDocument();
   });
 });

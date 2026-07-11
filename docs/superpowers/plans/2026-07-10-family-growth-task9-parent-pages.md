@@ -29,7 +29,7 @@
 - Create: `frontend/web/src/__tests__/family/familyApi.task9.test.js`
 - Create: `frontend/web/src/__tests__/family/useChildResource.test.js`
 
-- [ ] **Step 1: Write failing client and reset tests**
+- [x] **Step 1: Write failing client and reset tests**
 
 ```js
 await listGrowthTasks({ childId: 'child-a1', scope: 'today', signal });
@@ -38,13 +38,13 @@ resetChildScope({ previousChildId: 'child-a1', nextChildId: 'child-a2' });
 expect(controller.abort).toHaveBeenCalled();
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cd frontend/web && npm test -- --runInBand familyApi.task9 useChildResource`
 
 Expected: FAIL because Task 9 APIs and hook do not exist.
 
-- [ ] **Step 3: Implement client and hook**
+- [x] **Step 3: Implement client and hook**
 
 ```js
 export const listGrowthTasks = (params, signal) => parentGet('/api/growth-tasks', params, signal);
@@ -53,7 +53,7 @@ export const redeemReward = (id, key) => parentPatch(`/api/rewards/${id}/redeem`
 
 Add methods for tasks, logs, mistakes, reports, reminders/settings, rewards, upload, and signed access. The hook registers controller abort/clear with `registerChildScopeReset`, ignores abort error, and commits only if child ID/scope version still match.
 
-- [ ] **Step 4: Verify GREEN and commit**
+- [x] **Step 4: Verify GREEN and commit**
 
 Run: `cd frontend/web && npm test -- --runInBand familyApi.task9 useChildResource`
 
@@ -67,7 +67,7 @@ Commit: `git add frontend/web/src/services/familyApi.js frontend/web/src/hooks/u
 - Modify: `frontend/web/src/family-shell.css`
 - Test: `frontend/web/src/__tests__/family/Task9TodayTasks.test.js`
 
-- [ ] **Step 1: Write failing common-control tests**
+- [x] **Step 1: Write failing common-control tests**
 
 ```js
 render(<FamilyDataState state="partial" unavailableSources={['weekly_report']} />);
@@ -76,13 +76,13 @@ await user.upload(screen.getByLabelText('任务附件'), oversizedFile);
 expect(screen.getByText('图片不能超过 10 MiB')).toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Verify RED and implement**
+- [x] **Step 2: Verify RED and implement**
 
 Run: `cd frontend/web && npm test -- --runInBand Task9TodayTasks`
 
 Implement text panels and labelled retry. Validate JPEG/PNG/WebP and 10 MiB, upload selected child plus approved purpose, retain media ID only, and resolve signed URL on explicit view. Add mobile styles without page-width overflow.
 
-- [ ] **Step 3: Verify GREEN and commit**
+- [x] **Step 3: Verify GREEN and commit**
 
 Run: `cd frontend/web && npm test -- --runInBand Task9TodayTasks`
 
@@ -96,7 +96,7 @@ Commit: `git add frontend/web/src/components/family frontend/web/src/family-shel
 - Modify: `frontend/web/src/App.js`
 - Modify: `frontend/web/src/__tests__/family/Task9TodayTasks.test.js`
 
-- [ ] **Step 1: Write failing overview/task tests**
+- [x] **Step 1: Write failing overview/task tests**
 
 ```js
 expect(await screen.findByText('今日任务')).toBeInTheDocument();
@@ -105,13 +105,13 @@ await user.click(screen.getByRole('button', { name: '创建任务' }));
 expect(createGrowthTask).toHaveBeenCalledWith(expect.objectContaining({ childId: 'child-a1', dimension: 'physical' }));
 ```
 
-- [ ] **Step 2: Verify RED and implement**
+- [x] **Step 2: Verify RED and implement**
 
 Run: `cd frontend/web && npm test -- --runInBand Task9TodayTasks`
 
 Load today task/report/mistake/reminder data in parallel and render partial source labels. Implement filters, five-dimension create/edit, completion, feedback confirmation, cancel/archive. Replace records only with returned task; reload on `TASK_STATE_CONFLICT`.
 
-- [ ] **Step 3: Verify GREEN and commit**
+- [x] **Step 3: Verify GREEN and commit**
 
 Run: `cd frontend/web && npm test -- --runInBand Task9TodayTasks`
 
@@ -125,7 +125,7 @@ Commit: `git add frontend/web/src/pages/family/TodayPage.js frontend/web/src/pag
 - Create: `frontend/web/src/__tests__/family/Task9LogsMistakes.test.js`
 - Modify: `frontend/web/src/App.js`
 
-- [ ] **Step 1: Write failing log/mistake tests**
+- [x] **Step 1: Write failing log/mistake tests**
 
 ```js
 await user.click(screen.getByRole('button', { name: '保存成长记录' }));
@@ -134,13 +134,13 @@ await user.click(screen.getByRole('button', { name: '保存错题' }));
 expect(createMistake).toHaveBeenCalledWith(expect.objectContaining({ subject: '数学', reason: 'calculation' }));
 ```
 
-- [ ] **Step 2: Verify RED and implement**
+- [x] **Step 2: Verify RED and implement**
 
 Run: `cd frontend/web && npm test -- --runInBand Task9LogsMistakes`
 
 Implement date/dimension log filters and create/edit. Implement subject/review-status mistake filters and create/update. Use media only for contract-backed task/mistake IDs, preserve form values after failure, and do not log feedback.
 
-- [ ] **Step 3: Verify GREEN and commit**
+- [x] **Step 3: Verify GREEN and commit**
 
 Run: `cd frontend/web && npm test -- --runInBand Task9LogsMistakes`
 
@@ -149,13 +149,13 @@ Commit: `git add frontend/web/src/pages/family/GrowthLogsPage.js frontend/web/sr
 ### Task 5: Reports, Reminders, and Rewards
 
 **Files:**
-- Create: `frontend/web/src/pages/family/WeeklyReportsPage.js`
+- Create: `frontend/web/src/pages/family/ReportsPage.js`
 - Create: `frontend/web/src/pages/family/RemindersPage.js`
 - Create: `frontend/web/src/pages/family/RewardsPage.js`
 - Create: `frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js`
 - Modify: `frontend/web/src/App.js`
 
-- [ ] **Step 1: Write failing workflow tests**
+- [x] **Step 1: Write failing workflow tests**
 
 ```js
 await user.click(screen.getByRole('button', { name: '保存家长反馈' }));
@@ -164,17 +164,17 @@ await user.click(screen.getByRole('button', { name: '确认兑换' }));
 expect(redeemReward).toHaveBeenLastCalledWith('reward-a1', expect.any(String));
 ```
 
-- [ ] **Step 2: Verify RED and implement**
+- [x] **Step 2: Verify RED and implement**
 
 Run: `cd frontend/web && npm test -- --runInBand Task9ReportsRemindersRewards`
 
 Use Monday report selector and feedback-only patch. Render reminder partial metadata and nested settings `{ quietHours: { start, end } }`. Render balance/reward/ledger pagination, generate one key per redemption attempt, reuse it on retry, and disable in flight.
 
-- [ ] **Step 3: Verify GREEN and commit**
+- [x] **Step 3: Verify GREEN and commit**
 
 Run: `cd frontend/web && npm test -- --runInBand Task9ReportsRemindersRewards`
 
-Commit: `git add frontend/web/src/pages/family/WeeklyReportsPage.js frontend/web/src/pages/family/RemindersPage.js frontend/web/src/pages/family/RewardsPage.js frontend/web/src/App.js frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js && git commit -m "feat: add reports reminders and rewards pages"`
+Commit: `git add frontend/web/src/pages/family/ReportsPage.js frontend/web/src/pages/family/RemindersPage.js frontend/web/src/pages/family/RewardsPage.js frontend/web/src/App.js frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js && git commit -m "feat: add reports reminders and rewards pages"`
 
 ### Task 6: Contract Correction, Gate, and Merge Evidence
 
@@ -183,11 +183,11 @@ Commit: `git add frontend/web/src/pages/family/WeeklyReportsPage.js frontend/web
 - Create: `docs/development/family-growth-task9-gate.md`
 - Modify: `docs/development/README.md`
 
-- [ ] **Step 1: Correct reminder documentation**
+- [x] **Step 1: Correct reminder documentation**
 
 Replace `quietHoursStart`/`quietHoursEnd` with `{ "quietHours": { "start": "21:00", "end": "07:00" } }`.
 
-- [ ] **Step 2: Run backend smoke and final verification**
+- [x] **Step 2: Run backend smoke and final verification**
 
 Run: `npm run test:family-regression -- --runInBand growthTasks.test.js`
 

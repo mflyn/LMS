@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FamilyDataState from '../../components/family/FamilyDataState';
+import FamilyDialog from '../../components/family/FamilyDialog';
 import { useFamily } from '../../contexts/FamilyContext';
-import { useChildResource } from '../../hooks/useChildResource';
+import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { createReward, listRewards, redeemReward } from '../../services/familyApi';
 
 const newKey = (rewardId) => {
-  const random = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const random = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   return `reward:${rewardId}:${random}`;
 };
 const messageFor = (error) => error?.response?.data?.error?.message || error?.message || '操作失败，请重试。';
@@ -17,6 +18,7 @@ const RewardsPage = () => {
     []
   );
   const resource = useChildResource({ load });
+  const mutationGuard = useChildMutationGuard();
   const [data, setData] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [rewardForm, setRewardForm] = useState({ title: '', requiredStars: '' });
@@ -31,10 +33,12 @@ const RewardsPage = () => {
     setRedemption(null);
     setError('');
     setMessage('');
+    setBusy(false);
   }, [selectedChildId]);
 
   const saveReward = async (event) => {
     event.preventDefault();
+    const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
     try {
@@ -43,11 +47,13 @@ const RewardsPage = () => {
         title: rewardForm.title,
         requiredStars: Number(rewardForm.requiredStars)
       });
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       setData((current) => ({ ...current, rewards: { ...current.rewards, items: [result.reward, ...(current.rewards?.items || [])] } }));
       setCreateOpen(false);
       setRewardForm({ title: '', requiredStars: '' });
       setMessage('奖励已创建。');
     } catch (saveError) {
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       setError(messageFor(saveError));
     } finally {
       setBusy(false);
@@ -60,10 +66,12 @@ const RewardsPage = () => {
   };
 
   const redeem = async () => {
+    const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
     try {
       const result = await redeemReward(redemption.reward.rewardId, redemption.idempotencyKey);
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       setData((current) => ({
         ...current,
         starBalance: result.starBalance,
@@ -75,6 +83,7 @@ const RewardsPage = () => {
       setRedemption(null);
       setMessage(`已兑换，使用 ${result.spentStars} 颗星。`);
     } catch (redeemError) {
+      if (!mutationGuard.isCurrentScope(mutationScope)) return;
       setRedemption((current) => ({ ...current, failed: true }));
       setError(messageFor(redeemError));
     } finally {
@@ -88,18 +97,19 @@ const RewardsPage = () => {
 
   return (
     <section className="family-page family-page-wide" aria-labelledby="rewards-page-title">
-      <div className="family-page-heading"><div><p className="family-eyebrow">{selectedChild.name}的正向激励</p><h1 id="rewards-page-title">星星与奖励</h1></div><button type="button" className="family-button primary" onClick={() => { setCreateOpen(true); setError(''); }}>新建奖励</button></div>
+      <div className="family-page-heading"><div><p className="family-eyebrow">{selectedChild.name}的正向激励</p><h1 id="rewards-page-title">星星与奖励</h1></div><button type="button" className="family-button primary" disabled={resource.state === 'loading'} onClick={() => { setCreateOpen(true); setError(''); }}>新建奖励</button></div>
       {resource.state === 'loading' && <FamilyDataState state="loading" />}
       {resource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={resource.reload} />}
+      {resource.state === 'error' && <FamilyDataState state="error" error={resource.error} />}
       {message && <p className="family-success-message" role="status">{message}</p>}
       {error && !redemption && <p className="family-form-error" role="alert">{error}</p>}
       {data && <div className="family-star-balance"><span>当前星星</span><strong>{data.starBalance}</strong></div>}
       <div className="family-section-grid">
-        <section className="family-panel"><h2>奖励清单</h2>{data && rewards.length === 0 ? <p>暂无奖励。</p> : <div className="family-record-list">{rewards.map((reward) => <article className="family-record" key={reward.rewardId}><div className="family-record-main"><h3>{reward.title}</h3><p>{reward.requiredStars} 颗星 · {reward.status === 'active' ? '可兑换' : '已兑换'}</p></div>{reward.status === 'active' && <button type="button" className="family-button primary" aria-label={`兑换 ${reward.title}`} disabled={data.starBalance < reward.requiredStars} onClick={() => openRedemption(reward)}>兑换</button>}</article>)}</div>}</section>
-        <section className="family-panel"><h2>星星流水</h2>{data && ledger.length === 0 ? <p>暂无流水。</p> : <ul className="family-list">{ledger.map((entry) => <li key={entry.ledgerEntryId}><span>{entry.type === 'spend' ? '兑换使用' : '成长获得'}</span><strong>{entry.type === 'spend' ? '-' : '+'}{entry.amount}</strong></li>)}</ul>}</section>
+        <section className="family-panel family-unframed-panel"><h2>奖励清单</h2>{data && rewards.length === 0 ? <p>暂无奖励。</p> : <div className="family-record-list">{rewards.map((reward) => <article className="family-record" key={reward.rewardId}><div className="family-record-main"><h3>{reward.title}</h3><p>{reward.requiredStars} 颗星 · {reward.status === 'active' ? '可兑换' : '已兑换'}</p></div>{reward.status === 'active' && <button type="button" className="family-button primary" aria-label={`兑换 ${reward.title}`} disabled={data.starBalance < reward.requiredStars} onClick={() => openRedemption(reward)}>兑换</button>}</article>)}</div>}</section>
+        <section className="family-panel family-unframed-panel"><h2>星星流水</h2>{data && ledger.length === 0 ? <p>暂无流水。</p> : <ul className="family-list">{ledger.map((entry) => <li key={entry.ledgerEntryId}><span>{entry.type === 'spend' ? '兑换使用' : '成长获得'}</span><strong>{entry.type === 'spend' ? '-' : '+'}{entry.amount}</strong></li>)}</ul>}</section>
       </div>
-      {createOpen && <section className="family-dialog" role="dialog" aria-modal="true" aria-labelledby="reward-editor-title"><form onSubmit={saveReward}><div className="family-page-heading"><h2 id="reward-editor-title">新建奖励</h2><button type="button" className="family-button secondary" onClick={() => setCreateOpen(false)}>关闭</button></div><div className="family-form-grid"><label>奖励名称<input required value={rewardForm.title} onChange={(event) => setRewardForm((value) => ({ ...value, title: event.target.value }))} /></label><label>所需星星<input required type="number" min="1" value={rewardForm.requiredStars} onChange={(event) => setRewardForm((value) => ({ ...value, requiredStars: event.target.value }))} /></label></div>{error && <p className="family-form-error" role="alert">{error}</p>}<button type="submit" className="family-button primary" disabled={busy}>保存奖励</button></form></section>}
-      {redemption && <section className="family-dialog" role="dialog" aria-modal="true" aria-labelledby="reward-redeem-title"><div><div className="family-page-heading"><h2 id="reward-redeem-title">确认兑换</h2><button type="button" className="family-button secondary" onClick={() => setRedemption(null)}>关闭</button></div><p>使用 {redemption.reward.requiredStars} 颗星兑换“{redemption.reward.title}”？</p>{error && <p className="family-form-error" role="alert">{error}</p>}<button type="button" className="family-button primary" disabled={busy} onClick={redeem}>{redemption.failed ? '重试兑换' : '确认兑换'}</button></div></section>}
+      {createOpen && <FamilyDialog labelledBy="reward-editor-title" onClose={() => setCreateOpen(false)}><form onSubmit={saveReward}><div className="family-page-heading"><h2 id="reward-editor-title">新建奖励</h2><button type="button" className="family-button secondary" onClick={() => setCreateOpen(false)}>关闭</button></div><div className="family-form-grid"><label>奖励名称<input required value={rewardForm.title} onChange={(event) => setRewardForm((value) => ({ ...value, title: event.target.value }))} /></label><label>所需星星<input required type="number" min="1" value={rewardForm.requiredStars} onChange={(event) => setRewardForm((value) => ({ ...value, requiredStars: event.target.value }))} /></label></div>{error && <p className="family-form-error" role="alert">{error}</p>}<button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>保存奖励</button></form></FamilyDialog>}
+      {redemption && <FamilyDialog labelledBy="reward-redeem-title" onClose={() => setRedemption(null)}><div><div className="family-page-heading"><h2 id="reward-redeem-title">确认兑换</h2><button type="button" className="family-button secondary" onClick={() => setRedemption(null)}>关闭</button></div><p>使用 {redemption.reward.requiredStars} 颗星兑换“{redemption.reward.title}”？</p>{error && <p className="family-form-error" role="alert">{error}</p>}<button type="button" className="family-button primary" disabled={busy} onClick={redeem}>{redemption.failed ? '重试兑换' : '确认兑换'}</button></div></FamilyDialog>}
     </section>
   );
 };

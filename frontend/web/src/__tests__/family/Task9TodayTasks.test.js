@@ -11,10 +11,12 @@ import {
   completeGrowthTask,
   confirmGrowthTask,
   createGrowthTask,
+  deletePrivateMedia,
   getWeeklyReport,
   listFamilyReminders,
   listGrowthTasks,
   listMistakes,
+  uploadPrivateMedia,
   updateGrowthTask
 } from '../../services/familyApi';
 
@@ -36,6 +38,7 @@ jest.mock('../../services/familyApi', () => ({
   completeGrowthTask: jest.fn(),
   confirmGrowthTask: jest.fn(),
   cancelOrArchiveGrowthTask: jest.fn(),
+  deletePrivateMedia: jest.fn(),
   uploadPrivateMedia: jest.fn(),
   getPrivateMediaAccess: jest.fn()
 }));
@@ -153,9 +156,10 @@ describe('Task 9 shared family controls', () => {
     );
   });
 
-  test('removes the selected media id through the value callback without deleting the media asset', async () => {
+  test('reports a selected media removal to its lifecycle owner', async () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
+    const onRemoved = jest.fn();
     render(
       <PrivateMediaField
         label="错题图片"
@@ -163,12 +167,14 @@ describe('Task 9 shared family controls', () => {
         purpose="mistake_question"
         value="media-a1"
         onChange={onChange}
+        onRemoved={onRemoved}
       />
     );
 
     await user.click(screen.getByRole('button', { name: '移除错题图片' }));
 
     expect(onChange).toHaveBeenCalledWith(null);
+    expect(onRemoved).toHaveBeenCalledWith('media-a1');
   });
 });
 
@@ -191,7 +197,7 @@ describe('Task 9 today and task workflows', () => {
     jest.clearAllMocks();
     listGrowthTasks.mockResolvedValue({ items: [], page: 1, pageSize: 20, total: 0 });
     getWeeklyReport.mockResolvedValue({
-      report: { reportId: 'report-a1', taskCompletionRate: 75, totalDurationMinutes: 180 }
+      report: { reportId: 'report-a1', statistics: { taskCompletionRate: 75, totalDurationMinutes: 180 } }
     });
     listMistakes.mockResolvedValue({ items: [], page: 1, pageSize: 20, total: 0 });
     listFamilyReminders.mockResolvedValue({
@@ -250,6 +256,52 @@ describe('Task 9 today and task workflows', () => {
       title
     })));
     expect(await screen.findByText(title)).toBeInTheDocument();
+  });
+
+  test('queries task filters for the selected child', async () => {
+    const user = userEvent.setup();
+    renderPage(<TasksPage />);
+
+    await screen.findByText('暂无成长任务');
+    await user.selectOptions(screen.getByLabelText('筛选维度'), 'physical');
+    await user.selectOptions(screen.getByLabelText('任务状态'), 'pending');
+
+    await waitFor(() => expect(listGrowthTasks).toHaveBeenLastCalledWith(
+      expect.objectContaining({ childId: 'child-a1', dimension: 'physical', status: 'pending' }),
+      expect.any(AbortSignal)
+    ));
+  });
+
+  test('deletes an unbound private-media draft when task creation is cancelled', async () => {
+    const user = userEvent.setup();
+    uploadPrivateMedia.mockResolvedValueOnce({ mediaId: 'media-draft-1' });
+    deletePrivateMedia.mockResolvedValueOnce({});
+    renderPage(<TasksPage />);
+
+    await screen.findByText('暂无成长任务');
+    await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await user.upload(
+      screen.getByLabelText('任务附件'),
+      new File(['image'], 'task.png', { type: 'image/png' })
+    );
+    await user.click(screen.getByRole('button', { name: '关闭' }));
+
+    await waitFor(() => expect(deletePrivateMedia).toHaveBeenCalledWith('media-draft-1'));
+  });
+
+  test('traps dialog focus, closes with Escape, and restores the opener', async () => {
+    const user = userEvent.setup();
+    renderPage(<TasksPage />);
+
+    await screen.findByText('暂无成长任务');
+    const opener = screen.getByRole('button', { name: '新建任务' });
+    await user.click(opener);
+    const dialog = screen.getByRole('dialog', { name: '新建任务' });
+    expect(dialog).toContainElement(document.activeElement);
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: '新建任务' })).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
   });
 
   test('completes, confirms, and archives a task using server-returned states', async () => {

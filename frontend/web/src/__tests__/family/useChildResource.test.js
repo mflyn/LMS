@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { useChildResource } from '../../hooks/useChildResource';
+import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { useFamily } from '../../contexts/FamilyContext';
 import { registerChildScopeReset } from '../../services/childScope';
 
@@ -29,6 +29,12 @@ const ResourceProbe = ({ load, enabled, initialData }) => {
       <button onClick={resource.reload}>reload</button>
     </div>
   );
+};
+
+const MutationGuardProbe = ({ onGuard }) => {
+  const guard = useChildMutationGuard();
+  onGuard(guard);
+  return null;
 };
 
 describe('useChildResource', () => {
@@ -113,5 +119,27 @@ describe('useChildResource', () => {
     act(() => screen.getByRole('button', { name: 'reload' }).click());
     await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('empty'));
     expect(load).toHaveBeenCalledTimes(3);
+  });
+
+  test('rejects a mutation result captured before the child scope changes', () => {
+    let guard;
+    const { rerender } = render(<MutationGuardProbe onGuard={(value) => { guard = value; }} />);
+    const captured = guard.captureScope();
+
+    family = { selectedChildId: 'child-a2', childScopeVersion: 2 };
+    rerender(<MutationGuardProbe onGuard={(value) => { guard = value; }} />);
+
+    expect(guard.isCurrentScope(captured)).toBe(false);
+    expect(guard.isCurrentScope(guard.captureScope())).toBe(true);
+  });
+
+  test('exposes stable client errors without a retry state', async () => {
+    const load = jest.fn().mockRejectedValue({
+      response: { status: 400, data: { error: { message: 'weekStart 必须是周一' } } }
+    });
+
+    render(<ResourceProbe load={load} />);
+
+    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('error'));
   });
 });

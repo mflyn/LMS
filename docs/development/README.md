@@ -25,6 +25,9 @@
 - [Task 8 家长 Web 应用壳实施计划](../superpowers/plans/2026-07-10-family-growth-task8-parent-shell.md)
 - [Task 8 家长 Web 应用壳测试设计与用例](./family-growth-task8-test-cases.md)
 - [Task 8 家长 Web 应用壳门禁记录](./family-growth-task8-gate.md)
+- [Task 9 家长 MVP 页面设计](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md)
+- [Task 9 家长 MVP 页面实施计划](../superpowers/plans/2026-07-10-family-growth-task9-parent-pages.md)
+- [Task 9 家长 MVP 页面测试设计与用例](./family-growth-task9-test-cases.md)
 
 ## 开发环境搭建
 
