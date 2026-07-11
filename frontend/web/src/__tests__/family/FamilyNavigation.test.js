@@ -106,8 +106,8 @@ describe('family parent navigation', () => {
 
     openRoute('/app');
 
-    expect(await screen.findByRole('heading', { name: '今日成长' })).toBeInTheDocument();
-    expect(screen.getByLabelText('当前孩子')).toHaveValue('child-a1');
+    expect(await screen.findByLabelText('当前孩子')).toHaveValue('child-a1');
+    expect(window.location.pathname).toBe('/app/today');
     expect(screen.getByRole('button', { name: '打开导航' })).toBeInTheDocument();
 
     for (const label of ['今日', '任务', '记录', '错题', '周报', '提醒', '星星与奖励']) {
