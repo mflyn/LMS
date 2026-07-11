@@ -6,6 +6,7 @@ import {
   getMyFamily,
   getWeeklyReport,
   listFamilyReminders,
+  listGrowthLogs,
   listGrowthTasks,
   listMistakes
 } from '../../services/familyApi';
@@ -16,6 +17,7 @@ jest.mock('../../services/familyApi', () => ({
   createFamily: jest.fn(),
   getWeeklyReport: jest.fn(),
   listFamilyReminders: jest.fn(),
+  listGrowthLogs: jest.fn(),
   listGrowthTasks: jest.fn(),
   listMistakes: jest.fn()
 }));
@@ -53,6 +55,7 @@ describe('family parent navigation', () => {
     localStorage.clear();
     jest.clearAllMocks();
     listGrowthTasks.mockResolvedValue({ items: [], total: 0 });
+    listGrowthLogs.mockResolvedValue({ items: [], total: 0 });
     getWeeklyReport.mockResolvedValue({ report: null });
     listMistakes.mockResolvedValue({ items: [], total: 0 });
     listFamilyReminders.mockResolvedValue({ items: [], meta: { partial: false, unavailableSources: [] } });
