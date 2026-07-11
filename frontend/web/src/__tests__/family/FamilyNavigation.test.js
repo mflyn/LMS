@@ -1,12 +1,29 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../../App';
-import { createFamily, getMyFamily } from '../../services/familyApi';
+import {
+  createFamily,
+  getNotificationSettings,
+  getMyFamily,
+  getWeeklyReport,
+  listFamilyReminders,
+  listGrowthLogs,
+  listGrowthTasks,
+  listMistakes,
+  listRewards
+} from '../../services/familyApi';
 import { CHILD_SESSION_KEY, PARENT_SESSION_KEY } from '../../services/familySession';
 
 jest.mock('../../services/familyApi', () => ({
   getMyFamily: jest.fn(),
-  createFamily: jest.fn()
+  createFamily: jest.fn(),
+  getNotificationSettings: jest.fn(),
+  getWeeklyReport: jest.fn(),
+  listFamilyReminders: jest.fn(),
+  listGrowthLogs: jest.fn(),
+  listGrowthTasks: jest.fn(),
+  listMistakes: jest.fn(),
+  listRewards: jest.fn()
 }));
 jest.mock('../../contexts/WebSocketContext', () => ({
   WebSocketProvider: ({ children }) => children
@@ -41,6 +58,21 @@ describe('family parent navigation', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    listGrowthTasks.mockResolvedValue({ items: [], total: 0 });
+    listGrowthLogs.mockResolvedValue({ items: [], total: 0 });
+    getWeeklyReport.mockResolvedValue({ report: null });
+    listMistakes.mockResolvedValue({ items: [], total: 0 });
+    listFamilyReminders.mockResolvedValue({ items: [], meta: { partial: false, unavailableSources: [] } });
+    getNotificationSettings.mockResolvedValue({ settings: {
+      taskReminderEnabled: true,
+      overdueReminderEnabled: true,
+      mistakeReviewReminderEnabled: true,
+      dimensionReminderEnabled: true,
+      weeklyReportReminderEnabled: true,
+      weeklyReportDay: 7,
+      quietHours: { start: '21:00', end: '07:00' }
+    } });
+    listRewards.mockResolvedValue({ starBalance: 0, rewards: { items: [] }, ledger: { items: [] } });
   });
 
   test('redirects an unauthenticated parent route to parent login', async () => {
@@ -135,6 +167,7 @@ describe('family parent navigation', () => {
     openRoute('/family/setup');
 
     await screen.findByRole('heading', { name: '创建家庭' });
+    getMyFamily.mockResolvedValue(readyFamily);
     fireEvent.change(screen.getByLabelText('家庭名称'), { target: { value: '小明的家' } });
     fireEvent.click(screen.getByRole('button', { name: '创建家庭' }));
 

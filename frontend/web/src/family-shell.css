@@ -93,7 +93,67 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-navigation a:hover, .family-navigation a.is-active { color: var(--family-primary-dark); background: #e6f3ef; font-weight: 700; }
 .family-content { min-width: 0; padding: 32px; }
 .family-page { max-width: 840px; }
+.family-page-wide { max-width: 1180px; }
+.family-page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.family-page-heading h1, .family-page-heading h2 { margin: 0; }
+.family-metric-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+.family-metric-grid article { min-width: 0; padding: 16px; border: 1px solid var(--family-border); border-radius: 6px; background: var(--family-surface); }
+.family-metric-grid span { display: block; color: var(--family-muted); font-size: 14px; }
+.family-metric-grid strong { display: block; margin-top: 8px; font-size: 24px; }
+.family-section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.family-panel, .family-record { border: 1px solid var(--family-border); border-radius: 6px; background: var(--family-surface); }
+.family-panel { padding: 20px; }
+.family-unframed-panel { padding: 0; border: 0; background: transparent; }
+.family-panel h2, .family-record h2 { margin: 0 0 10px; font-size: 18px; }
+.family-list { margin: 0; padding-left: 20px; }
+.family-filter-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.family-filter-bar label, .family-form-grid label, .family-field-wide { display: grid; gap: 6px; color: var(--family-muted); font-size: 14px; }
+.family-filter-bar input, .family-filter-bar select, .family-form-grid input, .family-form-grid select, .family-field-wide textarea, .family-dialog textarea, .family-feedback-form textarea {
+  min-height: 40px;
+  border: 1px solid var(--family-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--family-surface);
+}
+.family-record-list { display: grid; gap: 10px; }
+.family-record { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px; }
+.family-record-main { min-width: 0; }
+.family-record-main p { margin: 0; }
+.family-dimension { display: inline-flex; padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: 700; background: #edf2f7; }
+.family-dimension.is-moral { color: #7a3e00; background: #fff3d6; }
+.family-dimension.is-academic { color: #174b70; background: #e5f3fb; }
+.family-dimension.is-physical { color: #176b5b; background: #e6f3ef; }
+.family-dimension.is-artistic { color: #7a315d; background: #faeaf4; }
+.family-dimension.is-labor { color: #57461c; background: #f3efd9; }
+.family-dialog-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 6vh 16px; background: rgba(28, 39, 51, 0.45); }
+.family-dialog { width: min(100%, 720px); max-height: 88vh; overflow: auto; padding: 24px; border: 1px solid var(--family-border); border-radius: 8px; background: var(--family-surface); box-shadow: 0 24px 70px rgba(28, 39, 51, 0.24); }
+.family-dialog form { display: grid; gap: 16px; }
+.family-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.family-field-wide { grid-column: 1 / -1; }
+.family-checkbox { display: flex !important; align-items: center; gap: 8px !important; }
+.family-success-message { color: var(--family-primary-dark) !important; font-weight: 700; }
+.family-empty-copy { padding: 28px; border: 1px dashed var(--family-border); text-align: center; }
 .family-state { max-width: 520px; padding: 24px; border: 1px solid var(--family-border); border-radius: 8px; background: var(--family-surface); }
+.family-data-state {
+  padding: 16px;
+  border: 1px solid var(--family-border);
+  border-radius: 6px;
+  background: var(--family-surface);
+}
+.family-data-state p { margin: 0; }
+.family-data-state ul { margin: 8px 0 0; padding-left: 20px; color: var(--family-muted); }
+.family-data-state.is-partial { border-left: 4px solid var(--family-accent); }
+.family-media-field { display: grid; gap: 8px; min-width: 0; }
+.family-media-field label { color: var(--family-ink); font-weight: 600; }
+.family-media-field input { max-width: 100%; }
+.family-inline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.family-checkbox-row { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 14px 0; }
+.family-feedback-form, .family-settings-form { display: grid; gap: 14px; margin-top: 16px; }
+.family-feedback-form label { display: grid; gap: 6px; color: var(--family-muted); font-size: 14px; }
+.family-star-balance { display: inline-grid; min-width: 150px; gap: 4px; margin-bottom: 18px; padding: 16px 20px; border: 1px solid var(--family-border); border-radius: 6px; background: #fff8e8; }
+.family-star-balance span { color: var(--family-muted); font-size: 14px; }
+.family-star-balance strong { color: #8a4b08; font-size: 30px; }
+.family-media-preview { display: block; width: min(100%, 420px); max-height: 320px; object-fit: contain; border: 1px solid var(--family-border); border-radius: 6px; background: #f8fafc; }
 .family-mobile-nav-toggle { display: none; }
 
 @media (max-width: 767px) {
@@ -114,6 +174,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .family-navigation { display: none; border: 0; border-bottom: 1px solid var(--family-border); }
   .family-navigation.is-open { display: grid; }
   .family-content { padding: 24px 16px; }
+  .family-page-heading, .family-record { align-items: stretch; flex-direction: column; }
+  .family-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .family-section-grid, .family-form-grid { grid-template-columns: 1fr; }
+  .family-dialog-backdrop { padding: 12px; }
+  .family-dialog { max-height: calc(100vh - 24px); padding: 18px; }
   .family-auth-page, .family-route-state { padding: 16px; }
   .family-auth-panel { padding: 24px; }
 }
