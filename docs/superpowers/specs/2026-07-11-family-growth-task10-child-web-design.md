@@ -1,6 +1,6 @@
 # Family Growth Task 10 Child Web Design
 
-**Document status:** DESIGN APPROVED / WRITTEN SPEC REVIEW
+**Document status:** APPROVED / IMPLEMENTATION BASELINE
 **Date:** 2026-07-11
 **Scope:** Task 10 child PIN entry and child-only Web workflows
 **Requirements:** `FR-UI-002`, `FR-CHILD-002`, `FR-CHILD-004`, `FR-CHILD-005`, `FR-TASK-003`, `FR-TASK-004`, `FR-MISTAKE-001`, `FR-REWARD-001`, `FR-REWARD-002`, `FR-NOTIFY-001`, `NFR-SEC-001`
