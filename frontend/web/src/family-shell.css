@@ -107,7 +107,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-list { margin: 0; padding-left: 20px; }
 .family-filter-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
 .family-filter-bar label, .family-form-grid label, .family-field-wide { display: grid; gap: 6px; color: var(--family-muted); font-size: 14px; }
-.family-filter-bar select, .family-form-grid input, .family-form-grid select, .family-field-wide textarea, .family-dialog textarea {
+.family-filter-bar input, .family-filter-bar select, .family-form-grid input, .family-form-grid select, .family-field-wide textarea, .family-dialog textarea, .family-feedback-form textarea {
   min-height: 40px;
   border: 1px solid var(--family-border);
   border-radius: 6px;
@@ -145,6 +145,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-media-field label { color: var(--family-ink); font-weight: 600; }
 .family-media-field input { max-width: 100%; }
 .family-inline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.family-checkbox-row { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 14px 0; }
+.family-feedback-form, .family-settings-form { display: grid; gap: 14px; margin-top: 16px; }
+.family-feedback-form label { display: grid; gap: 6px; color: var(--family-muted); font-size: 14px; }
+.family-star-balance { display: inline-grid; min-width: 150px; gap: 4px; margin-bottom: 18px; padding: 16px 20px; border: 1px solid var(--family-border); border-radius: 6px; background: #fff8e8; }
+.family-star-balance span { color: var(--family-muted); font-size: 14px; }
+.family-star-balance strong { color: #8a4b08; font-size: 30px; }
 .family-media-preview { display: block; width: min(100%, 420px); max-height: 320px; object-fit: contain; border: 1px solid var(--family-border); border-radius: 6px; background: #f8fafc; }
 .family-mobile-nav-toggle { display: none; }
 

@@ -16,13 +16,9 @@ import TodayPage from './pages/family/TodayPage';
 import TasksPage from './pages/family/TasksPage';
 import GrowthLogsPage from './pages/family/GrowthLogsPage';
 import MistakesPage from './pages/family/MistakesPage';
-import FamilyPlaceholderPage from './pages/family/FamilyPlaceholderPage';
-
-const familyPlaceholderRoutes = [
-  { path: 'reports', title: '周报', description: '成长周报将在 Task 9 接入。' },
-  { path: 'reminders', title: '提醒', description: '家庭提醒将在 Task 9 接入。' },
-  { path: 'rewards', title: '星星与奖励', description: '星星与奖励将在 Task 9 接入。' }
-];
+import ReportsPage from './pages/family/ReportsPage';
+import RemindersPage from './pages/family/RemindersPage';
+import RewardsPage from './pages/family/RewardsPage';
 
 const AppRoutes = () => (
   <Routes>
@@ -36,13 +32,9 @@ const AppRoutes = () => (
         <Route path="tasks" element={<TasksPage />} />
         <Route path="logs" element={<GrowthLogsPage />} />
         <Route path="mistakes" element={<MistakesPage />} />
-        {familyPlaceholderRoutes.map((route) => (
-          <Route
-            key={route.path}
-            path={route.path}
-            element={<FamilyPlaceholderPage title={route.title} description={route.description} />}
-          />
-        ))}
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="reminders" element={<RemindersPage />} />
+        <Route path="rewards" element={<RewardsPage />} />
       </Route>
     </Route>
     {LEGACY_SCHOOL_PATHS.map((path) => (

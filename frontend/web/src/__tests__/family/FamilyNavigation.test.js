@@ -3,23 +3,27 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../../App';
 import {
   createFamily,
+  getNotificationSettings,
   getMyFamily,
   getWeeklyReport,
   listFamilyReminders,
   listGrowthLogs,
   listGrowthTasks,
-  listMistakes
+  listMistakes,
+  listRewards
 } from '../../services/familyApi';
 import { CHILD_SESSION_KEY, PARENT_SESSION_KEY } from '../../services/familySession';
 
 jest.mock('../../services/familyApi', () => ({
   getMyFamily: jest.fn(),
   createFamily: jest.fn(),
+  getNotificationSettings: jest.fn(),
   getWeeklyReport: jest.fn(),
   listFamilyReminders: jest.fn(),
   listGrowthLogs: jest.fn(),
   listGrowthTasks: jest.fn(),
-  listMistakes: jest.fn()
+  listMistakes: jest.fn(),
+  listRewards: jest.fn()
 }));
 jest.mock('../../contexts/WebSocketContext', () => ({
   WebSocketProvider: ({ children }) => children
@@ -59,6 +63,16 @@ describe('family parent navigation', () => {
     getWeeklyReport.mockResolvedValue({ report: null });
     listMistakes.mockResolvedValue({ items: [], total: 0 });
     listFamilyReminders.mockResolvedValue({ items: [], meta: { partial: false, unavailableSources: [] } });
+    getNotificationSettings.mockResolvedValue({ settings: {
+      taskReminderEnabled: true,
+      overdueReminderEnabled: true,
+      mistakeReviewReminderEnabled: true,
+      dimensionReminderEnabled: true,
+      weeklyReportReminderEnabled: true,
+      weeklyReportDay: 7,
+      quietHours: { start: '21:00', end: '07:00' }
+    } });
+    listRewards.mockResolvedValue({ starBalance: 0, rewards: { items: [] }, ledger: { items: [] } });
   });
 
   test('redirects an unauthenticated parent route to parent login', async () => {
