@@ -13,10 +13,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import FamilySetupPage from './pages/family/FamilySetupPage';
 import TodayPage from './pages/family/TodayPage';
+import TasksPage from './pages/family/TasksPage';
 import FamilyPlaceholderPage from './pages/family/FamilyPlaceholderPage';
 
 const familyPlaceholderRoutes = [
-  { path: 'tasks', title: '任务', description: '成长任务将在 Task 9 接入。' },
   { path: 'logs', title: '记录', description: '成长记录将在 Task 9 接入。' },
   { path: 'mistakes', title: '错题', description: '错题复盘将在 Task 9 接入。' },
   { path: 'reports', title: '周报', description: '成长周报将在 Task 9 接入。' },
@@ -33,6 +33,7 @@ const AppRoutes = () => (
       <Route path="/app" element={<FamilyShell />}>
         <Route index element={<Navigate to="today" replace />} />
         <Route path="today" element={<TodayPage />} />
+        <Route path="tasks" element={<TasksPage />} />
         {familyPlaceholderRoutes.map((route) => (
           <Route
             key={route.path}

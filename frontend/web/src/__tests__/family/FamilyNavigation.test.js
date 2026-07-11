@@ -1,12 +1,23 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../../App';
-import { createFamily, getMyFamily } from '../../services/familyApi';
+import {
+  createFamily,
+  getMyFamily,
+  getWeeklyReport,
+  listFamilyReminders,
+  listGrowthTasks,
+  listMistakes
+} from '../../services/familyApi';
 import { CHILD_SESSION_KEY, PARENT_SESSION_KEY } from '../../services/familySession';
 
 jest.mock('../../services/familyApi', () => ({
   getMyFamily: jest.fn(),
-  createFamily: jest.fn()
+  createFamily: jest.fn(),
+  getWeeklyReport: jest.fn(),
+  listFamilyReminders: jest.fn(),
+  listGrowthTasks: jest.fn(),
+  listMistakes: jest.fn()
 }));
 jest.mock('../../contexts/WebSocketContext', () => ({
   WebSocketProvider: ({ children }) => children
@@ -41,6 +52,10 @@ describe('family parent navigation', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    listGrowthTasks.mockResolvedValue({ items: [], total: 0 });
+    getWeeklyReport.mockResolvedValue({ report: null });
+    listMistakes.mockResolvedValue({ items: [], total: 0 });
+    listFamilyReminders.mockResolvedValue({ items: [], meta: { partial: false, unavailableSources: [] } });
   });
 
   test('redirects an unauthenticated parent route to parent login', async () => {
