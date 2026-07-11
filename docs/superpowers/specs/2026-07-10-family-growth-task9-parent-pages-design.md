@@ -16,7 +16,7 @@ This task does not add a child Web experience, change service authorization, int
 
 ### 2.1 Child-Scoped Resource Boundary
 
-`FamilyContext` remains the only owner of the selected child. A new frontend resource layer will build every request from `selectedChildId`, add an `AbortController` to each request, and register cancellation with `registerChildScopeReset`. A switch synchronously aborts old-child requests and erases their records before the next child is exposed. Abort errors are ignored; `401` delegates to existing parent-session expiry; stable `400`, `403`, `409`, and `503` responses remain visible in-page.
+`FamilyContext` remains the only owner of the selected child. A new frontend resource layer will build every request from `selectedChildId`, add an `AbortController` to each request, and register cancellation with `registerChildScopeReset`. A switch synchronously aborts old-child requests and erases their records before the next child is exposed. Abort errors are ignored; `401` delegates to existing parent-session expiry; failed responses remain visible in-page.
 
 The resource layer returns `loading`, `empty`, `ready`, `partial`, `error`, and `retryable_error`. Stable `4xx` read errors remain visible without a retry action; network errors, `408`, `429`, and `5xx` are retryable. It does not add a query-cache dependency. This keeps page forms local while preserving the Task 8 child-isolation contract. Mutations capture the selected child ID and scope version and discard responses after a child switch.
 
@@ -35,13 +35,15 @@ Task attachments and mistake images follow one private-media sequence:
 5. Keep failed forms editable and show the stable error response.
 6. Track newly uploaded media as form drafts. Cancelled forms soft-delete unbound drafts; replacing persisted media deletes the old asset only after the business mutation succeeds.
 
+Task attachments use the complete `attachmentMediaIds` array and support multi-file selection, individual signed access, and individual removal up to the backend limit of 100 IDs. Question and answer images remain separate single-media fields because their API contract is scalar.
+
 `growth_evidence` is not a standalone Task 9 upload action because the approved GrowthLog API has no media-reference field. The UI will not create orphan media assets.
 
 ## 3. Page Design
 
 ### 3.1 Today
 
-The overview loads selected-child today tasks, current Monday-based weekly report, pending academic mistakes, and family reminders in parallel. It shows task status counts, completion rate and minutes, pending-review count, reminders, and direct links to task/log/mistake creation. An approved partial response keeps available panels visible and names only API-provided unavailable sources. It never treats missing data as zero.
+The overview loads selected-child today tasks, current Monday-based weekly report, pending academic mistakes, and family reminders in parallel. It shows task status counts, completion rate and minutes, pending-review count, reminders, and direct links to task/log/mistake creation. An approved partial response keeps available panels visible and names only API-provided unavailable sources. Direct source failures render as separate named rows: stable `4xx` errors remain visible without retry, while retryable failures expose a retry action for that source only. Other successful data remains visible, and missing data is never treated as zero.
 
 ### 3.2 Tasks
 
@@ -91,8 +93,8 @@ Successful mutations invalidate only affected selected-child resources. Failed m
 | --- | --- |
 | API client | Endpoint/query/header, parent token, abort signal, signed media read, idempotency header tests |
 | Child switching | Reset aborts old request, clears data before new child load, ignores abort errors |
-| Today | Loading, empty, partial, retryable-error and ready aggregate states |
-| Tasks and logs | All five dimensions, filters, create/edit/complete/confirm/cancel, create/edit log |
+| Today | Loading, empty, partial, ready, and mixed stable/retryable per-source failures |
+| Tasks and logs | All five dimensions, filters, create/edit/complete/confirm/cancel, multi-attachment task create, create/edit log |
 | Mistakes | Academic-only create/update and private-media IDs |
 | Reports | Monday read and feedback-only patch |
 | Reminders | Partial source labels and nested quiet-hours settings |

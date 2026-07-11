@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
-import PrivateMediaField from '../../components/family/PrivateMediaField';
+import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { useDraftMedia } from '../../hooks/useDraftMedia';
@@ -250,7 +250,7 @@ const TasksPage = () => {
               <label>优先级<select value={form.priority} onChange={(event) => setForm((value) => ({ ...value, priority: event.target.value }))}><option value="low">低</option><option value="medium">中</option><option value="high">高</option></select></label>
             </div>
             <label className="family-field-wide">说明<textarea value={form.description} onChange={(event) => setForm((value) => ({ ...value, description: event.target.value }))} /></label>
-            <PrivateMediaField label="任务附件" childId={selectedChildId} purpose="task_attachment" value={form.attachmentMediaIds[0] || null} onUploaded={mediaDrafts.replace} onRemoved={mediaDrafts.remove} onChange={(mediaId) => setForm((value) => ({ ...value, attachmentMediaIds: mediaId ? [mediaId] : [] }))} />
+            <PrivateMediaCollectionField label="任务附件" childId={selectedChildId} purpose="task_attachment" values={form.attachmentMediaIds} onUploaded={mediaDrafts.replace} onRemoved={mediaDrafts.remove} onChange={(mediaIds) => setForm((value) => ({ ...value, attachmentMediaIds: mediaIds }))} />
             <button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>保存任务</button>
           </form>
         </FamilyDialog>
