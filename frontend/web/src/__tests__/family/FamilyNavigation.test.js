@@ -167,6 +167,7 @@ describe('family parent navigation', () => {
     openRoute('/family/setup');
 
     await screen.findByRole('heading', { name: '创建家庭' });
+    getMyFamily.mockResolvedValue(readyFamily);
     fireEvent.change(screen.getByLabelText('家庭名称'), { target: { value: '小明的家' } });
     fireEvent.click(screen.getByRole('button', { name: '创建家庭' }));
 
