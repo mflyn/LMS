@@ -58,23 +58,20 @@ const TodayPage = () => {
   const mistakes = useChildResource({ load: loadMistakes });
   const reminders = useChildResource({ load: loadReminders });
 
-  const resources = [tasks, report, mistakes, reminders];
-  const loading = resources.every((resource) => resource.state === 'loading');
-  const failedSources = [
-    ['retryable_error', 'error'].includes(tasks.state) && 'growth_tasks',
-    ['retryable_error', 'error'].includes(report.state) && 'weekly_report',
-    ['retryable_error', 'error'].includes(mistakes.state) && 'mistakes',
-    ['retryable_error', 'error'].includes(reminders.state) && 'reminders',
-    ...(reminders.unavailableSources || [])
-  ].filter(Boolean);
-  const allFailed = resources.every((resource) => ['retryable_error', 'error'].includes(resource.state));
-  const stableError = resources.find((resource) => resource.state === 'error');
-  const reloadAll = () => resources.forEach((resource) => resource.reload());
+  const resources = [
+    { key: 'growth_tasks', label: '成长任务', resource: tasks },
+    { key: 'weekly_report', label: '本周报告', resource: report },
+    { key: 'mistakes', label: '待复习错题', resource: mistakes },
+    { key: 'reminders', label: '今日提醒', resource: reminders }
+  ];
+  const loading = resources.every(({ resource }) => resource.state === 'loading');
+  const failedResources = resources.filter(({ resource }) => (
+    ['retryable_error', 'error'].includes(resource.state)
+  ));
+  const unavailableSources = reminders.unavailableSources || [];
 
   if (!selectedChild) return <FamilyDataState state="empty" />;
   if (loading) return <FamilyDataState state="loading" />;
-  if (allFailed && stableError) return <FamilyDataState state="error" error={stableError.error} />;
-  if (allFailed) return <FamilyDataState state="retryable_error" onRetry={reloadAll} />;
 
   const taskItems = tasks.data?.items || [];
   const weekly = report.data?.report?.statistics;
@@ -95,10 +92,23 @@ const TodayPage = () => {
         </div>
       </div>
 
-      {failedSources.length > 0 && (
-        <FamilyDataState state="partial" unavailableSources={[...new Set(failedSources)]} />
+      {unavailableSources.length > 0 && (
+        <FamilyDataState state="partial" unavailableSources={[...new Set(unavailableSources)]} />
       )}
-      {stableError && <FamilyDataState state="error" error={stableError.error} />}
+      {failedResources.length > 0 && (
+        <div className="family-resource-errors">
+          {failedResources.map(({ key, label, resource }) => (
+            <div role="group" aria-label={`${label}加载失败`} className="family-resource-error" key={key}>
+              <strong>{label}</strong>
+              <FamilyDataState
+                state={resource.state}
+                error={resource.error}
+                onRetry={resource.state === 'retryable_error' ? resource.reload : undefined}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="family-metric-grid">
         <article><span>今日任务</span><strong>{tasks.data ? taskItems.length : '—'}</strong></article>

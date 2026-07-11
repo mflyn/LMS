@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import FamilyDataState from '../../components/family/FamilyDataState';
+import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
 import PrivateMediaField from '../../components/family/PrivateMediaField';
 import TodayPage from '../../pages/family/TodayPage';
 import TasksPage from '../../pages/family/TasksPage';
@@ -176,6 +177,60 @@ describe('Task 9 shared family controls', () => {
     expect(onChange).toHaveBeenCalledWith(null);
     expect(onRemoved).toHaveBeenCalledWith('media-a1');
   });
+
+  test('appends multiple private task attachments without collapsing existing media IDs', async () => {
+    const user = userEvent.setup();
+    const uploadPrivateMedia = jest.fn()
+      .mockResolvedValueOnce({ mediaId: 'media-a1' })
+      .mockResolvedValueOnce({ mediaId: 'media-a2' });
+    const onChange = jest.fn();
+    const onUploaded = jest.fn();
+
+    render(
+      <PrivateMediaCollectionField
+        label="任务附件"
+        childId="child-a1"
+        purpose="task_attachment"
+        values={[]}
+        onChange={onChange}
+        onUploaded={onUploaded}
+        uploadPrivateMedia={uploadPrivateMedia}
+      />
+    );
+
+    await user.upload(screen.getByLabelText('任务附件'), [
+      new File(['first'], 'first.png', { type: 'image/png' }),
+      new File(['second'], 'second.webp', { type: 'image/webp' })
+    ]);
+
+    expect(uploadPrivateMedia).toHaveBeenCalledTimes(2);
+    expect(onUploaded).toHaveBeenNthCalledWith(1, 'media-a1', null);
+    expect(onUploaded).toHaveBeenNthCalledWith(2, 'media-a2', null);
+    expect(onChange).toHaveBeenNthCalledWith(1, ['media-a1']);
+    expect(onChange).toHaveBeenNthCalledWith(2, ['media-a1', 'media-a2']);
+  });
+
+  test('removes only the selected task attachment from a media collection', async () => {
+    const user = userEvent.setup();
+    const onChange = jest.fn();
+    const onRemoved = jest.fn();
+
+    render(
+      <PrivateMediaCollectionField
+        label="任务附件"
+        childId="child-a1"
+        purpose="task_attachment"
+        values={['media-a1', 'media-a2']}
+        onChange={onChange}
+        onRemoved={onRemoved}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: '移除任务附件 2' }));
+
+    expect(onRemoved).toHaveBeenCalledWith('media-a2');
+    expect(onChange).toHaveBeenCalledWith(['media-a1']);
+  });
 });
 
 const task = (overrides = {}) => ({
@@ -228,6 +283,32 @@ describe('Task 9 today and task workflows', () => {
     expect(screen.getByText('180 分钟')).toBeInTheDocument();
     expect(screen.getByText('今天还有 1 个成长任务')).toBeInTheDocument();
     expect(screen.getByText('growth_logs')).toBeInTheDocument();
+  });
+
+  test('renders each failed Today source and retries only the selected retryable source', async () => {
+    const user = userEvent.setup();
+    listGrowthTasks.mockRejectedValueOnce({
+      response: { status: 403, data: { error: { message: '无权读取成长任务' } } }
+    });
+    getWeeklyReport
+      .mockRejectedValueOnce({ response: { status: 503 } })
+      .mockResolvedValueOnce({
+        report: { reportId: 'report-a1', statistics: { taskCompletionRate: 80, totalDurationMinutes: 200 } }
+      });
+
+    renderPage(<TodayPage />);
+
+    const taskFailure = await screen.findByRole('group', { name: '成长任务加载失败' });
+    expect(within(taskFailure).getByText('无权读取成长任务')).toBeInTheDocument();
+    expect(within(taskFailure).queryByRole('button', { name: '重新加载数据' })).not.toBeInTheDocument();
+
+    const reportFailure = await screen.findByRole('group', { name: '本周报告加载失败' });
+    await user.click(within(reportFailure).getByRole('button', { name: '重新加载数据' }));
+
+    await waitFor(() => expect(getWeeklyReport).toHaveBeenCalledTimes(2));
+    expect(listGrowthTasks).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('80%')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: '成长任务加载失败' })).toBeInTheDocument();
   });
 
   test.each([
@@ -287,6 +368,33 @@ describe('Task 9 today and task workflows', () => {
     await user.click(screen.getByRole('button', { name: '关闭' }));
 
     await waitFor(() => expect(deletePrivateMedia).toHaveBeenCalledWith('media-draft-1'));
+  });
+
+  test('creates a task with every uploaded private attachment media ID', async () => {
+    const user = userEvent.setup();
+    uploadPrivateMedia
+      .mockResolvedValueOnce({ mediaId: 'media-draft-1' })
+      .mockResolvedValueOnce({ mediaId: 'media-draft-2' });
+    createGrowthTask.mockResolvedValueOnce({ task: task({
+      attachmentMediaIds: ['media-draft-1', 'media-draft-2']
+    }) });
+    renderPage(<TasksPage />);
+
+    await screen.findByText('暂无成长任务');
+    await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await user.type(screen.getByLabelText('学科'), '体育');
+    await user.type(screen.getByLabelText('任务标题'), '记录两组训练');
+    await user.type(screen.getByLabelText('活动领域'), '体能');
+    await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+    await user.upload(screen.getByLabelText('任务附件'), [
+      new File(['first'], 'first.png', { type: 'image/png' }),
+      new File(['second'], 'second.png', { type: 'image/png' })
+    ]);
+    await user.click(screen.getByRole('button', { name: '保存任务' }));
+
+    await waitFor(() => expect(createGrowthTask).toHaveBeenCalledWith(expect.objectContaining({
+      attachmentMediaIds: ['media-draft-1', 'media-draft-2']
+    })));
   });
 
   test('traps dialog focus, closes with Escape, and restores the opener', async () => {

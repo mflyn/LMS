@@ -24,11 +24,12 @@ Frontend integration tests use a parent session for family A, children A1 and A2
 | --- | --- | --- | --- |
 | `TC-T9-TODAY-001` | Load today tasks, report, pending mistakes, and reminders. | Counts, rate/minutes, pending-review count, and reminders render for selected child. | `Task9TodayTasks.test.js` |
 | `TC-T9-TODAY-002` | One aggregate source is unavailable. | Available panels render and only returned unavailable-source labels are shown. | `Task9TodayTasks.test.js` |
+| `TC-T9-TODAY-003` | A stable `4xx` source and a retryable `5xx` source fail together. | Each source has a named error row; only the retryable row has an action, and retry reloads only that source while available data remains visible. | `Task9TodayTasks.test.js` |
 | `TC-T9-TASK-001` | Create moral, academic, physical, artistic, and labor tasks. | Each uses valid dimension payload and appears pending. | `Task9TodayTasks.test.js` |
 | `TC-T9-TASK-002` | Filter tasks by dimension/status. | List contains only matching selected-child records. | `Task9TodayTasks.test.js` |
 | `TC-T9-TASK-003` | Parent completes and confirms a task. | Actual values and feedback are sent; confirmed task and award state replace prior state once. | `Task9TodayTasks.test.js` |
 | `TC-T9-TASK-004` | Cancel pending or archive completed task. | Returned state replaces item; conflict triggers reload, not a blind transition. | `Task9TodayTasks.test.js` |
-| `TC-T9-MEDIA-001` | Attach, view, or cancel a task image draft. | Upload purpose is `task_attachment`; mutation stores media ID; view requests signed access; cancelled unbound draft is soft-deleted. | `familyApi.task9.test.js`, `Task9TodayTasks.test.js` |
+| `TC-T9-MEDIA-001` | Attach, view, remove, or cancel task image drafts. | Multiple uploads append every media ID; removal affects only the selected item; mutation stores the full ID array; view requests signed access; cancelled unbound drafts are soft-deleted. | `familyApi.task9.test.js`, `Task9TodayTasks.test.js` |
 
 ## Logs and Mistakes
 
@@ -65,7 +66,7 @@ Frontend integration tests use a parent session for family A, children A1 and A2
 
 | Requirement group | Cases |
 | --- | --- |
-| `FR-UI-001` | `TC-T9-API-001` to `002`, `TC-T9-SCOPE-001`, `TC-T9-TODAY-001` to `002`, `TC-T9-UX-001` |
+| `FR-UI-001` | `TC-T9-API-001` to `002`, `TC-T9-SCOPE-001`, `TC-T9-TODAY-001` to `003`, `TC-T9-UX-001` |
 | `FR-TASK-001` to `006` | `TC-T9-TASK-001` to `004`, `TC-T9-SMOKE-001` |
 | `FR-LOG-001` / `FR-MISTAKE-001` | `TC-T9-LOG-001` to `002`, `TC-T9-MISTAKE-001` to `002` |
 | `FR-REPORT-001` / `FR-NOTIFY-001` to `002` | `TC-T9-REPORT-001` to `002`, `TC-T9-REMIND-001` to `002` |
