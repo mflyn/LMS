@@ -43,7 +43,7 @@ Run the Task 1 test command and existing `src/__tests__/family/familySession.tes
 
 Expected: both suites pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/web/src/services/familySession.js frontend/web/src/__tests__/child/childSession.test.js
@@ -58,7 +58,7 @@ git commit -m "feat: add isolated child session storage"
 - Create: `frontend/web/src/__tests__/child/childApi.test.js`
 - Create: `frontend/web/src/__tests__/child/useChildDataResource.test.js`
 
-- [ ] **Step 1: Write failing API contract tests**
+- [x] **Step 1: Write failing API contract tests**
 
 Assert public login payload, per-request child bearer token, session-derived profile/reminder child ID, no caller child ID on task/mistake/reward lists, mutation allowlists, abort forwarding, and protected `401` expiry.
 
@@ -77,21 +77,21 @@ expect(axios.patch).toHaveBeenCalledWith(
 );
 ```
 
-- [ ] **Step 2: Verify API red**
+- [x] **Step 2: Verify API red**
 
 Run: `cd frontend/web && npm test -- --runInBand src/__tests__/child/childApi.test.js`
 
 Expected: FAIL because `childApi.js` does not exist.
 
-- [ ] **Step 3: Implement child API**
+- [x] **Step 3: Implement child API**
 
 Implement approved methods from design section 2.2. Build query strings from allowlisted values, unwrap the standard envelope, attach child authorization per request, and call `expireChildSession` only for protected `401` responses.
 
-- [ ] **Step 4: Write and verify resource-hook red**
+- [x] **Step 4: Write and verify resource-hook red**
 
 Test loading, empty, ready, partial, stable error, retryable error, reload, and abort-on-unmount. Run the hook suite and confirm it fails before implementation.
 
-- [ ] **Step 5: Implement resource hook and verify green**
+- [x] **Step 5: Implement resource hook and verify green**
 
 Use one `AbortController` per load and the same retry classification as the parent resource layer without depending on `FamilyContext`.
 
