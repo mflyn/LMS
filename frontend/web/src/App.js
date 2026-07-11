@@ -4,6 +4,7 @@ import zhCN from 'antd/locale/zh_CN';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import './index.css';
 import './family-shell.css';
+import './child-shell.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { ChildAuthProvider } from './contexts/ChildAuthContext';
 import { FamilyProvider } from './contexts/FamilyContext';

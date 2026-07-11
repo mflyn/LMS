@@ -252,7 +252,7 @@ Load rewards and confirmed tasks independently. Render reward items without comm
 
 Render only the returned child profile. Logout calls child context, replaces to `/child/login`, and leaves parent storage untouched.
 
-- [ ] **Step 5: Verify green and commit**
+- [x] **Step 5: Verify green and commit**
 
 ```bash
 git add frontend/web/src/pages/child/ChildAchievementsPage.js frontend/web/src/pages/child/ChildProfilePage.js frontend/web/src/__tests__/child/ChildAchievementsProfile.test.js
@@ -266,17 +266,17 @@ git commit -m "feat: add child achievements and profile"
 - Modify: `frontend/web/src/App.js`
 - Modify: child components/pages created in Tasks 3-7 only where accessibility evidence requires it
 
-- [ ] **Step 1: Add stable child layout styles**
+- [x] **Step 1: Add stable child layout styles**
 
 Use constrained content width, non-nested panels, dimension colors, 44px controls, desktop top navigation, and mobile bottom navigation. Add bottom content padding equal to mobile navigation height.
 
-- [ ] **Step 2: Run production build**
+- [x] **Step 2: Run production build**
 
 Run: `cd frontend/web && npm run build`
 
 Expected: compiled successfully with no new ESLint warnings.
 
-- [ ] **Step 3: Browser verification**
+- [x] **Step 3: Browser verification**
 
 Run the approved flow against a local deterministic API stub at desktop and 360px. Verify URL/title, meaningful DOM, no framework overlay, console health, target interactions, screenshot evidence, and `scrollWidth === clientWidth`.
 
