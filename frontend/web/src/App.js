@@ -22,6 +22,7 @@ import MistakesPage from './pages/family/MistakesPage';
 import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
 import RewardsPage from './pages/family/RewardsPage';
+import ChildPinLoginPage from './pages/child/ChildPinLoginPage';
 
 const ParentFamilyBoundary = () => (
   <FamilyProvider>
@@ -50,7 +51,7 @@ const AppRoutes = () => (
         </Route>
       </Route>
     </Route>
-    <Route path="/child/login" element={<ChildPlaceholder title="孩子登录" />} />
+    <Route path="/child/login" element={<ChildPinLoginPage />} />
     <Route element={<ChildRoute />}>
       <Route path="/child" element={<ChildShell />}>
         <Route index element={<Navigate to="today" replace />} />

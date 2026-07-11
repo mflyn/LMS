@@ -134,7 +134,7 @@ Render only 今天、错题、成就、我的 and a child identity header. Use `
 
 Run ChildNavigation plus `FamilyNavigation.test.js` and `AuthContext.test.js`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/web/src/App.js frontend/web/src/contexts/ChildAuthContext.js frontend/web/src/components/child frontend/web/src/config/childNavigation.js frontend/web/src/__tests__/child/ChildNavigation.test.js
@@ -147,19 +147,19 @@ git commit -m "feat: isolate child routes and authentication"
 - Create: `frontend/web/src/pages/child/ChildPinLoginPage.js`
 - Create: `frontend/web/src/__tests__/child/ChildLogin.test.js`
 
-- [ ] **Step 1: Write failing login tests**
+- [x] **Step 1: Write failing login tests**
 
 Cover success redirect, numeric/length validation, generic `401`, rate-limited `429`, retryable errors, disabled submit, and PIN clearing after every server response.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run the ChildLogin suite and confirm the login route lacks the approved form.
 
-- [ ] **Step 3: Implement login page**
+- [x] **Step 3: Implement login page**
 
 Use visible labels, `inputMode="numeric"`, pattern `[0-9]{4,6}`, and `autoComplete="one-time-code"`. Preserve family/child IDs, never persist PIN, and replace navigation on success.
 
-- [ ] **Step 4: Verify green**
+- [x] **Step 4: Verify green**
 
 Run ChildLogin and ChildNavigation suites.
 
