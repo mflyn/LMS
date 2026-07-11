@@ -28,6 +28,7 @@
 - [Task 9 家长 MVP 页面设计](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md)
 - [Task 9 家长 MVP 页面实施计划](../superpowers/plans/2026-07-10-family-growth-task9-parent-pages.md)
 - [Task 9 家长 MVP 页面测试设计与用例](./family-growth-task9-test-cases.md)
+- [Task 9 家长 MVP 页面门禁记录](./family-growth-task9-gate.md)
 
 ## 开发环境搭建
 

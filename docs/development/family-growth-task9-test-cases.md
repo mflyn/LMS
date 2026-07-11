@@ -1,6 +1,6 @@
 # Task 9 Parent MVP Pages Test Design and Cases
 
-**Document status:** APPROVED / LOCAL EXECUTION PASSED
+**Document status:** FINAL / GATE PASSED
 **Date:** 2026-07-10
 **Design:** `docs/superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md`
 **Scope:** Parent pages only; Task 10 child portal and Task 11 cross-role E2E are excluded.

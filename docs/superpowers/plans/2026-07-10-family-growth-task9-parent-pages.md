@@ -201,7 +201,7 @@ Run: `git diff --check`
 
 Expected: existing `TC-T5-SAGA-001` proves parent create/complete/confirm/award; all commands exit zero.
 
-- [ ] **Step 3: Browser inspect and commit gate**
+- [x] **Step 3: Browser inspect and commit gate**
 
 At desktop and 360px, create task, switch child, create log/mistake, read report/reminders/rewards, and verify no horizontal overflow. Record evidence, CI, PR, merge SHA. Commit: `git add docs/api/family-learning-tracker-api.md docs/development frontend/web && git commit -m "test: close task9 parent pages gate"`.
 
