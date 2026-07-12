@@ -1,10 +1,10 @@
 # Task 11 Family Growth End-to-End Gate
 
-**Local gate status:** PASSED  
-**Remote gate status:** PENDING PR CI AND MERGE  
+**Gate status:** PASSED / MERGE AUTHORIZED
 **Validated at:** 2026-07-12  
 **Requirement:** `FR-FLOW-001`  
-**Branch:** `codex/task11-family-e2e`
+**Pull request:** [#14](https://github.com/mflyn/LMS/pull/14)
+**Passing CI run:** [29188066334](https://github.com/mflyn/LMS/actions/runs/29188066334)
 
 ## Delivered Baseline
 
@@ -39,6 +39,7 @@
 | `100cd9c2` | Full UI acceptance areas and configurable test rate limit |
 | `d2b4d1a5` | Parent-visible child login identifiers |
 | `0e54b6d6` | Mandatory CI gate and manual demo |
+| `94dd6494` | Portable Sharp-generated browser media fixture |
 
 ## Verification Evidence
 
@@ -53,6 +54,16 @@
 | Browser runtime | Playwright 1.61.1; Chrome for Testing 149.0.7827.55, Chromium revision 1228 |
 | Browser viewports | Desktop Chrome profile plus focused 360x800 parent/child checks |
 | Repository hygiene | `git diff --check` passed; no tracked Playwright, build, coverage, or runtime artifacts |
+| Remote PR CI | Run 29188066334 passed mandatory `Family Regression` and Task 11 acceptance in 4m0s |
+
+## Remote CI Remediation
+
+The first PR run, 29187750639, passed the backend Task 11 integration and three of
+four browser cases, then rejected a hard-coded 68-byte PNG fixture on the Linux media
+sanitization path with `400 VALIDATION_ERROR`. The test now creates an 8x8 PNG through
+the repository's locked Sharp dependency, matching the media fixture path already used
+by backend integration tests. The complete local Chromium suite passed, and the new
+commit passed run 29188066334. The failed commit was not rerun.
 
 ## Security and Determinism
 
@@ -84,7 +95,7 @@ regression, frontend, integration, or Chromium checks.
 
 ## Acceptance Decision
 
-The local Task 11 implementation gate passes. `FR-FLOW-001` is implemented and
-`COVERED` by the committed backend and Playwright evidence. Final Task 11 closure
-requires the pull-request CI result, GitHub merge, and an audit proving this gate and
-traceability row are present on remote `main`.
+The local and remote Task 11 gates pass. `FR-FLOW-001` is implemented and `COVERED`
+by the committed backend and Playwright evidence, and PR #14 is authorized for merge.
+Final operational closure is the post-merge audit proving this gate and traceability
+row are present on remote `main`.
