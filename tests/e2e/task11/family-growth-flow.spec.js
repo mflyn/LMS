@@ -110,7 +110,9 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await expect(page).toHaveURL(/\/app\/today$/);
 
   await page.getByRole('link', { name: '孩子' }).click();
+  await expect(page.getByText(family.familyId, { exact: true })).toBeVisible();
   const childA = await createChild(page, '小明', 3);
+  await expect(page.getByText(childA.childId, { exact: true })).toBeVisible();
   await createChild(page, '小红', 2);
   await setPin(page, '小明', '2468');
   await setPin(page, '小红', '1357');

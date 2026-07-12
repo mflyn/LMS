@@ -50,6 +50,8 @@ describe('Task 11 parent child management', () => {
     expect(screen.getByRole('heading', { name: '小明' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '孩子' })).toHaveClass('is-active');
     expect(screen.getByLabelText('当前孩子')).toHaveValue('child-a1');
+    expect(screen.getByText('family-a')).toBeInTheDocument();
+    expect(within(screen.getByTestId('child-row-child-a1')).getByText('child-a1')).toBeInTheDocument();
   });
 
   test('creates a trimmed child then reloads the family selector', async () => {

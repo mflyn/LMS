@@ -165,6 +165,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-children-create > h2, .family-children-list > h2 { margin: 0 0 16px; font-size: 18px; }
 .family-child-record { align-items: flex-start; }
 .family-child-record h2 { margin: 0 0 6px; font-size: 18px; }
+.family-id-line { display: flex; flex-wrap: wrap; gap: 4px 8px; color: var(--family-muted); font-size: 13px; }
+.family-id-line code { max-width: 100%; overflow-wrap: anywhere; color: var(--family-ink); }
 .family-pin-form { display: grid; width: min(100%, 330px); gap: 6px; }
 .family-pin-form label { color: var(--family-muted); font-size: 14px; font-weight: 600; }
 .family-pin-form input { min-width: 0; min-height: 40px; flex: 1 1 140px; border: 1px solid var(--family-border); border-radius: 6px; padding: 8px 10px; }

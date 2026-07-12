@@ -8,7 +8,7 @@ const messageFor = (error, fallback) => (
 );
 
 const ChildrenPage = () => {
-  const { children, reload } = useFamily();
+  const { family, children, reload } = useFamily();
   const [childForm, setChildForm] = useState(emptyChild);
   const [childBusy, setChildBusy] = useState(false);
   const [childError, setChildError] = useState('');
@@ -76,6 +76,7 @@ const ChildrenPage = () => {
         <div>
           <p className="family-eyebrow">家庭成员与孩子入口</p>
           <h1 id="children-page-title">孩子</h1>
+          {family?.familyId && <p className="family-id-line"><span>家庭 ID</span><code>{family.familyId}</code></p>}
         </div>
       </div>
 
@@ -108,6 +109,7 @@ const ChildrenPage = () => {
                   <div className="family-record-main">
                     <h2>{child.name}</h2>
                     <p>{[child.grade ? `${child.grade} 年级` : '', child.school].filter(Boolean).join(' · ') || '档案信息待补充'}</p>
+                    <p className="family-id-line"><span>孩子 ID</span><code>{child.childId}</code></p>
                   </div>
                   <form className="family-pin-form" onSubmit={(event) => savePin(event, child)}>
                     <label htmlFor={`child-pin-${child.childId}`}>{child.name}的 PIN</label>
