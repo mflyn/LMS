@@ -1,5 +1,6 @@
 const express = require('express');
 const { authenticateGateway } = require('../../../common/middleware/auth');
+const { applySensitiveRateLimit } = require('../../../common/middleware/sensitiveRateLimit');
 const familyController = require('../controllers/familyController');
 
 const createChildrenRouter = ({ controller = familyController } = {}) => {
@@ -8,7 +9,7 @@ const createChildrenRouter = ({ controller = familyController } = {}) => {
   router.get('/', authenticateGateway, controller.listChildren);
   router.get('/:childId', authenticateGateway, controller.getChild);
   router.patch('/:childId', authenticateGateway, controller.updateChild);
-  router.post('/:childId/pin', authenticateGateway, controller.setChildPin);
+  router.post('/:childId/pin', authenticateGateway, applySensitiveRateLimit, controller.setChildPin);
   return router;
 };
 

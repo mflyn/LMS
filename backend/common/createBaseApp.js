@@ -12,6 +12,19 @@ const { auditLogger } = require('./middleware/auditLogger'); // Assuming auditLo
 const { sanitizeInput } = require('./middleware/requestValidator'); // For HTML sanitization
 const { createLogger } = require('./config/logger');
 
+const rateLimitMessage = {
+  success: false,
+  error: {
+    code: 'RATE_LIMITED',
+    message: '请求过于频繁，请稍后再试'
+  }
+};
+
+const positiveInteger = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 // 导入会话管理 (如果需要，并使其可选)
 // let session, sessionManagerModule;
 // if (process.env.NODE_ENV === 'test') {
@@ -106,13 +119,25 @@ function createBaseApp(options = {}) {
   // app.use(sanitizeInput); // sanitizeInput 是针对字符串的，如果全局用，确保其鲁棒性
 
   // 3. 速率限制 (可配置)
-  const limiter = rateLimit(options.rateLimitOptions || {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+  const windowMs = positiveInteger(process.env.RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000);
+  const limiter = rateLimit({
+    windowMs,
+    max: positiveInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 'error', message: 'Too many requests, please try again later.' },
+    message: rateLimitMessage,
+    ...(options.rateLimitOptions || {})
   });
+  const sensitiveLimiter = rateLimit({
+    windowMs,
+    max: positiveInteger(process.env.SENSITIVE_RATE_LIMIT_MAX_REQUESTS, 20),
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: rateLimitMessage,
+    ...(options.sensitiveRateLimitOptions || {})
+  });
+  app.set('defaultLimiter', limiter);
+  app.set('sensitiveLimiter', sensitiveLimiter);
   app.use(limiter);
   
   // 4. 会话管理 (可选，通过 options.enableSessions 启用)

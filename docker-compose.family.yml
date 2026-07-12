@@ -1,0 +1,178 @@
+# Family growth tracker minimal local development stack.
+# Usage: docker compose -f docker-compose.family.yml up -d
+
+services:
+  gateway:
+    build: ./backend/gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - GATEWAY_PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
+      - USER_SERVICE_URL=http://user-service:3001
+      - PROGRESS_SERVICE_URL=http://progress-service:3002
+      - HOMEWORK_SERVICE_URL=http://homework-service:3003
+      - RESOURCE_SERVICE_URL=http://resource-service:3005
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3006
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3007
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+      user-service:
+        condition: service_started
+      progress-service:
+        condition: service_started
+      homework-service:
+        condition: service_started
+      resource-service:
+        condition: service_started
+      analytics-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    networks:
+      - app-network
+
+  user-service:
+    build: ./backend/services/user-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
+      - RESOURCE_SERVICE_URL=http://resource-service:3005
+      - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:-dev-media-reference-token-32chars}
+      - SENSITIVE_RATE_LIMIT_MAX_REQUESTS=${SENSITIVE_RATE_LIMIT_MAX_REQUESTS:-20}
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  progress-service:
+    build: ./backend/services/progress-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-dev-internal-service-token-32chars}
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  homework-service:
+    build: ./backend/services/homework-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-dev-internal-service-token-32chars}
+      - PROGRESS_SERVICE_URL=http://progress-service:3002
+      - STAR_AWARD_TIMEOUT_MS=${STAR_AWARD_TIMEOUT_MS:-3000}
+      - RESOURCE_SERVICE_URL=http://resource-service:3005
+      - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:-dev-media-reference-token-32chars}
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+      progress-service:
+        condition: service_started
+    networks:
+      - app-network
+
+  resource-service:
+    build: ./backend/services/resource-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3005
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
+      - PRIVATE_MEDIA_ROOT=/var/lib/family-growth/private-media
+      - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:-dev-media-reference-token-32chars}
+    volumes:
+      - resource-data:/var/lib/family-growth/private-media
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  analytics-service:
+    build: ./backend/services/analytics-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3006
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
+      - RESOURCE_SERVICE_URL=http://resource-service:3005
+      - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:-dev-media-reference-token-32chars}
+      - REPORT_HISTORY_AVAILABLE_FROM=2026-06-01
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+      resource-service:
+        condition: service_started
+    networks:
+      - app-network
+
+  notification-service:
+    build: ./backend/services/notification-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3007
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
+      - ENABLE_RABBITMQ=false
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:4.4
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks:
+      - app-network
+
+  mongo-init:
+    image: mongo:4.4
+    depends_on:
+      mongo:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        until mongo --host mongo:27017 --quiet --eval "db.adminCommand('ping').ok"; do sleep 2; done;
+        mongo --host mongo:27017 --quiet --eval "try { rs.status() } catch (error) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }";
+        until mongo --host mongo:27017 --quiet --eval "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"; do sleep 2; done
+    networks:
+      - app-network
+    restart: "no"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  resource-data:

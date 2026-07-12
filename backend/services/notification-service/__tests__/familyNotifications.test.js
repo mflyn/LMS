@@ -169,6 +169,47 @@ describe('Task 7 family notifications', () => {
     });
   });
 
+  test('TC-CONFIG-003 startServer honors ENABLE_RABBITMQ=false by default', async () => {
+    const originalFlag = process.env.ENABLE_RABBITMQ;
+    process.env.ENABLE_RABBITMQ = 'false';
+
+    try {
+      await jest.isolateModulesAsync(async () => {
+        const connect = jest.fn(() => Promise.resolve());
+        const listen = jest.fn((port, callback) => callback());
+        const createServer = jest.fn(() => ({ listen }));
+        const socketServer = jest.fn(() => ({ on: jest.fn() }));
+        const amqpConnect = jest.fn(() => Promise.resolve());
+
+        jest.doMock('mongoose', () => ({ connect }));
+        jest.doMock('http', () => ({ ...jest.requireActual('http'), createServer }));
+        jest.doMock('socket.io', () => socketServer, { virtual: true });
+        jest.doMock('amqplib', () => ({ connect: amqpConnect }));
+        jest.doMock('../routes', () => express.Router());
+
+        const serverModule = require('../server');
+        await serverModule.startServer({
+          app: express(),
+          port: 0,
+          mongoUri: 'mongodb://localhost:27017/test'
+        });
+
+        expect(connect).toHaveBeenCalledWith('mongodb://localhost:27017/test', expect.any(Object));
+        expect(amqpConnect).not.toHaveBeenCalled();
+        expect(listen).toHaveBeenCalled();
+
+        jest.dontMock('mongoose');
+        jest.dontMock('http');
+        jest.dontMock('socket.io');
+        jest.dontMock('amqplib');
+        jest.dontMock('../routes');
+      });
+    } finally {
+      if (originalFlag === undefined) delete process.env.ENABLE_RABBITMQ;
+      else process.env.ENABLE_RABBITMQ = originalFlag;
+    }
+  });
+
   test('TC-T7-SETTINGS-001 creates default reminder settings for the parent family on first read', async () => {
     const { parent, family } = await createFamilyFixture('settingsDefault');
     const app = buildFamilyNotificationApp();
@@ -435,5 +476,34 @@ describe('Task 7 family notifications', () => {
       unavailableSources: ['mistakes']
     }));
     expect(JSON.stringify(response.body)).not.toContain('database password');
+  });
+
+  test('TC-T7-NOTIFY-013 returns partial reminders when a source query exceeds maxTimeMS', async () => {
+    const { parent, child } = await createFamilyFixture('notifyMaxTime');
+    const maxTimeError = new Error('operation exceeded time limit with internal query details');
+    maxTimeError.name = 'MongoServerError';
+    maxTimeError.codeName = 'MaxTimeMSExpired';
+    const sourceRepository = buildSourceRepository({
+      getTasks: jest.fn().mockRejectedValue(maxTimeError),
+      getMistakes: jest.fn().mockResolvedValue([
+        { mistakeId: 'mistake-1', childId: child._id.toString(), subject: '数学', mastered: false }
+      ]),
+      getLogs: jest.fn().mockResolvedValue([]),
+      hasWeeklyReport: jest.fn().mockResolvedValue(true)
+    });
+    const app = buildFamilyNotificationApp({ sourceRepository });
+    const path = `/api/notifications/family?childId=${child._id}&date=2026-07-07`;
+
+    const response = await request(app)
+      .get(path)
+      .set(signedHeaders(parent, 'GET', path));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.items.map((item) => item.type)).toContain('mistake_review');
+    expect(response.body.data.meta).toEqual(expect.objectContaining({
+      partial: true,
+      unavailableSources: ['tasks']
+    }));
+    expect(JSON.stringify(response.body)).not.toContain('internal query details');
   });
 });

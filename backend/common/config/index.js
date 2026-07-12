@@ -23,7 +23,7 @@ const configSchema = Joi.object({
   DATA_SERVICE_MONGO_URI: Joi.string().uri({ scheme: ['mongodb', 'mongodb+srv'] }).optional(),
   
   // 服务端口配置
-  GATEWAY_PORT: Joi.number().port().default(5000),
+  GATEWAY_PORT: Joi.number().port().optional(),
   USER_SERVICE_PORT: Joi.number().port().default(3001),
   DATA_SERVICE_PORT: Joi.number().port().default(3003),
   ANALYTICS_SERVICE_PORT: Joi.number().port().default(3007),
@@ -65,6 +65,7 @@ const configSchema = Joi.object({
   // 安全配置
   RATE_LIMIT_WINDOW_MS: Joi.number().default(15 * 60 * 1000), // 15分钟
   RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100),
+  SENSITIVE_RATE_LIMIT_MAX_REQUESTS: Joi.number().integer().positive().default(20),
   CORS_ORIGIN: Joi.string().default('*'),
   INTERNAL_SERVICE_TOKEN: Joi.string().min(32).optional(),
   STAR_AWARD_TIMEOUT_MS: Joi.number().integer().positive().default(3000),
@@ -167,6 +168,15 @@ class ConfigManager {
       standardHeaders: true,
       legacyHeaders: false
     };
+
+    config.SENSITIVE_RATE_LIMIT_CONFIG = {
+      windowMs: config.RATE_LIMIT_WINDOW_MS,
+      max: config.SENSITIVE_RATE_LIMIT_MAX_REQUESTS,
+      message: '请求过于频繁，请稍后再试',
+      standardHeaders: true,
+      legacyHeaders: false,
+      skipSuccessfulRequests: false
+    };
     
     return config;
   }
@@ -244,7 +254,8 @@ class ConfigManager {
       tokenExpiration: this.config.JWT_TOKEN_EXPIRATION,
       refreshTokenExpiration: this.config.JWT_REFRESH_TOKEN_EXPIRATION,
       corsConfig: this.config.CORS_CONFIG,
-      rateLimitConfig: this.config.RATE_LIMIT_CONFIG
+      rateLimitConfig: this.config.RATE_LIMIT_CONFIG,
+      sensitiveRateLimitConfig: this.config.SENSITIVE_RATE_LIMIT_CONFIG
     };
     
     switch (serviceName) {

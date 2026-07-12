@@ -70,7 +70,7 @@ async function startServer({
   port = process.env.PORT || 5005,
   mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/learning-tracker',
   app = createApp(),
-  enableRabbitMQ = true
+  enableRabbitMQ = process.env.ENABLE_RABBITMQ !== 'false'
 } = {}) {
   await mongoose.connect(mongoUri, {
     useNewUrlParser: true,

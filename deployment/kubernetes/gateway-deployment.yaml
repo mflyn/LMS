@@ -23,7 +23,7 @@ spec:
         env:
         - name: NODE_ENV
           value: "production"
-        - name: PORT
+        - name: GATEWAY_PORT
           value: "3000"
         - name: JWT_SECRET
           valueFrom:
@@ -43,8 +43,6 @@ spec:
           value: "http://progress-service:3002"
         - name: HOMEWORK_SERVICE_URL
           value: "http://homework-service:3003"
-        - name: INTERACTION_SERVICE_URL
-          value: "http://interaction-service:3004"
         - name: RESOURCE_SERVICE_URL
           value: "http://resource-service:3005"
         - name: ANALYTICS_SERVICE_URL

@@ -112,6 +112,9 @@ jobs:
       - name: Run Task 11 Acceptance
         run: npm run test:task11
 
+      - name: Check Git Clean
+        run: bash scripts/check-git-clean.sh
+
       - name: Upload Task 11 Failure Evidence
         if: failure()
         uses: actions/upload-artifact@v4

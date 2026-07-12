@@ -8,8 +8,6 @@ resources:
   - user-service-deployment.yaml
   - progress-service-deployment.yaml
   - homework-service-deployment.yaml
-  - interaction-service-deployment.yaml
   - resource-service-deployment.yaml
   - analytics-service-deployment.yaml
   - notification-service-deployment.yaml
-  - data-service-deployment.yaml

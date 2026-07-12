@@ -21,6 +21,8 @@
 - [Task 7 通知服务门禁](./family-growth-task7-gate.md)
 - [Task 7 通知服务测试设计与用例](./family-growth-task7-test-cases.md)
 - [Task 7 代码评审修复记录](./family-growth-task7-code-review-remediation.md)
+- [Task 1-7 测试质量修订记录](./family-growth-test-quality-remediation.md)
+- [Task 1-7 配置与基础设施修订记录](./family-growth-config-infra-remediation.md)
 - [Task 8-11 前端与端到端设计基线](../superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md)
 - [Task 8 家长 Web 应用壳实施计划](../superpowers/plans/2026-07-10-family-growth-task8-parent-shell.md)
 - [Task 8 家长 Web 应用壳测试设计与用例](./family-growth-task8-test-cases.md)
@@ -29,6 +31,19 @@
 - [Task 9 家长 MVP 页面实施计划](../superpowers/plans/2026-07-10-family-growth-task9-parent-pages.md)
 - [Task 9 家长 MVP 页面测试设计与用例](./family-growth-task9-test-cases.md)
 - [Task 9 家长 MVP 页面门禁记录](./family-growth-task9-gate.md)
+
+## 5 分钟快速入门
+
+家庭成长 MVP 本地开发优先使用最小 Compose 栈：
+
+```bash
+cd backend
+make up
+make test
+make down
+```
+
+等价的根目录入口是 `npm run docker:family`、`npm run test:family-regression` 和 `npm run docker:family:down`。完整学校兼容栈仍由 `docker-compose.yml` 管理。
 
 ## 开发环境搭建
 
