@@ -23,6 +23,7 @@ import MistakesPage from './pages/family/MistakesPage';
 import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
 import RewardsPage from './pages/family/RewardsPage';
+import ChildrenPage from './pages/family/ChildrenPage';
 import ChildPinLoginPage from './pages/child/ChildPinLoginPage';
 import ChildTodayPage from './pages/child/ChildTodayPage';
 import ChildTaskPage from './pages/child/ChildTaskPage';
@@ -52,6 +53,7 @@ const AppRoutes = () => (
           <Route path="reports" element={<ReportsPage />} />
           <Route path="reminders" element={<RemindersPage />} />
           <Route path="rewards" element={<RewardsPage />} />
+          <Route path="children" element={<ChildrenPage />} />
         </Route>
       </Route>
     </Route>

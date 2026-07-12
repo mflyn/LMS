@@ -5,7 +5,8 @@ export const PARENT_NAV_ITEMS = [
   { path: '/app/mistakes', label: '错题' },
   { path: '/app/reports', label: '周报' },
   { path: '/app/reminders', label: '提醒' },
-  { path: '/app/rewards', label: '星星与奖励' }
+  { path: '/app/rewards', label: '星星与奖励' },
+  { path: '/app/children', label: '孩子' }
 ];
 
 export const LEGACY_SCHOOL_PATHS = [
@@ -19,7 +20,6 @@ export const LEGACY_SCHOOL_PATHS = [
   '/courses',
   '/assignments',
   '/progress',
-  '/children',
   '/performance',
   '/communication',
   '/classes',

@@ -11,7 +11,10 @@
     "test:integration": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.integration.test.js'",
     "test:e2e": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.e2e.test.js'",
     "test:nocoverage": "npm run test:family-regression && npm run test:legacy-regression",
-    "test:family-regression": "jest --config=backend/jest.config.js --coverage=false --selectProjects family-common user-service homework-service progress-service resource-family analytics-family --runInBand",
+    "test:family-regression": "jest --config=backend/jest.config.js --coverage=false --selectProjects family-common user-service homework-service progress-service resource-family analytics-family notification-family --runInBand",
+    "test:family-flow:integration": "jest --config=backend/tests/task11/jest.config.js --runInBand",
+    "test:family-flow:e2e": "playwright test --project=chromium",
+    "test:task11": "npm run test:family-flow:integration && npm run test:family-flow:e2e",
     "test:legacy-regression": "jest --config=backend/jest.config.js --coverage=false --selectProjects progress-legacy legacy",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -31,6 +34,8 @@
     "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "express": "^4.22.2",
+    "express-http-proxy": "^1.6.3",
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
@@ -50,6 +55,7 @@
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/k6": "^1.0.2",
     "eslint": "^9.8.0",
     "jest": "^29.7.0",

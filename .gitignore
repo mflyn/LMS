@@ -54,6 +54,9 @@ node_modules/.cache/
 node_modules/.cache/mongodb-memory-server/
 .jest-cache/
 .babel-cache/
+/playwright-report/
+/test-results/
+/.task11-runtime/
 
 # IDE
 .idea/

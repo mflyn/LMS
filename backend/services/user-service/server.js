@@ -1,61 +1,65 @@
 const mongoose = require('mongoose');
-const createBaseApp = require('../../common/createBaseApp'); // 调整路径到 common 目录
+const createBaseApp = require('../../common/createBaseApp');
 const config = require('./config');
-const mainRoutes = require('./routes'); // user-service 的主路由
-const { createLogger } = require('../../common/config/logger'); // 直接导入 logger 用于启动日志
+const routesModule = require('./routes');
+const { createLogger } = require('../../common/config/logger');
+const { errorHandler, setupUncaughtExceptionHandler } = require('../../common/middleware/errorHandler');
+
 const logger = createLogger('user-service');
-const { errorHandler, setupUncaughtExceptionHandler } = require('../../common/middleware/errorHandler'); // Added import
 
-// 1. 创建基础应用实例
-const app = createBaseApp({
-  serviceName: 'user-service',
-  // productionCorsOrigin: ['https://your-frontend.com'], // 如果需要特定CORS源
-  // developmentCorsOrigin: ['http://localhost:8081'], // 如果前端开发端口不是默认的
-  enableSessions: false, // 用户服务通常不需要HTTP会话
-  // rateLimitOptions: { windowMs: 10 * 60 * 1000, max: 50 } // 如果需要自定义速率限制
-});
+const createApp = ({ routes = routesModule, appLogger = logger } = {}) => {
+  const app = createBaseApp({
+    serviceName: 'user-service',
+    enableSessions: false
+  });
+  app.locals.logger = appLogger;
+  app.use('/api', routes);
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', service: 'user-service' });
+  });
+  app.use(errorHandler);
+  return app;
+};
 
-// 2. 挂载 user-service 特有的路由 (在所有通用中间件之后，全局错误处理器之前)
-// 确保路由前缀与 API 网关配置和服务设计一致
-// 例如，如果设计文档中 user-service 的所有 API 都在 /api/users 或 /api/auth 下
-app.use('/api', mainRoutes); // 假设 mainRoutes 内部处理了 /users 和 /auth 等子路径
-app.use(errorHandler);
+const connectDatabase = async ({
+  mongooseInstance = mongoose,
+  mongoURI = config.mongoURI
+} = {}) => {
+  if (!mongoURI) {
+    throw new Error('mongoURI for user-service is required');
+  }
+  if (mongooseInstance.connection.readyState === 0) {
+    await mongooseInstance.connect(mongoURI);
+  }
+  return mongooseInstance.connection;
+};
 
-// 3. 数据库连接
-const mongoURI = config.mongoURI;
-if (!mongoURI) {
-  logger.error('FATAL ERROR: mongoURI for user-service is not defined in config or environment.');
-  process.exit(1);
+const startServer = async ({
+  app = createApp(),
+  port = Number(config.port || process.env.USER_SERVICE_PORT || 3001),
+  connect = connectDatabase,
+  appLogger = logger
+} = {}) => {
+  await connect();
+  const server = await new Promise((resolve, reject) => {
+    const listener = app.listen(port, () => resolve(listener));
+    listener.once('error', reject);
+  });
+  appLogger.info('User service started', { port: server.address().port });
+  return server;
+};
+
+const app = createApp();
+
+if (require.main === module) {
+  setupUncaughtExceptionHandler(logger);
+  startServer({ app }).catch((error) => {
+    logger.error('User service failed to start', { error: error.message, stack: error.stack });
+    process.exitCode = 1;
+  });
 }
 
-setupUncaughtExceptionHandler(logger); // Called setupUncaughtExceptionHandler
-
-mongoose.connect(mongoURI)
-.then(() => {
-  logger.info(`MongoDB Connected to user-service at ${mongoURI}`);
-  
-  // 4. 启动服务器
-  const PORT = config.port || process.env.USER_SERVICE_PORT || 3001;
-  if (!PORT) {
-    logger.error('FATAL ERROR: Port for user-service is not defined.');
-    process.exit(1);
-  }
-
-  app.listen(PORT, () => {
-    logger.info(`User service running on port ${PORT}`);
-  });
-})
-.catch(err => {
-  logger.error('MongoDB connection error for user-service:', err);
-  process.exit(1);
-});
-
-// 5. 可选: 更优雅的未捕获异常和Promise拒绝处理 (虽然 createBaseApp 中的 errorHandler 会处理一部分)
-// process.on('unhandledRejection', (reason, promise) => {
-//   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-//   // Application specific logging, throwing an error, or other logic here
-// });
-// process.on('uncaughtException', (error) => {
-//   logger.error('Uncaught Exception thrown:', error);
-//   process.exit(1);
-// });
+module.exports = app;
+module.exports.connectDatabase = connectDatabase;
+module.exports.createApp = createApp;
+module.exports.startServer = startServer;

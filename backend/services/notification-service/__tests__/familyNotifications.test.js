@@ -145,6 +145,7 @@ describe('Task 7 family notifications', () => {
         connect
       }));
       jest.doMock('http', () => ({
+        ...jest.requireActual('http'),
         createServer
       }));
       jest.doMock('socket.io', () => socketServer, { virtual: true });

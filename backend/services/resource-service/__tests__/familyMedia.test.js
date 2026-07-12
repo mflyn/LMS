@@ -244,6 +244,21 @@ afterAll(async () => {
 });
 
 describe('Task 6 private media upload API', () => {
+  test('resolves current family for a parent token issued before family creation', async () => {
+    const response = await signedUpload({
+      identity: { id: PARENT_A_ID.toString(), role: 'parent' },
+      purpose: 'task_attachment',
+      childId: CHILD_A1_ID,
+      bytes: await image('jpeg')
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.media).toEqual(expect.objectContaining({
+      mediaId: expect.any(String),
+      purpose: 'task_attachment'
+    }));
+  });
+
   test.each([
     ['avatar', null],
     ['avatar', CHILD_A1_ID],

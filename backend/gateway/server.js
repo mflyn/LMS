@@ -1,146 +1,122 @@
-const express = require('express');
 const proxy = require('express-http-proxy');
-const { jwtSecret } = require('../common/config/auth');
+const { jwtSecret: defaultJwtSecret } = require('../common/config/auth');
 const createBaseApp = require('../common/createBaseApp');
 const config = require('./config');
 const { createLogger } = require('../common/config/logger');
 const { errorHandler } = require('../common/middleware/errorHandler');
 const { createAuthenticateToken, stripClientIdentity } = require('./identityMiddleware');
+
 const logger = createLogger('api-gateway');
 
-// 1. 创建基础应用实例
-const app = createBaseApp({
-  serviceName: 'api-gateway',
-  // 网关的CORS策略可能需要更开放或与 user-service 不同，可以通过 corsOptions 覆盖
-  // corsOptions: { origin: '*' }, // 例如，如果需要更广泛的来源
-  enableSessions: false, // API 网关通常是无状态的
-  // 网关的速率限制可以由 createBaseApp 提供，或者如果需要更细致的针对特定路由的限制，可以在此定义并应用
-  // 如果 createBaseApp 中的全局速率限制足够，则这里不需要额外配置。
-  // rateLimitOptions: config.rateLimitOptions // 可以从网关配置中读取速率限制选项
-});
+const requireServiceHost = (serviceHosts, name) => {
+  const value = serviceHosts && serviceHosts[name];
+  if (!value) throw new Error(`Missing gateway service host: ${name}`);
+  return value;
+};
 
-const authenticateToken = createAuthenticateToken({
-  jwtSecret,
-  identitySecret: process.env.GATEWAY_IDENTITY_SECRET
-});
+const resolveProxyPath = (prefix, url = '') => {
+  if (url === '/') return prefix;
+  if (url.startsWith('/?')) return `${prefix}${url.slice(1)}`;
+  return `${prefix}${url}`;
+};
 
-app.use(stripClientIdentity);
-
-// 3. API 代理路由 (这些是网关的核心功能)
-// 注意: 确保服务地址来自配置，并且是正确的
-const userServiceUrl = config.serviceHosts.user; // 假设 user-service 包含 auth 和 user 模块
-const dataServiceUrl = config.serviceHosts.data;
-// ... 其他服务地址 ...
-
-if (!userServiceUrl || !dataServiceUrl) {
-  logger.error('FATAL ERROR: Upstream service URLs are not defined in gateway config.');
-  process.exit(1);
-}
-
-// 公共认证路由 (通常不需要 authenticateToken 中间件)
-app.use('/api/auth', proxy(userServiceUrl, {
-  proxyReqPathResolver: (req) => `/api/auth${req.url}`
-}));
-
-// 需要认证的用户相关路由
-app.use('/api/users', authenticateToken, proxy(userServiceUrl, {
-  proxyReqPathResolver: (req) => `/api/users${req.url}`
-}));
-
-app.use('/api/students', authenticateToken, proxy(userServiceUrl, {
-  proxyReqPathResolver: (req) => `/api/students${req.url}`
-}));
-
-app.use('/api/families', authenticateToken, proxy(userServiceUrl, {
-  proxyReqPathResolver: (req) => `/api/families${req.url}`
-}));
-
-app.use('/api/children', authenticateToken, proxy(userServiceUrl, {
-  proxyReqPathResolver: (req) => `/api/children${req.url}`
-}));
-
-// 需要认证的数据服务路由 - 修正：确保路由路径与设计文档一致
-app.use('/api/data', authenticateToken, proxy(dataServiceUrl, {
-  proxyReqPathResolver: (req) => `/api/data${req.url}`
-}));
-
-// 添加其他核心服务路由（如果存在）
-if (config.serviceHosts.analytics) {
-  app.use('/api/analytics', authenticateToken, proxy(config.serviceHosts.analytics, {
-    proxyReqPathResolver: (req) => `/api/analytics${req.url}`
+const mountProtectedProxy = (app, prefix, serviceUrl, authenticateToken, proxyOptions = {}) => {
+  app.use(prefix, authenticateToken, proxy(serviceUrl, {
+    ...proxyOptions,
+    proxyReqPathResolver: (req) => resolveProxyPath(prefix, req.url)
   }));
+};
 
-  ['/api/mistakes', '/api/reports/weekly'].forEach((prefix) => {
-    app.use(prefix, authenticateToken, proxy(config.serviceHosts.analytics, {
-      proxyReqPathResolver: (req) => `${prefix}${req.url}`
-    }));
+const createApp = ({
+  serviceHosts = config.serviceHosts,
+  jwtSecret = defaultJwtSecret,
+  identitySecret = process.env.GATEWAY_IDENTITY_SECRET,
+  rateLimitOptions = config.rateLimitOptions,
+  appLogger = logger
+} = {}) => {
+  const userServiceUrl = requireServiceHost(serviceHosts, 'user');
+  const dataServiceUrl = requireServiceHost(serviceHosts, 'data');
+  const app = createBaseApp({
+    serviceName: 'api-gateway',
+    enableSessions: false,
+    rateLimitOptions
   });
-}
+  app.locals = app.locals || {};
+  app.locals.logger = appLogger;
+  const authenticateToken = createAuthenticateToken({ jwtSecret, identitySecret });
+  app.locals.authenticateToken = authenticateToken;
 
-if (config.serviceHosts.homework) {
-  app.use('/api/homework', authenticateToken, proxy(config.serviceHosts.homework, {
-    proxyReqPathResolver: (req) => `/api/homework${req.url}`
+  app.use(stripClientIdentity);
+  app.use('/api/auth', proxy(userServiceUrl, {
+    proxyReqPathResolver: (req) => resolveProxyPath('/api/auth', req.url)
   }));
 
-  app.use('/api/growth-tasks', authenticateToken, proxy(config.serviceHosts.homework, {
-    proxyReqPathResolver: (req) => `/api/growth-tasks${req.url}`
-  }));
-}
-
-if (config.serviceHosts.progress) {
-  app.use('/api/progress', authenticateToken, proxy(config.serviceHosts.progress, {
-    proxyReqPathResolver: (req) => `/api/progress${req.url}`
-  }));
-
-  ['/api/growth-logs', '/api/knowledge-points', '/api/rewards'].forEach((prefix) => {
-    app.use(prefix, authenticateToken, proxy(config.serviceHosts.progress, {
-      proxyReqPathResolver: (req) => `${prefix}${req.url}`
-    }));
+  ['/api/users', '/api/students', '/api/families', '/api/children'].forEach((prefix) => {
+    mountProtectedProxy(app, prefix, userServiceUrl, authenticateToken);
   });
-}
+  mountProtectedProxy(app, '/api/data', dataServiceUrl, authenticateToken);
 
-if (config.serviceHosts.notification) {
-  ['/api/notifications/family', '/api/notifications/settings'].forEach((prefix) => {
-    app.use(prefix, authenticateToken, proxy(config.serviceHosts.notification, {
-      proxyReqPathResolver: (req) => `${prefix}${req.url}`
+  if (serviceHosts.analytics) {
+    ['/api/analytics', '/api/mistakes', '/api/reports/weekly'].forEach((prefix) => {
+      mountProtectedProxy(app, prefix, serviceHosts.analytics, authenticateToken);
+    });
+  }
+  if (serviceHosts.homework) {
+    ['/api/homework', '/api/growth-tasks'].forEach((prefix) => {
+      mountProtectedProxy(app, prefix, serviceHosts.homework, authenticateToken);
+    });
+  }
+  if (serviceHosts.progress) {
+    ['/api/progress', '/api/growth-logs', '/api/knowledge-points', '/api/rewards'].forEach((prefix) => {
+      mountProtectedProxy(app, prefix, serviceHosts.progress, authenticateToken);
+    });
+  }
+  if (serviceHosts.notification) {
+    ['/api/notifications/family', '/api/notifications/settings'].forEach((prefix) => {
+      mountProtectedProxy(app, prefix, serviceHosts.notification, authenticateToken);
+    });
+  }
+  if (serviceHosts.resource) {
+    app.use('/api/media/:mediaId/content', proxy(serviceHosts.resource, {
+      proxyReqPathResolver: (req) => req.originalUrl
+        || `/api/media/${req.params.mediaId}/content${req.url}`
     }));
+    mountProtectedProxy(app, '/api/media', serviceHosts.resource, authenticateToken, {
+      parseReqBody: false
+    });
+  }
+
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', service: 'api-gateway' });
   });
-}
+  app.use(errorHandler);
+  return app;
+};
 
-if (config.serviceHosts.resource) {
-  app.use('/api/media/:mediaId/content', proxy(config.serviceHosts.resource, {
-    proxyReqPathResolver: (req) => req.originalUrl
-      || `/api/media/${req.params.mediaId}/content${req.url}`
-  }));
+const startServer = async ({
+  app = createApp(),
+  port = Number(process.env.PORT || process.env.GATEWAY_PORT || config.port || 5000),
+  appLogger = logger
+} = {}) => {
+  const server = await new Promise((resolve, reject) => {
+    const listener = app.listen(port, () => resolve(listener));
+    listener.once('error', reject);
+  });
+  appLogger.info('API Gateway service started', { port: server.address().port });
+  return server;
+};
 
-  app.use('/api/media', authenticateToken, proxy(config.serviceHosts.resource, {
-    proxyReqPathResolver: (req) => `/api/media${req.url}`
-  }));
-}
-
-// (其他之前定义的代理路由，如 progress, interaction, notification, resource, analytics)
-// ... 如果这些服务存在并且需要通过网关暴露 ...
-// app.use('/api/progress', authenticateToken, proxy(config.serviceHosts.progress, { proxyReqPathResolver: (req) => `/api/progress${req.url}` }));
-// ...以此类推...
-
-// 4. 健康检查 (可以由 createBaseApp 提供一个更通用的，或者网关可以有自己的)
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'api-gateway' });
-});
-
-app.use(errorHandler);
-
-const PORT = Number(process.env.PORT || process.env.GATEWAY_PORT || config.port || 5000);
-
-const startServer = () => app.listen(PORT, () => {
-  logger.info(`API Gateway service running on port ${PORT}`);
-});
+const app = createApp();
 
 if (require.main === module) {
-  startServer();
+  startServer({ app }).catch((error) => {
+    logger.error('API Gateway failed to start', { error: error.message, stack: error.stack });
+    process.exitCode = 1;
+  });
 }
 
 module.exports = app;
-module.exports.authenticateToken = authenticateToken;
+module.exports.authenticateToken = app.locals.authenticateToken;
+module.exports.createApp = createApp;
+module.exports.port = Number(process.env.PORT || process.env.GATEWAY_PORT || config.port || 5000);
 module.exports.startServer = startServer;
-module.exports.port = PORT;
