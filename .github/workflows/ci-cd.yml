@@ -106,6 +106,22 @@ jobs:
           npm ci
           npm run test:ci
 
+      - name: Install Task 11 Browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Task 11 Acceptance
+        run: npm run test:task11
+
+      - name: Upload Task 11 Failure Evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task11-failure-evidence
+          if-no-files-found: ignore
+          path: |
+            playwright-report
+            test-results
+
   performance:
     name: Performance Test
     needs: test
