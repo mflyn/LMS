@@ -99,6 +99,12 @@ const parentDelete = async (path, options) => {
   return unwrap(response);
 };
 
+export const createChild = (payload) => parentPost('/api/children', payload);
+export const setChildPin = (childId, pin) => parentPost(
+  `/api/children/${encodeURIComponent(childId)}/pin`,
+  { pin }
+);
+
 export const listGrowthTasks = (params, signal) => parentGet('/api/growth-tasks', params, signal);
 export const getGrowthTask = (taskId, signal) => parentGet(`/api/growth-tasks/${taskId}`, undefined, signal);
 export const createGrowthTask = (payload) => parentPost('/api/growth-tasks', payload);

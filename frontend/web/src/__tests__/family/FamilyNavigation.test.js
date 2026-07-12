@@ -15,6 +15,7 @@ import {
 import { CHILD_SESSION_KEY, PARENT_SESSION_KEY } from '../../services/familySession';
 
 jest.mock('../../services/familyApi', () => ({
+  createChild: jest.fn(),
   getMyFamily: jest.fn(),
   createFamily: jest.fn(),
   getNotificationSettings: jest.fn(),
@@ -23,7 +24,8 @@ jest.mock('../../services/familyApi', () => ({
   listGrowthLogs: jest.fn(),
   listGrowthTasks: jest.fn(),
   listMistakes: jest.fn(),
-  listRewards: jest.fn()
+  listRewards: jest.fn(),
+  setChildPin: jest.fn()
 }));
 jest.mock('../../contexts/WebSocketContext', () => ({
   WebSocketProvider: ({ children }) => children
@@ -110,7 +112,7 @@ describe('family parent navigation', () => {
     expect(window.location.pathname).toBe('/app/today');
     expect(screen.getByRole('button', { name: '打开导航' })).toBeInTheDocument();
 
-    for (const label of ['今日', '任务', '记录', '错题', '周报', '提醒', '星星与奖励']) {
+    for (const label of ['今日', '任务', '记录', '错题', '周报', '提醒', '星星与奖励', '孩子']) {
       expect(screen.getByRole('link', { name: label })).toBeInTheDocument();
     }
 
@@ -126,7 +128,8 @@ describe('family parent navigation', () => {
       ['mistakes', '错题'],
       ['reports', '周报'],
       ['reminders', '提醒'],
-      ['rewards', '星星与奖励']
+      ['rewards', '星星与奖励'],
+      ['children', '孩子']
     ];
 
     for (const [path, heading] of routes) {

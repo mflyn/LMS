@@ -160,6 +160,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-star-balance strong { color: #8a4b08; font-size: 30px; }
 .family-media-preview { display: block; width: min(100%, 420px); max-height: 320px; object-fit: contain; border: 1px solid var(--family-border); border-radius: 6px; background: #f8fafc; }
 .family-mobile-nav-toggle { display: none; }
+.family-children-layout { display: grid; grid-template-columns: minmax(280px, 0.8fr) minmax(360px, 1.2fr); gap: 28px; align-items: start; }
+.family-children-create, .family-children-list { min-width: 0; }
+.family-children-create > h2, .family-children-list > h2 { margin: 0 0 16px; font-size: 18px; }
+.family-child-record { align-items: flex-start; }
+.family-child-record h2 { margin: 0 0 6px; font-size: 18px; }
+.family-pin-form { display: grid; width: min(100%, 330px); gap: 6px; }
+.family-pin-form label { color: var(--family-muted); font-size: 14px; font-weight: 600; }
+.family-pin-form input { min-width: 0; min-height: 40px; flex: 1 1 140px; border: 1px solid var(--family-border); border-radius: 6px; padding: 8px 10px; }
+.family-pin-form p { margin: 0; font-size: 14px; }
 
 @media (max-width: 767px) {
   .family-header { align-items: flex-start; padding: 16px; }
@@ -182,6 +191,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .family-page-heading, .family-record { align-items: stretch; flex-direction: column; }
   .family-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .family-section-grid, .family-form-grid { grid-template-columns: 1fr; }
+  .family-children-layout { grid-template-columns: 1fr; }
   .family-dialog-backdrop { padding: 12px; }
   .family-dialog { max-height: calc(100vh - 24px); padding: 18px; }
   .family-auth-page, .family-route-state { padding: 16px; }
