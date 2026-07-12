@@ -104,3 +104,4 @@ kubeconfig.yaml
 # System Files
 .DS_Store
 Thumbs.db
+.superpowers/
