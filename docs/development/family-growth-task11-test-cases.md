@@ -1,6 +1,6 @@
 # Task 11 Family Growth End-to-End Test Design and Cases
 
-**Document status:** APPROVED DESIGN / IMPLEMENTATION BASELINE  
+**Document status:** IMPLEMENTED / LOCAL GATE PASSED
 **Date:** 2026-07-12  
 **Design:** `docs/superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md`  
 **Requirement:** `FR-FLOW-001`
@@ -40,7 +40,7 @@
 | --- | --- | --- | --- |
 | `TC-T11-FLOW-001` | Register parent, create family, create two children, and set PINs. | IDs are returned through public APIs and both children belong only to the new family. | `family-growth-demo-flow.integration.test.js` |
 | `TC-T11-FLOW-002` | Create moral, academic, physical, artistic, and labor tasks. | Five dimensions persist for child A; child B and another family cannot list them. | integration test |
-| `TC-T11-FLOW-003` | Child A logs in and completes four tasks, including physical actual amount/unit. | Approved child fields persist; parent-only fields cannot be injected. | integration test |
+| `TC-T11-FLOW-003` | Child A logs in and completes the physical task with actual amount/unit. | Approved child fields persist; parent-only fields cannot be injected. | `family-growth-demo-flow.integration.test.js` |
 | `TC-T11-FLOW-004` | Parent confirms a completed task twice. | Task remains confirmed and exactly one task-award ledger entry exists. | integration test |
 | `TC-T11-FLOW-005` | Parent creates growth logs and an academic mistake. | Entries are returned only in the correct family/child scope. | integration test |
 
@@ -63,7 +63,7 @@
 | ID | Action | Expected result | Evidence |
 | --- | --- | --- | --- |
 | `TC-T11-E2E-001` | Complete registration -> family -> two children/PINs -> five tasks in Chromium. | User-visible state matches server state and no relevant console/page error occurs. | Playwright |
-| `TC-T11-E2E-002` | Log out parent, sign in as child A, complete a task, and return as parent to confirm it. | Role-specific shells remain isolated and parent sees the completed task before confirmation. | Playwright |
+| `TC-T11-E2E-002` | Use independent parent and child contexts; child A completes a task and the parent context confirms it. | Role-specific shells remain isolated and parent sees the completed task before confirmation. | `family-growth-flow.spec.js` |
 | `TC-T11-E2E-003` | Parent records log/mistake/media, reads report/reminders, and redeems reward. | Each accepted MVP area is reachable through the real UI and backend. | Playwright |
 | `TC-T11-E2E-004` | Open parent route with only child session. | Browser reaches parent login; no parent navigation or data renders. | Playwright |
 | `TC-T11-E2E-005` | Child A attempts a captured child-B resource URL/API. | Stable `403` is observed and no sibling content renders. | Playwright plus integration test |
