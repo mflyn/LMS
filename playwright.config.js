@@ -6,6 +6,7 @@ module.exports = defineConfig({
   workers: 1,
   retries: 0,
   timeout: 90000,
+  actionTimeout: 10000,
   expect: { timeout: 10000 },
   outputDir: 'test-results',
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],

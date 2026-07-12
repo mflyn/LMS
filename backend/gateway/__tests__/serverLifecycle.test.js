@@ -49,6 +49,24 @@ describe('gateway server lifecycle', () => {
     expect(response.body).toEqual({ status: 'ok', service: 'api-gateway' });
   });
 
+  test('applies injected rate-limit options', async () => {
+    const { createApp } = require('../server');
+    const app = createApp({
+      serviceHosts,
+      jwtSecret: process.env.JWT_SECRET,
+      identitySecret: process.env.GATEWAY_IDENTITY_SECRET,
+      rateLimitOptions: {
+        windowMs: 60000,
+        max: 1,
+        standardHeaders: true,
+        legacyHeaders: false
+      }
+    });
+
+    await request(app).get('/health').expect(200);
+    await request(app).get('/health').expect(429);
+  });
+
   test('throws a stable error when a required service host is missing', () => {
     const { createApp } = require('../server');
 

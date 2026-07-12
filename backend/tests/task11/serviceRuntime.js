@@ -211,7 +211,13 @@ const createFamilyRuntime = async () => {
         notification: serviceUrl('notification-service')
       },
       jwtSecret: process.env.JWT_SECRET,
-      identitySecret: process.env.GATEWAY_IDENTITY_SECRET
+      identitySecret: process.env.GATEWAY_IDENTITY_SECRET,
+      rateLimitOptions: {
+        windowMs: 15 * 60 * 1000,
+        max: 1000,
+        standardHeaders: true,
+        legacyHeaders: false
+      }
     });
     state.servers.push(await listen('api-gateway', gatewayApp));
 

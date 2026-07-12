@@ -31,11 +31,16 @@ const createApp = ({
   serviceHosts = config.serviceHosts,
   jwtSecret = defaultJwtSecret,
   identitySecret = process.env.GATEWAY_IDENTITY_SECRET,
+  rateLimitOptions = config.rateLimitOptions,
   appLogger = logger
 } = {}) => {
   const userServiceUrl = requireServiceHost(serviceHosts, 'user');
   const dataServiceUrl = requireServiceHost(serviceHosts, 'data');
-  const app = createBaseApp({ serviceName: 'api-gateway', enableSessions: false });
+  const app = createBaseApp({
+    serviceName: 'api-gateway',
+    enableSessions: false,
+    rateLimitOptions
+  });
   app.locals = app.locals || {};
   app.locals.logger = appLogger;
   const authenticateToken = createAuthenticateToken({ jwtSecret, identitySecret });

@@ -7,6 +7,11 @@ const localDateInShanghai = () => new Intl.DateTimeFormat('en-CA', {
   day: '2-digit'
 }).format(new Date());
 
+const ONE_PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nJkAAAAASUVORK5CYII=',
+  'base64'
+);
+
 const monitorPage = (page) => {
   const failures = [];
   let expectedFamilyProbeErrors = 0;
@@ -143,9 +148,65 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await dialog.getByRole('button', { name: '确认并发放星星' }).click();
   await expect(page.getByRole('heading', { name: '跳绳 500 个' }).locator('xpath=ancestor::article'))
     .toContainText('已确认');
+
+  await page.getByRole('link', { name: '记录' }).click();
+  await page.getByRole('button', { name: '记录成长' }).click();
+  const logDialog = page.getByRole('dialog', { name: '记录成长' });
+  await logDialog.getByLabel('日期').fill(localDateInShanghai());
+  await logDialog.getByLabel('成长维度').selectOption('physical');
+  await logDialog.getByLabel('领域').fill('体能');
+  await logDialog.getByLabel('时长（分钟）').fill('18');
+  await logDialog.getByLabel('记录内容').fill('跳绳训练完成');
+  await logDialog.getByRole('button', { name: '保存成长记录' }).click();
+  await expect(page.getByRole('status')).toContainText('成长记录已保存');
+
+  await page.getByRole('link', { name: '错题' }).click();
+  await page.getByRole('button', { name: '记录错题' }).click();
+  const mistakeDialog = page.getByRole('dialog', { name: '记录错题' });
+  await mistakeDialog.getByLabel('学科').fill('数学');
+  await mistakeDialog.getByLabel('知识点').fill('两位数乘法');
+  await mistakeDialog.getByLabel('错误原因').selectOption('calculation');
+  await mistakeDialog.getByLabel('正确答案').fill('84');
+  await mistakeDialog.getByLabel('家长备注').fill('复习进位步骤');
+  const uploadResponsePromise = page.waitForResponse((response) => (
+    response.url().endsWith('/api/media') && response.request().method() === 'POST'
+  ));
+  await mistakeDialog.getByLabel('题目图片').setInputFiles({
+    name: 'question.png',
+    mimeType: 'image/png',
+    buffer: ONE_PIXEL_PNG
+  });
+  expect((await uploadResponsePromise).status()).toBe(201);
+  await mistakeDialog.getByRole('button', { name: '查看题目图片' }).click();
+  await expect(mistakeDialog.getByRole('img', { name: '题目图片预览' })).toBeVisible();
+  await mistakeDialog.getByRole('button', { name: '保存错题' }).click();
+  await expect(page.getByRole('status')).toContainText('错题已记录');
+
+  await page.getByRole('link', { name: '周报' }).click();
+  await expect(page.getByText('记录天数').locator('..')).toContainText('1');
+  await expect(page.getByText('成长投入').locator('..')).toContainText('18 分钟');
+  await expect(page.getByText('新增错题').locator('..')).toContainText('1');
+
+  await page.getByRole('link', { name: '提醒' }).click();
+  await expect(page.getByRole('heading', { name: '提醒设置' })).toBeVisible();
+  await page.getByRole('checkbox', { name: '周报提醒', exact: true }).check();
+  await page.getByRole('combobox', { name: /^周报提醒日/ }).selectOption('7');
+  await page.getByRole('button', { name: '保存提醒设置' }).click();
+  await expect(page.getByRole('status')).toContainText('提醒设置已保存');
+
   await page.getByRole('link', { name: '星星与奖励' }).click();
   await expect(page.getByText('当前星星').locator('..')).toContainText('1');
   await expect(page.getByText('成长获得').locator('..')).toContainText('+1');
+  await page.getByRole('button', { name: '新建奖励' }).click();
+  const rewardDialog = page.getByRole('dialog', { name: '新建奖励' });
+  await rewardDialog.getByLabel('奖励名称').fill('选择周末家庭活动');
+  await rewardDialog.getByLabel('所需星星').fill('1');
+  await rewardDialog.getByRole('button', { name: '保存奖励' }).click();
+  await page.getByRole('button', { name: '兑换 选择周末家庭活动' }).click();
+  await page.getByRole('dialog', { name: '确认兑换' })
+    .getByRole('button', { name: '确认兑换' }).click();
+  await expect(page.getByRole('status')).toContainText('已兑换，使用 1 颗星');
+  await expect(page.getByText('当前星星').locator('..')).toContainText('0');
 
   assertParentConsole();
   assertChildConsole();

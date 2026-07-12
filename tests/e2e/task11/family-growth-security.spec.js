@@ -103,9 +103,8 @@ test('resetting a PIN expires the existing child browser session', async ({ page
 
 test('parent children page and child shell fit a 360px viewport', async ({ page, browser }) => {
   const { family, childA } = await setupFamily(page);
-  await page.setViewportSize({ width: 360, height: 800 });
-  await page.goto('/app/children');
   await expect(page.getByRole('heading', { name: '孩子', exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 360, height: 800 });
   expect(await page.evaluate(() => (
     document.documentElement.scrollWidth <= document.documentElement.clientWidth
   ))).toBe(true);
