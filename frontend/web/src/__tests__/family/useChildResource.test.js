@@ -142,4 +142,14 @@ describe('useChildResource', () => {
 
     await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('error'));
   });
+
+  test('preserves non-null initial data as ready without a selected child', () => {
+    family = { selectedChildId: null, childScopeVersion: 2 };
+    const load = jest.fn();
+
+    render(<ResourceProbe load={load} initialData={[]} />);
+
+    expect(screen.getByTestId('state')).toHaveTextContent('ready');
+    expect(load).not.toHaveBeenCalled();
+  });
 });
