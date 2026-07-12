@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const sharp = require('sharp');
 
 const localDateInShanghai = () => new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Asia/Shanghai',
@@ -6,11 +7,6 @@ const localDateInShanghai = () => new Intl.DateTimeFormat('en-CA', {
   month: '2-digit',
   day: '2-digit'
 }).format(new Date());
-
-const ONE_PIXEL_PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nJkAAAAASUVORK5CYII=',
-  'base64'
-);
 
 const monitorPage = (page) => {
   const failures = [];
@@ -170,13 +166,21 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await mistakeDialog.getByLabel('错误原因').selectOption('calculation');
   await mistakeDialog.getByLabel('正确答案').fill('84');
   await mistakeDialog.getByLabel('家长备注').fill('复习进位步骤');
+  const questionImage = await sharp({
+    create: {
+      width: 8,
+      height: 8,
+      channels: 3,
+      background: { r: 40, g: 120, b: 180 }
+    }
+  }).png().toBuffer();
   const uploadResponsePromise = page.waitForResponse((response) => (
     response.url().endsWith('/api/media') && response.request().method() === 'POST'
   ));
   await mistakeDialog.getByLabel('题目图片').setInputFiles({
     name: 'question.png',
     mimeType: 'image/png',
-    buffer: ONE_PIXEL_PNG
+    buffer: questionImage
   });
   expect((await uploadResponsePromise).status()).toBe(201);
   await mistakeDialog.getByRole('button', { name: '查看题目图片' }).click();
