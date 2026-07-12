@@ -16,11 +16,11 @@
 
 - Modify `backend/services/user-service/server.js`: export import-safe `createApp`, `connectDatabase`, and `startServer` functions.
 - Modify `backend/services/homework-service/server.js`: move app construction, route injection, logging, MQ, and startup behind factories.
-- Modify `backend/api-gateway/server.js`: export `createApp({ serviceHosts, jwtSecret, identitySecret })` and remove import-time exit behavior.
+- Modify `backend/gateway/server.js`: export `createApp({ serviceHosts, jwtSecret, identitySecret })` and remove import-time exit behavior.
 - Create `backend/services/user-service/__tests__/serverLifecycle.test.js`: guard user-service import/start contract.
 - Create `backend/services/homework-service/__tests__/serverLifecycle.test.js`: guard homework route injection and import contract.
-- Create `backend/api-gateway/__tests__/serverLifecycle.test.js`: guard injected host validation and import contract.
-- Create `backend/api-gateway/jest.config.js`: isolate gateway lifecycle tests from legacy setup mocks.
+- Create `backend/gateway/__tests__/serverLifecycle.test.js`: guard injected host validation and import contract.
+- Create `backend/gateway/jest.config.js`: isolate gateway lifecycle tests from legacy setup mocks.
 
 ### Parent child management
 
@@ -62,11 +62,11 @@
 **Files:**
 - Create: `backend/services/user-service/__tests__/serverLifecycle.test.js`
 - Create: `backend/services/homework-service/__tests__/serverLifecycle.test.js`
-- Create: `backend/api-gateway/__tests__/serverLifecycle.test.js`
-- Create: `backend/api-gateway/jest.config.js`
+- Create: `backend/gateway/__tests__/serverLifecycle.test.js`
+- Create: `backend/gateway/jest.config.js`
 - Modify: `backend/services/user-service/server.js`
 - Modify: `backend/services/homework-service/server.js`
-- Modify: `backend/api-gateway/server.js`
+- Modify: `backend/gateway/server.js`
 
 - [ ] **Step 1: Write failing import-safety tests**
 
@@ -89,7 +89,7 @@ Run:
 ```bash
 npx jest --config=backend/services/user-service/jest.config.js --runInBand serverLifecycle
 npx jest --config=backend/services/homework-service/jest.config.js --runInBand serverLifecycle
-npx jest --config=backend/api-gateway/jest.config.js --runInBand serverLifecycle
+npx jest --config=backend/gateway/jest.config.js --runInBand serverLifecycle
 ```
 
 Expected: failures show missing factories and current import-time side effects.
@@ -163,7 +163,7 @@ Expected: lifecycle suites and all family regression projects pass with no open-
 - [ ] **Step 7: Commit lifecycle refactor**
 
 ```bash
-git add backend/services/user-service/server.js backend/services/user-service/__tests__/serverLifecycle.test.js backend/services/homework-service/server.js backend/services/homework-service/__tests__/serverLifecycle.test.js backend/api-gateway/server.js backend/api-gateway/jest.config.js backend/api-gateway/__tests__/serverLifecycle.test.js
+git add backend/services/user-service/server.js backend/services/user-service/__tests__/serverLifecycle.test.js backend/services/homework-service/server.js backend/services/homework-service/__tests__/serverLifecycle.test.js backend/gateway/server.js backend/gateway/jest.config.js backend/gateway/__tests__/serverLifecycle.test.js
 git commit -m "refactor: make family service startup testable"
 ```
 
