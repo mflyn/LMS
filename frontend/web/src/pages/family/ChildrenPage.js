@@ -34,12 +34,11 @@ const ChildrenPage = () => {
     setChildError('');
     setChildMessage('');
     try {
-      await createChild({
-        name,
-        nickname: childForm.nickname.trim(),
-        grade: childForm.grade.trim(),
-        school: childForm.school.trim()
-      });
+      const payload = { name };
+      if (childForm.nickname.trim()) payload.nickname = childForm.nickname.trim();
+      if (childForm.grade) payload.grade = Number(childForm.grade);
+      if (childForm.school.trim()) payload.school = childForm.school.trim();
+      await createChild(payload);
       setChildForm(emptyChild());
       setChildMessage('孩子已添加。');
       await reload();
@@ -86,7 +85,7 @@ const ChildrenPage = () => {
           <form className="family-form-grid" onSubmit={saveChild}>
             <label>孩子姓名<input required value={childForm.name} onChange={(event) => setChildForm((current) => ({ ...current, name: event.target.value }))} /></label>
             <label>昵称<input value={childForm.nickname} onChange={(event) => setChildForm((current) => ({ ...current, nickname: event.target.value }))} /></label>
-            <label>年级<input value={childForm.grade} onChange={(event) => setChildForm((current) => ({ ...current, grade: event.target.value }))} /></label>
+            <label>年级<select value={childForm.grade} onChange={(event) => setChildForm((current) => ({ ...current, grade: event.target.value }))}><option value="">未选择</option>{[1, 2, 3, 4, 5, 6].map((grade) => <option key={grade} value={grade}>{grade} 年级</option>)}</select></label>
             <label>学校<input value={childForm.school} onChange={(event) => setChildForm((current) => ({ ...current, school: event.target.value }))} /></label>
             {childError && <p className="family-form-error family-field-wide" role="alert">{childError}</p>}
             {childMessage && <p className="family-success-message family-field-wide" role="status">{childMessage}</p>}
@@ -108,7 +107,7 @@ const ChildrenPage = () => {
                 <article className="family-record family-child-record" data-testid={`child-row-${child.childId}`} key={child.childId}>
                   <div className="family-record-main">
                     <h2>{child.name}</h2>
-                    <p>{[child.grade, child.school].filter(Boolean).join(' · ') || '档案信息待补充'}</p>
+                    <p>{[child.grade ? `${child.grade} 年级` : '', child.school].filter(Boolean).join(' · ') || '档案信息待补充'}</p>
                   </div>
                   <form className="family-pin-form" onSubmit={(event) => savePin(event, child)}>
                     <label htmlFor={`child-pin-${child.childId}`}>{child.name}的 PIN</label>

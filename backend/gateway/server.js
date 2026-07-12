@@ -14,9 +14,15 @@ const requireServiceHost = (serviceHosts, name) => {
   return value;
 };
 
+const resolveProxyPath = (prefix, url = '') => {
+  if (url === '/') return prefix;
+  if (url.startsWith('/?')) return `${prefix}${url.slice(1)}`;
+  return `${prefix}${url}`;
+};
+
 const mountProtectedProxy = (app, prefix, serviceUrl, authenticateToken) => {
   app.use(prefix, authenticateToken, proxy(serviceUrl, {
-    proxyReqPathResolver: (req) => `${prefix}${req.url}`
+    proxyReqPathResolver: (req) => resolveProxyPath(prefix, req.url)
   }));
 };
 
@@ -36,7 +42,7 @@ const createApp = ({
 
   app.use(stripClientIdentity);
   app.use('/api/auth', proxy(userServiceUrl, {
-    proxyReqPathResolver: (req) => `/api/auth${req.url}`
+    proxyReqPathResolver: (req) => resolveProxyPath('/api/auth', req.url)
   }));
 
   ['/api/users', '/api/students', '/api/families', '/api/children'].forEach((prefix) => {

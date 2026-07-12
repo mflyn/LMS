@@ -4,6 +4,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const { redactRuntimeError } = require('./testEnvironment');
+const Role = require('../../common/models/Role');
 
 const userServer = require('../../services/user-service/server');
 const homeworkServer = require('../../services/homework-service/server');
@@ -84,6 +85,10 @@ const createFamilyRuntime = async () => {
     process.env.USER_SERVICE_MONGO_URI = mongoUri;
     await mongoose.connect(mongoUri);
     const mongoHello = await mongoose.connection.db.admin().command({ hello: 1 });
+    await Role.create([
+      { name: 'parent', description: 'Family parent', permissions: [] },
+      { name: 'student', description: 'Family child', permissions: [] }
+    ]);
 
     state.privateRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'family-growth-task11-'));
     await fs.chmod(state.privateRoot, 0o700);

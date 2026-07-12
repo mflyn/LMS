@@ -18,11 +18,11 @@ describe('Task 11 parent child API client', () => {
   });
 
   test('creates a child with parent authentication and strips familyId', async () => {
-    await createChild({ name: ' 小明 ', grade: '三年级', familyId: 'family-a' });
+    await createChild({ name: ' 小明 ', grade: 3, familyId: 'family-a' });
 
     expect(axios.post).toHaveBeenCalledWith(
       '/api/children',
-      { name: ' 小明 ', grade: '三年级' },
+      { name: ' 小明 ', grade: 3 },
       parentConfig
     );
   });

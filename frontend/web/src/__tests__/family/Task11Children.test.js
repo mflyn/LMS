@@ -16,7 +16,7 @@ jest.mock('../../contexts/WebSocketContext', () => ({
 const firstChild = {
   childId: 'child-a1',
   name: '小明',
-  grade: '三年级',
+  grade: 3,
   school: '向阳小学'
 };
 const readyFamily = {
@@ -57,21 +57,19 @@ describe('Task 11 parent child management', () => {
       .mockResolvedValueOnce(readyFamily)
       .mockResolvedValueOnce({
         ...readyFamily,
-        children: [...readyFamily.children, { childId: 'child-a2', name: '小红', grade: '二年级' }]
+        children: [...readyFamily.children, { childId: 'child-a2', name: '小红', grade: 2 }]
       });
     openChildren();
     await screen.findByRole('heading', { name: '孩子' });
 
     fireEvent.change(screen.getByLabelText('孩子姓名'), { target: { value: '  小红  ' } });
-    fireEvent.change(screen.getByLabelText('年级'), { target: { value: '二年级' } });
+    fireEvent.change(screen.getByLabelText('年级'), { target: { value: '2' } });
     fireEvent.click(screen.getByRole('button', { name: '添加孩子' }));
 
     await waitFor(() => {
       expect(createChild).toHaveBeenCalledWith({
         name: '小红',
-        nickname: '',
-        grade: '二年级',
-        school: ''
+        grade: 2
       });
       expect(getMyFamily).toHaveBeenCalledTimes(2);
     });
@@ -86,12 +84,12 @@ describe('Task 11 parent child management', () => {
     await screen.findByRole('heading', { name: '孩子' });
 
     fireEvent.change(screen.getByLabelText('孩子姓名'), { target: { value: '小红' } });
-    fireEvent.change(screen.getByLabelText('年级'), { target: { value: '未知年级' } });
+    fireEvent.change(screen.getByLabelText('年级'), { target: { value: '3' } });
     fireEvent.click(screen.getByRole('button', { name: '添加孩子' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('年级格式不正确');
     expect(screen.getByLabelText('孩子姓名')).toHaveValue('小红');
-    expect(screen.getByLabelText('年级')).toHaveValue('未知年级');
+    expect(screen.getByLabelText('年级')).toHaveValue('3');
   });
 
   test('blocks an invalid PIN and saves a valid PIN without displaying it', async () => {
