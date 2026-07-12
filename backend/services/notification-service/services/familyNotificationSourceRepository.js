@@ -1,9 +1,8 @@
 const GrowthTask = require('../../homework-service/models/GrowthTask');
 const GrowthLog = require('../../progress-service/models/GrowthLog');
-const MistakeRecord = require('../../analytics-service/models/MistakeRecord');
-const Report = require('../../progress-service/models/Report');
+const FamilyMistake = require('../../analytics-service/models/FamilyMistake');
+const WeeklyReport = require('../../analytics-service/models/WeeklyReport');
 
-const toDate = (localDate) => new Date(`${localDate}T00:00:00.000Z`);
 const DEFAULT_MAX_TIME_MS = 3000;
 
 const taskView = (task) => ({
@@ -24,9 +23,9 @@ const logView = (log) => ({
 
 const mistakeView = (mistake) => ({
   mistakeId: mistake._id.toString(),
-  childId: mistake.student.toString(),
+  childId: (mistake.childId || mistake.student).toString(),
   subject: mistake.subject,
-  knowledgePoint: mistake.knowledgePoint,
+  knowledgePoint: mistake.knowledgePointName || mistake.knowledgePoint,
   mastered: mistake.mastered,
   reviewReminderDate: mistake.reviewReminderDate || undefined
 });
@@ -43,12 +42,14 @@ const createFamilyNotificationSourceRepository = ({
     throw new Error('NOTIFICATION_SOURCE_MAX_TIME_MS must be a positive integer');
   }
 
-  const {
-    GrowthTaskModel = GrowthTask,
-    MistakeRecordModel = MistakeRecord,
-    GrowthLogModel = GrowthLog,
-    ReportModel = Report
-  } = models;
+  const GrowthTaskModel = models.GrowthTaskModel || GrowthTask;
+  const FamilyMistakeModel = models.FamilyMistakeModel
+    || models.MistakeRecordModel
+    || FamilyMistake;
+  const GrowthLogModel = models.GrowthLogModel || GrowthLog;
+  const WeeklyReportModel = models.WeeklyReportModel
+    || models.ReportModel
+    || WeeklyReport;
 
   return {
     async getTasks({ familyId, childId, localDate }) {
@@ -61,9 +62,10 @@ const createFamilyNotificationSourceRepository = ({
       return tasks.map(taskView);
     },
 
-    async getMistakes({ childId }) {
-      const mistakes = await withMaxTime(MistakeRecordModel.find({
-        student: childId,
+    async getMistakes({ familyId, childId }) {
+      const mistakes = await withMaxTime(FamilyMistakeModel.find({
+        familyId,
+        childId,
         mastered: false
       }).sort({ createdAt: 1 }), maxTimeMS);
       return mistakes.map(mistakeView);
@@ -78,13 +80,12 @@ const createFamilyNotificationSourceRepository = ({
       return logs.map(logView);
     },
 
-    async hasWeeklyReport({ childId, weekStart, weekEnd }) {
-      const report = await withMaxTime(ReportModel.findOne({
-        student: childId,
-        period: 'week',
-        startDate: { $lte: toDate(weekStart) },
-        endDate: { $gte: toDate(weekEnd) },
-        status: { $in: ['draft', 'published'] }
+    async hasWeeklyReport({ familyId, childId, weekStart, weekEnd }) {
+      const report = await withMaxTime(WeeklyReportModel.findOne({
+        familyId,
+        childId,
+        weekStart,
+        weekEnd
       }).select('_id'), maxTimeMS);
       return Boolean(report);
     }

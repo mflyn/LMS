@@ -17,16 +17,25 @@ describe('family notification source repository', () => {
     const reportQuery = chain(null);
     const models = {
       GrowthTaskModel: { find: jest.fn(() => taskQuery) },
-      MistakeRecordModel: { find: jest.fn(() => mistakeQuery) },
+      FamilyMistakeModel: { find: jest.fn(() => mistakeQuery) },
       GrowthLogModel: { find: jest.fn(() => logQuery) },
-      ReportModel: { findOne: jest.fn(() => reportQuery) }
+      WeeklyReportModel: { findOne: jest.fn(() => reportQuery) }
     };
     const repository = createFamilyNotificationSourceRepository({ models, maxTimeMS: 1234 });
 
     await repository.getTasks({ familyId: 'family-1', childId: 'child-1', localDate: '2026-07-07' });
-    await repository.getMistakes({ childId: 'child-1' });
+    await repository.getMistakes({ familyId: 'family-1', childId: 'child-1' });
     await repository.getLogs({ familyId: 'family-1', childId: 'child-1', localDate: '2026-07-07' });
-    await repository.hasWeeklyReport({ childId: 'child-1', weekStart: '2026-07-06', weekEnd: '2026-07-12' });
+    await repository.hasWeeklyReport({
+      familyId: 'family-1', childId: 'child-1', weekStart: '2026-07-06', weekEnd: '2026-07-12'
+    });
+
+    expect(models.FamilyMistakeModel.find).toHaveBeenCalledWith({
+      familyId: 'family-1', childId: 'child-1', mastered: false
+    });
+    expect(models.WeeklyReportModel.findOne).toHaveBeenCalledWith({
+      familyId: 'family-1', childId: 'child-1', weekStart: '2026-07-06', weekEnd: '2026-07-12'
+    });
 
     expect(taskQuery.maxTimeMS).toHaveBeenCalledWith(1234);
     expect(mistakeQuery.maxTimeMS).toHaveBeenCalledWith(1234);

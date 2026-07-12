@@ -53,37 +53,56 @@ const createMediaService = ({
 
   const assertIdentity = (identity) => {
     if (!identity || !validObjectId(String(identity.id || ''))
-      || !validObjectId(String(identity.familyId || ''))
       || !['parent', 'student'].includes(identity.role)) {
       throw accessDenied();
     }
+  };
+
+  const resolveIdentityScope = async (identity) => {
+    assertIdentity(identity);
+    if (validObjectId(String(identity.familyId || ''))) {
+      return {
+        actorId: String(identity.id),
+        familyId: String(identity.familyId),
+        role: identity.role,
+        childId: identity.role === 'student' ? String(identity.childId || identity.id) : null
+      };
+    }
+    if (identity.role !== 'parent' || typeof UserModel.findOne !== 'function') throw accessDenied();
+    const query = UserModel.findOne({ _id: identity.id, role: 'parent' }).select('familyId');
+    const parent = typeof query.lean === 'function' ? await query.lean() : await query;
+    if (!parent || !validObjectId(String(parent.familyId || ''))) throw accessDenied();
+    return {
+      actorId: String(identity.id),
+      familyId: String(parent.familyId),
+      role: 'parent',
+      childId: null
+    };
   };
 
   const assertMediaId = (mediaId) => {
     if (!validObjectId(String(mediaId || ''))) throw validationError('Invalid mediaId');
   };
 
-  const authorizeAsset = (identity, asset) => {
-    assertIdentity(identity);
-    if (asset.familyId.toString() !== String(identity.familyId)) throw accessDenied();
-    if (identity.role === 'student') {
-      const ownChildId = String(identity.childId || identity.id);
-      if (!asset.childId || asset.childId.toString() !== ownChildId) throw accessDenied();
+  const authorizeAssetForScope = (scope, asset) => {
+    if (asset.familyId.toString() !== scope.familyId) throw accessDenied();
+    if (scope.role === 'student') {
+      if (!asset.childId || asset.childId.toString() !== scope.childId) throw accessDenied();
     }
   };
 
   const resolveUploadScope = async ({ identity, suppliedChildId, purpose }) => {
-    assertIdentity(identity);
+    const identityScope = await resolveIdentityScope(identity);
     if (typeof purpose !== 'string' || !MEDIA_PURPOSES.has(purpose)) {
       throw validationError('Invalid media purpose');
     }
 
-    const actorId = String(identity.id);
-    const familyId = String(identity.familyId);
+    const actorId = identityScope.actorId;
+    const familyId = identityScope.familyId;
     let childId = suppliedChildId ? String(suppliedChildId) : null;
 
-    if (identity.role === 'student') {
-      const ownChildId = String(identity.childId || identity.id);
+    if (identityScope.role === 'student') {
+      const ownChildId = identityScope.childId;
       if (!validObjectId(ownChildId) || (childId && childId !== ownChildId)) throw accessDenied();
       if (!CHILD_UPLOAD_PURPOSES.has(purpose)) throw accessDenied();
       childId = ownChildId;
@@ -136,7 +155,8 @@ const createMediaService = ({
     assertMediaId(mediaId);
     const asset = await MediaAssetModel.findById(mediaId).lean();
     if (!asset) throw notFound();
-    authorizeAsset(identity, asset);
+    const identityScope = await resolveIdentityScope(identity);
+    authorizeAssetForScope(identityScope, asset);
     if (asset.status !== 'active') throw notFound();
     return capabilityService.issue(String(mediaId));
   };
@@ -158,11 +178,12 @@ const createMediaService = ({
 
   const deleteMedia = async ({ identity, mediaId } = {}) => {
     assertMediaId(mediaId);
+    const identityScope = await resolveIdentityScope(identity);
     return transactionRunner(async (session) => {
       const assetQuery = MediaAssetModel.findById(mediaId);
       const asset = await (session ? assetQuery.session(session) : assetQuery).lean();
       if (!asset) throw notFound();
-      authorizeAsset(identity, asset);
+      authorizeAssetForScope(identityScope, asset);
       if (asset.status === 'deleted') return;
 
       const deletedAt = new Date(Number(now()));

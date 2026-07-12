@@ -20,8 +20,9 @@ const resolveProxyPath = (prefix, url = '') => {
   return `${prefix}${url}`;
 };
 
-const mountProtectedProxy = (app, prefix, serviceUrl, authenticateToken) => {
+const mountProtectedProxy = (app, prefix, serviceUrl, authenticateToken, proxyOptions = {}) => {
   app.use(prefix, authenticateToken, proxy(serviceUrl, {
+    ...proxyOptions,
     proxyReqPathResolver: (req) => resolveProxyPath(prefix, req.url)
   }));
 };
@@ -75,7 +76,9 @@ const createApp = ({
       proxyReqPathResolver: (req) => req.originalUrl
         || `/api/media/${req.params.mediaId}/content${req.url}`
     }));
-    mountProtectedProxy(app, '/api/media', serviceHosts.resource, authenticateToken);
+    mountProtectedProxy(app, '/api/media', serviceHosts.resource, authenticateToken, {
+      parseReqBody: false
+    });
   }
 
   app.get('/health', (req, res) => {

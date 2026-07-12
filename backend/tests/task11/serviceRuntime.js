@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const fs = require('fs/promises');
 const os = require('os');
 const path = require('path');
@@ -5,14 +6,71 @@ const mongoose = require('mongoose');
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const { redactRuntimeError } = require('./testEnvironment');
 const Role = require('../../common/models/Role');
+const { authenticateGateway } = require('../../common/middleware/auth');
+const { createMediaReferenceClient } = require('../../common/services/mediaReferenceClient');
 
 const userServer = require('../../services/user-service/server');
 const homeworkServer = require('../../services/homework-service/server');
+const GrowthTask = require('../../services/homework-service/models/GrowthTask');
+const { createGrowthTaskRouter } = require('../../services/homework-service/routes/growthTasks');
+const { createGrowthTaskAttachmentMediaService } = require('../../services/homework-service/services/growthTaskAttachmentMediaService');
 const progressServer = require('../../services/progress-service/server');
 const resourceApp = require('../../services/resource-service/app');
+const FamilyUser = require('../../services/resource-service/models/FamilyUser');
+const MediaAsset = require('../../services/resource-service/models/MediaAsset');
+const MediaReference = require('../../services/resource-service/models/MediaReference');
+const { createMediaReferenceCredential } = require('../../services/resource-service/middleware/mediaReferenceCredential');
+const { createPrivateMediaUpload } = require('../../services/resource-service/middleware/privateMediaUpload');
+const { createInternalMediaReferencesRouter } = require('../../services/resource-service/routes/internalMediaReferences');
+const { createMediaRouter } = require('../../services/resource-service/routes/media');
+const { createMediaCapabilityService } = require('../../services/resource-service/services/mediaCapability');
+const { createMediaReferenceService } = require('../../services/resource-service/services/mediaReferenceService');
+const { createMediaService } = require('../../services/resource-service/services/mediaService');
+const { createMongoTransactionRunner } = require('../../services/resource-service/services/mongoTransaction');
+const { createPrivateMediaStore } = require('../../services/resource-service/services/privateMediaStore');
 const analyticsApp = require('../../services/analytics-service/app');
+const FamilyMistake = require('../../services/analytics-service/models/FamilyMistake');
+const FamilyMistakeStateEvent = require('../../services/analytics-service/models/FamilyMistakeStateEvent');
+const { createFamilyMistakeMediaService } = require('../../services/analytics-service/services/familyMistakeMediaService');
 const notificationApp = require('../../services/notification-service/app');
 const gatewayServer = require('../../gateway/server');
+
+const quietLogger = {
+  error: () => undefined,
+  info: () => undefined,
+  warn: () => undefined
+};
+
+const createResourceApp = ({ privateRoot, transactionRunner }) => {
+  const mediaStore = createPrivateMediaStore({ root: privateRoot });
+  const capabilityService = createMediaCapabilityService({
+    secret: process.env.MEDIA_SIGNING_SECRET
+  });
+  const referenceService = createMediaReferenceService({
+    MediaAssetModel: MediaAsset,
+    MediaReferenceModel: MediaReference,
+    transactionRunner
+  });
+  const mediaService = createMediaService({
+    MediaAssetModel: MediaAsset,
+    MediaReferenceModel: MediaReference,
+    UserModel: FamilyUser,
+    capabilityService,
+    mediaStore,
+    transactionRunner
+  });
+  const mediaRouter = createMediaRouter({
+    authenticate: authenticateGateway,
+    fsPromises: fs,
+    mediaService,
+    upload: createPrivateMediaUpload({ privateRoot })
+  });
+  const internalMediaRouter = createInternalMediaReferencesRouter({
+    credential: createMediaReferenceCredential(process.env.MEDIA_REFERENCE_SERVICE_TOKEN),
+    referenceService
+  });
+  return resourceApp.createApp({ logger: quietLogger, mediaRouter, internalMediaRouter });
+};
 
 const listen = (name, app) => new Promise((resolve, reject) => {
   const server = app.listen(0, '127.0.0.1', () => {
@@ -93,19 +151,55 @@ const createFamilyRuntime = async () => {
     state.privateRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'family-growth-task11-'));
     await fs.chmod(state.privateRoot, 0o700);
 
-    const serviceApps = [
-      ['user-service', userServer.createApp()],
-      ['homework-service', homeworkServer.createApp()],
+    const transactionRunner = createMongoTransactionRunner(mongoose.connection);
+    const foundationalApps = [
+      ['user-service', userServer.createApp({ appLogger: quietLogger })],
       ['progress-service', progressServer.createApp()],
-      ['resource-service', resourceApp.createApp()],
-      ['analytics-service', analyticsApp.createApp()],
-      ['notification-service', notificationApp.createApp()]
+      ['resource-service', createResourceApp({
+        privateRoot: state.privateRoot,
+        transactionRunner
+      })]
     ];
-    for (const [name, app] of serviceApps) {
+    for (const [name, app] of foundationalApps) {
       state.servers.push(await listen(name, app));
     }
 
     const serviceUrl = (name) => state.servers.find((entry) => entry.name === name).url;
+    process.env.PROGRESS_SERVICE_URL = serviceUrl('progress-service');
+    process.env.RESOURCE_SERVICE_URL = serviceUrl('resource-service');
+    const mediaReferenceClient = createMediaReferenceClient({
+      resourceServiceUrl: process.env.RESOURCE_SERVICE_URL,
+      serviceToken: process.env.MEDIA_REFERENCE_SERVICE_TOKEN,
+      timeout: Number(process.env.MEDIA_REFERENCE_TIMEOUT_MS)
+    });
+    const attachmentMediaService = createGrowthTaskAttachmentMediaService({
+      GrowthTaskModel: GrowthTask,
+      mediaReferenceClient,
+      randomUUID: crypto.randomUUID,
+      logger: quietLogger
+    });
+    const homeworkApp = homeworkServer.createApp({
+      appLogger: quietLogger,
+      growthTaskRouter: createGrowthTaskRouter({ attachmentMediaService })
+    });
+    const familyMistakeMediaService = createFamilyMistakeMediaService({
+      FamilyMistakeModel: FamilyMistake,
+      FamilyMistakeStateEventModel: FamilyMistakeStateEvent,
+      mediaReferenceClient,
+      randomUUID: crypto.randomUUID
+    });
+    const dependentApps = [
+      ['homework-service', homeworkApp],
+      ['analytics-service', analyticsApp.createApp({
+        familyMistakeMediaService,
+        logger: quietLogger
+      })],
+      ['notification-service', notificationApp.createApp({ logger: quietLogger })]
+    ];
+    for (const [name, app] of dependentApps) {
+      state.servers.push(await listen(name, app));
+    }
+
     const gatewayApp = gatewayServer.createApp({
       serviceHosts: {
         user: serviceUrl('user-service'),
