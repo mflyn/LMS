@@ -326,7 +326,7 @@ Use unique email/username values, public API calls, and response IDs. Assert sta
 
 ```js
 expect(new Set(tasks.map((task) => task.dimension))).toEqual(
-  new Set(['academic', 'physical', 'artistic', 'labor', 'social'])
+  new Set(['moral', 'academic', 'physical', 'artistic', 'labor'])
 );
 ```
 

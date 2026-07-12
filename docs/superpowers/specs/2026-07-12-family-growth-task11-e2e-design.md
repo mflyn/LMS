@@ -18,7 +18,7 @@ The automated flow must cover:
 
 1. Register a parent and create a family.
 2. Create two child profiles and set a 4-to-6 digit PIN for each.
-3. Create one task in each development dimension: academic, physical, artistic, labor, and social.
+3. Create one task in each development dimension: moral, academic, physical, artistic, and labor.
 4. Sign in as the first child and complete at least four tasks, including a measurable physical task.
 5. Return as the parent and confirm completed tasks; confirming a task twice creates one star ledger entry.
 6. Record growth logs and one academic mistake.

@@ -39,7 +39,7 @@
 | ID | Action | Expected result | Evidence |
 | --- | --- | --- | --- |
 | `TC-T11-FLOW-001` | Register parent, create family, create two children, and set PINs. | IDs are returned through public APIs and both children belong only to the new family. | `family-growth-demo-flow.integration.test.js` |
-| `TC-T11-FLOW-002` | Create academic, physical, artistic, labor, and social tasks. | Five dimensions persist for child A; child B and another family cannot list them. | integration test |
+| `TC-T11-FLOW-002` | Create moral, academic, physical, artistic, and labor tasks. | Five dimensions persist for child A; child B and another family cannot list them. | integration test |
 | `TC-T11-FLOW-003` | Child A logs in and completes four tasks, including physical actual amount/unit. | Approved child fields persist; parent-only fields cannot be injected. | integration test |
 | `TC-T11-FLOW-004` | Parent confirms a completed task twice. | Task remains confirmed and exactly one task-award ledger entry exists. | integration test |
 | `TC-T11-FLOW-005` | Parent creates growth logs and an academic mistake. | Entries are returned only in the correct family/child scope. | integration test |
