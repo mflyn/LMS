@@ -14,6 +14,9 @@ const createApp = ({ routes = routesModule, appLogger = logger } = {}) => {
   });
   app.locals.logger = appLogger;
   app.use('/api', routes);
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', service: 'user-service' });
+  });
   app.use(errorHandler);
   return app;
 };
