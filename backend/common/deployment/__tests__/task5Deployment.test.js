@@ -47,8 +47,85 @@ describe('Task 5 deployment contracts', () => {
 
       expect(userEnvironment.JWT_SECRET).toBe('${JWT_SECRET:?set JWT_SECRET}');
       expect(userEnvironment.JWT_SECRET).toBe(gatewayEnvironment.JWT_SECRET);
+      expect(gatewayEnvironment.DATA_SERVICE_URL).toBe('http://data-service:3008');
+      expect(compose.services.gateway.depends_on).toContain('data-service');
     }
   );
+
+  test.each(['docker-compose.yml', 'docker-compose.china.yml'])(
+    'TC-CONFIG-001 %s configures gateway with GATEWAY_PORT instead of legacy PORT',
+    (composePath) => {
+      const compose = readYaml(composePath);
+      const gatewayEnvironment = environmentMap(compose.services.gateway.environment);
+
+      expect(gatewayEnvironment.GATEWAY_PORT).toBe('3000');
+      expect(gatewayEnvironment.PORT).toBeUndefined();
+    }
+  );
+
+  test('TC-CONFIG-001 Kubernetes gateway configures GATEWAY_PORT and omits paused service URLs', () => {
+    const deployment = readDeployment('deployment/kubernetes/gateway-deployment.yaml');
+    const environment = Object.fromEntries(
+      deployment.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry])
+    );
+
+    expect(environment.GATEWAY_PORT.value).toBe('3000');
+    expect(environment.PORT).toBeUndefined();
+    expect(environment.INTERACTION_SERVICE_URL).toBeUndefined();
+  });
+
+  test('TC-CONFIG-002 keeps only the canonical backend environment template in the workspace', () => {
+    expect(fs.existsSync(path.join(repositoryRoot, 'backend/.env.example'))).toBe(true);
+    expect(fs.existsSync(path.join(repositoryRoot, 'backend/.env.backup'))).toBe(false);
+    expect(fs.existsSync(path.join(repositoryRoot, 'backend/.env.new'))).toBe(false);
+  });
+
+  test('TC-CONFIG-003 family compose contains only family MVP services and disables RabbitMQ', () => {
+    const compose = readYaml('docker-compose.family.yml');
+    const serviceNames = Object.keys(compose.services).sort();
+
+    expect(serviceNames).toEqual([
+      'analytics-service',
+      'gateway',
+      'homework-service',
+      'mongo',
+      'mongo-init',
+      'notification-service',
+      'progress-service',
+      'resource-service',
+      'user-service'
+    ]);
+    expect(compose.services['notification-service'].environment)
+      .toContain('ENABLE_RABBITMQ=false');
+    expect(compose.services.gateway.environment.some((entry) => entry.startsWith('DATA_SERVICE_URL=')))
+      .toBe(false);
+    for (const pausedService of ['data-service', 'interaction-service', 'rabbitmq', 'redis', 'minio']) {
+      expect(compose.services[pausedService]).toBeUndefined();
+    }
+  });
+
+  test('TC-CONFIG-004 family docker scripts and Makefile use docker-compose.family.yml', () => {
+    const packageJson = require('../../../../package.json');
+    const makefile = fs.readFileSync(path.join(repositoryRoot, 'backend/Makefile'), 'utf8');
+
+    expect(packageJson.scripts['docker:family']).toBe('docker compose -f docker-compose.family.yml up -d');
+    expect(packageJson.scripts['docker:family:down']).toBe('docker compose -f docker-compose.family.yml down');
+    expect(packageJson.scripts['docker:family:logs']).toBe('docker compose -f docker-compose.family.yml logs -f');
+    expect(makefile).toContain('docker compose -f ../docker-compose.family.yml up -d');
+    expect(makefile).toContain('npm run test:family-regression');
+  });
+
+  test('TC-CONFIG-005 Kubernetes family baseline excludes paused school services', () => {
+    const kustomization = readYaml('deployment/kubernetes/kustomization.yaml');
+
+    expect(kustomization.resources).not.toContain('interaction-service-deployment.yaml');
+    expect(kustomization.resources).not.toContain('data-service-deployment.yaml');
+  });
+
+  test('TC-CONFIG-006 deprecated duplicate security middleware has been removed', () => {
+    expect(fs.existsSync(path.join(repositoryRoot, 'backend/common/middleware/security.js')))
+      .toBe(false);
+  });
 
   test('TC-T5-DEPLOY-002 Secret dry-run validates without exposing credentials', () => {
     const script = path.join(repositoryRoot, 'deployment/kubernetes/create-family-growth-secrets.sh');

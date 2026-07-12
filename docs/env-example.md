@@ -19,7 +19,7 @@ USER_SERVICE_MONGO_URI=mongodb://localhost:27017/user_service
 DATA_SERVICE_MONGO_URI=mongodb://localhost:27017/data_service
 
 # 服务端口配置
-GATEWAY_PORT=5000
+GATEWAY_PORT=3000
 USER_SERVICE_PORT=3001
 DATA_SERVICE_PORT=3003
 ANALYTICS_SERVICE_PORT=3007
@@ -61,6 +61,7 @@ UPLOAD_ALLOWED_TYPES=image/jpeg,image/png,image/gif,application/pdf
 # 安全配置
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
+SENSITIVE_RATE_LIMIT_MAX_REQUESTS=20
 CORS_ORIGIN=*
 
 # 监控配置
@@ -122,4 +123,4 @@ node backend/common/config/cli.js validate --service auth
 
 # 显示当前配置
 node backend/common/config/cli.js show
-``` 
+```

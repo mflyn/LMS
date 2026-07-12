@@ -67,13 +67,20 @@ describe('gateway server lifecycle', () => {
     await request(app).get('/health').expect(429);
   });
 
-  test('throws a stable error when a required service host is missing', () => {
+  test('requires the user service but allows the legacy data service to be absent', () => {
     const { createApp } = require('../server');
+
+    expect(() => createApp({
+      serviceHosts: { ...serviceHosts, user: undefined },
+      jwtSecret: process.env.JWT_SECRET,
+      identitySecret: process.env.GATEWAY_IDENTITY_SECRET
+    })).toThrow('Missing gateway service host: user');
 
     expect(() => createApp({
       serviceHosts: { ...serviceHosts, data: undefined },
       jwtSecret: process.env.JWT_SECRET,
-      identitySecret: process.env.GATEWAY_IDENTITY_SECRET
-    })).toThrow('Missing gateway service host: data');
+      identitySecret: process.env.GATEWAY_IDENTITY_SECRET,
+      enableLegacyDataProxy: false
+    })).not.toThrow();
   });
 });

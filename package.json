@@ -23,6 +23,9 @@
     "clean:coverage": "./scripts/clean-coverage.sh",
     "remove:coverage-git": "./scripts/remove-coverage-from-git.sh",
     "find:coverage": "./scripts/find-coverage-files.sh",
+    "docker:family": "docker compose -f docker-compose.family.yml up -d",
+    "docker:family:down": "docker compose -f docker-compose.family.yml down",
+    "docker:family:logs": "docker compose -f docker-compose.family.yml logs -f",
     "precommit": "npm run clean:coverage"
   },
   "dependencies": {

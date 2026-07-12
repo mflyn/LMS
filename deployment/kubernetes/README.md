@@ -4,9 +4,9 @@ The family-growth workloads require one externally managed Secret. Do not commit
 
 ## Family MVP deployment profile
 
-The kustomization still contains `interaction-service-deployment.yaml` for legacy school-system compatibility. Task 1-7 family-growth baselines do not require meetings, announcements, group chat or complex message flows, and the family MVP gate must not treat `interaction-service` as a required dependency.
+The family MVP kustomization intentionally excludes `interaction-service-deployment.yaml` and `data-service-deployment.yaml`. Task 1-7 family-growth baselines do not require meetings, announcements, group chat, complex message flows, or the legacy school data service.
 
-For a minimal family-growth deployment, validate these workloads first: `gateway`, `user-service`, `homework-service`, `progress-service`, `analytics-service`, `notification-service`, `resource-service`, MongoDB and `frontend/web`. Keep `interaction-service` only when the old school-oriented surface is intentionally deployed.
+For a minimal family-growth deployment, validate these workloads first: `gateway`, `user-service`, `homework-service`, `progress-service`, `analytics-service`, `notification-service`, `resource-service`, MongoDB and `frontend/web`. Deploy `interaction-service` or `data-service` only when the old school-oriented surface is intentionally enabled in a separate overlay.
 
 Set three independent values of at least 32 characters, then create or rotate the Secret before applying the workloads:
 

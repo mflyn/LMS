@@ -203,7 +203,6 @@ const createFamilyRuntime = async () => {
     const gatewayApp = gatewayServer.createApp({
       serviceHosts: {
         user: serviceUrl('user-service'),
-        data: serviceUrl('user-service'),
         homework: serviceUrl('homework-service'),
         progress: serviceUrl('progress-service'),
         resource: serviceUrl('resource-service'),

@@ -5,6 +5,7 @@ const config = require('./config');
 const { createLogger } = require('../common/config/logger');
 const { errorHandler } = require('../common/middleware/errorHandler');
 const { createAuthenticateToken, stripClientIdentity } = require('./identityMiddleware');
+const { resolveGatewayPort } = require('./port');
 
 const logger = createLogger('api-gateway');
 
@@ -32,10 +33,13 @@ const createApp = ({
   jwtSecret = defaultJwtSecret,
   identitySecret = process.env.GATEWAY_IDENTITY_SECRET,
   rateLimitOptions = config.rateLimitOptions,
+  enableLegacyDataProxy = Boolean(process.env.DATA_SERVICE_URL),
   appLogger = logger
 } = {}) => {
   const userServiceUrl = requireServiceHost(serviceHosts, 'user');
-  const dataServiceUrl = requireServiceHost(serviceHosts, 'data');
+  const dataServiceUrl = enableLegacyDataProxy
+    ? requireServiceHost(serviceHosts, 'data')
+    : null;
   const app = createBaseApp({
     serviceName: 'api-gateway',
     enableSessions: false,
@@ -54,7 +58,9 @@ const createApp = ({
   ['/api/users', '/api/students', '/api/families', '/api/children'].forEach((prefix) => {
     mountProtectedProxy(app, prefix, userServiceUrl, authenticateToken);
   });
-  mountProtectedProxy(app, '/api/data', dataServiceUrl, authenticateToken);
+  if (dataServiceUrl) {
+    mountProtectedProxy(app, '/api/data', dataServiceUrl, authenticateToken);
+  }
 
   if (serviceHosts.analytics) {
     ['/api/analytics', '/api/mistakes', '/api/reports/weekly'].forEach((prefix) => {
@@ -95,11 +101,14 @@ const createApp = ({
 
 const startServer = async ({
   app = createApp(),
-  port = Number(process.env.PORT || process.env.GATEWAY_PORT || config.port || 5000),
+  port,
   appLogger = logger
 } = {}) => {
+  const listenPort = port === undefined
+    ? resolveGatewayPort({ env: process.env, configPort: config.port })
+    : resolveGatewayPort({ env: { GATEWAY_PORT: port }, configPort: config.port });
   const server = await new Promise((resolve, reject) => {
-    const listener = app.listen(port, () => resolve(listener));
+    const listener = app.listen(listenPort, () => resolve(listener));
     listener.once('error', reject);
   });
   appLogger.info('API Gateway service started', { port: server.address().port });
@@ -118,5 +127,7 @@ if (require.main === module) {
 module.exports = app;
 module.exports.authenticateToken = app.locals.authenticateToken;
 module.exports.createApp = createApp;
-module.exports.port = Number(process.env.PORT || process.env.GATEWAY_PORT || config.port || 5000);
+module.exports.port = process.env.GATEWAY_PORT || process.env.PORT || config.port
+  ? resolveGatewayPort({ env: process.env, configPort: config.port })
+  : undefined;
 module.exports.startServer = startServer;
