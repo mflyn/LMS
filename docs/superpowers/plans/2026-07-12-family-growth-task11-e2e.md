@@ -21,6 +21,10 @@
 - Create `backend/services/homework-service/__tests__/serverLifecycle.test.js`: guard homework route injection and import contract.
 - Create `backend/gateway/__tests__/serverLifecycle.test.js`: guard injected host validation and import contract.
 - Create `backend/gateway/jest.config.js`: isolate gateway lifecycle tests from legacy setup mocks.
+- Modify `backend/gateway/__tests__/familyTask5Routes.test.js`: mock the now-installed proxy module as a real dependency.
+- Modify `backend/gateway/__tests__/familyTask6Routes.test.js`: mock the now-installed proxy module as a real dependency.
+- Modify `backend/gateway/__tests__/familyTask7Routes.test.js`: mock the now-installed proxy module as a real dependency.
+- Modify root `package.json` and `package-lock.json`: declare Express 4 and the gateway proxy as direct runtime dependencies.
 
 ### Parent child management
 
@@ -64,9 +68,14 @@
 - Create: `backend/services/homework-service/__tests__/serverLifecycle.test.js`
 - Create: `backend/gateway/__tests__/serverLifecycle.test.js`
 - Create: `backend/gateway/jest.config.js`
+- Modify: `backend/gateway/__tests__/familyTask5Routes.test.js`
+- Modify: `backend/gateway/__tests__/familyTask6Routes.test.js`
+- Modify: `backend/gateway/__tests__/familyTask7Routes.test.js`
 - Modify: `backend/services/user-service/server.js`
 - Modify: `backend/services/homework-service/server.js`
 - Modify: `backend/gateway/server.js`
+- Modify: `package.json`
+- Modify: `package-lock.json`
 
 - [ ] **Step 1: Write failing import-safety tests**
 
@@ -93,6 +102,14 @@ npx jest --config=backend/gateway/jest.config.js --runInBand serverLifecycle
 ```
 
 Expected: failures show missing factories and current import-time side effects.
+
+If root module resolution cannot load the gateway, install the gateway's declared runtime dependencies at the root composition boundary:
+
+```bash
+npm install --save express@^4.21.2 express-http-proxy@^1.6.3
+```
+
+Express must remain on major version 4 because the shared `xss-clean` middleware writes `req.query`, which is read-only in Express 5.
 
 - [ ] **Step 3: Refactor user-service around explicit lifecycle functions**
 
@@ -163,7 +180,7 @@ Expected: lifecycle suites and all family regression projects pass with no open-
 - [ ] **Step 7: Commit lifecycle refactor**
 
 ```bash
-git add backend/services/user-service/server.js backend/services/user-service/__tests__/serverLifecycle.test.js backend/services/homework-service/server.js backend/services/homework-service/__tests__/serverLifecycle.test.js backend/gateway/server.js backend/gateway/jest.config.js backend/gateway/__tests__/serverLifecycle.test.js
+git add package.json package-lock.json backend/services/user-service/server.js backend/services/user-service/__tests__/serverLifecycle.test.js backend/services/homework-service/server.js backend/services/homework-service/__tests__/serverLifecycle.test.js backend/gateway/server.js backend/gateway/jest.config.js backend/gateway/__tests__/serverLifecycle.test.js backend/gateway/__tests__/familyTask5Routes.test.js backend/gateway/__tests__/familyTask6Routes.test.js backend/gateway/__tests__/familyTask7Routes.test.js docs/superpowers/plans/2026-07-12-family-growth-task11-e2e.md
 git commit -m "refactor: make family service startup testable"
 ```
 
