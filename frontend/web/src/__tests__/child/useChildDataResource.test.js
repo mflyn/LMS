@@ -108,4 +108,12 @@ describe('useChildDataResource', () => {
     expect(screen.getByTestId('state')).toHaveTextContent('empty');
     expect(load).not.toHaveBeenCalled();
   });
+
+  test('preserves an initial empty-items envelope as ready while disabled', () => {
+    const load = jest.fn();
+    render(<ResourceProbe load={load} enabled={false} initialData={{ items: [] }} />);
+
+    expect(screen.getByTestId('state')).toHaveTextContent('ready');
+    expect(load).not.toHaveBeenCalled();
+  });
 });
