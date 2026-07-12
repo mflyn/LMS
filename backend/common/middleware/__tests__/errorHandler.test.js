@@ -109,6 +109,41 @@ describe('shared error middleware', () => {
     });
   });
 
+  test.each([
+    ['MongoServerSelectionError', undefined],
+    ['MongoTimeoutError', undefined],
+    ['MongooseServerSelectionError', undefined],
+    ['Error', 'ECONNREFUSED']
+  ])('normalizes %s/%s database connection failures without leaking details', (name, code) => {
+    const error = new Error('connection string mongodb://user:password@db.internal leaked');
+    error.name = name;
+    if (code) error.code = code;
+
+    errorHandler(error, req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: { code: 'DATABASE_UNAVAILABLE', message: '数据库暂时不可用', details: [] }
+    });
+    expect(JSON.stringify(res.json.mock.calls)).not.toContain('password');
+  });
+
+  test('keeps duplicate key errors on the resource conflict branch', () => {
+    const error = new Error('duplicate key');
+    error.name = 'MongoBulkWriteError';
+    error.code = 11000;
+    error.keyValue = { email: 'child@example.com' };
+
+    errorHandler(error, req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: { code: 'RESOURCE_CONFLICT', message: 'email 已存在', details: [] }
+    });
+  });
+
   test('requestTracker adds a request id and continues', () => {
     req.requestId = undefined;
     requestTracker(req, res, next);
@@ -141,6 +176,52 @@ describe('shared error middleware', () => {
       success: false,
       error: { code: 'REQUEST_TIMEOUT', message: 'Request timed out', details: [] }
     });
+  });
+
+  test('requestTimeout does not write a timeout after the response has already been sent', () => {
+    const timeout = requestTimeout({ timeoutMs: 25 });
+    req.setTimeout = jest.fn((ms, handler) => {
+      req.timeoutHandler = handler;
+    });
+    res.setTimeout = jest.fn((ms, handler) => {
+      res.timeoutHandler = handler;
+    });
+    res.headersSent = true;
+
+    timeout(req, res, next);
+    req.timeoutHandler();
+    res.timeoutHandler();
+
+    expect(next).toHaveBeenCalledWith();
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+  });
+
+  test('requestTimeout rejects invalid configured timeouts', () => {
+    expect(() => requestTimeout({ timeoutMs: 0 })).toThrow('REQUEST_TIMEOUT_MS');
+    expect(() => requestTimeout({ timeoutMs: -1 })).toThrow('REQUEST_TIMEOUT_MS');
+    expect(() => requestTimeout({ timeoutMs: 'abc' })).toThrow('REQUEST_TIMEOUT_MS');
+  });
+
+  test('requestTimeout reads REQUEST_TIMEOUT_MS from the environment', () => {
+    const original = process.env.REQUEST_TIMEOUT_MS;
+    try {
+      process.env.REQUEST_TIMEOUT_MS = '500';
+      req.setTimeout = jest.fn();
+      res.setTimeout = jest.fn();
+
+      requestTimeout()(req, res, next);
+
+      expect(req.setTimeout).toHaveBeenCalledWith(500, expect.any(Function));
+      expect(res.setTimeout).toHaveBeenCalledWith(500, expect.any(Function));
+      expect(next).toHaveBeenCalledWith();
+    } finally {
+      if (original === undefined) {
+        delete process.env.REQUEST_TIMEOUT_MS;
+      } else {
+        process.env.REQUEST_TIMEOUT_MS = original;
+      }
+    }
   });
 
   test('TC-T6-MEDIA-015 request and error logs omit signed media query values', () => {

@@ -49,6 +49,7 @@ describe('Task 5 star award client', () => {
       payload,
       { headers: { 'x-service-token': token }, timeout: 3000 }
     );
+    expect(axiosInstance.post).toHaveBeenCalledTimes(1);
   });
 
   test('TC-T5-STAR-002 maps outbound failures to a pending award error', async () => {
@@ -112,6 +113,81 @@ describe('Task 5 star award client', () => {
       status: 503
     });
     expect(axiosInstance.post).toHaveBeenCalledTimes(1);
+  });
+
+  test('TC-T5-STAR-002 does not retry non-transient 4xx responses', async () => {
+    const { createStarAwardClient } = require('../services/starAwardClient');
+    const axiosInstance = {
+      post: jest.fn().mockRejectedValue(Object.assign(new Error('bad request'), {
+        response: { status: 400 }
+      }))
+    };
+    const sleep = jest.fn().mockResolvedValue();
+    const client = createStarAwardClient({
+      axiosInstance,
+      progressServiceUrl: 'http://progress-service:3003',
+      internalServiceToken: 'test-internal-service-token-32-bytes',
+      retryAttempts: 2,
+      sleep
+    });
+
+    await expect(client.awardTaskStar({ taskId: 'task-1' })).rejects.toMatchObject({
+      code: 'STAR_AWARD_PENDING',
+      status: 503
+    });
+    expect(axiosInstance.post).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  test('TC-T5-STAR-002 exhausts retry attempts before returning pending', async () => {
+    const { createStarAwardClient } = require('../services/starAwardClient');
+    const axiosInstance = {
+      post: jest.fn().mockRejectedValue(Object.assign(new Error('service unavailable'), {
+        response: { status: 503 }
+      }))
+    };
+    const sleep = jest.fn().mockResolvedValue();
+    const client = createStarAwardClient({
+      axiosInstance,
+      progressServiceUrl: 'http://progress-service:3003',
+      internalServiceToken: 'test-internal-service-token-32-bytes',
+      retryAttempts: 2,
+      retryBackoffMs: 100,
+      maxRetryBackoffMs: 1000,
+      sleep
+    });
+
+    await expect(client.awardTaskStar({ taskId: 'task-1' })).rejects.toMatchObject({
+      code: 'STAR_AWARD_PENDING',
+      status: 503
+    });
+    expect(axiosInstance.post).toHaveBeenCalledTimes(3);
+    expect(sleep).toHaveBeenNthCalledWith(1, 100);
+    expect(sleep).toHaveBeenNthCalledWith(2, 200);
+  });
+
+  test('TC-T5-STAR-002 caps exponential retry backoff', async () => {
+    const { createStarAwardClient } = require('../services/starAwardClient');
+    const axiosInstance = {
+      post: jest.fn().mockRejectedValue(Object.assign(new Error('timeout'), { code: 'ETIMEDOUT' }))
+    };
+    const sleep = jest.fn().mockResolvedValue();
+    const client = createStarAwardClient({
+      axiosInstance,
+      progressServiceUrl: 'http://progress-service:3003',
+      internalServiceToken: 'test-internal-service-token-32-bytes',
+      retryAttempts: 3,
+      retryBackoffMs: 300,
+      maxRetryBackoffMs: 500,
+      sleep
+    });
+
+    await expect(client.awardTaskStar({ taskId: 'task-1' })).rejects.toMatchObject({
+      code: 'STAR_AWARD_PENDING',
+      status: 503
+    });
+    expect(axiosInstance.post).toHaveBeenCalledTimes(4);
+    expect(sleep.mock.calls.map(([ms]) => ms)).toEqual([300, 500, 500]);
   });
 
   test('TC-T5-STAR-002 rejects an incomplete success response', async () => {

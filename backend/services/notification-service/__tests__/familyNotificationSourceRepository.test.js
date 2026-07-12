@@ -42,4 +42,37 @@ describe('family notification source repository', () => {
     expect(logQuery.maxTimeMS).toHaveBeenCalledWith(1234);
     expect(reportQuery.maxTimeMS).toHaveBeenCalledWith(1234);
   });
+
+  test('uses NOTIFICATION_SOURCE_MAX_TIME_MS when maxTimeMS is not injected', async () => {
+    const original = process.env.NOTIFICATION_SOURCE_MAX_TIME_MS;
+    const { createFamilyNotificationSourceRepository } = require('../services/familyNotificationSourceRepository');
+    const taskQuery = chain([]);
+    const models = {
+      GrowthTaskModel: { find: jest.fn(() => taskQuery) }
+    };
+
+    try {
+      process.env.NOTIFICATION_SOURCE_MAX_TIME_MS = '5000';
+      const repository = createFamilyNotificationSourceRepository({ models });
+      await repository.getTasks({ familyId: 'family-1', childId: 'child-1', localDate: '2026-07-07' });
+      expect(taskQuery.maxTimeMS).toHaveBeenCalledWith(5000);
+    } finally {
+      if (original === undefined) delete process.env.NOTIFICATION_SOURCE_MAX_TIME_MS;
+      else process.env.NOTIFICATION_SOURCE_MAX_TIME_MS = original;
+    }
+  });
+
+  test('rejects invalid NOTIFICATION_SOURCE_MAX_TIME_MS values', () => {
+    const original = process.env.NOTIFICATION_SOURCE_MAX_TIME_MS;
+    const { createFamilyNotificationSourceRepository } = require('../services/familyNotificationSourceRepository');
+
+    try {
+      process.env.NOTIFICATION_SOURCE_MAX_TIME_MS = '0';
+      expect(() => createFamilyNotificationSourceRepository({ models: {} }))
+        .toThrow('NOTIFICATION_SOURCE_MAX_TIME_MS');
+    } finally {
+      if (original === undefined) delete process.env.NOTIFICATION_SOURCE_MAX_TIME_MS;
+      else process.env.NOTIFICATION_SOURCE_MAX_TIME_MS = original;
+    }
+  });
 });
