@@ -4,7 +4,7 @@
 **status:** READY_FOR_REVIEW
 **supersedesOnApproval:** FGT-MVP-1.5
 **scope:** Task 1~11 家庭成长跟踪 MVP
-**evidenceBaseCommit:** `d0238b8df1f76b69d3e0157b75ccdf8489eb9be7`
+**evidenceBaseCommit:** `0e9c2800c77ef9ef9a1442b6ae162b21ef0a4976`
 **latestFeatureMergeCommit:** `29991555b305ed4931d36f5b7a210e6bc32a2459`
 **postGateRemediationMergeCommit:** `2463f3f0daacc0907707a348b7d3bcaeb0bd07a9`
 **statusUpdatedAt:** 2026-07-13
@@ -61,7 +61,8 @@ PR 状态、CI 结论和 merge commit 已于 2026-07-13 从 GitHub 与本地
 | 资产 | 路径 | 当前用途 |
 | --- | --- | --- |
 | 产品需求 | [family-learning-tracker.md](../product/family-learning-tracker.md) | 家庭成长 MVP 范围、角色、德智体美劳闭环和非目标 |
-| 总体架构 | [family-learning-tracker-architecture.md](../architecture/family-learning-tracker-architecture.md) | 服务边界、数据归属、权限和部署边界 |
+| 总体架构 | [family-learning-tracker-architecture.md](../architecture/family-learning-tracker-architecture.md) | 服务边界、数据归属、组件图、ER、状态机、权限和部署边界 |
+| 跨服务时序 | [sequence-diagrams.md](../architecture/sequence-diagrams.md) | Task 1~11 核心流程、失败/降级点和一致性保证 |
 | API 契约 | [family-learning-tracker-api.md](../api/family-learning-tracker-api.md) | 家长、孩子、任务、记录、错题、周报、媒体、提醒和奖励接口 |
 | 架构决策 | [decisions/](../architecture/decisions/) | ADR-0001~0007：服务复用、家庭隔离、LocalDate、任务语义、星星幂等、身份信封和周报历史 |
 | 需求追踪 | [family-growth-requirement-traceability.md](./family-growth-requirement-traceability.md) | 需求到设计、API、代码、测试和 gate 的主追踪矩阵 |
@@ -73,8 +74,9 @@ PR 状态、CI 结论和 merge commit 已于 2026-07-13 从 GitHub 与本地
 
 本清单的功能、测试和合并证据以 `evidenceBaseCommit` 为基准。补充计划 Task B
 已增加 Task 1~4 归档导航，Task C+D 已收敛 Task 8~11 设计状态并统一 Task 7
-提醒设置契约；后续 Task E~J 将继续改进图、时序、索引和用户指南。这些文档治理
-变更不得改变已关闭的 MVP 行为或绕过变更评审。
+提醒设置契约，Task E+F 已补齐业务/服务/前端组件图、ER、状态机和 8 条跨服务
+时序；后续 Task G~J 将继续完善设计资产索引、API 索引、用户指南和旧文档治理。
+这些文档治理变更不得改变已关闭的 MVP 行为或绕过变更评审。
 
 ## 4. 最终质量证据
 
@@ -103,7 +105,9 @@ PR 状态、CI 结论和 merge commit 已于 2026-07-13 从 GitHub 与本地
 | 性能与安全扫描 | k6、ZAP 等不是当前 PR 必需 MVP gate；CI 中为显式控制的发布工作流，启用后其失败必须阻断相应发布。 |
 | 构建与生产部署 | Docker 镜像构建、Kubernetes 生产部署和生产拓扑不由 Task 11 E2E 证明；发布前必须单独启用并通过受控 build/deploy gate。 |
 | 基础设施拓扑 | 仓库内 MongoDB 副本集与本地 Compose 适用于开发/验收；生产需要托管或多成员拓扑、外部 Secret 和独立运维验收。 |
-| 文档补齐 | Task B、C、D 已纳入当前候选；Task E~J 尚待实施。它们是文档治理工作，不阻断已关闭功能，但 v1.6 正式签署前应评审其对权威文档引用的影响。 |
+| 家庭成员关系原子性 | 当前创建家庭和孩子会顺序写多个文档，不在一个事务内；中途 5xx 不能解释为完整回滚。正式发布前应增加事务或可审计的关系修复流程。 |
+| 待发放星星任务归档 | 当前删除路由允许把 `confirmed + starAwardState=pending` 的任务归档，归档后公开 confirm 不再恢复发放。v1.6 正式批准前应决定禁止该归档或增加补偿流程；在此之前不得把该分支描述为已收敛到 `awarded`。 |
+| 文档补齐 | Task B~F 已纳入当前候选；Task G~J 尚待实施。它们是文档治理工作，不阻断已关闭功能，但 v1.6 正式签署前应评审其对权威文档引用的影响。 |
 
 ## 6. 审批与变更控制
 
