@@ -44,11 +44,25 @@ Gateway exposes `/api/notifications/family` and `/api/notifications/settings` to
 | `mistakeReviewReminderEnabled` | Boolean | `true` | parent mutable |
 | `dimensionReminderEnabled` | Boolean | `true` | parent mutable |
 | `weeklyReportReminderEnabled` | Boolean | `true` | parent mutable |
-| `quietHoursStart` | String | `21:00` | `HH:mm` |
-| `quietHoursEnd` | String | `07:00` | `HH:mm` |
+| `quietHours` | Object | `{ start: "21:00", end: "07:00" }` | parent mutable as one object |
+| `quietHours.start` | String | `21:00` | required with `quietHours.end`; `HH:mm` |
+| `quietHours.end` | String | `07:00` | required with `quietHours.start`; `HH:mm` |
 | `updatedByParentId` | ObjectId | optional | set on parent patch |
 
-The service creates a default row on first read if none exists. Patches reject unknown fields and invalid weekday/time values.
+The service creates a default row on first read if none exists. `PATCH` accepts
+`quietHours` only as the complete nested object; `start` and `end` must be submitted
+together and each must be a valid 24-hour `HH:mm` value. A partial object or invalid
+weekday/time value returns `400 VALIDATION_ERROR`. Flat quiet-hours names are not part
+of the approved contract; clients must send the nested object shown below.
+
+```json
+{
+  "quietHours": {
+    "start": "21:00",
+    "end": "07:00"
+  }
+}
+```
 
 ## 4. Reminder Derivation
 

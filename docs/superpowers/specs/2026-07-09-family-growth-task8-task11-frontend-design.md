@@ -1,14 +1,27 @@
 # Family Growth Task 8-11 Frontend and E2E Design Baseline
 
-**Document status:** APPROVED FOR TASK 8 IMPLEMENTATION
+**Document status:** IMPLEMENTED / TASK 8-11 FINAL BASELINE INPUT
 **Date:** 2026-07-09
+**Status updated:** 2026-07-13
 **Scope:** Task 8 parent web shell, Task 9 parent MVP pages, Task 10 child web entry, Task 11 end-to-end MVP flow
 **Requirements:** `FR-UI-001`, `FR-UI-002`, `FR-FLOW-001`
 
-Task 8 implementation and test cases are defined in
-`docs/superpowers/plans/2026-07-10-family-growth-task8-parent-shell.md` and
-`docs/development/family-growth-task8-test-cases.md`. The Task 9-11 sections
-remain design input only and are not part of the Task 8 delivery gate.
+This document was the approved Task 8 implementation baseline and the shared design
+input for Task 9-11. All four stages are now implemented and closed by their own
+detailed design, test, and gate evidence. The future-tense sections below are retained
+as the approved design intent; current delivery status is determined by this closure
+table and the linked gates.
+
+| Stage | Detailed design / plan | Test and gate evidence | Final status |
+| --- | --- | --- | --- |
+| Task 8 parent shell | [Task 8 implementation plan](../plans/2026-07-10-family-growth-task8-parent-shell.md) | [test cases](../../development/family-growth-task8-test-cases.md), [gate](../../development/family-growth-task8-gate.md) | `PASSED`, merged by PR #6 |
+| Task 9 parent pages | [Task 9 detailed design](./2026-07-10-family-growth-task9-parent-pages-design.md) | [test cases](../../development/family-growth-task9-test-cases.md), [gate](../../development/family-growth-task9-gate.md) | `PASSED`, merged by PR #8 |
+| Task 10 child web | [Task 10 detailed design](./2026-07-11-family-growth-task10-child-web-design.md) | [test cases](../../development/family-growth-task10-test-cases.md), [gate](../../development/family-growth-task10-gate.md) | `PASSED`, merged by PR #11 |
+| Task 11 family E2E | [Task 11 detailed design](./2026-07-12-family-growth-task11-e2e-design.md) | [test cases](../../development/family-growth-task11-test-cases.md), [gate](../../development/family-growth-task11-gate.md) | `PASSED`, merged by PR #14 |
+
+The complete MVP merge and CI evidence is recorded in the
+[FGT-MVP-1.6 final baseline candidate](../../development/family-growth-baseline-v1.6-manifest.md).
+This status convergence does not retroactively expand any stage's accepted scope.
 
 ## 1. Current-State Assessment
 
