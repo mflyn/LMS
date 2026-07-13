@@ -66,12 +66,14 @@ PR 状态、CI 结论和 merge commit 已于 2026-07-13 从 GitHub 与本地
 | 架构决策 | [decisions/](../architecture/decisions/) | ADR-0001~0007：服务复用、家庭隔离、LocalDate、任务语义、星星幂等、身份信封和周报历史 |
 | 需求追踪 | [family-growth-requirement-traceability.md](./family-growth-requirement-traceability.md) | 需求到设计、API、代码、测试和 gate 的主追踪矩阵 |
 | 测试策略 | [family-growth-test-strategy.md](./family-growth-test-strategy.md) | 家庭隔离、状态机、网关、服务集成和 E2E 的质量策略 |
+| Task 1~4 设计归档 | [family-growth-task1-4-design-archive.md](./family-growth-task1-4-design-archive.md) | 解释早期任务的权威设计来源、Task 4.5 追溯评审和 Task 5 以后的详细设计分界 |
 | Task 4.5 评审 | [family-growth-design-review.md](./family-growth-design-review.md) | Task 1~4 总基线及追溯评审结论 |
 | Task 5~11 详细设计 | [specs/](../superpowers/specs/) | 各阶段已批准设计与实施边界 |
 | Task 5~11 测试/gate | [development/](./) | 编号测试用例、评审记录和关闭证据 |
 
-本清单引用的是 `evidenceBaseCommit` 上存在的资产。补充计划后续 Task B~J
-会改进归档说明、图、时序、索引和用户指南；这些文档治理变更不得改变已关闭的
+本清单的功能、测试和合并证据以 `evidenceBaseCommit` 为基准。补充计划 Task B
+已在本清单之后增加 Task 1~4 归档导航，不改变实现证据；后续 Task C~J 将继续
+改进状态一致性、图、时序、索引和用户指南。这些文档治理变更不得改变已关闭的
 MVP 行为或绕过变更评审。
 
 ## 4. 最终质量证据
@@ -101,7 +103,7 @@ MVP 行为或绕过变更评审。
 | 性能与安全扫描 | k6、ZAP 等不是当前 PR 必需 MVP gate；CI 中为显式控制的发布工作流，启用后其失败必须阻断相应发布。 |
 | 构建与生产部署 | Docker 镜像构建、Kubernetes 生产部署和生产拓扑不由 Task 11 E2E 证明；发布前必须单独启用并通过受控 build/deploy gate。 |
 | 基础设施拓扑 | 仓库内 MongoDB 副本集与本地 Compose 适用于开发/验收；生产需要托管或多成员拓扑、外部 Secret 和独立运维验收。 |
-| 文档补齐 | Task B~J 尚未纳入本提交；它们是文档治理工作，不阻断已关闭功能，但 v1.6 正式签署前应评审其对权威文档引用的影响。 |
+| 文档补齐 | Task B 已纳入当前候选；Task C~J 尚待实施。它们是文档治理工作，不阻断已关闭功能，但 v1.6 正式签署前应评审其对权威文档引用的影响。 |
 
 ## 6. 审批与变更控制
 
