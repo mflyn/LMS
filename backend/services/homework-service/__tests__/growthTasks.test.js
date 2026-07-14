@@ -9,7 +9,6 @@ jest.mock('../services/starAwardClient', () => ({
 
 const request = require('supertest');
 const express = require('express');
-const mongoose = require('mongoose');
 const app = require('../server');
 const GrowthTask = require('../models/GrowthTask');
 const { createGrowthTaskRouter } = require('../routes/growthTasks');

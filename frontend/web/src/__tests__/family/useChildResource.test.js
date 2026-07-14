@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { useFamily } from '../../contexts/FamilyContext';
 import { registerChildScopeReset } from '../../services/childScope';
@@ -64,8 +64,10 @@ describe('useChildResource', () => {
     expect(abortSpy).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('data')).toHaveTextContent('none');
     expect(screen.getByTestId('state')).toHaveTextContent('loading');
-    pending.resolve({ data: [{ id: 'old-child-record' }] });
-    await act(async () => {});
+    await act(async () => {
+      pending.resolve({ data: [{ id: 'old-child-record' }] });
+      await pending.promise;
+    });
     expect(screen.getByTestId('data')).toHaveTextContent('none');
     abortSpy.mockRestore();
   });
@@ -113,10 +115,10 @@ describe('useChildResource', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    act(() => screen.getByRole('button', { name: 'reload' }).click());
+    fireEvent.click(screen.getByRole('button', { name: 'reload' }));
     await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('retryable_error'));
 
-    act(() => screen.getByRole('button', { name: 'reload' }).click());
+    fireEvent.click(screen.getByRole('button', { name: 'reload' }));
     await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('empty'));
     expect(load).toHaveBeenCalledTimes(3);
   });

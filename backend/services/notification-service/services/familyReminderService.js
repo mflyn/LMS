@@ -17,7 +17,6 @@ const toId = (value) => {
 
 const taskId = (task) => toId(task.taskId || task._id || task.id);
 const mistakeId = (mistake) => toId(mistake.mistakeId || mistake._id || mistake.id);
-const logId = (log) => toId(log.logId || log._id || log.id);
 const mistakeTitle = (mistake) => (
   mistake.knowledgePointName || mistake.knowledgePoint || mistake.subject || '错题复习'
 );

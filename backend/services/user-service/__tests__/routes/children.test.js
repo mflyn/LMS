@@ -13,7 +13,7 @@ const createApp = () => {
   const app = express();
   app.use(express.json());
   app.use('/api', routes);
-  app.use((error, req, res, next) => res.status(error.statusCode || 500).json({
+  app.use((error, req, res, _next) => res.status(error.statusCode || 500).json({
     success: false,
     error: {
       code: error.code || 'INTERNAL_ERROR',
@@ -44,12 +44,6 @@ const signedHeaders = (user, method, originalUrl) => createIdentityHeaders({
 const parentHeaders = (parent, method, originalUrl) => signedHeaders({
   id: parent._id.toString(),
   role: 'parent'
-}, method, originalUrl);
-
-const childHeaders = (child, method, originalUrl) => signedHeaders({
-  id: child._id.toString(),
-  childId: child._id.toString(),
-  role: 'student'
 }, method, originalUrl);
 
 const createFamily = async (app, parent, familyName = '测试家庭') => {

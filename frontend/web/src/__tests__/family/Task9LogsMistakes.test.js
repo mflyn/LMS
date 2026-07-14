@@ -68,7 +68,8 @@ const mistake = (overrides = {}) => ({
   ...overrides
 });
 
-const renderPage = (page) => render(<MemoryRouter>{page}</MemoryRouter>);
+const routerFuture = { v7_startTransition: true, v7_relativeSplatPath: true };
+const renderPage = (page) => render(<MemoryRouter future={routerFuture}>{page}</MemoryRouter>);
 
 describe('Task 9 growth logs', () => {
   beforeEach(() => {
@@ -155,7 +156,11 @@ describe('Task 9 growth logs', () => {
       selectedChild: { childId: 'child-a2', name: '小红' },
       childScopeVersion: 2
     });
-    view.rerender(<MemoryRouter><GrowthLogsPage /></MemoryRouter>);
+    view.rerender(
+      <MemoryRouter future={routerFuture}>
+        <GrowthLogsPage />
+      </MemoryRouter>
+    );
     await act(async () => pending.resolve({ log: growthLog({ content: '旧孩子记录' }) }));
 
     expect(screen.queryByText('旧孩子记录')).not.toBeInTheDocument();
