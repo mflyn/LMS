@@ -442,6 +442,28 @@ describe('growth task routes', () => {
     expect(archived.body.data.task.status).toBe('archived');
   });
 
+  test('rejects archiving a confirmed task while its star award is pending', async () => {
+    const { parent, child } = await createFamilyFixture('待发星归档');
+    const created = await createTask(parent, child, { title: '待发星任务' });
+    await GrowthTask.findByIdAndUpdate(created.taskId, {
+      status: 'confirmed',
+      starAwardState: 'pending',
+      confirmedAt: new Date()
+    });
+
+    const endpoint = `/api/growth-tasks/${created.taskId}`;
+    const response = await request(app)
+      .delete(endpoint)
+      .set(userHeaders(parent, 'DELETE', endpoint));
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe('STAR_AWARD_PENDING');
+    expect(await GrowthTask.findById(created.taskId)).toMatchObject({
+      status: 'confirmed',
+      starAwardState: 'pending'
+    });
+  });
+
   test('TC-T5-SAGA-001 confirms a completed task and awards its star', async () => {
     const { parent, family, child } = await createFamilyFixture('发星成功');
     const created = await createTask(parent, child);
@@ -527,5 +549,51 @@ describe('growth task routes', () => {
     expect(invalidState.body.error.code).toBe('TASK_STATE_CONFLICT');
     expect(forbidden.status).toBe(403);
     expect(awardTaskStar).not.toHaveBeenCalled();
+  });
+
+  test('TC-T5-SAGA-007 keeps the task pending when the final award-state CAS fails', async () => {
+    const { parent, child } = await createFamilyFixture('状态写入失败');
+    const created = await createTask(parent, child);
+    await GrowthTask.findByIdAndUpdate(created.taskId, {
+      status: 'confirmed', starAwardState: 'pending', confirmedAt: new Date()
+    });
+    const cas = jest.spyOn(GrowthTask, 'findOneAndUpdate')
+      .mockRejectedValueOnce(new Error('write conflict'));
+    const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
+
+    const response = await request(sagaApp(jest.fn().mockResolvedValue({
+      awarded: true, ledgerEntryId: 'ledger-1', starBalance: 1
+    }))).patch(endpoint).set(userHeaders(parent, 'PATCH', endpoint)).send({});
+
+    expect(response.status).toBe(503);
+    expect(response.body.error.code).toBe('STAR_AWARD_PENDING');
+    expect(await GrowthTask.findById(created.taskId)).toMatchObject({
+      status: 'confirmed', starAwardState: 'pending'
+    });
+    cas.mockRestore();
+  });
+
+  test('TC-T5-SAGA-008 accepts a concurrent winner after the final CAS misses', async () => {
+    const { parent, child } = await createFamilyFixture('并发状态写入');
+    const created = await createTask(parent, child);
+    await GrowthTask.findByIdAndUpdate(created.taskId, {
+      status: 'confirmed', starAwardState: 'pending', confirmedAt: new Date()
+    });
+    const cas = jest.spyOn(GrowthTask, 'findOneAndUpdate').mockImplementationOnce(async () => {
+      await GrowthTask.updateOne(
+        { _id: created.taskId, starAwardState: 'pending' },
+        { $set: { starAwardState: 'awarded' } }
+      );
+      return null;
+    });
+    const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
+
+    const response = await request(sagaApp(jest.fn().mockResolvedValue({
+      awarded: false, ledgerEntryId: 'ledger-1', starBalance: 1
+    }))).patch(endpoint).set(userHeaders(parent, 'PATCH', endpoint)).send({});
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.task.starAwardState).toBe('awarded');
+    cas.mockRestore();
   });
 });

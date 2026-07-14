@@ -8,6 +8,7 @@ const routesModule = require('./routes');
 const { createChildAvatarMediaService } = require('./services/childAvatarMediaService');
 const { createLogger } = require('../../common/config/logger');
 const { errorHandler, setupUncaughtExceptionHandler } = require('../../common/middleware/errorHandler');
+const { assertTransactionCapability } = require('../../common/services/mongoTransaction');
 
 const logger = createLogger('user-service');
 
@@ -66,6 +67,7 @@ const connectDatabase = async ({
   if (mongooseInstance.connection.readyState === 0) {
     await mongooseInstance.connect(mongoURI);
   }
+  await assertTransactionCapability(mongooseInstance.connection, 'user-service');
   return mongooseInstance.connection;
 };
 

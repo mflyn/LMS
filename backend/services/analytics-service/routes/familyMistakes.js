@@ -1,9 +1,11 @@
 const crypto = require('crypto');
 const express = require('express');
+const mongoose = require('mongoose');
 
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { isObjectId, resolveChildAccess } = require('../../../common/utils/familyAccess');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
+const { runMongoTransaction } = require('../../../common/services/mongoTransaction');
 const FamilyMistake = require('../models/FamilyMistake');
 const FamilyMistakeStateEvent = require('../models/FamilyMistakeStateEvent');
 const {
@@ -23,6 +25,11 @@ const sendServiceError = (res, error) => {
   sendFamilyError(res, error.status, error.code, error.message, error.details || []);
   return true;
 };
+
+const stateEventUnavailable = () => Object.assign(
+  new Error('Mistake state event store is unavailable'),
+  { status: 503, code: 'STATE_EVENT_UNAVAILABLE' }
+);
 
 const booleanFromQuery = (value) => {
   if (value === undefined) return undefined;
@@ -119,7 +126,8 @@ const createFamilyMistakesRouter = ({
   MistakeModel = FamilyMistake,
   StateEventModel = FamilyMistakeStateEvent,
   familyMistakeMediaService = null,
-  now = () => new Date()
+  now = () => new Date(),
+  runTransaction = (work) => runMongoTransaction({ mongooseInstance: mongoose, work })
 } = {}) => {
   const router = express.Router();
 
@@ -167,23 +175,24 @@ const createFamilyMistakesRouter = ({
         return res.status(201).json({ success: true, data: { mistake: mistakeView(mistake) } });
       }
 
-      const mistake = await MistakeModel.create(sourceInput);
-
-      try {
-        await StateEventModel.create({
-          familyId: mistake.familyId,
-          childId: mistake.childId,
-          mistakeId: mistake._id,
-          reviewed: mistake.reviewed,
-          mastered: mistake.mastered,
-          reviewReminderDate: mistake.reviewReminderDate,
-          effectiveAt: now(),
-          operationId: crypto.randomUUID()
-        });
-      } catch (error) {
-        await MistakeModel.deleteOne({ _id: mistake._id });
-        return sendError(res, 503, 'STATE_EVENT_UNAVAILABLE', 'Mistake state event store is unavailable');
-      }
+      const mistake = await runTransaction(async (session) => {
+        const [createdMistake] = await MistakeModel.create([sourceInput], { session });
+        try {
+          await StateEventModel.create([{
+            familyId: createdMistake.familyId,
+            childId: createdMistake.childId,
+            mistakeId: createdMistake._id,
+            reviewed: createdMistake.reviewed,
+            mastered: createdMistake.mastered,
+            reviewReminderDate: createdMistake.reviewReminderDate,
+            effectiveAt: now(),
+            operationId: crypto.randomUUID()
+          }], { session });
+        } catch (error) {
+          throw stateEventUnavailable();
+        }
+        return createdMistake;
+      });
 
       return res.status(201).json({ success: true, data: { mistake: mistakeView(mistake) } });
     } catch (error) {
@@ -314,41 +323,48 @@ const createFamilyMistakesRouter = ({
       }
 
       const changedState = stateChangedBy(mistakePatch);
-      const previousValues = Object.keys(mistakePatch).reduce((snapshot, field) => ({
-        ...snapshot,
-        [field]: mistake[field]
-      }), {});
-      const previousUpdatedBy = mistake.updatedBy;
-      Object.keys(mistakePatch).forEach((field) => {
-        mistake[field] = mistakePatch[field];
-      });
-      mistake.updatedBy = req.user.id;
-      await mistake.validate({ validateModifiedOnly: true });
-      await mistake.save({ validateModifiedOnly: true });
-
+      let updatedMistake = mistake;
       if (changedState) {
-        try {
-          await StateEventModel.create({
-            familyId: mistake.familyId,
-            childId: mistake.childId,
-            mistakeId: mistake._id,
-            reviewed: mistake.reviewed,
-            mastered: mistake.mastered,
-            reviewReminderDate: mistake.reviewReminderDate,
-            effectiveAt: now(),
-            operationId: crypto.randomUUID()
+        updatedMistake = await runTransaction(async (session) => {
+          const transactionalMistake = await MistakeModel.findById(mistake._id).session(session);
+          if (!transactionalMistake) {
+            const error = new Error('Mistake not found');
+            error.status = 404;
+            error.code = 'RESOURCE_NOT_FOUND';
+            throw error;
+          }
+          Object.keys(mistakePatch).forEach((field) => {
+            transactionalMistake[field] = mistakePatch[field];
           });
-        } catch (error) {
-          Object.keys(previousValues).forEach((field) => {
-            mistake[field] = previousValues[field];
-          });
-          mistake.updatedBy = previousUpdatedBy;
-          await mistake.save({ validateModifiedOnly: true }).catch(() => undefined);
-          return sendError(res, 503, 'STATE_EVENT_UNAVAILABLE', 'Mistake state event store is unavailable');
-        }
+          transactionalMistake.updatedBy = req.user.id;
+          await transactionalMistake.validate({ validateModifiedOnly: true });
+          await transactionalMistake.save({ validateModifiedOnly: true, session });
+          try {
+            await StateEventModel.create([{
+              familyId: transactionalMistake.familyId,
+              childId: transactionalMistake.childId,
+              mistakeId: transactionalMistake._id,
+              reviewed: transactionalMistake.reviewed,
+              mastered: transactionalMistake.mastered,
+              reviewReminderDate: transactionalMistake.reviewReminderDate,
+              effectiveAt: now(),
+              operationId: crypto.randomUUID()
+            }], { session });
+          } catch (error) {
+            throw stateEventUnavailable();
+          }
+          return transactionalMistake;
+        });
+      } else {
+        Object.keys(mistakePatch).forEach((field) => {
+          mistake[field] = mistakePatch[field];
+        });
+        mistake.updatedBy = req.user.id;
+        await mistake.validate({ validateModifiedOnly: true });
+        await mistake.save({ validateModifiedOnly: true });
       }
 
-      return res.json({ success: true, data: { mistake: mistakeView(mistake) } });
+      return res.json({ success: true, data: { mistake: mistakeView(updatedMistake) } });
     } catch (error) {
       if (sendServiceError(res, error)) return undefined;
       const handled = withValidationErrors(res, error);

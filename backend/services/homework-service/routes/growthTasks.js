@@ -606,6 +606,9 @@ router.delete('/:taskId', authenticateGateway, async (req, res) => {
     }
 
     const activeTask = await resumePendingAttachmentMedia(task);
+    if (activeTask.status === 'confirmed' && activeTask.starAwardState === 'pending') {
+      return sendError(res, 409, 'Star award must complete before the task can be archived', 'STAR_AWARD_PENDING');
+    }
     if (activeTask.status === 'pending') {
       activeTask.status = 'cancelled';
       activeTask.cancelledAt = new Date();

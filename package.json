@@ -15,6 +15,7 @@
     "test:family-flow:integration": "jest --config=backend/tests/task11/jest.config.js --runInBand",
     "test:family-flow:e2e": "playwright test --project=chromium",
     "test:task11": "npm run test:family-flow:integration && npm run test:family-flow:e2e",
+    "repair:family-relationships": "node backend/services/user-service/scripts/repairFamilyRelationships.js",
     "test:legacy-regression": "jest --config=backend/jest.config.js --coverage=false --selectProjects progress-legacy legacy",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

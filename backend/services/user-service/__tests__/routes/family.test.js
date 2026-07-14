@@ -111,4 +111,20 @@ describe('family routes', () => {
     await expect(Family.create({ familyName: '第二个家', ownerParentId: parent._id }))
       .rejects.toMatchObject({ code: 11000 });
   });
+
+  test('family creation rolls back when linking the parent fails', async () => {
+    const parent = await createParent();
+    const update = jest.spyOn(User, 'findByIdAndUpdate')
+      .mockRejectedValueOnce(new Error('parent link failed'));
+
+    const response = await request(app)
+      .post('/api/families')
+      .set(parentHeaders(parent, 'POST', '/api/families'))
+      .send({ familyName: '不应残留的家庭' });
+
+    update.mockRestore();
+    expect(response.status).toBe(500);
+    expect(await Family.findOne({ ownerParentId: parent._id })).toBeNull();
+    expect((await User.findById(parent._id)).familyId).toBeUndefined();
+  });
 });
