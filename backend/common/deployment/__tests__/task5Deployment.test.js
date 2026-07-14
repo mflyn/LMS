@@ -1,9 +1,18 @@
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, execSync } = require('child_process');
 const yaml = require('js-yaml');
 
 const repositoryRoot = path.resolve(__dirname, '../../../..');
+
+const kubectlAvailable = (() => {
+  try {
+    execSync('kubectl version --client', { encoding: 'utf8', stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+})();
 
 const readYaml = (relativePath) => yaml.load(
   fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8')
@@ -127,7 +136,9 @@ describe('Task 5 deployment contracts', () => {
       .toBe(false);
   });
 
-  test('TC-T5-DEPLOY-002 Secret dry-run validates without exposing credentials', () => {
+  const testDeploySecret = kubectlAvailable ? test : test.skip;
+
+  testDeploySecret('TC-T5-DEPLOY-002 Secret dry-run validates without exposing credentials', () => {
     const script = path.join(repositoryRoot, 'deployment/kubernetes/create-family-growth-secrets.sh');
     const credentials = {
       JWT_SECRET: 'dry-run-jwt-secret-value-123456789',
