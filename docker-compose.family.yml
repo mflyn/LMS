@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: backend/gateway/Dockerfile
     ports:
-      - "3000:3000"
+      - "${FAMILY_GATEWAY_HOST_PORT:-3000}:3000"
     environment:
       - NODE_ENV=development
       - GATEWAY_PORT=3000
@@ -24,17 +24,22 @@ services:
       mongo-init:
         condition: service_completed_successfully
       user-service:
-        condition: service_started
+        condition: service_healthy
       progress-service:
-        condition: service_started
+        condition: service_healthy
       homework-service:
-        condition: service_started
+        condition: service_healthy
       resource-service:
-        condition: service_started
+        condition: service_healthy
       analytics-service:
-        condition: service_started
+        condition: service_healthy
       notification-service:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     networks:
       - app-network
 
@@ -54,6 +59,11 @@ services:
     depends_on:
       mongo-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     networks:
       - app-network
 
@@ -71,6 +81,11 @@ services:
     depends_on:
       mongo-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     networks:
       - app-network
 
@@ -94,7 +109,12 @@ services:
       mongo-init:
         condition: service_completed_successfully
       progress-service:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3003/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     networks:
       - app-network
 
@@ -105,6 +125,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3005
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
       - PRIVATE_MEDIA_ROOT=/var/lib/family-growth/private-media
@@ -115,6 +136,11 @@ services:
     depends_on:
       mongo-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3005/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     networks:
       - app-network
 
@@ -135,7 +161,12 @@ services:
       mongo-init:
         condition: service_completed_successfully
       resource-service:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3006/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     networks:
       - app-network
 
@@ -146,12 +177,18 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3007
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
       - ENABLE_RABBITMQ=false
     depends_on:
       mongo-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3007/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     networks:
       - app-network
 
@@ -159,11 +196,11 @@ services:
     image: mongo:4.4
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
-      - "27017:27017"
+      - "${FAMILY_MONGO_HOST_PORT:-27017}:27017"
     volumes:
       - mongo-data:/data/db
     healthcheck:
-      test: ["CMD", "mongo", "--quiet", "--eval", "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"]
+      test: ["CMD", "mongo", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 2)"]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -179,8 +216,9 @@ services:
     command:
       - >-
         until mongo --host mongo:27017 --quiet --eval "db.adminCommand('ping').ok"; do sleep 2; done;
-        mongo --host mongo:27017 --quiet --eval "try { rs.status() } catch (error) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }";
-        until mongo --host mongo:27017 --quiet --eval "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"; do sleep 2; done
+        mongo --host mongo:27017 --quiet --eval "try { if (!rs.status().ok) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) } } catch (error) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }";
+        until mongo --host mongo:27017 --quiet --eval "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"; do sleep 2; done;
+        mongo --host mongo:27017 learning-tracker --quiet --eval 'db.roles.updateOne({name:"parent"},{$$setOnInsert:{description:"Family parent",permissions:[]}},{upsert:true});db.roles.updateOne({name:"student"},{$$setOnInsert:{description:"Family child",permissions:[]}},{upsert:true})'
     networks:
       - app-network
     restart: "no"

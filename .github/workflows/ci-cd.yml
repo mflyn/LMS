@@ -68,23 +68,13 @@ on:
         default: family-growth
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '22'
   EFFECTIVE_IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
 
 jobs:
   test:
     name: Family Regression
     runs-on: ubuntu-latest
-
-    services:
-      mongodb:
-        image: mongo:6.0
-        ports:
-          - 27017:27017
-      redis:
-        image: redis:7.0
-        ports:
-          - 6379:6379
 
     steps:
       - uses: actions/checkout@v4
@@ -94,34 +84,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Run Reproducible Family Release Gate
+        env:
+          RELEASE_GATE_INSTALL_BROWSER_DEPS: '1'
+        run: npm run release:family
 
-      - name: Run Family Regression
-        run: npm run test:family-regression
-
-      - name: Frontend Smoke
-        run: |
-          cd frontend/web
-          npm ci
-          npm run test:ci
-
-      - name: Install Task 11 Browser
-        run: npx playwright install --with-deps chromium
-
-      - name: Run Task 11 Acceptance
-        run: npm run test:task11
-
-      - name: Check Git Clean
-        run: bash scripts/check-git-clean.sh
-
-      - name: Upload Task 11 Failure Evidence
-        if: failure()
+      - name: Upload Release Gate Evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: task11-failure-evidence
+          name: release-gate-artifacts
           if-no-files-found: ignore
           path: |
+            release-gate-artifacts
             playwright-report
             test-results
 
@@ -250,7 +225,8 @@ jobs:
       - name: Build and Push Gateway Image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/gateway
+          context: .
+          file: backend/gateway/Dockerfile
           push: true
           tags: ${{ inputs.image_registry }}/${{ inputs.image_namespace }}/gateway:${{ env.EFFECTIVE_IMAGE_TAG }}
 
