@@ -19,7 +19,15 @@ The family routes use signed gateway identity. Parents can read and patch settin
 - `services/familyReminderService.js`
 - `services/familyNotificationSourceRepository.js`
 
-Reminders are derived on read from bounded source repositories. If one source fails, available reminders still return with `meta.partial=true` and approved source names only.
+Reminders are derived on read from bounded source repositories. `familyNotificationSourceRepository.js`
+is only an adapter around `backend/common/repositories/familyReadRepository.js`: it supplies
+`familyId`, `childId`, LocalDate, cutoff and timeout parameters, and must not import private
+homework, progress or analytics models. If one source fails, available reminders still return
+with `meta.partial=true` and approved source names only.
+
+The adapter requests an inclusive request-time cutoff so a write committed at the same clock
+instant is immediately visible. Weekly-report snapshot aggregation keeps the shared repository's
+default exclusive cutoff, preserving its historical boundary semantics.
 
 Source MongoDB reads apply `maxTimeMS`; configure it with `NOTIFICATION_SOURCE_MAX_TIME_MS`, default `3000`.
 

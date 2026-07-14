@@ -74,15 +74,9 @@ class AuthController {
     });
   });
 
-  // Placeholder for other auth-related methods like logout, refreshToken, verifyEmail, etc.
-  /*
-  logout = catchAsync(async (req, res, next) => {
-    const logger = req.app.locals.logger;
-    logger.info('[AuthController] Logout attempt received');
-    // Logic for logout (e.g., token blocklisting if using a more complex setup)
-    res.status(200).json({ status: 'success', message: 'Logged out successfully' });
-  });
-  */
+  logout = (req, res) => {
+    res.status(204).send();
+  };
 }
 
-module.exports = new AuthController(); 
+module.exports = new AuthController();

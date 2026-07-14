@@ -28,4 +28,40 @@ describe('family learning API examples', () => {
     expect(response.data.knowledgePoint.masteryLevel).toBe(request.masteryLevel);
     expect(response.data.knowledgePoint.masteryLevel).toBe('skilled');
   });
+
+  test('canonical family and child mutation names do not expose obsolete aliases', () => {
+    const contract = section(
+      '### 2.8 退出、家庭更新和孩子档案契约',
+      '## 3. Growth Tasks'
+    );
+
+    const allowedChildFields = contract.match(
+      /`PATCH \/api\/children\/:childId` 只允许家长修改[^。]+。/
+    )[0];
+    expect(contract).toContain('`familyName`');
+    expect(allowedChildFields).toContain('`textbookVersion`');
+    expect(allowedChildFields).toContain('`sportsPreferences`');
+    expect(allowedChildFields).not.toContain('`curriculumVersion`');
+    expect(allowedChildFields).not.toContain('`sportPreferences`');
+  });
+
+  test('notification example uses the stable reminder contract and canonical order', () => {
+    const [response] = jsonBlocks(section(
+      '### 10.1 查询家庭提醒',
+      '### 10.2 查询和更新提醒设置'
+    ));
+    const [first] = response.data.items;
+
+    expect(first).toEqual(expect.objectContaining({
+      reminderId: expect.any(String),
+      type: 'task_overdue',
+      childId: expect.any(String),
+      localDate: expect.any(String),
+      sourceId: expect.any(String),
+      severity: 'warning',
+      title: expect.any(String),
+      message: expect.any(String),
+      dimension: 'academic'
+    }));
+  });
 });

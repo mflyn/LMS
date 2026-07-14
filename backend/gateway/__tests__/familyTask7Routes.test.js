@@ -16,7 +16,8 @@ jest.mock(
 );
 
 describe('Task 7 gateway notification routes', () => {
-  beforeAll(() => {
+  beforeEach(() => {
+    jest.resetModules();
     require('../server');
   });
 

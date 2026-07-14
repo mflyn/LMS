@@ -128,6 +128,24 @@ const seedProjectionSources = async () => {
     effectiveAt: new Date('2026-06-27T00:00:00.000Z'),
     operationId: 'mistake-reviewed'
   });
+  await connection.collection('weeklyreports').insertMany([
+    {
+      _id: new mongoose.Types.ObjectId('666000000000000000000061'),
+      familyId: FAMILY_A_ID,
+      childId: CHILD_A1_ID,
+      weekStart: '2026-06-22',
+      weekEnd: '2026-06-28',
+      createdAt: new Date('2026-06-28T00:00:00.000Z')
+    },
+    {
+      _id: new mongoose.Types.ObjectId('666000000000000000000062'),
+      familyId: FAMILY_B_ID,
+      childId: CHILD_B1_ID,
+      weekStart: '2026-06-22',
+      weekEnd: '2026-06-28',
+      createdAt: new Date('2026-06-28T00:00:00.000Z')
+    }
+  ]);
 };
 
 const scoped = () => ({
@@ -181,6 +199,7 @@ describe('family read repository', () => {
     await expect(repository.listMistakeStateEventProjection(scoped())).resolves.toEqual([
       expect.objectContaining({ operationId: 'mistake-reviewed', reviewed: true })
     ]);
+    await expect(repository.hasWeeklyReportProjection(scoped())).resolves.toBe(true);
   });
 
   test('TC-T6-REPO-006 normalizes source timeout and generic source errors', async () => {
@@ -213,6 +232,35 @@ describe('family read repository', () => {
       .rejects.toMatchObject({ code: 'FAMILY_READ_TIMEOUT', source: 'growthtasks' });
     await expect(createFamilyReadRepository({ connection: sourceConnection }).listTaskProjection(scoped()))
       .rejects.toMatchObject({ code: 'FAMILY_READ_SOURCE_UNAVAILABLE', source: 'growthtasks' });
+  });
+
+  test('inclusive request-time cutoff exposes rows committed at the same clock instant', async () => {
+    await connection.collection('growthtasks').insertOne({
+      _id: new mongoose.Types.ObjectId('666000000000000000000071'),
+      familyId: FAMILY_A_ID,
+      childId: CHILD_A1_ID,
+      title: '截止时刻任务',
+      status: 'pending',
+      dueDate: '2026-06-28',
+      createdAt: CUTOFF
+    });
+    await connection.collection('weeklyreports').insertOne({
+      _id: new mongoose.Types.ObjectId('666000000000000000000072'),
+      familyId: FAMILY_A_ID,
+      childId: CHILD_A1_ID,
+      weekStart: '2026-06-22',
+      weekEnd: '2026-06-28',
+      createdAt: CUTOFF
+    });
+    const repository = createFamilyReadRepository({ connection, timeoutMs: 20 });
+
+    await expect(repository.listTaskProjection(scoped())).resolves.toEqual([]);
+    await expect(repository.hasWeeklyReportProjection(scoped())).resolves.toBe(false);
+    await expect(repository.listTaskProjection({ ...scoped(), inclusiveCutoff: true })).resolves.toEqual([
+      expect.objectContaining({ taskId: '666000000000000000000071' })
+    ]);
+    await expect(repository.hasWeeklyReportProjection({ ...scoped(), inclusiveCutoff: true }))
+      .resolves.toBe(true);
   });
 
   test('TC-T6-REPO-006 does not import service-private models', () => {

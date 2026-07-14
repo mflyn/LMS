@@ -17,7 +17,8 @@ jest.mock(
 );
 
 describe('Task 6 gateway routes', () => {
-  beforeAll(() => {
+  beforeEach(() => {
+    jest.resetModules();
     require('../server');
   });
 
