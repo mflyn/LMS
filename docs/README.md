@@ -50,6 +50,7 @@ docs/
 - [家庭版成长跟踪产品需求与功能边界](./product/family-learning-tracker.md)：说明从学校级学习管理系统收敛到家庭成长跟踪软件后的产品定位、德智体美劳核心闭环、MVP 功能、暂缓功能和后续扩展路线。
 - [家庭成长跟踪架构设计](./architecture/family-learning-tracker-architecture.md)：说明第一阶段服务映射、核心模型、数据归属、权限规则、前端信息架构和本地演示部署边界。
 - [家庭成长跟踪 API 契约](./api/family-learning-tracker-api.md)：定义家长、孩子、成长任务、成长记录、错题、周报、奖励和提醒的首轮 API 契约。
+- [家庭成长跟踪设计资产索引](./development/family-growth-design-asset-index.md)：按 35 项 Requirement 和 Task 1~11 导航 PRD、架构图、详细设计、API、测试用例与 Gate。
 
 ## 文档类型
 
