@@ -393,14 +393,13 @@ describe('Task 6 family mistakes', () => {
     expect(unchanged.reviewed).toBe(false);
   });
 
-  test('TC-T6-MISTAKE-014 writes state events only after the patched source state is persisted', async () => {
+  test('TC-T6-MISTAKE-014 writes source state and event in the same transaction session', async () => {
     const app = createApp();
     const mistake = await seedMistake();
     const originalCreate = FamilyMistakeStateEvent.create;
-    const createSpy = jest.fn(async (event) => {
-      const persisted = await FamilyMistake.findById(mistake._id).lean();
-      expect(persisted.reviewed).toBe(true);
-      return originalCreate.call(FamilyMistakeStateEvent, event);
+    const createSpy = jest.fn(async (event, options) => {
+      expect(options.session).toEqual(expect.any(Object));
+      return originalCreate.call(FamilyMistakeStateEvent, event, options);
     });
     FamilyMistakeStateEvent.create = createSpy;
 
@@ -415,5 +414,29 @@ describe('Task 6 family mistakes', () => {
     expect(createSpy).toHaveBeenCalledTimes(1);
     const events = await FamilyMistakeStateEvent.find({ mistakeId: mistake._id });
     expect(events).toHaveLength(1);
+  });
+
+  test('TC-T6-MISTAKE-015 transaction rollback survives a failed compensating source write', async () => {
+    const app = createApp();
+    const mistake = await seedMistake();
+    jest.spyOn(FamilyMistakeStateEvent, 'create')
+      .mockRejectedValueOnce(new Error('event store down'));
+    const originalSave = FamilyMistake.prototype.save;
+    let saveCount = 0;
+    jest.spyOn(FamilyMistake.prototype, 'save').mockImplementation(function save(...args) {
+      saveCount += 1;
+      if (saveCount === 2) return Promise.reject(new Error('compensating write also failed'));
+      return originalSave.apply(this, args);
+    });
+
+    const patchPath = mistakePath(`/${mistake._id}`);
+    const response = await request(app)
+      .patch(patchPath)
+      .set(signedHeaders(parentA(), 'PATCH', patchPath))
+      .send({ reviewed: true });
+
+    expect(response.status).toBe(503);
+    expect(response.body.error.code).toBe('STATE_EVENT_UNAVAILABLE');
+    expect((await FamilyMistake.findById(mistake._id)).reviewed).toBe(false);
   });
 });

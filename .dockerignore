@@ -1,0 +1,15 @@
+.git
+.github
+.worktrees
+node_modules
+frontend
+docs
+coverage
+test-results
+playwright-report
+**/node_modules
+**/coverage
+**/__tests__
+**/test
+**/tests
+*.log

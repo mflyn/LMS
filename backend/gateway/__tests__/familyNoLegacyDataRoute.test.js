@@ -11,12 +11,12 @@ const mockApp = { use: mockUse, get: jest.fn(), listen: jest.fn() };
 jest.mock('../../common/createBaseApp', () => jest.fn(() => mockApp));
 jest.mock(
   'express-http-proxy',
-  () => jest.fn((target, options) => ({ target, options, proxy: true })),
-  { virtual: true }
+  () => jest.fn((target, options) => ({ target, options, proxy: true }))
 );
 
 describe('family gateway legacy data route isolation', () => {
-  beforeAll(() => {
+  beforeEach(() => {
+    jest.resetModules();
     require('../server');
   });
 

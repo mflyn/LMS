@@ -1,9 +1,11 @@
 const amqp = require('amqplib');
 const cors = require('cors');
+const crypto = require('crypto');
 const express = require('express');
 const mongoose = require('mongoose');
 
 const { createLogger } = require('../../common/config/logger');
+const { createMediaReferenceClient } = require('../../common/services/mediaReferenceClient');
 const {
   errorHandler,
   requestTracker,
@@ -12,9 +14,33 @@ const {
 } = require('../../common/middleware/errorHandler');
 const homeworkRoutes = require('./routes/homework');
 const growthTaskRoutes = require('./routes/growthTasks');
+const { createGrowthTaskRouter } = growthTaskRoutes;
+const GrowthTask = require('./models/GrowthTask');
+const { createGrowthTaskAttachmentMediaService } = require('./services/growthTaskAttachmentMediaService');
 const { validateClientConfig } = require('./services/starAwardClient');
 
 const logger = createLogger('homework-service');
+
+const createTask6MediaDependencies = ({
+  env = process.env,
+  mediaReferenceClientFactory = createMediaReferenceClient,
+  randomUUID = crypto.randomUUID,
+  appLogger = logger
+} = {}) => {
+  const mediaReferenceClient = mediaReferenceClientFactory({
+    resourceServiceUrl: env.RESOURCE_SERVICE_URL,
+    serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN,
+    timeout: Number(env.MEDIA_REFERENCE_TIMEOUT_MS || 3000)
+  });
+  return {
+    attachmentMediaService: createGrowthTaskAttachmentMediaService({
+      GrowthTaskModel: GrowthTask,
+      mediaReferenceClient,
+      randomUUID,
+      logger: appLogger
+    })
+  };
+};
 
 const createApp = ({
   growthTaskRouter = growthTaskRoutes,
@@ -37,6 +63,19 @@ const createApp = ({
   });
   app.use(errorHandler);
   return app;
+};
+
+const createProductionApp = ({
+  env = process.env,
+  createMediaDependencies = createTask6MediaDependencies,
+  growthTaskRouterFactory = createGrowthTaskRouter,
+  appLogger = logger
+} = {}) => {
+  const { attachmentMediaService } = createMediaDependencies({ env, appLogger });
+  return createApp({
+    growthTaskRouter: growthTaskRouterFactory({ attachmentMediaService }),
+    appLogger
+  });
 };
 
 const connectDatabase = async ({
@@ -65,7 +104,7 @@ const connectRabbitMQ = async ({
 
 const initializeMessageQueue = async ({
   app,
-  enableRabbitMQ = process.env.NODE_ENV !== 'test',
+  enableRabbitMQ = process.env.ENABLE_RABBITMQ !== 'false' && process.env.NODE_ENV !== 'test',
   connect = connectRabbitMQ
 } = {}) => {
   if (!enableRabbitMQ) {
@@ -89,21 +128,24 @@ const validateStarAwardEnvironment = (env = process.env) => validateClientConfig
 });
 
 const startServer = async ({
-  app = createApp(),
-  port = Number(process.env.PORT || 3002),
+  app = null,
+  port = Number(process.env.PORT || 3003),
   connect = connectDatabase,
+  createRuntimeApp = createProductionApp,
   initializeQueue = initializeMessageQueue,
   validateEnvironment = validateStarAwardEnvironment,
   appLogger = logger
 } = {}) => {
   validateEnvironment();
   await connect();
-  const server = await new Promise((resolve, reject) => {
-    const listener = app.listen(port, () => resolve(listener));
-    listener.once('error', reject);
+  const runtimeApp = app || createRuntimeApp({ appLogger });
+  let server;
+  await new Promise((resolve, reject) => {
+    server = runtimeApp.listen(port, resolve);
+    server.once('error', reject);
   });
   try {
-    await initializeQueue({ app });
+    await initializeQueue({ app: runtimeApp });
   } catch (error) {
     await new Promise((resolve) => server.close(resolve));
     throw error;
@@ -116,7 +158,7 @@ const app = createApp();
 
 if (require.main === module) {
   setupUncaughtExceptionHandler(logger);
-  startServer({ app }).then((server) => {
+  startServer().then((server) => {
     process.on('SIGTERM', () => {
       server.close(() => {
         mongoose.connection.close(false).finally(() => {
@@ -134,6 +176,8 @@ module.exports = app;
 module.exports.connectDatabase = connectDatabase;
 module.exports.connectRabbitMQ = connectRabbitMQ;
 module.exports.createApp = createApp;
+module.exports.createProductionApp = createProductionApp;
+module.exports.createTask6MediaDependencies = createTask6MediaDependencies;
 module.exports.initializeMessageQueue = initializeMessageQueue;
 module.exports.startServer = startServer;
 module.exports.validateStarAwardEnvironment = validateStarAwardEnvironment;

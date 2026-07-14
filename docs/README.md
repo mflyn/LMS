@@ -21,6 +21,8 @@ docs/
 │   ├── README.md                            # 开发与测试入口
 │   ├── family-growth-baseline-v1.6-manifest.md
 │   ├── family-growth-design-asset-index.md
+│   ├── family-growth-requirement-traceability.md
+│   ├── family-growth-v1.6-release-gate.md
 │   └── archive/                             # 已废弃历史文档
 ├── deployment/
 │   └── README.md                            # 当前部署入口
@@ -37,6 +39,10 @@ docs/
 - [家庭成长跟踪架构设计](./architecture/family-learning-tracker-architecture.md)：说明第一阶段服务映射、核心模型、数据归属、权限规则、前端信息架构和本地演示部署边界。
 - [家庭成长跟踪 API 契约](./api/family-learning-tracker-api.md)：定义家长、孩子、成长任务、成长记录、错题、周报、奖励和提醒的首轮 API 契约。
 - [家庭成长跟踪设计资产索引](./development/family-growth-design-asset-index.md)：按 35 项 Requirement 和 Task 1~11 导航 PRD、架构图、详细设计、API、测试用例与 Gate。
+- [FGT-MVP-1.6 基线候选](./development/family-growth-baseline-v1.6-manifest.md)：记录当前实现证据、签署状态、七阶段关闭结论和生产运维边界。
+- [FGT-MVP-1.6 统一发布 Gate](./development/family-growth-v1.6-release-gate.md)：定义 `npm run release:family` 的完整步骤、通过标准和诊断/清理规则。
+- [家庭成长需求追踪矩阵](./development/family-growth-requirement-traceability.md)：逐项连接 35 项需求与设计、API、代码、聚焦测试及当前统一 Gate。
+- [家庭成长部署入口](./deployment/README.md)：说明本地验收、发布前检查、Secret、数据和回滚边界。
 - [家庭成长跟踪用户指南](./user-guide/README.md)：提供快速上手、家长操作和孩子操作指南。
 
 ## 文档类型

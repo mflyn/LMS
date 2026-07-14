@@ -44,7 +44,43 @@ const deploymentEnvironment = (file) => (
 
 const secretKey = (entry) => entry.valueFrom && entry.valueFrom.secretKeyRef;
 
+const serviceDockerfiles = {
+  gateway: 'backend/gateway/Dockerfile',
+  'user-service': 'backend/services/user-service/Dockerfile',
+  'progress-service': 'backend/services/progress-service/Dockerfile',
+  'homework-service': 'backend/services/homework-service/Dockerfile',
+  'resource-service': 'backend/services/resource-service/Dockerfile',
+  'analytics-service': 'backend/services/analytics-service/Dockerfile',
+  'notification-service': 'backend/services/notification-service/Dockerfile'
+};
+
 describe('Task 6 deployment contracts', () => {
+  test.each(['docker-compose.yml', 'docker-compose.family.yml', 'docker-compose.ubuntu.yml'])(
+    'production-capable service images use the repository build context in %s',
+    (composeFile) => {
+      const compose = readYaml(composeFile);
+
+      Object.entries(serviceDockerfiles).forEach(([serviceName, dockerfile]) => {
+        expect(compose.services[serviceName].build).toEqual({
+          context: '.',
+          dockerfile
+        });
+      });
+    }
+  );
+
+  test('backend service Dockerfiles use Node 22 and retain the shared backend directory layout', () => {
+    Object.values(serviceDockerfiles).forEach((dockerfile) => {
+      const source = fs.readFileSync(path.join(repositoryRoot, dockerfile), 'utf8');
+      expect(source).toMatch(/^FROM node:22-alpine/m);
+      expect(source).toContain('COPY backend ./backend');
+      expect(source).toContain('COPY package*.json ./');
+      expect(source).toContain('RUN npm ci --omit=dev');
+    });
+
+    expect(require('../../../../package.json').dependencies['socket.io']).toBeDefined();
+  });
+
   test('TC-T6-REG-004 legacy regression excludes Task 6 family suites', () => {
     const legacyJestConfig = require('../../../jest.legacy.config');
     const ignoredPaths = legacyJestConfig.testPathIgnorePatterns.join('\n');
@@ -77,6 +113,8 @@ describe('Task 6 deployment contracts', () => {
 
     expect(resourceEnvironment.PRIVATE_MEDIA_ROOT).toBe('/var/lib/family-growth/private-media');
     expect(resourceEnvironment.PRIVATE_MEDIA_ROOT).not.toMatch(/\/app\/(public|uploads)\b/);
+    expect(resourceEnvironment.MEDIA_SIGNING_SECRET)
+      .toBe('${MEDIA_SIGNING_SECRET:?set MEDIA_SIGNING_SECRET}');
     expect(analyticsEnvironment.REPORT_HISTORY_AVAILABLE_FROM).toBe('2026-06-01');
 
     for (const environment of [resourceEnvironment, userEnvironment, homeworkEnvironment, analyticsEnvironment]) {
@@ -106,6 +144,10 @@ describe('Task 6 deployment contracts', () => {
 
     expect(resourceEnvironment.PRIVATE_MEDIA_ROOT.value).toBe('/var/lib/family-growth/private-media');
     expect(resourceEnvironment.PRIVATE_MEDIA_ROOT.value).not.toMatch(/\/app\/(public|uploads)\b/);
+    expect(secretKey(resourceEnvironment.MEDIA_SIGNING_SECRET)).toEqual({
+      name: 'family-growth-secrets',
+      key: 'media-signing-secret'
+    });
     expect(readDeployment('deployment/kubernetes/resource-service-deployment.yaml')
       .spec.template.spec.volumes).toContainEqual({
       name: 'private-media',

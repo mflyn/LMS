@@ -9,7 +9,6 @@ describe('通知服务测试', () => {
   let parentToken;
   let teacherUser;
   let studentUser;
-  let parentUser;
   let notificationId;
 
   beforeEach(async () => {
@@ -30,7 +29,7 @@ describe('通知服务测试', () => {
       name: '测试学生'
     });
 
-    parentUser = await User.create({
+    await User.create({
       username: 'testparent',
       password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', // Test123!@#
       email: 'parent@example.com',

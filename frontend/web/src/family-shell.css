@@ -108,7 +108,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-list { margin: 0; padding-left: 20px; }
 .family-filter-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
 .family-filter-bar label, .family-form-grid label, .family-field-wide { display: grid; gap: 6px; color: var(--family-muted); font-size: 14px; }
-.family-filter-bar input, .family-filter-bar select, .family-form-grid input, .family-form-grid select, .family-field-wide textarea, .family-dialog textarea, .family-feedback-form textarea {
+.family-filter-bar input, .family-filter-bar select, .family-form-grid input, .family-form-grid select, .family-form-grid textarea, .family-field-wide textarea, .family-dialog textarea, .family-feedback-form textarea {
   min-height: 40px;
   border: 1px solid var(--family-border);
   border-radius: 6px;
@@ -165,6 +165,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-children-create > h2, .family-children-list > h2 { margin: 0 0 16px; font-size: 18px; }
 .family-child-record { align-items: flex-start; }
 .family-child-record h2 { margin: 0 0 6px; font-size: 18px; }
+.family-child-actions { display: grid; width: min(100%, 330px); justify-items: start; gap: 12px; }
 .family-id-line { display: flex; flex-wrap: wrap; gap: 4px 8px; color: var(--family-muted); font-size: 13px; }
 .family-id-line code { max-width: 100%; overflow-wrap: anywhere; color: var(--family-ink); }
 .family-pin-form { display: grid; width: min(100%, 330px); gap: 6px; }

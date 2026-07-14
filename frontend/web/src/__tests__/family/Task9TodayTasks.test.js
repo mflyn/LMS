@@ -245,7 +245,8 @@ const task = (overrides = {}) => ({
   ...overrides
 });
 
-const renderPage = (page) => render(<MemoryRouter>{page}</MemoryRouter>);
+const routerFuture = { v7_startTransition: true, v7_relativeSplatPath: true };
+const renderPage = (page) => render(<MemoryRouter future={routerFuture}>{page}</MemoryRouter>);
 
 describe('Task 9 today and task workflows', () => {
   beforeEach(() => {

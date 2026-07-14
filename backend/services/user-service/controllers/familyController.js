@@ -6,6 +6,11 @@ const { generateToken } = require('../../../common/middleware/auth');
 const { isValidTimeZone } = require('../../../common/utils/familyDate');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
 const { logFamilyOperation } = require('../../../common/utils/familyAudit');
+const { runMongoTransaction } = require('../../../common/services/mongoTransaction');
+const {
+  FAMILY_CREATE_FIELDS,
+  FAMILY_UPDATE_FIELDS
+} = require('../../../common/contracts/familyGrowthApi');
 const { applyEntries, buildChildProfilePatch } = require('../services/childProfilePatch');
 
 const PIN_WINDOW_MS = 15 * 60 * 1000;
@@ -72,6 +77,38 @@ const sendError = (res, status, message, code = statusCodes[status] || 'INTERNAL
   sendFamilyError(res, status, code, message)
 );
 
+const familyValidationError = (message) => Object.assign(new Error(message), {
+  status: 400,
+  code: 'VALIDATION_ERROR'
+});
+
+const assertAllowedFields = (body, allowedFields) => {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw familyValidationError('Request body must be an object');
+  }
+  const unknown = Object.keys(body).filter((field) => !allowedFields.includes(field));
+  if (unknown.length > 0) {
+    throw familyValidationError(`Unknown family fields: ${unknown.join(', ')}`);
+  }
+};
+
+const parseFamilyName = (value, { required = false } = {}) => {
+  if (value === undefined && !required) return undefined;
+  if (typeof value !== 'string') throw familyValidationError('familyName must be a string');
+  const familyName = value.trim();
+  if (!familyName) throw familyValidationError('familyName is required');
+  if (familyName.length > 50) throw familyValidationError('familyName must not exceed 50 characters');
+  return familyName;
+};
+
+const parseTimezone = (value) => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || !isValidTimeZone(value)) {
+    throw familyValidationError('timezone must be a valid IANA timezone');
+  }
+  return value;
+};
+
 const requireParent = (req, res) => {
   if (!req.user || req.user.role !== 'parent') {
     sendError(res, 403, 'Only parents can access this resource');
@@ -80,12 +117,15 @@ const requireParent = (req, res) => {
   return true;
 };
 
-const findParentFamily = (parentId) => Family.findOne({
-  $or: [
-    { ownerParentId: parentId },
-    { memberParentIds: parentId }
-  ]
-});
+const findParentFamily = (parentId, session = null) => {
+  const query = Family.findOne({
+    $or: [
+      { ownerParentId: parentId },
+      { memberParentIds: parentId }
+    ]
+  });
+  return session ? query.session(session) : query;
+};
 
 const assertFamilyChild = async (family, childId) => {
   if (!family || !isObjectId(childId)) {
@@ -135,31 +175,41 @@ const createFamily = async (req, res) => {
   try {
     if (!requireParent(req, res)) return;
 
-    const familyName = (req.body.familyName || '').trim();
-    if (!familyName) {
-      return sendError(res, 400, 'familyName is required');
-    }
-    const timezone = req.body.timezone || 'Asia/Shanghai';
-    if (!isValidTimeZone(timezone)) {
-      return sendError(res, 400, 'timezone must be a valid IANA timezone', 'VALIDATION_ERROR');
-    }
-
-    const existingFamily = await findParentFamily(req.user.id);
-    if (existingFamily) {
-      return sendError(res, 409, 'Parent already belongs to a family');
+    assertAllowedFields(req.body, FAMILY_CREATE_FIELDS);
+    const familyName = parseFamilyName(req.body.familyName, { required: true });
+    const timezone = parseTimezone(req.body.timezone) || 'Asia/Shanghai';
+    const familyRole = req.body.familyRole || 'guardian';
+    if (!['father', 'mother', 'guardian', 'other'].includes(familyRole)) {
+      throw familyValidationError('familyRole is invalid');
     }
 
-    const family = await Family.create({
-      familyName,
-      timezone,
-      ownerParentId: req.user.id,
-      memberParentIds: [req.user.id],
-      childIds: []
-    });
+    let family;
+    await runMongoTransaction({
+      mongooseInstance: mongoose,
+      work: async (session) => {
+        const existingFamily = await findParentFamily(req.user.id, session);
+        if (existingFamily) {
+          const error = new Error('Parent already belongs to a family');
+          error.status = 409;
+          throw error;
+        }
 
-    await User.findByIdAndUpdate(req.user.id, {
-      familyId: family._id,
-      'parentProfile.familyRole': req.body.familyRole || 'guardian'
+        [family] = await Family.create([{
+          familyName,
+          timezone,
+          ownerParentId: req.user.id,
+          memberParentIds: [req.user.id],
+          childIds: []
+        }], { session });
+
+        const parent = await User.findByIdAndUpdate(req.user.id, {
+          familyId: family._id,
+          'parentProfile.familyRole': familyRole
+        }, { new: true, session });
+        if (!parent || parent.role !== 'parent') {
+          throw new Error('Parent not found');
+        }
+      }
     });
 
     return res.status(201).json({
@@ -169,6 +219,12 @@ const createFamily = async (req, res) => {
       }
     });
   } catch (error) {
+    if (error.code === 'VALIDATION_ERROR') {
+      return sendError(res, 400, error.message, error.code);
+    }
+    if (error.status === 409) {
+      return sendError(res, 409, error.message);
+    }
     if (error.code === 11000) {
       return sendError(res, 409, 'Parent already belongs to a family');
     }
@@ -180,14 +236,29 @@ const updateFamily = async (req, res) => {
   try {
     if (!requireParent(req, res)) return;
 
-    const family = await findParentFamily(req.user.id);
-    if (!family || family._id.toString() !== req.params.familyId) {
+    if (!isObjectId(req.params.familyId)) {
+      return sendError(res, 400, 'Invalid familyId', 'VALIDATION_ERROR');
+    }
+    assertAllowedFields(req.body, FAMILY_UPDATE_FIELDS);
+    if (Object.keys(req.body).length === 0) {
+      throw familyValidationError('At least one family field is required');
+    }
+    const familyName = parseFamilyName(req.body.familyName);
+    const timezone = parseTimezone(req.body.timezone);
+
+    const family = await Family.findById(req.params.familyId);
+    if (!family) {
+      return sendError(res, 404, 'Family not found', 'RESOURCE_NOT_FOUND');
+    }
+    const parentId = req.user.id.toString();
+    const ownsFamily = family.ownerParentId.toString() === parentId
+      || family.memberParentIds.some((id) => id.toString() === parentId);
+    if (!ownsFamily) {
       return sendError(res, 403, 'Cannot update another family');
     }
 
-    if (req.body.familyName) {
-      family.familyName = req.body.familyName.trim();
-    }
+    if (familyName !== undefined) family.familyName = familyName;
+    if (timezone !== undefined) family.timezone = timezone;
     await family.save();
 
     return res.json({
@@ -195,6 +266,9 @@ const updateFamily = async (req, res) => {
       data: { family: familyView(family) }
     });
   } catch (error) {
+    if (error.code === 'VALIDATION_ERROR' || error.name === 'ValidationError') {
+      return sendError(res, 400, error.message, 'VALIDATION_ERROR');
+    }
     return sendError(res, 500, error.message);
   }
 };
@@ -214,42 +288,54 @@ const createChild = async (req, res) => {
     }
 
     const childSeed = new mongoose.Types.ObjectId().toString().slice(-8);
-    const child = await User.create({
-      username: `c${childSeed}`,
-      password: `child${childSeed}`,
-      email: `c${childSeed}@child.local`,
-      name,
-      role: 'student',
-      familyId: family._id,
-      grade: req.body.grade,
-      childProfile: {
-        nickname: req.body.nickname || name,
-        school: req.body.school,
-        grade: req.body.grade,
-        textbookVersion: req.body.textbookVersion,
-        interests: req.body.interests || [],
-        weakSubjects: req.body.weakSubjects || [],
-        sportsPreferences: req.body.sportsPreferences || [],
-        artInterests: req.body.artInterests || [],
-        laborHabits: req.body.laborHabits || [],
-        moralGoals: req.body.moralGoals || []
+    let child;
+    await runMongoTransaction({
+      mongooseInstance: mongoose,
+      work: async (session) => {
+        const transactionalFamily = await findParentFamily(req.user.id, session);
+        if (!transactionalFamily || transactionalFamily._id.toString() !== family._id.toString()) {
+          throw new Error('Family relationship changed');
+        }
+
+        [child] = await User.create([{
+          username: `c${childSeed}`,
+          password: `child${childSeed}`,
+          email: `c${childSeed}@child.local`,
+          name,
+          role: 'student',
+          familyId: transactionalFamily._id,
+          grade: req.body.grade,
+          childProfile: {
+            nickname: req.body.nickname || name,
+            school: req.body.school,
+            grade: req.body.grade,
+            textbookVersion: req.body.textbookVersion,
+            interests: req.body.interests || [],
+            weakSubjects: req.body.weakSubjects || [],
+            sportsPreferences: req.body.sportsPreferences || [],
+            artInterests: req.body.artInterests || [],
+            laborHabits: req.body.laborHabits || [],
+            moralGoals: req.body.moralGoals || []
+          }
+        }], { session });
+
+        transactionalFamily.childIds.addToSet(child._id);
+        await transactionalFamily.save({ session });
+
+        const parentUpdate = {
+          $addToSet: { children: child._id },
+          $set: {}
+        };
+        if (transactionalFamily.childIds.length === 1) {
+          parentUpdate.$set['parentProfile.defaultChildId'] = child._id;
+        }
+        if (Object.keys(parentUpdate.$set).length === 0) {
+          delete parentUpdate.$set;
+        }
+        const parent = await User.findByIdAndUpdate(req.user.id, parentUpdate, { new: true, session });
+        if (!parent) throw new Error('Parent not found');
       }
     });
-
-    family.childIds.push(child._id);
-    await family.save();
-
-    const parentUpdate = {
-      $addToSet: { children: child._id },
-      $set: {}
-    };
-    if (family.childIds.length === 1) {
-      parentUpdate.$set['parentProfile.defaultChildId'] = child._id;
-    }
-    if (Object.keys(parentUpdate.$set).length === 0) {
-      delete parentUpdate.$set;
-    }
-    await User.findByIdAndUpdate(req.user.id, parentUpdate);
 
     return res.status(201).json({
       success: true,

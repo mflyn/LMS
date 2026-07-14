@@ -1,4 +1,4 @@
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const path = require('path');
 const mongoose = require('mongoose');
 const commonMongoose = require(require.resolve('mongoose', {
@@ -13,7 +13,9 @@ jest.setTimeout(30000);
 
 // 在所有测试开始前启动内存数据库
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: { count: 1, storageEngine: 'wiredTiger' }
+  });
   const mongoUri = mongoServer.getUri();
   await Promise.all(mongooseInstances.map((mongooseInstance) => mongooseInstance.connect(mongoUri, {
     useNewUrlParser: true,

@@ -1,7 +1,7 @@
 const express = require('express');
 const authController = require('../controllers/authController');
 const familyController = require('../controllers/familyController');
-const { authenticateJWT } = require('../../../common/middleware/auth'); // Import JWT authentication middleware
+const { authenticateJWT, checkRole } = require('../../../common/middleware/auth'); // Import JWT authentication middleware
 const { applySensitiveRateLimit } = require('../../../common/middleware/sensitiveRateLimit');
 // Removed local validator import: const { validate, registrationValidationRules, ... } = require('../middleware/validators/authValidators');
 const {
@@ -37,7 +37,12 @@ router.post('/change-password',
   authController.changePassword
 );
 
-// router.post('/logout', authController.logout); // Example for future logout route
+router.post('/logout',
+  authenticateJWT,
+  checkRole(['parent', 'student']),
+  authController.logout
+);
+
 // router.post('/refresh-token', authController.refreshToken); // Example for future refresh token route
 
 module.exports = router;

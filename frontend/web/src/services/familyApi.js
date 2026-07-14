@@ -72,7 +72,7 @@ const parentGet = async (path, params, signal) => {
 
 const mutationPayload = (body) => {
   if (!body || typeof body !== 'object' || body instanceof FormData) return body;
-  const { familyId, ...payload } = body;
+  const { familyId: _familyId, ...payload } = body;
   return payload;
 };
 
@@ -100,6 +100,10 @@ const parentDelete = async (path, options) => {
 };
 
 export const createChild = (payload) => parentPost('/api/children', payload);
+export const updateChild = (childId, payload) => parentPatch(
+  `/api/children/${encodeURIComponent(childId)}`,
+  payload
+);
 export const setChildPin = (childId, pin) => parentPost(
   `/api/children/${encodeURIComponent(childId)}/pin`,
   { pin }
@@ -116,6 +120,13 @@ export const cancelOrArchiveGrowthTask = (taskId) => parentDelete(`/api/growth-t
 export const listGrowthLogs = (params, signal) => parentGet('/api/growth-logs', params, signal);
 export const createGrowthLog = (payload) => parentPost('/api/growth-logs', payload);
 export const updateGrowthLog = (logId, payload) => parentPatch(`/api/growth-logs/${logId}`, payload);
+
+export const listKnowledgePoints = (params, signal) => parentGet('/api/knowledge-points', params, signal);
+export const createKnowledgePoint = (payload) => parentPost('/api/knowledge-points', payload);
+export const updateKnowledgePoint = (knowledgePointId, payload) => parentPatch(
+  `/api/knowledge-points/${encodeURIComponent(knowledgePointId)}`,
+  payload
+);
 
 export const listMistakes = (params, signal) => parentGet('/api/mistakes', params, signal);
 export const createMistake = (payload) => parentPost('/api/mistakes', payload);

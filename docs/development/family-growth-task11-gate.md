@@ -5,6 +5,7 @@
 **Requirement:** `FR-FLOW-001`  
 **Pull request:** [#14](https://github.com/mflyn/LMS/pull/14)
 **Passing CI run:** [29188066334](https://github.com/mflyn/LMS/actions/runs/29188066334)
+**Merge commit:** `29991555b305ed4931d36f5b7a210e6bc32a2459`
 
 ## Delivered Baseline
 
@@ -43,6 +44,9 @@
 
 ## Verification Evidence
 
+The counts below are the Task 11 candidate snapshot from 2026-07-12. Current aggregate
+v1.6 evidence is recorded in a separate section.
+
 | Gate | Result |
 | --- | --- |
 | Family backend regression | `npm run test:family-regression`: 58 suites, 675 tests passed across 7 projects in 89.453s |
@@ -79,23 +83,33 @@ commit passed run 29188066334. The failed commit was not rerun.
 - Runtime error handling redacts tokens, PINs, signing material, signed URLs, and
   private paths.
 
-## Known Non-Blocking Output
+## Known Non-Blocking Output Revalidation
 
-- Existing Task 9 MemoryRouter tests emit React Router v7 future-flag warnings.
-- CRA reports stale Browserslist data and webpack-dev-server deprecation warnings.
+- Stage 5 removed the React `act()` and Router future-flag warnings from the current
+  frontend gate and added a guard for unexpected `console.error` output.
+- CRA still reports stale Browserslist data during the production build.
 - Dependency audit findings remain dependency-maintenance work and were not changed by
   Task 11.
 
 ## Residual Scope
 
-Docker image builds, Kubernetes deployment, k6 performance, ZAP security scans, Safari,
-Firefox, and native mobile clients are outside this MVP acceptance gate. They remain
-explicitly controlled release workflows and do not replace the mandatory family
-regression, frontend, integration, or Chromium checks.
+Stage 6 added Docker image builds, Compose config/start/health, and a real public media
+smoke to the mandatory unified release gate. Target Kubernetes deployment, k6
+performance, ZAP security scans, Safari, Firefox, and native mobile clients remain
+separate target-environment or non-MVP acceptance activities.
 
 ## Acceptance Decision
 
 The local and remote Task 11 gates pass. `FR-FLOW-001` is implemented and `COVERED`
-by the committed backend and Playwright evidence, and PR #14 is authorized for merge.
-Final operational closure is the post-merge audit proving this gate and traceability
-row are present on remote `main`.
+by the committed backend and Playwright evidence. PR #14 was merged as
+`29991555b305ed4931d36f5b7a210e6bc32a2459`; later main audits retain this gate and its
+traceability row.
+
+## v1.6 Revalidation
+
+On 2026-07-14, `npm run release:family` passed from clean `main` implementation commit
+from the Stage 7 candidate and merged `main`: 70 backend suites / 755 tests, 4 Task 11
+integration suites / 6 tests, 25 frontend suites / 156 tests, production build, 4
+Chromium tests, seven image builds, eight healthy services, and a 91-byte private-media
+gateway smoke. The [v1.6 release gate](./family-growth-v1.6-release-gate.md) is the current
+aggregate evidence; this Task 11 document remains the focused historical closure.

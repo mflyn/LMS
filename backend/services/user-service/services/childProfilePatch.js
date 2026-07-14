@@ -1,4 +1,5 @@
 const OBJECT_ID_PATTERN = /^[0-9a-f]{24}$/i;
+const { CHILD_PROFILE_FIELDS } = require('../../../common/contracts/familyGrowthApi');
 
 const FIELD_DEFINITIONS = [
   ['name', ['name', 'childProfile.nickname']],
@@ -12,10 +13,7 @@ const FIELD_DEFINITIONS = [
   ['laborHabits', ['childProfile.laborHabits']],
   ['moralGoals', ['childProfile.moralGoals']]
 ];
-const PUBLIC_FIELDS = new Set([
-  ...FIELD_DEFINITIONS.map(([field]) => field),
-  'avatarMediaId'
-]);
+const PUBLIC_FIELDS = new Set(CHILD_PROFILE_FIELDS);
 const CANONICAL_PATHS = new Set(FIELD_DEFINITIONS.flatMap(([, paths]) => paths));
 
 const validationError = () => {

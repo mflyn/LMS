@@ -3,6 +3,7 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../../../../common/models/User');
+const Family = require('../../../../common/models/Family');
 const routes = require('../../routes');
 const { createIdentityHeaders } = require('../../../../common/middleware/gatewayIdentity');
 
@@ -12,7 +13,7 @@ const createApp = () => {
   const app = express();
   app.use(express.json());
   app.use('/api', routes);
-  app.use((error, req, res, next) => res.status(error.statusCode || 500).json({
+  app.use((error, req, res, _next) => res.status(error.statusCode || 500).json({
     success: false,
     error: {
       code: error.code || 'INTERNAL_ERROR',
@@ -43,12 +44,6 @@ const signedHeaders = (user, method, originalUrl) => createIdentityHeaders({
 const parentHeaders = (parent, method, originalUrl) => signedHeaders({
   id: parent._id.toString(),
   role: 'parent'
-}, method, originalUrl);
-
-const childHeaders = (child, method, originalUrl) => signedHeaders({
-  id: child._id.toString(),
-  childId: child._id.toString(),
-  role: 'student'
 }, method, originalUrl);
 
 const createFamily = async (app, parent, familyName = '测试家庭') => {
@@ -112,6 +107,24 @@ describe('children routes', () => {
     expect(listResponse.body.data).toEqual(expect.objectContaining({ page: 1, pageSize: 20, total: 2 }));
   });
 
+  test('child creation rolls back every relationship when linking the parent fails', async () => {
+    const parent = await createParent();
+    const family = await createFamily(app, parent, '事务家庭');
+    const update = jest.spyOn(User, 'findByIdAndUpdate')
+      .mockRejectedValueOnce(new Error('parent child link failed'));
+
+    const response = await request(app)
+      .post('/api/children')
+      .set(parentHeaders(parent, 'POST', '/api/children'))
+      .send({ name: '不应残留的孩子', grade: 3 });
+
+    update.mockRestore();
+    expect(response.status).toBe(500);
+    expect(await User.findOne({ role: 'student', name: '不应残留的孩子' })).toBeNull();
+    expect((await Family.findById(family.familyId)).childIds).toHaveLength(0);
+    expect((await User.findById(parent._id)).children).toHaveLength(0);
+  });
+
   test('parent cannot read or edit another family child', async () => {
     const parentA = await createParent('家长 A');
     const parentB = await createParent('家长 B');
@@ -131,6 +144,35 @@ describe('children routes', () => {
       .send({ name: '不应修改' });
 
     expect(editResponse.status).toBe(403);
+  });
+
+  test('uses textbookVersion and sportsPreferences as the only public profile field names', async () => {
+    const parent = await createParent();
+    await createFamily(app, parent);
+    const child = await createChild(app, parent);
+    const endpoint = `/api/children/${child.childId}`;
+
+    const canonical = await request(app)
+      .patch(endpoint)
+      .set(parentHeaders(parent, 'PATCH', endpoint))
+      .send({ textbookVersion: '苏教版', sportsPreferences: ['游泳'] });
+    expect(canonical.status).toBe(200);
+    expect(canonical.body.data.child).toEqual(expect.objectContaining({
+      textbookVersion: '苏教版',
+      sportsPreferences: ['游泳']
+    }));
+
+    for (const alias of [
+      { curriculumVersion: '错误别名' },
+      { sportPreferences: ['错误别名'] }
+    ]) {
+      const response = await request(app)
+        .patch(endpoint)
+        .set(parentHeaders(parent, 'PATCH', endpoint))
+        .send(alias);
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    }
   });
 
   test('child pin login returns child-scoped token and child cannot list siblings', async () => {

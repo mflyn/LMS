@@ -231,7 +231,7 @@ describe('TC-T6-MEDIA-016E initial Child avatar binding', () => {
   test('claims before prepare and exposes the avatar only after commit', async () => {
     const child = await createChild();
     const { service, mediaReferenceClient, randomUUID } = createHarness({
-      prepare: async (command) => {
+      prepare: async (_command) => {
         const duringPrepare = await loadInternal(child._id);
         expect(duringPrepare.childProfile.mediaReferenceState).toBe('pending');
         expect(duringPrepare.childProfile.avatarMediaId).toBeNull();

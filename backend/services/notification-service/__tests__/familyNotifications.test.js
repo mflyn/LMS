@@ -341,7 +341,7 @@ describe('Task 7 family notifications', () => {
         { taskId: 'task-overdue-1', childId: child._id.toString(), dimension: 'academic', title: '英语背诵', dueDate: '2026-07-06', status: 'pending' }
       ]),
       getMistakes: jest.fn().mockResolvedValue([
-        { mistakeId: 'mistake-1', childId: child._id.toString(), subject: '数学', knowledgePoint: '分数', reviewReminderDate: '2026-07-07', mastered: false }
+        { mistakeId: 'mistake-1', childId: child._id.toString(), subject: '数学', knowledgePointName: '分数', reviewReminderDate: '2026-07-07', mastered: false }
       ]),
       getLogs: jest.fn().mockResolvedValue([]),
       hasWeeklyReport: jest.fn().mockResolvedValue(false)
@@ -355,14 +355,29 @@ describe('Task 7 family notifications', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.items.map((item) => item.type)).toEqual([
-      'task_today',
       'task_overdue',
+      'task_today',
       'mistake_review',
       'dimension_physical',
       'dimension_moral',
       'dimension_labor',
       'weekly_report'
     ]);
+    response.body.data.items.forEach((item) => {
+      expect(item).toEqual(expect.objectContaining({
+        reminderId: `${item.type}:${item.childId}:${item.localDate}:${item.sourceId}`,
+        severity: expect.stringMatching(/^(warning|info)$/),
+        message: expect.any(String)
+      }));
+    });
+    expect(response.body.data.items[0]).toEqual(expect.objectContaining({
+      type: 'task_overdue',
+      severity: 'warning',
+      dimension: 'academic'
+    }));
+    expect(response.body.data.items.find((item) => item.type === 'mistake_review')).toEqual(
+      expect.objectContaining({ title: '分数', message: '错题复习：分数' })
+    );
     expect(response.body.data.meta).toEqual(expect.objectContaining({
       localDate: '2026-07-07',
       partial: false,

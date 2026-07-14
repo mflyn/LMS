@@ -1,5 +1,32 @@
 import '@testing-library/jest-dom';
 
+const formatConsoleValue = (value) => {
+  if (value instanceof Error) return value.stack || value.message;
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch (_error) {
+    return String(value);
+  }
+};
+
+let consoleErrorGuard;
+let consoleWarnGuard;
+
+beforeEach(() => {
+  consoleErrorGuard = jest.spyOn(console, 'error').mockImplementation((...values) => {
+    throw new Error(`Unexpected console.error: ${values.map(formatConsoleValue).join(' ')}`);
+  });
+  consoleWarnGuard = jest.spyOn(console, 'warn').mockImplementation((...values) => {
+    throw new Error(`Unexpected console.warn: ${values.map(formatConsoleValue).join(' ')}`);
+  });
+});
+
+afterEach(() => {
+  consoleErrorGuard.mockRestore();
+  consoleWarnGuard.mockRestore();
+});
+
 jest.mock('axios', () => {
   const client = {
     get: jest.fn(),

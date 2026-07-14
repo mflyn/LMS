@@ -39,6 +39,11 @@ spec:
             secretKeyRef:
               name: family-growth-secrets
               key: media-reference-service-token
+        - name: MEDIA_SIGNING_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: family-growth-secrets
+              key: media-signing-secret
         volumeMounts:
         - name: private-media
           mountPath: /var/lib/family-growth/private-media

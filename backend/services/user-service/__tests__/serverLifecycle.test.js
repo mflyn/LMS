@@ -15,6 +15,8 @@ describe('user-service server lifecycle', () => {
 
     expect(serverModule).toEqual(expect.objectContaining({
       createApp: expect.any(Function),
+      createProductionApp: expect.any(Function),
+      createTask6MediaDependencies: expect.any(Function),
       connectDatabase: expect.any(Function),
       startServer: expect.any(Function)
     }));
@@ -32,5 +34,44 @@ describe('user-service server lifecycle', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ success: true });
+  });
+
+  test('default startServer path composes avatar media after connecting', async () => {
+    const { startServer } = require('../server');
+    const order = [];
+    const runtimeApp = {
+      listen: jest.fn((port, callback) => {
+        order.push(`listen:${port}`);
+        callback();
+        return { address: () => ({ port }), once: jest.fn() };
+      })
+    };
+
+    await startServer({
+      port: 3001,
+      connect: async () => order.push('connect'),
+      createRuntimeApp: () => {
+        order.push('media-app');
+        return runtimeApp;
+      },
+      appLogger: { info: jest.fn() }
+    });
+
+    expect(order).toEqual(['connect', 'media-app', 'listen:3001']);
+  });
+
+  test('connectDatabase rejects standalone MongoDB before serving transactional routes', async () => {
+    const { connectDatabase } = require('../server');
+    const mongooseInstance = {
+      connection: {
+        readyState: 1,
+        db: { admin: () => ({ command: async () => ({ isWritablePrimary: true, maxWireVersion: 13 }) }) }
+      },
+      connect: jest.fn()
+    };
+
+    await expect(connectDatabase({ mongooseInstance, mongoURI: 'mongodb://standalone/test' }))
+      .rejects.toThrow('user-service requires a transaction-capable writable replica-set primary');
+    expect(mongooseInstance.connect).not.toHaveBeenCalled();
   });
 });

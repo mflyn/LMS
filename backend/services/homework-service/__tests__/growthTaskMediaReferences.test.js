@@ -185,7 +185,6 @@ const createBoundTask = async (parent, child, ids = [MEDIA_A], overrides = {}) =
   ...overrides
 });
 
-const publicTaskFields = (task) => Object.keys(task).sort();
 const hiddenResponseFields = [
   'attachments',
   'attachmentMediaBindings',

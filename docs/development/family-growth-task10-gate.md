@@ -29,6 +29,9 @@
 
 ## Verification Evidence
 
+The following counts are the Task 10 candidate snapshot. Current aggregate evidence is
+recorded separately so that results from different commits are not combined.
+
 | Gate | Result |
 | --- | --- |
 | Targeted TDD suites | Session/API/resource, routes/login, Today/task, mistakes, achievements/profile suites passed red-to-green during implementation |
@@ -61,15 +64,21 @@ then passed without retrying the same commit.
 - Stable `4xx` responses do not enter retry loops; protected `401` responses expire
   the child session while public PIN-login failures remain local to the form.
 
-## Residual Scope
+## Residual Scope Revalidation
 
-Task 11 still owns the automated cross-role browser E2E flow from parent family setup
-through child completion, parent confirmation, reports, reminders, media privacy, and
-reward redemption. Existing React Router future-flag messages in older Task 9 tests,
-the Browserslist data-age warning, and dependency audit findings are dependency
-maintenance items and did not change Task 10 runtime behavior or its acceptance gate.
+Task 11 has since closed the automated cross-role flow, and Stage 5 removed the React
+`act()`/Router warning debt from the current frontend gate. The Browserslist data-age
+notice and dependency audit findings remain separate dependency-maintenance work; they
+do not change Task 10 behavior.
 
 ## Acceptance Decision
 
-Task 10 is accepted and merged. `FR-UI-002` is `implemented` and `COVERED`; Task 11
-`FR-FLOW-001` remains planned.
+Task 10 is accepted and merged. `FR-UI-002` is `implemented` and `COVERED`;
+`FR-FLOW-001` is also now implemented and covered by Task 11 and the unified v1.6 gate.
+
+## v1.6 Revalidation
+
+The 2026-07-14 clean-main `npm run release:family` run passed 70 backend suites / 755
+tests, 4 Task 11 integration suites / 6 tests, 25 frontend suites / 156 tests, production
+build, 4 Chromium tests, Compose build/health, and the media-backed gateway smoke. See
+the [v1.6 release gate](./family-growth-v1.6-release-gate.md) for current totals.

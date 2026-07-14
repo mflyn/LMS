@@ -4,27 +4,13 @@ const mongoose = require('mongoose');
 const appModule = require('./app');
 const { createLogger } = require('../../common/config/logger');
 const { createMediaReferenceClient } = require('../../common/services/mediaReferenceClient');
+const { assertTransactionCapability } = require('../../common/services/mongoTransaction');
 const FamilyMistake = require('./models/FamilyMistake');
 const FamilyMistakeStateEvent = require('./models/FamilyMistakeStateEvent');
 const { createFamilyMistakeMediaService } = require('./services/familyMistakeMediaService');
 
 const logger = createLogger('analytics-service');
 const createApp = appModule.createApp;
-
-const assertTransactionCapability = async (connection) => {
-  const hello = await connection.db.admin().command({ hello: 1 });
-  const transactionReady = Boolean(hello.setName)
-    && hello.isWritablePrimary === true
-    && Number.isInteger(hello.maxWireVersion)
-    && hello.maxWireVersion >= 7
-    && Number.isFinite(hello.logicalSessionTimeoutMinutes);
-
-  if (!transactionReady) {
-    throw new Error('analytics-service requires a transaction-capable writable replica-set primary');
-  }
-
-  return hello;
-};
 
 const connectDatabase = async ({
   mongooseInstance = mongoose,
@@ -33,7 +19,7 @@ const connectDatabase = async ({
   if (mongooseInstance.connection.readyState === 0) {
     await mongooseInstance.connect(mongoURI);
   }
-  const hello = await assertTransactionCapability(mongooseInstance.connection);
+  const hello = await assertTransactionCapability(mongooseInstance.connection, 'analytics-service');
   logger.info('Analytics MongoDB connected with transaction support', { replicaSet: hello.setName });
   return mongooseInstance.connection;
 };
@@ -101,7 +87,9 @@ if (require.main === module) {
 }
 
 module.exports = app;
-module.exports.assertTransactionCapability = assertTransactionCapability;
+module.exports.assertTransactionCapability = (connection) => (
+  assertTransactionCapability(connection, 'analytics-service')
+);
 module.exports.connectDatabase = connectDatabase;
 module.exports.createApp = createApp;
 module.exports.createSocketServer = createSocketServer;

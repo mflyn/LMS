@@ -1,19 +1,13 @@
 const { addLocalDateDays, formatLocalDate, getWeekRange } = require('../../../common/utils/familyDate');
+const {
+  REMINDER_SEVERITY_ORDER,
+  REMINDER_TYPE_ORDER
+} = require('../../../common/contracts/familyGrowthApi');
 
 const DIMENSION_REMINDERS = [
   ['physical', 'dimension_physical'],
   ['moral', 'dimension_moral'],
   ['labor', 'dimension_labor']
-];
-
-const TYPE_ORDER = [
-  'task_today',
-  'task_overdue',
-  'mistake_review',
-  'dimension_physical',
-  'dimension_moral',
-  'dimension_labor',
-  'weekly_report'
 ];
 
 const toId = (value) => {
@@ -23,7 +17,9 @@ const toId = (value) => {
 
 const taskId = (task) => toId(task.taskId || task._id || task.id);
 const mistakeId = (mistake) => toId(mistake.mistakeId || mistake._id || mistake.id);
-const logId = (log) => toId(log.logId || log._id || log.id);
+const mistakeTitle = (mistake) => (
+  mistake.knowledgePointName || mistake.knowledgePoint || mistake.subject || '错题复习'
+);
 
 const isoWeekday = (localDate) => {
   const date = new Date(`${localDate}T00:00:00.000Z`);
@@ -34,13 +30,26 @@ const isoWeekday = (localDate) => {
 const isPendingTask = (task) => !['completed', 'confirmed', 'cancelled', 'archived'].includes(task.status);
 const isActiveEntry = (entry) => !['cancelled', 'archived'].includes(entry.status);
 
-const reminder = ({ type, childId, localDate, sourceId, title, source }) => ({
+const reminder = ({
+  type,
+  childId,
+  localDate,
+  sourceId,
+  severity = 'info',
+  title,
+  message = title,
+  dimension,
+  source
+}) => ({
   reminderId: `${type}:${childId}:${localDate}:${sourceId}`,
   type,
   childId,
   localDate,
   sourceId,
+  severity,
   title,
+  message,
+  dimension,
   source
 });
 
@@ -60,7 +69,8 @@ const dedupeAndSort = (items) => {
     if (!seen.has(key)) seen.set(key, item);
   });
   return [...seen.values()].sort((left, right) => (
-    TYPE_ORDER.indexOf(left.type) - TYPE_ORDER.indexOf(right.type)
+    REMINDER_SEVERITY_ORDER.indexOf(left.severity) - REMINDER_SEVERITY_ORDER.indexOf(right.severity)
+    || REMINDER_TYPE_ORDER.indexOf(left.type) - REMINDER_TYPE_ORDER.indexOf(right.type)
     || left.sourceId.localeCompare(right.sourceId)
   ));
 };
@@ -102,6 +112,7 @@ const deriveFamilyReminders = async ({
         localDate,
         sourceId: taskId(task),
         title: task.title || '今日任务',
+        dimension: task.dimension,
         source: 'task'
       })));
   }
@@ -114,7 +125,10 @@ const deriveFamilyReminders = async ({
         childId,
         localDate,
         sourceId: taskId(task),
+        severity: 'warning',
         title: task.title || '逾期任务',
+        message: `逾期任务：${task.title || '待完成任务'}`,
+        dimension: task.dimension,
         source: 'task'
       })));
   }
@@ -127,7 +141,9 @@ const deriveFamilyReminders = async ({
         childId,
         localDate,
         sourceId: mistakeId(mistake),
-        title: mistake.knowledgePoint || mistake.subject || '错题复习',
+        title: mistakeTitle(mistake),
+        message: `错题复习：${mistakeTitle(mistake)}`,
+        dimension: 'academic',
         source: 'mistake'
       })));
   }
@@ -145,6 +161,8 @@ const deriveFamilyReminders = async ({
           localDate,
           sourceId: dimension,
           title: `${dimension} reminder`,
+          message: `${dimension} 今日尚无成长任务或记录`,
+          dimension,
           source: 'dimension'
         }));
       }
@@ -161,6 +179,7 @@ const deriveFamilyReminders = async ({
       localDate,
       sourceId: `${week.start}:${week.end}`,
       title: '周报待生成',
+      message: '本周成长周报尚未生成',
       source: 'weeklyReport'
     }));
   }
