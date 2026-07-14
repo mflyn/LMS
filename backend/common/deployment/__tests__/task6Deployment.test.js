@@ -81,6 +81,14 @@ describe('Task 6 deployment contracts', () => {
     expect(require('../../../../package.json').dependencies['socket.io']).toBeDefined();
   });
 
+  test('Ubuntu Compose exposes the web UI to the LAN and binds diagnostics to loopback', () => {
+    const compose = readYaml('docker-compose.ubuntu.yml');
+
+    expect(compose.services.frontend.ports).toEqual(['80:80']);
+    expect(compose.services.gateway.ports).toEqual(['127.0.0.1:3000:3000']);
+    expect(compose.services.mongo.ports).toEqual(['127.0.0.1:27017:27017']);
+  });
+
   test('TC-T6-REG-004 legacy regression excludes Task 6 family suites', () => {
     const legacyJestConfig = require('../../../jest.legacy.config');
     const ignoredPaths = legacyJestConfig.testPathIgnorePatterns.join('\n');
