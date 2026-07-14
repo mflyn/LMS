@@ -19,6 +19,7 @@ import FamilySetupPage from './pages/family/FamilySetupPage';
 import TodayPage from './pages/family/TodayPage';
 import TasksPage from './pages/family/TasksPage';
 import GrowthLogsPage from './pages/family/GrowthLogsPage';
+import KnowledgePointsPage from './pages/family/KnowledgePointsPage';
 import MistakesPage from './pages/family/MistakesPage';
 import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
@@ -49,6 +50,7 @@ const AppRoutes = () => (
           <Route path="today" element={<TodayPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="logs" element={<GrowthLogsPage />} />
+          <Route path="points" element={<KnowledgePointsPage />} />
           <Route path="mistakes" element={<MistakesPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="reminders" element={<RemindersPage />} />

@@ -1,5 +1,12 @@
 import axios from 'axios';
-import { createChild, setChildPin } from '../../services/familyApi';
+import {
+  createChild,
+  createKnowledgePoint,
+  listKnowledgePoints,
+  setChildPin,
+  updateChild,
+  updateKnowledgePoint
+} from '../../services/familyApi';
 import { PARENT_SESSION_KEY } from '../../services/familySession';
 
 const parentConfig = {
@@ -33,6 +40,51 @@ describe('Task 11 parent child API client', () => {
     expect(axios.post).toHaveBeenCalledWith(
       '/api/children/child%2Fa%201/pin',
       { pin: '2468' },
+      parentConfig
+    );
+  });
+
+  test('updates a child through the canonical profile contract', async () => {
+    axios.patch.mockResolvedValueOnce({ data: { success: true, data: {} } });
+
+    await updateChild('child/a 1', {
+      name: '小明',
+      textbookVersion: '人教版',
+      sportsPreferences: ['跳绳'],
+      familyId: 'family-a'
+    });
+
+    expect(axios.patch).toHaveBeenCalledWith(
+      '/api/children/child%2Fa%201',
+      { name: '小明', textbookVersion: '人教版', sportsPreferences: ['跳绳'] },
+      parentConfig
+    );
+  });
+
+  test('reads, creates, and updates knowledge points without client family ownership fields', async () => {
+    axios.get.mockResolvedValueOnce({ data: { success: true, data: { items: [] } } });
+    axios.patch.mockResolvedValueOnce({ data: { success: true, data: {} } });
+
+    await listKnowledgePoints({
+      childId: 'child-a1', dimension: 'academic', masteryLevel: 'learning', familyId: 'family-a'
+    });
+    await createKnowledgePoint({
+      childId: 'child-a1', dimension: 'academic', subject: '数学', name: '分数', familyId: 'family-a'
+    });
+    await updateKnowledgePoint('point/a 1', { masteryLevel: 'skilled', practiceCount: 8 });
+
+    expect(axios.get).toHaveBeenCalledWith(
+      '/api/knowledge-points?childId=child-a1&dimension=academic&masteryLevel=learning',
+      parentConfig
+    );
+    expect(axios.post).toHaveBeenCalledWith(
+      '/api/knowledge-points',
+      { childId: 'child-a1', dimension: 'academic', subject: '数学', name: '分数' },
+      parentConfig
+    );
+    expect(axios.patch).toHaveBeenCalledWith(
+      '/api/knowledge-points/point%2Fa%201',
+      { masteryLevel: 'skilled', practiceCount: 8 },
       parentConfig
     );
   });
