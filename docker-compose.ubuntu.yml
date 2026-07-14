@@ -1,5 +1,7 @@
+# Family growth tracker — Ubuntu server deployment.
+# Optimized for an 8GB RAM home server in production mode.
+
 services:
-  # API网关
   gateway:
     build:
       context: .
@@ -13,27 +15,18 @@ services:
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - USER_SERVICE_URL=http://user-service:3001
-      - DATA_SERVICE_URL=http://data-service:3008
       - PROGRESS_SERVICE_URL=http://progress-service:3002
       - HOMEWORK_SERVICE_URL=http://homework-service:3003
-      - INTERACTION_SERVICE_URL=http://interaction-service:3004
       - RESOURCE_SERVICE_URL=http://resource-service:3005
       - ANALYTICS_SERVICE_URL=http://analytics-service:3006
       - NOTIFICATION_SERVICE_URL=http://notification-service:3007
+      - NODE_OPTIONS=--max-old-space-size=256
     depends_on:
-      - user-service
-      - progress-service
-      - homework-service
-      - interaction-service
-      - resource-service
-      - analytics-service
-      - notification-service
-      - data-service
-    networks:
-      - app-network
+      mongo-init:
+        condition: service_completed_successfully
+    networks: [app-network]
     restart: always
 
-  # 用户服务
   user-service:
     build:
       context: .
@@ -41,18 +34,19 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - RESOURCE_SERVICE_URL=http://resource-service:3005
       - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:?set MEDIA_REFERENCE_SERVICE_TOKEN}
+      - SENSITIVE_RATE_LIMIT_MAX_REQUESTS=20
+      - NODE_OPTIONS=--max-old-space-size=256
     depends_on:
-      - mongo
-    networks:
-      - app-network
+      mongo-init:
+        condition: service_completed_successfully
+    networks: [app-network]
     restart: always
 
-  # 进度服务
   progress-service:
     build:
       context: .
@@ -60,20 +54,17 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3002
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN}
+      - NODE_OPTIONS=--max-old-space-size=256
     depends_on:
-      mongo:
-        condition: service_healthy
       mongo-init:
         condition: service_completed_successfully
-    networks:
-      - app-network
+    networks: [app-network]
     restart: always
 
-  # 作业服务
   homework-service:
     build:
       context: .
@@ -81,39 +72,22 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3003
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
+      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN}
       - PROGRESS_SERVICE_URL=http://progress-service:3002
-      - STAR_AWARD_TIMEOUT_MS=${STAR_AWARD_TIMEOUT_MS:-3000}
+      - STAR_AWARD_TIMEOUT_MS=3000
       - RESOURCE_SERVICE_URL=http://resource-service:3005
       - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:?set MEDIA_REFERENCE_SERVICE_TOKEN}
       - ENABLE_RABBITMQ=false
+      - NODE_OPTIONS=--max-old-space-size=256
     depends_on:
-      mongo:
-        condition: service_healthy
       mongo-init:
         condition: service_completed_successfully
-    networks:
-      - app-network
+    networks: [app-network]
     restart: always
 
-  # 家校互动服务
-  interaction-service:
-    build: ./backend/services/interaction-service
-    environment:
-      - NODE_ENV=production
-      - PORT=3004
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
-      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
-    depends_on:
-      - mongo
-    networks:
-      - app-network
-    restart: always
-
-  # 学习资源服务
   resource-service:
     build:
       context: .
@@ -126,15 +100,15 @@ services:
       - PRIVATE_MEDIA_ROOT=/var/lib/family-growth/private-media
       - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:?set MEDIA_REFERENCE_SERVICE_TOKEN}
       - MEDIA_SIGNING_SECRET=${MEDIA_SIGNING_SECRET:?set MEDIA_SIGNING_SECRET}
+      - NODE_OPTIONS=--max-old-space-size=256
     volumes:
       - resource-data:/var/lib/family-growth/private-media
     depends_on:
-      - mongo
-    networks:
-      - app-network
+      mongo-init:
+        condition: service_completed_successfully
+    networks: [app-network]
     restart: always
 
-  # 数据分析服务
   analytics-service:
     build:
       context: .
@@ -147,13 +121,13 @@ services:
       - RESOURCE_SERVICE_URL=http://resource-service:3005
       - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:?set MEDIA_REFERENCE_SERVICE_TOKEN}
       - REPORT_HISTORY_AVAILABLE_FROM=2026-06-01
+      - NODE_OPTIONS=--max-old-space-size=256
     depends_on:
-      - mongo
-    networks:
-      - app-network
+      mongo-init:
+        condition: service_completed_successfully
+    networks: [app-network]
     restart: always
 
-  # 通知服务
   notification-service:
     build:
       context: .
@@ -162,108 +136,51 @@ services:
       - NODE_ENV=production
       - PORT=3007
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
-      - RABBITMQ_URL=amqp://rabbitmq
+      - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
+      - ENABLE_RABBITMQ=false
+      - NODE_OPTIONS=--max-old-space-size=256
     depends_on:
-      - mongo
-      - rabbitmq
-    networks:
-      - app-network
+      mongo-init:
+        condition: service_completed_successfully
+    networks: [app-network]
     restart: always
 
-  # Web前端
-  web-frontend:
+  frontend:
     build: ./frontend/web
     ports:
       - "80:80"
-    networks:
-      - app-network
+    depends_on: [gateway]
+    networks: [app-network]
     restart: always
 
-  # MongoDB数据库
   mongo:
-    image: mongo:4.4
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    image: mongo:6.0
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.5"]
+    ports:
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo-data:/data/db
     healthcheck:
-      test: ["CMD", "mongo", "--quiet", "--eval", "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"]
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"]
       interval: 5s
       timeout: 5s
       retries: 30
-    networks:
-      - app-network
+    networks: [app-network]
     restart: always
 
   mongo-init:
-    image: mongo:4.4
+    image: mongo:6.0
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
-        until mongo --host mongo:27017 --quiet --eval "db.adminCommand('ping').ok"; do sleep 2; done;
-        mongo --host mongo:27017 --quiet --eval "try { rs.status() } catch (error) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }";
-        until mongo --host mongo:27017 --quiet --eval "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"; do sleep 2; done
-    networks:
-      - app-network
+        until mongosh --host mongo:27017 --quiet --eval "db.adminCommand('ping').ok"; do sleep 2; done;
+        mongosh --host mongo:27017 --quiet --eval "try { rs.status() } catch (error) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }";
+        until mongosh --host mongo:27017 --quiet --eval "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"; do sleep 2; done
+    networks: [app-network]
     restart: "no"
-
-  # RabbitMQ消息队列
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"  # AMQP协议端口
-      - "15672:15672"  # 管理界面端口
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - app-network
-    restart: always
-
-  # MinIO对象存储
-  minio:
-    image: minio/minio
-    ports:
-      - "9000:9000"  # API端口
-      - "9001:9001"  # 控制台端口
-    volumes:
-      - minio-data:/data
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    command: server --console-address ":9001" /data
-    networks:
-      - app-network
-    restart: always
-
-  # Redis缓存服务
-  redis:
-    image: redis:6
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - app-network
-    restart: always
-
-  # 数据服务
-  data-service:
-    build: ./backend/services/data-service
-    environment:
-      - NODE_ENV=production
-      - PORT=3008
-      - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
-      - MINIO_ENDPOINT=minio
-      - MINIO_PORT=9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-    depends_on:
-      - mongo
-      - minio
-    networks:
-      - app-network
-    restart: always
 
 networks:
   app-network:
@@ -271,7 +188,4 @@ networks:
 
 volumes:
   mongo-data:
-  rabbitmq-data:
-  minio-data:
   resource-data:
-  redis-data:

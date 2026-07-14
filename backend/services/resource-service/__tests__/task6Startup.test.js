@@ -75,6 +75,8 @@ describe('resource-service Task 6 startup contract', () => {
     const serverModule = require('../server');
 
     expect(serverModule.createApp).toEqual(expect.any(Function));
+    expect(serverModule.createProductionApp).toEqual(expect.any(Function));
+    expect(serverModule.createTask6MediaDependencies).toEqual(expect.any(Function));
     expect(serverModule.connectDatabase).toEqual(expect.any(Function));
     expect(serverModule.startServer).toEqual(expect.any(Function));
     expect(mockConnect).not.toHaveBeenCalled();
@@ -99,5 +101,28 @@ describe('resource-service Task 6 startup contract', () => {
     });
 
     expect(order).toEqual(['connect', 'listen:3005']);
+  });
+
+  test('default startServer path composes Task 6 media after connecting', async () => {
+    const serverModule = require('../server');
+    const order = [];
+    const productionApp = {
+      listen: jest.fn((port, callback) => {
+        order.push(`listen:${port}`);
+        callback();
+        return { close: jest.fn() };
+      })
+    };
+
+    await serverModule.startServer({
+      port: 3005,
+      connect: async () => order.push('connect'),
+      createRuntimeApp: () => {
+        order.push('media-app');
+        return productionApp;
+      }
+    });
+
+    expect(order).toEqual(['connect', 'media-app', 'listen:3005']);
   });
 });

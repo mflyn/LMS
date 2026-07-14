@@ -1,9 +1,63 @@
 const mongoose = require('mongoose');
 const appModule = require('./app');
 const { createLogger } = require('../../common/config/logger');
+const { authenticateGateway } = require('../../common/middleware/auth');
+const MediaAsset = require('./models/MediaAsset');
+const MediaReference = require('./models/MediaReference');
+const FamilyUser = require('./models/FamilyUser');
+const { createMediaReferenceCredential } = require('./middleware/mediaReferenceCredential');
+const { createPrivateMediaUpload } = require('./middleware/privateMediaUpload');
+const { createInternalMediaReferencesRouter } = require('./routes/internalMediaReferences');
+const { createMediaRouter } = require('./routes/media');
+const { createMediaCapabilityService } = require('./services/mediaCapability');
+const { createMediaReferenceService } = require('./services/mediaReferenceService');
+const { createMediaService } = require('./services/mediaService');
+const { createMongoTransactionRunner } = require('./services/mongoTransaction');
+const { createPrivateMediaStore } = require('./services/privateMediaStore');
 
 const logger = createLogger('resource-service');
 const createApp = appModule.createApp;
+
+const createTask6MediaDependencies = ({
+  env = process.env,
+  connection = mongoose.connection
+} = {}) => {
+  const privateRoot = env.PRIVATE_MEDIA_ROOT;
+  const mediaStore = createPrivateMediaStore({ root: privateRoot });
+  const capabilityService = createMediaCapabilityService({ secret: env.MEDIA_SIGNING_SECRET });
+  const transactionRunner = createMongoTransactionRunner(connection);
+  const referenceService = createMediaReferenceService({
+    MediaAssetModel: MediaAsset,
+    MediaReferenceModel: MediaReference,
+    transactionRunner
+  });
+  const mediaService = createMediaService({
+    MediaAssetModel: MediaAsset,
+    MediaReferenceModel: MediaReference,
+    UserModel: FamilyUser,
+    capabilityService,
+    mediaStore,
+    transactionRunner
+  });
+
+  return {
+    mediaRouter: createMediaRouter({
+      authenticate: authenticateGateway,
+      mediaService,
+      upload: createPrivateMediaUpload({ privateRoot })
+    }),
+    internalMediaRouter: createInternalMediaReferencesRouter({
+      credential: createMediaReferenceCredential(env.MEDIA_REFERENCE_SERVICE_TOKEN),
+      referenceService
+    })
+  };
+};
+
+const createProductionApp = ({
+  env = process.env,
+  connection = mongoose.connection,
+  createMediaDependencies = createTask6MediaDependencies
+} = {}) => createApp(createMediaDependencies({ env, connection }));
 
 const connectDatabase = async ({
   mongooseInstance = mongoose,
@@ -16,12 +70,14 @@ const connectDatabase = async ({
 };
 
 const startServer = async ({
-  app = createApp(),
+  app = null,
   port = Number(process.env.PORT || 3005),
-  connect = connectDatabase
+  connect = connectDatabase,
+  createRuntimeApp = createProductionApp
 } = {}) => {
   await connect();
-  return app.listen(port, () => {
+  const runtimeApp = app || createRuntimeApp();
+  return runtimeApp.listen(port, () => {
     logger.info('Resource service started', { port });
   });
 };
@@ -29,7 +85,7 @@ const startServer = async ({
 const app = createApp();
 
 if (require.main === module) {
-  startServer({ app }).catch((error) => {
+  startServer().catch((error) => {
     logger.error('Resource service failed to start', { error: error.message, stack: error.stack });
     process.exitCode = 1;
   });
@@ -38,4 +94,6 @@ if (require.main === module) {
 module.exports = app;
 module.exports.connectDatabase = connectDatabase;
 module.exports.createApp = createApp;
+module.exports.createProductionApp = createProductionApp;
+module.exports.createTask6MediaDependencies = createTask6MediaDependencies;
 module.exports.startServer = startServer;
