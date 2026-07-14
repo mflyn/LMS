@@ -6,7 +6,7 @@ process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/user
 process.env.USER_SERVICE_MONGO_URI = process.env.USER_SERVICE_MONGO_URI || process.env.MONGO_URI;
 
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const { MongoMemoryReplSet } = require('mongodb-memory-server');
 
 // 确保在尝试 mongoose.model() 之前，相关的 Schema 文件已经被 require
 const UserSchema = require('../../../common/models/User').schema;
@@ -28,7 +28,9 @@ try {
 }
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: { count: 1, storageEngine: 'wiredTiger' }
+  });
   const mongoUri = mongoServer.getUri();
   process.env.USER_SERVICE_MONGO_URI = mongoUri;
 

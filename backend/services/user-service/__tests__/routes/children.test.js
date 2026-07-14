@@ -3,6 +3,7 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../../../../common/models/User');
+const Family = require('../../../../common/models/Family');
 const routes = require('../../routes');
 const { createIdentityHeaders } = require('../../../../common/middleware/gatewayIdentity');
 
@@ -110,6 +111,24 @@ describe('children routes', () => {
     expect(listResponse.status).toBe(200);
     expect(listResponse.body.data.items.map((child) => child.name)).toEqual(['小明', '小红']);
     expect(listResponse.body.data).toEqual(expect.objectContaining({ page: 1, pageSize: 20, total: 2 }));
+  });
+
+  test('child creation rolls back every relationship when linking the parent fails', async () => {
+    const parent = await createParent();
+    const family = await createFamily(app, parent, '事务家庭');
+    const update = jest.spyOn(User, 'findByIdAndUpdate')
+      .mockRejectedValueOnce(new Error('parent child link failed'));
+
+    const response = await request(app)
+      .post('/api/children')
+      .set(parentHeaders(parent, 'POST', '/api/children'))
+      .send({ name: '不应残留的孩子', grade: 3 });
+
+    update.mockRestore();
+    expect(response.status).toBe(500);
+    expect(await User.findOne({ role: 'student', name: '不应残留的孩子' })).toBeNull();
+    expect((await Family.findById(family.familyId)).childIds).toHaveLength(0);
+    expect((await User.findById(parent._id)).children).toHaveLength(0);
   });
 
   test('parent cannot read or edit another family child', async () => {

@@ -59,4 +59,19 @@ describe('user-service server lifecycle', () => {
 
     expect(order).toEqual(['connect', 'media-app', 'listen:3001']);
   });
+
+  test('connectDatabase rejects standalone MongoDB before serving transactional routes', async () => {
+    const { connectDatabase } = require('../server');
+    const mongooseInstance = {
+      connection: {
+        readyState: 1,
+        db: { admin: () => ({ command: async () => ({ isWritablePrimary: true, maxWireVersion: 13 }) }) }
+      },
+      connect: jest.fn()
+    };
+
+    await expect(connectDatabase({ mongooseInstance, mongoURI: 'mongodb://standalone/test' }))
+      .rejects.toThrow('user-service requires a transaction-capable writable replica-set primary');
+    expect(mongooseInstance.connect).not.toHaveBeenCalled();
+  });
 });
