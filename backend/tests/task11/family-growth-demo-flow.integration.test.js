@@ -21,6 +21,9 @@ const expectStatus = (response, status) => {
   if (response.status !== status) {
     throw new Error(`Expected HTTP ${status}, received ${response.status}: ${JSON.stringify(response.data)}`);
   }
+  if (response.data?.success !== true) {
+    throw new Error(`Expected success envelope for HTTP ${status}: ${JSON.stringify(response.data)}`);
+  }
   return response.data.data;
 };
 

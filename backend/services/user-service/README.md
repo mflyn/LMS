@@ -9,7 +9,6 @@ Older user-service README content described broad school user administration, te
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/child-pin-login`
-- `POST /api/auth/change-password`
 - `POST /api/families`
 - `GET /api/families/me`
 - `PATCH /api/families/:familyId`
@@ -20,6 +19,8 @@ Older user-service README content described broad school user administration, te
 - `POST /api/children/:childId/pin`
 
 Family and child routes use signed gateway identity and derive authorization from the authenticated identity and stored ownership.
+
+`POST /api/auth/change-password` remains available as a compatibility account route and follows the common `{ success, data }` response envelope. It is not part of the accepted family MVP API baseline until its product requirement, allowed roles and full contract are reviewed.
 
 ## Current Family Models and Services
 

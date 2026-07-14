@@ -7,7 +7,7 @@ const {
   AppError,
   BadRequestError,
   NotFoundError,
-  AuthenticationError,
+  UnauthorizedError,
   ConflictError,
   ForbiddenError
 } = require('../../../common/middleware/errorTypes'); // 修正路径
@@ -101,13 +101,13 @@ class UserService {
     
     if (!user) {
       logger.warn('[UserService] Login failed: User not found', { loginIdentifier: username });
-      throw new AuthenticationError('Invalid credentials.'); // Generic message for security
+      throw new UnauthorizedError('Invalid credentials.'); // Generic message for security
     }
 
     const isMatch = await user.comparePassword(password); 
     if (!isMatch) {
       logger.warn('[UserService] Login failed: Password mismatch', { loginIdentifier: username });
-      throw new AuthenticationError('Invalid credentials.'); // Generic message
+      throw new UnauthorizedError('Invalid credentials.'); // Generic message
     }
 
     logger.info('[UserService] User logged in successfully', { userId: user._id, loginIdentifier: username });
@@ -330,7 +330,7 @@ class UserService {
     const isMatch = await user.comparePassword(oldPassword);
     if (!isMatch) {
       logger.warn(`[UserService] Change password failed: Old password mismatch for user ID: ${userId}`);
-      throw new AuthenticationError('Incorrect old password.');
+      throw new UnauthorizedError('Incorrect old password.');
     }
 
     user.password = newPassword; // The pre-save hook in User model will hash this

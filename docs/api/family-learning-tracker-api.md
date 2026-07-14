@@ -113,6 +113,8 @@ gateway 在代理前删除客户端提供的 `x-user-id`、`x-user-role`、`x-us
 | `PATCH /api/notifications/settings` | 家长 | `FR-NOTIFY-002` | 更新家庭提醒设置 |
 | `POST /api/internal/stars/award` | homework-service | `FR-REWARD-001`, `NFR-SEC-003`, `NFR-DATA-002` | 内部幂等星星发放，不通过 gateway |
 
+`POST /api/auth/change-password` 是 `user-service` 暂时保留的账户兼容接口，成功时同样返回通用成功格式。该接口尚未进入家庭版 PRD 和 MVP 验收清单，不作为本基线中的承诺能力；后续如进入家庭端产品范围，必须先补充需求、角色约束和完整 API 契约。
+
 ## 2. Auth and Family
 
 ### 2.1 注册家长

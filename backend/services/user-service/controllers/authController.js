@@ -1,8 +1,6 @@
 const { catchAsync } = require('../../../common/middleware/errorHandler');
-const { BadRequestError, UnauthorizedError, ConflictError } = require('../../../common/middleware/errorTypes');
-const User = require('../../../common/models/User');
+const { BadRequestError } = require('../../../common/middleware/errorTypes');
 const UserService = require('../services/userService');
-const mongoose = require('mongoose'); // For mongoose.Types.ObjectId.isValid if needed in future methods
 
 class AuthController {
   constructor() {
@@ -21,9 +19,8 @@ class AuthController {
 
     logger.info(`[AuthController] User registered successfully: ${user.username} (ID: ${user.id})`);
     res.status(201).json({
-      status: 'success',
-      message: 'User registered successfully',
-      data: { user, token }, // UserService ensures 'user' object is clean (no password)
+      success: true,
+      data: { user, token }
     });
   });
 
@@ -37,9 +34,8 @@ class AuthController {
 
     logger.info(`[AuthController] User logged in successfully: ${user.username} (ID: ${user.id})`);
     res.status(200).json({
-      status: 'success',
-      message: 'Login successful',
-      data: { user, token }, // UserService ensures 'user' is clean
+      success: true,
+      data: { user, token }
     });
   });
 
@@ -65,12 +61,12 @@ class AuthController {
     //   return next(new BadRequestError(policyCheck.message || 'New password does not meet policy requirements.'));
     // }
 
-    const result = await UserService.changePassword(userId, oldPassword, newPassword, logger);
+    await UserService.changePassword(userId, oldPassword, newPassword, logger);
 
     logger.info(`[AuthController] Password changed successfully for user ID: ${userId}`);
     res.status(200).json({
-      status: 'success',
-      message: result.message || 'Password changed successfully.',
+      success: true,
+      data: {}
     });
   });
 
