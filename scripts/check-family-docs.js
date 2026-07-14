@@ -5,6 +5,7 @@ const path = require('path');
 
 const repositoryRoot = path.resolve(__dirname, '..');
 const authoritativeDocuments = [
+  'README.md',
   'docs/README.md',
   'docs/development/README.md',
   'docs/product/family-learning-tracker.md',
@@ -134,6 +135,9 @@ function validate() {
   }
 
   const product = documents.get('docs/product/family-learning-tracker.md') || '';
+  const repositoryReadme = documents.get('README.md') || '';
+  const documentationReadme = documents.get('docs/README.md') || '';
+  const developmentReadme = documents.get('docs/development/README.md') || '';
   const traceability =
     documents.get('docs/development/family-growth-requirement-traceability.md') || '';
   const designIndex =
@@ -141,6 +145,94 @@ function validate() {
   const manifest =
     documents.get('docs/development/family-growth-baseline-v1.6-manifest.md') || '';
   const deployment = documents.get('docs/deployment/README.md') || '';
+
+  for (const requiredText of [
+    '家庭成长跟踪',
+    '德智体美劳',
+    'npm run docker:family',
+    'npm run release:family',
+    './docs/README.md'
+  ]) {
+    assert(
+      repositoryReadme.includes(requiredText),
+      `README.md is missing ${requiredText}`,
+      errors
+    );
+  }
+  for (const obsoleteText of [
+    '小学生学习追踪系统',
+    '最大并发用户：10000',
+    'API响应时间：<100ms',
+    '张三',
+    '李四',
+    '王五',
+    'example.com',
+    'Redux Toolkit',
+    'Prometheus + Grafana'
+  ]) {
+    assert(
+      !repositoryReadme.includes(obsoleteText),
+      `README.md contains obsolete or unverified content: ${obsoleteText}`,
+      errors
+    );
+  }
+
+  for (const requiredText of [
+    'npm run docs:family:check',
+    './product/family-learning-tracker.md',
+    './architecture/family-learning-tracker-architecture.md',
+    './api/family-learning-tracker-api.md',
+    './development/README.md',
+    './deployment/README.md',
+    './user-guide/README.md'
+  ]) {
+    assert(
+      documentationReadme.includes(requiredText),
+      `docs/README.md is missing ${requiredText}`,
+      errors
+    );
+  }
+  for (const templateHeading of [
+    '## 文档类型',
+    '## 文档工具',
+    '## 文档自动化',
+    '## 文档质量'
+  ]) {
+    assert(
+      !documentationReadme.includes(templateHeading),
+      `docs/README.md contains obsolete template heading: ${templateHeading}`,
+      errors
+    );
+  }
+
+  for (const requiredText of [
+    'Node.js 22',
+    'npm ci --prefix frontend/web',
+    'npm run test:family-regression',
+    'npm run test:ci --prefix frontend/web -- --runInBand',
+    'npm run test:task11',
+    'npm run release:family'
+  ]) {
+    assert(
+      developmentReadme.includes(requiredText),
+      `docs/development/README.md is missing ${requiredText}`,
+      errors
+    );
+  }
+  for (const obsoleteText of [
+    '我们使用 Cypress',
+    'npm run cypress:open',
+    'npm run cypress:run',
+    '我们采用 Git Flow',
+    '`.prettierrc`',
+    'cd ../frontend'
+  ]) {
+    assert(
+      !developmentReadme.includes(obsoleteText),
+      `docs/development/README.md contains obsolete content: ${obsoleteText}`,
+      errors
+    );
+  }
 
   const productIds = requirementIds(product);
   const traceabilityIds = requirementIds(traceability);

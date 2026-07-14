@@ -1,450 +1,115 @@
-# 开发文档
+# 家庭成长跟踪开发与测试
 
-## 概述
+本目录保存家庭成长 MVP 的详细设计、实施计划、测试用例、评审记录和发布证据。
+当前开发范围以 Task 1-11、35 项需求和 FGT-MVP-1.6 基线候选为准。
 
-本文档提供小学生学习追踪系统的开发指南，包括开发环境搭建、代码规范、开发流程、测试指南和调试技巧等内容。本指南旨在帮助开发者快速上手项目，并保持代码质量和一致性。
+## 当前基线
 
-## 目录
-
-- [开发环境搭建](#开发环境搭建)
-- [项目结构](#项目结构)
-- [代码规范](#代码规范)
-- [开发流程](#开发流程)
-- [测试指南](#测试指南)
-- [调试技巧](#调试技巧)
-- [版本控制](#版本控制)
-- [文档规范](#文档规范)
-
-## 家庭成长基线
-
-- [Task 1-11 / FGT-MVP-1.6 最终 MVP 基线候选](./family-growth-baseline-v1.6-manifest.md)
-- [FGT-MVP-1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md)
+- [FGT-MVP-1.6 基线候选](./family-growth-baseline-v1.6-manifest.md)
+- [统一发布 Gate](./family-growth-v1.6-release-gate.md)
 - [35 项需求追踪矩阵](./family-growth-requirement-traceability.md)
-- [家庭成长跟踪文档补充计划](./family-growth-doc-supplement-plan.md)
-- [Task 1-4 设计归档说明](./family-growth-task1-4-design-archive.md)
 - [Task 1-11 设计资产索引](./family-growth-design-asset-index.md)
-- [测试覆盖率产物管理](./test-coverage-file-management.md)
-- [历史文档归档与 Task J 迁移记录](./archive/README.md)
-- [Task 7 / FGT-MVP-1.5 基线清单](./family-growth-baseline-v1.5-manifest.md)
-- [Task 7 通知服务门禁](./family-growth-task7-gate.md)
-- [Task 7 通知服务测试设计与用例](./family-growth-task7-test-cases.md)
-- [Task 7 代码评审修复记录](./family-growth-task7-code-review-remediation.md)
-- [Task 1-7 测试质量修订记录](./family-growth-test-quality-remediation.md)
-- [Task 1-7 配置与基础设施修订记录](./family-growth-config-infra-remediation.md)
-- [Task 8-11 前端与端到端设计基线](../superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md)
-- [Task 8 家长 Web 应用壳实施计划](../superpowers/plans/2026-07-10-family-growth-task8-parent-shell.md)
-- [Task 8 家长 Web 应用壳测试设计与用例](./family-growth-task8-test-cases.md)
-- [Task 8 家长 Web 应用壳门禁记录](./family-growth-task8-gate.md)
-- [Task 9 家长 MVP 页面设计](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md)
-- [Task 9 家长 MVP 页面实施计划](../superpowers/plans/2026-07-10-family-growth-task9-parent-pages.md)
-- [Task 9 家长 MVP 页面测试设计与用例](./family-growth-task9-test-cases.md)
-- [Task 9 家长 MVP 页面门禁记录](./family-growth-task9-gate.md)
-- [Task 10 孩子 Web 入口设计](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md)
-- [Task 10 孩子 Web 入口实施计划](../superpowers/plans/2026-07-11-family-growth-task10-child-web.md)
-- [Task 10 孩子 Web 入口测试设计与用例](./family-growth-task10-test-cases.md)
-- [Task 10 孩子 Web 入口门禁记录](./family-growth-task10-gate.md)
-- [Task 11 家庭成长端到端设计](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md)
-- [Task 11 家庭成长端到端实施计划](../superpowers/plans/2026-07-12-family-growth-task11-e2e.md)
-- [Task 11 家庭成长端到端测试设计与用例](./family-growth-task11-test-cases.md)
-- [Task 11 家庭成长端到端门禁记录](./family-growth-task11-gate.md)
+- [家庭成长测试策略](./family-growth-test-strategy.md)
+- [测试质量修订记录](./family-growth-test-quality-remediation.md)
+- [配置与基础设施修订记录](./family-growth-config-infra-remediation.md)
+- [历史基线和废弃文档说明](./archive/README.md)
 
-## 5 分钟快速入门
+## Task 设计与验证
 
-家庭成长 MVP 本地开发优先使用最小 Compose 栈：
+| 范围 | 设计/计划 | 测试与 Gate |
+| --- | --- | --- |
+| Task 1-4 | [设计归档说明](./family-growth-task1-4-design-archive.md) | [初始基线](./family-growth-baseline-manifest.md) |
+| Task 5 | [详细设计](../superpowers/specs/2026-06-19-family-growth-task5-design.md) | [测试用例](./family-growth-task5-test-cases.md) / [Gate](./family-growth-task5-gate.md) |
+| Task 6 | [详细设计](../superpowers/specs/2026-06-20-family-growth-task6-design.md) | [测试用例](./family-growth-task6-test-cases.md) / [Gate](./family-growth-task6-gate.md) |
+| Task 7 | [详细设计](../superpowers/specs/2026-07-07-family-growth-task7-notifications-design.md) | [测试用例](./family-growth-task7-test-cases.md) / [Gate](./family-growth-task7-gate.md) |
+| Task 8 | [详细设计](../superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md) / [实施计划](../superpowers/plans/2026-07-10-family-growth-task8-parent-shell.md) | [测试用例](./family-growth-task8-test-cases.md) / [Gate](./family-growth-task8-gate.md) |
+| Task 9 | [详细设计](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md) / [实施计划](../superpowers/plans/2026-07-10-family-growth-task9-parent-pages.md) | [测试用例](./family-growth-task9-test-cases.md) / [Gate](./family-growth-task9-gate.md) |
+| Task 10 | [详细设计](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md) / [实施计划](../superpowers/plans/2026-07-11-family-growth-task10-child-web.md) | [测试用例](./family-growth-task10-test-cases.md) / [Gate](./family-growth-task10-gate.md) |
+| Task 11 | [详细设计](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) / [实施计划](../superpowers/plans/2026-07-12-family-growth-task11-e2e.md) | [测试用例](./family-growth-task11-test-cases.md) / [Gate](./family-growth-task11-gate.md) |
 
-```bash
-cd backend
-make up
-make test
-make down
-```
+旧 Task Gate 只证明对应历史范围。当前发布判定必须使用 v1.6 统一发布 Gate，不能
+用某个服务、页面或旧基线的单项结果替代。
 
-等价的根目录入口是 `npm run docker:family`、`npm run test:family-regression` 和 `npm run docker:family:down`。完整学校兼容栈仍由 `docker-compose.yml` 管理。
+## 环境要求
 
-提交发布候选前必须在根目录执行 `npm run release:family`；该命令包含 clean
-install、文档契约、静态检查、后端/前端/浏览器测试、production build、Compose
-health 和私有媒体 smoke，详细标准见 [v1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md)。
+- Node.js 22，与 CI 和家庭服务生产镜像一致。
+- 与根目录和 `frontend/web` lockfile 匹配的 npm。
+- Docker Engine 与 Docker Compose v2。
+- Git；完整发布 Gate 还需要安装 Playwright Chromium 的网络和系统能力。
 
-## 开发环境搭建
+家庭最小栈通过 Compose 提供 MongoDB 副本集和各 API 服务，本地开发不要求单独
+安装 MongoDB、Redis 或消息队列。
 
-### 系统要求
-
-- **操作系统**：Windows 10+、macOS 10.15+、Linux (Ubuntu 18.04+)
-- **Node.js**：v22.x（与 CI 和家庭服务镜像一致）
-- **MongoDB**：v4.4 或更高版本
-- **Redis**：v6.x 或更高版本
-- **Git**：v2.x 或更高版本
-
-### 安装步骤
-
-#### 1. 安装 Node.js
-
-从 [Node.js 官网](https://nodejs.org/) 下载并安装适合您系统的版本。
-
-验证安装：
-```bash
-node --version
-npm --version
-```
-
-#### 2. 安装 MongoDB
-
-从 [MongoDB 官网](https://www.mongodb.com/try/download/community) 下载并安装社区版。
-
-验证安装：
-```bash
-mongo --version
-```
-
-#### 3. 安装 Redis
-
-从 [Redis 官网](https://redis.io/download) 下载并安装。
-
-验证安装：
-```bash
-redis-cli --version
-```
-
-#### 4. 克隆项目
+## 安装依赖
 
 ```bash
-git clone https://github.com/mflyn/LMS.git
-cd LMS
-```
-
-#### 5. 安装依赖
-
-```bash
-# 严格按 lockfile 安装根目录和家庭 Web 依赖
 npm ci
 npm ci --prefix frontend/web
 ```
 
-#### 6. 配置环境变量
+需要单独运行浏览器测试时安装 Chromium：
 
 ```bash
-# 后端环境变量
-cp backend/.env.example backend/.env
-
-# Ubuntu Compose 环境模板（仅按部署场景使用）
-cp docker-compose.ubuntu.env.example .env.ubuntu
+npx playwright install chromium
 ```
 
-编辑 `.env` 文件，配置必要的环境变量。
+Linux CI 需要浏览器系统依赖时，按发布文档使用
+`RELEASE_GATE_INSTALL_BROWSER_DEPS=1 npm run release:family`。
 
-#### 7. 启动开发服务器
+## 本地开发
+
+启动家庭 API 栈，并把 Gateway 暴露到 Web 默认使用的 8000 端口：
 
 ```bash
-# 启动后端服务
-cd backend
-npm run dev
-
-# 启动前端服务
-cd ../frontend
-npm start
+FAMILY_GATEWAY_HOST_PORT=8000 npm run docker:family
+npm start --prefix frontend/web
 ```
 
-## 项目结构
-
-### 后端结构
-
-```
-backend/
-├── app.js                # 应用入口
-├── config/              # 配置文件
-├── common/              # 公共模块
-│   ├── middleware/      # 中间件
-│   ├── models/         # 数据模型
-│   ├── utils/          # 工具函数
-│   └── seeds/          # 种子数据
-├── services/           # 服务模块
-│   ├── auth-service/   # 认证服务
-│   ├── data-service/   # 数据服务
-│   └── resource-service/ # 资源服务
-└── tests/              # 测试文件
-```
-
-### 前端结构
-
-```
-frontend/
-├── src/              # 源代码
-│   ├── assets/      # 静态资源
-│   ├── components/  # 组件
-│   ├── pages/       # 页面
-│   ├── services/    # 服务
-│   ├── store/       # 状态管理
-│   ├── utils/       # 工具函数
-│   └── styles/      # 样式文件
-├── public/          # 公共资源
-├── tests/           # 测试文件
-└── config/          # 配置文件
-```
-
-## 代码规范
-
-### JavaScript/TypeScript 规范
-
-我们使用 ESLint 和 Prettier 来保证代码质量和一致性。
-
-#### ESLint 配置
-
-项目根目录下的 `.eslintrc.js` 文件包含了 ESLint 配置。
-
-运行 ESLint 检查：
-```bash
-npm run lint
-```
-
-自动修复 ESLint 问题：
-```bash
-npm run lint:fix
-```
-
-#### Prettier 配置
-
-项目根目录下的 `.prettierrc` 文件包含了 Prettier 配置。
-
-格式化代码：
-```bash
-npm run format
-```
-
-### 命名规范
-
-- **文件名**：使用小写字母，多个单词用连字符（-）连接
-  - 例如：`user-service.js`、`auth-middleware.js`
-
-- **类名**：使用 PascalCase
-  - 例如：`UserService`、`AuthMiddleware`
-
-- **函数和变量**：使用 camelCase
-  - 例如：`getUserById`、`authToken`
-
-- **常量**：使用大写字母，多个单词用下划线（_）连接
-  - 例如：`MAX_RETRY_COUNT`、`API_BASE_URL`
-
-- **组件文件**：使用 PascalCase
-  - 例如：`UserProfile.jsx`、`LoginForm.jsx`
-
-### 注释规范
-
-- 使用 JSDoc 风格的注释
-- 为所有函数、类和复杂逻辑添加注释
-- 注释应该解释"为什么"而不仅仅是"是什么"
-
-示例：
-```javascript
-/**
- * 获取用户信息
- * @param {string} userId - 用户ID
- * @returns {Promise<Object>} 用户信息对象
- */
-async function getUserInfo(userId) {
-  // 实现逻辑
-}
-```
-
-## 开发流程
-
-### 功能开发流程
-
-1. **需求分析**：理解需求文档，明确功能目标和范围
-2. **任务分解**：将功能分解为可管理的小任务
-3. **分支创建**：从主分支创建功能分支
-   ```bash
-   git checkout -b feature/feature-name
-   ```
-4. **编码实现**：按照代码规范实现功能
-5. **单元测试**：编写并运行单元测试
-6. **代码审查**：提交Pull Request并接受代码审查
-7. **合并代码**：审查通过后合并到主分支
-
-### 版本发布流程
-
-1. **版本规划**：确定版本包含的功能和修复
-2. **创建发布分支**：从主分支创建发布分支
-   ```bash
-   git checkout -b release/v1.0.0
-   ```
-3. **版本测试**：进行集成测试和系统测试
-4. **修复问题**：修复测试中发现的问题
-5. **版本标记**：创建版本标签
-   ```bash
-   git tag -a v1.0.0 -m "Version 1.0.0"
-   ```
-6. **合并到主分支**：将发布分支合并回主分支
-7. **部署发布**：部署到生产环境
-
-## 测试指南
-
-### 单元测试
-
-我们使用 Jest 作为测试框架。
-
-#### 编写测试
-
-测试文件应放在与被测代码相同的目录下，并以 `.test.js` 或 `.spec.js` 结尾。
-
-示例：
-```javascript
-// user-service.test.js
-const UserService = require('./user-service');
-
-describe('UserService', () => {
-  test('should get user by id', async () => {
-    // 测试实现
-  });
-});
-```
-
-#### 运行测试
+Web 默认运行在 `http://localhost:3000`。查看日志或停止服务：
 
 ```bash
-# 运行所有测试
-npm test
-
-# 运行特定测试文件
-npm test -- path/to/test-file.test.js
-
-# 生成测试覆盖率报告
-npm run test:coverage
+npm run docker:family:logs
+npm run docker:family:down
 ```
 
-### 集成测试
+Compose 内置密钥只用于本地隔离开发。Ubuntu、Kubernetes、外部 Secret、数据备份
+和生产边界见[部署入口](../deployment/README.md)。
 
-集成测试验证不同模块之间的交互。
+## 测试命令
 
-```bash
-# 运行集成测试
-npm run test:integration
-```
+| 验证范围 | 命令 |
+| --- | --- |
+| 文档契约 | `npm run docs:family:check` |
+| ESLint | `npm run lint` |
+| 家庭后端回归 | `npm run test:family-regression` |
+| 前端回归 | `npm run test:ci --prefix frontend/web -- --runInBand` |
+| Task 11 集成与浏览器 E2E | `npm run test:task11` |
+| 旧学校兼容回归 | `npm run test:legacy-regression` |
+| 完整发布候选 | `npm run release:family` |
 
-### 端到端测试
+前端默认测试排除 `frontend/web/src/__tests__/legacy/` 中的学校版遗留测试；新增家庭
+功能测试必须进入默认 `test:ci` 通道。Task 11 E2E 使用真实内存 MongoDB 副本集、
+真实 Gateway/API 和 Chromium，不以静态页面 smoke 代替业务验收。
 
-我们使用 Cypress 进行端到端测试。
+## 目录职责
 
-```bash
-# 打开 Cypress 测试运行器
-npm run cypress:open
+| 路径 | 职责 |
+| --- | --- |
+| `backend/gateway` | 家庭 API 入口、认证和服务代理 |
+| `backend/services` | 用户、任务、进度、媒体、分析和提醒服务 |
+| `backend/common` | 跨服务契约、模型、中间件和只读仓储 |
+| `frontend/web` | 当前家长与孩子 Web 应用 |
+| `frontend/mobile` | 旧移动端代码，不属于当前家庭 MVP Gate |
+| `tests/e2e/task11` | 家庭业务浏览器验收 |
+| `deployment/kubernetes` | 受控 Kubernetes 清单与外部 Secret 流程 |
 
-# 运行所有端到端测试
-npm run cypress:run
-```
+## 变更流程
 
-## 调试技巧
+1. 从当前 `main` 建立隔离分支或 worktree。
+2. 需求变化先更新 PRD、总体设计、详细设计和测试设计并完成评审。
+3. 行为修改先增加能失败的聚焦测试，再实现并运行相关回归。
+4. 提交发布候选前执行 `npm run release:family` 并保存失败诊断或成功摘要。
+5. 通过 Pull Request 合并；不得把历史 Gate、跳过状态或人工口头确认当作发布证据。
 
-### 后端调试
-
-#### 使用 Node.js 调试器
-
-```bash
-# 启动调试模式
-node --inspect backend/app.js
-```
-
-然后在Chrome浏览器中访问 `chrome://inspect` 连接到调试器。
-
-#### 使用 VS Code 调试
-
-在 `.vscode/launch.json` 中配置调试设置：
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Program",
-      "program": "${workspaceFolder}/backend/app.js"
-    }
-  ]
-}
-```
-
-### 前端调试
-
-#### 使用浏览器开发工具
-
-- Chrome DevTools：按 F12 或右键点击 -> 检查
-- React DevTools：Chrome 扩展，用于调试 React 组件
-- Redux DevTools：Chrome 扩展，用于调试 Redux 状态
-
-#### 使用日志调试
-
-```javascript
-console.log('变量值:', variable);
-console.table(arrayData);
-console.time('操作') && console.timeEnd('操作');
-```
-
-## 版本控制
-
-### Git 工作流
-
-我们采用 Git Flow 工作流：
-
-- **master**：生产环境代码
-- **develop**：开发环境代码
-- **feature/***：功能分支
-- **release/***：发布分支
-- **hotfix/***：热修复分支
-
-### 提交规范
-
-我们使用 Conventional Commits 规范：
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-类型（type）：
-- **feat**：新功能
-- **fix**：修复Bug
-- **docs**：文档更新
-- **style**：代码风格更改（不影响功能）
-- **refactor**：代码重构
-- **perf**：性能优化
-- **test**：添加或修改测试
-- **chore**：构建过程或辅助工具变动
-
-示例：
-```
-feat(auth): 添加用户登录功能
-
-实现了基于JWT的用户认证系统，包括登录、注销和令牌刷新功能。
-
-Closes #123
-```
-
-## 文档规范
-
-### 文档类型
-
-- **README.md**：项目概述和快速入门
-- **API文档**：API接口说明
-- **开发文档**：开发指南和规范
-- **部署文档**：部署和配置说明
-- **用户指南**：用户使用说明
-
-### Markdown 规范
-
-- 使用标准 Markdown 语法
-- 标题层级清晰，从 # 开始
-- 代码块使用 ``` 包裹，并指定语言
-- 使用列表、表格等元素提高可读性
-- 添加适当的链接和图片
-
-### API 文档规范
-
-我们使用 Swagger/OpenAPI 规范记录 API 文档：
-
-- 每个 API 端点都应有清晰的描述
-- 包含请求参数、响应格式和错误码
-- 提供示例请求和响应
-- 定期更新文档以保持与代码同步
+当前仓库的 Compose 和 Kubernetes 资产是开发、验收与受控发布能力，不表示生产
+环境已经部署。容量、TLS、监控、备份恢复、k6/ZAP 和回滚演练仍需目标环境签署。
