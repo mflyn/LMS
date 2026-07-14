@@ -337,14 +337,13 @@ kubectl logs -f deployment/app
   - 安全审计：日志记录
 
 ## 文档
-- [开发文档](./docs/development) - 开发环境搭建、规范、流程等
-- [API 文档](./docs/api) - 接口说明、请求/响应格式、错误码等
-- [部署文档](./docs/deployment) - 环境要求、部署流程、配置说明等
-- [架构文档](./docs/architecture) - 系统架构、技术栈、数据流等
-- [用户指南](./docs/user-guide) - 功能说明、操作指南、常见问题等
-- [性能监控文档](./docs/performance) - 监控指标、告警规则、优化建议等
-- [错误处理文档](./docs/error-handling) - 错误类型、处理流程、最佳实践等
-- [用户体验文档](./docs/user-experience) - 交互设计、响应时间、错误提示等
+- [家庭成长产品需求](./docs/product/family-learning-tracker.md) - MVP 范围、角色和五育闭环
+- [家庭成长总体架构](./docs/architecture/family-learning-tracker-architecture.md) - 服务、数据、权限和状态机
+- [家庭成长 API 契约](./docs/api/family-learning-tracker-api.md) - 请求、响应、错误和权限规则
+- [家庭成长用户指南](./docs/user-guide/README.md) - 快速上手、家长和孩子操作指南
+- [开发与测试文档](./docs/development/README.md) - 基线、详细设计、测试用例和 gate
+- [部署文档](./docs/deployment/README.md) - 家庭 Compose、Kubernetes 和发布边界
+- [设计资产索引](./docs/development/family-growth-design-asset-index.md) - Requirement 到设计和验证证据
 
 ## 贡献指南
 

@@ -21,6 +21,8 @@
 - [家庭成长跟踪文档补充计划](./family-growth-doc-supplement-plan.md)
 - [Task 1-4 设计归档说明](./family-growth-task1-4-design-archive.md)
 - [Task 1-11 设计资产索引](./family-growth-design-asset-index.md)
+- [测试覆盖率产物管理](./test-coverage-file-management.md)
+- [历史文档归档与 Task J 迁移记录](./archive/README.md)
 - [Task 7 / FGT-MVP-1.5 基线清单](./family-growth-baseline-v1.5-manifest.md)
 - [Task 7 通知服务门禁](./family-growth-task7-gate.md)
 - [Task 7 通知服务测试设计与用例](./family-growth-task7-test-cases.md)

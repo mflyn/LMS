@@ -6,43 +6,29 @@
 ## 目录结构
 ```
 docs/
-├── development/       # 开发文档
-│   ├── setup.md      # 开发环境搭建
-│   ├── standards.md  # 开发规范
-│   ├── components.md # 组件开发指南
-│   ├── testing.md    # 测试规范
-│   ├── performance.md # 性能优化指南
-│   └── error-handling.md # 错误处理规范
-├── api/              # API 文档
-│   ├── overview.md   # API 概述
-│   ├── family-learning-tracker-api.md # 家庭成长跟踪 API 契约
-│   ├── auth.md       # 认证授权
-│   ├── endpoints/    # 接口文档
-│   ├── errors.md     # 错误码说明
-│   └── rate-limit.md # 限流规则
-├── deployment/       # 部署文档
-│   ├── requirements.md # 环境要求
-│   ├── process.md    # 部署流程
-│   ├── config.md     # 配置说明
-│   ├── monitoring.md # 监控告警
-│   └── troubleshooting.md # 故障处理
-├── architecture/     # 架构文档
-│   ├── family-learning-tracker-architecture.md # 家庭成长跟踪架构设计
-│   ├── system.md     # 系统架构
-│   ├── data-flow.md  # 数据流说明
-│   ├── performance.md # 性能架构
-│   └── security.md   # 安全架构
-├── product/          # 产品需求与规划文档
-│   └── family-learning-tracker.md # 家庭版成长跟踪产品需求与功能边界
-├── user-guide/       # 用户指南
-│   ├── README.md     # 家庭成长用户指南入口
-│   ├── quick-start.md # 快速上手
-│   ├── parent-guide.md # 家长操作指南
-│   └── child-guide.md # 孩子操作指南
-└── templates/        # 文档模板
-    ├── api.md        # API 文档模板
-    ├── component.md  # 组件文档模板
-    └── guide.md      # 指南文档模板
+├── README.md                                # 文档总入口
+├── product/
+│   └── family-learning-tracker.md           # 家庭成长 PRD
+├── architecture/
+│   ├── README.md                            # 架构入口
+│   ├── family-learning-tracker-architecture.md
+│   ├── sequence-diagrams.md
+│   └── decisions/                           # ADR
+├── api/
+│   ├── README.md                            # API 入口
+│   └── family-learning-tracker-api.md       # 当前 API 契约
+├── development/
+│   ├── README.md                            # 开发与测试入口
+│   ├── family-growth-baseline-v1.6-manifest.md
+│   ├── family-growth-design-asset-index.md
+│   └── archive/                             # 已废弃历史文档
+├── deployment/
+│   └── README.md                            # 当前部署入口
+└── user-guide/
+    ├── README.md                            # 用户指南入口
+    ├── quick-start.md
+    ├── parent-guide.md
+    └── child-guide.md
 ```
 
 ## 重点产品文档
