@@ -1,8 +1,9 @@
 # 家庭成长跟踪设计资产索引
 
-**Document status:** CURRENT
+**Document status:** READY_FOR_REVIEW
 **Applies to baseline:** FGT-MVP-1.6 candidate
 **Requirement source:** PRD 10.4 / requirement traceability matrix
+**Implementation evidence commit:** `30d0e7bb4adddc51edc7d412f82aac8d323f2bfd`
 **Updated at:** 2026-07-14
 
 本文为 Task 1~11 的设计导航和审计入口，将 35 项产品需求映射到产品、架构、
@@ -25,7 +26,7 @@
 | Task 8 | 家长 Web 应用壳 | [Task 8~11 前端总设计](../superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md) | [测试用例](./family-growth-task8-test-cases.md)、[Gate](./family-growth-task8-gate.md) |
 | Task 9 | 家长 MVP 七个业务页面 | [详细设计](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md) | [测试用例](./family-growth-task9-test-cases.md)、[Gate](./family-growth-task9-gate.md) |
 | Task 10 | 孩子 PIN 登录与孩子端页面 | [详细设计](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md) | [测试用例](./family-growth-task10-test-cases.md)、[Gate](./family-growth-task10-gate.md) |
-| Task 11 | 家长/孩子跨角色真实服务 E2E | [详细设计](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) | [测试用例](./family-growth-task11-test-cases.md)、[Gate](./family-growth-task11-gate.md) |
+| Task 11 | 家长/孩子跨角色真实服务 E2E | [详细设计](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) | [测试用例](./family-growth-task11-test-cases.md)、[Task Gate](./family-growth-task11-gate.md)、[v1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md) |
 
 ## 2. 核心图资产
 
@@ -37,6 +38,15 @@
 | 核心实体 ER 图 | [总体架构 §4.10](../architecture/family-learning-tracker-architecture.md#410-核心实体关系) | Family、User 与 Task 5~7 核心业务实体关系 |
 | 状态机 | [总体架构 §4/8](../architecture/family-learning-tracker-architecture.md#4-核心域模型) | GrowthTask、MediaAsset/Reference、星星、奖励、周报和孩子会话 |
 | 跨服务时序 | [跨服务时序图](../architecture/sequence-diagrams.md) | 注册/PIN、任务/星星、记录/周报、媒体、提醒、奖励与 Task 11 E2E |
+
+### 2.1 图资产完整性结论
+
+- 总体架构同时覆盖业务组件、服务职责、前端组件和核心实体关系，不以单一部署图
+  代替业务边界设计。
+- GrowthTask、MediaAsset/MediaReference、星星发放、奖励兑换、周报冻结和孩子会话
+  均有状态机；跨服务写入、失败补偿和权限切换由 8 条时序图覆盖。
+- Requirement 行的“架构/图”链接是每项需求的最短审计入口；共享状态机或时序图
+  可以支撑多项需求，但不得省略对应行。
 
 ## 3. Requirement 设计资产追踪
 
@@ -86,4 +96,7 @@
    不能只修改本文链接。
 3. Task 新增详细设计、测试或 Gate 后，应先更新对应 Requirement 行，再更新
    [最终 MVP 基线清单](./family-growth-baseline-v1.6-manifest.md)。
-4. 文档评审必须执行本地链接检查，并验证本文 Requirement 集合与 PRD 10.4 完全一致。
+4. 文档评审必须执行 `npm run docs:family:check`，验证本地链接、占位符、本文与
+   PRD/追踪矩阵的 35 项 Requirement 集合，以及 v1.6 证据状态。
+5. 所有 Requirement 行共用 [v1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md)
+   的 clean-main 回归证据；表中 Task Gate 保留该需求首次关闭时的聚焦证据。

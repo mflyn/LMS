@@ -14,7 +14,10 @@
 - Legacy school paths redirect into the protected family entry and do not import school pages into the Task 8 application composition.
 - Legacy school tests are isolated under `frontend/web/src/__tests__/legacy/`; the default CI path runs only current family-growth tests.
 
-## Automated Evidence
+## Historical Automated Evidence
+
+The counts below are the Task 8 candidate snapshot from 2026-07-10. They prove the
+shell's original closure and are not the current v1.6 total.
 
 | Command | Result |
 | --- | --- |
@@ -33,7 +36,7 @@ The local Web application was inspected in the in-app browser at `/login` on a d
 - At 360px, form controls remain inside the viewport without horizontal overflow or clipped text.
 - With the demo parent session, `/app/today` shows the parent shell, the 360px navigation trigger expands all seven routes, and changing the labelled child selector updates the current child from 小明 to 小红.
 
-## Review Notes and Residual Risk
+## Historical Review Notes and Residual Risk
 
 - `npm audit` reports inherited CRA dependency issues: frontend reports 61 vulnerabilities and the root install reports 30. This Task 8 change does not add a runtime dependency; the work needs a separate CRA/dependency modernization task, not an unreviewed `npm audit fix --force` inside the UI-shell delivery.
 - CRA reports that the checked-in Browserslist data is stale. This does not change the successful build but should be refreshed with the future dependency-maintenance task.
@@ -47,3 +50,12 @@ All exit criteria have succeeded:
 - The implementation review findings were remediated and covered by the final 7-suite frontend test run.
 - PR [#6](https://github.com/mflyn/LMS/pull/6) passed the required `Family Regression` CI check.
 - PR #6 was squash-merged to `main` as `6e5803e8c0e937889aad49f94bac66c4d8b6b995` on 2026-07-10.
+
+## v1.6 Revalidation
+
+Task 9~11 subsequently closed the business pages, child entry, and real cross-role E2E
+that were outside this historical gate. On 2026-07-14, the unified clean-main command
+`npm run release:family` passed 70 backend suites / 755 tests, 4 Task 11 integration
+suites / 6 tests, 25 frontend suites / 156 tests, production build, 4 Chromium tests,
+Compose build/health, and the media-backed gateway smoke. Current evidence and remaining
+production boundaries are in the [v1.6 release gate](./family-growth-v1.6-release-gate.md).

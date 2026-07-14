@@ -18,6 +18,8 @@
 ## 家庭成长基线
 
 - [Task 1-11 / FGT-MVP-1.6 最终 MVP 基线候选](./family-growth-baseline-v1.6-manifest.md)
+- [FGT-MVP-1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md)
+- [35 项需求追踪矩阵](./family-growth-requirement-traceability.md)
 - [家庭成长跟踪文档补充计划](./family-growth-doc-supplement-plan.md)
 - [Task 1-4 设计归档说明](./family-growth-task1-4-design-archive.md)
 - [Task 1-11 设计资产索引](./family-growth-design-asset-index.md)
@@ -59,12 +61,16 @@ make down
 
 等价的根目录入口是 `npm run docker:family`、`npm run test:family-regression` 和 `npm run docker:family:down`。完整学校兼容栈仍由 `docker-compose.yml` 管理。
 
+提交发布候选前必须在根目录执行 `npm run release:family`；该命令包含 clean
+install、文档契约、静态检查、后端/前端/浏览器测试、production build、Compose
+health 和私有媒体 smoke，详细标准见 [v1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md)。
+
 ## 开发环境搭建
 
 ### 系统要求
 
 - **操作系统**：Windows 10+、macOS 10.15+、Linux (Ubuntu 18.04+)
-- **Node.js**：v14.x 或更高版本
+- **Node.js**：v22.x（与 CI 和家庭服务镜像一致）
 - **MongoDB**：v4.4 或更高版本
 - **Redis**：v6.x 或更高版本
 - **Git**：v2.x 或更高版本
@@ -102,23 +108,16 @@ redis-cli --version
 #### 4. 克隆项目
 
 ```bash
-git clone https://github.com/your-organization/student-tracking-system.git
-cd student-tracking-system
+git clone https://github.com/mflyn/LMS.git
+cd LMS
 ```
 
 #### 5. 安装依赖
 
 ```bash
-# 安装根目录依赖
-npm install
-
-# 安装后端依赖
-cd backend
-npm install
-
-# 安装前端依赖
-cd ../frontend
-npm install
+# 严格按 lockfile 安装根目录和家庭 Web 依赖
+npm ci
+npm ci --prefix frontend/web
 ```
 
 #### 6. 配置环境变量
@@ -127,8 +126,8 @@ npm install
 # 后端环境变量
 cp backend/.env.example backend/.env
 
-# 前端环境变量
-cp frontend/.env.example frontend/.env
+# Ubuntu Compose 环境模板（仅按部署场景使用）
+cp docker-compose.ubuntu.env.example .env.ubuntu
 ```
 
 编辑 `.env` 文件，配置必要的环境变量。

@@ -1,0 +1,256 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+
+const repositoryRoot = path.resolve(__dirname, '..');
+const authoritativeDocuments = [
+  'docs/README.md',
+  'docs/development/README.md',
+  'docs/product/family-learning-tracker.md',
+  'docs/architecture/family-learning-tracker-architecture.md',
+  'docs/architecture/sequence-diagrams.md',
+  'docs/api/family-learning-tracker-api.md',
+  'docs/development/family-growth-requirement-traceability.md',
+  'docs/development/family-growth-design-asset-index.md',
+  'docs/development/family-growth-baseline-v1.6-manifest.md',
+  'docs/development/family-growth-v1.6-release-gate.md',
+  'docs/deployment/README.md'
+];
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8');
+}
+
+function requirementIds(markdown) {
+  return new Set(
+    [...markdown.matchAll(/^\|\s*`((?:FR|NFR)-[A-Z]+-\d{3})`\s*\|/gm)].map(
+      match => match[1]
+    )
+  );
+}
+
+function assert(condition, message, errors) {
+  if (!condition) {
+    errors.push(message);
+  }
+}
+
+function sameSet(actual, expected) {
+  return (
+    actual.size === expected.size && [...actual].every(value => expected.has(value))
+  );
+}
+
+const headingCache = new Map();
+
+function headingSlug(text) {
+  return text
+    .toLowerCase()
+    .replace(/<[^>]*>/g, '')
+    .replace(/[`*_~]/g, '')
+    .replace(/[^\p{L}\p{N}\s_-]/gu, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+function headingSlugs(absolutePath) {
+  if (headingCache.has(absolutePath)) {
+    return headingCache.get(absolutePath);
+  }
+  const seen = new Map();
+  const slugs = new Set();
+  const markdown = fs.readFileSync(absolutePath, 'utf8');
+  for (const match of markdown.matchAll(/^#{1,6}\s+(.+?)\s*#*$/gm)) {
+    let slug = headingSlug(match[1]);
+    const duplicateCount = seen.get(slug) || 0;
+    seen.set(slug, duplicateCount + 1);
+    if (duplicateCount > 0) {
+      slug = `${slug}-${duplicateCount}`;
+    }
+    slugs.add(slug);
+  }
+  headingCache.set(absolutePath, slugs);
+  return slugs;
+}
+
+function checkLocalLinks(relativePath, markdown, errors) {
+  const linkPattern = /!?\[[^\]]*\]\(([^)]+)\)/g;
+  for (const match of markdown.matchAll(linkPattern)) {
+    let target = match[1].trim();
+    if (target.startsWith('<') && target.endsWith('>')) {
+      target = target.slice(1, -1);
+    }
+    if (/^(?:https?:|mailto:|tel:)/i.test(target)) {
+      continue;
+    }
+    const [targetPath, fragment] = target.split('#');
+    const decodedTarget = decodeURIComponent(targetPath || path.basename(relativePath));
+    const resolved = path.resolve(
+      repositoryRoot,
+      path.dirname(relativePath),
+      decodedTarget
+    );
+    assert(
+      fs.existsSync(resolved),
+      `${relativePath}: missing local link target ${decodedTarget}`,
+      errors
+    );
+    if (
+      fragment &&
+      fs.existsSync(resolved) &&
+      fs.statSync(resolved).isFile() &&
+      path.extname(resolved).toLowerCase() === '.md'
+    ) {
+      const decodedFragment = decodeURIComponent(fragment).toLowerCase();
+      assert(
+        headingSlugs(resolved).has(decodedFragment),
+        `${relativePath}: missing heading ${decodedTarget}#${decodedFragment}`,
+        errors
+      );
+    }
+  }
+}
+
+function validate() {
+  const errors = [];
+  const documents = new Map();
+
+  for (const relativePath of authoritativeDocuments) {
+    const absolutePath = path.join(repositoryRoot, relativePath);
+    assert(fs.existsSync(absolutePath), `${relativePath}: file is missing`, errors);
+    if (fs.existsSync(absolutePath)) {
+      documents.set(relativePath, read(relativePath));
+    }
+  }
+
+  for (const [relativePath, markdown] of documents) {
+    checkLocalLinks(relativePath, markdown, errors);
+    assert(
+      !/\b(?:TODO|TBD|FIXME|PLANNED_TASK_5_PLUS)\b/.test(markdown),
+      `${relativePath}: unresolved placeholder marker`,
+      errors
+    );
+  }
+
+  const product = documents.get('docs/product/family-learning-tracker.md') || '';
+  const traceability =
+    documents.get('docs/development/family-growth-requirement-traceability.md') || '';
+  const designIndex =
+    documents.get('docs/development/family-growth-design-asset-index.md') || '';
+  const manifest =
+    documents.get('docs/development/family-growth-baseline-v1.6-manifest.md') || '';
+  const deployment = documents.get('docs/deployment/README.md') || '';
+
+  const productIds = requirementIds(product);
+  const traceabilityIds = requirementIds(traceability);
+  const designIds = requirementIds(designIndex);
+  assert(productIds.size === 35, `PRD requirement count is ${productIds.size}, expected 35`, errors);
+  assert(
+    sameSet(traceabilityIds, productIds),
+    'traceability requirement set differs from PRD 10.4',
+    errors
+  );
+  assert(
+    sameSet(designIds, productIds),
+    'design asset requirement set differs from PRD 10.4',
+    errors
+  );
+
+  const traceabilityRows = traceability
+    .split('\n')
+    .filter(line => /^\|\s*`(?:FR|NFR)-[A-Z]+-\d{3}`\s*\|/.test(line));
+  assert(
+    traceabilityRows.every(line => line.includes('| COVERED |')),
+    'every traceability row must be COVERED',
+    errors
+  );
+  assert(
+    traceability.includes('**Document status:** READY_FOR_REVIEW'),
+    'traceability status must be READY_FOR_REVIEW',
+    errors
+  );
+  assert(
+    traceability.includes('**Baseline candidate:** FGT-MVP-1.6'),
+    'traceability must target FGT-MVP-1.6',
+    errors
+  );
+
+  assert(
+    manifest.includes('**status:** READY_FOR_REVIEW'),
+    'v1.6 manifest must remain READY_FOR_REVIEW',
+    errors
+  );
+  assert(
+    manifest.includes(
+      '**implementationEvidenceCommit:** `30d0e7bb4adddc51edc7d412f82aac8d323f2bfd`'
+    ),
+    'v1.6 manifest must identify the verified implementation commit',
+    errors
+  );
+  for (const evidence of [
+    '70 suites / 755 tests',
+    '25 suites / 156 tests',
+    '4 suites / 6 tests',
+    '4 Chromium tests',
+    '91-byte PNG'
+  ]) {
+    assert(manifest.includes(evidence), `v1.6 manifest is missing ${evidence}`, errors);
+  }
+  for (const staleClaim of [
+    '52 suites / 652',
+    '58 suites / 675',
+    '23 suites / 149',
+    '当前创建家庭和孩子会顺序写多个文档，不在一个事务内',
+    '当前删除路由允许把 `confirmed + starAwardState=pending` 的任务归档',
+    '发布前必须单独启用并通过受控 build/deploy gate'
+  ]) {
+    assert(
+      !manifest.includes(staleClaim),
+      `v1.6 manifest contains obsolete claim: ${staleClaim}`,
+      errors
+    );
+  }
+
+  for (const requiredText of [
+    'npm run release:family',
+    'Node.js 22',
+    'Docker Compose',
+    'release-gate-artifacts',
+    '不删除持久卷'
+  ]) {
+    assert(
+      deployment.includes(requiredText),
+      `deployment guide is missing ${requiredText}`,
+      errors
+    );
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Family documentation gate failed:\n- ${errors.join('\n- ')}`);
+  }
+
+  return {
+    documents: documents.size,
+    requirements: productIds.size
+  };
+}
+
+if (require.main === module) {
+  try {
+    const result = validate();
+    process.stdout.write(
+      `Family documentation gate passed: ${result.documents} documents, ` +
+        `${result.requirements} requirements.\n`
+    );
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+  }
+}
+
+module.exports = {
+  authoritativeDocuments,
+  requirementIds,
+  validate
+};

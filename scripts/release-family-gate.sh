@@ -59,24 +59,25 @@ trap 'exit 143' TERM
 
 run_step 01-root-clean-install npm ci
 run_step 02-lint npm run lint
-run_step 03-family-regression npm run test:family-regression
-run_step 04-task11-integration npm run test:family-flow:integration
-run_step 05-frontend-clean-install npm ci --prefix frontend/web
-run_step 06-frontend-tests npm run test:ci --prefix frontend/web -- --runInBand
-run_step 07-frontend-build npm run build --prefix frontend/web
+run_step 03-family-docs npm run docs:family:check
+run_step 04-family-regression npm run test:family-regression
+run_step 05-task11-integration npm run test:family-flow:integration
+run_step 06-frontend-clean-install npm ci --prefix frontend/web
+run_step 07-frontend-tests npm run test:ci --prefix frontend/web -- --runInBand
+run_step 08-frontend-build npm run build --prefix frontend/web
 
 if [[ "${RELEASE_GATE_INSTALL_BROWSER_DEPS:-0}" == "1" ]]; then
-  run_step 08-playwright-browser npx playwright install --with-deps chromium
+  run_step 09-playwright-browser npx playwright install --with-deps chromium
 else
-  run_step 08-playwright-browser npx playwright install chromium
+  run_step 09-playwright-browser npx playwright install chromium
 fi
-run_step 09-task11-e2e npm run test:family-flow:e2e
+run_step 10-task11-e2e npm run test:family-flow:e2e
 
 compose_touched=1
-run_step 10-compose-config compose_family config --quiet
-run_step 11-compose-build compose_family build
-run_step 12-compose-start compose_family up -d --wait --wait-timeout "${RELEASE_GATE_HEALTH_TIMEOUT_SECONDS:-240}"
-run_step 13-compose-smoke node scripts/compose-family-smoke.js
-run_step 14-git-clean bash scripts/check-git-clean.sh
+run_step 11-compose-config compose_family config --quiet
+run_step 12-compose-build compose_family build
+run_step 13-compose-start compose_family up -d --wait --wait-timeout "${RELEASE_GATE_HEALTH_TIMEOUT_SECONDS:-240}"
+run_step 14-compose-smoke node scripts/compose-family-smoke.js
+run_step 15-git-clean bash scripts/check-git-clean.sh
 
 printf '\nFamily release gate passed. Evidence: %s\n' "$artifact_dir"

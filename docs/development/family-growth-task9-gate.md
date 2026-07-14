@@ -27,6 +27,9 @@ A post-gate review raised two additional observations. The reported Today-page i
 
 ## Verification Evidence
 
+The following counts are the Task 9 candidate snapshot. They remain useful focused
+evidence but do not represent the current v1.6 totals.
+
 | Gate | Result |
 | --- | --- |
 | Frontend integration | `npm run test:ci`: 12 suites, 68 tests passed; Today mixed-failure and task multi-attachment remediation included |
@@ -41,4 +44,14 @@ A post-gate review raised two additional observations. The reported Today-page i
 
 ## Acceptance Decision
 
-Task 9 is accepted and merged. Task 10 child PIN entry and child-only routes, plus Task 11 cross-role E2E, remain outside this gate.
+Task 9 is accepted and merged. At this historical gate, Task 10 child PIN entry and
+Task 11 cross-role E2E were outside scope; both are now implemented and covered.
+
+## v1.6 Revalidation
+
+The 2026-07-14 clean-main `npm run release:family` run passed 70 backend suites / 755
+tests, 4 Task 11 integration suites / 6 tests, 25 frontend suites / 156 tests, production
+build, 4 Chromium tests, Compose build/health, and the media-backed gateway smoke. The
+[v1.6 release gate](./family-growth-v1.6-release-gate.md) supersedes this document only
+for current aggregate counts and residual release risks; the Task 9 acceptance decision
+and focused evidence remain historical facts.
