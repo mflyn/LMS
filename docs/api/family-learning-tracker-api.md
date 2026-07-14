@@ -1090,3 +1090,32 @@ Idempotency-Key: redeem-reward-001-20260618
 9. 聚合接口必须报告部分失败；不得把缺失数据静默当作 0。
 10. 图片必须先上传为私有 MediaAsset，业务接口只接受 mediaId；任何永久公开 URL 都不是有效契约。
 11. 创建与更新接口使用相同的角色字段白名单；禁止字段返回 `403 FIELD_ACCESS_DENIED`，不得静默丢弃。
+
+## 12. 相关设计文档
+
+本节是 API 契约到产品、架构、详细设计和验收证据的反向导航，不改变前述接口
+定义。逐 Requirement 的完整映射见
+[设计资产索引](../development/family-growth-design-asset-index.md)。
+
+### 12.1 产品与总体设计基线
+
+| 资产 | 文档 | 用途 |
+| --- | --- | --- |
+| 产品需求 | [家庭成长跟踪 PRD](../product/family-learning-tracker.md) | 角色、德智体美劳范围、MVP 行为和验收标准 |
+| 总体架构 | [家庭成长跟踪架构](../architecture/family-learning-tracker-architecture.md) | 服务边界、数据归属、组件/ER/状态机和权限规则 |
+| 跨服务时序 | [核心流程时序图](../architecture/sequence-diagrams.md) | 公开 API、内部调用、失败降级和一致性保证 |
+| Task 1~4 设计归档 | [Task 1~4 设计归档说明](../development/family-growth-task1-4-design-archive.md) | 早期任务的 PRD、架构、API、ADR 和 Task 4.5 评审映射 |
+| 需求追踪 | [需求追踪矩阵](../development/family-growth-requirement-traceability.md) | Requirement 到代码、测试和发现关闭证据 |
+| 最终候选基线 | [FGT-MVP-1.6 基线清单](../development/family-growth-baseline-v1.6-manifest.md) | Task 1~11 范围、质量证据、风险和审批状态 |
+
+### 12.2 Task 5~11 详细设计与验收
+
+| Task | 详细设计 | 测试用例 | Gate |
+| --- | --- | --- | --- |
+| Task 5 | [Growth Logs、Knowledge Points、Stars and Rewards](../superpowers/specs/2026-06-19-family-growth-task5-design.md) | [Task 5 测试用例](../development/family-growth-task5-test-cases.md) | [Task 5 Gate](../development/family-growth-task5-gate.md) |
+| Task 6 | [Private Media、Mistakes and Weekly Reports](../superpowers/specs/2026-06-20-family-growth-task6-design.md)；[媒体引用](../superpowers/specs/2026-06-21-family-growth-task6-phase3a-reference-release-design.md)、[孩子头像](../superpowers/specs/2026-06-21-family-growth-task6-phase3b-child-avatar-design.md)、[任务附件](../superpowers/specs/2026-06-22-family-growth-task6-phase3c-task-attachments-design.md)补充设计 | [Task 6 测试用例](../development/family-growth-task6-test-cases.md) | [Task 6 Gate](../development/family-growth-task6-gate.md) |
+| Task 7 | [Lightweight Family Notifications](../superpowers/specs/2026-07-07-family-growth-task7-notifications-design.md) | [Task 7 测试用例](../development/family-growth-task7-test-cases.md) | [Task 7 Gate](../development/family-growth-task7-gate.md) |
+| Task 8 | [Task 8~11 Frontend Design Baseline](../superpowers/specs/2026-07-09-family-growth-task8-task11-frontend-design.md) | [Task 8 测试用例](../development/family-growth-task8-test-cases.md) | [Task 8 Gate](../development/family-growth-task8-gate.md) |
+| Task 9 | [Parent MVP Pages Design](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md) | [Task 9 测试用例](../development/family-growth-task9-test-cases.md) | [Task 9 Gate](../development/family-growth-task9-gate.md) |
+| Task 10 | [Child Web Entry Design](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md) | [Task 10 测试用例](../development/family-growth-task10-test-cases.md) | [Task 10 Gate](../development/family-growth-task10-gate.md) |
+| Task 11 | [Family End-to-End Design](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) | [Task 11 测试用例](../development/family-growth-task11-test-cases.md) | [Task 11 Gate](../development/family-growth-task11-gate.md) |
