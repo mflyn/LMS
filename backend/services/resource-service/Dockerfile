@@ -1,24 +1,12 @@
-FROM node:14-alpine
+FROM node:22-alpine
 
 WORKDIR /app
-
-# 复制package.json和package-lock.json
 COPY package*.json ./
+RUN npm ci --omit=dev
+COPY backend ./backend
+RUN mkdir -p /var/lib/family-growth/private-media
 
-# 安装依赖
-RUN npm ci --only=production
-
-# 创建上传目录
-RUN mkdir -p /app/uploads
-
-# 复制源代码
-COPY . .
-
-# 暴露端口
+WORKDIR /app/backend/services/resource-service
 EXPOSE 3005
-
-# 设置卷挂载点
-VOLUME ["/app/uploads"]
-
-# 启动服务
+VOLUME ["/var/lib/family-growth/private-media"]
 CMD ["node", "server.js"]
