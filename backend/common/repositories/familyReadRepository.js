@@ -140,6 +140,9 @@ const withSourceError = async (source, fn) => {
 };
 
 const idString = (value) => (value ? value.toString() : undefined);
+const beforeCutoff = (options, field = 'createdAt') => ({
+  [field]: { [options.inclusiveCutoff ? '$lte' : '$lt']: options.cutoff }
+});
 
 const baseView = (row) => ({
   familyId: idString(row.familyId),
@@ -180,7 +183,7 @@ const createFamilyReadRepository = ({ connection, timeoutMs = DEFAULT_TIMEOUT_MS
       query: {
         ...ids,
         dueDate: { $gte: options.from, $lte: options.to },
-        createdAt: { $lt: options.cutoff }
+        ...beforeCutoff(options)
       }
     });
     return rows.map((row) => ({
@@ -211,7 +214,7 @@ const createFamilyReadRepository = ({ connection, timeoutMs = DEFAULT_TIMEOUT_MS
       query: {
         ...ids,
         date: { $gte: options.from, $lte: options.to },
-        createdAt: { $lt: options.cutoff }
+        ...beforeCutoff(options)
       }
     });
     return rows.map((row) => ({
@@ -240,7 +243,7 @@ const createFamilyReadRepository = ({ connection, timeoutMs = DEFAULT_TIMEOUT_MS
       sort: { dimension: 1, name: 1, _id: 1 },
       query: {
         ...ids,
-        createdAt: { $lt: options.cutoff }
+        ...beforeCutoff(options)
       }
     });
     return rows.map((row) => ({
@@ -266,7 +269,7 @@ const createFamilyReadRepository = ({ connection, timeoutMs = DEFAULT_TIMEOUT_MS
       sort: { effectiveAt: 1, _id: 1 },
       query: {
         ...ids,
-        effectiveAt: { $lt: options.cutoff }
+        ...beforeCutoff(options, 'effectiveAt')
       }
     });
     return rows.map((row) => ({
@@ -293,7 +296,7 @@ const createFamilyReadRepository = ({ connection, timeoutMs = DEFAULT_TIMEOUT_MS
       sort: { createdAt: 1, _id: 1 },
       query: {
         ...ids,
-        createdAt: { $lt: options.cutoff }
+        ...beforeCutoff(options)
       }
     });
     return rows.map((row) => ({
@@ -320,7 +323,7 @@ const createFamilyReadRepository = ({ connection, timeoutMs = DEFAULT_TIMEOUT_MS
       sort: { effectiveAt: 1, _id: 1 },
       query: {
         ...ids,
-        effectiveAt: { $lt: options.cutoff }
+        ...beforeCutoff(options, 'effectiveAt')
       }
     });
     return rows.map((row) => ({
@@ -336,7 +339,25 @@ const createFamilyReadRepository = ({ connection, timeoutMs = DEFAULT_TIMEOUT_MS
     }));
   };
 
+  const hasWeeklyReportProjection = async (options = {}) => {
+    const ids = rangeScope(options);
+    const rows = await findRows({
+      collection: 'weeklyreports',
+      options,
+      projection: { _id: 1 },
+      sort: { _id: 1 },
+      query: {
+        ...ids,
+        weekStart: options.from,
+        weekEnd: options.to,
+        ...beforeCutoff(options)
+      }
+    });
+    return rows.length > 0;
+  };
+
   return {
+    hasWeeklyReportProjection,
     listTaskProjection,
     listGrowthLogProjection,
     listKnowledgePointProjection,

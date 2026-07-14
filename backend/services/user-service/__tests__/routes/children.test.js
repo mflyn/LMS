@@ -152,6 +152,35 @@ describe('children routes', () => {
     expect(editResponse.status).toBe(403);
   });
 
+  test('uses textbookVersion and sportsPreferences as the only public profile field names', async () => {
+    const parent = await createParent();
+    await createFamily(app, parent);
+    const child = await createChild(app, parent);
+    const endpoint = `/api/children/${child.childId}`;
+
+    const canonical = await request(app)
+      .patch(endpoint)
+      .set(parentHeaders(parent, 'PATCH', endpoint))
+      .send({ textbookVersion: '苏教版', sportsPreferences: ['游泳'] });
+    expect(canonical.status).toBe(200);
+    expect(canonical.body.data.child).toEqual(expect.objectContaining({
+      textbookVersion: '苏教版',
+      sportsPreferences: ['游泳']
+    }));
+
+    for (const alias of [
+      { curriculumVersion: '错误别名' },
+      { sportPreferences: ['错误别名'] }
+    ]) {
+      const response = await request(app)
+        .patch(endpoint)
+        .set(parentHeaders(parent, 'PATCH', endpoint))
+        .send(alias);
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    }
+  });
+
   test('child pin login returns child-scoped token and child cannot list siblings', async () => {
     const parent = await createParent();
     const family = await createFamily(app, parent, '小明的家');

@@ -19,7 +19,7 @@ Task 7 does not implement push notifications, email, SMS, background schedulers,
 
 ## 2. Architecture
 
-`notification-service` remains the owner of `ReminderSettings`. It does not copy task, mistake, report, or log data. Instead, it receives a `sourceRepository` dependency with bounded read methods. Production can construct the repository from Mongo collections; tests inject deterministic sources. When the Task 6 shared `familyReadRepository` is available, the production adapter must call that boundary rather than importing private service models.
+`notification-service` remains the owner of `ReminderSettings`. It does not copy task, mistake, report, or log data. Instead, it receives a `sourceRepository` dependency with bounded read methods. Production adapts the Task 6 shared `familyReadRepository` and must not import private service models; tests inject deterministic sources. The adapter uses an inclusive request-time cutoff so writes committed at the same clock instant are visible, while historical weekly-report aggregation retains the shared repository's default exclusive cutoff.
 
 The public API is mounted under the notification service:
 
@@ -70,7 +70,7 @@ All reminders include:
 
 ```json
 {
-  "id": "type:childId:localDate:sourceId",
+  "reminderId": "type:childId:localDate:sourceId",
   "type": "task_today",
   "childId": "...",
   "localDate": "2026-07-07",
@@ -82,7 +82,7 @@ All reminders include:
 }
 ```
 
-`id` is stable and deduplicates by `type + childId + LocalDate + sourceId`. Items are sorted by severity order `warning > info`, then type order, then `sourceId`.
+`reminderId` is stable and deduplicates by `type + childId + LocalDate + sourceId`. Items are sorted by severity order `warning > info`, then type order, then `sourceId`.
 
 Reminder categories:
 

@@ -72,6 +72,8 @@ Test names must begin with the case ID. Unless stated otherwise, database cases 
 | `TC-T5-SAGA-004` | `FR-REWARD-001` | idempotency | Confirm already confirmed/awarded task. | `200` existing result; award client not called. | `growthTasks.test.js` |
 | `TC-T5-SAGA-005` | `FR-REWARD-001`, `NFR-DATA-002` | concurrency | Two parent confirmations race on completed task. | One state transition; calls converge to one ledger award and awarded task. | `growthTasks.test.js` |
 | `TC-T5-SAGA-006` | `FR-REWARD-001` | state | Confirm pending/archived or other-family task. | Stable `409 TASK_STATE_CONFLICT` or `403 CHILD_ACCESS_DENIED`; no award call. | `growthTasks.test.js` |
+| `TC-T5-SAGA-007` | `FR-REWARD-001`, `NFR-DATA-002` | failure | Star award succeeds but the final pending-to-awarded CAS throws. | `503 STAR_AWARD_PENDING`; task remains confirmed/pending so a retry can converge. | `growthTasks.test.js` |
+| `TC-T5-SAGA-008` | `FR-REWARD-001`, `NFR-DATA-002` | concurrency | The final CAS misses because another request already changed the task to awarded. | Reload observes awarded and returns `200` without regressing state. | `growthTasks.test.js` |
 
 ## Gateway, Regression, and Gate
 
@@ -93,7 +95,7 @@ Test names must begin with the case ID. Unless stated otherwise, database cases 
 | --- | --- |
 | `FR-LOG-001` | `TC-T5-LOG-001` through `TC-T5-LOG-010` |
 | `FR-POINT-001` | `TC-T5-POINT-001` through `TC-T5-POINT-008`, `TC-T5-CONTRACT-001` |
-| `FR-REWARD-001` | `TC-T5-STAR-003` through `TC-T5-STAR-005`, `TC-T5-SAGA-001` through `TC-T5-SAGA-006`, `TC-T5-REWARD-004` |
+| `FR-REWARD-001` | `TC-T5-STAR-003` through `TC-T5-STAR-005`, `TC-T5-SAGA-001` through `TC-T5-SAGA-008`, `TC-T5-REWARD-004` |
 | `FR-REWARD-002` | `TC-T5-REWARD-001` through `TC-T5-REWARD-012` |
 | `NFR-SEC-001` | cross-family and sibling cases in every route suite |
 | `NFR-SEC-002` | `TC-T5-DEPLOY-001` plus gateway identity suites from the approved baseline |
