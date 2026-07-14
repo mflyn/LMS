@@ -9,6 +9,7 @@ import {
   listFamilyReminders,
   listGrowthLogs,
   listGrowthTasks,
+  listKnowledgePoints,
   listMistakes,
   listRewards
 } from '../../services/familyApi';
@@ -23,6 +24,7 @@ jest.mock('../../services/familyApi', () => ({
   listFamilyReminders: jest.fn(),
   listGrowthLogs: jest.fn(),
   listGrowthTasks: jest.fn(),
+  listKnowledgePoints: jest.fn(),
   listMistakes: jest.fn(),
   listRewards: jest.fn(),
   setChildPin: jest.fn()
@@ -62,6 +64,7 @@ describe('family parent navigation', () => {
     jest.clearAllMocks();
     listGrowthTasks.mockResolvedValue({ items: [], total: 0 });
     listGrowthLogs.mockResolvedValue({ items: [], total: 0 });
+    listKnowledgePoints.mockResolvedValue({ items: [], page: 1, pageSize: 100, total: 0 });
     getWeeklyReport.mockResolvedValue({ report: null });
     listMistakes.mockResolvedValue({ items: [], total: 0 });
     listFamilyReminders.mockResolvedValue({ items: [], meta: { partial: false, unavailableSources: [] } });
@@ -112,7 +115,7 @@ describe('family parent navigation', () => {
     expect(window.location.pathname).toBe('/app/today');
     expect(screen.getByRole('button', { name: '打开导航' })).toBeInTheDocument();
 
-    for (const label of ['今日', '任务', '记录', '错题', '周报', '提醒', '星星与奖励', '孩子']) {
+    for (const label of ['今日', '任务', '记录', '知识与能力点', '错题', '周报', '提醒', '星星与奖励', '孩子']) {
       expect(screen.getByRole('link', { name: label })).toBeInTheDocument();
     }
 
@@ -125,6 +128,7 @@ describe('family parent navigation', () => {
     const routes = [
       ['tasks', '任务'],
       ['logs', '记录'],
+      ['points', '知识与能力点'],
       ['mistakes', '错题'],
       ['reports', '周报'],
       ['reminders', '提醒'],

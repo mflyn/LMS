@@ -17,6 +17,7 @@ const PrivateMediaField = ({
   onChange,
   onUploaded,
   onRemoved,
+  onBusyChange,
   uploadPrivateMedia = requestPrivateMediaUpload,
   getPrivateMediaAccess = requestPrivateMediaAccess
 }) => {
@@ -24,12 +25,14 @@ const PrivateMediaField = ({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [signedUrl, setSignedUrl] = useState('');
+  const [message, setMessage] = useState('');
 
   const upload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     setError('');
     setSignedUrl('');
+    setMessage('');
 
     if (!ALLOWED_TYPES.has(file.type)) {
       setError('仅支持 JPEG、PNG 或 WebP 图片');
@@ -41,16 +44,19 @@ const PrivateMediaField = ({
     }
 
     setBusy(true);
+    onBusyChange?.(true);
     try {
       const result = await uploadPrivateMedia({ childId, purpose, file });
       const mediaId = result?.media?.mediaId || result?.mediaId;
       if (!mediaId) throw new Error('上传响应缺少 mediaId');
       onUploaded?.(mediaId, value);
       onChange(mediaId);
+      setMessage(`${label}已就绪，请保存表单完成更新。`);
     } catch (uploadError) {
       setError(apiMessage(uploadError));
     } finally {
       setBusy(false);
+      onBusyChange?.(false);
       event.target.value = '';
     }
   };
@@ -73,6 +79,7 @@ const PrivateMediaField = ({
   const remove = () => {
     setSignedUrl('');
     setError('');
+    setMessage('');
     onRemoved?.(value);
     onChange(null);
   };
@@ -98,6 +105,7 @@ const PrivateMediaField = ({
         </div>
       )}
       {signedUrl && <img className="family-media-preview" src={signedUrl} alt={`${label}预览`} />}
+      {message && <p className="family-success-message" role="status">{message}</p>}
       {error && <p className="family-form-error" role="alert">{error}</p>}
     </div>
   );
