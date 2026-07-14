@@ -89,12 +89,12 @@ PR 状态、CI 结论和 merge commit 已于 2026-07-13 从 GitHub 与本地
 
 `npm run release:family` 已在 Stage 6 clean feature commit 和合并后的 clean
 `main` 提交各执行一次；Stage 7 候选及其合并提交又在文档契约加入同一命令后
-各执行一次。当前同一次命令的结果为：
+各执行一次。本次文档治理候选继续通过同一命令重验；当前结果为：
 
 | Gate | 当前同一次运行结果 |
 | --- | --- |
-| 文档契约 | 11 份权威文档、35 项需求、链接/占位符/集合一致性检查通过 |
-| Backend family regression | 70 suites / 755 tests，通过 |
+| 文档契约 | 17 份权威文档、35 项需求、链接/占位符/集合一致性检查通过 |
+| Backend family regression | 70 suites / 756 tests，通过 |
 | Task 11 integration | 4 suites / 6 tests，通过 |
 | Frontend CI | 25 suites / 156 tests，通过且无意外 console warning/error |
 | Frontend production build | 通过 |

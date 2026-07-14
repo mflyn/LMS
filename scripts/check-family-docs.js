@@ -16,7 +16,12 @@ const authoritativeDocuments = [
   'docs/development/family-growth-design-asset-index.md',
   'docs/development/family-growth-baseline-v1.6-manifest.md',
   'docs/development/family-growth-v1.6-release-gate.md',
-  'docs/deployment/README.md'
+  'docs/deployment/README.md',
+  'docs/deployment/local-ubuntu-deployment.md',
+  'docs/user-guide/README.md',
+  'docs/user-guide/quick-start.md',
+  'docs/user-guide/parent-guide.md',
+  'docs/user-guide/child-guide.md'
 ];
 
 function read(relativePath) {
@@ -135,6 +140,9 @@ function validate() {
   }
 
   const product = documents.get('docs/product/family-learning-tracker.md') || '';
+  const architecture =
+    documents.get('docs/architecture/family-learning-tracker-architecture.md') || '';
+  const api = documents.get('docs/api/family-learning-tracker-api.md') || '';
   const repositoryReadme = documents.get('README.md') || '';
   const documentationReadme = documents.get('docs/README.md') || '';
   const developmentReadme = documents.get('docs/development/README.md') || '';
@@ -144,7 +152,27 @@ function validate() {
     documents.get('docs/development/family-growth-design-asset-index.md') || '';
   const manifest =
     documents.get('docs/development/family-growth-baseline-v1.6-manifest.md') || '';
+  const releaseGate =
+    documents.get('docs/development/family-growth-v1.6-release-gate.md') || '';
   const deployment = documents.get('docs/deployment/README.md') || '';
+  const ubuntuDeployment =
+    documents.get('docs/deployment/local-ubuntu-deployment.md') || '';
+  const userGuide = documents.get('docs/user-guide/README.md') || '';
+  const childGuide = documents.get('docs/user-guide/child-guide.md') || '';
+  const ubuntuEnvironment = read('docker-compose.ubuntu.env.example');
+  const ubuntuCompose = read('docker-compose.ubuntu.yml');
+
+  for (const [relativePath, markdown] of [
+    ['docs/product/family-learning-tracker.md', product],
+    ['docs/architecture/family-learning-tracker-architecture.md', architecture],
+    ['docs/api/family-learning-tracker-api.md', api]
+  ]) {
+    assert(
+      markdown.includes('**Baseline candidate:** FGT-MVP-1.6'),
+      `${relativePath}: baseline candidate must be FGT-MVP-1.6`,
+      errors
+    );
+  }
 
   for (const requiredText of [
     '家庭成长跟踪',
@@ -263,6 +291,11 @@ function validate() {
     errors
   );
   assert(
+    traceability.includes('**Implementation conformance:** COVERED (35/35)'),
+    'traceability must record 35/35 implementation conformance separately from approval',
+    errors
+  );
+  assert(
     traceability.includes('**Baseline candidate:** FGT-MVP-1.6'),
     'traceability must target FGT-MVP-1.6',
     errors
@@ -281,7 +314,8 @@ function validate() {
     errors
   );
   for (const evidence of [
-    '70 suites / 755 tests',
+    '17 份权威文档',
+    '70 suites / 756 tests',
     '25 suites / 156 tests',
     '4 suites / 6 tests',
     '4 Chromium tests',
@@ -303,6 +337,55 @@ function validate() {
       errors
     );
   }
+
+  for (const evidence of ['17 份权威文档', '70 suites / 756 tests']) {
+    assert(
+      releaseGate.includes(evidence),
+      `v1.6 release gate is missing ${evidence}`,
+      errors
+    );
+  }
+
+  assert(
+    userGuide.includes('知识与能力点'),
+    'user guide navigation is missing 知识与能力点',
+    errors
+  );
+  assert(
+    !childGuide.includes('姓名、昵称、年级、学校'),
+    'child guide describes profile fields that the child UI does not render',
+    errors
+  );
+
+  for (const requiredText of [
+    'cp docker-compose.ubuntu.env.example .env',
+    '该 `.env` 位于仓库根目录'
+  ]) {
+    assert(
+      ubuntuDeployment.includes(requiredText),
+      `Ubuntu deployment guide is missing ${requiredText}`,
+      errors
+    );
+  }
+  assert(
+    !ubuntuDeployment.includes('backend/.env'),
+    'Ubuntu deployment guide must not direct operators to backend/.env',
+    errors
+  );
+
+  const ubuntuTemplateKeys = new Set(
+    [...ubuntuEnvironment.matchAll(/^([A-Z][A-Z0-9_]*)=/gm)].map(match => match[1])
+  );
+  const ubuntuRequiredSecretKeys = new Set(
+    [...ubuntuCompose.matchAll(/\$\{([A-Z][A-Z0-9_]*):\?set [^}]+\}/g)].map(
+      match => match[1]
+    )
+  );
+  assert(
+    sameSet(ubuntuTemplateKeys, ubuntuRequiredSecretKeys),
+    'docker-compose.ubuntu.env.example keys differ from Ubuntu Compose required secrets',
+    errors
+  );
 
   for (const requiredText of [
     'npm run release:family',

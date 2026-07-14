@@ -1,6 +1,7 @@
 # 家庭成长跟踪需求追踪矩阵
 
 **Document status:** READY_FOR_REVIEW
+**Implementation conformance:** COVERED (35/35)
 **Baseline candidate:** FGT-MVP-1.6
 **Implementation evidence commit:** `30d0e7bb4adddc51edc7d412f82aac8d323f2bfd`
 **Revalidated at:** 2026-07-14
@@ -12,9 +13,11 @@ design asset index, merged code, focused tests, and the unified release gate.
 
 ## Current full-gate evidence
 
-- Verified command: `npm run release:family` on clean `main` commit
-  `30d0e7bb4adddc51edc7d412f82aac8d323f2bfd`.
-- Result: 70 backend suites / 755 tests, 4 Task 11 integration suites / 6 tests,
+- Implementation behavior was established on clean `main` commit
+  `30d0e7bb4adddc51edc7d412f82aac8d323f2bfd`; the current clean candidate is
+  revalidated with `npm run release:family`, and its exact commit is recorded in
+  `release-gate-artifacts/release-gate-summary.txt`.
+- Current candidate result: 70 backend suites / 756 tests, 4 Task 11 integration suites / 6 tests,
   25 frontend suites / 156 tests, production build, 4 Chromium tests, seven service
   images, eight healthy runtime services, and a private-media gateway smoke flow.
 - Detailed evidence and residual boundaries are recorded in

@@ -217,6 +217,9 @@ cp docker-compose.ubuntu.env.example .env
 chmod 600 .env
 ```
 
+该 `.env` 位于仓库根目录，专供 `docker-compose.ubuntu.yml` 读取；各后端服务
+目录不需要另建环境文件。
+
 为五个密钥生成不同的随机值。下列命令会直接写入 `.env`，不会在终端回显密钥：
 
 ```bash

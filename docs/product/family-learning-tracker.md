@@ -1,8 +1,8 @@
 # 家庭版成长跟踪产品需求与功能边界
 
 **Document status:** APPROVED
-**Baseline candidate:** FGT-MVP-1
-**Last reviewed:** 2026-06-19
+**Baseline candidate:** FGT-MVP-1.6
+**Last reviewed:** 2026-07-14
 **Change control:** Semantic changes require a review record and traceability update.
 
 ## 1. 背景与定位

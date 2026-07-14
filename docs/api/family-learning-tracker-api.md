@@ -1,7 +1,7 @@
 # 家庭成长跟踪 API 契约
 
 **Document status:** APPROVED
-**Baseline candidate:** FGT-MVP-1
+**Baseline candidate:** FGT-MVP-1.6
 **Normative requirements:** `docs/product/family-learning-tracker.md` section 10.4
 
 ## 1. 基本约定
