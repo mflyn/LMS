@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useChildDataResource } from '../../hooks/useChildDataResource';
 
 const deferred = () => {
@@ -81,7 +81,7 @@ describe('useChildDataResource', () => {
     render(<ResourceProbe load={load} />);
     await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('retryable_error'));
 
-    act(() => screen.getByRole('button', { name: 'reload' }).click());
+    fireEvent.click(screen.getByRole('button', { name: 'reload' }));
 
     await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('ready'));
     expect(load).toHaveBeenCalledTimes(2);
@@ -97,8 +97,11 @@ describe('useChildDataResource', () => {
     unmount();
     expect(abortSpy).toHaveBeenCalledTimes(1);
 
-    pending.reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
-    await act(async () => {});
+    const abortError = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    await act(async () => {
+      pending.reject(abortError);
+      await expect(pending.promise).rejects.toBe(abortError);
+    });
     abortSpy.mockRestore();
   });
 

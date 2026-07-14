@@ -112,7 +112,7 @@ describe('family parent navigation', () => {
     openRoute('/app');
 
     expect(await screen.findByLabelText('当前孩子')).toHaveValue('child-a1');
-    expect(window.location.pathname).toBe('/app/today');
+    await waitFor(() => expect(window.location.pathname).toBe('/app/today'));
     expect(screen.getByRole('button', { name: '打开导航' })).toBeInTheDocument();
 
     for (const label of ['今日', '任务', '记录', '知识与能力点', '错题', '周报', '提醒', '星星与奖励', '孩子']) {

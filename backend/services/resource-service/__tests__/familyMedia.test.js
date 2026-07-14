@@ -67,7 +67,6 @@ let app;
 let mediaStore;
 let mongoServer;
 let privateRoot;
-let upload;
 let nowMs = FIXED_NOW;
 let referenceService;
 
@@ -221,7 +220,7 @@ beforeAll(async () => {
   await mongoose.connect(mongoServer.getUri());
   privateRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'family-media-api-'));
   mediaStore = createPrivateMediaStore({ root: privateRoot });
-  ({ app, referenceService, upload } = buildApp());
+  ({ app, referenceService } = buildApp());
 });
 
 beforeEach(async () => {

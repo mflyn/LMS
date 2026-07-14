@@ -83,13 +83,6 @@ const createFamilyMistakeMediaService = ({
     references
   });
 
-  const pendingReferencesFor = (mistake) => (mistake.mediaPendingPatch || [])
-    .filter((entry) => entry.value)
-    .map((entry) => ({
-      mediaId: String(entry.value),
-      field: entry.path
-    }));
-
   const bindingDtos = (bindings = []) => bindings.map((binding) => ({
     field: binding.field,
     mediaId: String(binding.mediaId),

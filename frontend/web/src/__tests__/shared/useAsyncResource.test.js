@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useAsyncResource } from '../../hooks/useAsyncResource';
 
 const deferred = () => {
@@ -57,7 +57,7 @@ describe('useAsyncResource', () => {
     expect(screen.getByTestId('data')).toHaveTextContent('record-a');
     expect(screen.getByTestId('sources')).toHaveTextContent('weekly_report');
 
-    act(() => screen.getByRole('button', { name: 'reload' }).click());
+    fireEvent.click(screen.getByRole('button', { name: 'reload' }));
     await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('empty'));
   });
 
@@ -98,8 +98,10 @@ describe('useAsyncResource', () => {
     expect(screen.getByTestId('state')).toHaveTextContent('loading');
     expect(screen.getByTestId('data')).toHaveTextContent('stale');
 
-    pending.resolve([{ id: 'late' }]);
-    await act(async () => {});
+    await act(async () => {
+      pending.resolve([{ id: 'late' }]);
+      await pending.promise;
+    });
     expect(screen.getByTestId('data')).not.toHaveTextContent('late');
 
     unmount();
@@ -120,8 +122,10 @@ describe('useAsyncResource', () => {
       />
     );
 
-    pending.resolve([{ id: 'stale' }]);
-    await act(async () => {});
+    await act(async () => {
+      pending.resolve([{ id: 'stale' }]);
+      await pending.promise;
+    });
 
     expect(isCurrentRequest).toHaveBeenCalled();
     expect(screen.getByTestId('data')).toHaveTextContent('current');
