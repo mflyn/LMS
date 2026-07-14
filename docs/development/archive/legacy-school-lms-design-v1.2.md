@@ -1,3 +1,16 @@
+> [!WARNING]
+> **Status: SUPERSEDED**
+>
+> 这是 2024 年学校级 LMS 的历史设计，仅用于追溯，不再定义当前产品、API、
+> 架构或验收范围。当前权威文档为[家庭成长 PRD](../../product/family-learning-tracker.md)、
+> [总体架构](../../architecture/family-learning-tracker-architecture.md)、
+> [API 契约](../../api/family-learning-tracker-api.md)和
+> [设计资产索引](../family-growth-design-asset-index.md)。
+
+- **原路径:** `docs/设计文档.md`
+- **归档日期:** 2026-07-14
+- **归档原因:** 产品已从教师、班级和成绩中心的学校 LMS 收敛为家庭五育成长跟踪。
+
 ---
 
 # 小学生学习追踪系统总体设计文档

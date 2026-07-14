@@ -146,7 +146,7 @@ docker-compose up -d
 - 开发/生产环境差异化
 
 ## API 文档
-详细的API文档请参考 [API文档](./docs/api.md)
+家庭成长接口请参考[当前 API 契约](../docs/api/family-learning-tracker-api.md)。
 
 ## 测试
 
@@ -528,12 +528,7 @@ const monitor = {
 ## 许可证
 MIT License
 
-## 联系方式
-- 项目维护者：张三
-- 技术负责人：李四
-- 运维负责人：王五
-- 邮箱：support@example.com
-- 问题反馈：GitHub Issues
-- 紧急联系：+86 123 4567 8900
-- 工作时间：周一至周五 9:00-18:00
-- 值班安排：7x24小时轮值 
+## 问题反馈
+
+请通过项目 GitHub Issues 提交可复现的问题和必要日志，不要附带账号凭据、PIN
+或其他敏感配置。

@@ -4,7 +4,7 @@
 **status:** READY_FOR_REVIEW
 **supersedesOnApproval:** FGT-MVP-1.5
 **scope:** Task 1~11 家庭成长跟踪 MVP
-**evidenceBaseCommit:** `3ae6fd6463cd1554e839f30fc4a24254338c1ef8`
+**evidenceBaseCommit:** `4646480dea4ef1e84646f5015ccd4eab847c4307`
 **latestFeatureMergeCommit:** `29991555b305ed4931d36f5b7a210e6bc32a2459`
 **postGateRemediationMergeCommit:** `2463f3f0daacc0907707a348b7d3bcaeb0bd07a9`
 **statusUpdatedAt:** 2026-07-14
@@ -68,6 +68,7 @@ PR 状态、CI 结论和 merge commit 已于 2026-07-13 从 GitHub 与本地
 | 需求追踪 | [family-growth-requirement-traceability.md](./family-growth-requirement-traceability.md) | 需求到设计、API、代码、测试和 gate 的主追踪矩阵 |
 | 设计资产索引 | [family-growth-design-asset-index.md](./family-growth-design-asset-index.md) | 35 项 Requirement 到 PRD、架构/图、详细设计、API、测试和 gate 的统一导航 |
 | 用户指南 | [user-guide/](../user-guide/) | 家庭成长指南入口、快速上手、家长操作和孩子操作说明 |
+| 历史文档治理 | [archive/](./archive/) | Task J 旧文档引用扫描、删除、迁移和替代依据 |
 | 测试策略 | [family-growth-test-strategy.md](./family-growth-test-strategy.md) | 家庭隔离、状态机、网关、服务集成和 E2E 的质量策略 |
 | Task 1~4 设计归档 | [family-growth-task1-4-design-archive.md](./family-growth-task1-4-design-archive.md) | 解释早期任务的权威设计来源、Task 4.5 追溯评审和 Task 5 以后的详细设计分界 |
 | Task 4.5 评审 | [family-growth-design-review.md](./family-growth-design-review.md) | Task 1~4 总基线及追溯评审结论 |
@@ -78,7 +79,7 @@ PR 状态、CI 结论和 merge commit 已于 2026-07-13 从 GitHub 与本地
 已增加 Task 1~4 归档导航，Task C+D 已收敛 Task 8~11 设计状态并统一 Task 7
 提醒设置契约，Task E+F 已补齐业务/服务/前端组件图、ER、状态机和 8 条跨服务
 时序，Task G+H 已补齐 35 项需求设计资产追踪和 API 反向设计索引，Task I 已
-补齐快速上手、家长和孩子用户指南；后续 Task J 将继续完成旧文档治理。
+补齐快速上手、家长和孩子用户指南，Task J 已完成旧文档引用扫描、迁移和清理。
 这些文档治理变更不得改变已关闭的 MVP 行为或绕过变更评审。
 
 ## 4. 最终质量证据
@@ -110,7 +111,7 @@ PR 状态、CI 结论和 merge commit 已于 2026-07-13 从 GitHub 与本地
 | 基础设施拓扑 | 仓库内 MongoDB 副本集与本地 Compose 适用于开发/验收；生产需要托管或多成员拓扑、外部 Secret 和独立运维验收。 |
 | 家庭成员关系原子性 | 当前创建家庭和孩子会顺序写多个文档，不在一个事务内；中途 5xx 不能解释为完整回滚。正式发布前应增加事务或可审计的关系修复流程。 |
 | 待发放星星任务归档 | 当前删除路由允许把 `confirmed + starAwardState=pending` 的任务归档，归档后公开 confirm 不再恢复发放。v1.6 正式批准前应决定禁止该归档或增加补偿流程；在此之前不得把该分支描述为已收敛到 `awarded`。 |
-| 文档补齐 | Task B~I 已纳入当前候选；Task J 尚待实施。它们是文档治理工作，不阻断已关闭功能，但 v1.6 正式签署前应评审其对权威文档引用的影响。 |
+| 文档补齐 | Task B~J 已全部纳入当前候选。v1.6 正式签署前仍需评审最终权威入口和历史归档边界。 |
 
 ## 6. 审批与变更控制
 
