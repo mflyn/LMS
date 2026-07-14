@@ -17,6 +17,10 @@
 
 ## 家庭成长基线
 
+- [Task 1-11 / FGT-MVP-1.6 最终 MVP 基线候选](./family-growth-baseline-v1.6-manifest.md)
+- [家庭成长跟踪文档补充计划](./family-growth-doc-supplement-plan.md)
+- [Task 1-4 设计归档说明](./family-growth-task1-4-design-archive.md)
+- [Task 1-11 设计资产索引](./family-growth-design-asset-index.md)
 - [Task 7 / FGT-MVP-1.5 基线清单](./family-growth-baseline-v1.5-manifest.md)
 - [Task 7 通知服务门禁](./family-growth-task7-gate.md)
 - [Task 7 通知服务测试设计与用例](./family-growth-task7-test-cases.md)
@@ -31,6 +35,14 @@
 - [Task 9 家长 MVP 页面实施计划](../superpowers/plans/2026-07-10-family-growth-task9-parent-pages.md)
 - [Task 9 家长 MVP 页面测试设计与用例](./family-growth-task9-test-cases.md)
 - [Task 9 家长 MVP 页面门禁记录](./family-growth-task9-gate.md)
+- [Task 10 孩子 Web 入口设计](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md)
+- [Task 10 孩子 Web 入口实施计划](../superpowers/plans/2026-07-11-family-growth-task10-child-web.md)
+- [Task 10 孩子 Web 入口测试设计与用例](./family-growth-task10-test-cases.md)
+- [Task 10 孩子 Web 入口门禁记录](./family-growth-task10-gate.md)
+- [Task 11 家庭成长端到端设计](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md)
+- [Task 11 家庭成长端到端实施计划](../superpowers/plans/2026-07-12-family-growth-task11-e2e.md)
+- [Task 11 家庭成长端到端测试设计与用例](./family-growth-task11-test-cases.md)
+- [Task 11 家庭成长端到端门禁记录](./family-growth-task11-gate.md)
 
 ## 5 分钟快速入门
 

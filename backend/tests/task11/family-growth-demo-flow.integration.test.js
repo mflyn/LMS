@@ -3,6 +3,20 @@ const sharp = require('sharp');
 const { createTask11ApiClient } = require('./apiClient');
 const { createFamilyRuntime } = require('./serviceRuntime');
 
+const ACCEPTANCE_NOW = new Date('2026-07-12T04:00:00.000Z');
+const REAL_TIMER_APIS = [
+  'nextTick',
+  'queueMicrotask',
+  'setImmediate',
+  'clearImmediate',
+  'setInterval',
+  'clearInterval',
+  'setTimeout',
+  'clearTimeout',
+  'hrtime',
+  'performance'
+];
+
 const expectStatus = (response, status) => {
   if (response.status !== status) {
     throw new Error(`Expected HTTP ${status}, received ${response.status}: ${JSON.stringify(response.data)}`);
@@ -15,12 +29,17 @@ describe('Task 11 family growth demo flow', () => {
   let api;
 
   beforeAll(async () => {
+    jest.useFakeTimers({ now: ACCEPTANCE_NOW, doNotFake: REAL_TIMER_APIS });
     runtime = await createFamilyRuntime();
     api = createTask11ApiClient({ baseURL: runtime.gatewayUrl });
   });
 
   afterAll(async () => {
-    if (runtime) await runtime.stop();
+    try {
+      if (runtime) await runtime.stop();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test('completes the parent-child growth, evidence, report, and reward acceptance flow', async () => {
