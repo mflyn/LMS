@@ -29,8 +29,13 @@ const makePdf = async ({ pages = 1, configure } = {}) => {
   const document = await PDFDocument.create();
   for (let index = 0; index < pages; index += 1) document.addPage([200, 200]);
   if (configure) await configure(document);
-  return Buffer.from(await document.save({ addDefaultPage: false }));
+  return Buffer.from(await document.save({ addDefaultPage: false, useObjectStreams: false }));
 };
+
+const replaceStartXref = (bytes, replacement) => Buffer.from(
+  bytes.toString('latin1').replace(/startxref\s+\d+\s+%%EOF\s*$/, `startxref\n${replacement}\n%%EOF`),
+  'latin1'
+);
 
 const expectCode = async (promise, code, statusCode) => {
   await expect(promise).rejects.toMatchObject({ code, statusCode, isOperational: true });
@@ -118,6 +123,30 @@ describe('private media canonical processor', () => {
     }), 'PDF_INVALID', 400);
   });
 
+  test('TC-MPA-MEDIA-003 rejects object streams before parsing and invalid final xref pointers', async () => {
+    const processor = loadProcessor()();
+    const objectStreamDocument = await PDFDocument.create();
+    objectStreamDocument.addPage([200, 200]);
+    const objectStream = Buffer.from(await objectStreamDocument.save({ useObjectStreams: true }));
+    const classic = await makePdf();
+
+    await expectCode(processor.prepare({
+      bytes: objectStream,
+      purpose: 'mistake_question',
+      originalName: 'compressed.pdf'
+    }), 'PDF_INVALID', 400);
+    await expectCode(processor.prepare({
+      bytes: replaceStartXref(classic, 1),
+      purpose: 'mistake_question',
+      originalName: 'wrong-xref.pdf'
+    }), 'PDF_INVALID', 400);
+    await expectCode(processor.prepare({
+      bytes: Buffer.from(classic.toString('latin1').replace(/\nxref\n[\s\S]*?\ntrailer\n/, '\n'), 'latin1'),
+      purpose: 'mistake_question',
+      originalName: 'missing-xref.pdf'
+    }), 'PDF_INVALID', 400);
+  });
+
   test.each([
     ['OpenAction', (document) => document.catalog.set(
       PDFName.of('OpenAction'),
@@ -150,6 +179,30 @@ describe('private media canonical processor', () => {
     ['external file action', (document) => document.catalog.set(
       PDFName.of('OpenAction'),
       document.context.obj({ S: 'GoToR', F: PDFString.of('remote.pdf') })
+    )],
+    ['embedded target action', (document) => document.getPage(0).node.set(
+      PDFName.of('Annots'),
+      document.context.obj([{ Type: 'Annot', Subtype: 'Link', A: { S: 'GoToE' } }])
+    )],
+    ['rendition action', (document) => document.getPage(0).node.set(
+      PDFName.of('Annots'),
+      document.context.obj([{ Type: 'Annot', Subtype: 'Screen', A: { S: 'Rendition' } }])
+    )],
+    ['form submission action', (document) => document.getPage(0).node.set(
+      PDFName.of('Annots'),
+      document.context.obj([{ Type: 'Annot', Subtype: 'Widget', A: { S: 'SubmitForm' } }])
+    )],
+    ['form import action', (document) => document.getPage(0).node.set(
+      PDFName.of('Annots'),
+      document.context.obj([{ Type: 'Annot', Subtype: 'Widget', A: { S: 'ImportData' } }])
+    )],
+    ['URI action', (document) => document.getPage(0).node.set(
+      PDFName.of('Annots'),
+      document.context.obj([{ Type: 'Annot', Subtype: 'Link', A: { S: 'URI' } }])
+    )],
+    ['transition action', (document) => document.getPage(0).node.set(
+      PDFName.of('AA'),
+      document.context.obj({ O: { S: 'Trans' } })
     )],
     ['three-dimensional annotation', (document) => document.getPage(0).node.set(
       PDFName.of('Annots'),

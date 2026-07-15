@@ -33,7 +33,7 @@ module.exports = {
   restoreMocks: true,
   testTimeout: 30000,
   moduleNameMapper: {
-    '^uuid$': '<rootDir>/node_modules/uuid/dist/index.js',
+    '^uuid$': '<rootDir>/../../../node_modules/uuid/dist/cjs/index.js',
     '^../../../common/(.*)$': '<rootDir>/../../common/$1',
     '^../../user-service/(.*)$': '<rootDir>/../user-service/$1'
   }

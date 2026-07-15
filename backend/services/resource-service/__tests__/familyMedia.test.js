@@ -15,7 +15,8 @@ const { MongoMemoryReplSet } = require('../../../../node_modules/mongodb-memory-
 
 const { createIdentityHeaders, resetIdentityNonceStore } = require('../../../common/middleware/gatewayIdentity');
 const { authenticateGateway } = require('../../../common/middleware/auth');
-const { errorHandler } = require('../../../common/middleware/errorHandler');
+const { errorHandler, requestTracker } = require('../../../common/middleware/errorHandler');
+const { AppError } = require('../../../common/middleware/errorTypes');
 const FamilyUser = require('../models/FamilyUser');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
@@ -87,7 +88,7 @@ const image = async (format, withMetadata = false) => {
 const pdf = async (pages = 1) => {
   const document = await PDFDocument.create();
   for (let index = 0; index < pages; index += 1) document.addPage([200, 200]);
-  return Buffer.from(await document.save({ addDefaultPage: false }));
+  return Buffer.from(await document.save({ addDefaultPage: false, useObjectStreams: false }));
 };
 
 const signedHeaders = (identity, method, originalUrl) => createIdentityHeaders({
@@ -177,7 +178,12 @@ const insertIdentityFixtures = async () => {
   ]);
 };
 
-const buildApp = ({ MediaAssetModel = MediaAsset } = {}) => {
+const buildApp = ({
+  MediaAssetModel = MediaAsset,
+  mediaStoreOverride = mediaStore,
+  scanner = null,
+  securityProfile = 'trusted-local'
+} = {}) => {
   const { createPrivateMediaUpload } = require('../middleware/privateMediaUpload');
   const { createMediaService } = require('../services/mediaService');
   const { createMediaRouter } = require('../routes/media');
@@ -201,8 +207,10 @@ const buildApp = ({ MediaAssetModel = MediaAsset } = {}) => {
     MediaAssetModel,
     MediaReferenceModel: MediaReference,
     UserModel: FamilyUser,
-    mediaStore,
+    mediaStore: mediaStoreOverride,
     now: () => nowMs,
+    scanner,
+    securityProfile,
     transactionRunner
   });
   const router = createMediaRouter({
@@ -215,6 +223,7 @@ const buildApp = ({ MediaAssetModel = MediaAsset } = {}) => {
   testApp.locals.logger = logger;
   testApp.locals.serviceName = 'resource-service-test';
   testApp.locals.userModel = FamilyUser;
+  testApp.use(requestTracker);
   testApp.use('/api/media', router);
   testApp.use(errorHandler);
   return { app: testApp, referenceService: localReferenceService, upload: localUpload };
@@ -352,6 +361,107 @@ describe('Task 6 private media upload API', () => {
     expect(await privateObjectNames()).toHaveLength(1);
   });
 
+  test('TC-MPA-SCAN-002 trusted-local records an explicit skip without contacting a scanner', async () => {
+    const scanner = { scan: jest.fn(() => { throw new Error('scanner must not be called'); }) };
+    const trustedApp = buildApp({ scanner, securityProfile: 'trusted-local' }).app;
+
+    const response = await signedUpload({
+      targetApp: trustedApp,
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: await pdf(),
+      filename: 'question.pdf'
+    });
+
+    expect(response.status).toBe(201);
+    expect(scanner.scan).not.toHaveBeenCalled();
+    const asset = await MediaAsset.findById(response.body.data.media.mediaId).lean();
+    expect(asset.malwareScanStatus).toBe('skipped_trusted_local');
+    expect(asset.malwareScannedAt).toBeNull();
+  });
+
+  test('TC-MPA-SCAN-003 secure-production scans exact canonical bytes before persistence', async () => {
+    const scanner = { scan: jest.fn().mockResolvedValue(undefined) };
+    const secureApp = buildApp({ scanner, securityProfile: 'secure-production' }).app;
+    const original = await image('jpeg', true);
+
+    const response = await signedUpload({
+      targetApp: secureApp,
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: original,
+      filename: 'question.jpg'
+    });
+
+    expect(response.status).toBe(201);
+    const asset = await MediaAsset.findById(response.body.data.media.mediaId).lean();
+    const stored = await mediaStore.read(asset.storageKey);
+    expect(scanner.scan).toHaveBeenCalledTimes(1);
+    expect(scanner.scan).toHaveBeenCalledWith(stored);
+    expect(scanner.scan.mock.calls[0][0]).not.toEqual(original);
+    expect(asset.malwareScanStatus).toBe('clean');
+    expect(asset.malwareScannedAt).toEqual(new Date(FIXED_NOW));
+  });
+
+  test('TC-MPA-SCAN-004 secure-production scan rejection leaves no media or stored object', async () => {
+    const scanner = {
+      scan: jest.fn().mockRejectedValue(new AppError(
+        'Malware detected',
+        422,
+        'MALWARE_DETECTED',
+        true,
+        []
+      ))
+    };
+    const secureApp = buildApp({ scanner, securityProfile: 'secure-production' }).app;
+
+    const response = await signedUpload({
+      targetApp: secureApp,
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: await image('png')
+    });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe('MALWARE_DETECTED');
+    expect(await MediaAsset.countDocuments()).toBe(0);
+    expect(await privateObjectNames()).toEqual([]);
+    expect(await incomingNames()).toEqual([]);
+  });
+
+  test('TC-MPA-SCAN-005 secure-production scanner failure returns 503 and fails before storage', async () => {
+    const scanner = {
+      scan: jest.fn().mockRejectedValue(new AppError(
+        'Malware scanner unavailable',
+        503,
+        'MALWARE_SCANNER_UNAVAILABLE',
+        true,
+        []
+      ))
+    };
+    const secureApp = buildApp({ scanner, securityProfile: 'secure-production' }).app;
+
+    const response = await signedUpload({
+      targetApp: secureApp,
+      purpose: 'mistake_answer',
+      childId: CHILD_A1_ID,
+      bytes: await image('webp')
+    });
+
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({
+      success: false,
+      error: {
+        code: 'MALWARE_SCANNER_UNAVAILABLE',
+        message: 'Malware scanner unavailable',
+        details: []
+      },
+      requestId: expect.any(String)
+    });
+    expect(await MediaAsset.countDocuments()).toBe(0);
+    expect(await privateObjectNames()).toEqual([]);
+  });
+
   test('TC-T6-MEDIA-002 rejects invalid images and cleans all files and metadata', async () => {
     const inputs = [
       { bytes: null, filename: 'missing.jpg', contentType: 'image/jpeg', status: 400, code: 'VALIDATION_ERROR' },
@@ -486,6 +596,38 @@ describe('Task 6 private media upload API', () => {
     expect(failingModel.create).toHaveBeenCalledTimes(1);
     expect(await privateObjectNames()).toEqual([]);
     expect(await incomingNames()).toEqual([]);
+  });
+
+  test('TC-MPA-MEDIA-007 retries transient private-object cleanup failures', async () => {
+    const failingModel = {
+      create: jest.fn().mockRejectedValue(new Error('simulated metadata failure'))
+    };
+    let removeAttempts = 0;
+    const retryingStore = {
+      ...mediaStore,
+      writeCanonical: mediaStore.writeCanonical,
+      read: mediaStore.read,
+      remove: jest.fn(async (storageKey) => {
+        removeAttempts += 1;
+        if (removeAttempts < 3) throw new Error('simulated transient storage failure');
+        return mediaStore.remove(storageKey);
+      })
+    };
+    const failingApp = buildApp({
+      MediaAssetModel: failingModel,
+      mediaStoreOverride: retryingStore
+    }).app;
+
+    const response = await signedUpload({
+      purpose: 'growth_evidence',
+      childId: CHILD_A1_ID,
+      bytes: await image('jpeg'),
+      targetApp: failingApp
+    });
+
+    expect(response.status).toBe(500);
+    expect(retryingStore.remove).toHaveBeenCalledTimes(3);
+    expect(await privateObjectNames()).toEqual([]);
   });
 });
 
@@ -718,7 +860,8 @@ describe('Task 6 private media access API', () => {
         code: 'VALIDATION_ERROR',
         message: 'Invalid mediaId',
         details: []
-      }
+      },
+      requestId: expect.any(String)
     });
   });
 });

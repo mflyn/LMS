@@ -38,7 +38,8 @@ describe('production error contract', () => {
         code: 'INVALID_IDENTITY_ENVELOPE',
         message: 'Invalid gateway identity envelope',
         details: []
-      }
+      },
+      requestId: expect.any(String)
     });
   });
 });

@@ -11,6 +11,8 @@ const CHILD_UPLOAD_PURPOSES = new Set([
   'growth_evidence'
 ]);
 const MEDIA_PURPOSES = new Set(MediaAsset.MEDIA_PURPOSES);
+const MEDIA_SECURITY_PROFILES = new Set(['trusted-local', 'secure-production']);
+const STORAGE_CLEANUP_ATTEMPTS = 3;
 const normalizeAsset = (asset) => MediaAsset.normalizeAuditFields(asset);
 
 const publicMediaDescriptor = (asset, { includePurpose = false } = {}) => {
@@ -46,6 +48,8 @@ const createMediaService = ({
   mediaStore,
   now = Date.now,
   processor = createPrivateMediaProcessor(),
+  scanner = null,
+  securityProfile = 'trusted-local',
   transactionRunner
 } = {}) => {
   if (!MediaAssetModel || typeof MediaAssetModel.create !== 'function') {
@@ -58,6 +62,10 @@ const createMediaService = ({
     throw new Error('mediaStore is required');
   }
   if (!processor || typeof processor.prepare !== 'function') throw new Error('media processor is required');
+  if (!MEDIA_SECURITY_PROFILES.has(securityProfile)) throw new Error('valid media security profile is required');
+  if (securityProfile === 'secure-production' && (!scanner || typeof scanner.scan !== 'function')) {
+    throw new Error('media scanner is required for secure-production');
+  }
   if (!capabilityService || typeof capabilityService.issue !== 'function'
     || typeof capabilityService.verify !== 'function') {
     throw new Error('capabilityService is required');
@@ -142,6 +150,13 @@ const createMediaService = ({
   const upload = async ({ identity, suppliedChildId, purpose, bytes, originalName } = {}) => {
     const scope = await resolveUploadScope({ identity, suppliedChildId, purpose });
     const prepared = await processor.prepare({ bytes, purpose, originalName });
+    let malwareScanStatus = 'skipped_trusted_local';
+    let malwareScannedAt = null;
+    if (securityProfile === 'secure-production') {
+      await scanner.scan(prepared.buffer);
+      malwareScanStatus = 'clean';
+      malwareScannedAt = new Date(Number(now()));
+    }
     const stored = await mediaStore.writeCanonical(prepared.buffer);
     let asset;
     try {
@@ -155,10 +170,24 @@ const createMediaService = ({
         sizeBytes: prepared.sizeBytes,
         pageCount: prepared.pageCount,
         storageKey: stored.storageKey,
+        malwareScanStatus,
+        malwareScannedAt,
         status: 'active'
       });
     } catch (error) {
-      await mediaStore.remove(stored.storageKey).catch(() => undefined);
+      let cleanupError;
+      for (let attempt = 0; attempt < STORAGE_CLEANUP_ATTEMPTS; attempt += 1) {
+        try {
+          await mediaStore.remove(stored.storageKey);
+          cleanupError = null;
+          break;
+        } catch (currentCleanupError) {
+          cleanupError = currentCleanupError;
+        }
+      }
+      if (cleanupError) {
+        throw new AggregateError([error, cleanupError], 'Media persistence and cleanup failed');
+      }
       throw error;
     }
 

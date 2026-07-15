@@ -96,7 +96,8 @@ describe('Progress Service 服务器测试', () => {
           code: 'VALIDATION_ERROR',
           message: expect.any(String),
           details: []
-        }
+        },
+        requestId: expect.any(String)
       });
     });
   });

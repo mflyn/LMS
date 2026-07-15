@@ -46,12 +46,23 @@ const ACTIVE_NAMES = new Set([
   'EmbeddedFile',
   'FileAttachment',
   'Filespec',
+  'GoTo3DView',
+  'GoToE',
   'GoToR',
+  'Hide',
+  'ImportData',
   'JavaScript',
   'Launch',
   'Movie',
+  'Rendition',
+  'ResetForm',
   'RichMedia',
+  'SetOCGState',
   'Sound',
+  'SubmitForm',
+  'Thread',
+  'Trans',
+  'URI',
   '3D'
 ]);
 
@@ -74,6 +85,34 @@ const assertBuffer = (bytes, maxBytes) => {
 };
 
 const startsWith = (bytes, signature) => signature.every((value, index) => bytes[index] === value);
+
+const decodePdfNameToken = (token) => token.replace(/#([0-9a-f]{2})/gi, (_match, hex) => (
+  String.fromCharCode(Number.parseInt(hex, 16))
+));
+
+const containsPdfName = (source, expectedName) => {
+  const pattern = /\/((?:#[0-9a-fA-F]{2}|[^\s()<>{}\[\]/%#])+)/g;
+  for (const match of source.matchAll(pattern)) {
+    if (decodePdfNameToken(match[1]) === expectedName) return true;
+  }
+  return false;
+};
+
+const assertPdfContainer = (bytes) => {
+  const source = bytes.toString('latin1');
+  if (containsPdfName(source, 'ObjStm')) throw invalidPdf();
+
+  const finalXref = /startxref\s+(\d+)\s+%%EOF\s*$/.exec(source);
+  if (!finalXref) throw invalidPdf();
+  const offset = Number(finalXref[1]);
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset >= bytes.length) throw invalidPdf();
+
+  const target = source.slice(offset, Math.min(bytes.length, offset + 4096));
+  if (/^xref(?:\s|$)/.test(target)) return;
+  if (!/^\d+\s+\d+\s+obj(?:\s|$)/.test(target) || !containsPdfName(target, 'XRef')) {
+    throw invalidPdf();
+  }
+};
 
 const detectFormat = (bytes) => {
   if (startsWith(bytes, [0xff, 0xd8, 0xff])) return 'jpeg';
@@ -164,6 +203,7 @@ const inspectPdf = (document) => {
 
 const loadPdf = async (bytes) => {
   try {
+    assertPdfContainer(bytes);
     const document = await PDFDocument.load(bytes, {
       capNumbers: true,
       ignoreEncryption: false,
