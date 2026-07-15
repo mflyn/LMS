@@ -5,7 +5,6 @@ import App from '../../App';
 import {
   createOwnMistake,
   deleteOwnPrivateMedia,
-  getOwnPrivateMediaAccess,
   listOwnMistakes,
   reviewOwnMistake,
   uploadOwnPrivateMedia

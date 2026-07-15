@@ -91,7 +91,7 @@ const decodePdfNameToken = (token) => token.replace(/#([0-9a-f]{2})/gi, (_match,
 ));
 
 const containsPdfName = (source, expectedName) => {
-  const pattern = /\/((?:#[0-9a-fA-F]{2}|[^\s()<>{}\[\]/%#])+)/g;
+  const pattern = /\/((?:#[0-9a-fA-F]{2}|[^\s()<>{}\x5b\]/%#])+)/g;
   for (const match of source.matchAll(pattern)) {
     if (decodePdfNameToken(match[1]) === expectedName) return true;
   }
