@@ -1,6 +1,7 @@
 # Family Growth Mistake PDF and Multi-Attachment Design
 
-**Document status:** READY_FOR_REVIEW  
+**Document status:** APPROVED / IMPLEMENTATION BASELINE
+**Approved:** 2026-07-15
 **Date:** 2026-07-15  
 **Scope:** Private-media PDF support and multi-attachment mistake workflows for parents and children  
 **Requirements:** `FR-MISTAKE-001`, `FR-MEDIA-001`, `FR-UI-001`, `FR-UI-002`, `NFR-SEC-001`, `NFR-REL-001`  
