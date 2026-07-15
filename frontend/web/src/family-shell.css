@@ -148,9 +148,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-resource-error > strong { font-size: 14px; }
 .family-resource-error .family-data-state { padding: 12px 16px; }
 .family-media-field { display: grid; gap: 8px; min-width: 0; }
-.family-media-field label { color: var(--family-ink); font-weight: 600; }
-.family-media-field input { max-width: 100%; }
+.family-media-field label, .family-media-label { color: var(--family-ink); font-weight: 600; }
+.family-media-field input[type="file"] { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; }
+.family-media-count { margin: 0; color: var(--family-muted); font-size: 13px; }
 .family-media-item { display: grid; gap: 8px; padding: 10px 0; border-top: 1px solid var(--family-border); }
+.family-media-name { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.family-media-meta { color: var(--family-muted); font-size: 13px; }
 .family-inline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .family-checkbox-row { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 14px 0; }
 .family-feedback-form, .family-settings-form { display: grid; gap: 14px; margin-top: 16px; }

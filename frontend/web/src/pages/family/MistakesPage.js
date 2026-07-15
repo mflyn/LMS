@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
-import PrivateMediaField from '../../components/family/PrivateMediaField';
+import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { useDraftMedia } from '../../hooks/useDraftMedia';
@@ -14,9 +14,15 @@ const REASONS = [
 const blankMistake = () => ({
   subject: '', knowledgePointName: '', reason: 'concept', correctAnswer: '',
   parentNote: '', childExplanation: '', reviewReminderDate: '', corrected: false,
-  reviewed: false, mastered: false, questionMediaId: null, childAnswerMediaId: null
+  reviewed: false, mastered: false, questionMediaIds: [], childAnswerMediaIds: []
 });
 const messageFor = (error) => error?.response?.data?.error?.message || error?.message || '保存失败，请重试。';
+const normalizedMediaIds = (item, field, legacyField) => {
+  if (Array.isArray(item?.[field])) return item[field];
+  return item?.[legacyField] ? [item[legacyField]] : [];
+};
+const sameMediaIds = (left, right) => left.length === right.length
+  && left.every((mediaId, index) => mediaId === right[index]);
 
 const MistakesPage = () => {
   const { selectedChild, selectedChildId } = useFamily();
@@ -32,6 +38,7 @@ const MistakesPage = () => {
   const [editor, setEditor] = useState(null);
   const [form, setForm] = useState(blankMistake());
   const [busy, setBusy] = useState(false);
+  const [mediaUploadCount, setMediaUploadCount] = useState(0);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -42,21 +49,33 @@ const MistakesPage = () => {
     setError('');
     setMessage('');
     setBusy(false);
+    setMediaUploadCount(0);
   }, [mediaDrafts, selectedChildId]);
 
   const closeEditor = () => {
+    if (mediaUploadCount > 0) return;
     mediaDrafts.cancel();
     setEditor(null);
   };
 
+  const trackMediaUpload = (active) => {
+    setMediaUploadCount((current) => Math.max(0, current + (active ? 1 : -1)));
+  };
+
   const openEditor = (item) => {
-    setForm(item ? { ...blankMistake(), ...item } : blankMistake());
+    setForm(item ? {
+      ...blankMistake(),
+      ...item,
+      questionMediaIds: normalizedMediaIds(item, 'questionMediaIds', 'questionMediaId'),
+      childAnswerMediaIds: normalizedMediaIds(item, 'childAnswerMediaIds', 'childAnswerMediaId')
+    } : blankMistake());
     setEditor(item ? { mode: 'edit', item } : { mode: 'create' });
     setError('');
   };
 
   const save = async (event) => {
     event.preventDefault();
+    if (mediaUploadCount > 0) return;
     const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
@@ -72,10 +91,15 @@ const MistakesPage = () => {
       reviewed: form.reviewed,
       mastered: form.mastered
     };
-    ['questionMediaId', 'childAnswerMediaId'].forEach((field) => {
-      const previous = editor.mode === 'edit' ? editor.item[field] || null : null;
-      const next = form[field] || null;
-      if (next || next !== previous) payload[field] = next;
+    [
+      ['questionMediaIds', 'questionMediaId'],
+      ['childAnswerMediaIds', 'childAnswerMediaId']
+    ].forEach(([field, legacyField]) => {
+      const previous = editor.mode === 'edit'
+        ? normalizedMediaIds(editor.item, field, legacyField)
+        : [];
+      const next = form[field];
+      if (editor.mode === 'create' || !sameMediaIds(previous, next)) payload[field] = next;
     });
     try {
       const result = editor.mode === 'create'
@@ -121,6 +145,7 @@ const MistakesPage = () => {
               <div className="family-inline-actions"><span className="family-dimension is-academic">智育</span><span>{item.subject}</span><span>{item.mastered ? '已掌握' : item.reviewed ? '已复习' : '待复习'}</span></div>
               <h2>{item.knowledgePointName || item.subject}</h2>
               <p>{REASONS.find(([value]) => value === item.reason)?.[1] || item.reason}{item.reviewReminderDate ? ` · ${item.reviewReminderDate} 复习` : ''}</p>
+              <p>题目附件 {normalizedMediaIds(item, 'questionMediaIds', 'questionMediaId').length} · 答案附件 {normalizedMediaIds(item, 'childAnswerMediaIds', 'childAnswerMediaId').length}</p>
             </div>
             <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`复盘 ${item.knowledgePointName || item.subject}`} onClick={() => openEditor(item)}>复盘</button>
           </article>
@@ -129,7 +154,7 @@ const MistakesPage = () => {
       {editor && (
         <FamilyDialog labelledBy="mistake-editor-title" onClose={closeEditor}>
           <form onSubmit={save}>
-            <div className="family-page-heading"><h2 id="mistake-editor-title">{editor.mode === 'create' ? '记录错题' : '错题复盘'}</h2><button type="button" className="family-button secondary" onClick={closeEditor}>关闭</button></div>
+            <div className="family-page-heading"><h2 id="mistake-editor-title">{editor.mode === 'create' ? '记录错题' : '错题复盘'}</h2><button type="button" className="family-button secondary" disabled={mediaUploadCount > 0} onClick={closeEditor}>关闭</button></div>
             <div className="family-form-grid">
               <label>学科<input required disabled={editor.mode === 'edit'} value={form.subject} onChange={(event) => setForm((value) => ({ ...value, subject: event.target.value }))} /></label>
               <label>知识点<input value={form.knowledgePointName} onChange={(event) => setForm((value) => ({ ...value, knowledgePointName: event.target.value }))} /></label>
@@ -145,10 +170,10 @@ const MistakesPage = () => {
               <label className="family-checkbox"><input type="checkbox" checked={form.mastered} onChange={(event) => setForm((value) => ({ ...value, mastered: event.target.checked }))} />已掌握</label>
             </div>
             <div className="family-form-grid">
-              <PrivateMediaField label="题目图片" childId={selectedChildId} purpose="mistake_question" value={form.questionMediaId} onUploaded={mediaDrafts.replace} onRemoved={mediaDrafts.remove} onChange={(mediaId) => setForm((value) => ({ ...value, questionMediaId: mediaId }))} />
-              <PrivateMediaField label="答案图片" childId={selectedChildId} purpose="mistake_answer" value={form.childAnswerMediaId} onUploaded={mediaDrafts.replace} onRemoved={mediaDrafts.remove} onChange={(mediaId) => setForm((value) => ({ ...value, childAnswerMediaId: mediaId }))} />
+              <PrivateMediaCollectionField label="题目附件" childId={selectedChildId} purpose="mistake_question" values={form.questionMediaIds} onUploaded={mediaDrafts.replace} onRemoved={mediaDrafts.remove} onBusyChange={trackMediaUpload} onChange={(mediaIds) => setForm((value) => ({ ...value, questionMediaIds: mediaIds }))} />
+              <PrivateMediaCollectionField label="答案附件" childId={selectedChildId} purpose="mistake_answer" values={form.childAnswerMediaIds} onUploaded={mediaDrafts.replace} onRemoved={mediaDrafts.remove} onBusyChange={trackMediaUpload} onChange={(mediaIds) => setForm((value) => ({ ...value, childAnswerMediaIds: mediaIds }))} />
             </div>
-            <button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>{editor.mode === 'create' ? '保存错题' : '保存复盘'}</button>
+            <button type="submit" className="family-button primary" disabled={busy || mediaUploadCount > 0 || resource.state === 'loading'}>{editor.mode === 'create' ? '保存错题' : '保存复盘'}</button>
           </form>
         </FamilyDialog>
       )}

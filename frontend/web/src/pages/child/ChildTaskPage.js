@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import FamilyDataState from '../../components/family/FamilyDataState';
+import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
 import { useChildDataResource } from '../../hooks/useChildDataResource';
-import { completeOwnTask, getOwnTask } from '../../services/childApi';
+import { completeOwnTask, getOwnPrivateMediaAccess, getOwnTask } from '../../services/childApi';
 
 const DIMENSION_LABELS = {
   moral: '德育', academic: '智育', physical: '体育', artistic: '美育', labor: '劳育'
@@ -103,6 +104,18 @@ const ChildTaskPage = () => {
           {task.estimatedMinutes !== undefined && <div><dt>预计用时</dt><dd>{task.estimatedMinutes} 分钟</dd></div>}
           {task.targetAmount !== undefined && <div><dt>目标</dt><dd>{task.targetAmount} {task.unit || ''}</dd></div>}
         </dl>
+        {task.attachmentMediaIds?.length > 0 && (
+          <PrivateMediaCollectionField
+            label="任务附件"
+            purpose="task_attachment"
+            values={task.attachmentMediaIds}
+            readOnly
+            ownScope
+            className="child-media-field"
+            controlClassName="child-secondary-button"
+            getPrivateMediaAccess={getOwnPrivateMediaAccess}
+          />
+        )}
       </section>
 
       {message && <p className="child-success-message" role="status">{message}</p>}

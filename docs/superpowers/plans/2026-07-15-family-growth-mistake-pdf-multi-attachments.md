@@ -312,23 +312,23 @@ git commit -m "feat: add shared PDF media collections"
 - Legacy scalar records normalize to one-item arrays at form-open time.
 - Each editor owns independent draft state; list rows show counts without access grants.
 
-- [ ] **Step 1: Write failing parent workflow tests**
+- [x] **Step 1: Write failing parent workflow tests**
 
 Cover `TC-MPA-WEB-004`, `006`: create/edit/reopen, legacy normalization, arrays-only payload, counts, failure preservation, cleanup, and task PDF while retaining the 100-item limit.
 
-- [ ] **Step 2: Verify parent red, implement, and verify green**
+- [x] **Step 2: Verify parent red, implement, and verify green**
 
 Run the two family suites after each minimal implementation slice.
 
-- [ ] **Step 3: Write failing child workflow tests**
+- [x] **Step 3: Write failing child workflow tests**
 
 Cover `TC-MPA-WEB-005`, `008`: own create/review with both collections, child media auth, independent row drafts, error retry, 44px controls, and 360px-safe structure.
 
-- [ ] **Step 4: Verify child red, implement, and verify green**
+- [x] **Step 4: Verify child red, implement, and verify green**
 
 Expose task image/PDF access in ChildTaskPage only when returned by the task API; no child upload is added to task completion in this increment.
 
-- [ ] **Step 5: Run frontend regression and commit**
+- [x] **Step 5: Run frontend regression and commit**
 
 ```bash
 npm run test:ci --prefix frontend/web -- --runInBand

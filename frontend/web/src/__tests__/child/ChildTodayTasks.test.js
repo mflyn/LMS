@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../../App';
 import {
   completeOwnTask,
+  getOwnPrivateMediaAccess,
   getOwnTask,
   listOwnReminders,
   listOwnTasks
@@ -12,6 +13,7 @@ import { saveChildSession } from '../../services/familySession';
 jest.mock('../../services/childApi', () => ({
   childPinLogin: jest.fn(),
   completeOwnTask: jest.fn(),
+  getOwnPrivateMediaAccess: jest.fn(),
   getOwnTask: jest.fn(),
   listOwnReminders: jest.fn(),
   listOwnTasks: jest.fn()
@@ -196,5 +198,28 @@ describe('child task completion', () => {
     expect(await screen.findByRole('heading', { name: '跳绳 500 个' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '提交完成情况' })).not.toBeInTheDocument();
     view.unmount();
+  });
+
+  test('TC-MPA-WEB-006 shows task PDF attachments through child-authorized access without upload controls', async () => {
+    getOwnTask.mockResolvedValueOnce({ task: task({ attachmentMediaIds: ['task-pdf'] }) });
+    getOwnPrivateMediaAccess.mockResolvedValueOnce({
+      access: { url: 'https://signed.example/task-pdf' },
+      media: {
+        mediaId: 'task-pdf',
+        mimeType: 'application/pdf',
+        displayName: '训练计划.pdf',
+        sizeBytes: 2048,
+        pageCount: 2
+      }
+    });
+    openRoute('/child/tasks/task-a1');
+
+    expect(await screen.findByRole('heading', { name: '跳绳 500 个' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('任务附件')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '查看任务附件 1' }));
+    expect(await screen.findByRole('link', { name: '保存训练计划.pdf' })).toHaveAttribute(
+      'href',
+      'https://signed.example/task-pdf'
+    );
   });
 });

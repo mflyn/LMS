@@ -23,7 +23,11 @@ const PrivateMediaCollectionField = ({
   onRemoved,
   onBusyChange,
   uploadPrivateMedia = requestPrivateMediaUpload,
-  getPrivateMediaAccess = requestPrivateMediaAccess
+  getPrivateMediaAccess = requestPrivateMediaAccess,
+  ownScope = false,
+  readOnly = false,
+  className = '',
+  controlClassName = 'family-button secondary'
 }) => {
   const inputId = useId();
   const rules = mediaRulesForPurpose(purpose);
@@ -73,7 +77,9 @@ const PrivateMediaCollectionField = ({
           break;
         }
         try {
-          const result = await uploadPrivateMedia({ childId, purpose, file });
+          const uploadRequest = { purpose, file };
+          if (childId) uploadRequest.childId = childId;
+          const result = await uploadPrivateMedia(uploadRequest);
           const descriptor = result?.media || result;
           const mediaId = descriptor?.mediaId;
           if (!mediaId) throw new Error('上传响应缺少 mediaId');
@@ -123,20 +129,26 @@ const PrivateMediaCollectionField = ({
   };
 
   return (
-    <div className="family-media-field">
-      <label htmlFor={inputId}>{label}</label>
+    <div className={`family-media-field ${className}`.trim()}>
+      {readOnly
+        ? <span className="family-media-label">{label}</span>
+        : <label htmlFor={inputId}>{label}</label>}
       <p className="family-media-count" aria-live="polite">已添加 {items.length}/{rules.maxItems}</p>
-      <input
-        id={inputId}
-        type="file"
-        accept={rules.acceptedMimeTypes.join(',')}
-        multiple
-        onChange={upload}
-        disabled={busy || !childId || items.length >= rules.maxItems}
-      />
+      {!readOnly && (
+        <input
+          id={inputId}
+          type="file"
+          accept={rules.acceptedMimeTypes.join(',')}
+          multiple
+          onChange={upload}
+          disabled={busy || (!childId && !ownScope) || items.length >= rules.maxItems}
+        />
+      )}
       {items.map((item, index) => {
         const itemLabel = item.displayName || `${label} ${index + 1}`;
         const pdf = isPdfMedia(item);
+        const image = item.mimeType?.startsWith('image/');
+        const actionLabel = pdf ? '下载' : image ? '预览' : '查看';
         const details = [
           formatMediaSize(item.sizeBytes),
           pdf && item.pageCount ? `${item.pageCount} 页` : ''
@@ -148,22 +160,24 @@ const PrivateMediaCollectionField = ({
             <div className="family-inline-actions">
               <button
                 type="button"
-                className="family-button secondary"
+                className={controlClassName}
                 onClick={() => requestAccess(item)}
                 disabled={busy}
-                aria-label={`${pdf ? '下载' : '预览'}${label} ${index + 1}`}
+                aria-label={`${actionLabel}${label} ${index + 1}`}
               >
-                {pdf ? '下载' : '预览'}
+                {actionLabel}
               </button>
-              <button
-                type="button"
-                className="family-button secondary"
-                onClick={() => remove(item.mediaId)}
-                disabled={busy}
-                aria-label={`移除${label} ${index + 1}`}
-              >
-                移除
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  className={controlClassName}
+                  onClick={() => remove(item.mediaId)}
+                  disabled={busy}
+                  aria-label={`移除${label} ${index + 1}`}
+                >
+                  移除
+                </button>
+              )}
             </div>
             {!pdf && signedUrls[item.mediaId] && (
               <img className="family-media-preview" src={signedUrls[item.mediaId]} alt={`${itemLabel} 预览`} />
