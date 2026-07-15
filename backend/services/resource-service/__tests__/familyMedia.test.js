@@ -524,6 +524,32 @@ describe('Task 6 private media access API', () => {
     expect(response.headers['content-type']).toMatch(/^image\/webp/);
   });
 
+  test('TC-MPA-SCAN-009 normalizes a raw legacy asset during access', async () => {
+    const legacyId = new mongoose.Types.ObjectId();
+    await MediaAsset.collection.insertOne({
+      _id: legacyId,
+      familyId: FAMILY_A_ID,
+      childId: CHILD_A1_ID,
+      uploadedBy: PARENT_A_ID,
+      purpose: 'mistake_question',
+      mimeType: 'image/png',
+      sizeBytes: 128,
+      storageKey: '26d9a5ee-e3f8-4d46-847d-b30dd22f88bc',
+      status: 'active'
+    });
+    const normalize = jest.spyOn(MediaAsset, 'normalizeAuditFields');
+    resetIdentityNonceStore();
+
+    const response = await signedGet(parentA, `/api/media/${legacyId}/access`);
+
+    expect(response.status).toBe(200);
+    expect(normalize).toHaveBeenCalledWith(expect.not.objectContaining({ malwareScanStatus: expect.anything() }));
+    expect(normalize.mock.results[0].value).toEqual(expect.objectContaining({
+      malwareScanStatus: 'legacy_unscanned',
+      malwareScannedAt: null
+    }));
+  });
+
   test('TC-MPA-MEDIA-009 keeps image content inline and prepares PDF attachment disposition', async () => {
     const { createMediaRouter } = require('../routes/media');
     const contentService = {
@@ -533,7 +559,7 @@ describe('Task 6 private media access API', () => {
       readContent: jest.fn().mockResolvedValue({
         bytes: Buffer.from('%PDF-1.7'),
         mimeType: 'application/pdf',
-        displayName: '期中试卷第3题.pdf'
+        displayName: '期中\u0085\u202e试卷第3题.pdf'
       })
     };
     const contentApp = express();

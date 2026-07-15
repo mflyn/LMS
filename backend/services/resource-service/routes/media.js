@@ -1,5 +1,6 @@
 const defaultFs = require('fs/promises');
 const express = require('express');
+const MediaAsset = require('../models/MediaAsset');
 
 const encodeDispositionFilename = (displayName) => encodeURIComponent(displayName)
   .replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
@@ -35,7 +36,7 @@ const createMediaRouter = ({
       signature: req.query.signature
     });
     const disposition = content.mimeType === 'application/pdf'
-      ? `attachment; filename*=UTF-8''${encodeDispositionFilename(content.displayName)}`
+      ? `attachment; filename*=UTF-8''${encodeDispositionFilename(MediaAsset.sanitizeDisplayName(content.displayName))}`
       : 'inline';
     res.set({
       'Cache-Control': 'private, no-store',

@@ -34,8 +34,18 @@ const sanitizeDisplayName = (originalName) => {
     .split('/')
     .filter(Boolean)
     .pop() || '';
-  const sanitized = basename.replace(/[\u0000-\u001f\u007f]/g, '').trim();
+  const sanitized = basename.replace(/[\p{Cc}\p{Cf}]/gu, '').trim();
   return truncateUtf8(sanitized, MAX_DISPLAY_NAME_BYTES) || 'media';
+};
+
+const normalizeAuditFields = (asset) => {
+  if (!asset) return asset;
+  const normalized = { ...asset };
+  if (!normalized.malwareScanStatus) normalized.malwareScanStatus = 'legacy_unscanned';
+  if (normalized.malwareScannedAt === undefined && normalized.malwareScanStatus !== 'clean') {
+    normalized.malwareScannedAt = null;
+  }
+  return normalized;
 };
 
 const mediaAssetSchema = new Schema({
@@ -131,5 +141,6 @@ MediaAsset.MAX_MEDIA_BYTES = MAX_MEDIA_BYTES;
 MediaAsset.MAX_DISPLAY_NAME_BYTES = MAX_DISPLAY_NAME_BYTES;
 MediaAsset.STORAGE_KEY_PATTERN = STORAGE_KEY_PATTERN;
 MediaAsset.sanitizeDisplayName = sanitizeDisplayName;
+MediaAsset.normalizeAuditFields = normalizeAuditFields;
 
 module.exports = MediaAsset;

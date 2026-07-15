@@ -10,6 +10,7 @@ const CHILD_UPLOAD_PURPOSES = new Set([
   'growth_evidence'
 ]);
 const MEDIA_PURPOSES = new Set(MediaAsset.MEDIA_PURPOSES);
+const normalizeAsset = (asset) => MediaAsset.normalizeAuditFields(asset);
 
 const publicMediaDescriptor = (asset, { includePurpose = false } = {}) => {
   const descriptor = {
@@ -161,7 +162,7 @@ const createMediaService = ({
 
   const issueAccess = async ({ identity, mediaId } = {}) => {
     assertMediaId(mediaId);
-    const asset = await MediaAssetModel.findById(mediaId).lean();
+    const asset = normalizeAsset(await MediaAssetModel.findById(mediaId).lean());
     if (!asset) throw notFound();
     const identityScope = await resolveIdentityScope(identity);
     authorizeAssetForScope(identityScope, asset);
@@ -181,7 +182,7 @@ const createMediaService = ({
       nonce,
       signature
     });
-    const asset = await MediaAssetModel.findOne({ _id: mediaId, status: 'active' }).lean();
+    const asset = normalizeAsset(await MediaAssetModel.findOne({ _id: mediaId, status: 'active' }).lean());
     if (!asset) throw notFound();
     const bytes = await mediaStore.read(asset.storageKey);
     return {
@@ -196,7 +197,7 @@ const createMediaService = ({
     const identityScope = await resolveIdentityScope(identity);
     return transactionRunner(async (session) => {
       const assetQuery = MediaAssetModel.findById(mediaId);
-      const asset = await (session ? assetQuery.session(session) : assetQuery).lean();
+      const asset = normalizeAsset(await (session ? assetQuery.session(session) : assetQuery).lean());
       if (!asset) throw notFound();
       authorizeAssetForScope(identityScope, asset);
       if (asset.status === 'deleted') return;

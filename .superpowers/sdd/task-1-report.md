@@ -70,3 +70,27 @@ The legacy broad Jest selector continues to conflict with family-media suites
 that own their Mongo replica set. `jest.family.config.js` is the approved
 isolated configuration for the family-media suite and passed the required
 33-test regression.
+
+## Review Remediation
+
+The independent review found two P2 issues. The follow-up strips all Unicode
+control and format characters from public display names and applies the same
+defense at the PDF response boundary. It also normalizes missing audit fields
+on every lean asset read so raw records created before the scan fields existed
+are treated as `legacy_unscanned` without a risky in-place migration.
+
+RED evidence covered retained C1/bidi controls and the absent legacy
+normalizer. GREEN evidence after remediation:
+
+```sh
+npm test --prefix backend/services/resource-service -- --runInBand __tests__/mediaModels.test.js __tests__/privateMediaStore.test.js __tests__/mediaCapability.test.js
+```
+
+Passed: 3 suites, 32 tests.
+
+```sh
+npx jest --config=backend/services/resource-service/jest.family.config.js --runInBand backend/services/resource-service/__tests__/familyMedia.test.js
+```
+
+Passed: 1 suite, 34 tests, including a raw Mongo collection insert that omits
+the new scan fields and is normalized through the real access route.

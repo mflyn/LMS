@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { publicMediaDescriptor } = require('../services/mediaService');
 let MediaAsset;
 let MediaReference;
 
@@ -69,13 +70,24 @@ describe('Task 6 media models', () => {
 
   test('TC-MPA-MEDIA-006 sanitizes bounded display names and validates PDF metadata', async () => {
     loadModels();
-    const originalName = '../untrusted\\question\u0000.png';
+    const originalName = '../untrusted\\question\u0000\u0085\u202e.png';
     const displayName = MediaAsset.sanitizeDisplayName(originalName);
     const longDisplayName = MediaAsset.sanitizeDisplayName(`${'测'.repeat(100)}.pdf`);
 
     expect(displayName).toBe('question.png');
-    expect(displayName).not.toMatch(/[\\/\u0000-\u001f\u007f]/);
+    expect(displayName).not.toMatch(/[\\/\p{Cc}\p{Cf}]/u);
     expect(Buffer.byteLength(longDisplayName, 'utf8')).toBeLessThanOrEqual(255);
+    expect(publicMediaDescriptor({
+      _id: ids.mediaId,
+      mimeType: 'image/png',
+      displayName: originalName,
+      sizeBytes: 1024
+    })).toEqual({
+      mediaId: ids.mediaId.toString(),
+      mimeType: 'image/png',
+      displayName: 'question.png',
+      sizeBytes: 1024
+    });
     await expect(new MediaAsset(validAsset({
       purpose: 'mistake_question',
       mimeType: 'application/pdf',
@@ -110,6 +122,17 @@ describe('Task 6 media models', () => {
       malwareScanStatus: 'skipped_trusted_local',
       malwareScannedAt: new Date()
     })).validate()).rejects.toThrow('malwareScannedAt is only valid');
+  });
+
+  test('TC-MPA-SCAN-009 normalizes audit fields on raw legacy records', () => {
+    loadModels();
+    const rawLegacyRecord = validAsset({ _id: ids.mediaId });
+
+    expect(rawLegacyRecord.malwareScanStatus).toBeUndefined();
+    expect(MediaAsset.normalizeAuditFields(rawLegacyRecord)).toEqual(expect.objectContaining({
+      malwareScanStatus: 'legacy_unscanned',
+      malwareScannedAt: null
+    }));
   });
 
   test('TC-T6-MEDIA-001 uses approved family-first asset indexes', () => {
