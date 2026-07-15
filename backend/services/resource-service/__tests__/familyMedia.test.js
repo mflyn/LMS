@@ -280,6 +280,7 @@ describe('Task 6 private media upload API', () => {
         media: {
           mediaId: expect.any(String),
           purpose,
+          displayName: 'untrusted-name.bin',
           mimeType: 'image/jpeg',
           sizeBytes: expect.any(Number)
         }
@@ -463,10 +464,48 @@ describe('Task 6 private media access API', () => {
         access: {
           url: expect.stringMatching(new RegExp(`^/api/media/${asset._id}/content\\?`)),
           expiresAt: FIXED_EXPIRY
+        },
+        media: {
+          mediaId: asset._id.toString(),
+          mimeType: asset.mimeType,
+          displayName: asset.displayName,
+          sizeBytes: asset.sizeBytes
         }
       }
     });
     expect(JSON.stringify(response.body)).not.toMatch(/storageKey/);
+  });
+
+  test('TC-MPA-MEDIA-009 returns a safe public descriptor without storage metadata', async () => {
+    const upload = await signedUpload({
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: await image('png'),
+      filename: 'question.png',
+      contentType: 'image/png'
+    });
+
+    expect(upload.status).toBe(201);
+    expect(upload.body.data.media).toEqual(expect.objectContaining({
+      mediaId: expect.any(String),
+      purpose: 'mistake_question',
+      displayName: 'question.png',
+      mimeType: 'image/png',
+      sizeBytes: expect.any(Number)
+    }));
+    expect(upload.body.data.media).not.toHaveProperty('storageKey');
+
+    resetIdentityNonceStore();
+    const access = await signedGet(parentA, `/api/media/${upload.body.data.media.mediaId}/access`);
+
+    expect(access.status).toBe(200);
+    expect(access.body.data.media).toEqual({
+      mediaId: upload.body.data.media.mediaId,
+      displayName: 'question.png',
+      mimeType: 'image/png',
+      sizeBytes: upload.body.data.media.sizeBytes
+    });
+    expect(JSON.stringify(access.body.data.media)).not.toMatch(/storageKey|uploadedBy|familyId|childId/i);
   });
 
   test('TC-T6-MEDIA-007 streams exact sanitized bytes with private response headers', async () => {
@@ -483,6 +522,34 @@ describe('Task 6 private media access API', () => {
     expect(response.headers['content-disposition']).toBe('inline');
     expect(response.headers['x-content-type-options']).toBe('nosniff');
     expect(response.headers['content-type']).toMatch(/^image\/webp/);
+  });
+
+  test('TC-MPA-MEDIA-009 keeps image content inline and prepares PDF attachment disposition', async () => {
+    const { createMediaRouter } = require('../routes/media');
+    const contentService = {
+      upload: jest.fn(),
+      deleteMedia: jest.fn(),
+      issueAccess: jest.fn(),
+      readContent: jest.fn().mockResolvedValue({
+        bytes: Buffer.from('%PDF-1.7'),
+        mimeType: 'application/pdf',
+        displayName: '期中试卷第3题.pdf'
+      })
+    };
+    const contentApp = express();
+    contentApp.use('/api/media', createMediaRouter({
+      authenticate: (_req, _res, next) => next(),
+      mediaService: contentService,
+      upload: { singleImage: (_req, _res, next) => next(), removeTemporary: jest.fn() }
+    }));
+
+    const response = await request(contentApp).get('/api/media/6656875da7f86a0012c2a301/content');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-disposition']).toBe("attachment; filename*=UTF-8''%E6%9C%9F%E4%B8%AD%E8%AF%95%E5%8D%B7%E7%AC%AC3%E9%A2%98.pdf");
+    expect(contentService.readContent).toHaveBeenCalledWith(expect.objectContaining({
+      mediaId: '6656875da7f86a0012c2a301'
+    }));
   });
 
   test('TC-T6-MEDIA-007 rejects every tampered or expired capability component', async () => {

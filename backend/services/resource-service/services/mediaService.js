@@ -11,6 +11,18 @@ const CHILD_UPLOAD_PURPOSES = new Set([
 ]);
 const MEDIA_PURPOSES = new Set(MediaAsset.MEDIA_PURPOSES);
 
+const publicMediaDescriptor = (asset, { includePurpose = false } = {}) => {
+  const descriptor = {
+    mediaId: asset._id.toString(),
+    mimeType: asset.mimeType,
+    displayName: MediaAsset.sanitizeDisplayName(asset.displayName),
+    sizeBytes: asset.sizeBytes
+  };
+  if (includePurpose) descriptor.purpose = asset.purpose;
+  if (asset.mimeType === 'application/pdf') descriptor.pageCount = asset.pageCount;
+  return descriptor;
+};
+
 const operationalError = (message, statusCode, code) => new AppError(
   message,
   statusCode,
@@ -123,7 +135,7 @@ const createMediaService = ({
     return { actorId, childId, familyId };
   };
 
-  const upload = async ({ identity, suppliedChildId, purpose, bytes } = {}) => {
+  const upload = async ({ identity, suppliedChildId, purpose, bytes, originalName } = {}) => {
     const scope = await resolveUploadScope({ identity, suppliedChildId, purpose });
     const stored = await mediaStore.write(bytes);
     let asset;
@@ -134,6 +146,7 @@ const createMediaService = ({
         uploadedBy: scope.actorId,
         purpose,
         mimeType: stored.mimeType,
+        displayName: MediaAsset.sanitizeDisplayName(originalName),
         sizeBytes: stored.sizeBytes,
         storageKey: stored.storageKey,
         status: 'active'
@@ -143,12 +156,7 @@ const createMediaService = ({
       throw error;
     }
 
-    return {
-      mediaId: asset._id.toString(),
-      purpose: asset.purpose,
-      mimeType: asset.mimeType,
-      sizeBytes: asset.sizeBytes
-    };
+    return publicMediaDescriptor(asset, { includePurpose: true });
   };
 
   const issueAccess = async ({ identity, mediaId } = {}) => {
@@ -158,7 +166,10 @@ const createMediaService = ({
     const identityScope = await resolveIdentityScope(identity);
     authorizeAssetForScope(identityScope, asset);
     if (asset.status !== 'active') throw notFound();
-    return capabilityService.issue(String(mediaId));
+    return {
+      access: capabilityService.issue(String(mediaId)),
+      media: publicMediaDescriptor(asset)
+    };
   };
 
   const readContent = async ({ mediaId, path, expires, nonce, signature } = {}) => {
@@ -173,7 +184,11 @@ const createMediaService = ({
     const asset = await MediaAssetModel.findOne({ _id: mediaId, status: 'active' }).lean();
     if (!asset) throw notFound();
     const bytes = await mediaStore.read(asset.storageKey);
-    return { bytes, mimeType: asset.mimeType };
+    return {
+      bytes,
+      mimeType: asset.mimeType,
+      displayName: MediaAsset.sanitizeDisplayName(asset.displayName)
+    };
   };
 
   const deleteMedia = async ({ identity, mediaId } = {}) => {
@@ -208,5 +223,6 @@ const createMediaService = ({
 
 module.exports = {
   CHILD_UPLOAD_PURPOSES,
-  createMediaService
+  createMediaService,
+  publicMediaDescriptor
 };
