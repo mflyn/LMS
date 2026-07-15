@@ -5,9 +5,9 @@ const {
 } = require('../../../common/contracts/familyGrowthApi');
 
 const DIMENSION_REMINDERS = [
-  ['physical', 'dimension_physical'],
-  ['moral', 'dimension_moral'],
-  ['labor', 'dimension_labor']
+  ['physical', 'dimension_physical', '体育'],
+  ['moral', 'dimension_moral', '德育'],
+  ['labor', 'dimension_labor', '劳育']
 ];
 
 const toId = (value) => {
@@ -149,7 +149,7 @@ const deriveFamilyReminders = async ({
   }
 
   if (settings.dimensionReminderEnabled && (tasks || logs)) {
-    DIMENSION_REMINDERS.forEach(([dimension, type]) => {
+    DIMENSION_REMINDERS.forEach(([dimension, type, label]) => {
       const hasTask = safeTasks.some((task) => task.dimension === dimension
         && task.dueDate === localDate && isActiveEntry(task));
       const hasLog = safeLogs.some((log) => log.dimension === dimension
@@ -160,8 +160,8 @@ const deriveFamilyReminders = async ({
           childId,
           localDate,
           sourceId: dimension,
-          title: `${dimension} reminder`,
-          message: `${dimension} 今日尚无成长任务或记录`,
+          title: `${label}维度提醒`,
+          message: `今日尚无${label}成长任务或记录`,
           dimension,
           source: 'dimension'
         }));
