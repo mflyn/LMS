@@ -38,7 +38,7 @@
 - Upload passes `{ bytes, originalName }` and returns `{ mediaId, purpose, mimeType, displayName, sizeBytes, pageCount? }`.
 - Access returns `{ access, media }`; content returns descriptor fields required for `Content-Disposition`.
 
-- [ ] **Step 1: Write failing model and route tests**
+- [x] **Step 1: Write failing model and route tests**
 
 Add `TC-MPA-MEDIA-006`, `009`, and `TC-MPA-SCAN-009` cases for bounded basename sanitization, legacy scan status, descriptor shape, image inline disposition, and absence of storage metadata.
 
@@ -51,21 +51,21 @@ expect(upload.body.data.media).toEqual(expect.objectContaining({
 expect(upload.body.data.media).not.toHaveProperty('storageKey');
 ```
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `npx jest --config=backend/services/resource-service/jest.config.js --runInBand mediaModels familyMedia`
 
 Expected: FAIL because descriptor and scan-audit fields do not exist.
 
-- [ ] **Step 3: Implement the metadata contract**
+- [x] **Step 3: Implement the metadata contract**
 
 Add `displayName`, `pageCount`, `malwareScanStatus`, and `malwareScannedAt` model validation. Pass Multer `originalname` into the service. Sanitize only for display/disposition, never for storage. Keep image content inline and prepare PDF attachment disposition support without enabling PDF yet.
 
-- [ ] **Step 4: Verify green and regression**
+- [x] **Step 4: Verify green and regression**
 
 Run the red command plus `privateMediaStore` and `mediaCapability` suites.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/services/resource-service
@@ -87,11 +87,11 @@ git commit -m "feat: add private media descriptors"
 - `mediaStore.writeCanonical(buffer)` stores already validated bytes and returns only `{ storageKey }`.
 - Processor is the sole owner of magic-byte detection, purpose matrix, image re-encoding, PDF inspection, canonical serialization, and post-transform limits.
 
-- [ ] **Step 1: Add `pdf-lib@1.17.1` to root and resource-service lockfiles**
+- [x] **Step 1: Add `pdf-lib@1.17.1` to root and resource-service lockfiles**
 
 Use exact version `1.17.1`; do not add browser PDF rendering or native PDF dependencies.
 
-- [ ] **Step 2: Write failing image and PDF processor tests**
+- [x] **Step 2: Write failing image and PDF processor tests**
 
 Implement `TC-MPA-MEDIA-001`-`008` fixtures in memory. Assert safe 1/50-page PDFs, 51-page/encrypted/malformed rejection, dangerous catalog/page/object names, magic-byte MIME, EXIF removal, purpose matrix, and pre/post 10 MiB checks.
 
@@ -103,21 +103,21 @@ await expect(processor.prepare({
 })).rejects.toMatchObject({ code: 'PDF_ACTIVE_CONTENT_REJECTED' });
 ```
 
-- [ ] **Step 3: Verify red**
+- [x] **Step 3: Verify red**
 
 Run: `npx jest --config=backend/services/resource-service/jest.config.js --runInBand privateMediaProcessor`
 
 Expected: FAIL because the processor is absent.
 
-- [ ] **Step 4: Implement conservative processing**
+- [x] **Step 4: Implement conservative processing**
 
 Detect image/PDF from bytes. Continue `sharp(..., { failOn: 'error' }).rotate()` image re-encoding. Load PDF with encryption disallowed and invalid objects rejected; traverse parsed dictionaries, arrays, names, and streams with cycle protection and reject the approved active-content tokens. Copy accepted pages into a new document, serialize without metadata-derived paths, verify `%PDF-`, size, page count, and second parse.
 
-- [ ] **Step 5: Refactor private storage and verify green**
+- [x] **Step 5: Refactor private storage and verify green**
 
 Keep UUID/atomic-link/private-permission behavior in `privateMediaStore`; move format processing out. Run processor, store, media-model, and family-media suites.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json backend/services/resource-service
@@ -142,27 +142,27 @@ git commit -m "feat: canonicalize private PDF media"
 - Scanner exposes `ping(): Promise<void>` and `scan(buffer): Promise<void>`; `scan` resolves only for `OK` and throws stable `MALWARE_DETECTED` or `MALWARE_SCANNER_UNAVAILABLE` errors.
 - Media service receives `processor`, `scanner|null`, and immutable `securityProfile`.
 
-- [ ] **Step 1: Write failing configuration/profile tests**
+- [x] **Step 1: Write failing configuration/profile tests**
 
 Cover `TC-MPA-SCAN-001`, `002`, `006`, `008`, and audit fields. In trusted-local, inject a scanner getter that throws if constructed.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `npx jest --config=backend/services/resource-service/jest.config.js --runInBand mediaSecurity server familyMedia`
 
-- [ ] **Step 3: Implement profile resolution and pipeline integration**
+- [x] **Step 3: Implement profile resolution and pipeline integration**
 
 Development/test default to trusted-local; production requires explicit valid mode. Scan canonical bytes before storage. Persist `skipped_trusted_local` or `clean`/timestamp only after the corresponding policy succeeds. Add health metadata without claiming scanner cleanliness in trusted-local.
 
-- [ ] **Step 4: Write failing TCP protocol tests**
+- [x] **Step 4: Write failing TCP protocol tests**
 
 Use a local fake TCP server for `TC-MPA-SCAN-003`-`007`: `PING`, bounded `INSTREAM` chunks, terminator, clean, found, timeout, refusal, malformed/oversized response, and socket cleanup.
 
-- [ ] **Step 5: Implement and verify the ClamAV adapter**
+- [x] **Step 5: Implement and verify the ClamAV adapter**
 
 Use `net.createConnection`, `zPING\0`, and `zINSTREAM\0`; cap chunk and response sizes, own all timers/listeners, and sanitize outward errors. `startServer` performs `ping` after Mongo connection and before listen only in secure-production.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/services/resource-service
@@ -183,15 +183,15 @@ git commit -m "feat: add explicit media scan profiles"
 - `normalizeMistakeMediaInput(data)` returns canonical changed arrays; ambiguous group input fails.
 - `toPublicMistake` returns arrays plus first-item projections and normalizes legacy-only documents lazily.
 
-- [ ] **Step 1: Write failing parser/model/response tests**
+- [x] **Step 1: Write failing parser/model/response tests**
 
 Cover `TC-MPA-API-001`-`004`, `007`, `008`: legacy reads, alias requests, mixed rejection, dedupe/order, 0/10/11 limits, child self-scope, and both group permissions.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `npx jest --config=backend/services/analytics-service/jest.family.config.js --runInBand familyMistakes`
 
-- [ ] **Step 3: Implement schema and strict parser**
+- [x] **Step 3: Implement schema and strict parser**
 
 Keep arrays absent on legacy rows, normalize on reads, store arrays on new mutations, and update/remove scalar projections atomically. Keep internal logical field names singular for resource references.
 
@@ -202,7 +202,7 @@ const MEDIA_GROUPS = Object.freeze({
 });
 ```
 
-- [ ] **Step 4: Verify green and commit**
+- [x] **Step 4: Verify green and commit**
 
 Run family mistakes and startup suites, then commit.
 
@@ -225,27 +225,27 @@ git commit -m "feat: add mistake attachment arrays"
 - Pending state carries ordered desired arrays, prior bindings, complete non-media patch, actor, and recoverable state-event intent.
 - Owner publication and `FamilyMistakeStateEvent` persistence run in one local Mongo transaction after remote additions are bound and before removals are released.
 
-- [ ] **Step 1: Write failing multi-binding saga tests**
+- [x] **Step 1: Write failing multi-binding saga tests**
 
 Cover `TC-MPA-API-005`, `006`, `009`, `010`: create, append, replace, reorder-only, remove-all, repeated field commands, stable/retryable failures, exact operation replay, and rollback projection behavior.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `npx jest --config=backend/services/analytics-service/jest.family.config.js --runInBand familyMistakeMediaSaga`
 
-- [ ] **Step 3: Implement set-difference and ordered publication**
+- [x] **Step 3: Implement set-difference and ordered publication**
 
 Prepare/commit additions, publish arrays/projections/non-media patch/`updatedBy`, then release removals. Reorder-only performs no resource call. Preserve exact binding generations and operation ID across recovery.
 
-- [ ] **Step 4: Write failing combined state/media tests**
+- [x] **Step 4: Write failing combined state/media tests**
 
 Submit attachment changes with `reviewed`, `mastered`, or `reviewReminderDate`; force owner/event transaction failure and detail-read recovery. Assert no published state exists without its state event.
 
-- [ ] **Step 5: Implement transactional local publication and verify green**
+- [x] **Step 5: Implement transactional local publication and verify green**
 
 Reuse the existing transaction runner/state-event builder instead of adding a separate non-recoverable post-publication write. Run saga, route, weekly-report cutoff, resource reference, and startup tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/services/analytics-service
