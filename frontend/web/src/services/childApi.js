@@ -98,6 +98,19 @@ export const completeOwnTask = (taskId, payload, signal) => childPatch(
   signal
 );
 
+const childPost = async (path, body, allowedFields) => {
+  const response = await childRequest(
+    (config) => axios.post(path, pick(body, allowedFields), config)
+  );
+  return unwrap(response);
+};
+
+export const createOwnMistake = (payload) => childPost('/api/mistakes', payload, [
+  'subject',
+  'reason',
+  'childExplanation'
+]);
+
 export const listOwnMistakes = (params, signal) => childGet('/api/mistakes', params, [
   'subject',
   'reason',

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import { useChildDataResource } from '../../hooks/useChildDataResource';
-import { listOwnMistakes, reviewOwnMistake } from '../../services/childApi';
+import { listOwnMistakes, reviewOwnMistake, createOwnMistake } from '../../services/childApi';
 
 const messageFor = (error) => error?.response?.data?.error?.message
   || error?.message
@@ -18,6 +18,31 @@ const ChildMistakesPage = () => {
   const [busyId, setBusyId] = useState(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [newSubject, setNewSubject] = useState('');
+  const [newReason, setNewReason] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const resetForm = () => {
+    setShowForm(false);
+    setNewSubject('');
+    setNewReason('');
+  };
+
+  const saveNewMistake = async () => {
+    if (!newSubject.trim() || !newReason.trim()) return;
+    setSaving(true);
+    setError('');
+    try {
+      await createOwnMistake({ subject: newSubject.trim(), reason: newReason.trim() });
+      resetForm();
+      resource.reload();
+    } catch (e) {
+      setError(e?.response?.data?.error?.message || e?.message || '保存失败');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!resource.data?.items) return;
@@ -73,6 +98,56 @@ const ChildMistakesPage = () => {
 
       {message && <p className="child-success-message" role="status">{message}</p>}
       {error && <p className="child-form-error" role="alert">{error}</p>}
+
+      <div className="child-inline-actions" style={{ marginBottom: '1rem' }}>
+        <button type="button" className="child-primary-button" onClick={() => setShowForm(!showForm)}>
+          {showForm ? '取消' : '记录新错题'}
+        </button>
+      </div>
+
+      {showForm && (
+        <section className="child-mistake-row" style={{ padding: '1rem', marginBottom: '1rem', border: '1px solid #d9d9d9', borderRadius: 8 }}>
+          <label style={{ display: 'block', marginBottom: '0.75rem' }}>
+            科目
+            <input
+              type="text"
+              className="child-input"
+              style={{ display: 'block', width: '100%', marginTop: 4 }}
+              value={newSubject}
+              onChange={(e) => setNewSubject(e.target.value)}
+              disabled={saving}
+              placeholder="例如：数学"
+            />
+          </label>
+          <label style={{ display: 'block', marginBottom: '0.75rem' }}>
+            错因
+            <select
+              className="child-input"
+              style={{ display: 'block', width: '100%', marginTop: 4 }}
+              value={newReason}
+              onChange={(e) => setNewReason(e.target.value)}
+              disabled={saving}
+            >
+              <option value="">选择错因</option>
+              <option value="concept">概念不懂</option>
+              <option value="careless">粗心</option>
+              <option value="misreading">审题错误</option>
+              <option value="calculation">计算错误</option>
+              <option value="memory">记忆不牢</option>
+              <option value="method">方法不会</option>
+              <option value="time">时间不够</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            className="child-primary-button"
+            disabled={saving || !newSubject.trim() || !newReason.trim()}
+            onClick={saveNewMistake}
+          >
+            {saving ? '保存中…' : '保存'}
+          </button>
+        </section>
+      )}
       {resource.state === 'loading' && <FamilyDataState state="loading" />}
       {resource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={resource.reload} />}
       {resource.state === 'error' && <FamilyDataState state="error" error={resource.error} />}
