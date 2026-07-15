@@ -3,7 +3,7 @@
 **Document status:** READY_FOR_REVIEW
 **Implementation conformance:** COVERED (35/35)
 **Baseline candidate:** FGT-MVP-1.6
-**Implementation evidence commit:** `f5af5c0f`
+**Implementation evidence commit:** `e331c2810ba7fc3077748623d2148585177d791a`
 **Revalidated at:** 2026-07-15
 
 Conformance values are `COVERED`, `PARTIAL`, and `GAP`. `plannedTask` and
@@ -29,10 +29,11 @@ design asset index, merged code, focused tests, and the unified release gate.
 - The increment extends the existing requirements without adding a new PRD ID. Canonical mistake
   arrays, task PDF attachments, parent/child workflows, PDF processing, explicit media security
   profiles, deployment assets and protected real-scanner command are implemented through commit
-  `f5af5c0f`.
-- Focused resource, analytics, frontend, Task 11 integration, Chromium desktop/360px and deployment
-  tests pass. The default candidate remains `trusted-local`; the real ClamAV command is intentionally
-  not executed on the 8 GiB development host.
+  `e331c2810ba7fc3077748623d2148585177d791a`.
+- The trusted-local release gate passes with 78 backend suites / 867 tests, 27 frontend suites / 174
+  tests, 4 Task 11 integration suites / 6 tests, production build, 4 Chromium tests, seven service
+  images, eight healthy runtime services and the gateway media smoke flow. The real ClamAV command
+  is intentionally not executed on the 8 GiB development host.
 - Exact evidence and the `secure-production` approval boundary are recorded in
   [the increment Gate](./family-growth-mistake-pdf-multi-attachments-gate.md).
 

@@ -377,7 +377,7 @@ Generate antivirus test content only at runtime, run only through the secure ove
 
 Set implemented statuses only after evidence exists. Record exact commands, commit, suite/test counts, browser viewports, secure-scan runner constraints, and any approved residual risk.
 
-- [ ] **Step 6: Run final verification**
+- [x] **Step 6: Run final verification**
 
 ```bash
 npm run docs:family:check
@@ -392,7 +392,7 @@ bash scripts/check-git-clean.sh
 
 Run `npm run test:family-security-scan` only on a sufficiently sized scanner runner. The branch cannot claim secure-production release approval without it.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add .

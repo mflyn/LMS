@@ -1,7 +1,7 @@
 # Mistake PDF and Multi-Attachment Gate
 
-**Document status:** IMPLEMENTED / FINAL LOW-RESOURCE VERIFICATION PENDING
-**Implementation evidence commit:** `f5af5c0f`
+**Document status:** TRUSTED-LOCAL APPROVED / SECURE-PRODUCTION PENDING
+**Implementation evidence commit:** `e331c2810ba7fc3077748623d2148585177d791a`
 **Evidence date:** 2026-07-15
 **Design:** [Mistake PDF and Multi-Attachment Design](../superpowers/specs/2026-07-15-family-growth-mistake-pdf-multi-attachments-design.md)
 **Test cases:** [Mistake PDF and Multi-Attachment Test Cases](./family-growth-mistake-pdf-multi-attachments-test-cases.md)
@@ -45,6 +45,8 @@ No result from `trusted-local` may be described as malware-clean. Scanner failur
 | browser E2E | `npm run test:family-flow:e2e` | 4 Chromium tests passed on Desktop Chrome and explicit 360 x 800 checks; no overflow or console errors |
 | deployment and scan harness | focused family-common deployment/smoke suites | 2 suites / 8 tests passed |
 | scanner opt-in guard | `npm run test:family-security-scan` without authorization | exited 2 with `SECURITY_SCAN_SKIPPED:EXPLICIT_OPT_IN_REQUIRED`; no container started |
+| full family regression | `npm run test:family-regression` | 78 suites / 867 tests passed |
+| trusted-local release | `npm run release:family` at `e331c281` | passed: docs, lint, backend/frontend/integration/E2E, production build, seven service images, eight healthy runtime services, gateway media smoke and clean Git |
 
 The browser flow covers parent task PDF upload, child task download, child mistake PDF/image
 creation, parent image/PDF collection upload, reload, download, removal, and sibling/cross-family
@@ -54,7 +56,7 @@ denial through the real Gateway and services. Test PDFs are generated in memory.
 
 | Candidate boundary | Required command | Current state | Approval |
 | --- | --- | --- | --- |
-| private trusted-family / 8 GiB host | `npm run release:family` | final candidate rerun pending | pending final low-resource Gate |
+| private trusted-family / 8 GiB host | `npm run release:family` | passed at `e331c281`; no scanner container started | approved for trusted-local |
 | secure-production implementation | deterministic scanner, deployment and smoke-harness tests | passed | implementation approved |
 | secure-production release | `RUN_FAMILY_SECURITY_SCAN=1 npm run test:family-security-scan` on at least 10 GiB Docker memory | intentionally not run on the 8 GiB host | not approved |
 
