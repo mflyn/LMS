@@ -3,9 +3,7 @@ import {
   getPrivateMediaAccess as requestPrivateMediaAccess,
   uploadPrivateMedia as requestPrivateMediaUpload
 } from '../../services/familyApi';
-
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+import { mediaRulesForPurpose, validatePrivateMediaFile } from './privateMediaRules';
 
 const apiMessage = (error) => error?.response?.data?.error?.message || error?.message || '图片处理失败，请重试。';
 
@@ -22,6 +20,7 @@ const PrivateMediaField = ({
   getPrivateMediaAccess = requestPrivateMediaAccess
 }) => {
   const inputId = useId();
+  const rules = mediaRulesForPurpose('child_avatar');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [signedUrl, setSignedUrl] = useState('');
@@ -34,12 +33,9 @@ const PrivateMediaField = ({
     setSignedUrl('');
     setMessage('');
 
-    if (!ALLOWED_TYPES.has(file.type)) {
-      setError('仅支持 JPEG、PNG 或 WebP 图片');
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      setError('图片不能超过 10 MiB');
+    const validationError = validatePrivateMediaFile(file, 'child_avatar');
+    if (validationError) {
+      setError(validationError.message.replace('文件不能', '图片不能'));
       return;
     }
 
@@ -90,7 +86,7 @@ const PrivateMediaField = ({
       <input
         id={inputId}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={rules.acceptedMimeTypes.join(',')}
         onChange={upload}
         disabled={busy || !childId}
       />

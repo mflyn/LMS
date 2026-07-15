@@ -59,6 +59,11 @@ const childPatch = async (path, body, allowedFields, signal) => {
   return unwrap(response);
 };
 
+const childDelete = async (path, signal) => {
+  const response = await childRequest((config) => axios.delete(path, config), signal);
+  return unwrap(response);
+};
+
 export const childPinLogin = async (credentials) => {
   const response = await axios.post('/api/auth/child-pin-login', pick(credentials, [
     'familyId',
@@ -108,7 +113,9 @@ const childPost = async (path, body, allowedFields) => {
 export const createOwnMistake = (payload) => childPost('/api/mistakes', payload, [
   'subject',
   'reason',
-  'childExplanation'
+  'childExplanation',
+  'questionMediaIds',
+  'childAnswerMediaIds'
 ]);
 
 export const listOwnMistakes = (params, signal) => childGet('/api/mistakes', params, [
@@ -127,7 +134,27 @@ export const listOwnMistakes = (params, signal) => childGet('/api/mistakes', par
 export const reviewOwnMistake = (mistakeId, payload, signal) => childPatch(
   `/api/mistakes/${encodeURIComponent(mistakeId)}`,
   payload,
-  ['childExplanation', 'reviewed', 'mastered'],
+  ['childExplanation', 'reviewed', 'mastered', 'questionMediaIds', 'childAnswerMediaIds'],
+  signal
+);
+
+export const uploadOwnPrivateMedia = async ({ file, purpose }, signal) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('purpose', purpose);
+  const response = await childRequest((config) => axios.post('/api/media', formData, config), signal);
+  return unwrap(response);
+};
+
+export const getOwnPrivateMediaAccess = (mediaId, signal) => childGet(
+  `/api/media/${encodeURIComponent(mediaId)}/access`,
+  undefined,
+  [],
+  signal
+);
+
+export const deleteOwnPrivateMedia = (mediaId, signal) => childDelete(
+  `/api/media/${encodeURIComponent(mediaId)}`,
   signal
 );
 

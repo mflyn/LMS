@@ -270,23 +270,23 @@ git commit -m "feat: bind mistake attachment collections"
 - `useDraftMedia({ deleteMedia })` supports parent or child authenticated cleanup.
 - Child API adds `uploadOwnPrivateMedia`, `getOwnPrivateMediaAccess`, and `deleteOwnPrivateMedia`; it never accepts `childId`.
 
-- [ ] **Step 1: Write failing shared rule/collection tests**
+- [x] **Step 1: Write failing shared rule/collection tests**
 
 Cover `TC-MPA-WEB-001`-`003`, `007`, `008`: purpose limits, MIME/size hints, sequential partial failure, PDF metadata/download, image preview, no iframe, duplicate/order, draft cleanup, long names, and keyboard labels.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `npm run test:ci --prefix frontend/web -- --runInBand PrivateMediaCollectionField useDraftMedia`
 
-- [ ] **Step 3: Implement shared rules, collection, and injected cleanup**
+- [x] **Step 3: Implement shared rules, collection, and injected cleanup**
 
 Keep `PrivateMediaField` image-only for avatar. Do not persist signed URLs. Stop a selected batch after the first failed upload while preserving prior successes.
 
-- [ ] **Step 4: Write child API red tests and implement**
+- [x] **Step 4: Write child API red tests and implement**
 
 Allow only canonical arrays in mistake payloads; attach the child bearer token per call; omit `childId` from multipart and method signatures.
 
-- [ ] **Step 5: Verify green and commit**
+- [x] **Step 5: Verify green and commit**
 
 ```bash
 git add frontend/web/src
