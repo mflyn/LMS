@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const { AppError } = require('../../../common/middleware/errorTypes');
 const MediaAsset = require('../models/MediaAsset');
+const { createPrivateMediaProcessor } = require('./privateMediaProcessor');
 
 const CHILD_UPLOAD_PURPOSES = new Set([
   'task_completion',
@@ -44,6 +45,7 @@ const createMediaService = ({
   capabilityService,
   mediaStore,
   now = Date.now,
+  processor = createPrivateMediaProcessor(),
   transactionRunner
 } = {}) => {
   if (!MediaAssetModel || typeof MediaAssetModel.create !== 'function') {
@@ -52,9 +54,10 @@ const createMediaService = ({
   if (!UserModel || typeof UserModel.exists !== 'function') {
     throw new Error('UserModel is required');
   }
-  if (!mediaStore || typeof mediaStore.write !== 'function' || typeof mediaStore.remove !== 'function') {
+  if (!mediaStore || typeof mediaStore.writeCanonical !== 'function' || typeof mediaStore.remove !== 'function') {
     throw new Error('mediaStore is required');
   }
+  if (!processor || typeof processor.prepare !== 'function') throw new Error('media processor is required');
   if (!capabilityService || typeof capabilityService.issue !== 'function'
     || typeof capabilityService.verify !== 'function') {
     throw new Error('capabilityService is required');
@@ -138,7 +141,8 @@ const createMediaService = ({
 
   const upload = async ({ identity, suppliedChildId, purpose, bytes, originalName } = {}) => {
     const scope = await resolveUploadScope({ identity, suppliedChildId, purpose });
-    const stored = await mediaStore.write(bytes);
+    const prepared = await processor.prepare({ bytes, purpose, originalName });
+    const stored = await mediaStore.writeCanonical(prepared.buffer);
     let asset;
     try {
       asset = await MediaAssetModel.create({
@@ -146,9 +150,10 @@ const createMediaService = ({
         childId: scope.childId,
         uploadedBy: scope.actorId,
         purpose,
-        mimeType: stored.mimeType,
-        displayName: MediaAsset.sanitizeDisplayName(originalName),
-        sizeBytes: stored.sizeBytes,
+        mimeType: prepared.mimeType,
+        displayName: prepared.displayName,
+        sizeBytes: prepared.sizeBytes,
+        pageCount: prepared.pageCount,
         storageKey: stored.storageKey,
         status: 'active'
       });

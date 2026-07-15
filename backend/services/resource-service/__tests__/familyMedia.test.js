@@ -10,6 +10,7 @@ const os = require('os');
 const path = require('path');
 const request = require('supertest');
 const sharp = require('sharp');
+const { PDFDocument } = require('pdf-lib');
 const { MongoMemoryReplSet } = require('../../../../node_modules/mongodb-memory-server');
 
 const { createIdentityHeaders, resetIdentityNonceStore } = require('../../../common/middleware/gatewayIdentity');
@@ -81,6 +82,12 @@ const image = async (format, withMetadata = false) => {
   });
   if (withMetadata) pipeline = pipeline.withMetadata({ orientation: 6 });
   return pipeline.toFormat(format).toBuffer();
+};
+
+const pdf = async (pages = 1) => {
+  const document = await PDFDocument.create();
+  for (let index = 0; index < pages; index += 1) document.addPage([200, 200]);
+  return Buffer.from(await document.save({ addDefaultPage: false }));
 };
 
 const signedHeaders = (identity, method, originalUrl) => createIdentityHeaders({
@@ -314,23 +321,73 @@ describe('Task 6 private media upload API', () => {
     expect(response.body.data.media.mimeType).toBe(mimeType);
   });
 
+  test('TC-MPA-MEDIA-001 persists canonical PDF metadata and rejects an image-only purpose', async () => {
+    const response = await signedUpload({
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: await pdf(2),
+      filename: 'question.bin',
+      contentType: 'application/octet-stream'
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.media).toEqual(expect.objectContaining({
+      mimeType: 'application/pdf',
+      displayName: 'question.bin',
+      pageCount: 2
+    }));
+    const asset = await MediaAsset.findById(response.body.data.media.mediaId).lean();
+    expect(asset).toEqual(expect.objectContaining({ mimeType: 'application/pdf', pageCount: 2 }));
+    expect((await mediaStore.read(asset.storageKey)).subarray(0, 5).toString('ascii')).toBe('%PDF-');
+
+    const rejected = await signedUpload({
+      purpose: 'growth_evidence',
+      childId: CHILD_A1_ID,
+      bytes: await pdf(),
+      filename: 'evidence.pdf',
+      contentType: 'application/pdf'
+    });
+    expect(rejected.status).toBe(400);
+    expect(rejected.body.error.code).toBe('MEDIA_TYPE_NOT_ALLOWED');
+    expect(await privateObjectNames()).toHaveLength(1);
+  });
+
   test('TC-T6-MEDIA-002 rejects invalid images and cleans all files and metadata', async () => {
     const inputs = [
-      { bytes: null, filename: 'missing.jpg', contentType: 'image/jpeg' },
-      { bytes: Buffer.from('not-an-image'), filename: 'corrupt.jpg', contentType: 'image/jpeg' },
-      { bytes: await image('gif'), filename: 'unsupported.gif', contentType: 'image/gif' },
-      { bytes: Buffer.alloc(MAX_MEDIA_BYTES + 1), filename: 'oversized.jpg', contentType: 'image/jpeg' }
+      { bytes: null, filename: 'missing.jpg', contentType: 'image/jpeg', status: 400, code: 'VALIDATION_ERROR' },
+      {
+        bytes: Buffer.from('not-an-image'),
+        filename: 'corrupt.jpg',
+        contentType: 'image/jpeg',
+        status: 400,
+        code: 'MEDIA_TYPE_NOT_ALLOWED'
+      },
+      {
+        bytes: await image('gif'),
+        filename: 'unsupported.gif',
+        contentType: 'image/gif',
+        status: 400,
+        code: 'MEDIA_TYPE_NOT_ALLOWED'
+      },
+      {
+        bytes: Buffer.alloc(MAX_MEDIA_BYTES + 1),
+        filename: 'oversized.jpg',
+        contentType: 'image/jpeg',
+        status: 413,
+        code: 'MEDIA_TOO_LARGE'
+      }
     ];
 
     for (const input of inputs) {
       resetIdentityNonceStore();
+      const { status, code, ...uploadInput } = input;
       const response = await signedUpload({
         purpose: 'growth_evidence',
         childId: CHILD_A1_ID,
-        ...input
+        ...uploadInput
       });
-      expect(response.status).toBe(400);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.status).toBe(status);
+      expect(response.body.error.code).toBe(code);
       expect(await MediaAsset.countDocuments()).toBe(0);
       expect(await privateObjectNames()).toEqual([]);
       expect(await incomingNames()).toEqual([]);

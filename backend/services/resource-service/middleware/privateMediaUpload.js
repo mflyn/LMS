@@ -6,13 +6,15 @@ const path = require('path');
 const { AppError } = require('../../../common/middleware/errorTypes');
 const { MAX_MEDIA_BYTES } = require('../models/MediaAsset');
 
-const validationError = (message) => new AppError(
+const operationalError = (message, statusCode, code) => new AppError(
   message,
-  400,
-  'VALIDATION_ERROR',
+  statusCode,
+  code,
   true,
   []
 );
+const validationError = (message) => operationalError(message, 400, 'VALIDATION_ERROR');
+const mediaTooLarge = () => operationalError('Media exceeds the 10 MiB limit', 413, 'MEDIA_TOO_LARGE');
 
 const createPrivateMediaUpload = ({
   privateRoot,
@@ -43,12 +45,10 @@ const createPrivateMediaUpload = ({
   const singleImage = (req, res, next) => {
     parseSingle(req, res, (error) => {
       if (error) {
-        const message = error.code === 'LIMIT_FILE_SIZE'
-          ? 'Image file exceeds the 10 MiB limit'
-          : 'Invalid media upload';
-        return next(validationError(message));
+        if (error.code === 'LIMIT_FILE_SIZE') return next(mediaTooLarge());
+        return next(validationError('Invalid media upload'));
       }
-      if (!req.file) return next(validationError('Image file is required'));
+      if (!req.file) return next(validationError('Media file is required'));
       return next();
     });
   };
