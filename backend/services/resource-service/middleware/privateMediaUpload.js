@@ -16,6 +16,20 @@ const operationalError = (message, statusCode, code) => new AppError(
 const validationError = (message) => operationalError(message, 400, 'VALIDATION_ERROR');
 const mediaTooLarge = () => operationalError('Media exceeds the 10 MiB limit', 413, 'MEDIA_TOO_LARGE');
 
+const normalizeUploadFilename = (value) => {
+  const original = String(value || '');
+  if ([...original].some((character) => character.codePointAt(0) > 0xff)) {
+    return original.normalize('NFC');
+  }
+
+  const headerBytes = Buffer.from(original, 'latin1');
+  const decoded = headerBytes.toString('utf8');
+  if (decoded.includes('\ufffd') || !Buffer.from(decoded, 'utf8').equals(headerBytes)) {
+    return original.normalize('NFC');
+  }
+  return decoded.normalize('NFC');
+};
+
 const createPrivateMediaUpload = ({
   privateRoot,
   fsPromises = defaultFs,
@@ -49,6 +63,7 @@ const createPrivateMediaUpload = ({
         return next(validationError('Invalid media upload'));
       }
       if (!req.file) return next(validationError('Media file is required'));
+      req.file.originalname = normalizeUploadFilename(req.file.originalname);
       return next();
     });
   };
@@ -72,5 +87,6 @@ const createPrivateMediaUpload = ({
 };
 
 module.exports = {
-  createPrivateMediaUpload
+  createPrivateMediaUpload,
+  normalizeUploadFilename
 };

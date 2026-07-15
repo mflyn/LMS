@@ -20,6 +20,7 @@ const { AppError } = require('../../../common/middleware/errorTypes');
 const FamilyUser = require('../models/FamilyUser');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
+const { normalizeUploadFilename } = require('../middleware/privateMediaUpload');
 const { createMediaCapabilityService } = require('../services/mediaCapability');
 const { createMediaReferenceService } = require('../services/mediaReferenceService');
 const { createMongoTransactionRunner } = require('../services/mongoTransaction');
@@ -259,6 +260,26 @@ afterAll(async () => {
 });
 
 describe('Task 6 private media upload API', () => {
+  test('TC-MPA-MEDIA-010 restores UTF-8 multipart filenames without corrupting ambiguous Latin-1', async () => {
+    const utf8Name = '训练计划.pdf';
+    const multerMojibake = Buffer.from(utf8Name, 'utf8').toString('latin1');
+
+    expect(normalizeUploadFilename(multerMojibake)).toBe(utf8Name);
+    expect(normalizeUploadFilename('plain-name.pdf')).toBe('plain-name.pdf');
+    expect(normalizeUploadFilename('café.pdf')).toBe('café.pdf');
+
+    const response = await signedUpload({
+      purpose: 'task_attachment',
+      childId: CHILD_A1_ID,
+      bytes: await pdf(),
+      filename: utf8Name,
+      contentType: 'application/pdf'
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.media.displayName).toBe(utf8Name);
+  });
+
   test('resolves current family for a parent token issued before family creation', async () => {
     const response = await signedUpload({
       identity: { id: PARENT_A_ID.toString(), role: 'parent' },
