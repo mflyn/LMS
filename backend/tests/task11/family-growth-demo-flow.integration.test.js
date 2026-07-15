@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { PDFDocument, StandardFonts } = require('pdf-lib');
 const sharp = require('sharp');
 const { createTask11ApiClient } = require('./apiClient');
 const { createFamilyRuntime } = require('./serviceRuntime');
@@ -25,6 +26,22 @@ const expectStatus = (response, status) => {
     throw new Error(`Expected success envelope for HTTP ${status}: ${JSON.stringify(response.data)}`);
   }
   return response.data.data;
+};
+
+const createPdf = async (text) => {
+  const document = await PDFDocument.create();
+  const font = await document.embedFont(StandardFonts.Helvetica);
+  const page = document.addPage([360, 240]);
+  page.drawText(text, { x: 24, y: 180, size: 14, font });
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+};
+
+const uploadMedia = async (client, { bytes, childId, mimeType, name, purpose }) => {
+  const form = new FormData();
+  form.append('file', new Blob([bytes], { type: mimeType }), name);
+  form.append('purpose', purpose);
+  if (childId) form.append('childId', childId);
+  return expectStatus(await client.post('/api/media', form), 201).media;
 };
 
 describe('Task 11 family growth demo flow', () => {
@@ -213,21 +230,71 @@ describe('Task 11 family growth demo flow', () => {
     );
     expect(childBLogs.items).toEqual([]);
 
-    const mistake = expectStatus(await parent.post('/api/mistakes', {
+    const mistakeQuestionImage = await uploadMedia(parent, {
+      bytes: await sharp({
+        create: { width: 8, height: 8, channels: 3, background: { r: 40, g: 120, b: 180 } }
+      }).png().toBuffer(),
+      childId: childA.childId,
+      mimeType: 'image/png',
+      name: 'mistake-question.png',
+      purpose: 'mistake_question'
+    });
+    const mistakeQuestionPdf = await uploadMedia(parent, {
+      bytes: await createPdf('Task 11 mistake question'),
+      childId: childA.childId,
+      mimeType: 'application/pdf',
+      name: 'mistake-question.pdf',
+      purpose: 'mistake_question'
+    });
+    const mistakeAnswerPdf = await uploadMedia(parent, {
+      bytes: await createPdf('Task 11 mistake answer'),
+      childId: childA.childId,
+      mimeType: 'application/pdf',
+      name: 'mistake-answer.pdf',
+      purpose: 'mistake_answer'
+    });
+    let mistake = expectStatus(await parent.post('/api/mistakes', {
       childId: childA.childId,
       subject: '数学',
       knowledgePointName: '两位数乘法',
       reason: 'calculation',
       correctAnswer: '84',
       parentNote: '复习进位步骤',
-      reviewReminderDate: '2026-07-13'
+      reviewReminderDate: '2026-07-13',
+      questionMediaIds: [mistakeQuestionImage.mediaId, mistakeQuestionPdf.mediaId],
+      childAnswerMediaIds: [mistakeAnswerPdf.mediaId]
     }), 201).mistake;
     expect(mistake).toEqual(expect.objectContaining({
       childId: childA.childId,
       dimension: 'academic',
       subject: '数学',
-      mastered: false
+      mastered: false,
+      questionMediaIds: [mistakeQuestionImage.mediaId, mistakeQuestionPdf.mediaId],
+      childAnswerMediaIds: [mistakeAnswerPdf.mediaId]
     }));
+    mistake = expectStatus(await parent.patch(`/api/mistakes/${mistake.mistakeId}`, {
+      questionMediaIds: [mistakeQuestionPdf.mediaId, mistakeQuestionImage.mediaId]
+    }), 200).mistake;
+    expect(mistake.questionMediaIds).toEqual([
+      mistakeQuestionPdf.mediaId,
+      mistakeQuestionImage.mediaId
+    ]);
+
+    const mistakePdfAccess = expectStatus(await child.get(
+      `/api/media/${mistakeQuestionPdf.mediaId}/access`
+    ), 200);
+    const mistakePdfContent = await axios.get(`${runtime.gatewayUrl}${mistakePdfAccess.access.url}`, {
+      responseType: 'arraybuffer'
+    });
+    expect(mistakePdfContent.status).toBe(200);
+    expect(mistakePdfContent.headers['content-type']).toBe('application/pdf');
+    expect(mistakePdfContent.headers['content-disposition']).toMatch(/^attachment;/);
+
+    mistake = expectStatus(await parent.patch(`/api/mistakes/${mistake.mistakeId}`, {
+      questionMediaIds: [mistakeQuestionPdf.mediaId]
+    }), 200).mistake;
+    expect(mistake.questionMediaIds).toEqual([mistakeQuestionPdf.mediaId]);
+    expect((await parent.delete(`/api/media/${mistakeQuestionImage.mediaId}`)).status).toBe(204);
     const childBMistakes = expectStatus(await parent.get(
       `/api/mistakes?childId=${childB.childId}&pageSize=100`
     ), 200);
@@ -273,6 +340,8 @@ describe('Task 11 family growth demo flow', () => {
     const childBMediaAccess = await api.asChild(childBLogin.token)
       .get(`/api/media/${media.mediaId}/access`);
     expect(childBMediaAccess.status).toBe(403);
+    expect((await api.asChild(childBLogin.token)
+      .get(`/api/media/${mistakeQuestionPdf.mediaId}/access`)).status).toBe(403);
 
     const otherRegistration = expectStatus(await api.registerParent({
       username: 'task11_other_parent',
@@ -288,6 +357,7 @@ describe('Task 11 family growth demo flow', () => {
     }), 201);
     const crossFamilyMediaAccess = await otherParent.get(`/api/media/${media.mediaId}/access`);
     expect(crossFamilyMediaAccess.status).toBe(403);
+    expect((await otherParent.get(`/api/media/${mistakeQuestionPdf.mediaId}/access`)).status).toBe(403);
 
     const deletion = await parent.delete(`/api/media/${media.mediaId}`);
     expect(deletion.status).toBe(204);

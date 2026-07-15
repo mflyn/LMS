@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { deletePrivateMedia } from '../services/familyApi';
 
-export const useDraftMedia = () => {
+export const useDraftMedia = ({ deleteMedia = deletePrivateMedia } = {}) => {
   const draftsRef = useRef(new Set());
   const removedPersistedRef = useRef(new Set());
 
   const softDelete = useCallback((mediaId) => {
-    if (mediaId) deletePrivateMedia(mediaId).catch(() => {});
-  }, []);
+    if (mediaId) deleteMedia(mediaId).catch(() => {});
+  }, [deleteMedia]);
 
   const remove = useCallback((mediaId) => {
     if (!mediaId) return;

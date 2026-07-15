@@ -6,13 +6,29 @@ const path = require('path');
 const { AppError } = require('../../../common/middleware/errorTypes');
 const { MAX_MEDIA_BYTES } = require('../models/MediaAsset');
 
-const validationError = (message) => new AppError(
+const operationalError = (message, statusCode, code) => new AppError(
   message,
-  400,
-  'VALIDATION_ERROR',
+  statusCode,
+  code,
   true,
   []
 );
+const validationError = (message) => operationalError(message, 400, 'VALIDATION_ERROR');
+const mediaTooLarge = () => operationalError('Media exceeds the 10 MiB limit', 413, 'MEDIA_TOO_LARGE');
+
+const normalizeUploadFilename = (value) => {
+  const original = String(value || '');
+  if ([...original].some((character) => character.codePointAt(0) > 0xff)) {
+    return original.normalize('NFC');
+  }
+
+  const headerBytes = Buffer.from(original, 'latin1');
+  const decoded = headerBytes.toString('utf8');
+  if (decoded.includes('\ufffd') || !Buffer.from(decoded, 'utf8').equals(headerBytes)) {
+    return original.normalize('NFC');
+  }
+  return decoded.normalize('NFC');
+};
 
 const createPrivateMediaUpload = ({
   privateRoot,
@@ -43,12 +59,11 @@ const createPrivateMediaUpload = ({
   const singleImage = (req, res, next) => {
     parseSingle(req, res, (error) => {
       if (error) {
-        const message = error.code === 'LIMIT_FILE_SIZE'
-          ? 'Image file exceeds the 10 MiB limit'
-          : 'Invalid media upload';
-        return next(validationError(message));
+        if (error.code === 'LIMIT_FILE_SIZE') return next(mediaTooLarge());
+        return next(validationError('Invalid media upload'));
       }
-      if (!req.file) return next(validationError('Image file is required'));
+      if (!req.file) return next(validationError('Media file is required'));
+      req.file.originalname = normalizeUploadFilename(req.file.originalname);
       return next();
     });
   };
@@ -72,5 +87,6 @@ const createPrivateMediaUpload = ({
 };
 
 module.exports = {
-  createPrivateMediaUpload
+  createPrivateMediaUpload,
+  normalizeUploadFilename
 };

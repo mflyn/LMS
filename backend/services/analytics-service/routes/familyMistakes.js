@@ -88,29 +88,40 @@ const applyReviewReminderRange = (filter, from, to) => {
   }
 };
 
-const mistakeView = (mistake) => ({
-  mistakeId: mistake._id.toString(),
-  familyId: mistake.familyId.toString(),
-  childId: mistake.childId.toString(),
-  dimension: mistake.dimension,
-  subject: mistake.subject,
-  knowledgePointId: mistake.knowledgePointId ? mistake.knowledgePointId.toString() : undefined,
-  knowledgePointName: mistake.knowledgePointName,
-  reason: mistake.reason,
-  correctAnswer: mistake.correctAnswer,
-  parentNote: mistake.parentNote,
-  childExplanation: mistake.childExplanation,
-  reviewReminderDate: mistake.reviewReminderDate,
-  corrected: mistake.corrected,
-  reviewed: mistake.reviewed,
-  mastered: mistake.mastered,
-  questionMediaId: mistake.questionMediaId ? mistake.questionMediaId.toString() : undefined,
-  childAnswerMediaId: mistake.childAnswerMediaId ? mistake.childAnswerMediaId.toString() : undefined,
-  createdBy: mistake.createdBy.toString(),
-  updatedBy: mistake.updatedBy.toString(),
-  createdAt: mistake.createdAt,
-  updatedAt: mistake.updatedAt
-});
+const mediaIdsFor = (mistake, arrayField, aliasField) => {
+  if (Array.isArray(mistake[arrayField])) return mistake[arrayField].map((mediaId) => mediaId.toString());
+  return mistake[aliasField] ? [mistake[aliasField].toString()] : [];
+};
+
+const mistakeView = (mistake) => {
+  const questionMediaIds = mediaIdsFor(mistake, 'questionMediaIds', 'questionMediaId');
+  const childAnswerMediaIds = mediaIdsFor(mistake, 'childAnswerMediaIds', 'childAnswerMediaId');
+  return {
+    mistakeId: mistake._id.toString(),
+    familyId: mistake.familyId.toString(),
+    childId: mistake.childId.toString(),
+    dimension: mistake.dimension,
+    subject: mistake.subject,
+    knowledgePointId: mistake.knowledgePointId ? mistake.knowledgePointId.toString() : undefined,
+    knowledgePointName: mistake.knowledgePointName,
+    reason: mistake.reason,
+    correctAnswer: mistake.correctAnswer,
+    parentNote: mistake.parentNote,
+    childExplanation: mistake.childExplanation,
+    reviewReminderDate: mistake.reviewReminderDate,
+    corrected: mistake.corrected,
+    reviewed: mistake.reviewed,
+    mastered: mistake.mastered,
+    questionMediaIds,
+    childAnswerMediaIds,
+    questionMediaId: questionMediaIds[0],
+    childAnswerMediaId: childAnswerMediaIds[0],
+    createdBy: mistake.createdBy.toString(),
+    updatedBy: mistake.updatedBy.toString(),
+    createdAt: mistake.createdAt,
+    updatedAt: mistake.updatedAt
+  };
+};
 
 const withValidationErrors = (res, error) => {
   if (error instanceof FamilyMistakePatchError) {
@@ -314,6 +325,7 @@ const createFamilyMistakesRouter = ({
         return sendError(res, 400, 'MEDIA_NOT_ENABLED', 'Private media is not enabled yet');
       }
       if (hasMediaMutation) {
+        mistakePatch.updatedBy = req.user.id;
         const updatedMistake = await familyMistakeMediaService.mutate({
           mistake,
           mistakePatch,
@@ -379,4 +391,5 @@ const createFamilyMistakesRouter = ({
 module.exports = createFamilyMistakesRouter();
 module.exports.createFamilyMistakesRouter = createFamilyMistakesRouter;
 module.exports.mistakeView = mistakeView;
+module.exports.toPublicMistake = mistakeView;
 module.exports.resolveChildAccess = resolveChildAccess;

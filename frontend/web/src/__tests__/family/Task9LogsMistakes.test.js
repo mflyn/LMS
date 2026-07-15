@@ -7,8 +7,10 @@ import MistakesPage from '../../pages/family/MistakesPage';
 import {
   createGrowthLog,
   createMistake,
+  deletePrivateMedia,
   listGrowthLogs,
   listMistakes,
+  uploadPrivateMedia,
   updateGrowthLog,
   updateMistake
 } from '../../services/familyApi';
@@ -35,6 +37,7 @@ const deferred = () => {
 jest.mock('../../services/familyApi', () => ({
   createGrowthLog: jest.fn(),
   createMistake: jest.fn(),
+  deletePrivateMedia: jest.fn(),
   getPrivateMediaAccess: jest.fn(),
   listGrowthLogs: jest.fn(),
   listMistakes: jest.fn(),
@@ -172,6 +175,7 @@ describe('Task 9 mistakes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFamilyContext = familyContext();
+    deletePrivateMedia.mockResolvedValue({});
     listMistakes.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
   });
 
@@ -223,5 +227,92 @@ describe('Task 9 mistakes', () => {
         within(screen.getByRole('heading', { name: '分数计算' }).closest('article')).getByText('已掌握')
       ).toBeInTheDocument();
     });
+  });
+
+  test('TC-MPA-WEB-004 creates ordered question and answer collections with canonical arrays only', async () => {
+    const user = userEvent.setup();
+    uploadPrivateMedia
+      .mockResolvedValueOnce({ media: { mediaId: 'question-image', mimeType: 'image/png', displayName: '题目.png' } })
+      .mockResolvedValueOnce({ media: { mediaId: 'question-pdf', mimeType: 'application/pdf', displayName: '试卷.pdf', pageCount: 2 } })
+      .mockResolvedValueOnce({ media: { mediaId: 'answer-pdf', mimeType: 'application/pdf', displayName: '答案.pdf', pageCount: 1 } });
+    createMistake.mockResolvedValueOnce({
+      mistake: mistake({
+        questionMediaIds: ['question-image', 'question-pdf'],
+        childAnswerMediaIds: ['answer-pdf']
+      })
+    });
+    renderPage(<MistakesPage />);
+
+    await screen.findByText('暂无错题');
+    await user.click(screen.getByRole('button', { name: '记录错题' }));
+    await user.type(screen.getByLabelText('学科'), '数学');
+    await user.upload(screen.getByLabelText('题目附件'), [
+      new File(['image'], '题目.png', { type: 'image/png' }),
+      new File(['pdf'], '试卷.pdf', { type: 'application/pdf' })
+    ]);
+    await user.upload(
+      screen.getByLabelText('答案附件'),
+      new File(['pdf'], '答案.pdf', { type: 'application/pdf' })
+    );
+    await user.click(screen.getByRole('button', { name: '保存错题' }));
+
+    await waitFor(() => expect(createMistake).toHaveBeenCalledWith(expect.objectContaining({
+      childId: 'child-a1',
+      questionMediaIds: ['question-image', 'question-pdf'],
+      childAnswerMediaIds: ['answer-pdf']
+    })));
+    const payload = createMistake.mock.calls[0][0];
+    expect(payload).not.toHaveProperty('questionMediaId');
+    expect(payload).not.toHaveProperty('childAnswerMediaId');
+    expect(await screen.findByText('题目附件 2 · 答案附件 1')).toBeInTheDocument();
+    expect(deletePrivateMedia).not.toHaveBeenCalled();
+  });
+
+  test('TC-MPA-WEB-004 normalizes a legacy scalar and clears it through the canonical group', async () => {
+    const user = userEvent.setup();
+    listMistakes.mockResolvedValueOnce({
+      items: [mistake({ questionMediaId: 'legacy-question' })],
+      total: 1
+    });
+    updateMistake.mockResolvedValueOnce({
+      mistake: mistake({ questionMediaIds: [], childAnswerMediaIds: [] })
+    });
+    renderPage(<MistakesPage />);
+
+    await user.click(await screen.findByRole('button', { name: '复盘 分数计算' }));
+    expect(screen.getByText('已添加 1/10')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '移除题目附件 1' }));
+    await user.click(screen.getByRole('button', { name: '保存复盘' }));
+
+    await waitFor(() => expect(updateMistake).toHaveBeenCalledWith('mistake-1', expect.objectContaining({
+      questionMediaIds: []
+    })));
+    const payload = updateMistake.mock.calls[0][1];
+    expect(payload).not.toHaveProperty('questionMediaId');
+  });
+
+  test('TC-MPA-WEB-003 prevents save and close while a parent attachment upload is in flight', async () => {
+    const user = userEvent.setup();
+    const pendingUpload = deferred();
+    uploadPrivateMedia.mockReturnValueOnce(pendingUpload.promise);
+    renderPage(<MistakesPage />);
+
+    await screen.findByText('暂无错题');
+    await user.click(screen.getByRole('button', { name: '记录错题' }));
+    const upload = user.upload(
+      screen.getByLabelText('题目附件'),
+      new File(['pdf'], '题目.pdf', { type: 'application/pdf' })
+    );
+
+    await waitFor(() => expect(uploadPrivateMedia).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: '保存错题' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '关闭' })).toBeDisabled();
+
+    await act(async () => pendingUpload.resolve({
+      media: { mediaId: 'question-pdf', mimeType: 'application/pdf', displayName: '题目.pdf' }
+    }));
+    await upload;
+    expect(screen.getByRole('button', { name: '保存错题' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '关闭' })).toBeEnabled();
   });
 });

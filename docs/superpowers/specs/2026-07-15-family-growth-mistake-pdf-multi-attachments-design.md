@@ -177,10 +177,10 @@ Images continue through `sharp`: decode with fail-on-error, auto-rotate, re-enco
 
 ### 5.3 PDF Inspection and Canonicalization
 
-The PDF inspector loads the document with encryption disallowed and rejects invalid cross-reference or object structure. It rejects zero-page documents and documents over fifty pages. It walks the parsed object graph and rejects document or page objects containing active or embedded-content features, including:
+Before invoking the in-process PDF parser, the inspector validates the final `startxref` target and rejects compressed object streams. This prevents compressed object-stream expansion from occurring before application object/depth limits can apply. The compatibility boundary is deliberate: a PDF using `/ObjStm` must be exported or printed to a non-object-stream PDF before upload. The inspector then loads the document with encryption disallowed and rejects invalid cross-reference or object structure. It rejects zero-page documents and documents over fifty pages. It walks the parsed object graph and rejects document or page objects containing active or embedded-content features, including:
 
 - JavaScript or JavaScript name trees;
-- `OpenAction`, additional actions, or launch actions;
+- `OpenAction`, additional actions, launch, external/embedded target, URI, rendition, transition, and form submit/import/reset actions;
 - embedded files and file-attachment annotations;
 - XFA, RichMedia, multimedia, or three-dimensional content;
 - encrypted payloads or external-file launch instructions.

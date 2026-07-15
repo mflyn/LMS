@@ -129,6 +129,7 @@ services:
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
       - PRIVATE_MEDIA_ROOT=/var/lib/family-growth/private-media
+      - MEDIA_SECURITY_PROFILE=trusted-local
       - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:-dev-media-reference-token-32chars}
       - MEDIA_SIGNING_SECRET=${MEDIA_SIGNING_SECRET:-dev-media-signing-secret-32-characters}
     volumes:

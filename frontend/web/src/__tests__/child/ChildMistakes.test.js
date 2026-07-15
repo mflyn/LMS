@@ -1,14 +1,24 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import App from '../../App';
-import { createOwnMistake, listOwnMistakes, reviewOwnMistake } from '../../services/childApi';
+import {
+  createOwnMistake,
+  deleteOwnPrivateMedia,
+  listOwnMistakes,
+  reviewOwnMistake,
+  uploadOwnPrivateMedia
+} from '../../services/childApi';
 import { saveChildSession } from '../../services/familySession';
 
 jest.mock('../../services/childApi', () => ({
   childPinLogin: jest.fn(),
   createOwnMistake: jest.fn(),
+  deleteOwnPrivateMedia: jest.fn(),
+  getOwnPrivateMediaAccess: jest.fn(),
   listOwnMistakes: jest.fn(),
-  reviewOwnMistake: jest.fn()
+  reviewOwnMistake: jest.fn(),
+  uploadOwnPrivateMedia: jest.fn()
 }));
 
 const session = {
@@ -36,10 +46,17 @@ const openMistakes = () => {
   return render(<App />);
 };
 
+const deferred = () => {
+  let resolve;
+  const promise = new Promise((nextResolve) => { resolve = nextResolve; });
+  return { promise, resolve };
+};
+
 describe('child mistake review', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    deleteOwnPrivateMedia.mockResolvedValue({});
     listOwnMistakes.mockResolvedValue({ items: [mistake()], total: 1 });
   });
 
@@ -127,7 +144,9 @@ describe('child mistake review', () => {
     await waitFor(() => expect(createOwnMistake).toHaveBeenCalledWith({
       subject: '科学',
       reason: 'concept',
-      childExplanation: '没有理解浮力方向'
+      childExplanation: '没有理解浮力方向',
+      questionMediaIds: [],
+      childAnswerMediaIds: []
     }));
     expect(await screen.findByRole('status')).toHaveTextContent('错题已记录。');
     expect(screen.getByRole('heading', { name: '科学' })).toBeInTheDocument();
@@ -169,5 +188,106 @@ describe('child mistake review', () => {
     expect(await screen.findByText('无权查看错题')).toBeInTheDocument();
     expect(screen.queryByText('正在加载数据…')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '重新加载数据' })).not.toBeInTheDocument();
+  });
+
+  test('TC-MPA-WEB-005 creates an own mistake with child-authenticated files in both groups', async () => {
+    const user = userEvent.setup();
+    listOwnMistakes.mockResolvedValueOnce({ items: [], total: 0 });
+    uploadOwnPrivateMedia
+      .mockResolvedValueOnce({ media: { mediaId: 'question-pdf', mimeType: 'application/pdf', displayName: '题目.pdf' } })
+      .mockResolvedValueOnce({ media: { mediaId: 'answer-image', mimeType: 'image/png', displayName: '答案.png' } });
+    createOwnMistake.mockResolvedValueOnce({
+      mistake: mistake({
+        mistakeId: 'mistake-new',
+        questionMediaIds: ['question-pdf'],
+        childAnswerMediaIds: ['answer-image']
+      })
+    });
+    openMistakes();
+
+    await screen.findByText('暂无待复习错题。');
+    await user.click(screen.getByRole('button', { name: '记录新错题' }));
+    await user.type(screen.getByLabelText('科目'), '数学');
+    await user.selectOptions(screen.getByLabelText('错因'), 'calculation');
+    await user.upload(
+      screen.getByLabelText('题目附件'),
+      new File(['pdf'], '题目.pdf', { type: 'application/pdf' })
+    );
+    await user.upload(
+      screen.getByLabelText('答案附件'),
+      new File(['image'], '答案.png', { type: 'image/png' })
+    );
+    await user.click(screen.getByRole('button', { name: '保存' }));
+
+    expect(uploadOwnPrivateMedia).toHaveBeenCalledWith(expect.objectContaining({
+      purpose: 'mistake_question',
+      file: expect.any(File)
+    }));
+    expect(uploadOwnPrivateMedia.mock.calls[0][0]).not.toHaveProperty('childId');
+    await waitFor(() => expect(createOwnMistake).toHaveBeenCalledWith({
+      subject: '数学',
+      reason: 'calculation',
+      childExplanation: undefined,
+      questionMediaIds: ['question-pdf'],
+      childAnswerMediaIds: ['answer-image']
+    }));
+    expect(deleteOwnPrivateMedia).not.toHaveBeenCalled();
+  });
+
+  test('TC-MPA-WEB-005 normalizes legacy media and sends only the changed review group', async () => {
+    const user = userEvent.setup();
+    listOwnMistakes.mockResolvedValueOnce({
+      items: [mistake({ questionMediaId: 'legacy-question' })],
+      total: 1
+    });
+    uploadOwnPrivateMedia.mockResolvedValueOnce({
+      media: { mediaId: 'answer-pdf', mimeType: 'application/pdf', displayName: '新答案.pdf' }
+    });
+    reviewOwnMistake.mockResolvedValueOnce({
+      mistake: mistake({
+        reviewed: true,
+        questionMediaIds: ['legacy-question'],
+        childAnswerMediaIds: ['answer-pdf']
+      })
+    });
+    openMistakes();
+
+    expect(await screen.findByText('已添加 1/10')).toBeInTheDocument();
+    await user.upload(
+      screen.getByLabelText('答案附件（分数加减）'),
+      new File(['pdf'], '新答案.pdf', { type: 'application/pdf' })
+    );
+    await user.click(screen.getByRole('button', { name: '我还不会 分数加减' }));
+
+    await waitFor(() => expect(reviewOwnMistake).toHaveBeenCalledWith('mistake-a1', {
+      childExplanation: undefined,
+      reviewed: true,
+      mastered: false,
+      childAnswerMediaIds: ['answer-pdf']
+    }));
+  });
+
+  test('TC-MPA-WEB-003 prevents cancelling a child draft while its upload is in flight', async () => {
+    const user = userEvent.setup();
+    const pendingUpload = deferred();
+    listOwnMistakes.mockResolvedValueOnce({ items: [], total: 0 });
+    uploadOwnPrivateMedia.mockReturnValueOnce(pendingUpload.promise);
+    openMistakes();
+
+    await screen.findByText('暂无待复习错题。');
+    await user.click(screen.getByRole('button', { name: '记录新错题' }));
+    const upload = user.upload(
+      screen.getByLabelText('题目附件'),
+      new File(['pdf'], '题目.pdf', { type: 'application/pdf' })
+    );
+
+    await waitFor(() => expect(uploadOwnPrivateMedia).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: '取消' })).toBeDisabled();
+
+    pendingUpload.resolve({
+      media: { mediaId: 'question-pdf', mimeType: 'application/pdf', displayName: '题目.pdf' }
+    });
+    await upload;
+    await waitFor(() => expect(screen.getByRole('button', { name: '取消' })).toBeEnabled());
   });
 });

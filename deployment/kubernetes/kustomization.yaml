@@ -8,6 +8,9 @@ resources:
   - user-service-deployment.yaml
   - progress-service-deployment.yaml
   - homework-service-deployment.yaml
+  - clamav-deployment.yaml
+  - clamav-service.yaml
+  - clamav-network-policy.yaml
   - resource-service-deployment.yaml
   - analytics-service-deployment.yaml
   - notification-service-deployment.yaml

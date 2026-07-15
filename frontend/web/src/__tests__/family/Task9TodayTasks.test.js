@@ -398,6 +398,39 @@ describe('Task 9 today and task workflows', () => {
     })));
   });
 
+  test('TC-MPA-WEB-006 adds a PDF to the existing task attachment collection', async () => {
+    const user = userEvent.setup();
+    uploadPrivateMedia.mockResolvedValueOnce({
+      media: {
+        mediaId: 'task-pdf',
+        mimeType: 'application/pdf',
+        displayName: '训练计划.pdf',
+        sizeBytes: 2048,
+        pageCount: 2
+      }
+    });
+    createGrowthTask.mockResolvedValueOnce({ task: task({ attachmentMediaIds: ['task-pdf'] }) });
+    renderPage(<TasksPage />);
+
+    await screen.findByText('暂无成长任务');
+    await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await user.type(screen.getByLabelText('学科'), '体育');
+    await user.type(screen.getByLabelText('任务标题'), '阅读训练计划');
+    await user.type(screen.getByLabelText('活动领域'), '体能');
+    await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+    await user.upload(
+      screen.getByLabelText('任务附件'),
+      new File(['pdf'], '训练计划.pdf', { type: 'application/pdf' })
+    );
+
+    expect(screen.getByText('训练计划.pdf')).toBeInTheDocument();
+    expect(screen.getByText(/2 页/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '保存任务' }));
+    await waitFor(() => expect(createGrowthTask).toHaveBeenCalledWith(expect.objectContaining({
+      attachmentMediaIds: ['task-pdf']
+    })));
+  });
+
   test('traps dialog focus, closes with Escape, and restores the opener', async () => {
     const user = userEvent.setup();
     renderPage(<TasksPage />);

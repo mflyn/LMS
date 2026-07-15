@@ -10,14 +10,17 @@ const os = require('os');
 const path = require('path');
 const request = require('supertest');
 const sharp = require('sharp');
+const { PDFDocument } = require('pdf-lib');
 const { MongoMemoryReplSet } = require('../../../../node_modules/mongodb-memory-server');
 
 const { createIdentityHeaders, resetIdentityNonceStore } = require('../../../common/middleware/gatewayIdentity');
 const { authenticateGateway } = require('../../../common/middleware/auth');
-const { errorHandler } = require('../../../common/middleware/errorHandler');
+const { errorHandler, requestTracker } = require('../../../common/middleware/errorHandler');
+const { AppError } = require('../../../common/middleware/errorTypes');
 const FamilyUser = require('../models/FamilyUser');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
+const { normalizeUploadFilename } = require('../middleware/privateMediaUpload');
 const { createMediaCapabilityService } = require('../services/mediaCapability');
 const { createMediaReferenceService } = require('../services/mediaReferenceService');
 const { createMongoTransactionRunner } = require('../services/mongoTransaction');
@@ -81,6 +84,12 @@ const image = async (format, withMetadata = false) => {
   });
   if (withMetadata) pipeline = pipeline.withMetadata({ orientation: 6 });
   return pipeline.toFormat(format).toBuffer();
+};
+
+const pdf = async (pages = 1) => {
+  const document = await PDFDocument.create();
+  for (let index = 0; index < pages; index += 1) document.addPage([200, 200]);
+  return Buffer.from(await document.save({ addDefaultPage: false, useObjectStreams: false }));
 };
 
 const signedHeaders = (identity, method, originalUrl) => createIdentityHeaders({
@@ -170,7 +179,12 @@ const insertIdentityFixtures = async () => {
   ]);
 };
 
-const buildApp = ({ MediaAssetModel = MediaAsset } = {}) => {
+const buildApp = ({
+  MediaAssetModel = MediaAsset,
+  mediaStoreOverride = mediaStore,
+  scanner = null,
+  securityProfile = 'trusted-local'
+} = {}) => {
   const { createPrivateMediaUpload } = require('../middleware/privateMediaUpload');
   const { createMediaService } = require('../services/mediaService');
   const { createMediaRouter } = require('../routes/media');
@@ -194,8 +208,10 @@ const buildApp = ({ MediaAssetModel = MediaAsset } = {}) => {
     MediaAssetModel,
     MediaReferenceModel: MediaReference,
     UserModel: FamilyUser,
-    mediaStore,
+    mediaStore: mediaStoreOverride,
     now: () => nowMs,
+    scanner,
+    securityProfile,
     transactionRunner
   });
   const router = createMediaRouter({
@@ -208,6 +224,7 @@ const buildApp = ({ MediaAssetModel = MediaAsset } = {}) => {
   testApp.locals.logger = logger;
   testApp.locals.serviceName = 'resource-service-test';
   testApp.locals.userModel = FamilyUser;
+  testApp.use(requestTracker);
   testApp.use('/api/media', router);
   testApp.use(errorHandler);
   return { app: testApp, referenceService: localReferenceService, upload: localUpload };
@@ -243,6 +260,26 @@ afterAll(async () => {
 });
 
 describe('Task 6 private media upload API', () => {
+  test('TC-MPA-MEDIA-010 restores UTF-8 multipart filenames without corrupting ambiguous Latin-1', async () => {
+    const utf8Name = '训练计划.pdf';
+    const multerMojibake = Buffer.from(utf8Name, 'utf8').toString('latin1');
+
+    expect(normalizeUploadFilename(multerMojibake)).toBe(utf8Name);
+    expect(normalizeUploadFilename('plain-name.pdf')).toBe('plain-name.pdf');
+    expect(normalizeUploadFilename('café.pdf')).toBe('café.pdf');
+
+    const response = await signedUpload({
+      purpose: 'task_attachment',
+      childId: CHILD_A1_ID,
+      bytes: await pdf(),
+      filename: utf8Name,
+      contentType: 'application/pdf'
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.media.displayName).toBe(utf8Name);
+  });
+
   test('resolves current family for a parent token issued before family creation', async () => {
     const response = await signedUpload({
       identity: { id: PARENT_A_ID.toString(), role: 'parent' },
@@ -280,6 +317,7 @@ describe('Task 6 private media upload API', () => {
         media: {
           mediaId: expect.any(String),
           purpose,
+          displayName: 'untrusted-name.bin',
           mimeType: 'image/jpeg',
           sizeBytes: expect.any(Number)
         }
@@ -313,23 +351,174 @@ describe('Task 6 private media upload API', () => {
     expect(response.body.data.media.mimeType).toBe(mimeType);
   });
 
+  test('TC-MPA-MEDIA-001 persists canonical PDF metadata and rejects an image-only purpose', async () => {
+    const response = await signedUpload({
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: await pdf(2),
+      filename: 'question.bin',
+      contentType: 'application/octet-stream'
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.media).toEqual(expect.objectContaining({
+      mimeType: 'application/pdf',
+      displayName: 'question.bin',
+      pageCount: 2
+    }));
+    const asset = await MediaAsset.findById(response.body.data.media.mediaId).lean();
+    expect(asset).toEqual(expect.objectContaining({ mimeType: 'application/pdf', pageCount: 2 }));
+    expect((await mediaStore.read(asset.storageKey)).subarray(0, 5).toString('ascii')).toBe('%PDF-');
+
+    const rejected = await signedUpload({
+      purpose: 'growth_evidence',
+      childId: CHILD_A1_ID,
+      bytes: await pdf(),
+      filename: 'evidence.pdf',
+      contentType: 'application/pdf'
+    });
+    expect(rejected.status).toBe(400);
+    expect(rejected.body.error.code).toBe('MEDIA_TYPE_NOT_ALLOWED');
+    expect(await privateObjectNames()).toHaveLength(1);
+  });
+
+  test('TC-MPA-SCAN-002 trusted-local records an explicit skip without contacting a scanner', async () => {
+    const scanner = { scan: jest.fn(() => { throw new Error('scanner must not be called'); }) };
+    const trustedApp = buildApp({ scanner, securityProfile: 'trusted-local' }).app;
+
+    const response = await signedUpload({
+      targetApp: trustedApp,
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: await pdf(),
+      filename: 'question.pdf'
+    });
+
+    expect(response.status).toBe(201);
+    expect(scanner.scan).not.toHaveBeenCalled();
+    const asset = await MediaAsset.findById(response.body.data.media.mediaId).lean();
+    expect(asset.malwareScanStatus).toBe('skipped_trusted_local');
+    expect(asset.malwareScannedAt).toBeNull();
+  });
+
+  test('TC-MPA-SCAN-003 secure-production scans exact canonical bytes before persistence', async () => {
+    const scanner = { scan: jest.fn().mockResolvedValue(undefined) };
+    const secureApp = buildApp({ scanner, securityProfile: 'secure-production' }).app;
+    const original = await image('jpeg', true);
+
+    const response = await signedUpload({
+      targetApp: secureApp,
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: original,
+      filename: 'question.jpg'
+    });
+
+    expect(response.status).toBe(201);
+    const asset = await MediaAsset.findById(response.body.data.media.mediaId).lean();
+    const stored = await mediaStore.read(asset.storageKey);
+    expect(scanner.scan).toHaveBeenCalledTimes(1);
+    expect(scanner.scan).toHaveBeenCalledWith(stored);
+    expect(scanner.scan.mock.calls[0][0]).not.toEqual(original);
+    expect(asset.malwareScanStatus).toBe('clean');
+    expect(asset.malwareScannedAt).toEqual(new Date(FIXED_NOW));
+  });
+
+  test('TC-MPA-SCAN-004 secure-production scan rejection leaves no media or stored object', async () => {
+    const scanner = {
+      scan: jest.fn().mockRejectedValue(new AppError(
+        'Malware detected',
+        422,
+        'MALWARE_DETECTED',
+        true,
+        []
+      ))
+    };
+    const secureApp = buildApp({ scanner, securityProfile: 'secure-production' }).app;
+
+    const response = await signedUpload({
+      targetApp: secureApp,
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: await image('png')
+    });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe('MALWARE_DETECTED');
+    expect(await MediaAsset.countDocuments()).toBe(0);
+    expect(await privateObjectNames()).toEqual([]);
+    expect(await incomingNames()).toEqual([]);
+  });
+
+  test('TC-MPA-SCAN-005 secure-production scanner failure returns 503 and fails before storage', async () => {
+    const scanner = {
+      scan: jest.fn().mockRejectedValue(new AppError(
+        'Malware scanner unavailable',
+        503,
+        'MALWARE_SCANNER_UNAVAILABLE',
+        true,
+        []
+      ))
+    };
+    const secureApp = buildApp({ scanner, securityProfile: 'secure-production' }).app;
+
+    const response = await signedUpload({
+      targetApp: secureApp,
+      purpose: 'mistake_answer',
+      childId: CHILD_A1_ID,
+      bytes: await image('webp')
+    });
+
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({
+      success: false,
+      error: {
+        code: 'MALWARE_SCANNER_UNAVAILABLE',
+        message: 'Malware scanner unavailable',
+        details: []
+      },
+      requestId: expect.any(String)
+    });
+    expect(await MediaAsset.countDocuments()).toBe(0);
+    expect(await privateObjectNames()).toEqual([]);
+  });
+
   test('TC-T6-MEDIA-002 rejects invalid images and cleans all files and metadata', async () => {
     const inputs = [
-      { bytes: null, filename: 'missing.jpg', contentType: 'image/jpeg' },
-      { bytes: Buffer.from('not-an-image'), filename: 'corrupt.jpg', contentType: 'image/jpeg' },
-      { bytes: await image('gif'), filename: 'unsupported.gif', contentType: 'image/gif' },
-      { bytes: Buffer.alloc(MAX_MEDIA_BYTES + 1), filename: 'oversized.jpg', contentType: 'image/jpeg' }
+      { bytes: null, filename: 'missing.jpg', contentType: 'image/jpeg', status: 400, code: 'VALIDATION_ERROR' },
+      {
+        bytes: Buffer.from('not-an-image'),
+        filename: 'corrupt.jpg',
+        contentType: 'image/jpeg',
+        status: 400,
+        code: 'MEDIA_TYPE_NOT_ALLOWED'
+      },
+      {
+        bytes: await image('gif'),
+        filename: 'unsupported.gif',
+        contentType: 'image/gif',
+        status: 400,
+        code: 'MEDIA_TYPE_NOT_ALLOWED'
+      },
+      {
+        bytes: Buffer.alloc(MAX_MEDIA_BYTES + 1),
+        filename: 'oversized.jpg',
+        contentType: 'image/jpeg',
+        status: 413,
+        code: 'MEDIA_TOO_LARGE'
+      }
     ];
 
     for (const input of inputs) {
       resetIdentityNonceStore();
+      const { status, code, ...uploadInput } = input;
       const response = await signedUpload({
         purpose: 'growth_evidence',
         childId: CHILD_A1_ID,
-        ...input
+        ...uploadInput
       });
-      expect(response.status).toBe(400);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.status).toBe(status);
+      expect(response.body.error.code).toBe(code);
       expect(await MediaAsset.countDocuments()).toBe(0);
       expect(await privateObjectNames()).toEqual([]);
       expect(await incomingNames()).toEqual([]);
@@ -429,6 +618,38 @@ describe('Task 6 private media upload API', () => {
     expect(await privateObjectNames()).toEqual([]);
     expect(await incomingNames()).toEqual([]);
   });
+
+  test('TC-MPA-MEDIA-007 retries transient private-object cleanup failures', async () => {
+    const failingModel = {
+      create: jest.fn().mockRejectedValue(new Error('simulated metadata failure'))
+    };
+    let removeAttempts = 0;
+    const retryingStore = {
+      ...mediaStore,
+      writeCanonical: mediaStore.writeCanonical,
+      read: mediaStore.read,
+      remove: jest.fn(async (storageKey) => {
+        removeAttempts += 1;
+        if (removeAttempts < 3) throw new Error('simulated transient storage failure');
+        return mediaStore.remove(storageKey);
+      })
+    };
+    const failingApp = buildApp({
+      MediaAssetModel: failingModel,
+      mediaStoreOverride: retryingStore
+    }).app;
+
+    const response = await signedUpload({
+      purpose: 'growth_evidence',
+      childId: CHILD_A1_ID,
+      bytes: await image('jpeg'),
+      targetApp: failingApp
+    });
+
+    expect(response.status).toBe(500);
+    expect(retryingStore.remove).toHaveBeenCalledTimes(3);
+    expect(await privateObjectNames()).toEqual([]);
+  });
 });
 
 describe('Task 6 private media access API', () => {
@@ -463,10 +684,48 @@ describe('Task 6 private media access API', () => {
         access: {
           url: expect.stringMatching(new RegExp(`^/api/media/${asset._id}/content\\?`)),
           expiresAt: FIXED_EXPIRY
+        },
+        media: {
+          mediaId: asset._id.toString(),
+          mimeType: asset.mimeType,
+          displayName: asset.displayName,
+          sizeBytes: asset.sizeBytes
         }
       }
     });
     expect(JSON.stringify(response.body)).not.toMatch(/storageKey/);
+  });
+
+  test('TC-MPA-MEDIA-009 returns a safe public descriptor without storage metadata', async () => {
+    const upload = await signedUpload({
+      purpose: 'mistake_question',
+      childId: CHILD_A1_ID,
+      bytes: await image('png'),
+      filename: 'question.png',
+      contentType: 'image/png'
+    });
+
+    expect(upload.status).toBe(201);
+    expect(upload.body.data.media).toEqual(expect.objectContaining({
+      mediaId: expect.any(String),
+      purpose: 'mistake_question',
+      displayName: 'question.png',
+      mimeType: 'image/png',
+      sizeBytes: expect.any(Number)
+    }));
+    expect(upload.body.data.media).not.toHaveProperty('storageKey');
+
+    resetIdentityNonceStore();
+    const access = await signedGet(parentA, `/api/media/${upload.body.data.media.mediaId}/access`);
+
+    expect(access.status).toBe(200);
+    expect(access.body.data.media).toEqual({
+      mediaId: upload.body.data.media.mediaId,
+      displayName: 'question.png',
+      mimeType: 'image/png',
+      sizeBytes: upload.body.data.media.sizeBytes
+    });
+    expect(JSON.stringify(access.body.data.media)).not.toMatch(/storageKey|uploadedBy|familyId|childId/i);
   });
 
   test('TC-T6-MEDIA-007 streams exact sanitized bytes with private response headers', async () => {
@@ -483,6 +742,60 @@ describe('Task 6 private media access API', () => {
     expect(response.headers['content-disposition']).toBe('inline');
     expect(response.headers['x-content-type-options']).toBe('nosniff');
     expect(response.headers['content-type']).toMatch(/^image\/webp/);
+  });
+
+  test('TC-MPA-SCAN-009 normalizes a raw legacy asset during access', async () => {
+    const legacyId = new mongoose.Types.ObjectId();
+    await MediaAsset.collection.insertOne({
+      _id: legacyId,
+      familyId: FAMILY_A_ID,
+      childId: CHILD_A1_ID,
+      uploadedBy: PARENT_A_ID,
+      purpose: 'mistake_question',
+      mimeType: 'image/png',
+      sizeBytes: 128,
+      storageKey: '26d9a5ee-e3f8-4d46-847d-b30dd22f88bc',
+      status: 'active'
+    });
+    const normalize = jest.spyOn(MediaAsset, 'normalizeAuditFields');
+    resetIdentityNonceStore();
+
+    const response = await signedGet(parentA, `/api/media/${legacyId}/access`);
+
+    expect(response.status).toBe(200);
+    expect(normalize).toHaveBeenCalledWith(expect.not.objectContaining({ malwareScanStatus: expect.anything() }));
+    expect(normalize.mock.results[0].value).toEqual(expect.objectContaining({
+      malwareScanStatus: 'legacy_unscanned',
+      malwareScannedAt: null
+    }));
+  });
+
+  test('TC-MPA-MEDIA-009 keeps image content inline and prepares PDF attachment disposition', async () => {
+    const { createMediaRouter } = require('../routes/media');
+    const contentService = {
+      upload: jest.fn(),
+      deleteMedia: jest.fn(),
+      issueAccess: jest.fn(),
+      readContent: jest.fn().mockResolvedValue({
+        bytes: Buffer.from('%PDF-1.7'),
+        mimeType: 'application/pdf',
+        displayName: '期中\u0085\u202e试卷第3题.pdf'
+      })
+    };
+    const contentApp = express();
+    contentApp.use('/api/media', createMediaRouter({
+      authenticate: (_req, _res, next) => next(),
+      mediaService: contentService,
+      upload: { singleImage: (_req, _res, next) => next(), removeTemporary: jest.fn() }
+    }));
+
+    const response = await request(contentApp).get('/api/media/6656875da7f86a0012c2a301/content');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-disposition']).toBe("attachment; filename*=UTF-8''%E6%9C%9F%E4%B8%AD%E8%AF%95%E5%8D%B7%E7%AC%AC3%E9%A2%98.pdf");
+    expect(contentService.readContent).toHaveBeenCalledWith(expect.objectContaining({
+      mediaId: '6656875da7f86a0012c2a301'
+    }));
   });
 
   test('TC-T6-MEDIA-007 rejects every tampered or expired capability component', async () => {
@@ -568,7 +881,8 @@ describe('Task 6 private media access API', () => {
         code: 'VALIDATION_ERROR',
         message: 'Invalid mediaId',
         details: []
-      }
+      },
+      requestId: expect.any(String)
     });
   });
 });

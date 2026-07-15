@@ -3,12 +3,15 @@ import {
   childPinLogin,
   completeOwnTask,
   createOwnMistake,
+  deleteOwnPrivateMedia,
+  getOwnPrivateMediaAccess,
   getOwnProfile,
   listOwnMistakes,
   listOwnReminders,
   listOwnRewards,
   listOwnTasks,
-  reviewOwnMistake
+  reviewOwnMistake,
+  uploadOwnPrivateMedia
 } from '../../services/childApi';
 import {
   CHILD_SESSION_EXPIRED_EVENT,
@@ -25,6 +28,8 @@ const childSession = {
     name: '小雨'
   }
 };
+
+const pdf = (name) => new File(['pdf'], name, { type: 'application/pdf' });
 
 describe('childApi', () => {
   beforeEach(() => {
@@ -128,6 +133,9 @@ describe('childApi', () => {
       childExplanation: '重新计算后是 42',
       reviewed: true,
       mastered: false,
+      questionMediaIds: ['question-a'],
+      childAnswerMediaIds: ['answer-a'],
+      questionMediaId: 'legacy-must-not-send',
       parentNote: 'must-not-send',
       reason: 'must-not-send'
     });
@@ -135,7 +143,9 @@ describe('childApi', () => {
     expect(axios.patch).toHaveBeenCalledWith('/api/mistakes/mistake-a1', {
       childExplanation: '重新计算后是 42',
       reviewed: true,
-      mastered: false
+      mastered: false,
+      questionMediaIds: ['question-a'],
+      childAnswerMediaIds: ['answer-a']
     }, { headers: { Authorization: 'Bearer child-token' } });
   });
 
@@ -146,6 +156,9 @@ describe('childApi', () => {
       subject: '数学',
       reason: 'calculation',
       childExplanation: '我把进位漏掉了',
+      questionMediaIds: ['question-a'],
+      childAnswerMediaIds: ['answer-a'],
+      questionMediaId: 'legacy-must-not-send',
       childId: 'child-b2',
       familyId: 'family-b',
       parentNote: 'must-not-send'
@@ -154,8 +167,35 @@ describe('childApi', () => {
     expect(axios.post).toHaveBeenCalledWith('/api/mistakes', {
       subject: '数学',
       reason: 'calculation',
-      childExplanation: '我把进位漏掉了'
+      childExplanation: '我把进位漏掉了',
+      questionMediaIds: ['question-a'],
+      childAnswerMediaIds: ['answer-a']
     }, { headers: { Authorization: 'Bearer child-token' } });
+  });
+
+  test('TC-MPA-WEB-005 uses child-authenticated private media calls without accepting childId', async () => {
+    axios.post.mockResolvedValueOnce({ data: { data: { media: { mediaId: 'media-a' } } } });
+    axios.get.mockResolvedValueOnce({ data: { data: { access: { url: '/signed' } } } });
+    axios.delete.mockResolvedValueOnce({ data: { data: {} } });
+    const file = pdf('answer.pdf');
+
+    await uploadOwnPrivateMedia({ file, purpose: 'mistake_answer', childId: 'child-b2' });
+    await getOwnPrivateMediaAccess('media-a');
+    await deleteOwnPrivateMedia('media-a');
+
+    expect(axios.post).toHaveBeenCalledWith('/api/media', expect.any(FormData), {
+      headers: { Authorization: 'Bearer child-token' }
+    });
+    const formData = axios.post.mock.calls[0][1];
+    expect(formData.get('file')).toBe(file);
+    expect(formData.get('purpose')).toBe('mistake_answer');
+    expect(formData.has('childId')).toBe(false);
+    expect(axios.get).toHaveBeenCalledWith('/api/media/media-a/access', {
+      headers: { Authorization: 'Bearer child-token' }
+    });
+    expect(axios.delete).toHaveBeenCalledWith('/api/media/media-a', {
+      headers: { Authorization: 'Bearer child-token' }
+    });
   });
 
   test('forwards abort signals to protected mutations', async () => {

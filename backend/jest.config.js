@@ -8,6 +8,7 @@ module.exports = {
     '<rootDir>/services/progress-service/jest.config.js',
     '<rootDir>/services/resource-service/jest.family.config.js',
     '<rootDir>/services/analytics-service/jest.family.config.js',
+    '<rootDir>/services/analytics-service/jest.attachments.config.js',
     '<rootDir>/services/notification-service/jest.family.config.js',
     '<rootDir>/services/progress-service/jest.legacy.config.js',
     '<rootDir>/jest.legacy.config.js'

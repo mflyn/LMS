@@ -37,14 +37,15 @@ const createDeletedAsset = async ({
   bound = false,
   missingBytes = false
 }) => {
-  const stored = await mediaStore.write(await image());
+  const bytes = await image();
+  const stored = await mediaStore.writeCanonical(bytes);
   const asset = await MediaAsset.create({
     familyId: FAMILY_ID,
     childId: CHILD_ID,
     uploadedBy: new mongoose.Types.ObjectId(),
     purpose: 'mistake_question',
-    mimeType: stored.mimeType,
-    sizeBytes: stored.sizeBytes,
+    mimeType: 'image/jpeg',
+    sizeBytes: bytes.length,
     storageKey: stored.storageKey,
     status: 'deleted',
     deletedAt: new Date(NOW - deletedDays * DAY_MS)

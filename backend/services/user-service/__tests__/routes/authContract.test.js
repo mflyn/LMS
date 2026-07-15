@@ -26,14 +26,15 @@ const expectSuccessEnvelope = (response, status) => {
 
 const expectErrorEnvelope = (response, status, code) => {
   expect(response.status).toBe(status);
-  expect(Object.keys(response.body).sort()).toEqual(['error', 'success']);
+  expect(Object.keys(response.body).sort()).toEqual(['error', 'requestId', 'success']);
   expect(response.body).toEqual({
     success: false,
     error: {
       code,
       message: expect.any(String),
       details: expect.any(Array)
-    }
+    },
+    requestId: expect.any(String)
   });
 };
 

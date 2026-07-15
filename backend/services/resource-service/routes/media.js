@@ -1,5 +1,9 @@
 const defaultFs = require('fs/promises');
 const express = require('express');
+const MediaAsset = require('../models/MediaAsset');
+
+const encodeDispositionFilename = (displayName) => encodeURIComponent(displayName)
+  .replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
 
 const asyncRoute = (handler) => (req, res, next) => {
   Promise.resolve(handler(req, res, next)).catch(next);
@@ -31,9 +35,12 @@ const createMediaRouter = ({
       nonce: req.query.nonce,
       signature: req.query.signature
     });
+    const disposition = content.mimeType === 'application/pdf'
+      ? `attachment; filename*=UTF-8''${encodeDispositionFilename(MediaAsset.sanitizeDisplayName(content.displayName))}`
+      : 'inline';
     res.set({
       'Cache-Control': 'private, no-store',
-      'Content-Disposition': 'inline',
+      'Content-Disposition': disposition,
       'Content-Type': content.mimeType,
       'X-Content-Type-Options': 'nosniff'
     });
@@ -42,12 +49,12 @@ const createMediaRouter = ({
 
   router.use(authenticate);
   router.get('/:mediaId/access', asyncRoute(async (req, res) => {
-    const access = await mediaService.issueAccess({
+    const { access, media } = await mediaService.issueAccess({
       identity: req.user,
       mediaId: req.params.mediaId
     });
     res.set('Cache-Control', 'no-store');
-    res.status(200).json({ success: true, data: { access } });
+    res.status(200).json({ success: true, data: { access, media } });
   }));
 
   router.delete('/:mediaId', asyncRoute(async (req, res) => {
@@ -63,7 +70,8 @@ const createMediaRouter = ({
         identity: req.user,
         suppliedChildId: req.body.childId,
         purpose: req.body.purpose,
-        bytes
+        bytes,
+        originalName: req.file.originalname
       });
     } finally {
       await upload.removeTemporary(req.file && req.file.path);

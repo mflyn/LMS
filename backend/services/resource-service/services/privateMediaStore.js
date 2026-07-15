@@ -1,16 +1,9 @@
 const crypto = require('crypto');
 const defaultFs = require('fs/promises');
 const path = require('path');
-const sharp = require('sharp');
 const MediaAsset = require('../models/MediaAsset');
 
 const { MAX_MEDIA_BYTES, STORAGE_KEY_PATTERN } = MediaAsset;
-
-const MIME_BY_FORMAT = Object.freeze({
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp'
-});
 
 const operationalError = (message, statusCode, code) => {
   const error = new Error(message);
@@ -25,49 +18,13 @@ const validationError = (message) => operationalError(message, 400, 'VALIDATION_
 const notFoundError = () => operationalError('Media object not found', 404, 'RESOURCE_NOT_FOUND');
 const conflictError = () => operationalError('Media storage key already exists', 409, 'RESOURCE_CONFLICT');
 
-const assertInputBuffer = (input) => {
-  if (!Buffer.isBuffer(input) || input.length === 0) {
-    throw validationError('Image file is required');
-  }
-  if (input.length > MAX_MEDIA_BYTES) {
-    throw validationError('Image file exceeds the 10 MiB limit');
-  }
-};
-
-const encode = (pipeline, format) => {
-  if (format === 'jpeg') return pipeline.jpeg({ quality: 90, mozjpeg: true });
-  if (format === 'png') return pipeline.png({ compressionLevel: 9 });
-  if (format === 'webp') return pipeline.webp({ quality: 90 });
-  throw validationError('Only JPEG, PNG, and WebP images are supported');
-};
-
-const sanitizeImage = async (input) => {
-  assertInputBuffer(input);
-
-  let metadata;
-  try {
-    metadata = await sharp(input, { failOn: 'error' }).metadata();
-  } catch (error) {
-    throw validationError('Image data is corrupt or unsupported');
-  }
-
-  const mimeType = MIME_BY_FORMAT[metadata.format];
-  if (!mimeType) {
-    throw validationError('Only JPEG, PNG, and WebP images are supported');
-  }
-
-  let buffer;
-  try {
-    buffer = await encode(sharp(input, { failOn: 'error' }).rotate(), metadata.format).toBuffer();
-  } catch (error) {
-    if (error.code === 'VALIDATION_ERROR') throw error;
-    throw validationError('Image data is corrupt or unsupported');
+const assertCanonicalBuffer = (buffer) => {
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+    throw validationError('Canonical media bytes are required');
   }
   if (buffer.length > MAX_MEDIA_BYTES) {
-    throw validationError('Sanitized image exceeds the 10 MiB limit');
+    throw validationError('Canonical media exceeds the 10 MiB limit');
   }
-
-  return { buffer, mimeType, sizeBytes: buffer.length };
 };
 
 const createPrivateMediaStore = ({
@@ -96,8 +53,8 @@ const createPrivateMediaStore = ({
     return resolved;
   };
 
-  const write = async (input) => {
-    const sanitized = await sanitizeImage(input);
+  const writeCanonical = async (buffer) => {
+    assertCanonicalBuffer(buffer);
     const storageKey = randomUUID();
     const objectPath = resolveStoragePath(storageKey);
     const temporaryPath = path.join(privateRoot, `.${storageKey}.${process.pid}.tmp`);
@@ -105,7 +62,7 @@ const createPrivateMediaStore = ({
     await initialize();
     let published = false;
     try {
-      await fsPromises.writeFile(temporaryPath, sanitized.buffer, { flag: 'wx', mode: 0o600 });
+      await fsPromises.writeFile(temporaryPath, buffer, { flag: 'wx', mode: 0o600 });
       await fsPromises.chmod(temporaryPath, 0o600);
       await fsPromises.link(temporaryPath, objectPath);
       published = true;
@@ -117,11 +74,7 @@ const createPrivateMediaStore = ({
       throw error;
     }
 
-    return {
-      storageKey,
-      mimeType: sanitized.mimeType,
-      sizeBytes: sanitized.sizeBytes
-    };
+    return { storageKey };
   };
 
   const read = async (storageKey) => {
@@ -145,12 +98,10 @@ const createPrivateMediaStore = ({
     }
   };
 
-  return { initialize, read, remove, resolveStoragePath, write };
+  return { initialize, read, remove, resolveStoragePath, writeCanonical };
 };
 
 module.exports = {
   MAX_MEDIA_BYTES,
-  MIME_BY_FORMAT,
-  createPrivateMediaStore,
-  sanitizeImage
+  createPrivateMediaStore
 };

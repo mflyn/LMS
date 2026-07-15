@@ -41,6 +41,9 @@ const quietLogger = {
   warn: () => undefined
 };
 
+const resourceMongoose = FamilyUser.db.base;
+const mongooseInstances = [...new Set([mongoose, resourceMongoose])];
+
 const createResourceApp = ({ privateRoot, transactionRunner }) => {
   const mediaStore = createPrivateMediaStore({ root: privateRoot });
   const capabilityService = createMediaCapabilityService({
@@ -107,9 +110,10 @@ const createFamilyRuntime = async () => {
         errors.push(error);
       }
     }
-    if (mongoose.connection.readyState !== 0) {
+    for (const instance of [...mongooseInstances].reverse()) {
+      if (instance.connection.readyState === 0) continue;
       try {
-        await mongoose.disconnect();
+        await instance.disconnect();
       } catch (error) {
         errors.push(error);
       }
@@ -141,23 +145,22 @@ const createFamilyRuntime = async () => {
     const mongoUri = state.mongoServer.getUri(`task11_${Date.now()}`);
     process.env.MONGO_URI = mongoUri;
     process.env.USER_SERVICE_MONGO_URI = mongoUri;
-    await mongoose.connect(mongoUri);
+    await Promise.all(mongooseInstances.map((instance) => instance.connect(mongoUri)));
     const mongoHello = await mongoose.connection.db.admin().command({ hello: 1 });
     await Role.create([
       { name: 'parent', description: 'Family parent', permissions: [] },
       { name: 'student', description: 'Family child', permissions: [] }
     ]);
-
     state.privateRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'family-growth-task11-'));
     await fs.chmod(state.privateRoot, 0o700);
 
-    const transactionRunner = createMongoTransactionRunner(mongoose.connection);
+    const resourceTransactionRunner = createMongoTransactionRunner(resourceMongoose.connection);
     const foundationalApps = [
       ['user-service', userServer.createApp({ appLogger: quietLogger })],
       ['progress-service', progressServer.createApp()],
       ['resource-service', createResourceApp({
         privateRoot: state.privateRoot,
-        transactionRunner
+        transactionRunner: resourceTransactionRunner
       })]
     ];
     for (const [name, app] of foundationalApps) {
@@ -223,6 +226,7 @@ const createFamilyRuntime = async () => {
     const urls = Object.fromEntries(state.servers.map(({ name, url }) => [name, url]));
     return {
       mongoHello,
+      mongooseInstances,
       privateRoot: state.privateRoot,
       servers: state.servers,
       stop,

@@ -46,8 +46,17 @@ describe('shared error middleware', () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'VALIDATION_ERROR', message: 'invalid input', details: [] }
+      error: { code: 'VALIDATION_ERROR', message: 'invalid input', details: [] },
+      requestId: 'request-1'
     });
+  });
+
+  test('includes the request id in the approved error envelope', () => {
+    errorHandler(new BadRequestError('invalid input'), req, res, next);
+
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      requestId: 'request-1'
+    }));
   });
 
   test('preserves an explicit stable error code', () => {
@@ -60,7 +69,8 @@ describe('shared error middleware', () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'STALE_CHILD_TOKEN', message: 'stale token', details: [] }
+      error: { code: 'STALE_CHILD_TOKEN', message: 'stale token', details: [] },
+      requestId: 'request-1'
     });
   });
 
@@ -70,7 +80,8 @@ describe('shared error middleware', () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'INTERNAL_ERROR', message: '服务器内部错误', details: [] }
+      error: { code: 'INTERNAL_ERROR', message: '服务器内部错误', details: [] },
+      requestId: 'request-1'
     });
   });
 
@@ -79,7 +90,8 @@ describe('shared error middleware', () => {
 
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'INTERNAL_ERROR', message: '服务器内部错误', details: [] }
+      error: { code: 'INTERNAL_ERROR', message: '服务器内部错误', details: [] },
+      requestId: 'request-1'
     });
   });
 
@@ -92,7 +104,8 @@ describe('shared error middleware', () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'VALIDATION_ERROR', message: 'name is required', details: [] }
+      error: { code: 'VALIDATION_ERROR', message: 'name is required', details: [] },
+      requestId: 'request-1'
     });
   });
 
@@ -105,7 +118,8 @@ describe('shared error middleware', () => {
     expect(res.status).toHaveBeenCalledWith(503);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'DATABASE_UNAVAILABLE', message: '数据库暂时不可用', details: [] }
+      error: { code: 'DATABASE_UNAVAILABLE', message: '数据库暂时不可用', details: [] },
+      requestId: 'request-1'
     });
   });
 
@@ -124,7 +138,8 @@ describe('shared error middleware', () => {
     expect(res.status).toHaveBeenCalledWith(503);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'DATABASE_UNAVAILABLE', message: '数据库暂时不可用', details: [] }
+      error: { code: 'DATABASE_UNAVAILABLE', message: '数据库暂时不可用', details: [] },
+      requestId: 'request-1'
     });
     expect(JSON.stringify(res.json.mock.calls)).not.toContain('password');
   });
@@ -140,7 +155,8 @@ describe('shared error middleware', () => {
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'RESOURCE_CONFLICT', message: 'email 已存在', details: [] }
+      error: { code: 'RESOURCE_CONFLICT', message: 'email 已存在', details: [] },
+      requestId: 'request-1'
     });
   });
 
@@ -174,7 +190,8 @@ describe('shared error middleware', () => {
     expect(res.status).toHaveBeenCalledWith(408);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      error: { code: 'REQUEST_TIMEOUT', message: 'Request timed out', details: [] }
+      error: { code: 'REQUEST_TIMEOUT', message: 'Request timed out', details: [] },
+      requestId: 'request-1'
     });
   });
 

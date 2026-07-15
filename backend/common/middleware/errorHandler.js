@@ -189,7 +189,8 @@ const sendContractError = (err, req, res) => {
 
   res.status(err.statusCode).json({
     success: false,
-    error: { code, message, details }
+    error: { code, message, details },
+    requestId: req.requestId
   });
 };
 

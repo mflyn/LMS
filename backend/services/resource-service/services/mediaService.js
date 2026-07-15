@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const { AppError } = require('../../../common/middleware/errorTypes');
 const MediaAsset = require('../models/MediaAsset');
+const { createPrivateMediaProcessor } = require('./privateMediaProcessor');
 
 const CHILD_UPLOAD_PURPOSES = new Set([
   'task_completion',
@@ -10,6 +11,21 @@ const CHILD_UPLOAD_PURPOSES = new Set([
   'growth_evidence'
 ]);
 const MEDIA_PURPOSES = new Set(MediaAsset.MEDIA_PURPOSES);
+const MEDIA_SECURITY_PROFILES = new Set(['trusted-local', 'secure-production']);
+const STORAGE_CLEANUP_ATTEMPTS = 3;
+const normalizeAsset = (asset) => MediaAsset.normalizeAuditFields(asset);
+
+const publicMediaDescriptor = (asset, { includePurpose = false } = {}) => {
+  const descriptor = {
+    mediaId: asset._id.toString(),
+    mimeType: asset.mimeType,
+    displayName: MediaAsset.sanitizeDisplayName(asset.displayName),
+    sizeBytes: asset.sizeBytes
+  };
+  if (includePurpose) descriptor.purpose = asset.purpose;
+  if (asset.mimeType === 'application/pdf') descriptor.pageCount = asset.pageCount;
+  return descriptor;
+};
 
 const operationalError = (message, statusCode, code) => new AppError(
   message,
@@ -31,6 +47,9 @@ const createMediaService = ({
   capabilityService,
   mediaStore,
   now = Date.now,
+  processor = createPrivateMediaProcessor(),
+  scanner = null,
+  securityProfile = 'trusted-local',
   transactionRunner
 } = {}) => {
   if (!MediaAssetModel || typeof MediaAssetModel.create !== 'function') {
@@ -39,8 +58,13 @@ const createMediaService = ({
   if (!UserModel || typeof UserModel.exists !== 'function') {
     throw new Error('UserModel is required');
   }
-  if (!mediaStore || typeof mediaStore.write !== 'function' || typeof mediaStore.remove !== 'function') {
+  if (!mediaStore || typeof mediaStore.writeCanonical !== 'function' || typeof mediaStore.remove !== 'function') {
     throw new Error('mediaStore is required');
+  }
+  if (!processor || typeof processor.prepare !== 'function') throw new Error('media processor is required');
+  if (!MEDIA_SECURITY_PROFILES.has(securityProfile)) throw new Error('valid media security profile is required');
+  if (securityProfile === 'secure-production' && (!scanner || typeof scanner.scan !== 'function')) {
+    throw new Error('media scanner is required for secure-production');
   }
   if (!capabilityService || typeof capabilityService.issue !== 'function'
     || typeof capabilityService.verify !== 'function') {
@@ -123,9 +147,17 @@ const createMediaService = ({
     return { actorId, childId, familyId };
   };
 
-  const upload = async ({ identity, suppliedChildId, purpose, bytes } = {}) => {
+  const upload = async ({ identity, suppliedChildId, purpose, bytes, originalName } = {}) => {
     const scope = await resolveUploadScope({ identity, suppliedChildId, purpose });
-    const stored = await mediaStore.write(bytes);
+    const prepared = await processor.prepare({ bytes, purpose, originalName });
+    let malwareScanStatus = 'skipped_trusted_local';
+    let malwareScannedAt = null;
+    if (securityProfile === 'secure-production') {
+      await scanner.scan(prepared.buffer);
+      malwareScanStatus = 'clean';
+      malwareScannedAt = new Date(Number(now()));
+    }
+    const stored = await mediaStore.writeCanonical(prepared.buffer);
     let asset;
     try {
       asset = await MediaAssetModel.create({
@@ -133,32 +165,46 @@ const createMediaService = ({
         childId: scope.childId,
         uploadedBy: scope.actorId,
         purpose,
-        mimeType: stored.mimeType,
-        sizeBytes: stored.sizeBytes,
+        mimeType: prepared.mimeType,
+        displayName: prepared.displayName,
+        sizeBytes: prepared.sizeBytes,
+        pageCount: prepared.pageCount,
         storageKey: stored.storageKey,
+        malwareScanStatus,
+        malwareScannedAt,
         status: 'active'
       });
     } catch (error) {
-      await mediaStore.remove(stored.storageKey).catch(() => undefined);
+      let cleanupError;
+      for (let attempt = 0; attempt < STORAGE_CLEANUP_ATTEMPTS; attempt += 1) {
+        try {
+          await mediaStore.remove(stored.storageKey);
+          cleanupError = null;
+          break;
+        } catch (currentCleanupError) {
+          cleanupError = currentCleanupError;
+        }
+      }
+      if (cleanupError) {
+        throw new AggregateError([error, cleanupError], 'Media persistence and cleanup failed');
+      }
       throw error;
     }
 
-    return {
-      mediaId: asset._id.toString(),
-      purpose: asset.purpose,
-      mimeType: asset.mimeType,
-      sizeBytes: asset.sizeBytes
-    };
+    return publicMediaDescriptor(asset, { includePurpose: true });
   };
 
   const issueAccess = async ({ identity, mediaId } = {}) => {
     assertMediaId(mediaId);
-    const asset = await MediaAssetModel.findById(mediaId).lean();
+    const asset = normalizeAsset(await MediaAssetModel.findById(mediaId).lean());
     if (!asset) throw notFound();
     const identityScope = await resolveIdentityScope(identity);
     authorizeAssetForScope(identityScope, asset);
     if (asset.status !== 'active') throw notFound();
-    return capabilityService.issue(String(mediaId));
+    return {
+      access: capabilityService.issue(String(mediaId)),
+      media: publicMediaDescriptor(asset)
+    };
   };
 
   const readContent = async ({ mediaId, path, expires, nonce, signature } = {}) => {
@@ -170,10 +216,14 @@ const createMediaService = ({
       nonce,
       signature
     });
-    const asset = await MediaAssetModel.findOne({ _id: mediaId, status: 'active' }).lean();
+    const asset = normalizeAsset(await MediaAssetModel.findOne({ _id: mediaId, status: 'active' }).lean());
     if (!asset) throw notFound();
     const bytes = await mediaStore.read(asset.storageKey);
-    return { bytes, mimeType: asset.mimeType };
+    return {
+      bytes,
+      mimeType: asset.mimeType,
+      displayName: MediaAsset.sanitizeDisplayName(asset.displayName)
+    };
   };
 
   const deleteMedia = async ({ identity, mediaId } = {}) => {
@@ -181,7 +231,7 @@ const createMediaService = ({
     const identityScope = await resolveIdentityScope(identity);
     return transactionRunner(async (session) => {
       const assetQuery = MediaAssetModel.findById(mediaId);
-      const asset = await (session ? assetQuery.session(session) : assetQuery).lean();
+      const asset = normalizeAsset(await (session ? assetQuery.session(session) : assetQuery).lean());
       if (!asset) throw notFound();
       authorizeAssetForScope(identityScope, asset);
       if (asset.status === 'deleted') return;
@@ -208,5 +258,6 @@ const createMediaService = ({
 
 module.exports = {
   CHILD_UPLOAD_PURPOSES,
-  createMediaService
+  createMediaService,
+  publicMediaDescriptor
 };

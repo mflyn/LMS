@@ -25,6 +25,11 @@ const {
 const createApp = () => require('../app').createApp();
 const FamilyMistake = require('../models/FamilyMistake');
 const FamilyMistakeStateEvent = require('../models/FamilyMistakeStateEvent');
+const {
+  FamilyMistakePatchError,
+  parseFamilyMistakeInput,
+  splitMediaPatch
+} = require('../services/familyMistakePatch');
 const Family = require('../../../common/models/Family');
 const User = require('../../../common/models/User');
 
@@ -438,5 +443,165 @@ describe('Task 6 family mistakes', () => {
     expect(response.status).toBe(503);
     expect(response.body.error.code).toBe('STATE_EVENT_UNAVAILABLE');
     expect((await FamilyMistake.findById(mistake._id)).reviewed).toBe(false);
+  });
+});
+
+describe('Task 4 canonical mistake attachment arrays', () => {
+  const QUESTION_A = '6656875da7f86a0012c2aa01';
+  const QUESTION_B = '6656875da7f86a0012c2aa02';
+  const ANSWER_A = '6656875da7f86a0012c2ab01';
+
+  test('TC-MPA-API-001/002 normalizes singular aliases and canonical arrays', () => {
+    const fromAliases = parseFamilyMistakeInput({
+      body: {
+        childId: CHILD_A1_ID,
+        subject: 'math',
+        reason: 'careless',
+        questionMediaId: QUESTION_A,
+        childAnswerMediaId: ANSWER_A
+      },
+      role: 'parent',
+      operation: 'create'
+    });
+    expect(fromAliases).toEqual(expect.objectContaining({
+      questionMediaIds: [QUESTION_A],
+      childAnswerMediaIds: [ANSWER_A]
+    }));
+    expect(fromAliases).not.toHaveProperty('questionMediaId');
+    expect(fromAliases).not.toHaveProperty('childAnswerMediaId');
+
+    const canonical = parseFamilyMistakeInput({
+      body: {
+        questionMediaIds: [QUESTION_A, QUESTION_B, QUESTION_A],
+        childAnswerMediaIds: []
+      },
+      role: 'parent',
+      operation: 'patch'
+    });
+    expect(canonical).toEqual({
+      questionMediaIds: [QUESTION_A, QUESTION_B],
+      childAnswerMediaIds: []
+    });
+    expect(splitMediaPatch(canonical)).toEqual({
+      mistakePatch: {},
+      mediaPatch: canonical,
+      hasMediaMutation: true
+    });
+  });
+
+  test('TC-MPA-API-003 rejects ambiguous, malformed, and over-limit groups', () => {
+    const invalidCases = [
+      { questionMediaIds: [QUESTION_A], questionMediaId: QUESTION_B },
+      { questionMediaIds: QUESTION_A },
+      { questionMediaIds: [QUESTION_A, 'not-an-object-id'] }
+    ];
+
+    invalidCases.forEach((body) => {
+      expect(() => parseFamilyMistakeInput({ body, role: 'parent', operation: 'patch' }))
+        .toThrow(FamilyMistakePatchError);
+    });
+
+    expect(() => parseFamilyMistakeInput({
+      body: {
+        questionMediaIds: Array.from({ length: 11 }, () => new mongoose.Types.ObjectId().toString())
+      },
+      role: 'parent',
+      operation: 'patch'
+    })).toThrow(expect.objectContaining({
+      code: 'MEDIA_ATTACHMENT_LIMIT_EXCEEDED',
+      status: 400
+    }));
+  });
+
+  test('TC-MPA-API-004 allows child question and answer media without parent-only fields', () => {
+    expect(parseFamilyMistakeInput({
+      body: {
+        questionMediaIds: [QUESTION_A],
+        childAnswerMediaId: ANSWER_A
+      },
+      role: 'student',
+      operation: 'patch'
+    })).toEqual({
+      questionMediaIds: [QUESTION_A],
+      childAnswerMediaIds: [ANSWER_A]
+    });
+    expect(() => parseFamilyMistakeInput({
+      body: { parentNote: 'not child-owned' },
+      role: 'student',
+      operation: 'patch'
+    })).toThrow(expect.objectContaining({ code: 'FIELD_ACCESS_DENIED', status: 403 }));
+  });
+
+  test('TC-MPA-API-003 validates model array limits', async () => {
+    const base = {
+      familyId: FAMILY_A_ID,
+      childId: CHILD_A1_ID,
+      subject: 'math',
+      reason: 'careless',
+      createdBy: PARENT_A_ID,
+      updatedBy: PARENT_A_ID
+    };
+    const tenIds = Array.from({ length: 10 }, () => new mongoose.Types.ObjectId());
+
+    await expect(new FamilyMistake({ ...base, questionMediaIds: tenIds }).validate())
+      .resolves.toBeUndefined();
+    await expect(new FamilyMistake({
+      ...base,
+      questionMediaIds: [...tenIds, new mongoose.Types.ObjectId()]
+    }).validate()).rejects.toMatchObject({ name: 'ValidationError' });
+  });
+
+  test('TC-MPA-API-002 keeps singular compatibility projections synchronized on document writes', async () => {
+    const mistake = await seedMistake({
+      questionMediaIds: [QUESTION_A, QUESTION_B],
+      childAnswerMediaIds: [ANSWER_A]
+    });
+
+    expect(mistake.questionMediaId.toString()).toBe(QUESTION_A);
+    expect(mistake.childAnswerMediaId.toString()).toBe(ANSWER_A);
+
+    mistake.questionMediaIds = [];
+    mistake.childAnswerMediaIds = [];
+    await mistake.save();
+    const cleared = await FamilyMistake.findById(mistake._id);
+    expect(cleared.questionMediaId).toBeUndefined();
+    expect(cleared.childAnswerMediaId).toBeUndefined();
+  });
+
+  test('TC-MPA-API-007/008 normalizes legacy and array-backed records in public responses', async () => {
+    const legacy = await seedMistake({
+      questionMediaId: QUESTION_A,
+      childAnswerMediaId: ANSWER_A
+    });
+    const arrayBacked = await seedMistake({
+      questionMediaIds: [QUESTION_A, QUESTION_B],
+      childAnswerMediaIds: []
+    });
+    const app = createApp();
+
+    for (const [mistake, expected] of [
+      [legacy, {
+        questionMediaIds: [QUESTION_A],
+        questionMediaId: QUESTION_A,
+        childAnswerMediaIds: [ANSWER_A],
+        childAnswerMediaId: ANSWER_A
+      }],
+      [arrayBacked, {
+        questionMediaIds: [QUESTION_A, QUESTION_B],
+        questionMediaId: QUESTION_A,
+        childAnswerMediaIds: []
+      }]
+    ]) {
+      const path = mistakePath(`/${mistake._id}`);
+      const response = await request(app)
+        .get(path)
+        .set(signedHeaders(parentA(), 'GET', path));
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.mistake).toEqual(expect.objectContaining(expected));
+      if (expected.childAnswerMediaIds.length === 0) {
+        expect(response.body.data.mistake).not.toHaveProperty('childAnswerMediaId');
+      }
+    }
   });
 });

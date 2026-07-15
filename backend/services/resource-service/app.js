@@ -43,14 +43,26 @@ const createLegacyUpload = () => multer({
 const createApp = ({
   internalMediaRouter = null,
   logger = createLogger('resource-service'),
+  mediaSecurity = { profile: 'trusted-local', scanner: null },
   mediaRouter = null,
   userModel = FamilyUser
 } = {}) => {
+  if (!mediaSecurity || !['trusted-local', 'secure-production'].includes(mediaSecurity.profile)) {
+    throw new Error('valid media security state is required');
+  }
+  if (mediaSecurity.profile === 'secure-production'
+    && (!mediaSecurity.scanner || typeof mediaSecurity.scanner.ping !== 'function')) {
+    throw new Error('secure-production scanner is required');
+  }
   const app = express();
   app.locals.logger = logger;
   app.locals.serviceName = 'resource-service';
   app.locals.upload = createLegacyUpload();
   app.locals.userModel = userModel;
+  app.locals.mediaSecurity = Object.freeze({
+    profile: mediaSecurity.profile,
+    scanner: mediaSecurity.profile === 'secure-production' ? mediaSecurity.scanner : null
+  });
 
   app.use(cors());
   app.use(express.json());
@@ -64,8 +76,31 @@ const createApp = ({
   app.use('/api/recommendations', recommendationsRouter);
   app.use('/api/resources/collections', collectionsRouter);
   app.use('/api/resources', resourcesRouter);
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', service: 'resource-service' });
+  app.get('/health', async (req, res) => {
+    const security = req.app.locals.mediaSecurity;
+    if (security.profile === 'trusted-local') {
+      res.status(200).json({
+        status: 'ok',
+        service: 'resource-service',
+        mediaSecurity: { profile: 'trusted-local' }
+      });
+      return;
+    }
+
+    try {
+      await security.scanner.ping();
+      res.status(200).json({
+        status: 'ok',
+        service: 'resource-service',
+        mediaSecurity: { profile: 'secure-production', scanner: 'healthy' }
+      });
+    } catch (_error) {
+      res.status(503).json({
+        status: 'unhealthy',
+        service: 'resource-service',
+        mediaSecurity: { profile: 'secure-production', scanner: 'unavailable' }
+      });
+    }
   });
   app.use(errorHandler);
 

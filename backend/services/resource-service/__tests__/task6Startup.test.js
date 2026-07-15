@@ -71,6 +71,55 @@ describe('resource-service Task 6 startup contract', () => {
     expect(mockListen).not.toHaveBeenCalled();
   });
 
+  test('TC-MPA-SCAN-002 trusted-local health names the profile without contacting or claiming a scanner', async () => {
+    const appModule = jest.requireActual('../app');
+    const scanner = { ping: jest.fn(() => { throw new Error('must not be called'); }) };
+    const actualApp = appModule.createApp({
+      logger: mockLogger,
+      mediaSecurity: { profile: 'trusted-local', scanner }
+    });
+
+    const response = await request(actualApp).get('/health');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      status: 'ok',
+      service: 'resource-service',
+      mediaSecurity: { profile: 'trusted-local' }
+    });
+    expect(scanner.ping).not.toHaveBeenCalled();
+  });
+
+  test('TC-MPA-SCAN-006/008 secure health fails closed without changing profile', async () => {
+    const appModule = jest.requireActual('../app');
+    const scanner = {
+      ping: jest.fn()
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('private scanner detail'))
+    };
+    const actualApp = appModule.createApp({
+      logger: mockLogger,
+      mediaSecurity: { profile: 'secure-production', scanner }
+    });
+
+    const healthy = await request(actualApp).get('/health');
+    const unhealthy = await request(actualApp).get('/health');
+
+    expect(healthy.status).toBe(200);
+    expect(healthy.body.mediaSecurity).toEqual({
+      profile: 'secure-production',
+      scanner: 'healthy'
+    });
+    expect(unhealthy.status).toBe(503);
+    expect(unhealthy.body).toEqual({
+      status: 'unhealthy',
+      service: 'resource-service',
+      mediaSecurity: { profile: 'secure-production', scanner: 'unavailable' }
+    });
+    expect(JSON.stringify(unhealthy.body)).not.toContain('private scanner detail');
+    expect(actualApp.locals.mediaSecurity.profile).toBe('secure-production');
+  });
+
   test('TC-T6-REG-001 importing resource server has no startup side effects', () => {
     const serverModule = require('../server');
 
@@ -101,6 +150,68 @@ describe('resource-service Task 6 startup contract', () => {
     });
 
     expect(order).toEqual(['connect', 'listen:3005']);
+  });
+
+  test('TC-MPA-SCAN-006 secure startup connects, pings, then listens', async () => {
+    const serverModule = require('../server');
+    const order = [];
+    const app = {
+      locals: {
+        mediaSecurity: {
+          profile: 'secure-production',
+          scanner: { ping: async () => order.push('ping') }
+        }
+      },
+      listen: jest.fn((port, callback) => {
+        order.push(`listen:${port}`);
+        callback();
+        return { close: jest.fn() };
+      })
+    };
+
+    await serverModule.startServer({
+      app,
+      port: 3005,
+      connect: async () => order.push('connect')
+    });
+
+    expect(order).toEqual(['connect', 'ping', 'listen:3005']);
+  });
+
+  test('TC-MPA-SCAN-006 secure startup does not listen after a failed scanner probe', async () => {
+    const serverModule = require('../server');
+    const scannerError = new Error('scanner unavailable');
+    const app = {
+      locals: {
+        mediaSecurity: {
+          profile: 'secure-production',
+          scanner: { ping: jest.fn().mockRejectedValue(scannerError) }
+        }
+      },
+      listen: jest.fn()
+    };
+
+    await expect(serverModule.startServer({
+      app,
+      connect: jest.fn().mockResolvedValue(undefined)
+    })).rejects.toBe(scannerError);
+    expect(app.listen).not.toHaveBeenCalled();
+  });
+
+  test('TC-MPA-SCAN-002 trusted dependency composition never constructs a scanner', () => {
+    const serverModule = require('../server');
+    const createScanner = jest.fn(() => { throw new Error('must not construct scanner'); });
+
+    expect(() => serverModule.createTask6MediaDependencies({
+      env: {
+        NODE_ENV: 'development',
+        PRIVATE_MEDIA_ROOT: '/tmp/resource-media-test',
+        MEDIA_SIGNING_SECRET: 'test-media-signing-secret-at-least-32-characters',
+        MEDIA_REFERENCE_SERVICE_TOKEN: 'test-media-reference-token-at-least-32-characters'
+      },
+      createScanner
+    })).not.toThrow();
+    expect(createScanner).not.toHaveBeenCalled();
   });
 
   test('default startServer path composes Task 6 media after connecting', async () => {

@@ -1,5 +1,6 @@
 module.exports = {
   testEnvironment: 'node',
+  resolver: './jest.resolver.js',
   globalSetup: './__tests__/globalSetup.js',
   globalTeardown: './__tests__/globalTeardown.js',
   setupFilesAfterEnv: ['./__tests__/setup.js'],
@@ -32,6 +33,7 @@ module.exports = {
   restoreMocks: true,
   testTimeout: 30000,
   moduleNameMapper: {
+    '^uuid$': '<rootDir>/../../../node_modules/uuid/dist/cjs/index.js',
     '^../../../common/(.*)$': '<rootDir>/../../common/$1',
     '^../../user-service/(.*)$': '<rootDir>/../user-service/$1'
   }

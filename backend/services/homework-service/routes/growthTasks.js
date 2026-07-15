@@ -181,7 +181,7 @@ const createGrowthTaskRouter = ({
 } = {}) => {
   const router = express.Router();
   const resumePendingAttachmentMedia = async (task) => {
-    if (!attachmentMediaService || !task || task.mediaReferenceState !== 'pending') {
+    if (!attachmentMediaService || !task) {
       return task;
     }
     return attachmentMediaService.resume(task._id.toString());

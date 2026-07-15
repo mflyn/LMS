@@ -40,7 +40,7 @@ describe('Task 5 deployment contracts', () => {
     expect(packageJson.scripts['test:nocoverage'])
       .toBe('npm run test:family-regression && npm run test:legacy-regression');
     expect(packageJson.scripts['test:family-regression']).toContain(
-      '--selectProjects family-common user-service homework-service progress-service resource-family analytics-family notification-family --runInBand'
+      '--selectProjects family-common user-service homework-service progress-service resource-family analytics-family analytics-attachments notification-family --runInBand'
     );
     expect(packageJson.scripts['test:legacy-regression']).toContain(
       '--selectProjects progress-legacy legacy'
