@@ -357,11 +357,11 @@ git commit -m "feat: manage mistake attachment collections"
 - Security overlay sets `secure-production`, private ClamAV networking/health, and no host-published scanner port.
 - New `npm run test:family-security-scan` is separate from `npm run release:family`.
 
-- [ ] **Step 1: Write failing deployment static tests**
+- [x] **Step 1: Write failing deployment static tests**
 
 Cover `TC-MPA-DEPLOY-001`-`004`: default absence, explicit profile, secure overlay, digest pin, no ingress/host port, startup dependency, and Kubernetes 3 GiB request/4 GiB limit.
 
-- [ ] **Step 2: Verify red, implement deployment assets, verify green**
+- [x] **Step 2: Verify red, implement deployment assets, verify green**
 
 Use rendered Compose/Kustomize assertions; do not start ClamAV on the local 8 GiB Gate.
 

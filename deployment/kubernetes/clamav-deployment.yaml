@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clamav
+  labels:
+    app: clamav
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clamav
+  template:
+    metadata:
+      labels:
+        app: clamav
+    spec:
+      containers:
+      - name: clamav
+        image: clamav/clamav:1.4.5-debian13-slim@sha256:0542880c8abebb7430be5366657aec561f03693ed7be4e64a45fd2ee60b08d02
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3310
+          name: clamd
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "3Gi"
+          limits:
+            cpu: "1"
+            memory: "4Gi"
+        startupProbe:
+          exec:
+            command: ["/usr/local/bin/clamdcheck.sh"]
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 36
+        livenessProbe:
+          exec:
+            command: ["/usr/local/bin/clamdcheck.sh"]
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 4
+        readinessProbe:
+          exec:
+            command: ["/usr/local/bin/clamdcheck.sh"]
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
