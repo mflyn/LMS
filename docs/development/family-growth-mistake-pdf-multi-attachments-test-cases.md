@@ -1,6 +1,7 @@
 # Mistake PDF and Multi-Attachment Test Design and Cases
 
-**Document status:** READY_FOR_REVIEW  
+**Document status:** APPROVED / IMPLEMENTATION BASELINE
+**Approved:** 2026-07-15
 **Date:** 2026-07-15  
 **Design:** `docs/superpowers/specs/2026-07-15-family-growth-mistake-pdf-multi-attachments-design.md`  
 **Scope:** Parent and child mistake attachments, task PDF attachments, private-media PDF security, and deployment security profiles  
