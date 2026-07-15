@@ -165,10 +165,11 @@ services:
     volumes:
       - mongo-data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"]
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 2)"]
       interval: 5s
       timeout: 5s
       retries: 30
+      start_period: 10s
     networks: [app-network]
     restart: always
 
