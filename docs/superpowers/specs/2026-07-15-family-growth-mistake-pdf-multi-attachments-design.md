@@ -2,6 +2,7 @@
 
 **Document status:** APPROVED / IMPLEMENTATION BASELINE
 **Approved:** 2026-07-15
+**Approved revision:** 2026-07-15 (`trusted-local` / `secure-production` security profiles)
 **Date:** 2026-07-15  
 **Scope:** Private-media PDF support and multi-attachment mistake workflows for parents and children  
 **Requirements:** `FR-MISTAKE-001`, `FR-MEDIA-001`, `FR-UI-001`, `FR-UI-002`, `NFR-SEC-001`, `NFR-REL-001`  
@@ -13,7 +14,7 @@ Parents and children must be able to attach multiple question files and multiple
 
 This increment also enables PDF in the existing parent task-attachment collection because it uses the same private-media purpose and collection control. Avatars remain image-only. Task-completion and growth-evidence persistence are unchanged because those purposes still have no approved owner field.
 
-PDF is not treated as an opaque trusted blob. A PDF must pass structural checks, active-content rejection, canonical serialization, and a mandatory ClamAV scan before any `MediaAsset` is persisted. A missing or unhealthy scanner fails closed.
+PDF is not treated as an opaque trusted blob. Every PDF must pass structural checks, active-content rejection, and canonical serialization before any `MediaAsset` is persisted. Malware scanning is controlled by an explicit deployment security profile: low-resource trusted local deployments may skip ClamAV without claiming a malware-clean result, while secure production deployments require ClamAV and fail closed when it is unavailable. The service never silently falls back from the secure profile to the trusted-local profile.
 
 ## 2. Approved Product Contract
 
@@ -43,6 +44,19 @@ The existing `questionMediaId` and `childAnswerMediaId` fields remain compatibil
 
 Every incoming and canonical file is at most 10 MiB. Every PDF is at most fifty pages. Encrypted PDFs and PDFs requiring a password are rejected.
 
+### 2.3 Deployment Security Profiles
+
+Resource-service exposes one explicit media security profile through `MEDIA_SECURITY_PROFILE`:
+
+| Profile | Intended environment | Malware behavior | Startup behavior |
+| --- | --- | --- | --- |
+| `trusted-local` | private single-family development or low-resource self-hosting where all uploaders are trusted | skips ClamAV; retains every static validation and canonicalization control | starts without a scanner and reports the profile in health and audit data |
+| `secure-production` | internet-reachable, shared, or production deployment | scans every canonical image and PDF; accepts only a clean result | requires valid ClamAV configuration and a successful bounded `PING` before listening |
+
+Development and test default to `trusted-local` when the variable is absent. Production refuses to start when the variable is absent or invalid, so an operator must explicitly choose the trust boundary. A `secure-production` process never changes profile at runtime and never accepts an upload after scanner timeout, connection failure, malformed response, or unhealthy status.
+
+`trusted-local` is a resource tradeoff, not an equivalent security claim. It is approved only for trusted family uploaders on a private network. Internet exposure, untrusted accounts, or external file intake requires `secure-production` or an equivalent approved malware-scanning adapter.
+
 ## 3. Compatibility and Data Model
 
 ### 3.1 Lazy Compatibility
@@ -66,7 +80,9 @@ The previously approved rule that treated question media as parent-owned is supe
 
 ### 3.3 MediaAsset Additions
 
-`MediaAsset` adds `displayName` and optional `pageCount`. `displayName` is a sanitized basename of at most 255 UTF-8 characters with path separators and control characters removed. `pageCount` is required for `application/pdf`, absent for images, and constrained to 1-50. The MIME enum adds `application/pdf`, while purpose-specific validation continues to reject PDF avatars, task-completion uploads, and growth-evidence uploads.
+`MediaAsset` adds `displayName`, optional `pageCount`, `malwareScanStatus`, and optional `malwareScannedAt`. `displayName` is a sanitized basename of at most 255 UTF-8 characters with path separators and control characters removed. `pageCount` is required for `application/pdf`, absent for images, and constrained to 1-50. The MIME enum adds `application/pdf`, while purpose-specific validation continues to reject PDF avatars, task-completion uploads, and growth-evidence uploads.
+
+`malwareScanStatus` has three values: `legacy_unscanned` for records created before this increment, `skipped_trusted_local` for a new upload explicitly accepted by the trusted-local profile, and `clean` for a new upload accepted after a secure-production scan. `malwareScannedAt` is required only for `clean`. Neither field is a public safety guarantee or part of the ordinary media access descriptor; both are retained for operator audit and release evidence.
 
 ### 3.4 Media Reference Identity
 
@@ -157,7 +173,7 @@ The upload middleware accepts one bounded temporary file and no more than two te
 
 ### 5.2 Image Canonicalization
 
-Images continue through `sharp`: decode with fail-on-error, auto-rotate, re-encode in the detected format, remove EXIF and embedded metadata, enforce the post-encode 10 MiB limit, then scan the canonical bytes with ClamAV.
+Images continue through `sharp`: decode with fail-on-error, auto-rotate, re-encode in the detected format, remove EXIF and embedded metadata, and enforce the post-encode 10 MiB limit. The resulting canonical bytes then follow the active security profile's malware policy.
 
 ### 5.3 PDF Inspection and Canonicalization
 
@@ -169,24 +185,27 @@ The PDF inspector loads the document with encryption disallowed and rejects inva
 - XFA, RichMedia, multimedia, or three-dimensional content;
 - encrypted payloads or external-file launch instructions.
 
-The accepted document is serialized into a new canonical byte sequence. The canonical bytes must still begin with a PDF signature, remain within 10 MiB, and pass a second parse before scanning. PDF metadata is not used for authorization or paths.
+The accepted document is serialized into a new canonical byte sequence. The canonical bytes must still begin with a PDF signature, remain within 10 MiB, and pass a second parse before following the active security profile's malware policy. PDF metadata is not used for authorization or paths.
 
-### 5.4 ClamAV
+### 5.4 Malware Scan Policy and ClamAV
 
-Resource-service owns a small ClamAV client that implements the documented TCP `INSTREAM` protocol with bounded chunks. Configuration is:
+Resource-service owns a scanner abstraction. The ClamAV adapter implements the documented TCP `INSTREAM` protocol with bounded chunks. Configuration is:
 
 | Variable | Default | Constraint |
 | --- | --- | --- |
-| `CLAMAV_HOST` | `clamav` | required non-empty host in production |
+| `MEDIA_SECURITY_PROFILE` | development/test: `trusted-local`; production: none | `trusted-local` or `secure-production`; production must set it explicitly |
+| `CLAMAV_HOST` | `clamav` | required non-empty host in `secure-production` |
 | `CLAMAV_PORT` | `3310` | integer 1-65535 |
 | `CLAMAV_CONNECT_TIMEOUT_MS` | `2000` | positive integer |
 | `CLAMAV_SCAN_TIMEOUT_MS` | `30000` | positive integer |
 
-All canonical private-media bytes are scanned, not only PDFs. `OK` is the only clean result. `FOUND` rejects the upload. Protocol errors, timeouts, connection failures, or unknown responses fail closed.
+In `trusted-local`, the scanner adapter is not constructed or contacted. The service accepts only files that pass the full static pipeline and persists `malwareScanStatus=skipped_trusted_local`. Health returns the explicit profile without presenting scanner health or a clean claim.
 
-`startServer` verifies the scanner with `PING` after MongoDB connection and before listening. `/health` reports unhealthy when the latest bounded scanner probe fails. Tests inject a scanner and do not require a global daemon.
+In `secure-production`, all canonical private-media bytes are scanned, not only PDFs. `OK` is the only clean result and persists `malwareScanStatus=clean` plus `malwareScannedAt`. `FOUND` rejects the upload. Protocol errors, timeouts, connection failures, or unknown responses fail closed. `startServer` verifies the scanner with `PING` after MongoDB connection and before listening; `/health` is unhealthy when the latest bounded probe fails. Tests inject a scanner and do not require a global daemon for ordinary unit and integration gates.
 
-Compose and Kubernetes add a private ClamAV service on port 3310 with no public ingress. Deployment pins the selected image by digest, provides a health check, and starts resource-service only after the scanner is healthy. Compose limits the scanner to 2 GiB memory. Kubernetes requests 1 GiB memory and 250 millicores, limits it to 2 GiB memory and one CPU, and allows a 180-second startup window before normal readiness checks. Signature data uses a persistent or image-managed volume according to the target environment; it is never stored in the application repository.
+Default family and Ubuntu Compose files use `trusted-local` and do not start ClamAV. A separate security overlay adds a private ClamAV service on port 3310, sets resource-service to `secure-production`, and starts resource-service only after scanner health succeeds. This keeps the minimum local stack usable on the approved 8 GiB machine while making the stronger boundary explicit and reproducible.
+
+The secure Compose and Kubernetes assets pin the selected ClamAV image by digest, expose no public ingress, and allow a 180-second startup window before normal readiness checks. Kubernetes requests 3 GiB memory and 250 millicores for ClamAV, limits it to 4 GiB memory and one CPU, and schedules it only where that capacity exists. Signature data uses a persistent or image-managed volume according to the target environment; it is never stored in the application repository. A Kubernetes trusted-local overlay may omit the scanner only when it explicitly sets the weaker profile and remains within the approved private-family boundary.
 
 ## 6. Frontend Design
 
@@ -229,8 +248,8 @@ Controls maintain the existing 44px child touch target and fit a 360px viewport 
 | 400 | `PDF_PAGE_LIMIT_EXCEEDED` | PDF has more than fifty pages |
 | 400 | `MEDIA_ATTACHMENT_LIMIT_EXCEEDED` | owner array exceeds its approved unique limit |
 | 413 | `MEDIA_TOO_LARGE` | incoming or canonical file exceeds 10 MiB |
-| 422 | `MALWARE_DETECTED` | ClamAV reported `FOUND` |
-| 503 | `MALWARE_SCANNER_UNAVAILABLE` | scanner unavailable, timed out, or returned an invalid response |
+| 422 | `MALWARE_DETECTED` | secure-production scanner reported `FOUND` |
+| 503 | `MALWARE_SCANNER_UNAVAILABLE` | secure-production scanner unavailable, timed out, or returned an invalid response |
 | 503 | `MEDIA_REFERENCE_PENDING` | owner-reference mutation requires recovery |
 
 Errors use the approved `success=false`, `error.code/message/details`, and `requestId` envelope. Malware signatures, file bytes, signed URLs, temporary paths, and scanner protocol responses are never returned or logged. Logs may include operation, media ID after persistence, detected MIME, byte count, purpose, and stable result code.
@@ -243,7 +262,9 @@ Errors use the approved `success=false`, `error.code/message/details`, and `requ
 - Preserve image EXIF removal and post-encode size checks.
 - Accept a safe one-page and fifty-page PDF; reject zero-page, fifty-one-page, encrypted, malformed, JavaScript, launch-action, embedded-file, XFA, and RichMedia fixtures.
 - Verify canonical PDF second parse and PDF attachment disposition.
-- Exercise ClamAV `PING` and `INSTREAM`, chunk framing, clean, infected, timeout, connection failure, malformed response, and socket cleanup.
+- In `trusted-local`, prove no scanner connection is attempted and the persisted audit status is `skipped_trusted_local`.
+- In `secure-production`, exercise ClamAV `PING` and `INSTREAM`, chunk framing, clean, infected, timeout, connection failure, malformed response, socket cleanup, and startup refusal.
+- Reject an absent or invalid production profile and prove secure-production never falls back to trusted-local.
 - Prove no `MediaAsset`, storage object, or temporary file survives a rejected upload.
 - Keep cross-family, sibling, deleted, and wrong-purpose media tests green.
 
@@ -267,15 +288,18 @@ Errors use the approved `success=false`, `error.code/message/details`, and `requ
 - A parent creates a mistake with two question images and one PDF answer, reopens it, downloads the PDF, reorders attachments, and removes one.
 - A child creates an own mistake with one PDF question and two answer images, then adds an answer PDF during review.
 - Sibling and cross-family access remain forbidden.
-- Runtime-generated malware content is rejected by the real Compose ClamAV service without committing its signature as a repository fixture.
-- Compose config/build/start, ClamAV health, resource-service health, safe PDF upload, malware rejection, media binding, signed download, and cleanup smoke all pass.
-- Kubernetes static validation proves private scanner networking, resource-service dependency/configuration, health probes, and no scanner ingress.
+- The default low-resource Compose gate starts without ClamAV, reports `trusted-local`, uploads a safe PDF, persists the skipped audit state, and completes binding, signed download, and cleanup smoke.
+- A separate secure-release gate uses the security overlay and rejects runtime-generated malware content through a real ClamAV service without committing its signature as a repository fixture.
+- Secure Compose config/build/start, ClamAV health, resource-service health, safe PDF upload, malware rejection, media binding, signed download, and cleanup smoke all pass on a sufficiently sized runner.
+- Kubernetes static validation proves explicit profile selection, private scanner networking, resource-service dependency/configuration, health probes, scanner resource requests, and no scanner ingress.
 
 ## 9. Rollout and Rollback
 
-Rollout order is ClamAV, resource-service, analytics-service, gateway, then Web. Resource-service must not become ready before ClamAV. Analytics accepts both old and new request forms before the new Web is deployed.
+Trusted-local rollout order is resource-service, analytics-service, gateway, then Web. Secure-production rollout order is ClamAV, resource-service, analytics-service, gateway, then Web; resource-service must not become ready before ClamAV. Analytics accepts both old and new request forms before the new Web is deployed.
 
-Rollback reverses the application order. The compatibility projections preserve the first attachment for the prior version, but the old application cannot safely reconcile edits to the hidden remaining array. The deployment runbook must therefore place mistake and task attachment mutations in read-only maintenance mode before rolling analytics-service or Web back past this increment. No new media bytes are deleted during rollback. Rolling back ClamAV or resource-service while PDF upload is enabled is prohibited; the old resource-service may continue serving already stored PDFs as private bytes, but the runbook must disable new uploads before that rollback.
+Rollback reverses the application order. The compatibility projections preserve the first attachment for the prior version, but the old application cannot safely reconcile edits to the hidden remaining array. The deployment runbook must therefore place mistake and task attachment mutations in read-only maintenance mode before rolling analytics-service or Web back past this increment. No new media bytes are deleted during rollback. Rolling back ClamAV or resource-service while secure-production PDF upload is enabled is prohibited; the old resource-service may continue serving already stored PDFs as private bytes, but the runbook must disable new uploads before that rollback.
+
+Changing from `secure-production` to `trusted-local` is a security downgrade, not an automatic recovery action. It requires an explicit configuration change, operator approval, an audit record, and a deployment restart. Scanner health failure alone never triggers that change.
 
 ## 10. Acceptance Gate
 
@@ -284,11 +308,11 @@ The increment is complete only when:
 1. Parent and child create and review workflows manage both attachment groups with ten-item limits.
 2. Existing scalar-only mistakes remain readable and editable without data loss.
 3. Safe images and PDFs pass, while oversized, active, encrypted, malformed, and infected files fail with stable codes.
-4. ClamAV is mandatory, private, health checked, and represented in Compose and Kubernetes.
+4. Trusted-local runs without ClamAV and records skipped status without a clean claim; secure-production requires a private, health-checked ClamAV and fails closed.
 5. Media-reference create, replace, reorder, removal, failure, and recovery cases pass for multi-value groups.
 6. Frontend unit/integration tests and desktop/360px browser flows pass without console errors or overflow.
 7. Documentation, API examples, deployment guides, traceability, test cases, and gate evidence describe the canonical contract.
-8. `npm run release:family` passes from a clean tree, remote CI succeeds, and the implementation is merged into `main`.
+8. The default low-resource release gate passes without ClamAV, the dedicated secure scan gate passes on a sufficiently sized runner, remote CI succeeds, and the implementation is merged into `main`.
 
 ## 11. Non-Goals
 
@@ -296,5 +320,12 @@ The increment is complete only when:
 - OCR, answer recognition, PDF text indexing, annotation, or in-browser PDF editing.
 - More than ten question or ten answer attachments per mistake.
 - Changing task-completion or growth-evidence owner models.
-- Public URLs, permanent signed URLs, or bypassing ClamAV when it is unavailable.
+- Public URLs, permanent signed URLs, silent profile fallback, or bypassing ClamAV while `secure-production` is active.
+- Claiming that a `trusted-local` upload was malware scanned or is equivalent to a secure-production upload.
 - Immediate removal of legacy scalar API fields.
+
+## 12. Operational References
+
+- [ClamAV Docker deployment and memory guidance](https://docs.clamav.net/manual/Installing/Docker.html) is the source for the 3 GiB minimum and 4 GiB preferred scanner capacity used by the secure overlay design.
+- [ClamAV daemon usage](https://docs.clamav.net/manual/Usage.html) defines the daemon model and operational commands.
+- [ClamD protocol](https://docs.clamav.net/manual/Usage/ClamdProtocol.html) defines `PING`, `INSTREAM`, and the private TCP protocol boundary implemented by the scanner adapter.

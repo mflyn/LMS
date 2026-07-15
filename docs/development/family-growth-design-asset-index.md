@@ -27,6 +27,7 @@
 | Task 9 | 家长 MVP 七个业务页面 | [详细设计](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md) | [测试用例](./family-growth-task9-test-cases.md)、[Gate](./family-growth-task9-gate.md) |
 | Task 10 | 孩子 PIN 登录与孩子端页面 | [详细设计](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md) | [测试用例](./family-growth-task10-test-cases.md)、[Gate](./family-growth-task10-gate.md) |
 | Task 11 | 家长/孩子跨角色真实服务 E2E | [详细设计](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) | [测试用例](./family-growth-task11-test-cases.md)、[Task Gate](./family-growth-task11-gate.md)、[v1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md) |
+| 错题 PDF 与多附件增量 | 家长/孩子题目与答案多附件、任务 PDF、两档媒体安全配置 | [详细设计](../superpowers/specs/2026-07-15-family-growth-mistake-pdf-multi-attachments-design.md) | [测试设计与用例](./family-growth-mistake-pdf-multi-attachments-test-cases.md)、实施与 Gate 待完成 |
 
 ## 2. 核心图资产
 

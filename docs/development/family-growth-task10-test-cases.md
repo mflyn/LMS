@@ -1,5 +1,7 @@
 # Task 10 Child Web Test Design and Cases
 
+> **2026-07-15 increment:** The approved detailed design and [mistake PDF and multi-attachment test design](./family-growth-mistake-pdf-multi-attachments-test-cases.md) extend `TC-T10-API-004`, `TC-T10-API-007`, and `TC-T10-MISTAKE-001`-`005` so children can manage own question/answer image and PDF collections. This document remains the historical Task 10 gate baseline.
+
 **Document status:** APPROVED DESIGN / IMPLEMENTATION BASELINE
 **Date:** 2026-07-11
 **Design:** `docs/superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md`

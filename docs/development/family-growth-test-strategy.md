@@ -136,3 +136,16 @@ The first eight commands must exit 0. `npm run test:nocoverage` first reruns tho
 ## 11. Evidence Recording
 
 For each Task 5 run, `docs/development/family-growth-task5-gate.md` records command, date, exit code, suite/test counts and relevant warning or failure IDs. Evidence from a previous commit is not sufficient after code changes; remediation requires fresh targeted and regression runs.
+
+## 12. Mistake PDF and Multi-Attachment Increment
+
+The [increment test design](./family-growth-mistake-pdf-multi-attachments-test-cases.md) extends this historical strategy for parent/child mistake attachment collections, task PDF attachments, and private-media PDF security.
+
+The increment uses two independent gate paths:
+
+- The merge and low-resource release path uses `trusted-local`. It must exercise the complete static media pipeline and prove that no scanner connection occurs and no malware-clean claim is stored.
+- The secure-production path uses injected or fake scanner infrastructure for deterministic merge CI, plus a dedicated real-ClamAV smoke on a sufficiently sized runner before approving a secure-production release.
+- Scanner unavailability, malformed protocol responses, or health failure are fail-closed only in `secure-production`; no test may model an automatic downgrade to `trusted-local`.
+- The planned real-scanner command is not release evidence until it exists, exits zero, and is recorded against the candidate commit.
+
+Historical Task 6 and Task 10 gates remain evidence for their original single-value/image-only boundaries. They do not satisfy the increment's `TC-MPA-*` cases.

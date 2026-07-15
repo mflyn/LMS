@@ -1,5 +1,7 @@
 # Task 6 Numbered Test Cases
 
+> **2026-07-15 increment:** The [mistake PDF and multi-attachment test design](./family-growth-mistake-pdf-multi-attachments-test-cases.md) supersedes the historical single-value, image-only, and parent-owned question-media expectations in this Task 6 baseline. Historical Task 6 gate evidence remains valid for its original release and is not evidence for the new increment.
+
 **Document status:** APPROVED
 **Baseline candidate:** FGT-MVP-1.4  
 **Design:** `docs/superpowers/specs/2026-06-20-family-growth-task6-design.md`
