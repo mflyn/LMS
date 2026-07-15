@@ -62,7 +62,7 @@ Passed: 1 suite, 33 tests.
 
 ## Commit
 
-Final commit hash is filled in after the commit is created.
+`56d9c947 feat: add private media descriptors`
 
 ## Concerns
 
