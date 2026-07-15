@@ -171,6 +171,41 @@ docker --version
 docker compose version
 ```
 
+如果 `docker compose` 提示 `unknown shorthand flag: 'f' in -f`，说明系统安装了 Docker 但缺少 Compose v2 插件，独立安装：
+
+```bash
+DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+mkdir -p $DOCKER_CONFIG/cli-plugins
+curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 \
+  -o $DOCKER_CONFIG/cli-plugins/docker-compose
+chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+docker compose version
+```
+
+#### 3.3.1 Docker 镜像加速（中国大陆服务器）
+
+在中国大陆直接拉取 Docker Hub 镜像可能超时。配置镜像加速器：
+
+```bash
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json << 'EOF'
+{
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://dockerproxy.com",
+    "https://docker.nju.edu.cn"
+  ]
+}
+EOF
+sudo systemctl restart docker
+```
+
+配置后验证拉取不再超时：
+
+```bash
+docker pull mongo:6.0
+```
+
 ### 3.4 保持安全更新，并设置本地防火墙
 
 不要为了节省少量内存关闭 `unattended-upgrades`。这台机器保存孩子的账号、学习记录和图片，安全更新比节省几十 MB 内存更重要。
@@ -192,6 +227,8 @@ sudo ufw status verbose
 ---
 
 ## 4. 部署项目
+
+所有命令默认在 `~/LMS` 目录执行。如果使用多个终端窗口，每个终端都需先执行 `cd ~/LMS`。
 
 ### 4.1 克隆代码
 
@@ -297,6 +334,8 @@ docker compose -f docker-compose.ubuntu.yml up -d
 
 首次构建会下载依赖，旧电脑上可能需要数分钟。构建期间不要关机或执行 `docker compose down -v`。
 
+如果 `docker compose up -d` 报错 `failed to bind host port`，说明端口被占用，跳到[端口冲突](#端口冲突)排查。
+
 ### 4.6 等待初始化完成
 
 查看 MongoDB 副本集初始化进度：
@@ -312,6 +351,19 @@ mongo-init exited (0)
 ```
 
 按 `Ctrl+C` 退出日志查看。
+
+如果 `mongo` 容器一直处于 `unhealthy` 状态（`docker compose ps` 显示 `(unhealthy)`），可能是副本集未能自动初始化，手动执行：
+
+```bash
+docker compose -f docker-compose.ubuntu.yml exec mongo mongosh --quiet --eval \
+  'rs.initiate({_id:"rs0",members:[{_id:0,host:"mongo:27017"}]})'
+```
+
+等几秒确认 MongoDB 变健康后，再启动依赖它的服务：
+
+```bash
+docker compose -f docker-compose.ubuntu.yml up -d
+```
 
 ### 4.7 查看全部服务状态
 
@@ -334,6 +386,17 @@ frontend               Up
 mongo                  Up (healthy)
 mongo-init             Exited (0)
 ```
+
+### 4.8 初始化角色数据
+
+首次启动后，MongoDB 的 `roles` 集合为空，注册时会返回 `400 Invalid role: parent`。执行以下命令插入预定义角色：
+
+```bash
+docker compose -f docker-compose.ubuntu.yml exec mongo mongosh learning-tracker --quiet --eval \
+  'db.roles.insertOne({name:"parent",description:"Family parent"})'
+```
+
+该操作只需在首次部署时执行一次。
 
 ---
 
@@ -726,7 +789,7 @@ sudo env \
 - 不让 MongoDB 使用公网 IP，也不要把它添加到 VPN 外的访问规则。
 - 任何对外网页访问都只经由反向代理的 `443`；在完成 HTTPS、域名、更新 Node 运行时与访问控制审查前，不要将本机暴露到公网。
 
-7 个后端镜像使用 Node.js 22。前端最终运行于 Nginx，但其构建阶段当前仍使用 Node.js 14；这是需要升级并重新执行发布门禁的维护项。在完成 HTTPS、前端构建运行时升级和独立安全评审前，家庭试用应限制在局域网或私有 VPN，不直接暴露到公网。
+7 个后端镜像和前端构建镜像均使用 Node.js 22。
 
 ### 8.2 外网访问选项
 
@@ -782,6 +845,15 @@ docker compose -f docker-compose.ubuntu.yml exec mongo mongosh --eval "
 "
 ```
 
+### 注册时提示 "Invalid role: parent"
+
+MongoDB 的 `roles` 集合缺少预定义角色。首次部署只需执行一次：
+
+```bash
+docker compose -f docker-compose.ubuntu.yml exec mongo mongosh learning-tracker --quiet --eval \
+  'db.roles.insertOne({name:"parent",description:"Family parent"})'
+```
+
 ### Node 进程 OOM（内存不足）
 
 如果 Node 进程被系统杀死（`docker logs` 中看到 `exit code 137`）：
@@ -800,10 +872,16 @@ docker compose -f docker-compose.ubuntu.yml exec mongo mongosh --eval "
 # 查看端口占用
 sudo lsof -i :80
 sudo lsof -i :3000
-
-# 修改 docker-compose.ubuntu.yml 中的端口映射。
-# 前端可改为 8080:80；不要为排障把 MongoDB 暴露到公网。
 ```
+
+Ubuntu 桌面版或预装 LAMP 的系统常自带 Apache2 占用 80 端口：
+
+```bash
+sudo systemctl stop apache2
+sudo systemctl disable apache2   # 禁止开机自启
+```
+
+如果前端端口不够用，可修改 `docker-compose.ubuntu.yml` 中的映射。不要为排障把 MongoDB 暴露到公网。
 
 ### MongoDB 慢查询
 
