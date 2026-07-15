@@ -373,7 +373,7 @@ Cover `TC-MPA-DEPLOY-005`-`006` parent/child upload, reload, PDF download, reord
 
 Generate antivirus test content only at runtime, run only through the secure overlay, emit stable result codes, and always tear the overlay down. Keep the command protected/manual until a sized runner is configured.
 
-- [ ] **Step 5: Update final contracts and gate evidence**
+- [x] **Step 5: Update final contracts and gate evidence**
 
 Set implemented statuses only after evidence exists. Record exact commands, commit, suite/test counts, browser viewports, secure-scan runner constraints, and any approved residual risk.
 

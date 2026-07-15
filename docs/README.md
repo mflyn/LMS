@@ -15,7 +15,7 @@
 | 详细设计 | [设计资产索引](./development/family-growth-design-asset-index.md) | Requirement 与 Task 1-11 设计、代码和测试证据 |
 | 需求追踪 | [需求追踪矩阵](./development/family-growth-requirement-traceability.md) | 35 项需求的设计、实现和验证状态 |
 | 当前基线 | [FGT-MVP-1.6 基线候选](./development/family-growth-baseline-v1.6-manifest.md) | 当前实现证据、关闭结论和遗留边界 |
-| 测试与发布 | [开发与测试入口](./development/README.md) / [统一发布 Gate](./development/family-growth-v1.6-release-gate.md) | 本地命令、测试层次和发布判定 |
+| 测试与发布 | [开发与测试入口](./development/README.md) / [统一发布 Gate](./development/family-growth-v1.6-release-gate.md) / [PDF 与多附件 Gate](./development/family-growth-mistake-pdf-multi-attachments-gate.md) | 本地命令、测试层次和发布判定 |
 | 部署 | [部署入口](./deployment/README.md) | Compose、Ubuntu、Kubernetes、Secret 和回滚 |
 | 使用 | [用户指南](./user-guide/README.md) | 家长和孩子的操作流程 |
 

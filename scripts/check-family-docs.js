@@ -16,6 +16,7 @@ const authoritativeDocuments = [
   'docs/development/family-growth-design-asset-index.md',
   'docs/development/family-growth-baseline-v1.6-manifest.md',
   'docs/development/family-growth-v1.6-release-gate.md',
+  'docs/development/family-growth-mistake-pdf-multi-attachments-gate.md',
   'docs/deployment/README.md',
   'docs/deployment/local-ubuntu-deployment.md',
   'docs/user-guide/README.md',
@@ -154,10 +155,14 @@ function validate() {
     documents.get('docs/development/family-growth-baseline-v1.6-manifest.md') || '';
   const releaseGate =
     documents.get('docs/development/family-growth-v1.6-release-gate.md') || '';
+  const attachmentGate =
+    documents.get('docs/development/family-growth-mistake-pdf-multi-attachments-gate.md') || '';
   const deployment = documents.get('docs/deployment/README.md') || '';
   const ubuntuDeployment =
     documents.get('docs/deployment/local-ubuntu-deployment.md') || '';
   const userGuide = documents.get('docs/user-guide/README.md') || '';
+  const quickStart = documents.get('docs/user-guide/quick-start.md') || '';
+  const parentGuide = documents.get('docs/user-guide/parent-guide.md') || '';
   const childGuide = documents.get('docs/user-guide/child-guide.md') || '';
   const ubuntuEnvironment = read('docker-compose.ubuntu.env.example');
   const ubuntuCompose = read('docker-compose.ubuntu.yml');
@@ -346,6 +351,36 @@ function validate() {
     );
   }
 
+  for (const requiredText of [
+    'questionMediaIds',
+    'childAnswerMediaIds',
+    'application/pdf',
+    'MALWARE_DETECTED',
+    'MALWARE_SCANNER_UNAVAILABLE',
+    'trusted-local',
+    'secure-production'
+  ]) {
+    assert(api.includes(requiredText), `API contract is missing ${requiredText}`, errors);
+  }
+
+  for (const requiredText of [
+    'RUN_FAMILY_SECURITY_SCAN=1 npm run test:family-security-scan',
+    'trusted-local',
+    'secure-production',
+    '10 GiB'
+  ]) {
+    assert(
+      deployment.includes(requiredText),
+      `deployment guide is missing secure-media boundary ${requiredText}`,
+      errors
+    );
+    assert(
+      attachmentGate.includes(requiredText),
+      `attachment gate is missing ${requiredText}`,
+      errors
+    );
+  }
+
   assert(
     userGuide.includes('知识与能力点'),
     'user guide navigation is missing 知识与能力点',
@@ -356,6 +391,14 @@ function validate() {
     'child guide describes profile fields that the child UI does not render',
     errors
   );
+  for (const [relativePath, markdown] of [
+    ['docs/user-guide/quick-start.md', quickStart],
+    ['docs/user-guide/parent-guide.md', parentGuide],
+    ['docs/user-guide/child-guide.md', childGuide]
+  ]) {
+    assert(markdown.includes('PDF'), `${relativePath} is missing PDF guidance`, errors);
+    assert(markdown.includes('10 MiB'), `${relativePath} is missing media size guidance`, errors);
+  }
 
   for (const requiredText of [
     'cp docker-compose.ubuntu.env.example .env',

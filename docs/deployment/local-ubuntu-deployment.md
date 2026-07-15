@@ -6,6 +6,8 @@
 >
 > 硬件要求：x86_64 CPU、4 核、8GB RAM、120GB+ SSD。20GB 磁盘不足以同时保存 Docker 镜像、MongoDB、附件、日志和备份。
 >
+> 媒体安全边界：8GB 机器使用 `trusted-local`，只允许可信家庭成员在私有局域网上传。该模式会严格检查并规范化图片/PDF，但不运行 ClamAV，不等于恶意软件已扫描。互联网暴露或不可信上传必须迁移到容量充足且通过独立扫描 Gate 的 `secure-production` 环境。
+>
 > 部署边界：本文只部署家庭成长 MVP（LMS）。DeepTutor、AutoClaw 和本地大模型不是首轮必需组件；DeepTutor 后续应先调用云端模型 API，不在这台旧电脑上部署 GPU 推理。
 
 ---
@@ -208,7 +210,7 @@ docker pull mongo:6.0
 
 ### 3.4 保持安全更新，并设置本地防火墙
 
-不要为了节省少量内存关闭 `unattended-upgrades`。这台机器保存孩子的账号、学习记录和图片，安全更新比节省几十 MB 内存更重要。
+不要为了节省少量内存关闭 `unattended-upgrades`。这台机器保存孩子的账号、学习记录和私有附件，安全更新比节省几十 MB 内存更重要。
 
 以下规则只允许局域网访问 SSH 和 LMS 前端；将 `192.168.1.0/24` 改成自己的 LAN 网段。**在启用前，确认当前 SSH 会话来自该网段，避免把自己锁在服务器外。**
 
@@ -229,6 +231,18 @@ sudo ufw status verbose
 ## 4. 部署项目
 
 所有命令默认在 `~/LMS` 目录执行。如果使用多个终端窗口，每个终端都需先执行 `cd ~/LMS`。
+
+本文的 `docker-compose.ubuntu.yml` 已显式设置 `MEDIA_SECURITY_PROFILE=trusted-local`，
+不会拉取或启动 ClamAV。不要在 8GB 主机上叠加 `docker-compose.security.yml`，也不要
+为了对外开放上传而把该模式描述为安全扫描。需要 `secure-production` 时，应使用
+至少 10 GiB Docker 可用内存的独立主机或 runner，并先执行：
+
+```bash
+RUN_FAMILY_SECURITY_SCAN=1 npm run test:family-security-scan
+```
+
+只有该命令在候选提交上通过，才可批准相应的安全生产部署；它不是本指南中普通
+安装步骤的一部分。
 
 ### 4.1 克隆代码
 
@@ -528,7 +542,7 @@ free -h
 docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}"
 ```
 
-8GB 机器应保留至少约 1GB 可用内存和少量 swap 余量。首次启动、上传图片、生成周报时记录一次基线；如果持续触发 swap、出现 `exit code 137` 或磁盘使用率超过 80%，先停止扩展功能并处理资源问题。
+8GB 机器应保留至少约 1GB 可用内存和少量 swap 余量。首次启动、上传附件、生成周报时记录一次基线；如果持续触发 swap、出现 `exit code 137` 或磁盘使用率超过 80%，先停止扩展功能并处理资源问题。
 
 ### 7.2 日志轮转
 
@@ -576,7 +590,7 @@ sudo apt update && sudo apt upgrade -y
 | 内容 | 原因 | 方式 |
 |------|------|------|
 | MongoDB 逻辑备份 | 家庭、账号、任务、成长记录、错题、周报、奖励 | `mongodump --oplog --archive` |
-| `resource-data` 媒体卷 | 题目照片、孩子答案、任务附件 | 归档整个 Docker 卷 |
+| `resource-data` 媒体卷 | 题目图片/PDF、孩子答案、任务附件 | 归档整个 Docker 卷 |
 | `.env` 与 Ubuntu Compose | 密钥、端口和服务配置；丢失后无法完整恢复 | 暂存后由 Restic 加密 |
 | Git 提交版本 | 恢复时确认数据对应的代码版本 | 写入纯文本清单 |
 

@@ -146,6 +146,6 @@ The increment uses two independent gate paths:
 - The merge and low-resource release path uses `trusted-local`. It must exercise the complete static media pipeline and prove that no scanner connection occurs and no malware-clean claim is stored.
 - The secure-production path uses injected or fake scanner infrastructure for deterministic merge CI, plus a dedicated real-ClamAV smoke on a sufficiently sized runner before approving a secure-production release.
 - Scanner unavailability, malformed protocol responses, or health failure are fail-closed only in `secure-production`; no test may model an automatic downgrade to `trusted-local`.
-- The planned real-scanner command is not release evidence until it exists, exits zero, and is recorded against the candidate commit.
+- The protected real-scanner command is `RUN_FAMILY_SECURITY_SCAN=1 npm run test:family-security-scan`. It is secure-production release evidence only when it exits zero on a sufficiently sized runner and is recorded against the candidate commit.
 
 Historical Task 6 and Task 10 gates remain evidence for their original single-value/image-only boundaries. They do not satisfy the increment's `TC-MPA-*` cases.
