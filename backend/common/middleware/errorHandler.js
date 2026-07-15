@@ -206,10 +206,12 @@ const errorHandler = (err, req, res, next) => {
   error.message = err.message;
 
   // 处理特定类型的错误
-  if (err.name === 'CastError'
+  // 注意: AppError 子类 (ValidationError 等) 已有 isOperational=true 和正确格式，
+  // 不要路由到 handleMongoError，否则 message 和 details 会丢失。
+  if (!err.isOperational && (err.name === 'CastError'
     || err.name === 'ValidationError'
     || err.code === 11000
-    || isMongoConnectivityError(err)) {
+    || isMongoConnectivityError(err))) {
     error = handleMongoError(err);
   }
   
