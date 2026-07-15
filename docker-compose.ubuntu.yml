@@ -95,6 +95,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3005
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - PRIVATE_MEDIA_ROOT=/var/lib/family-growth/private-media
@@ -116,6 +117,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3006
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - RESOURCE_SERVICE_URL=http://resource-service:3005
@@ -135,6 +137,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3007
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:?set GATEWAY_IDENTITY_SECRET}
       - ENABLE_RABBITMQ=false
