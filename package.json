@@ -15,6 +15,7 @@
     "test:family-flow:integration": "jest --config=backend/tests/task11/jest.config.js --runInBand",
     "test:family-flow:e2e": "playwright test --project=chromium",
     "test:task11": "npm run test:family-flow:integration && npm run test:family-flow:e2e",
+    "test:family-security-scan": "bash scripts/test-family-security-scan.sh",
     "docs:family:check": "node scripts/check-family-docs.js",
     "release:family": "bash scripts/release-family-gate.sh",
     "repair:family-relationships": "node backend/services/user-service/scripts/repairFamilyRelationships.js",

@@ -97,4 +97,27 @@ describe('secure private-media deployment contracts', () => {
     expect(container.startupProbe.periodSeconds * container.startupProbe.failureThreshold)
       .toBeGreaterThanOrEqual(180);
   });
+
+  test('TC-MPA-DEPLOY-008 real scanner smoke is explicit, isolated, and always tears down', () => {
+    const packageJson = JSON.parse(read('package.json'));
+    const releaseGate = read('scripts/release-family-gate.sh');
+    const scanGate = read('scripts/test-family-security-scan.sh');
+    const smoke = read('scripts/compose-family-security-smoke.js');
+
+    expect(packageJson.scripts['test:family-security-scan'])
+      .toBe('bash scripts/test-family-security-scan.sh');
+    expect(packageJson.scripts['release:family']).not.toContain('security-scan');
+    expect(releaseGate).not.toContain('docker-compose.security.yml');
+    expect(scanGate).toContain('RUN_FAMILY_SECURITY_SCAN');
+    expect(scanGate).toContain('FAMILY_SECURITY_SCAN_MIN_MEMORY_BYTES');
+    expect(scanGate).toContain('docker-compose.security.yml');
+    expect(scanGate).toMatch(/trap cleanup EXIT/);
+    expect(scanGate).toMatch(/down --volumes --remove-orphans/);
+    expect(smoke).toContain('MALWARE_DETECTED');
+    expect(smoke).toContain('SECURITY_SCAN_SAFE_PDF_OK');
+    expect(smoke).toContain('SECURITY_SCAN_MALWARE_REJECTED');
+    expect(`${scanGate}\n${smoke}`).not.toContain(
+      'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*'
+    );
+  });
 });

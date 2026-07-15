@@ -369,7 +369,7 @@ Use rendered Compose/Kustomize assertions; do not start ClamAV on the local 8 Gi
 
 Cover `TC-MPA-DEPLOY-005`-`006` parent/child upload, reload, PDF download, reorder, removal, sibling/cross-family denial, desktop, and 360px. Generate PDFs at runtime and assert no console error/overflow.
 
-- [ ] **Step 4: Add secure scanner smoke command**
+- [x] **Step 4: Add secure scanner smoke command**
 
 Generate antivirus test content only at runtime, run only through the secure overlay, emit stable result codes, and always tear the overlay down. Keep the command protected/manual until a sized runner is configured.
 
