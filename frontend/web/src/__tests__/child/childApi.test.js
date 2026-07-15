@@ -2,6 +2,7 @@ import axios from 'axios';
 import {
   childPinLogin,
   completeOwnTask,
+  createOwnMistake,
   getOwnProfile,
   listOwnMistakes,
   listOwnReminders,
@@ -135,6 +136,25 @@ describe('childApi', () => {
       childExplanation: '重新计算后是 42',
       reviewed: true,
       mastered: false
+    }, { headers: { Authorization: 'Bearer child-token' } });
+  });
+
+  test('TC-T10-API-007 creates an own mistake with only approved child fields', async () => {
+    axios.post.mockResolvedValueOnce({ data: { data: { mistake: { mistakeId: 'mistake-new' } } } });
+
+    await expect(createOwnMistake({
+      subject: '数学',
+      reason: 'calculation',
+      childExplanation: '我把进位漏掉了',
+      childId: 'child-b2',
+      familyId: 'family-b',
+      parentNote: 'must-not-send'
+    })).resolves.toEqual({ mistake: { mistakeId: 'mistake-new' } });
+
+    expect(axios.post).toHaveBeenCalledWith('/api/mistakes', {
+      subject: '数学',
+      reason: 'calculation',
+      childExplanation: '我把进位漏掉了'
     }, { headers: { Authorization: 'Bearer child-token' } });
   });
 

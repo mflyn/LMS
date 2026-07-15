@@ -1,11 +1,12 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../../App';
-import { listOwnMistakes, reviewOwnMistake } from '../../services/childApi';
+import { createOwnMistake, listOwnMistakes, reviewOwnMistake } from '../../services/childApi';
 import { saveChildSession } from '../../services/familySession';
 
 jest.mock('../../services/childApi', () => ({
   childPinLogin: jest.fn(),
+  createOwnMistake: jest.fn(),
   listOwnMistakes: jest.fn(),
   reviewOwnMistake: jest.fn()
 }));
@@ -101,6 +102,62 @@ describe('child mistake review', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('复习状态无效');
     expect(screen.getByRole('heading', { name: '分数加减' })).toBeInTheDocument();
     expect(explanation).toHaveValue('还要再练一次');
+  });
+
+  test('TC-T10-MISTAKE-004 inserts the created mistake without a dependent list reload', async () => {
+    listOwnMistakes.mockResolvedValueOnce({ items: [], total: 0 });
+    createOwnMistake.mockResolvedValueOnce({
+      mistake: mistake({
+        mistakeId: 'mistake-new',
+        subject: '科学',
+        knowledgePointName: '',
+        reason: 'concept',
+        childExplanation: '没有理解浮力方向'
+      })
+    });
+    openMistakes();
+    expect(await screen.findByText('暂无待复习错题。')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '记录新错题' }));
+    fireEvent.change(screen.getByLabelText('科目'), { target: { value: ' 科学 ' } });
+    fireEvent.change(screen.getByLabelText('错因'), { target: { value: 'concept' } });
+    fireEvent.change(screen.getByLabelText('错题说明（选填）'), { target: { value: ' 没有理解浮力方向 ' } });
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+    await waitFor(() => expect(createOwnMistake).toHaveBeenCalledWith({
+      subject: '科学',
+      reason: 'concept',
+      childExplanation: '没有理解浮力方向'
+    }));
+    expect(await screen.findByRole('status')).toHaveTextContent('错题已记录。');
+    expect(screen.getByRole('heading', { name: '科学' })).toBeInTheDocument();
+    expect(screen.getByLabelText('我的解释（科学）')).toHaveValue('没有理解浮力方向');
+    expect(screen.queryByLabelText('科目')).not.toBeInTheDocument();
+    expect(listOwnMistakes).toHaveBeenCalledTimes(1);
+  });
+
+  test('TC-T10-MISTAKE-005 clears stale success and preserves create values after failure', async () => {
+    reviewOwnMistake.mockResolvedValueOnce({
+      mistake: mistake({ reviewed: true, childExplanation: '先通分' })
+    });
+    createOwnMistake.mockRejectedValueOnce({
+      response: { status: 400, data: { error: { message: '错题内容无效' } } }
+    });
+    openMistakes();
+    fireEvent.click(await screen.findByRole('button', { name: '我还不会 分数加减' }));
+    expect(await screen.findByText('已记录，之后继续复习。')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '记录新错题' }));
+    fireEvent.change(screen.getByLabelText('科目'), { target: { value: '数学' } });
+    fireEvent.change(screen.getByLabelText('错因'), { target: { value: 'careless' } });
+    fireEvent.change(screen.getByLabelText('错题说明（选填）'), { target: { value: '抄错了符号' } });
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('错题内容无效');
+    expect(screen.queryByText('已记录，之后继续复习。')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('科目')).toHaveValue('数学');
+    expect(screen.getByLabelText('错因')).toHaveValue('careless');
+    expect(screen.getByLabelText('错题说明（选填）')).toHaveValue('抄错了符号');
   });
 
   test('renders stable list failures without an infinite loading state', async () => {

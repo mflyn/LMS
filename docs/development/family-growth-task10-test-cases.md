@@ -28,6 +28,7 @@
 | `TC-T10-API-004` | Review a mistake with approved and unsupported fields. | Only child explanation, reviewed, and mastered reach the PATCH body. | `childApi.test.js` |
 | `TC-T10-API-005` | Abort a protected list request. | Abort signal is forwarded and does not expire the child session. | `childApi.test.js`, `useChildDataResource.test.js` |
 | `TC-T10-API-006` | Public PIN login returns `401`. | No child-expiry event is emitted; login error remains local to the form. | `childApi.test.js`, `ChildLogin.test.js` |
+| `TC-T10-API-007` | Create an own mistake with approved and identity/parent-owned fields. | POST sends only subject, reason, and optional child explanation with the child bearer token; family/child/parent fields are stripped. | `childApi.test.js` |
 
 ## Login and Route Isolation
 
@@ -56,6 +57,8 @@
 | `TC-T10-MISTAKE-001` | Mark mistake `我还不会` with explanation. | PATCH sends reviewed true/mastered false and keeps server-returned row active. | `ChildMistakes.test.js` |
 | `TC-T10-MISTAKE-002` | Mark mistake `我已经会了`. | PATCH sends reviewed/mastered true and removes mastered row from active list. | `ChildMistakes.test.js` |
 | `TC-T10-MISTAKE-003` | Mistake update fails. | Explanation remains editable; retry does not send parent-only fields. | `ChildMistakes.test.js` |
+| `TC-T10-MISTAKE-004` | Create an own mistake with subject, reason, and optional explanation. | The server-returned record is inserted once, success is announced, the form resets, and no dependent list reload is required. | `ChildMistakes.test.js` |
+| `TC-T10-MISTAKE-005` | Mistake creation fails after a previous successful action. | Previous success is cleared, the stable create error is announced, and all create-form values remain editable for retry. | `ChildMistakes.test.js` |
 | `TC-T10-ACHIEVE-001` | Load rewards, ledger, balance, and confirmed tasks. | All own achievement sections render; reward actions are read-only. | `ChildAchievementsProfile.test.js` |
 | `TC-T10-ACHIEVE-002` | Rewards fail while confirmed tasks load. | Confirmed tasks remain visible with a named rewards error. | `ChildAchievementsProfile.test.js` |
 | `TC-T10-PROFILE-001` | Load own complete or sparse profile. | Available five-development preferences render; missing optional groups use empty copy. | `ChildAchievementsProfile.test.js` |
@@ -79,7 +82,7 @@
 | `FR-CHILD-004` | `LOGIN-001` to `004`, `API-006` |
 | `FR-CHILD-005` | `SESSION-004`, `ROUTE-001` |
 | `FR-TASK-003` / `FR-TASK-004` | `TODAY-001` to `003`, `TASK-001` to `003` |
-| `FR-MISTAKE-001` | `MISTAKE-001` to `003` |
+| `FR-MISTAKE-001` | `API-007`, `MISTAKE-001` to `005` |
 | `FR-REWARD-001` / `FR-REWARD-002` | `ACHIEVE-001` to `002` |
 | `FR-NOTIFY-001` | `TODAY-002` to `003` |
-| `NFR-SEC-001` | `SESSION-001` to `004`, `API-001` to `006`, `ROUTE-001` to `005` |
+| `NFR-SEC-001` | `SESSION-001` to `004`, `API-001` to `007`, `ROUTE-001` to `005` |

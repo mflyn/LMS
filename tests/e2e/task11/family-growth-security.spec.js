@@ -132,5 +132,20 @@ test('parent children page and child shell fit a 360px viewport', async ({ page,
     };
   });
   expect(childLayout.contentPaddingBottom).toBeGreaterThanOrEqual(childLayout.navigationHeight);
+
+  await childPage.getByRole('link', { name: '错题' }).click();
+  await childPage.getByRole('button', { name: '记录新错题' }).click();
+  const mistakeFormLayout = await childPage.evaluate(() => {
+    const controls = Array.from(document.querySelectorAll(
+      '.child-mistake-create-form input, .child-mistake-create-form select, .child-mistake-create-form textarea, .child-mistake-create-form button'
+    ));
+    return {
+      controlHeights: controls.map((control) => control.getBoundingClientRect().height),
+      noHorizontalOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth
+    };
+  });
+  expect(mistakeFormLayout.controlHeights.length).toBeGreaterThanOrEqual(4);
+  expect(mistakeFormLayout.controlHeights.every((height) => height >= 44)).toBe(true);
+  expect(mistakeFormLayout.noHorizontalOverflow).toBe(true);
   await childContext.close();
 });

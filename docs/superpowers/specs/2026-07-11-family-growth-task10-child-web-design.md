@@ -2,6 +2,7 @@
 
 **Document status:** APPROVED / IMPLEMENTATION BASELINE
 **Date:** 2026-07-11
+**Approved addendum:** 2026-07-15 child mistake quick capture
 **Scope:** Task 10 child PIN entry and child-only Web workflows
 **Requirements:** `FR-UI-002`, `FR-CHILD-002`, `FR-CHILD-004`, `FR-CHILD-005`, `FR-TASK-003`, `FR-TASK-004`, `FR-MISTAKE-001`, `FR-REWARD-001`, `FR-REWARD-002`, `FR-NOTIFY-001`, `NFR-SEC-001`
 **Predecessor:** Task 9 parent workflows merged at `01d9810e3883222dadff8acdff0e97dff72d6108`
@@ -46,6 +47,7 @@ Approved methods are:
 | `listOwnTasks` | `GET /api/growth-tasks` | `scope`, `status`, `dimension`, pagination |
 | `getOwnTask` | `GET /api/growth-tasks/:taskId` | `taskId` |
 | `completeOwnTask` | `PATCH /api/growth-tasks/:taskId/complete` | `actualMinutes`, `actualAmount`, `difficulty`, `needsHelp`, `childNote` |
+| `createOwnMistake` | `POST /api/mistakes` | `subject`, `reason`, optional `childExplanation` |
 | `listOwnMistakes` | `GET /api/mistakes` | approved filters and pagination |
 | `reviewOwnMistake` | `PATCH /api/mistakes/:mistakeId` | `childExplanation`, `reviewed`, `mastered` |
 | `listOwnRewards` | `GET /api/rewards` | status and pagination only |
@@ -93,9 +95,11 @@ Today loads `scope=today` tasks and own reminders in parallel. It renders all fi
 
 The task page loads the selected task using its opaque task ID. It shows plan details and accepts actual minutes, actual amount, difficulty (`easy|normal|hard`), needs-help, and one-sentence child reflection. Empty numeric fields are omitted, zero remains valid, and unsupported fields are never sent. Successful completion replaces the task with the server response and shows a return action. `409` reloads the task and explains that its state changed.
 
-### 3.5 Mistake Review
+### 3.5 Mistake Capture and Review
 
-The mistake page lists the child's non-mastered academic mistakes. Each row accepts an optional child explanation and two explicit commands:
+The mistake page lets a child quickly capture an own academic mistake with required subject and reason plus an optional child explanation. The client derives ownership from the validated child session and never submits caller-controlled family or child IDs. A successful create inserts the server-returned mistake into the active list and announces success without depending on a second list request. A failed create preserves every entered value and replaces any stale success message with the stable API error. Private-media capture and knowledge-point classification remain outside this quick-capture increment; the parent workflow can enrich those fields later.
+
+The page also lists the child's non-mastered academic mistakes. Each row accepts an optional child explanation and two explicit commands:
 
 - `我还不会`: `{ reviewed: true, mastered: false, childExplanation? }`
 - `我已经会了`: `{ reviewed: true, mastered: true, childExplanation? }`
@@ -122,7 +126,7 @@ The profile page loads only `/api/children/:sessionChildId` and displays name, g
 
 ## 5. Accessibility and Responsive Behavior
 
-All forms have visible labels and named controls. Status changes use text and live regions, not color alone. Keyboard users can log in, navigate, open a task, submit completion, review mistakes, and log out. Focus enters the routed page heading after navigation where practical. Controls maintain at least 44px touch height on child pages. At 360px there is no horizontal page overflow, fixed navigation does not cover content, and the longest Chinese labels wrap without clipping.
+All forms have visible labels and named controls. Status changes use text and live regions, not color alone. Keyboard users can log in, navigate, open a task, submit completion, create and review mistakes, and log out. Focus enters the routed page heading after navigation where practical. Controls maintain at least 44px touch height on child pages. At 360px there is no horizontal page overflow, fixed navigation does not cover content, and the longest Chinese labels wrap without clipping.
 
 ## 6. Test Strategy
 
@@ -148,7 +152,7 @@ Task 10 is complete only when:
 
 1. Every route in section 2.4 is implemented and keyboard reachable.
 2. Child pages use only `childApi.js` and child session credentials.
-3. Today, task completion, mistake review, achievements, profile, token expiry, and logout have direct automated tests.
+3. Today, task completion, mistake capture/review, achievements, profile, token expiry, and logout have direct automated tests.
 4. Route tests prove parent/child credential isolation and refresh behavior.
 5. Desktop and 360px browser flows pass with no relevant console errors, overlap, or horizontal overflow.
 6. `npm run test:ci`, `npm run build`, `npm run test:family-regression`, and `git diff --check` exit zero.

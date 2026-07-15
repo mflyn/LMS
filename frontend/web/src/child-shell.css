@@ -196,6 +196,8 @@ a.child-task-row:hover { border-color: #8fb8aa; background: #f8fcfa; }
 .child-record-heading > div { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: var(--child-muted); }
 .child-record-heading > span { color: var(--child-muted); font-size: 14px; }
 .child-inline-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.child-mistake-create-actions { margin-bottom: 16px; }
+.child-mistake-create-form { max-width: 680px; margin-bottom: 18px; }
 
 .child-star-balance {
   width: fit-content;

@@ -21,7 +21,8 @@
   Parent and school actions are absent and parent routes do not accept child sessions.
 - Today supports all five development dimensions and independent stable/retryable
   source errors. Task completion records approved child feedback and handles stale
-  state conflicts. Mistake review supports not-mastered and mastered outcomes.
+  state conflicts. Mistakes support child-owned quick capture plus not-mastered and
+  mastered review outcomes.
 - Achievements and rewards are read-only for the child. Profile renders the approved
   development preferences and logout clears only the child session.
 - Desktop navigation and a four-item mobile bottom bar are responsive from 360px;
@@ -60,7 +61,7 @@ then passed without retrying the same commit.
   authenticate a parent route.
 - Child logout and expiry remove only child credentials.
 - Child list and mutation APIs expose no sibling-ID input and send only approved
-  completion or mistake-review fields.
+  completion or mistake-create/review fields.
 - Stable `4xx` responses do not enter retry loops; protected `401` responses expire
   the child session while public PIN-login failures remain local to the form.
 
@@ -82,3 +83,17 @@ The 2026-07-14 clean-main `npm run release:family` run passed 70 backend suites 
 tests, 4 Task 11 integration suites / 6 tests, 25 frontend suites / 156 tests, production
 build, 4 Chromium tests, Compose build/health, and the media-backed gateway smoke. See
 the [v1.6 release gate](./family-growth-v1.6-release-gate.md) for current totals.
+
+## 2026-07-15 Child Mistake Quick-Capture Addendum
+
+The approved child Web baseline now includes a quick-capture form for an own academic
+mistake. Subject and reason are required; child explanation is optional. Ownership is
+derived from the child session, unsupported identity/parent fields are stripped, and
+the server-returned record is inserted into the list without a dependent reload.
+Stable create failures clear stale success text and preserve every entered value.
+
+Red-to-green evidence covers `TC-T10-API-007` and `TC-T10-MISTAKE-004`-`005`. The
+current frontend run passes 25 suites / 159 tests. The Task 11 Chromium flow passes
+4/4 tests with a real child create through the gateway, a two-mistake weekly aggregate,
+and 360px assertions for 44px controls, bottom-navigation clearance, and no horizontal
+overflow. The unified release gate remains the final merge requirement.

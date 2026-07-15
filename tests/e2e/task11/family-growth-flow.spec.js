@@ -139,6 +139,20 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await childPage.getByRole('button', { name: '提交完成情况' }).click();
   await expect(childPage.getByRole('status')).toContainText('等待家长确认');
 
+  await childPage.getByRole('link', { name: '错题' }).click();
+  await childPage.getByRole('button', { name: '记录新错题' }).click();
+  await childPage.getByLabel('科目').fill('科学');
+  await childPage.getByLabel('错因').selectOption('concept');
+  await childPage.getByLabel('错题说明（选填）').fill('没有理解浮力方向');
+  const childMistakeResponsePromise = childPage.waitForResponse((response) => (
+    response.url().endsWith('/api/mistakes') && response.request().method() === 'POST'
+  ));
+  await childPage.getByRole('button', { name: '保存' }).click();
+  expect((await childMistakeResponsePromise).status()).toBe(201);
+  await expect(childPage.getByRole('status')).toContainText('错题已记录');
+  await expect(childPage.getByRole('heading', { name: '科学' })).toBeVisible();
+  await expect(childPage.getByLabel('我的解释（科学）')).toHaveValue('没有理解浮力方向');
+
   await page.reload();
   await page.getByRole('button', { name: '确认 跳绳 500 个' }).click();
   const dialog = page.getByRole('dialog', { name: '家长确认' });
@@ -191,7 +205,7 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await page.getByRole('link', { name: '周报' }).click();
   await expect(page.getByText('记录天数').locator('..')).toContainText('1');
   await expect(page.getByText('成长投入').locator('..')).toContainText('18 分钟');
-  await expect(page.getByText('新增错题').locator('..')).toContainText('1');
+  await expect(page.getByText('新增错题').locator('..')).toContainText('2');
 
   await page.getByRole('link', { name: '提醒' }).click();
   await expect(page.getByRole('heading', { name: '提醒设置' })).toBeVisible();
