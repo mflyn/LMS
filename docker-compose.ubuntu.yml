@@ -184,7 +184,7 @@ services:
         until mongosh --host mongo:27017 --quiet --eval "db.adminCommand('ping').ok"; do sleep 2; done;
         mongosh --host mongo:27017 --quiet --eval "try { rs.status() } catch (error) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }";
         until mongosh --host mongo:27017 --quiet --eval "quit(db.adminCommand({hello:1}).isWritablePrimary ? 0 : 2)"; do sleep 2; done;
-        mongosh --host mongo:27017 learning-tracker --quiet --eval 'db.roles.updateOne({name:"parent"},{$setOnInsert:{description:"Family parent"}},{upsert:true});db.roles.updateOne({name:"student"},{$setOnInsert:{description:"Family child"}},{upsert:true})'
+        mongosh --host mongo:27017 learning-tracker --quiet --eval 'db.roles.updateOne({name:"parent"},{$$setOnInsert:{description:"Family parent"}},{upsert:true});db.roles.updateOne({name:"student"},{$$setOnInsert:{description:"Family child"}},{upsert:true})'
     networks: [app-network]
     restart: "no"
 
