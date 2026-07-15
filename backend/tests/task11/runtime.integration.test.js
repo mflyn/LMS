@@ -1,6 +1,5 @@
 const fs = require('fs/promises');
 const axios = require('axios');
-const mongoose = require('mongoose');
 const { createFamilyRuntime } = require('./serviceRuntime');
 
 describe('Task 11 real-service runtime', () => {
@@ -33,7 +32,7 @@ describe('Task 11 real-service runtime', () => {
     await runtime.stop();
 
     expect(servers.every((server) => !server.listening)).toBe(true);
-    expect(mongoose.connection.readyState).toBe(0);
+    expect(runtime.mongooseInstances.every(({ connection }) => connection.readyState === 0)).toBe(true);
     await expect(fs.access(privateRoot)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
@@ -50,7 +49,7 @@ describe('Task 11 real-service runtime', () => {
       await runtime.stop();
     }
 
-    expect(mongoose.connection.readyState).toBe(0);
+    expect(runtime.mongooseInstances.every(({ connection }) => connection.readyState === 0)).toBe(true);
     await expect(fs.access(privateRoot)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 });

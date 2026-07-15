@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { PDFDocument, StandardFonts } = require('pdf-lib');
 const sharp = require('sharp');
 
 const localDateInShanghai = () => new Intl.DateTimeFormat('en-CA', {
@@ -55,6 +56,31 @@ const setPin = async (page, name, pin) => {
   await expect(input.locator('xpath=ancestor::form').getByRole('status')).toContainText('PIN 已更新');
 };
 
+const createPdf = async (text) => {
+  const document = await PDFDocument.create();
+  const font = await document.embedFont(StandardFonts.Helvetica);
+  const page = document.addPage([360, 240]);
+  page.drawText(text, { x: 24, y: 180, size: 14, font });
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+};
+
+const createPng = () => sharp({
+  create: {
+    width: 8,
+    height: 8,
+    channels: 3,
+    background: { r: 40, g: 120, b: 180 }
+  }
+}).png().toBuffer();
+
+const uploadFile = async (page, input, file) => {
+  const responsePromise = page.waitForResponse((response) => (
+    response.url().endsWith('/api/media') && response.request().method() === 'POST'
+  ));
+  await input.setInputFiles(file);
+  expect((await responsePromise).status()).toBe(201);
+};
+
 const createTask = async (page, task, dueDate) => {
   await page.getByRole('button', { name: '新建任务' }).click();
   const dialog = page.getByRole('dialog', { name: '新建任务' });
@@ -68,6 +94,10 @@ const createTask = async (page, task, dueDate) => {
   if (task.dimension === 'physical') {
     await dialog.getByLabel('目标数量').fill('500');
     await dialog.getByLabel('单位').fill('个');
+  }
+  if (task.attachment) {
+    await uploadFile(page, dialog.getByLabel('任务附件'), task.attachment);
+    await expect(dialog.getByText('已添加 1/100')).toBeVisible();
   }
   const responsePromise = page.waitForResponse((response) => (
     response.url().endsWith('/api/growth-tasks') && response.request().method() === 'POST'
@@ -114,10 +144,17 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await setPin(page, '小红', '1357');
 
   await page.getByRole('link', { name: '任务' }).click();
+  const taskPdf = await createPdf('Physical training plan');
   const tasks = [
     { dimension: 'moral', title: '帮助同学', area: '友善', taskType: 'habit' },
     { dimension: 'academic', title: '完成数学练习', area: '数学', taskType: 'practice' },
-    { dimension: 'physical', title: '跳绳 500 个', area: '体能', taskType: 'exercise' },
+    {
+      dimension: 'physical',
+      title: '跳绳 500 个',
+      area: '体能',
+      taskType: 'exercise',
+      attachment: { name: '训练计划.pdf', mimeType: 'application/pdf', buffer: taskPdf }
+    },
     { dimension: 'artistic', title: '练习钢琴', area: '音乐', taskType: 'practice' },
     { dimension: 'labor', title: '整理房间', area: '家务', taskType: 'chore' }
   ];
@@ -133,6 +170,8 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await childPage.getByRole('button', { name: '进入我的成长空间' }).click();
   await expect(childPage).toHaveURL(/\/child\/today$/);
   await childPage.getByRole('link', { name: /跳绳 500 个/ }).click();
+  await childPage.getByRole('button', { name: '查看任务附件 1' }).click();
+  await expect(childPage.getByRole('link', { name: '保存训练计划.pdf' })).toBeVisible();
   await childPage.getByLabel('实际用时（分钟）').fill('18');
   await childPage.getByLabel('实际完成数量').fill('500');
   await childPage.getByLabel('我的一句话').fill('我按计划完成了。');
@@ -144,6 +183,16 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await childPage.getByLabel('科目').fill('科学');
   await childPage.getByLabel('错因').selectOption('concept');
   await childPage.getByLabel('错题说明（选填）').fill('没有理解浮力方向');
+  await uploadFile(childPage, childPage.getByLabel('题目附件'), {
+    name: '浮力题目.pdf',
+    mimeType: 'application/pdf',
+    buffer: await createPdf('Buoyancy question')
+  });
+  await uploadFile(childPage, childPage.getByLabel('答案附件'), {
+    name: '我的答案.png',
+    mimeType: 'image/png',
+    buffer: await createPng()
+  });
   const childMistakeResponsePromise = childPage.waitForResponse((response) => (
     response.url().endsWith('/api/mistakes') && response.request().method() === 'POST'
   ));
@@ -152,6 +201,7 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await expect(childPage.getByRole('status')).toContainText('错题已记录');
   await expect(childPage.getByRole('heading', { name: '科学' })).toBeVisible();
   await expect(childPage.getByLabel('我的解释（科学）')).toHaveValue('没有理解浮力方向');
+  await expect(childPage.getByText('已添加 1/10')).toHaveCount(2);
 
   await page.reload();
   await page.getByRole('button', { name: '确认 跳绳 500 个' }).click();
@@ -180,27 +230,36 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await mistakeDialog.getByLabel('错误原因').selectOption('calculation');
   await mistakeDialog.getByLabel('正确答案').fill('84');
   await mistakeDialog.getByLabel('家长备注').fill('复习进位步骤');
-  const questionImage = await sharp({
-    create: {
-      width: 8,
-      height: 8,
-      channels: 3,
-      background: { r: 40, g: 120, b: 180 }
+  const uploadStatuses = [];
+  const recordUpload = (response) => {
+    if (response.url().endsWith('/api/media') && response.request().method() === 'POST') {
+      uploadStatuses.push(response.status());
     }
-  }).png().toBuffer();
-  const uploadResponsePromise = page.waitForResponse((response) => (
-    response.url().endsWith('/api/media') && response.request().method() === 'POST'
-  ));
-  await mistakeDialog.getByLabel('题目图片').setInputFiles({
-    name: 'question.png',
-    mimeType: 'image/png',
-    buffer: questionImage
-  });
-  expect((await uploadResponsePromise).status()).toBe(201);
-  await mistakeDialog.getByRole('button', { name: '查看题目图片' }).click();
-  await expect(mistakeDialog.getByRole('img', { name: '题目图片预览' })).toBeVisible();
+  };
+  page.on('response', recordUpload);
+  await mistakeDialog.getByLabel('题目附件').setInputFiles([
+    { name: 'question.png', mimeType: 'image/png', buffer: await createPng() },
+    { name: 'question.pdf', mimeType: 'application/pdf', buffer: await createPdf('Math question') }
+  ]);
+  await expect(mistakeDialog.getByText('已添加 2/10')).toBeVisible();
+  page.off('response', recordUpload);
+  expect(uploadStatuses).toEqual([201, 201]);
+  await mistakeDialog.getByRole('button', { name: '预览题目附件 1' }).click();
+  await expect(mistakeDialog.getByRole('img', { name: 'question.png 预览' })).toBeVisible();
+  await mistakeDialog.getByRole('button', { name: '下载题目附件 2' }).click();
+  await expect(mistakeDialog.getByRole('link', { name: '保存question.pdf' })).toBeVisible();
   await mistakeDialog.getByRole('button', { name: '保存错题' }).click();
   await expect(page.getByRole('status')).toContainText('错题已记录');
+  await expect(page.getByText('题目附件 2 · 答案附件 0')).toBeVisible();
+
+  await page.getByRole('button', { name: '复盘 两位数乘法' }).click();
+  const reopenedMistake = page.getByRole('dialog', { name: '错题复盘' });
+  await expect(reopenedMistake.getByText('已添加 2/10')).toBeVisible();
+  await reopenedMistake.getByRole('button', { name: '查看题目附件 2' }).click();
+  await expect(reopenedMistake.getByRole('link', { name: '保存question.pdf' })).toBeVisible();
+  await reopenedMistake.getByRole('button', { name: '移除题目附件 2' }).click();
+  await reopenedMistake.getByRole('button', { name: '保存复盘' }).click();
+  await expect(page.getByText('题目附件 1 · 答案附件 0')).toBeVisible();
 
   await page.getByRole('link', { name: '周报' }).click();
   await expect(page.getByText('记录天数').locator('..')).toContainText('1');

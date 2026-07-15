@@ -198,6 +198,27 @@ const hiddenResponseFields = [
 ];
 
 describe('TC-T6-MEDIA-017K GrowthTask route lifecycle media recovery', () => {
+  test('complete preserves stable attachment bindings while mutating task status', async () => {
+    const { parent, child } = await createFamilyFixture('完成已绑定任务');
+    const task = await createBoundTask(parent, child);
+    const attachmentMediaService = {
+      resume: jest.fn((taskId) => GrowthTask.findById(taskId).select('+attachmentMediaBindings'))
+    };
+    const endpoint = `/api/growth-tasks/${task._id}/complete`;
+
+    const response = await request(routeApp(attachmentMediaService))
+      .patch(endpoint)
+      .set(userHeaders(child, 'PATCH', endpoint))
+      .send({ actualMinutes: 12, difficulty: 'normal' });
+
+    expect(response.status).toBe(200);
+    expect(attachmentMediaService.resume).toHaveBeenCalledWith(task._id.toString());
+    const stored = await GrowthTask.findById(task._id).select('+attachmentMediaBindings');
+    expect(stored.status).toBe('completed');
+    expect(stored.attachmentMediaIds.map(String)).toEqual([MEDIA_A]);
+    expect(stored.attachmentMediaBindings.map(({ mediaId }) => String(mediaId))).toEqual([MEDIA_A]);
+  });
+
   test('complete resumes pending media before mutating task status', async () => {
     const { parent, child } = await createFamilyFixture('完成恢复');
     const task = await GrowthTask.create(taskInput(parent, child));

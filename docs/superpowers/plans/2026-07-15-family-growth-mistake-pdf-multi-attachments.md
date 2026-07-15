@@ -365,7 +365,7 @@ Cover `TC-MPA-DEPLOY-001`-`004`: default absence, explicit profile, secure overl
 
 Use rendered Compose/Kustomize assertions; do not start ClamAV on the local 8 GiB Gate.
 
-- [ ] **Step 3: Extend real-service and browser E2E red-first**
+- [x] **Step 3: Extend real-service and browser E2E red-first**
 
 Cover `TC-MPA-DEPLOY-005`-`006` parent/child upload, reload, PDF download, reorder, removal, sibling/cross-family denial, desktop, and 360px. Generate PDFs at runtime and assert no console error/overflow.
 
