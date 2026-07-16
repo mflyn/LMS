@@ -25,6 +25,8 @@ import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
 import RewardsPage from './pages/family/RewardsPage';
 import ChildrenPage from './pages/family/ChildrenPage';
+import FamilyMembersPage from './pages/family/FamilyMembersPage';
+import ParentInvitationPage from './pages/family/ParentInvitationPage';
 import ChildPinLoginPage from './pages/child/ChildPinLoginPage';
 import ChildTodayPage from './pages/child/ChildTodayPage';
 import ChildTaskPage from './pages/child/ChildTaskPage';
@@ -43,6 +45,7 @@ const AppRoutes = () => (
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route element={<ParentRoute />}>
+      <Route path="/family/invitations" element={<ParentInvitationPage />} />
       <Route element={<ParentFamilyBoundary />}>
         <Route path="/family/setup" element={<FamilySetupPage />} />
         <Route path="/app" element={<FamilyShell />}>
@@ -56,6 +59,7 @@ const AppRoutes = () => (
           <Route path="reminders" element={<RemindersPage />} />
           <Route path="rewards" element={<RewardsPage />} />
           <Route path="children" element={<ChildrenPage />} />
+          <Route path="family-members" element={<FamilyMembersPage />} />
         </Route>
       </Route>
     </Route>
