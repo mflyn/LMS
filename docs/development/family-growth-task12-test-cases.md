@@ -1,6 +1,7 @@
 # Task 12 Second Parent Co-Management Test Design and Cases
 
-**Document status:** READY_FOR_REVIEW
+**Document status:** APPROVED / IMPLEMENTED
+**Approved by:** linmingfeng
 **Date:** 2026-07-16
 **Baseline candidate:** FGT-MVP-1.7
 **Design:** `docs/superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md`
@@ -97,11 +98,11 @@
 Entry requires approved product, overall, detailed, API, and test designs; no open design
 BLOCKER or MAJOR finding; and a passing v1.6 baseline.
 
-Exit requires every `TC-T12-*` case to have executable evidence, all Task 12 and regression
-commands to pass without retries, and the repair sequence to complete dry-run, conflict resolution,
-apply, then a zero-drift `--check` before Task 12 is enabled. Traceability must move all three
-requirements to `COVERED`, and the v1.7 candidate manifest must identify the verified implementation
-commit and remote CI run.
+Exit requires the mapped automated evidence in the [Task 12 Gate](./family-growth-task12-gate.md),
+all Task 12 and regression commands to pass without retries, and traceability to move all three
+requirements to `COVERED`. Enabling Task 12 in a target environment additionally requires repair
+dry-run, conflict resolution, apply, then a zero-drift `--check` against that environment's database;
+an in-memory test database is not a substitute for this deployment precondition.
 
 ## 8. Requirement Traceability
 

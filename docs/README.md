@@ -14,8 +14,8 @@
 | API | [家庭成长 API 契约](./api/family-learning-tracker-api.md) | 请求、响应、错误码、权限和幂等规则 |
 | 详细设计 | [设计资产索引](./development/family-growth-design-asset-index.md) | Requirement 与 Task 1-12 设计、代码和测试证据 |
 | 需求追踪 | [需求追踪矩阵](./development/family-growth-requirement-traceability.md) | 38 项需求的设计、实现和验证状态 |
-| 当前基线 | [FGT-MVP-1.6 基线候选](./development/family-growth-baseline-v1.6-manifest.md) | 当前实现证据、关闭结论和遗留边界 |
-| 活跃候选 | [Task 12 第二家长共管设计](./superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md) | FGT-MVP-1.7 设计候选；尚未声明实现完成 |
+| 历史基线 | [FGT-MVP-1.6 基线候选](./development/family-growth-baseline-v1.6-manifest.md) | Task 12 前的实现证据、关闭结论和遗留边界 |
+| 当前候选 | [Task 12 第二家长共管 Gate](./development/family-growth-task12-gate.md) | FGT-MVP-1.7 实现、测试、发布与部署前置条件 |
 | 测试与发布 | [开发与测试入口](./development/README.md) / [统一发布 Gate](./development/family-growth-v1.6-release-gate.md) / [PDF 与多附件 Gate](./development/family-growth-mistake-pdf-multi-attachments-gate.md) | 本地命令、测试层次和发布判定 |
 | 部署 | [部署入口](./deployment/README.md) | Compose、Ubuntu、Kubernetes、Secret 和回滚 |
 | 使用 | [用户指南](./user-guide/README.md) | 家长和孩子的操作流程 |
@@ -42,7 +42,7 @@ docs/
 2. 总体架构和 Task 详细设计定义实现约束。
 3. API 契约定义前后端可观察行为。
 4. 需求追踪矩阵连接需求、设计、代码和测试。
-5. v1.6 manifest 与统一发布 Gate 记录当前已实现基线；Task 12 文档记录 v1.7 设计候选。
+5. v1.6 manifest 记录历史基线；统一发布 Gate 和 Task 12 Gate 记录 v1.7 候选证据。
 
 发生冲突时，先停止修改并通过设计评审确定应更新的权威来源，不能只调整某一份
 说明来掩盖代码或契约差异。

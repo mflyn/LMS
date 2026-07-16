@@ -1,6 +1,6 @@
 # 家庭成长跟踪跨服务时序图
 
-**Document status:** FGT-MVP-1.7 DESIGN CANDIDATE; TASK 1~11 IMPLEMENTED
+**Document status:** FGT-MVP-1.7 IMPLEMENTED; TASK 1~12
 **Scope:** Task 1~12 家庭成长功能的公开请求、内部命令、失败路径和一致性边界
 **Updated:** 2026-07-13
 

@@ -18,8 +18,16 @@ const createUser = (role, name) => {
 const createTask5Fixtures = async () => {
   const parentA = await createUser('parent', 'Parent A');
   const parentB = await createUser('parent', 'Parent B');
-  const familyA = await Family.create({ familyName: 'Family A', ownerParentId: parentA._id });
-  const familyB = await Family.create({ familyName: 'Family B', ownerParentId: parentB._id });
+  const familyA = await Family.create({
+    familyName: 'Family A',
+    ownerParentId: parentA._id,
+    memberParentIds: [parentA._id]
+  });
+  const familyB = await Family.create({
+    familyName: 'Family B',
+    ownerParentId: parentB._id,
+    memberParentIds: [parentB._id]
+  });
   const childA1 = await createUser('student', 'Child A1');
   const childA2 = await createUser('student', 'Child A2');
   const childB1 = await createUser('student', 'Child B1');

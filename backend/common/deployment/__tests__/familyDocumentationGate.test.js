@@ -28,12 +28,15 @@ describe('family baseline documentation gate', () => {
     expect(releaseGate).toContain('npm run docs:family:check');
   });
 
-  test('the review candidate records current main evidence without self-approval', () => {
+  test('the historical v1.6 manifest and current v1.7 traceability stay distinct', () => {
     const manifest = read(
       'docs/development/family-growth-baseline-v1.6-manifest.md'
     );
     const traceability = read(
       'docs/development/family-growth-requirement-traceability.md'
+    );
+    const task12Gate = read(
+      'docs/development/family-growth-task12-gate.md'
     );
     const product = read('docs/product/family-learning-tracker.md');
     const architecture = read(
@@ -53,13 +56,14 @@ describe('family baseline documentation gate', () => {
     expect(manifest).toContain('25 suites / 156 tests');
     expect(manifest).not.toContain('**status:** APPROVED');
 
-    expect(traceability).toContain('**Document status:** READY_FOR_REVIEW');
-    expect(traceability).toContain('**Implementation conformance:** COVERED (35/35)');
-    expect(traceability).toContain('**Baseline candidate:** FGT-MVP-1.6');
-    expect(traceability).toContain('70 backend suites / 756 tests');
+    expect(traceability).toContain('**Document status:** FGT-MVP-1.7 IMPLEMENTED / RELEASE GATE');
+    expect(traceability).toContain('**Implementation conformance:** COVERED (38/38)');
+    expect(traceability).toContain('**Baseline candidate:** FGT-MVP-1.7');
+    expect(task12Gate).toContain('npm run test:task12:integration');
+    expect(task12Gate).toContain('npm run repair:family-relationships:check');
 
     for (const document of [product, architecture, api]) {
-      expect(document).toContain('**Baseline candidate:** FGT-MVP-1.6');
+      expect(document).toContain('**Baseline candidate:** FGT-MVP-1.7');
     }
 
     expect(userGuide).toContain('知识与能力点');

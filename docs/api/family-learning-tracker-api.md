@@ -1313,7 +1313,7 @@ Idempotency-Key: redeem-reward-001-20260618
 | Task 1~4 设计归档 | [Task 1~4 设计归档说明](../development/family-growth-task1-4-design-archive.md) | 早期任务的 PRD、架构、API、ADR 和 Task 4.5 评审映射 |
 | 需求追踪 | [需求追踪矩阵](../development/family-growth-requirement-traceability.md) | Requirement 到代码、测试和发现关闭证据 |
 | 当前已实现基线 | [FGT-MVP-1.6 基线清单](../development/family-growth-baseline-v1.6-manifest.md) | Task 1~11 范围、质量证据、风险和审批状态 |
-| 活跃设计候选 | [Task 12 第二家长共管设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md) | FGT-MVP-1.7 新增契约；实现 Gate 尚未形成 |
+| 当前实现候选 | [Task 12 第二家长共管设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md) | FGT-MVP-1.7 新增契约；实现证据见 Task 12 Gate |
 
 ### 12.2 Task 5~12 详细设计与验收
 
@@ -1326,5 +1326,5 @@ Idempotency-Key: redeem-reward-001-20260618
 | Task 9 | [Parent MVP Pages Design](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md) | [Task 9 测试用例](../development/family-growth-task9-test-cases.md) | [Task 9 Gate](../development/family-growth-task9-gate.md) |
 | Task 10 | [Child Web Entry Design](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md) | [Task 10 测试用例](../development/family-growth-task10-test-cases.md) | [Task 10 Gate](../development/family-growth-task10-gate.md) |
 | Task 11 | [Family End-to-End Design](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) | [Task 11 测试用例](../development/family-growth-task11-test-cases.md) | [Task 11 Gate](../development/family-growth-task11-gate.md) |
-| Task 12 | [第二家长共管详细设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md) | [Task 12 测试用例](../development/family-growth-task12-test-cases.md) | [Task 12 设计评审](../development/family-growth-task12-design-review.md) |
+| Task 12 | [第二家长共管详细设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md) | [Task 12 测试用例](../development/family-growth-task12-test-cases.md) | [Task 12 Gate](../development/family-growth-task12-gate.md) |
 | 错题 PDF 与多附件增量 | [详细设计](../superpowers/specs/2026-07-15-family-growth-mistake-pdf-multi-attachments-design.md) | [测试设计与用例](../development/family-growth-mistake-pdf-multi-attachments-test-cases.md) | [增量 Gate](../development/family-growth-mistake-pdf-multi-attachments-gate.md) |

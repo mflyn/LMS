@@ -43,7 +43,7 @@
 | ADR-0008 | PASS | Opaque invitation, canonical Family membership, live authorization, transaction, projection, and preflight decisions recorded. |
 | Detailed design | PASS | Invitation lifecycle, governance commands, UI, stable errors, and release criteria defined. |
 | API contract | PASS | Eight public operations and safe parent projections defined. |
-| Test design | READY_FOR_REVIEW | Numbered model, route, concurrency, cross-service, frontend, browser, repair, and rollback cases prepared. |
+| Test design | PASS | Approved numbered model, route, concurrency, cross-service, frontend, browser, repair, and rollback cases are implemented and mapped in the Task 12 Gate. |
 
 ## 4. Decision
 

@@ -21,6 +21,7 @@ const authoritativeDocuments = [
   'docs/superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md',
   'docs/development/family-growth-task12-test-cases.md',
   'docs/development/family-growth-task12-design-review.md',
+  'docs/development/family-growth-task12-gate.md',
   'docs/deployment/README.md',
   'docs/deployment/local-ubuntu-deployment.md',
   'docs/user-guide/README.md',
@@ -248,6 +249,7 @@ function validate() {
     'npm run test:family-regression',
     'npm run test:ci --prefix frontend/web -- --runInBand',
     'npm run test:task11',
+    'npm run test:task12',
     'npm run release:family'
   ]) {
     assert(
@@ -290,24 +292,21 @@ function validate() {
     .split('\n')
     .filter(line => /^\|\s*`(?:FR|NFR)-[A-Z]+-\d{3}`\s*\|/.test(line));
   const coveredRows = traceabilityRows.filter(line => line.includes('| COVERED |'));
-  const approvedDesignRows = traceabilityRows.filter(
-    line => line.includes('| DESIGN_APPROVED |')
-  );
-  assert(coveredRows.length === 35, `traceability has ${coveredRows.length} COVERED rows, expected 35`, errors);
+  const approvedDesignRows = traceabilityRows.filter(line => line.includes('| DESIGN_APPROVED |'));
+  assert(coveredRows.length === 38, `traceability has ${coveredRows.length} COVERED rows, expected 38`, errors);
   assert(
-    approvedDesignRows.length === 3 &&
-      approvedDesignRows.every(line => /`(?:FR-FAM-004|FR-FAM-005|NFR-DATA-003)`/.test(line)),
-    'only the three Task 12 requirements may be DESIGN_APPROVED',
+    approvedDesignRows.length === 0,
+    'implemented FGT-MVP-1.7 must not retain DESIGN_APPROVED rows',
     errors
   );
   assert(
-    traceability.includes('**Document status:** TASK 12 DESIGN APPROVED / IMPLEMENTATION PENDING'),
-    'traceability must distinguish Task 12 design approval from implementation',
+    traceability.includes('**Document status:** FGT-MVP-1.7 IMPLEMENTED / RELEASE GATE'),
+    'traceability must identify the implemented v1.7 release candidate',
     errors
   );
   assert(
-    traceability.includes('**Implementation conformance:** COVERED (35/38); DESIGN_APPROVED (3/38)'),
-    'traceability must record covered and design-approved counts separately',
+    traceability.includes('**Implementation conformance:** COVERED (38/38)'),
+    'traceability must record all 38 implemented requirements',
     errors
   );
   assert(
@@ -321,6 +320,7 @@ function validate() {
   ) || '';
   const task12Tests = documents.get('docs/development/family-growth-task12-test-cases.md') || '';
   const task12Review = documents.get('docs/development/family-growth-task12-design-review.md') || '';
+  const task12Gate = documents.get('docs/development/family-growth-task12-gate.md') || '';
   const task12Adr = documents.get(
     'docs/architecture/decisions/0008-co-parent-membership-governance.md'
   ) || '';
@@ -370,8 +370,8 @@ function validate() {
     assert(task12Tests.includes(testId), `Task 12 tests are missing ${testId}`, errors);
   }
   assert(
-    task12Tests.includes('**Document status:** READY_FOR_REVIEW'),
-    'Task 12 test design must remain READY_FOR_REVIEW until separately approved',
+    task12Tests.includes('**Document status:** APPROVED / IMPLEMENTED'),
+    'Task 12 test design must record approval and implementation',
     errors
   );
   assert(
@@ -379,6 +379,27 @@ function validate() {
     'Task 12 design review must record approval',
     errors
   );
+  for (const requiredText of [
+    '**Baseline:** FGT-MVP-1.7',
+    'npm run release:family',
+    'npm run test:task12:integration',
+    'npm run test:task12:e2e',
+    'npm run repair:family-relationships:check',
+    'Target-environment activation'
+  ]) {
+    assert(task12Gate.includes(requiredText), `Task 12 Gate is missing ${requiredText}`, errors);
+  }
+  const releaseScript = read('scripts/release-family-gate.sh');
+  for (const requiredCommand of [
+    'npm run test:task12:integration',
+    'npm run test:task12:e2e'
+  ]) {
+    assert(
+      releaseScript.includes(requiredCommand),
+      `unified release Gate is missing ${requiredCommand}`,
+      errors
+    );
+  }
 
   assert(
     manifest.includes('**status:** READY_FOR_REVIEW'),

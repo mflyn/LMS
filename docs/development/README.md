@@ -1,8 +1,8 @@
 # 家庭成长跟踪开发与测试
 
 本目录保存家庭成长 MVP 的详细设计、实施计划、测试用例、评审记录和发布证据。
-当前已实现基线是 FGT-MVP-1.6；Task 12 新增 3 项第二家长共管需求，形成包含
-38 项需求的 FGT-MVP-1.7 设计候选。
+当前实现候选是 FGT-MVP-1.7，包含 38 项需求；Task 12 新增第二家长共管、
+成员治理和家长成员关系原子性。
 
 ## 当前基线
 
@@ -27,11 +27,11 @@
 | Task 9 | [详细设计](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md) / [实施计划](../superpowers/plans/2026-07-10-family-growth-task9-parent-pages.md) | [测试用例](./family-growth-task9-test-cases.md) / [Gate](./family-growth-task9-gate.md) |
 | Task 10 | [详细设计](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md) / [实施计划](../superpowers/plans/2026-07-11-family-growth-task10-child-web.md) | [测试用例](./family-growth-task10-test-cases.md) / [Gate](./family-growth-task10-gate.md) |
 | Task 11 | [详细设计](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) / [实施计划](../superpowers/plans/2026-07-12-family-growth-task11-e2e.md) | [测试用例](./family-growth-task11-test-cases.md) / [Gate](./family-growth-task11-gate.md) |
-| Task 12 | [详细设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md) / [设计评审](./family-growth-task12-design-review.md) | [测试设计与用例](./family-growth-task12-test-cases.md)；实施计划和 Gate 在测试设计批准后建立 |
+| Task 12 | [详细设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md) / [实施计划](../superpowers/plans/2026-07-16-family-growth-task12-co-parent.md) / [设计评审](./family-growth-task12-design-review.md) | [测试设计与用例](./family-growth-task12-test-cases.md) / [Gate](./family-growth-task12-gate.md) |
 | 错题 PDF 与多附件增量 | [详细设计](../superpowers/specs/2026-07-15-family-growth-mistake-pdf-multi-attachments-design.md) | [测试设计与用例](./family-growth-mistake-pdf-multi-attachments-test-cases.md) / [Gate](./family-growth-mistake-pdf-multi-attachments-gate.md) |
 
-旧 Task Gate 只证明对应历史范围。当前已实现发布判定使用 v1.6 统一发布 Gate；
-Task 12 在实现和独立 Gate 关闭前不能声明为 v1.7 已实现能力。
+旧 Task Gate 只证明对应历史范围。FGT-MVP-1.7 发布判定使用已纳入 Task 12 的统一
+发布 Gate；目标环境启用前还必须完成 Task 12 Gate 规定的数据修复检查。
 
 ## 环境要求
 
@@ -87,6 +87,7 @@ Compose 内置密钥只用于本地隔离开发。Ubuntu、Kubernetes、外部 S
 | 家庭后端回归 | `npm run test:family-regression` |
 | 前端回归 | `npm run test:ci --prefix frontend/web -- --runInBand` |
 | Task 11 集成与浏览器 E2E | `npm run test:task11` |
+| Task 12 集成与浏览器 E2E | `npm run test:task12` |
 | 旧学校兼容回归 | `npm run test:legacy-regression` |
 | 完整发布候选 | `npm run release:family` |
 

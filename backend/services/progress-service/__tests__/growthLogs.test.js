@@ -27,8 +27,16 @@ describe('Task 5 growth logs', () => {
     const parentB = await User.create({
       username: `pb${suffix}`, password: 'parent123', email: `pb${suffix}@example.com`, name: 'Parent B', role: 'parent'
     });
-    const familyA = await Family.create({ familyName: 'Family A', ownerParentId: parentA._id });
-    const familyB = await Family.create({ familyName: 'Family B', ownerParentId: parentB._id });
+    const familyA = await Family.create({
+      familyName: 'Family A',
+      ownerParentId: parentA._id,
+      memberParentIds: [parentA._id]
+    });
+    const familyB = await Family.create({
+      familyName: 'Family B',
+      ownerParentId: parentB._id,
+      memberParentIds: [parentB._id]
+    });
     const childA1 = await User.create({
       username: `c1${suffix}`, password: 'child123', email: `c1${suffix}@example.com`, name: 'Child A1', role: 'student', familyId: familyA._id
     });

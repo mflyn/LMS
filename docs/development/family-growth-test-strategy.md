@@ -152,8 +152,8 @@ Historical Task 6 and Task 10 gates remain evidence for their original single-va
 
 ## 13. Task 12 Second Parent Co-Management
 
-The [Task 12 test design](./family-growth-task12-test-cases.md) extends the implemented v1.6
-baseline with invitation, membership governance, and equal daily parent access. It does not reuse
+The approved [Task 12 test design](./family-growth-task12-test-cases.md) extends the v1.6
+baseline with implemented invitation, membership governance, and equal daily parent access. It does not reuse
 single-parent route tests as evidence that a second parent can operate every service.
 
 Task 12 uses four mandatory layers:
@@ -174,10 +174,10 @@ Task 12 uses four mandatory layers:
 Task 12 release evidence cannot use an in-memory standalone MongoDB, mocked transaction helper,
 retry, or only the owner route suite. The focused integration command must pass twice with identical
 totals, followed by family regression, frontend CI/build, Task 11, documentation, generated-artifact,
-and clean-worktree checks. The three Task 12 requirements remain `DESIGN_APPROVED` until all evidence
-is recorded against one candidate commit.
+and clean-worktree checks. The three Task 12 requirements move to `COVERED` only after this evidence
+is recorded in the [Task 12 Gate](./family-growth-task12-gate.md) against one candidate commit.
 
 The release preflight keeps Task 12 disabled while the relationship repair command runs in dry-run
 mode, conflicts are resolved, deterministic changes are applied, and `--check` reports zero pending
-operations and conflicts with exit code `0`. A startup-time full-database assertion is not release
+operations and conflicts with exit code `0` in the target environment. A startup-time full-database assertion is not release
 evidence and must not make user-service availability depend on historical compatibility drift.
