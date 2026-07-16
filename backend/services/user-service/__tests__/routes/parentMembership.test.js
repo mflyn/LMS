@@ -218,28 +218,28 @@ describe('Task 12 parent membership routes', () => {
     await expectInactiveInvitation(app, parent, token);
   });
 
-  test('TC-T12-INV-007 checks inactive invitation before account eligibility', async () => {
-    const nonParent = await User.create({
-      username: unique('ca'),
-      password: 'admin123',
-      email: `${unique('ca')}@example.com`,
-      name: '非家长账号',
-      role: 'admin'
-    });
+  test('TC-T12-INV-007 checks inactive invitation before parent family eligibility', async () => {
+    const ineligibleParent = await createParent();
+    const otherOwner = await createParent();
+    const otherFamily = await createFamily(otherOwner);
+    otherFamily.memberParentIds.addToSet(ineligibleParent._id);
+    await otherFamily.save();
+    ineligibleParent.familyId = otherFamily._id;
+    await ineligibleParent.save();
     const token = crypto.randomBytes(32).toString('base64url');
 
     for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
       const body = path.endsWith('/accept') ? { token, familyRole: 'guardian' } : { token };
       const response = await request(app)
         .post(path)
-        .set(identityHeaders(nonParent, 'POST', path))
+        .set(headers(ineligibleParent, 'POST', path))
         .send(body);
       expect(response.status).toBe(409);
       expect(response.body.error.code).toBe('FAMILY_INVITATION_NOT_ACTIVE');
     }
   });
 
-  test('TC-T12-ACCEPT-002 rejects a non-parent only after resolving a valid invitation', async () => {
+  test('TC-T12-AUTH-002 rejects a non-parent before resolving invitation tokens', async () => {
     const owner = await createParent();
     const family = await createFamily(owner);
     const created = await createInvitation(app, owner, family);
@@ -250,16 +250,38 @@ describe('Task 12 parent membership routes', () => {
       name: '非家长账号',
       role: 'admin'
     });
+    const unknownToken = crypto.randomBytes(32).toString('base64url');
+
+    for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
+      for (const token of [created.body.data.invitation.token, unknownToken]) {
+        const body = path.endsWith('/accept') ? { token, familyRole: 'guardian' } : { token };
+        const response = await request(app)
+          .post(path)
+          .set(identityHeaders(nonParent, 'POST', path))
+          .send(body);
+
+        expect(response.status).toBe(403);
+        expect(response.body.error.code).toBe('FAMILY_GOVERNANCE_DENIED');
+      }
+    }
+    expect((await FamilyParentInvitation.findById(created.body.data.invitation.invitationId)).status).toBe('pending');
+  });
+
+  test('TC-T12-PROJ-003 ignores a stale User.familyId when Family has no membership', async () => {
+    const owner = await createParent();
+    const candidate = await createParent({ familyId: new mongoose.Types.ObjectId() });
+    const family = await createFamily(owner);
+    const created = await createInvitation(app, owner, family);
     const path = '/api/parent-invitations/accept';
 
     const response = await request(app)
       .post(path)
-      .set(identityHeaders(nonParent, 'POST', path))
+      .set(headers(candidate, 'POST', path))
       .send({ token: created.body.data.invitation.token, familyRole: 'guardian' });
 
-    expect(response.status).toBe(403);
-    expect(response.body.error.code).toBe('FAMILY_GOVERNANCE_DENIED');
-    expect((await FamilyParentInvitation.findById(created.body.data.invitation.invitationId)).status).toBe('pending');
+    expect(response.status).toBe(200);
+    expect((await User.findById(candidate._id)).familyId.toString()).toBe(family._id.toString());
+    expect((await Family.findById(family._id)).memberParentIds.map(String)).toContain(candidate._id.toString());
   });
 
   test('TC-T12-ACCEPT-003/007 rejects an existing member and a full family without mutation', async () => {
@@ -270,6 +292,8 @@ describe('Task 12 parent membership routes', () => {
     const otherOwner = await createParent();
     const family = await createFamily(owner);
     const otherFamily = await createFamily(otherOwner);
+    otherFamily.memberParentIds.addToSet(existingMember._id);
+    await otherFamily.save();
     existingMember.familyId = otherFamily._id;
     await existingMember.save();
     const created = await createInvitation(app, owner, family);

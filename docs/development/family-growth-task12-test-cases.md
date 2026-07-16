@@ -32,14 +32,14 @@
 | `TC-T12-INV-004` | Owner creates after prior invitation elapsed. | Prior row becomes expired and one new invitation is created atomically. | fixed-clock route test |
 | `TC-T12-INV-005` | Owner revokes active invitation twice. | First returns `204`; replay returns `409 FAMILY_INVITATION_NOT_ACTIVE` without another event. | route test |
 | `TC-T12-INV-006` | Inspect API responses, request targets, application logs, errors, and audit events. | Clear token appears in the create response and redacted preview/accept body only; token and digest are absent from request URLs, other responses, logs, errors, and events. | log-capture security test |
-| `TC-T12-INV-007` | Preview and accept well-formed unknown, expired, revoked, and consumed tokens, including with an ineligible parent. | Both endpoints return the same `409`, code, message, and details for every state before eligibility checks; only requestId differs. Missing/malformed input remains `400`. | cross-endpoint contract test |
+| `TC-T12-INV-007` | An authenticated parent, including one already in another family, previews or accepts well-formed unknown, expired, revoked, and consumed tokens. | Both endpoints return the same `409`, code, message, and details for every state before live Family eligibility checks; only requestId differs. Missing/malformed input remains `400`. | cross-endpoint contract test |
 
 ## 3. Acceptance and Concurrency
 
 | ID | Action | Expected result | Evidence |
 | --- | --- | --- | --- |
 | `TC-T12-ACCEPT-001` | Eligible parent accepts an active token with a valid family role. | Invitation becomes accepted; Family, User compatibility projection, and event commit together. | transaction integration test |
-| `TC-T12-ACCEPT-002` | Child/admin account attempts acceptance. | `403`; no document changes. | route test |
+| `TC-T12-AUTH-002` | Child/admin account attempts preview or acceptance with an active or unknown token. | `403` before token resolution; no invitation or membership details leak and no document changes. | route test |
 | `TC-T12-ACCEPT-003` | Parent already in this or another family accepts. | `409 PARENT_ALREADY_IN_FAMILY`; original membership remains unchanged. | transaction integration test |
 | `TC-T12-ACCEPT-004` | Accept invalid, expired, revoked, or consumed token. | `409 FAMILY_INVITATION_NOT_ACTIVE` for every case; no history enumeration. | fixed-clock route test |
 | `TC-T12-ACCEPT-005` | Two different parents concurrently accept the same token. | Exactly one succeeds; family has exactly two members, one accepted event, and no partial loser update. | replica-set concurrency test |
@@ -57,6 +57,7 @@
 | `TC-T12-AUTH-001` | Register, login, and accept as a parent and inspect JWT payload and Gateway envelope. | No authoritative `familyId` is emitted; accepting succeeds without token refresh. | real auth contract test |
 | `TC-T12-PROJ-001` | Either parent creates or changes a child while two parents are active. | Family childIds and both parents' children/default-child projections commit together and agree. | user-service transaction test |
 | `TC-T12-PROJ-002` | Inject failure while updating either parent's compatibility projection. | Family child/member change and every projection roll back; no partial relationship remains. | transaction rollback test |
+| `TC-T12-PROJ-003` | A parent with a stale `User.familyId` but no authoritative Family membership accepts an invitation. | Acceptance follows the live Family lookup and replaces the stale compatibility projection atomically. | user-service transaction test |
 | `TC-T12-GOV-001` | Non-owner attempts invite, revoke, remove, or transfer. | `403 FAMILY_GOVERNANCE_DENIED`; no state/event changes. | user-service route test |
 | `TC-T12-GOV-002` | Owner removes active second parent. | Membership and User projection clear atomically; history remains; one removal event exists. | transaction integration test |
 | `TC-T12-GOV-003` | Second parent leaves. | Same atomic cleanup and history retention with one leave event. | transaction integration test |
