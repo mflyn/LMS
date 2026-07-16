@@ -21,6 +21,8 @@ const monitorPage = (page) => {
 };
 
 const register = async (page, { username, name, password }) => {
+  await expect(page).toHaveURL(/\/register$/);
+  await expect(page.getByRole('heading', { name: '注册家长账号' })).toBeVisible();
   await page.getByLabel('用户名').fill(username);
   await page.getByLabel('称呼').fill(name);
   await page.getByLabel('邮箱').fill(`${username}@example.com`);
