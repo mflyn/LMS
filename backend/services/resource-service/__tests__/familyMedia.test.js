@@ -17,6 +17,7 @@ const { createIdentityHeaders, resetIdentityNonceStore } = require('../../../com
 const { authenticateGateway } = require('../../../common/middleware/auth');
 const { errorHandler, requestTracker } = require('../../../common/middleware/errorHandler');
 const { AppError } = require('../../../common/middleware/errorTypes');
+const Family = require('../../../common/models/Family');
 const FamilyUser = require('../models/FamilyUser');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
@@ -33,6 +34,7 @@ const FAMILY_A_ID = objectId('6656875da7f86a0012c2a101');
 const FAMILY_B_ID = objectId('6656875da7f86a0012c2a102');
 const PARENT_A_ID = objectId('6656875da7f86a0012c2a201');
 const PARENT_B_ID = objectId('6656875da7f86a0012c2a202');
+const PARENT_A2_ID = objectId('6656875da7f86a0012c2a203');
 const CHILD_A1_ID = objectId('6656875da7f86a0012c2a301');
 const CHILD_A2_ID = objectId('6656875da7f86a0012c2a302');
 const CHILD_B1_ID = objectId('6656875da7f86a0012c2a303');
@@ -58,6 +60,11 @@ const childA2 = {
 };
 const parentB = {
   id: PARENT_B_ID.toString(),
+  role: 'parent',
+  familyId: FAMILY_B_ID.toString()
+};
+const parentA2WithStaleClaim = {
+  id: PARENT_A2_ID.toString(),
   role: 'parent',
   familyId: FAMILY_B_ID.toString()
 };
@@ -136,7 +143,32 @@ const privateObjectNames = async () => {
 const incomingNames = async () => fs.readdir(path.join(privateRoot, '.incoming')).catch(() => []);
 
 const insertIdentityFixtures = async () => {
+  await Family.collection.insertMany([
+    {
+      _id: FAMILY_A_ID,
+      familyName: 'Family A',
+      ownerParentId: PARENT_A_ID,
+      memberParentIds: [PARENT_A_ID, PARENT_A2_ID],
+      childIds: [CHILD_A1_ID, CHILD_A2_ID]
+    },
+    {
+      _id: FAMILY_B_ID,
+      familyName: 'Family B',
+      ownerParentId: PARENT_B_ID,
+      memberParentIds: [PARENT_B_ID],
+      childIds: [CHILD_B1_ID]
+    }
+  ]);
   await FamilyUser.collection.insertMany([
+    {
+      _id: PARENT_A2_ID,
+      username: 'parent-a2',
+      password: 'unused-hash',
+      email: 'parent-a2@example.com',
+      name: 'Parent A2',
+      role: 'parent',
+      familyId: FAMILY_A_ID
+    },
     {
       _id: PARENT_A_ID,
       username: 'parent-a',
@@ -208,6 +240,7 @@ const buildApp = ({
     MediaAssetModel,
     MediaReferenceModel: MediaReference,
     UserModel: FamilyUser,
+    FamilyModel: Family,
     mediaStore: mediaStoreOverride,
     now: () => nowMs,
     scanner,
@@ -293,6 +326,37 @@ describe('Task 6 private media upload API', () => {
       mediaId: expect.any(String),
       purpose: 'task_attachment'
     }));
+  });
+
+  test('TC-T12-AUTH-002 resolves co-parent membership live and ignores a stale family claim', async () => {
+    const response = await signedUpload({
+      identity: parentA2WithStaleClaim,
+      purpose: 'task_attachment',
+      childId: CHILD_A1_ID,
+      bytes: await image('jpeg')
+    });
+
+    expect(response.status).toBe(201);
+    const persisted = await MediaAsset.findById(response.body.data.media.mediaId).lean();
+    expect(persisted.familyId).toEqual(FAMILY_A_ID);
+    expect(persisted.uploadedBy).toEqual(PARENT_A2_ID);
+  });
+
+  test('TC-T12-AUTH-003 revokes resource access immediately after member removal', async () => {
+    await Family.updateOne(
+      { _id: FAMILY_A_ID },
+      { $pull: { memberParentIds: PARENT_A2_ID } }
+    );
+
+    const response = await signedUpload({
+      identity: parentA2WithStaleClaim,
+      purpose: 'task_attachment',
+      childId: CHILD_A1_ID,
+      bytes: await image('jpeg')
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe('CHILD_ACCESS_DENIED');
   });
 
   test.each([
@@ -828,9 +892,18 @@ describe('Task 6 private media access API', () => {
 
     for (const tampered of cases) {
       const response = await request(app).get(`${tampered.pathname}${tampered.search}`);
-      expect(response.status).toBe(400);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
-      expect(response.body.data).toBeUndefined();
+      expect({
+        url: `${tampered.pathname}${tampered.search}`,
+        status: response.status,
+        body: response.body
+      }).toEqual({
+        url: `${tampered.pathname}${tampered.search}`,
+        status: 400,
+        body: expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({ code: 'VALIDATION_ERROR' })
+        })
+      });
     }
 
     nowMs = FIXED_NOW + 301_000;

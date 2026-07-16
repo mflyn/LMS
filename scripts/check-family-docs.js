@@ -11,12 +11,17 @@ const authoritativeDocuments = [
   'docs/product/family-learning-tracker.md',
   'docs/architecture/family-learning-tracker-architecture.md',
   'docs/architecture/sequence-diagrams.md',
+  'docs/architecture/decisions/0008-co-parent-membership-governance.md',
   'docs/api/family-learning-tracker-api.md',
   'docs/development/family-growth-requirement-traceability.md',
   'docs/development/family-growth-design-asset-index.md',
   'docs/development/family-growth-baseline-v1.6-manifest.md',
   'docs/development/family-growth-v1.6-release-gate.md',
   'docs/development/family-growth-mistake-pdf-multi-attachments-gate.md',
+  'docs/superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md',
+  'docs/development/family-growth-task12-test-cases.md',
+  'docs/development/family-growth-task12-design-review.md',
+  'docs/development/family-growth-task12-gate.md',
   'docs/deployment/README.md',
   'docs/deployment/local-ubuntu-deployment.md',
   'docs/user-guide/README.md',
@@ -173,8 +178,8 @@ function validate() {
     ['docs/api/family-learning-tracker-api.md', api]
   ]) {
     assert(
-      markdown.includes('**Baseline candidate:** FGT-MVP-1.6'),
-      `${relativePath}: baseline candidate must be FGT-MVP-1.6`,
+      markdown.includes('**Baseline candidate:** FGT-MVP-1.7'),
+      `${relativePath}: baseline candidate must be FGT-MVP-1.7`,
       errors
     );
   }
@@ -244,6 +249,7 @@ function validate() {
     'npm run test:family-regression',
     'npm run test:ci --prefix frontend/web -- --runInBand',
     'npm run test:task11',
+    'npm run test:task12',
     'npm run release:family'
   ]) {
     assert(
@@ -270,7 +276,7 @@ function validate() {
   const productIds = requirementIds(product);
   const traceabilityIds = requirementIds(traceability);
   const designIds = requirementIds(designIndex);
-  assert(productIds.size === 35, `PRD requirement count is ${productIds.size}, expected 35`, errors);
+  assert(productIds.size === 38, `PRD requirement count is ${productIds.size}, expected 38`, errors);
   assert(
     sameSet(traceabilityIds, productIds),
     'traceability requirement set differs from PRD 10.4',
@@ -285,26 +291,115 @@ function validate() {
   const traceabilityRows = traceability
     .split('\n')
     .filter(line => /^\|\s*`(?:FR|NFR)-[A-Z]+-\d{3}`\s*\|/.test(line));
+  const coveredRows = traceabilityRows.filter(line => line.includes('| COVERED |'));
+  const approvedDesignRows = traceabilityRows.filter(line => line.includes('| DESIGN_APPROVED |'));
+  assert(coveredRows.length === 38, `traceability has ${coveredRows.length} COVERED rows, expected 38`, errors);
   assert(
-    traceabilityRows.every(line => line.includes('| COVERED |')),
-    'every traceability row must be COVERED',
+    approvedDesignRows.length === 0,
+    'implemented FGT-MVP-1.7 must not retain DESIGN_APPROVED rows',
     errors
   );
   assert(
-    traceability.includes('**Document status:** READY_FOR_REVIEW'),
-    'traceability status must be READY_FOR_REVIEW',
+    traceability.includes('**Document status:** FGT-MVP-1.7 IMPLEMENTED / RELEASE GATE'),
+    'traceability must identify the implemented v1.7 release candidate',
     errors
   );
   assert(
-    traceability.includes('**Implementation conformance:** COVERED (35/35)'),
-    'traceability must record 35/35 implementation conformance separately from approval',
+    traceability.includes('**Implementation conformance:** COVERED (38/38)'),
+    'traceability must record all 38 implemented requirements',
     errors
   );
   assert(
-    traceability.includes('**Baseline candidate:** FGT-MVP-1.6'),
-    'traceability must target FGT-MVP-1.6',
+    traceability.includes('**Baseline candidate:** FGT-MVP-1.7'),
+    'traceability must target FGT-MVP-1.7',
     errors
   );
+
+  const task12Design = documents.get(
+    'docs/superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md'
+  ) || '';
+  const task12Tests = documents.get('docs/development/family-growth-task12-test-cases.md') || '';
+  const task12Review = documents.get('docs/development/family-growth-task12-design-review.md') || '';
+  const task12Gate = documents.get('docs/development/family-growth-task12-gate.md') || '';
+  const task12Adr = documents.get(
+    'docs/architecture/decisions/0008-co-parent-membership-governance.md'
+  ) || '';
+  for (const requirement of ['FR-FAM-004', 'FR-FAM-005', 'NFR-DATA-003']) {
+    for (const [name, markdown] of [
+      ['Task 12 design', task12Design],
+      ['Task 12 tests', task12Tests],
+      ['Task 12 review', task12Review]
+    ]) {
+      assert(markdown.includes(requirement), `${name} is missing ${requirement}`, errors);
+    }
+  }
+  for (const requiredText of [
+    'APPROVED DESIGN / IMPLEMENTATION BASELINE',
+    '72 hours',
+    'FamilyParentInvitation',
+    'FamilyMembershipEvent',
+    'FAMILY_INVITATION_NOT_ACTIVE',
+    'runMongoTransaction',
+    'useLocation().hash',
+    'resource-service',
+    '`--check`'
+  ]) {
+    assert(task12Design.includes(requiredText), `Task 12 design is missing ${requiredText}`, errors);
+  }
+  for (const requiredText of [
+    '**Status:** Accepted',
+    'opaque token',
+    'Family.memberParentIds',
+    'User.children',
+    'MongoDB',
+    'resource-service',
+    '`--check`'
+  ]) {
+    assert(task12Adr.includes(requiredText), `ADR-0008 is missing ${requiredText}`, errors);
+  }
+  for (const testId of [
+    'TC-T12-INV-007',
+    'TC-T12-ACCESS-004',
+    'TC-T12-AUTH-001',
+    'TC-T12-PROJ-001',
+    'TC-T12-PROJ-002',
+    'TC-T12-UI-007',
+    'TC-T12-REPAIR-003',
+    'TC-T12-REPAIR-004'
+  ]) {
+    assert(task12Tests.includes(testId), `Task 12 tests are missing ${testId}`, errors);
+  }
+  assert(
+    task12Tests.includes('**Document status:** APPROVED / IMPLEMENTED'),
+    'Task 12 test design must record approval and implementation',
+    errors
+  );
+  assert(
+    task12Review.includes('**Status:** APPROVED'),
+    'Task 12 design review must record approval',
+    errors
+  );
+  for (const requiredText of [
+    '**Baseline:** FGT-MVP-1.7',
+    'npm run release:family',
+    'npm run test:task12:integration',
+    'npm run test:task12:e2e',
+    'npm run repair:family-relationships:check',
+    'Target-environment activation'
+  ]) {
+    assert(task12Gate.includes(requiredText), `Task 12 Gate is missing ${requiredText}`, errors);
+  }
+  const releaseScript = read('scripts/release-family-gate.sh');
+  for (const requiredCommand of [
+    'npm run test:task12:integration',
+    'npm run test:task12:e2e'
+  ]) {
+    assert(
+      releaseScript.includes(requiredCommand),
+      `unified release Gate is missing ${requiredCommand}`,
+      errors
+    );
+  }
 
   assert(
     manifest.includes('**status:** READY_FOR_REVIEW'),

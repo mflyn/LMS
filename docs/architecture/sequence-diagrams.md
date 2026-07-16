@@ -1,12 +1,12 @@
 # 家庭成长跟踪跨服务时序图
 
-**Document status:** IMPLEMENTED / FGT-MVP-1.6 BASELINE INPUT
-**Scope:** Task 1~11 家庭成长 MVP 的公开请求、内部命令、失败路径和一致性边界
+**Document status:** FGT-MVP-1.7 IMPLEMENTED; TASK 1~12
+**Scope:** Task 1~12 家庭成长功能的公开请求、内部命令、失败路径和一致性边界
 **Updated:** 2026-07-13
 
 本文与[产品需求](../product/family-learning-tracker.md)、
 [总体架构](family-learning-tracker-architecture.md)、
-[API 契约](../api/family-learning-tracker-api.md)及 Task 5~11 详细设计共同构成
+[API 契约](../api/family-learning-tracker-api.md)及 Task 5~12 详细设计共同构成
 权威设计输入。图中的客户端请求默认经过 API Gateway；只有星星发放和媒体引用
 协议使用独立服务凭据绕过公开 gateway 路由。
 
@@ -472,11 +472,69 @@ sequenceDiagram
   测试边界固定；真实路由、中间件、模型、事务和 HTTP 客户端执行。关闭顺序在
   `finally` 中逆序运行，避免开放句柄或跨测试污染。
 
-## 9. 一致性模式汇总
+## 9. Task 12 第二家长邀请、加入和治理
+
+```mermaid
+sequenceDiagram
+  actor Owner as Family owner
+  actor Parent2 as Second parent
+  participant Web as Parent Web
+  participant Gateway
+  participant User as user-service
+  participant DB as MongoDB replica set
+
+  Owner->>Web: Generate invitation
+  Web->>Gateway: POST /api/families/:id/parent-invitations
+  Gateway->>User: Signed owner identity
+  User->>DB: Transaction: expire elapsed pending + create digest + audit event
+  DB-->>User: committed
+  User-->>Web: 201 clear token once + expiresAt
+
+  Parent2->>Web: Open fragment invitation link and authenticate
+  Web->>Gateway: POST /api/parent-invitations/preview (redacted body)
+  Gateway->>User: Signed parent identity
+  User->>DB: Hash token; read pending unexpired invitation and safe preview
+  User-->>Web: family name, owner name, expiresAt
+
+  Parent2->>Web: Accept and choose familyRole
+  Web->>Gateway: POST /api/parent-invitations/accept (redacted body)
+  Gateway->>User: Signed accepting parent identity
+  User->>DB: Transaction: CAS invitation + conditional member add + User projection + event
+  alt all conditions win
+    DB-->>User: committed
+    User-->>Web: updated family and two safe parent summaries
+  else invalid/replayed/full/already-member/race loser
+    DB-->>User: abort
+    User-->>Web: stable 409 without token history
+  end
+
+  Owner->>Web: Transfer ownership or remove second parent
+  Web->>Gateway: PATCH owner or DELETE member
+  Gateway->>User: Signed current identity
+  User->>DB: Transaction: re-check owner/member + mutate + append event
+  DB-->>User: committed or rolled back
+  User-->>Web: updated family or 204
+```
+
+- **参与组件：** 家长 Web、Gateway、user-service、MongoDB 副本集。
+- **关键 API：** 邀请创建/读取/撤销/接受、退出、成员移除、所有权转移。
+- **失败与降级：** 邀请不存在、过期、撤销或已使用统一返回
+  `FAMILY_INVITATION_NOT_ACTIVE`；事务不可用时不降级为顺序写。
+- **一致性保证：** Family、User、邀请和成员事件全部提交或全部回滚；并发接受最多
+  一个成功；所有者始终在成员集合且家庭最多两位家长。
+- **权限切换：** 家长 JWT 不作为家庭关系缓存。加入、退出、移除和转移后的下一次
+  业务请求读取实时 Family 关系。父级 JWT/身份信封不提供授权性 `familyId`；包括
+  resource-service 在内的下游服务忽略伪造或陈旧父级家庭声明。
+- **前端 token：** React Router 从 fragment 读取邀请，登录/注册只保留白名单邀请回跳；
+  接受成功以 replace 导航清除 token-bearing history，且不写浏览器持久存储。
+- **升级前置：** Task 12 保持关闭，关系修复依次执行 dry-run、冲突处理、apply 和
+  `--check`；只有零操作、零冲突且退出码为 `0` 才启用新 schema、路由和 UI。
+
+## 10. 一致性模式汇总
 
 | 场景 | 模式 | 权威恢复依据 |
 | --- | --- | --- |
-| 家庭和孩子创建 | 当前为同服务顺序写 | 唯一 owner、familyId/childIds 交叉核对；失败不声明原子回滚 |
+| 家庭和孩子创建 | 单副本集事务 | Family/User 交叉关系和事务回滚 |
 | 孩子会话撤销 | 版本化 token | User.childProfile.tokenVersion |
 | 任务确认发星 | 可恢复 saga + 幂等内部命令 | GrowthTask.starAwardState + 唯一 StarLedgerEntry |
 | 周报历史 | cutoff 事件投影 + CAS 冻结 | WeeklyReport 唯一键和 frozen=true winner |
@@ -484,3 +542,4 @@ sequenceDiagram
 | 提醒 | 读取时派生 + 显式 partial | 稳定 reminderId 和 unavailableSources |
 | 奖励兑换 | 单副本集事务 + 幂等键 | StarLedgerGuard、spend ledger、Reward CAS |
 | Task 11 | 真实服务隔离验收 | 独立数据库/目录、固定时钟、强制 CI gate |
+| Task 12 家长成员关系 | 单副本集事务 + 条件更新 + 不可变事件 | Invitation CAS、Family/User 关系、FamilyMembershipEvent |

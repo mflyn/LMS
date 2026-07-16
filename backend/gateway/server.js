@@ -55,7 +55,13 @@ const createApp = ({
     proxyReqPathResolver: (req) => resolveProxyPath('/api/auth', req.url)
   }));
 
-  ['/api/users', '/api/students', '/api/families', '/api/children'].forEach((prefix) => {
+  [
+    '/api/users',
+    '/api/students',
+    '/api/families',
+    '/api/children',
+    '/api/parent-invitations'
+  ].forEach((prefix) => {
     mountProtectedProxy(app, prefix, userServiceUrl, authenticateToken);
   });
   if (dataServiceUrl) {

@@ -108,6 +108,21 @@ describe('Auth Middleware', () => {
         { expiresIn: '7d' }  // refreshTokenExpiration from mocked config
       );
     });
+
+    it('TC-T12-AUTH-001 excludes mutable family scope from parent tokens', () => {
+      generateToken({
+        _id: 'parent-id',
+        role: 'parent',
+        username: 'parent',
+        familyId: 'stale-family-id'
+      });
+
+      expect(jwt.sign).toHaveBeenCalledWith(
+        { id: 'parent-id', role: 'parent', username: 'parent' },
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
+      );
+    });
   });
 
   describe('authenticateJWT', () => {

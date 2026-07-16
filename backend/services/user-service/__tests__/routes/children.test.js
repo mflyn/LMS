@@ -46,13 +46,19 @@ const parentHeaders = (parent, method, originalUrl) => signedHeaders({
   role: 'parent'
 }, method, originalUrl);
 
+const expectStatus = (response, expected) => {
+  if (response.status !== expected) {
+    throw new Error(`Expected HTTP ${expected}, received ${response.status}: ${JSON.stringify(response.body)}`);
+  }
+};
+
 const createFamily = async (app, parent, familyName = '测试家庭') => {
   const response = await request(app)
     .post('/api/families')
     .set(parentHeaders(parent, 'POST', '/api/families'))
     .send({ familyName });
 
-  expect(response.status).toBe(201);
+  expectStatus(response, 201);
   return response.body.data.family;
 };
 
@@ -73,7 +79,7 @@ const createChild = async (app, parent, childName = '小明') => {
       moralGoals: ['按时睡觉']
     });
 
-  expect(response.status).toBe(201);
+  expectStatus(response, 201);
   return response.body.data.child;
 };
 
@@ -110,7 +116,7 @@ describe('children routes', () => {
   test('child creation rolls back every relationship when linking the parent fails', async () => {
     const parent = await createParent();
     const family = await createFamily(app, parent, '事务家庭');
-    const update = jest.spyOn(User, 'findByIdAndUpdate')
+    const update = jest.spyOn(User, 'updateMany')
       .mockRejectedValueOnce(new Error('parent child link failed'));
 
     const response = await request(app)

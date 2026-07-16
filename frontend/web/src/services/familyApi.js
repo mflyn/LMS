@@ -37,6 +37,44 @@ export const createFamily = async ({ familyName, timezone = 'Asia/Shanghai' }) =
   return unwrap(response);
 };
 
+export const createParentInvitation = (familyId) => parentPost(
+  `/api/families/${encodeURIComponent(familyId)}/parent-invitations`,
+  {}
+);
+
+export const getActiveParentInvitation = (familyId, signal) => parentGet(
+  `/api/families/${encodeURIComponent(familyId)}/parent-invitations/active`,
+  undefined,
+  signal
+);
+
+export const revokeParentInvitation = (familyId, invitationId) => parentDelete(
+  `/api/families/${encodeURIComponent(familyId)}/parent-invitations/${encodeURIComponent(invitationId)}`
+);
+
+export const previewParentInvitation = (token) => parentPost(
+  '/api/parent-invitations/preview',
+  { token }
+);
+
+export const acceptParentInvitation = (token, familyRole) => parentPost(
+  '/api/parent-invitations/accept',
+  { token, familyRole }
+);
+
+export const leaveFamily = (familyId) => parentDelete(
+  `/api/families/${encodeURIComponent(familyId)}/members/me`
+);
+
+export const removeFamilyMember = (familyId, parentId) => parentDelete(
+  `/api/families/${encodeURIComponent(familyId)}/members/${encodeURIComponent(parentId)}`
+);
+
+export const transferFamilyOwnership = (familyId, newOwnerParentId) => parentPatch(
+  `/api/families/${encodeURIComponent(familyId)}/owner`,
+  { newOwnerParentId }
+);
+
 const requestConfig = (config, { signal, headers } = {}) => {
   const nextConfig = {
     ...config,

@@ -1,14 +1,14 @@
 # 家庭成长跟踪需求追踪矩阵
 
-**Document status:** READY_FOR_REVIEW
-**Implementation conformance:** COVERED (35/35)
-**Baseline candidate:** FGT-MVP-1.6
-**Implementation evidence commit:** `e331c2810ba7fc3077748623d2148585177d791a`
-**Revalidated at:** 2026-07-15
+**Document status:** FGT-MVP-1.7 IMPLEMENTED / RELEASE GATE
+**Implementation conformance:** COVERED (38/38)
+**Baseline candidate:** FGT-MVP-1.7
+**Implementation evidence commit:** `d424192e`
+**Revalidated at:** 2026-07-16
 
-Conformance values are `COVERED`, `PARTIAL`, and `GAP`. `plannedTask` and
+Conformance values are `COVERED`, `DESIGN_APPROVED`, `PARTIAL`, and `GAP`. `plannedTask` and
 `gateAtTask` retain the historical delivery phase; conformance describes the current
-Task 1~11 implementation. Every row below was reconciled against PRD 10.4, the current
+Task 1~12 scope. Every row below was reconciled against PRD 10.4, the current
 design asset index, merged code, focused tests, and the unified release gate.
 
 ## Current full-gate evidence
@@ -37,11 +37,24 @@ design asset index, merged code, focused tests, and the unified release gate.
 - Exact evidence and the `secure-production` approval boundary are recorded in
   [the increment Gate](./family-growth-mistake-pdf-multi-attachments-gate.md).
 
+## Task 12 implementation evidence
+
+- `FR-FAM-004`, `FR-FAM-005`, and `NFR-DATA-003` are implemented by the user service,
+  Gateway, live-membership authorization in downstream services, and the parent Web application.
+- Replica-set route and real-service tests cover invitation lifecycle, two-parent concurrency,
+  governance transactions, compatibility projections, stale-token revocation, and repair behavior.
+- React and Chromium tests cover fragment-preserving authentication, one-time token display,
+  two stable parent slots, ownership transfer/removal, 360px layout, and browser history cleanup.
+- Repeatable commands and deployment-only repair preconditions are recorded in the
+  [Task 12 Gate](./family-growth-task12-gate.md).
+
 | Requirement | plannedTask | gateAtTask | Product section | Architecture/ADR | API | Code owner | Test evidence | Conformance | Finding |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `FR-FAM-001` | 3 | 4 | 10.4 | 4.1, ADR-0002/0003 | `POST /api/families` | `Family.js`, `familyController.js` | timezone/default/unique-owner and transaction rollback tests pass | COVERED | closed `FGT-T3-001`, `FGT-T3-007`; Stage 2 atomicity remediation closed |
 | `FR-FAM-002` | 3 | 4 | 10.4 | 5, 6, ADR-0002 | family read/update | `familyController.js` | ownership database tests pass | COVERED | none |
 | `FR-FAM-003` | 3 | 4 | 10.4 | 3.3, ADR-0006 | auth register/login/logout | `authController.js`, `auth.js` | stable family errors, signed gateway auth, and authenticated idempotent logout contract pass | COVERED | closed `FGT-T3-006`; logout contract remediation closed |
+| `FR-FAM-004` | 12 | 12 | 5.1/10.4 | 4.1/6/8.1, ADR-0008, Task 12 design | parent invitation create/read/accept | user-service, gateway, parent Web | invitation/accept/access/auth/projection/API React contracts and real-service Chromium flow pass | COVERED | opaque single-use invitation, equal daily access, safe projections, and fragment return implemented |
+| `FR-FAM-005` | 12 | 12 | 5.1/10.4 | 4.1/6/7/8.1, ADR-0008, Task 12 design | invitation revoke, leave, remove, transfer | user-service, gateway, parent Web | governance transaction tests plus transfer/removal React and Chromium flows pass | COVERED | owner-only governance, history retention, and immediate live-membership revocation implemented |
 | `FR-CHILD-001` | 3 | 4 | 10.4 | 4.2, 6 | children create/update | `User.js`, `familyController.js` | multiple children, cross-family edit, transaction rollback, full-profile and avatar UI tests pass | COVERED | Stage 2 atomicity and Stage 4 parent workflow remediations closed |
 | `FR-CHILD-002` | 3 | 4 | 10.4 | 6.1/6.3 | children list/detail | `familyController.js` | self/sibling and cross-family tests pass | COVERED | none |
 | `FR-CHILD-003` | 3 | 4 | 10.4 | 4.2, 6.1 | child PIN set | `User.js`, `familyController.js` | 4-6 digit bounds and reset tests pass | COVERED | closed `FGT-T3-002` |
@@ -71,6 +84,7 @@ design asset index, merged code, focused tests, and the unified release gate.
 | `NFR-SEC-003` | 5 | 5 | 10.4 | Task 5 design section 6 | internal star award | `serviceCredential.js`, `internalStars.js`, `starAwardClient.js`, gateway allowlist, external Secret workflow | `TC-T5-STAR-001/002/006`, `TC-T5-GW-002`, `TC-T5-DEPLOY-002` pass | COVERED | closed Task 5 implementation review and v1.3 remediation |
 | `NFR-DATA-001` | 3 | 4 | 10.4 | 4/5, ADR-0002 | all child data APIs | Family/User/GrowthTask, Task 6 media state, mistake/mastery events, weekly snapshots | family-first IDs/indexes, family-child and mistake-history transactions, media generations, scoped projections, and frozen weekly snapshots verified | COVERED | Stage 2 cross-document atomicity closed; repair command is auditable and tested |
 | `NFR-DATA-002` | 5 | 5 | 10.4 | Task 5 design sections 7/8, ADR-0005 | task award and reward redemption | immutable ledger, guard transaction, recoverable confirmation saga, topology startup guard | `TC-T5-STAR-003`-`005`, `TC-T5-REWARD-005`-`012`, `TC-T5-SAGA-001`-`005`, `TC-T5-DEPLOY-003` pass | COVERED | closed Task 5 implementation review and v1.3 remediation |
+| `NFR-DATA-003` | 12 | 12 | 10.4 | 4.1/5/7, ADR-0008, Task 12 design sections 3-5/9 | all parent membership mutations | Family, User, FamilyParentInvitation, FamilyMembershipEvent | model, concurrency, rollback, projection, immutable-event, repair and repeated real-service tests pass | COVERED | max-two invariant and atomic membership are enforced; target database zero-drift check remains an enablement precondition |
 | `NFR-PRIVACY-001` | 6 | 6 | 9.11/10.4 | 4.8, Task 6 design 4/9/10, PDF security design | all media APIs | resource/common/owner services, gateway and deployment profiles | Historical privacy suite plus PDF active-content, canonicalization, scan fail-closed, signed PDF, family isolation and private deployment tests pass | COVERED | trusted-local is explicitly weaker and private-only; secure-production requires successful real-scanner Gate |
 | `NFR-TIME-001` | 4 | 4 | 10.4 | 3.2, ADR-0003 | family/task/report dates | `Family.js`, `GrowthTask.js`, routes, `weeklyReportService.js`, `FamilyMistake.js` | IANA timezone, LocalDate boundary, mistake date validation, weekly cutoff, cancellation/completion cutoff, and historical snapshot tests pass | COVERED | closed `FGT-T3-001`, `FGT-T4-001`; Task 6 time scope closed by final gate |
 | `NFR-COMPAT-001` | 3 | 4 | 10.4 | 7 | legacy and family routes | legacy plus family route modules and isolated test projects | route-preservation contracts, family release gate, and explicit legacy-test isolation pass | COVERED | school models/routes retained; family rollback remains route-disable without data deletion |

@@ -149,3 +149,35 @@ The increment uses two independent gate paths:
 - The protected real-scanner command is `RUN_FAMILY_SECURITY_SCAN=1 npm run test:family-security-scan`. It is secure-production release evidence only when it exits zero on a sufficiently sized runner and is recorded against the candidate commit.
 
 Historical Task 6 and Task 10 gates remain evidence for their original single-value/image-only boundaries. They do not satisfy the increment's `TC-MPA-*` cases.
+
+## 13. Task 12 Second Parent Co-Management
+
+The approved [Task 12 test design](./family-growth-task12-test-cases.md) extends the v1.6
+baseline with implemented invitation, membership governance, and equal daily parent access. It does not reuse
+single-parent route tests as evidence that a second parent can operate every service.
+
+Task 12 uses four mandatory layers:
+
+1. Model and route tests prove Family invariants, token hashing/redaction, stable errors, and
+   owner-only governance.
+2. Replica-set integration tests prove atomic acceptance, departure, removal, transfer, rollback,
+   and concurrent single-winner behavior.
+3. Cross-service regression proves that the second parent has ordinary access equal to the owner
+   while unrelated and departed parents remain denied. Parent JWTs/envelopes contain no
+   authoritative family claim; resource-service and every other parent service must ignore a
+   forged or stale `familyId` and resolve live Family owner/member membership.
+4. React and real Chromium tests prove invitation preservation through authentication, member
+   controls, immediate permission changes, responsive layout, and accessible confirmation flows.
+   The browser matrix covers both login and registration, Router fragment preservation, persistent
+   storage inspection, and replace-navigation removal of the token-bearing history entry.
+
+Task 12 release evidence cannot use an in-memory standalone MongoDB, mocked transaction helper,
+retry, or only the owner route suite. The focused integration command must pass twice with identical
+totals, followed by family regression, frontend CI/build, Task 11, documentation, generated-artifact,
+and clean-worktree checks. The three Task 12 requirements move to `COVERED` only after this evidence
+is recorded in the [Task 12 Gate](./family-growth-task12-gate.md) against one candidate commit.
+
+The release preflight keeps Task 12 disabled while the relationship repair command runs in dry-run
+mode, conflicts are resolved, deterministic changes are applied, and `--check` reports zero pending
+operations and conflicts with exit code `0` in the target environment. A startup-time full-database assertion is not release
+evidence and must not make user-service availability depend on historical compatibility drift.

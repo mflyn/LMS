@@ -43,6 +43,7 @@ const validObjectId = (value) => typeof value === 'string' && mongoose.Types.Obj
 const createMediaService = ({
   MediaAssetModel = MediaAsset,
   MediaReferenceModel,
+  FamilyModel,
   UserModel,
   capabilityService,
   mediaStore,
@@ -57,6 +58,9 @@ const createMediaService = ({
   }
   if (!UserModel || typeof UserModel.exists !== 'function') {
     throw new Error('UserModel is required');
+  }
+  if (!FamilyModel || typeof FamilyModel.findOne !== 'function') {
+    throw new Error('FamilyModel is required');
   }
   if (!mediaStore || typeof mediaStore.writeCanonical !== 'function' || typeof mediaStore.remove !== 'function') {
     throw new Error('mediaStore is required');
@@ -84,7 +88,7 @@ const createMediaService = ({
 
   const resolveIdentityScope = async (identity) => {
     assertIdentity(identity);
-    if (validObjectId(String(identity.familyId || ''))) {
+    if (identity.role === 'student' && validObjectId(String(identity.familyId || ''))) {
       return {
         actorId: String(identity.id),
         familyId: String(identity.familyId),
@@ -92,13 +96,18 @@ const createMediaService = ({
         childId: identity.role === 'student' ? String(identity.childId || identity.id) : null
       };
     }
-    if (identity.role !== 'parent' || typeof UserModel.findOne !== 'function') throw accessDenied();
-    const query = UserModel.findOne({ _id: identity.id, role: 'parent' }).select('familyId');
-    const parent = typeof query.lean === 'function' ? await query.lean() : await query;
-    if (!parent || !validObjectId(String(parent.familyId || ''))) throw accessDenied();
+    if (identity.role !== 'parent') throw accessDenied();
+    const query = FamilyModel.findOne({
+      $or: [
+        { ownerParentId: identity.id },
+        { memberParentIds: identity.id }
+      ]
+    }).select('_id');
+    const family = typeof query.lean === 'function' ? await query.lean() : await query;
+    if (!family || !validObjectId(String(family._id || ''))) throw accessDenied();
     return {
       actorId: String(identity.id),
-      familyId: String(parent.familyId),
+      familyId: String(family._id),
       role: 'parent',
       childId: null
     };

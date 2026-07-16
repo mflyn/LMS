@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { authDestination, safeInvitationReturn } from '../services/invitationReturn';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -9,7 +10,8 @@ const Login = () => {
   const { error, login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const destination = location.state?.from?.pathname || '/app/today';
+  const returnLocation = safeInvitationReturn(location.state?.from);
+  const destination = authDestination(location.state?.from);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -48,7 +50,9 @@ const Login = () => {
             {submitting ? '正在登录…' : '登录'}
           </button>
         </form>
-        <p className="family-auth-footer">还没有账号？ <Link to="/register">注册家长账号</Link></p>
+        <p className="family-auth-footer">
+          还没有账号？ <Link to="/register" state={returnLocation ? { from: returnLocation } : undefined}>注册家长账号</Link>
+        </p>
       </section>
     </main>
   );

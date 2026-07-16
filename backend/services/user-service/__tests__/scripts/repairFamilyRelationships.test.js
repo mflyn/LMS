@@ -1,6 +1,9 @@
 const Family = require('../../../../common/models/Family');
 const User = require('../../../../common/models/User');
 const {
+  checkExitCode,
+  parseCliMode,
+  planFamilyRelationshipRepairs,
   repairFamilyRelationships
 } = require('../../scripts/repairFamilyRelationships');
 
@@ -26,9 +29,20 @@ const createChild = (familyId, overrides = {}) => User.create({
 });
 
 describe('family relationship repair command', () => {
+  const insertHistoricalFamily = async (values) => {
+    const _id = values._id || new Family()._id;
+    await Family.collection.insertOne({
+      _id,
+      timezone: 'Asia/Shanghai',
+      childIds: [],
+      ...values
+    });
+    return Family.findById(_id);
+  };
+
   test('dry-run emits auditable changes without writing data', async () => {
     const parent = await createParent();
-    const family = await Family.create({
+    const family = await insertHistoricalFamily({
       familyName: 'Repair Family',
       ownerParentId: parent._id,
       memberParentIds: [],
@@ -61,7 +75,7 @@ describe('family relationship repair command', () => {
 
   test('apply repairs Family, parent, and child links in one transaction', async () => {
     const parent = await createParent();
-    const family = await Family.create({
+    const family = await insertHistoricalFamily({
       familyName: 'Apply Family',
       ownerParentId: parent._id,
       memberParentIds: [],
@@ -112,5 +126,46 @@ describe('family relationship repair command', () => {
     expect((await User.findById(childB._id)).familyId.toString()).toBe(familyB._id.toString());
     expect((await Family.findById(familyA._id)).childIds.map(String)).not.toContain(childB._id.toString());
     expect((await Family.findById(familyB._id)).childIds.map(String)).toContain(childB._id.toString());
+  });
+
+  test('TC-T12-REPAIR-004 reports over-two parents and writes no family operation', () => {
+    const familyId = new Family()._id;
+    const [ownerId, memberId, thirdId] = [new User()._id, new User()._id, new User()._id];
+    const users = [ownerId, memberId, thirdId].map((id) => ({
+      _id: id,
+      role: 'parent',
+      familyId,
+      children: [],
+      parentProfile: {}
+    }));
+    const result = planFamilyRelationshipRepairs({
+      families: [{
+        _id: familyId,
+        ownerParentId: ownerId,
+        memberParentIds: [ownerId, memberId],
+        childIds: []
+      }],
+      users
+    });
+
+    expect(result.conflicts).toContainEqual(expect.objectContaining({
+      code: 'FAMILY_PARENT_LIMIT_CONFLICT',
+      familyId: familyId.toString()
+    }));
+    expect(result.operations).not.toContainEqual(expect.objectContaining({
+      entity: 'Family',
+      id: familyId.toString()
+    }));
+  });
+
+  test('TC-T12-REPAIR-003 check mode exits nonzero for drift/conflicts and zero when clean', () => {
+    expect(parseCliMode([])).toBe('dry-run');
+    expect(parseCliMode(['--apply'])).toBe('apply');
+    expect(parseCliMode(['--check'])).toBe('check');
+    expect(() => parseCliMode(['--apply', '--check'])).toThrow(/mutually exclusive/);
+    expect(checkExitCode('check', { operations: [{}], conflicts: [] })).toBe(1);
+    expect(checkExitCode('check', { operations: [], conflicts: [{}] })).toBe(1);
+    expect(checkExitCode('check', { operations: [], conflicts: [] })).toBe(0);
+    expect(checkExitCode('dry-run', { operations: [{}], conflicts: [{}] })).toBe(0);
   });
 });

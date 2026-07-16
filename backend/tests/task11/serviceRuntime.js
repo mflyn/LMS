@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const { redactRuntimeError } = require('./testEnvironment');
 const Role = require('../../common/models/Role');
+const Family = require('../../common/models/Family');
 const { authenticateGateway } = require('../../common/middleware/auth');
 const { createMediaReferenceClient } = require('../../common/services/mediaReferenceClient');
 
@@ -57,6 +58,7 @@ const createResourceApp = ({ privateRoot, transactionRunner }) => {
   const mediaService = createMediaService({
     MediaAssetModel: MediaAsset,
     MediaReferenceModel: MediaReference,
+    FamilyModel: Family,
     UserModel: FamilyUser,
     capabilityService,
     mediaStore,

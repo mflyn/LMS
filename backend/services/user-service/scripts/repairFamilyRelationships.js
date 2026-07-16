@@ -92,6 +92,16 @@ const planFamilyRelationshipRepairs = ({ families, users }) => {
       .filter((userId) => acceptDeclaredUser({ familyId, userId, role: 'parent' }));
     const childIds = uniqueIds(childCandidates)
       .filter((userId) => acceptDeclaredUser({ familyId, userId, role: 'student' }));
+
+    if (memberParentIds.length > 2) {
+      conflicts.push({
+        code: 'FAMILY_PARENT_LIMIT_CONFLICT',
+        familyId,
+        candidateParentIds: memberParentIds
+      });
+      return;
+    }
+
     const currentMemberIds = uniqueIds(family.memberParentIds || []);
     const currentChildIds = uniqueIds(family.childIds || []);
 
@@ -149,6 +159,7 @@ const repairFamilyRelationships = async ({
   FamilyModel = Family,
   UserModel = User,
   dryRun = true,
+  mode = dryRun ? 'dry-run' : 'apply',
   emit = (entry) => process.stdout.write(`${JSON.stringify(entry)}\n`),
   mongooseInstance = mongoose
 } = {}) => {
@@ -159,11 +170,11 @@ const repairFamilyRelationships = async ({
       .lean()
   ]);
   const { operations, conflicts } = planFamilyRelationshipRepairs({ families, users });
-  const mode = dryRun ? 'dry-run' : 'apply';
+  const apply = mode === 'apply';
 
   operations.forEach((operation) => emit({ event: 'family_relationship_repair', mode, operation }));
 
-  if (!dryRun && operations.length > 0) {
+  if (apply && operations.length > 0) {
     await runMongoTransaction({
       mongooseInstance,
       work: async (session) => {
@@ -187,22 +198,38 @@ const repairFamilyRelationships = async ({
     scanned: { families: families.length, users: users.length },
     operations,
     conflicts,
-    applied: dryRun ? 0 : operations.length
+    applied: apply ? operations.length : 0
   };
 };
 
-const runCli = async () => {
-  const args = new Set(process.argv.slice(2));
-  const unknown = [...args].filter((arg) => arg !== '--apply');
+const parseCliMode = (argv = []) => {
+  const args = new Set(argv);
+  const unknown = [...args].filter((arg) => !['--apply', '--check'].includes(arg));
   if (unknown.length > 0) throw new Error(`Unknown option: ${unknown.join(', ')}`);
+  if (args.has('--apply') && args.has('--check')) {
+    throw new Error('--apply and --check are mutually exclusive');
+  }
+  if (args.has('--apply')) return 'apply';
+  if (args.has('--check')) return 'check';
+  return 'dry-run';
+};
+
+const checkExitCode = (mode, result) => (
+  mode === 'check' && (result.operations.length > 0 || result.conflicts.length > 0) ? 1 : 0
+);
+
+const runCli = async () => {
+  const mode = parseCliMode(process.argv.slice(2));
   const mongoURI = process.env.MONGO_URI || process.env.USER_SERVICE_MONGO_URI;
   if (!mongoURI) throw new Error('MONGO_URI or USER_SERVICE_MONGO_URI is required');
 
   await mongoose.connect(mongoURI);
   try {
     await assertTransactionCapability(mongoose.connection, 'family relationship repair');
-    const result = await repairFamilyRelationships({ dryRun: !args.has('--apply') });
+    const result = await repairFamilyRelationships({ dryRun: mode !== 'apply', mode });
     process.stdout.write(`${JSON.stringify({ event: 'family_relationship_repair_summary', ...result })}\n`);
+    process.exitCode = checkExitCode(mode, result);
+    return result;
   } finally {
     await mongoose.disconnect();
   }
@@ -215,4 +242,10 @@ if (require.main === module) {
   });
 }
 
-module.exports = { planFamilyRelationshipRepairs, repairFamilyRelationships, runCli };
+module.exports = {
+  checkExitCode,
+  parseCliMode,
+  planFamilyRelationshipRepairs,
+  repairFamilyRelationships,
+  runCli
+};

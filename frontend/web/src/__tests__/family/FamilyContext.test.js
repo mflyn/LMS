@@ -88,4 +88,19 @@ describe('family context', () => {
     await waitFor(() => expect(screen.getByTestId('family-status')).toHaveTextContent('ready'));
     expect(getMyFamily).toHaveBeenCalledTimes(2);
   });
+
+  test('keeps an established family view mounted during a background reload', async () => {
+    let resolveReload;
+    getMyFamily
+      .mockResolvedValueOnce(familyPayload)
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveReload = resolve; }));
+    renderFamily();
+
+    await waitFor(() => expect(screen.getByTestId('family-status')).toHaveTextContent('ready'));
+    fireEvent.click(screen.getByRole('button', { name: '重试' }));
+
+    expect(screen.getByTestId('family-status')).toHaveTextContent('ready');
+    resolveReload(familyPayload);
+    await waitFor(() => expect(getMyFamily).toHaveBeenCalledTimes(2));
+  });
 });

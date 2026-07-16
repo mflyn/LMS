@@ -1,17 +1,17 @@
 # 家庭成长跟踪设计资产索引
 
-**Document status:** READY_FOR_REVIEW
-**Applies to baseline:** FGT-MVP-1.6 candidate
+**Document status:** FGT-MVP-1.7 IMPLEMENTED / RELEASE GATE
+**Applies to baseline:** FGT-MVP-1.7
 **Requirement source:** PRD 10.4 / requirement traceability matrix
 **Implementation evidence commit:** `30d0e7bb4adddc51edc7d412f82aac8d323f2bfd`
 **Updated at:** 2026-07-15
 
-本文为 Task 1~11 的设计导航和审计入口，将 35 项产品需求映射到产品、架构、
+本文为 Task 1~12 的设计导航和审计入口，将 38 项产品需求映射到产品、架构、
 详细设计、API、测试用例和最终 Gate。本文不定义新需求，也不替代被链接文档；
 内容冲突时按 [Task 1~4 设计归档的权威性规则](./family-growth-task1-4-design-archive.md#2-文档权威性规则)
 处理。
 
-## 1. Task 1~11 设计闭环
+## 1. Task 1~12 设计闭环
 
 | Task | 范围 | 设计来源 | 测试与关闭证据 |
 | --- | --- | --- | --- |
@@ -27,6 +27,7 @@
 | Task 9 | 家长 MVP 七个业务页面 | [详细设计](../superpowers/specs/2026-07-10-family-growth-task9-parent-pages-design.md) | [测试用例](./family-growth-task9-test-cases.md)、[Gate](./family-growth-task9-gate.md) |
 | Task 10 | 孩子 PIN 登录与孩子端页面 | [详细设计](../superpowers/specs/2026-07-11-family-growth-task10-child-web-design.md) | [测试用例](./family-growth-task10-test-cases.md)、[Gate](./family-growth-task10-gate.md) |
 | Task 11 | 家长/孩子跨角色真实服务 E2E | [详细设计](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) | [测试用例](./family-growth-task11-test-cases.md)、[Task Gate](./family-growth-task11-gate.md)、[v1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md) |
+| Task 12 | 第二家长共管与成员治理 | [详细设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md)、[ADR-0008](../architecture/decisions/0008-co-parent-membership-governance.md)、[设计评审](./family-growth-task12-design-review.md) | [测试设计与用例](./family-growth-task12-test-cases.md) / [Gate](./family-growth-task12-gate.md) |
 | 错题 PDF 与多附件增量 | 家长/孩子题目与答案多附件、任务 PDF、两档媒体安全配置 | [详细设计](../superpowers/specs/2026-07-15-family-growth-mistake-pdf-multi-attachments-design.md) | [测试设计与用例](./family-growth-mistake-pdf-multi-attachments-test-cases.md)、[Gate](./family-growth-mistake-pdf-multi-attachments-gate.md) |
 
 ## 2. 核心图资产
@@ -56,6 +57,8 @@
 | `FR-FAM-001` | 创建家庭 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [Family / 注册时序](../architecture/sequence-diagrams.md#1-家长注册创建家庭添加孩子和设置-pin) | [Task 3 归档](./family-growth-task1-4-design-archive.md#5-task-3familychildpin-和家庭权限) | [创建家庭](../api/family-learning-tracker-api.md#23-创建家庭) | [测试基线](./family-tracker-test-baseline.md)、[追踪矩阵](./family-growth-requirement-traceability.md) | [Task 4.5 评审](./family-growth-design-review.md) |
 | `FR-FAM-002` | 管理家庭 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [Family / 权限规则](../architecture/family-learning-tracker-architecture.md#41-family) | [Task 3 归档](./family-growth-task1-4-design-archive.md#5-task-3familychildpin-和家庭权限) | [家庭读取与更新](../api/family-learning-tracker-api.md#24-获取我的家庭) | [测试基线](./family-tracker-test-baseline.md)、[追踪矩阵](./family-growth-requirement-traceability.md) | [Task 4.5 评审](./family-growth-design-review.md) |
 | `FR-FAM-003` | 家长注册与登录 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [信任边界 / 注册时序](../architecture/sequence-diagrams.md#1-家长注册创建家庭添加孩子和设置-pin) | [Task 3 归档](./family-growth-task1-4-design-archive.md#5-task-3familychildpin-和家庭权限) | [注册家长](../api/family-learning-tracker-api.md#21-注册家长)、[登录](../api/family-learning-tracker-api.md#22-家长登录) | [测试基线](./family-tracker-test-baseline.md)、[追踪矩阵](./family-growth-requirement-traceability.md) | [Task 4.5 评审](./family-growth-design-review.md) |
+| `FR-FAM-004` | 第二家长共管 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [Family / Task 12 时序](../architecture/sequence-diagrams.md#9-task-12-第二家长邀请加入和治理) | [Task 12 设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md)、[ADR-0008](../architecture/decisions/0008-co-parent-membership-governance.md) | [邀请与接受](../api/family-learning-tracker-api.md#29-创建和查询第二家长邀请) | [Task 12 测试](./family-growth-task12-test-cases.md) | [Task 12 Gate](./family-growth-task12-gate.md) |
+| `FR-FAM-005` | 家庭成员治理 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [权限 / Task 12 时序](../architecture/sequence-diagrams.md#9-task-12-第二家长邀请加入和治理) | [Task 12 设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md)、[ADR-0008](../architecture/decisions/0008-co-parent-membership-governance.md) | [退出、移除和转移](../api/family-learning-tracker-api.md#212-第二家长退出) | [Task 12 测试](./family-growth-task12-test-cases.md) | [Task 12 Gate](./family-growth-task12-gate.md) |
 | `FR-CHILD-001` | 管理孩子档案 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [User / 注册时序](../architecture/sequence-diagrams.md#1-家长注册创建家庭添加孩子和设置-pin) | [Task 3 归档](./family-growth-task1-4-design-archive.md#5-task-3familychildpin-和家庭权限) | [添加孩子](../api/family-learning-tracker-api.md#25-添加孩子) | [测试基线](./family-tracker-test-baseline.md)、[追踪矩阵](./family-growth-requirement-traceability.md) | [Task 4.5 评审](./family-growth-design-review.md) |
 | `FR-CHILD-002` | 孩子自助访问 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [孩子权限](../architecture/family-learning-tracker-architecture.md#63-孩子) | [Task 3 归档](./family-growth-task1-4-design-archive.md#5-task-3familychildpin-和家庭权限) | [孩子档案契约](../api/family-learning-tracker-api.md#28-退出家庭更新和孩子档案契约) | [测试基线](./family-tracker-test-baseline.md)、[追踪矩阵](./family-growth-requirement-traceability.md) | [Task 4.5 评审](./family-growth-design-review.md) |
 | `FR-CHILD-003` | 设置孩子 PIN | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [User / PIN 时序](../architecture/sequence-diagrams.md#1-家长注册创建家庭添加孩子和设置-pin) | [Task 3 归档](./family-growth-task1-4-design-archive.md#5-task-3familychildpin-和家庭权限) | [设置或重置 PIN](../api/family-learning-tracker-api.md#26-设置或重置孩子-pin) | [测试基线](./family-tracker-test-baseline.md)、[追踪矩阵](./family-growth-requirement-traceability.md) | [Task 4.5 评审](./family-growth-design-review.md) |
@@ -85,6 +88,7 @@
 | `NFR-SEC-003` | 内部服务命令认证 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [服务职责 / 星星时序](../architecture/sequence-diagrams.md#3-创建任务孩子完成家长确认和星星发放) | [Task 5 §6](../superpowers/specs/2026-06-19-family-growth-task5-design.md#6-internal-award-command) | [内部星星发放](../api/family-learning-tracker-api.md#94-内部星星发放命令) | [Task 5 测试](./family-growth-task5-test-cases.md) | [Task 5 Gate](./family-growth-task5-gate.md) |
 | `NFR-DATA-001` | 家庭数据归属 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [核心 ER / 数据归属](../architecture/family-learning-tracker-architecture.md#410-核心实体关系) | [Task 3/4 归档](./family-growth-task1-4-design-archive.md)、[Task 6 数据设计](../superpowers/specs/2026-06-20-family-growth-task6-design.md) | [权限验收规则](../api/family-learning-tracker-api.md#11-权限验收规则) | [Task 6 测试](./family-growth-task6-test-cases.md)、[追踪矩阵](./family-growth-requirement-traceability.md) | [Task 6 Gate](./family-growth-task6-gate.md) |
 | `NFR-DATA-002` | 星星和奖励一致性 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [星星/奖励状态机与时序](../architecture/sequence-diagrams.md#7-奖励创建事务兑换和幂等重放) | [Task 5 §7/8](../superpowers/specs/2026-06-19-family-growth-task5-design.md#7-task-confirmation-saga)、[ADR-0005](../architecture/decisions/0005-idempotent-star-ledger.md) | [任务确认与奖励](../api/family-learning-tracker-api.md#9-rewards) | [Task 5 测试](./family-growth-task5-test-cases.md) | [Task 5 Gate](./family-growth-task5-gate.md) |
+| `NFR-DATA-003` | 家长成员关系原子性与审计 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [Family / 一致性时序](../architecture/sequence-diagrams.md#9-task-12-第二家长邀请加入和治理) | [Task 12 事务设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md#5-transaction-and-concurrency-design)、[ADR-0008](../architecture/decisions/0008-co-parent-membership-governance.md) | [事务边界](../api/family-learning-tracker-api.md#215-成员治理错误和事务边界) | [Task 12 测试](./family-growth-task12-test-cases.md) | [Task 12 Gate](./family-growth-task12-gate.md) |
 | `NFR-PRIVACY-001` | 未成年人媒体隐私 | [9.11/10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [媒体状态机 / 时序](../architecture/sequence-diagrams.md#5-私有媒体上传绑定读取删除和清理) | [Task 6 §4/9/10](../superpowers/specs/2026-06-20-family-growth-task6-design.md#4-private-media-design)、[PDF 安全设计](../superpowers/specs/2026-07-15-family-growth-mistake-pdf-multi-attachments-design.md) | [Private Media](../api/family-learning-tracker-api.md#8-private-media) | [Task 6](./family-growth-task6-test-cases.md)、[PDF/扫描测试](./family-growth-mistake-pdf-multi-attachments-test-cases.md) | [多附件 Gate](./family-growth-mistake-pdf-multi-attachments-gate.md) |
 | `NFR-TIME-001` | 日期与时区一致性 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [日期规则 / 周报时序](../architecture/sequence-diagrams.md#4-growthlog错题和周报截止快照) | [Task 4 归档](./family-growth-task1-4-design-archive.md#6-task-4growthtask状态和家庭时区)、[Task 6 §8.2](../superpowers/specs/2026-06-20-family-growth-task6-design.md#82-time-boundary-and-formulas) | [日期与时区约定](../api/family-learning-tracker-api.md#11-日期时区和任务发生规则) | [Task 6 测试](./family-growth-task6-test-cases.md)、[追踪矩阵](./family-growth-requirement-traceability.md) | [Task 6 Gate](./family-growth-task6-gate.md) |
 | `NFR-COMPAT-001` | 学校版兼容与回滚 | [10.4](../product/family-learning-tracker.md#104-mvp-requirements-and-acceptance-criteria) | [兼容、迁移与回滚](../architecture/family-learning-tracker-architecture.md#7-兼容迁移与回滚) | [Task 1/2 归档](./family-growth-task1-4-design-archive.md) | [非 API：兼容与路由回滚说明](../architecture/family-learning-tracker-architecture.md#7-兼容迁移与回滚) | [测试基线](./family-tracker-test-baseline.md)、[测试策略](./family-growth-test-strategy.md) | [Task 4.5 评审](./family-growth-design-review.md) |
@@ -98,6 +102,6 @@
 3. Task 新增详细设计、测试或 Gate 后，应先更新对应 Requirement 行，再更新
    [最终 MVP 基线清单](./family-growth-baseline-v1.6-manifest.md)。
 4. 文档评审必须执行 `npm run docs:family:check`，验证本地链接、占位符、本文与
-   PRD/追踪矩阵的 35 项 Requirement 集合，以及 v1.6 证据状态。
+   PRD/追踪矩阵的 38 项 Requirement 集合、v1.6 已实现证据和 Task 12 设计状态。
 5. 所有 Requirement 行共用 [v1.6 统一发布 Gate](./family-growth-v1.6-release-gate.md)
    的 clean-main 回归证据；表中 Task Gate 保留该需求首次关闭时的聚焦证据。

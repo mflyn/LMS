@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { authDestination, safeInvitationReturn } from '../services/invitationReturn';
 
 const Register = () => {
   const [form, setForm] = useState({ username: '', name: '', email: '', password: '', confirmPassword: '' });
   const [submitting, setSubmitting] = useState(false);
   const [validationError, setValidationError] = useState(null);
   const { error, register } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const returnLocation = safeInvitationReturn(location.state?.from);
+  const destination = authDestination(location.state?.from);
 
   const update = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
 
@@ -27,7 +31,7 @@ const Register = () => {
       password: form.password
     });
     setSubmitting(false);
-    if (success) navigate('/app/today', { replace: true });
+    if (success) navigate(destination, { replace: true });
   };
 
   return (
@@ -52,7 +56,9 @@ const Register = () => {
             {submitting ? '正在注册…' : '注册'}
           </button>
         </form>
-        <p className="family-auth-footer">已有账号？ <Link to="/login">返回登录</Link></p>
+        <p className="family-auth-footer">
+          已有账号？ <Link to="/login" state={returnLocation ? { from: returnLocation } : undefined}>返回登录</Link>
+        </p>
       </section>
     </main>
   );

@@ -13,6 +13,7 @@ const { MongoMemoryReplSet } = require('../../../../node_modules/mongodb-memory-
 
 const { createIdentityHeaders, resetIdentityNonceStore } = require('../../../common/middleware/gatewayIdentity');
 const { authenticateGateway } = require('../../../common/middleware/auth');
+const Family = require('../../../common/models/Family');
 const FamilyUser = require('../models/FamilyUser');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
@@ -85,6 +86,7 @@ const buildApp = () => {
     MediaAssetModel: MediaAsset,
     MediaReferenceModel: MediaReference,
     UserModel: FamilyUser,
+    FamilyModel: Family,
     capabilityService,
     mediaStore,
     now: () => NOW,
@@ -119,6 +121,13 @@ beforeEach(async () => {
   await Promise.all(Object.values(mongoose.connection.collections).map((collection) => collection.deleteMany({})));
   await fs.rm(privateRoot, { recursive: true, force: true });
   await fs.mkdir(privateRoot, { recursive: true, mode: 0o700 });
+  await Family.collection.insertOne({
+    _id: FAMILY_ID,
+    familyName: 'Privacy Family',
+    ownerParentId: PARENT_ID,
+    memberParentIds: [PARENT_ID],
+    childIds: [CHILD_ID]
+  });
   await FamilyUser.collection.insertMany([
     {
       _id: PARENT_ID,
