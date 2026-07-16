@@ -2,8 +2,8 @@
 
 **Gate ID:** FGT-T12-GATE-2026-07-16
 **Baseline:** FGT-MVP-1.7
-**Status:** IMPLEMENTED / LOCAL RELEASE GATE REQUIRED
-**Implementation evidence commit:** `2cbec3d4`
+**Status:** IMPLEMENTED / RELEASE CANDIDATE
+**Implementation evidence commit:** `99515312`
 **Requirements:** `FR-FAM-004`, `FR-FAM-005`, `NFR-DATA-003`
 
 ## 1. Automated Evidence
@@ -26,7 +26,7 @@ storage. Service request logging records method and URL, not request bodies.
 ## 2. Repeatable Commands
 
 The 2026-07-16 implementation candidate produced the following local component evidence without
-retries: 81 family backend suites / 894 tests; two consecutive Task 12 runs of 1 suite / 2 tests;
+retries: 81 family backend suites / 895 tests; two consecutive Task 12 runs of 1 suite / 2 tests;
 29 frontend suites / 183 tests; 4 Task 11 integration suites / 6 tests; 4 Task 11 Chromium tests;
 1 Task 12 Chromium test; ESLint, documentation audit, and production Web build all passed.
 
