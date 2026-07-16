@@ -1,8 +1,14 @@
 const request = require('supertest');
-const app = require('../server');
 const mongoose = require('mongoose');
+const { createApp } = require('../server');
 
 describe('Progress Service 服务器测试', () => {
+  let app;
+
+  beforeEach(() => {
+    app = createApp();
+  });
+
   // 测试健康检查端点
   describe('GET /health', () => {
     it('应该返回服务健康状态', async () => {
