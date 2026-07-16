@@ -58,6 +58,22 @@ const createInvitation = async (app, owner, family) => {
   const path = `/api/families/${family._id}/parent-invitations`;
   return request(app).post(path).set(headers(owner, 'POST', path)).send({});
 };
+const expectInactiveInvitation = async (app, parent, token) => {
+  const expected = {
+    success: false,
+    error: {
+      code: 'FAMILY_INVITATION_NOT_ACTIVE',
+      message: 'Invitation is not active',
+      details: []
+    }
+  };
+  for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
+    const body = path.endsWith('/accept') ? { token, familyRole: 'guardian' } : { token };
+    const response = await request(app).post(path).set(headers(parent, 'POST', path)).send(body);
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual(expected);
+  }
+};
 
 describe('Task 12 parent membership routes', () => {
   let app;
@@ -129,6 +145,7 @@ describe('Task 12 parent membership routes', () => {
     expect(replacement.status).toBe(201);
     expect(replacement.body.data.invitation.invitationId).not.toBe(first.body.data.invitation.invitationId);
     expect((await FamilyParentInvitation.findById(first.body.data.invitation.invitationId)).status).toBe('expired');
+    await expectInactiveInvitation(app, owner, first.body.data.invitation.token);
   });
 
   test('TC-T12-INV-005 revocation is single-use and emits one event', async () => {
@@ -146,6 +163,7 @@ describe('Task 12 parent membership routes', () => {
       familyId: family._id,
       action: 'invitation_revoked'
     })).toBe(1);
+    await expectInactiveInvitation(app, owner, created.body.data.invitation.token);
   });
 
   test('TC-T12-ACCEPT-001 accepts invitation atomically and returns safe parent summaries', async () => {
@@ -191,27 +209,13 @@ describe('Task 12 parent membership routes', () => {
     const familyPath = '/api/families/me';
     const read = await request(app).get(familyPath).set(headers(member, 'GET', familyPath));
     expect(read.body.data.family.parents).toEqual(accepted.body.data.family.parents);
+    await expectInactiveInvitation(app, member, token);
   });
 
   test('TC-T12-INV-007 preview and accept use the same envelope for an unknown token', async () => {
     const parent = await createParent();
     const token = crypto.randomBytes(32).toString('base64url');
-    const expected = {
-      success: false,
-      error: {
-        code: 'FAMILY_INVITATION_NOT_ACTIVE',
-        message: 'Invitation is not active',
-        details: []
-      }
-    };
-    for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
-      const body = path.endsWith('/accept')
-        ? { token, familyRole: 'guardian' }
-        : { token };
-      const response = await request(app).post(path).set(headers(parent, 'POST', path)).send(body);
-      expect(response.status).toBe(409);
-      expect(response.body).toEqual(expected);
-    }
+    await expectInactiveInvitation(app, parent, token);
   });
 
   test('TC-T12-INV-007 checks inactive invitation before account eligibility', async () => {
@@ -287,41 +291,6 @@ describe('Task 12 parent membership routes', () => {
     expect(full.status).toBe(409);
     expect(full.body.error.code).toBe('FAMILY_PARENT_LIMIT_REACHED');
     expect((await FamilyParentInvitation.findById(created.body.data.invitation.invitationId)).status).toBe('pending');
-  });
-
-  test('TC-T12-ACCEPT-004 hides expired, revoked, and consumed invitation history', async () => {
-    const parent = await createParent();
-    const owner = await createParent();
-    const family = await createFamily(owner);
-    const states = [
-      { status: 'expired', expiresAt: new Date(Date.now() - 1000) },
-      { status: 'revoked', expiresAt: new Date(Date.now() + 60_000), revokedAt: new Date() },
-      { status: 'accepted', expiresAt: new Date(Date.now() + 60_000), acceptedAt: new Date() }
-    ];
-
-    for (const state of states) {
-      const token = crypto.randomBytes(32).toString('base64url');
-      await FamilyParentInvitation.create({
-        familyId: family._id,
-        invitedByParentId: owner._id,
-        tokenDigest: crypto.createHash('sha256').update(token).digest('hex'),
-        ...state
-      });
-
-      for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
-        const body = path.endsWith('/accept') ? { token, familyRole: 'guardian' } : { token };
-        const response = await request(app).post(path).set(headers(parent, 'POST', path)).send(body);
-        expect(response.status).toBe(409);
-        expect(response.body).toEqual({
-          success: false,
-          error: {
-            code: 'FAMILY_INVITATION_NOT_ACTIVE',
-            message: 'Invitation is not active',
-            details: []
-          }
-        });
-      }
-    }
   });
 
   test('TC-T12-API-002 rejects unknown invitation and governance fields', async () => {
