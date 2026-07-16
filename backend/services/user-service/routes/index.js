@@ -6,6 +6,7 @@ const authRoutes = require('./auth');
 const userRoutes = require('./user');
 const studentRoutes = require('./student');
 const familyRoutes = require('./family');
+const parentInvitationRoutes = require('./parentInvitations');
 const { createChildrenRouter } = require('./children');
 const { createFamilyController } = require('../controllers/familyController');
 
@@ -16,6 +17,7 @@ const createRoutes = ({ childAvatarMediaService = null } = {}) => {
   composed.use('/users', userRoutes);
   composed.use('/students', studentRoutes);
   composed.use('/families', familyRoutes);
+  composed.use('/parent-invitations', parentInvitationRoutes);
   composed.use('/children', createChildrenRouter({ controller }));
   return composed;
 };

@@ -110,7 +110,7 @@ describe('children routes', () => {
   test('child creation rolls back every relationship when linking the parent fails', async () => {
     const parent = await createParent();
     const family = await createFamily(app, parent, '事务家庭');
-    const update = jest.spyOn(User, 'findByIdAndUpdate')
+    const update = jest.spyOn(User, 'updateMany')
       .mockRejectedValueOnce(new Error('parent child link failed'));
 
     const response = await request(app)

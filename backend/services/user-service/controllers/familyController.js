@@ -12,6 +12,7 @@ const {
   FAMILY_UPDATE_FIELDS
 } = require('../../../common/contracts/familyGrowthApi');
 const { applyEntries, buildChildProfilePatch } = require('../services/childProfilePatch');
+const { createFamilyMembershipService } = require('../services/familyMembershipService');
 
 const PIN_WINDOW_MS = 15 * 60 * 1000;
 const PIN_MAX_FAILURES = 5;
@@ -31,16 +32,8 @@ const recordPinFailure = (failureKey, state, now) => {
 
 const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
-const familyView = (family) => ({
-  familyId: family._id.toString(),
-  familyName: family.familyName,
-  timezone: family.timezone,
-  ownerParentId: family.ownerParentId.toString(),
-  memberParentIds: family.memberParentIds.map((id) => id.toString()),
-  childIds: family.childIds.map((id) => id.toString()),
-  createdAt: family.createdAt,
-  updatedAt: family.updatedAt
-});
+const membershipService = createFamilyMembershipService();
+const familyView = (family) => membershipService.buildFamilyView(family);
 
 const childView = (child, childAvatarMediaService = null) => {
   const profile = child.childProfile || {};
@@ -161,7 +154,7 @@ const getMyFamily = async (req, res) => {
     return res.json({
       success: true,
       data: {
-        family: familyView(family),
+        family: await familyView(family),
         children: orderedChildren,
         defaultChildId: orderedChildren[0] ? orderedChildren[0].childId : null
       }
@@ -215,7 +208,7 @@ const createFamily = async (req, res) => {
     return res.status(201).json({
       success: true,
       data: {
-        family: familyView(family)
+        family: await familyView(family)
       }
     });
   } catch (error) {
@@ -263,7 +256,7 @@ const updateFamily = async (req, res) => {
 
     return res.json({
       success: true,
-      data: { family: familyView(family) }
+      data: { family: await familyView(family) }
     });
   } catch (error) {
     if (error.code === 'VALIDATION_ERROR' || error.name === 'ValidationError') {
@@ -332,8 +325,13 @@ const createChild = async (req, res) => {
         if (Object.keys(parentUpdate.$set).length === 0) {
           delete parentUpdate.$set;
         }
-        const parent = await User.findByIdAndUpdate(req.user.id, parentUpdate, { new: true, session });
-        if (!parent) throw new Error('Parent not found');
+        const parentResult = await User.updateMany({
+          _id: { $in: transactionalFamily.memberParentIds },
+          role: 'parent'
+        }, parentUpdate, { session });
+        if (parentResult.matchedCount !== transactionalFamily.memberParentIds.length) {
+          throw new Error('Active parent projection is incomplete');
+        }
       }
     });
 
