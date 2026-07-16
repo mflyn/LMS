@@ -37,9 +37,9 @@ const respondError = (res, error) => sendFamilyError(
 );
 
 const createParentMembershipController = ({ service = createFamilyMembershipService() } = {}) => {
-  const handler = (work) => async (req, res) => {
+  const handler = (work, { requireParentRole = true } = {}) => async (req, res) => {
     try {
-      requireParent(req);
+      if (requireParentRole) requireParent(req);
       return await work(req, res);
     } catch (error) {
       if (error.code === 11000) {
@@ -85,8 +85,9 @@ const createParentMembershipController = ({ service = createFamilyMembershipServ
     previewInvitation: handler(async (req, res) => {
       requireFieldsOnly(req.body, ['token'], ['token']);
       const invitation = await service.previewInvitation({ token: req.body.token });
+      requireParent(req);
       return res.json({ success: true, data: { invitation } });
-    }),
+    }, { requireParentRole: false }),
     acceptInvitation: handler(async (req, res) => {
       requireFieldsOnly(req.body, ['token', 'familyRole'], ['token', 'familyRole']);
       const family = await service.acceptInvitation({
@@ -95,7 +96,7 @@ const createParentMembershipController = ({ service = createFamilyMembershipServ
         familyRole: req.body.familyRole
       });
       return res.json({ success: true, data: { family } });
-    }),
+    }, { requireParentRole: false }),
     leaveFamily: handler(async (req, res) => {
       requireId(req.params.familyId, 'familyId');
       await service.leaveFamily({ actorParentId: req.user.id, familyId: req.params.familyId });
