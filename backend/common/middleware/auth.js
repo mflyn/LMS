@@ -173,9 +173,11 @@ const generateToken = (user, type = 'access', options = {}) => {
     role: user.role,
     username: user.username
   };
-  ['familyId', 'childId', 'tokenVersion'].forEach((field) => {
-    if (user[field] !== undefined) payload[field] = user[field];
-  });
+  if (user.role === 'student') {
+    ['familyId', 'childId', 'tokenVersion'].forEach((field) => {
+      if (user[field] !== undefined) payload[field] = user[field];
+    });
+  }
   
   const jwtSecret = configManager.get('JWT_SECRET');
   const tokenExpiration = type === 'refresh' 

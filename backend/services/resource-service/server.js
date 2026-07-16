@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const appModule = require('./app');
 const { createLogger } = require('../../common/config/logger');
 const { authenticateGateway } = require('../../common/middleware/auth');
+const Family = require('../../common/models/Family');
 const MediaAsset = require('./models/MediaAsset');
 const MediaReference = require('./models/MediaReference');
 const FamilyUser = require('./models/FamilyUser');
@@ -41,6 +42,7 @@ const createTask6MediaDependencies = ({
   const mediaService = createMediaService({
     MediaAssetModel: MediaAsset,
     MediaReferenceModel: MediaReference,
+    FamilyModel: Family,
     UserModel: FamilyUser,
     capabilityService,
     mediaStore,
