@@ -27,7 +27,7 @@ const createMediaRouter = ({
   }
 
   const router = express.Router();
-  router.get('/:mediaId/content', asyncRoute(async (req, res) => {
+  const readContent = asyncRoute(async (req, res) => {
     const content = await mediaService.readContent({
       mediaId: req.params.mediaId,
       path: `${req.baseUrl}${req.path}`,
@@ -45,7 +45,9 @@ const createMediaRouter = ({
       'X-Content-Type-Options': 'nosniff'
     });
     res.status(200).send(content.bytes);
-  }));
+  });
+  router.get('/:mediaId/content', readContent);
+  router.get('/:mediaId/content/', readContent);
 
   router.use(authenticate);
   router.get('/:mediaId/access', asyncRoute(async (req, res) => {

@@ -892,9 +892,18 @@ describe('Task 6 private media access API', () => {
 
     for (const tampered of cases) {
       const response = await request(app).get(`${tampered.pathname}${tampered.search}`);
-      expect(response.status).toBe(400);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
-      expect(response.body.data).toBeUndefined();
+      expect({
+        url: `${tampered.pathname}${tampered.search}`,
+        status: response.status,
+        body: response.body
+      }).toEqual({
+        url: `${tampered.pathname}${tampered.search}`,
+        status: 400,
+        body: expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({ code: 'VALIDATION_ERROR' })
+        })
+      });
     }
 
     nowMs = FIXED_NOW + 301_000;
