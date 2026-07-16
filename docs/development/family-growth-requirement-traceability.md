@@ -3,7 +3,7 @@
 **Document status:** FGT-MVP-1.7 IMPLEMENTED / RELEASE GATE
 **Implementation conformance:** COVERED (38/38)
 **Baseline candidate:** FGT-MVP-1.7
-**Implementation evidence commit:** `d424192e`
+**Implementation evidence commit:** `a5ebae9b`
 **Revalidated at:** 2026-07-16
 
 Conformance values are `COVERED`, `DESIGN_APPROVED`, `PARTIAL`, and `GAP`. `plannedTask` and
@@ -45,6 +45,8 @@ design asset index, merged code, focused tests, and the unified release gate.
   governance transactions, compatibility projections, stale-token revocation, and repair behavior.
 - React and Chromium tests cover fragment-preserving authentication, one-time token display,
   two stable parent slots, ownership transfer/removal, 360px layout, and browser history cleanup.
+- The unified local release command completed with `status=0` at commit `a5ebae9b`, including
+  Compose image builds, healthy-service checks, the private-media smoke flow, and clean-tree check.
 - Repeatable commands and deployment-only repair preconditions are recorded in the
   [Task 12 Gate](./family-growth-task12-gate.md).
 
