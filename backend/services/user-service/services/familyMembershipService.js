@@ -232,7 +232,7 @@ const createFamilyMembershipService = ({
             { memberParentIds: actorParentId }
           ]
         }), session);
-        if (parent.familyId || existingFamily) {
+        if (existingFamily) {
           throw membershipError(409, 'PARENT_ALREADY_IN_FAMILY', 'Parent already belongs to a family');
         }
 

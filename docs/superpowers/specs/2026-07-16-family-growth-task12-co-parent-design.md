@@ -135,8 +135,9 @@ Only `pending` and unexpired invitations can be accepted or revoked. Preview and
 a well-formed but unknown, expired, revoked, or consumed token return HTTP `409` with the same
 `FAMILY_INVITATION_NOT_ACTIVE` code, message, and details. Only `requestId` may differ. The
 canonical message is `Invitation is not active`, and the response contains no indication that a
-token ever existed, its prior state, family, creator, or acceptor. This inactive-token decision
-precedes accepting-parent eligibility checks; malformed or missing input remains `400`.
+token ever existed, its prior state, family, creator, or acceptor. Both endpoints first require an
+authenticated parent role. For an authenticated parent, the inactive-token decision precedes live
+Family membership eligibility checks; malformed or missing input remains `400`.
 
 ```mermaid
 stateDiagram-v2
@@ -154,7 +155,9 @@ transfer run on a transaction-capable MongoDB replica set through `runMongoTrans
 Invitation acceptance performs these checks and writes atomically:
 
 1. Hash the presented token and select a `pending`, unexpired invitation.
-2. Select the accepting `User` with role `parent` and no current `familyId`.
+2. Select the accepting `User` with role `parent` and verify that no live `Family.ownerParentId` or
+   `Family.memberParentIds` relationship already contains it. `User.familyId` is not consulted for
+   eligibility because it is a compatibility projection.
 3. Conditionally add the parent to a family whose active-member count is below two.
 4. Set `User.familyId`, selected `parentProfile.familyRole`, compatibility `children`, and
    default child where available.
@@ -223,10 +226,10 @@ resource-service must ignore a parent `identity.familyId` or legacy `User.family
 must not authorize media from a stale or forged parent family claim. Child identities continue to
 carry `familyId`, `childId`, and `tokenVersion` for child-scoped authorization.
 
-The invitation preview and accept endpoints require an authenticated `parent`; the public login
-and registration routes preserve the invitation fragment in client navigation only. The server
-never accepts a client-supplied parent ID as the joining identity and request logging must redact
-the `token` body field.
+The invitation preview and accept endpoints require an authenticated `parent` before validating or
+resolving the invitation token; the public login and registration routes preserve the invitation
+fragment in client navigation only. The server never accepts a client-supplied parent ID as the
+joining identity and request logging must redact the `token` body field.
 
 ## 8. Frontend Design
 
