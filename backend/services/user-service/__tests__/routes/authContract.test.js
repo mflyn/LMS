@@ -53,11 +53,12 @@ describe('family auth response contract', () => {
 
     expectSuccessEnvelope(response, 201);
     expect(response.body.data).toEqual({
-      user: expect.objectContaining({
+      user: {
+        id: expect.any(String),
         username: 'contract_parent',
         name: 'Contract Parent',
         role: 'parent'
-      }),
+      },
       token: expect.any(String)
     });
   });
@@ -71,7 +72,12 @@ describe('family auth response contract', () => {
 
     expectSuccessEnvelope(response, 200);
     expect(response.body.data).toEqual({
-      user: expect.objectContaining({ username: 'contract_parent', role: 'parent' }),
+      user: {
+        id: expect.any(String),
+        username: 'contract_parent',
+        name: 'Contract Parent',
+        role: 'parent'
+      },
       token: expect.any(String)
     });
   });

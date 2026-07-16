@@ -21,6 +21,17 @@ const cleanUser = (user) => {
   return userObj;
 };
 
+const cleanAuthUser = (user) => {
+  const userObj = cleanUser(user);
+  if (!userObj) return null;
+  return {
+    id: String(userObj._id),
+    username: userObj.username,
+    name: userObj.name,
+    role: userObj.role
+  };
+};
+
 class UserService {
   async registerUser(userData, logger) {
     logger.info('[UserService] Attempting to register new user', { username: userData.username, email: userData.email });
@@ -70,7 +81,7 @@ class UserService {
       logger.info('[UserService] User registered successfully', { userId: newUser._id, username: newUser.username });
 
       const token = generateToken({ id: newUser._id, username: newUser.username, role: newUser.role });
-      return { user: cleanUser(newUser), token };
+      return { user: cleanAuthUser(newUser), token };
     } catch (error) {
       logger.error('[UserService] Error during user registration', { error: error.message, stack: error.stack });
       if (error.name === 'ValidationError') {
@@ -112,7 +123,7 @@ class UserService {
 
     logger.info('[UserService] User logged in successfully', { userId: user._id, loginIdentifier: username });
     const token = generateToken({ id: user._id, username: user.username, role: user.role });
-    return { user: cleanUser(user), token };
+    return { user: cleanAuthUser(user), token };
   }
 
   async getUserProfile(userId, logger) {

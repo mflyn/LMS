@@ -32,7 +32,9 @@ export const FamilyProvider = ({ children }) => {
 
     const version = requestVersion.current + 1;
     requestVersion.current = version;
-    setFamilyState((current) => ({ ...current, status: 'unknown' }));
+    setFamilyState((current) => (
+      current.status === 'ready' ? current : { ...current, status: 'unknown' }
+    ));
 
     try {
       const payload = await getMyFamily();
