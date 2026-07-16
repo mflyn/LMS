@@ -193,29 +193,25 @@ describe('Task 12 parent membership routes', () => {
     expect(read.body.data.family.parents).toEqual(accepted.body.data.family.parents);
   });
 
-  test('TC-T12-INV-007 preview and accept use the same inactive envelope', async () => {
+  test('TC-T12-INV-007 preview and accept use the same envelope for an unknown token', async () => {
     const parent = await createParent();
-    const unknownToken = crypto.randomBytes(32).toString('base64url');
-    const bodies = [];
-
-    for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
-      const body = path.endsWith('/accept')
-        ? { token: unknownToken, familyRole: 'guardian' }
-        : { token: unknownToken };
-      const response = await request(app).post(path).set(headers(parent, 'POST', path)).send(body);
-      expect(response.status).toBe(409);
-      bodies.push(response.body);
-    }
-
-    expect(bodies[0]).toEqual(bodies[1]);
-    expect(bodies[0]).toEqual({
+    const token = crypto.randomBytes(32).toString('base64url');
+    const expected = {
       success: false,
       error: {
         code: 'FAMILY_INVITATION_NOT_ACTIVE',
         message: 'Invitation is not active',
         details: []
       }
-    });
+    };
+    for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
+      const body = path.endsWith('/accept')
+        ? { token, familyRole: 'guardian' }
+        : { token };
+      const response = await request(app).post(path).set(headers(parent, 'POST', path)).send(body);
+      expect(response.status).toBe(409);
+      expect(response.body).toEqual(expected);
+    }
   });
 
   test('TC-T12-INV-007 checks inactive invitation before account eligibility', async () => {
@@ -466,6 +462,73 @@ describe('Task 12 parent membership routes', () => {
     expect((await Family.findById(family._id)).memberParentIds.map(String)).toEqual([owner._id.toString()]);
     expect((await User.findById(member._id)).familyId).toBeUndefined();
     expect((await FamilyParentInvitation.findById(created.body.data.invitation.invitationId)).status).toBe('pending');
+  });
+
+  test('TC-T12-GOV-006 rejects invalid transfer targets without changing ownership', async () => {
+    const owner = await createParent();
+    const member = await createParent();
+    const outsider = await createParent();
+    const family = await createFamily(owner);
+    family.memberParentIds.addToSet(member._id);
+    await family.save();
+    const path = `/api/families/${family._id}/owner`;
+
+    const cases = [
+      { newOwnerParentId: owner._id.toString(), status: 404 },
+      { newOwnerParentId: outsider._id.toString(), status: 404 },
+      { newOwnerParentId: 'not-an-object-id', status: 400 }
+    ];
+    for (const testCase of cases) {
+      const response = await request(app)
+        .patch(path)
+        .set(headers(owner, 'PATCH', path))
+        .send({ newOwnerParentId: testCase.newOwnerParentId });
+      expect(response.status).toBe(testCase.status);
+      expect((await Family.findById(family._id)).ownerParentId.toString()).toBe(owner._id.toString());
+    }
+  });
+
+  test('TC-T12-GOV-007 rolls back removal, leave, and transfer when event persistence fails', async () => {
+    for (const operation of ['remove', 'leave', 'transfer']) {
+      const owner = await createParent();
+      const member = await createParent();
+      const family = await createFamily(owner);
+      family.memberParentIds.addToSet(member._id);
+      await family.save();
+      member.familyId = family._id;
+      await member.save();
+      const failingService = createFamilyMembershipService({
+        EventModel: { create: jest.fn().mockRejectedValue(new Error(`injected ${operation} failure`)) }
+      });
+
+      let work;
+      if (operation === 'remove') {
+        work = failingService.removeFamilyMember({
+          actorParentId: owner._id,
+          familyId: family._id,
+          targetParentId: member._id
+        });
+      } else if (operation === 'leave') {
+        work = failingService.leaveFamily({ actorParentId: member._id, familyId: family._id });
+      } else {
+        work = failingService.transferOwnership({
+          actorParentId: owner._id,
+          familyId: family._id,
+          newOwnerParentId: member._id
+        });
+      }
+      await expect(work).rejects.toThrow(`injected ${operation} failure`);
+
+      const [storedFamily, storedMember] = await Promise.all([
+        Family.findById(family._id),
+        User.findById(member._id)
+      ]);
+      expect(storedFamily.ownerParentId.toString()).toBe(owner._id.toString());
+      expect(storedFamily.memberParentIds.map(String)).toEqual([
+        owner._id.toString(), member._id.toString()
+      ]);
+      expect(storedMember.familyId.toString()).toBe(family._id.toString());
+    }
   });
 
   test('TC-T12-ACCEPT-005 concurrent acceptance has exactly one winner', async () => {
