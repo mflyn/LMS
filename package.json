@@ -19,6 +19,7 @@
     "docs:family:check": "node scripts/check-family-docs.js",
     "release:family": "bash scripts/release-family-gate.sh",
     "repair:family-relationships": "node backend/services/user-service/scripts/repairFamilyRelationships.js",
+    "repair:family-relationships:check": "node backend/services/user-service/scripts/repairFamilyRelationships.js --check",
     "test:legacy-regression": "jest --config=backend/jest.config.js --coverage=false --selectProjects progress-legacy legacy",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
