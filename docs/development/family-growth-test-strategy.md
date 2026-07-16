@@ -149,3 +149,26 @@ The increment uses two independent gate paths:
 - The protected real-scanner command is `RUN_FAMILY_SECURITY_SCAN=1 npm run test:family-security-scan`. It is secure-production release evidence only when it exits zero on a sufficiently sized runner and is recorded against the candidate commit.
 
 Historical Task 6 and Task 10 gates remain evidence for their original single-value/image-only boundaries. They do not satisfy the increment's `TC-MPA-*` cases.
+
+## 13. Task 12 Second Parent Co-Management
+
+The [Task 12 test design](./family-growth-task12-test-cases.md) extends the implemented v1.6
+baseline with invitation, membership governance, and equal daily parent access. It does not reuse
+single-parent route tests as evidence that a second parent can operate every service.
+
+Task 12 uses four mandatory layers:
+
+1. Model and route tests prove Family invariants, token hashing/redaction, stable errors, and
+   owner-only governance.
+2. Replica-set integration tests prove atomic acceptance, departure, removal, transfer, rollback,
+   and concurrent single-winner behavior.
+3. Cross-service regression proves that the second parent has ordinary access equal to the owner
+   while unrelated and departed parents remain denied.
+4. React and real Chromium tests prove invitation preservation through authentication, member
+   controls, immediate permission changes, responsive layout, and accessible confirmation flows.
+
+Task 12 release evidence cannot use an in-memory standalone MongoDB, mocked transaction helper,
+retry, or only the owner route suite. The focused integration command must pass twice with identical
+totals, followed by family regression, frontend CI/build, Task 11, documentation, generated-artifact,
+and clean-worktree checks. The three Task 12 requirements remain `DESIGN_APPROVED` until all evidence
+is recorded against one candidate commit.

@@ -17,6 +17,9 @@ const authoritativeDocuments = [
   'docs/development/family-growth-baseline-v1.6-manifest.md',
   'docs/development/family-growth-v1.6-release-gate.md',
   'docs/development/family-growth-mistake-pdf-multi-attachments-gate.md',
+  'docs/superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md',
+  'docs/development/family-growth-task12-test-cases.md',
+  'docs/development/family-growth-task12-design-review.md',
   'docs/deployment/README.md',
   'docs/deployment/local-ubuntu-deployment.md',
   'docs/user-guide/README.md',
@@ -173,8 +176,8 @@ function validate() {
     ['docs/api/family-learning-tracker-api.md', api]
   ]) {
     assert(
-      markdown.includes('**Baseline candidate:** FGT-MVP-1.6'),
-      `${relativePath}: baseline candidate must be FGT-MVP-1.6`,
+      markdown.includes('**Baseline candidate:** FGT-MVP-1.7'),
+      `${relativePath}: baseline candidate must be FGT-MVP-1.7`,
       errors
     );
   }
@@ -270,7 +273,7 @@ function validate() {
   const productIds = requirementIds(product);
   const traceabilityIds = requirementIds(traceability);
   const designIds = requirementIds(designIndex);
-  assert(productIds.size === 35, `PRD requirement count is ${productIds.size}, expected 35`, errors);
+  assert(productIds.size === 38, `PRD requirement count is ${productIds.size}, expected 38`, errors);
   assert(
     sameSet(traceabilityIds, productIds),
     'traceability requirement set differs from PRD 10.4',
@@ -285,24 +288,65 @@ function validate() {
   const traceabilityRows = traceability
     .split('\n')
     .filter(line => /^\|\s*`(?:FR|NFR)-[A-Z]+-\d{3}`\s*\|/.test(line));
+  const coveredRows = traceabilityRows.filter(line => line.includes('| COVERED |'));
+  const approvedDesignRows = traceabilityRows.filter(
+    line => line.includes('| DESIGN_APPROVED |')
+  );
+  assert(coveredRows.length === 35, `traceability has ${coveredRows.length} COVERED rows, expected 35`, errors);
   assert(
-    traceabilityRows.every(line => line.includes('| COVERED |')),
-    'every traceability row must be COVERED',
+    approvedDesignRows.length === 3 &&
+      approvedDesignRows.every(line => /`(?:FR-FAM-004|FR-FAM-005|NFR-DATA-003)`/.test(line)),
+    'only the three Task 12 requirements may be DESIGN_APPROVED',
     errors
   );
   assert(
-    traceability.includes('**Document status:** READY_FOR_REVIEW'),
-    'traceability status must be READY_FOR_REVIEW',
+    traceability.includes('**Document status:** TASK 12 DESIGN APPROVED / IMPLEMENTATION PENDING'),
+    'traceability must distinguish Task 12 design approval from implementation',
     errors
   );
   assert(
-    traceability.includes('**Implementation conformance:** COVERED (35/35)'),
-    'traceability must record 35/35 implementation conformance separately from approval',
+    traceability.includes('**Implementation conformance:** COVERED (35/38); DESIGN_APPROVED (3/38)'),
+    'traceability must record covered and design-approved counts separately',
     errors
   );
   assert(
-    traceability.includes('**Baseline candidate:** FGT-MVP-1.6'),
-    'traceability must target FGT-MVP-1.6',
+    traceability.includes('**Baseline candidate:** FGT-MVP-1.7'),
+    'traceability must target FGT-MVP-1.7',
+    errors
+  );
+
+  const task12Design = documents.get(
+    'docs/superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md'
+  ) || '';
+  const task12Tests = documents.get('docs/development/family-growth-task12-test-cases.md') || '';
+  const task12Review = documents.get('docs/development/family-growth-task12-design-review.md') || '';
+  for (const requirement of ['FR-FAM-004', 'FR-FAM-005', 'NFR-DATA-003']) {
+    for (const [name, markdown] of [
+      ['Task 12 design', task12Design],
+      ['Task 12 tests', task12Tests],
+      ['Task 12 review', task12Review]
+    ]) {
+      assert(markdown.includes(requirement), `${name} is missing ${requirement}`, errors);
+    }
+  }
+  for (const requiredText of [
+    'APPROVED DESIGN / IMPLEMENTATION BASELINE',
+    '72 hours',
+    'FamilyParentInvitation',
+    'FamilyMembershipEvent',
+    'FAMILY_INVITATION_NOT_ACTIVE',
+    'runMongoTransaction'
+  ]) {
+    assert(task12Design.includes(requiredText), `Task 12 design is missing ${requiredText}`, errors);
+  }
+  assert(
+    task12Tests.includes('**Document status:** READY_FOR_REVIEW'),
+    'Task 12 test design must remain READY_FOR_REVIEW until separately approved',
+    errors
+  );
+  assert(
+    task12Review.includes('**Status:** APPROVED'),
+    'Task 12 design review must record approval',
     errors
   );
 
