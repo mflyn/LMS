@@ -2,8 +2,8 @@
 
 **Gate ID:** FGT-T12-GATE-2026-07-16
 **Baseline:** FGT-MVP-1.7
-**Status:** IMPLEMENTED / RELEASE CANDIDATE
-**Implementation evidence commit:** `d424192e`
+**Status:** IMPLEMENTED / LOCAL RELEASE GATE PASSED
+**Implementation evidence commit:** `a5ebae9b`
 **Requirements:** `FR-FAM-004`, `FR-FAM-005`, `NFR-DATA-003`
 
 ## 1. Automated Evidence
@@ -29,6 +29,9 @@ The 2026-07-16 implementation candidate produced the following local component e
 retries: 81 family backend suites / 895 tests; two consecutive Task 12 runs of 1 suite / 2 tests;
 29 frontend suites / 183 tests; 4 Task 11 integration suites / 6 tests; 4 Task 11 Chromium tests;
 1 Task 12 Chromium test; ESLint, documentation audit, and production Web build all passed.
+The unified release command completed with `status=0` at commit `a5ebae9b`; Compose validation,
+image builds, service health checks, the private-media smoke flow, teardown, and the clean-tree
+check also passed in that run.
 
 The unified local and CI release command is:
 
