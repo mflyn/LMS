@@ -2,6 +2,7 @@
 
 **Document status:** APPROVED DESIGN / IMPLEMENTATION BASELINE
 **Approved:** 2026-07-16
+**Approved revision:** 2026-07-16 review remediation
 **Baseline candidate:** FGT-MVP-1.7
 **Scope:** Second-parent invitation, equal daily management, owner governance, membership audit, and parent Web flows
 **Requirements:** `FR-FAM-004`, `FR-FAM-005`, `NFR-DATA-003`
@@ -67,6 +68,14 @@ loses read and write access to the family.
 only as a compatibility projection for legacy readers. Membership transactions synchronize
 that projection, but no Task 12 authorization decision reads it.
 
+Every mutation that changes `Family.childIds` or active parent membership updates
+`User.familyId`, `User.children`, and `parentProfile.defaultChildId` for every affected active
+parent in the same transaction. A valid existing default child is preserved; a missing or invalid
+default is repaired from the canonical child set. A failed projection write rolls back the
+canonical write. The service does not perform a full-database relationship scan at startup:
+historical drift is a release-preflight concern handled by the repair command and its strict
+`--check` mode.
+
 ### 3.2 FamilyParentInvitation
 
 | Field | Type | Constraint |
@@ -122,9 +131,12 @@ stateDiagram-v2
   expired --> [*]
 ```
 
-Only `pending` and unexpired invitations can be accepted or revoked. Reusing an accepted,
-revoked, or expired token returns the same stable invalid-invitation response so callers cannot
-use error differences to inspect invitation history.
+Only `pending` and unexpired invitations can be accepted or revoked. Preview and acceptance of
+a well-formed but unknown, expired, revoked, or consumed token return HTTP `409` with the same
+`FAMILY_INVITATION_NOT_ACTIVE` code, message, and details. Only `requestId` may differ. The
+canonical message is `Invitation is not active`, and the response contains no indication that a
+token ever existed, its prior state, family, creator, or acceptor. This inactive-token decision
+precedes accepting-parent eligibility checks; malformed or missing input remains `400`.
 
 ```mermaid
 stateDiagram-v2
@@ -158,6 +170,11 @@ Removal and departure atomically remove the member from `memberParentIds`, clear
 transfer atomically changes only `ownerParentId` and appends the before/after event; both parents
 remain in `memberParentIds`.
 
+Adding or changing a child atomically projects the canonical `Family.childIds` set and valid
+default-child choice to both active parents. No create-child path may update only the requesting
+parent. Projection maintenance is a write invariant, while `Family` remains the recovery and
+authorization source.
+
 ## 6. Public API
 
 | Method and path | Actor | Result |
@@ -188,14 +205,23 @@ Stable errors include:
 | 404 | `FAMILY_MEMBER_NOT_FOUND` | requested removable or transfer target is not an active member |
 
 All errors use the existing family error envelope and contain no token or membership details
-beyond the stable code.
+beyond the stable code. For inactive invitation preview and acceptance, the complete stable
+`error.code`, `error.message`, and `error.details` are identical; only the per-request
+`requestId` differs.
 
 ## 7. Authentication and Immediate Revocation
 
-Parent access tokens continue to identify only the account and role for family authorization.
-Every protected family operation resolves the live `Family` relationship. Acceptance therefore
-does not require issuing a new token, and removal or departure takes effect on the next family
-request even if the old access token remains cryptographically valid.
+Parent access tokens and Gateway parent identity envelopes identify only the account and role for
+family authorization; they do not contain an authoritative `familyId`. Every protected family
+operation resolves the live `Family` relationship. Acceptance therefore does not require issuing
+a new token, and removal or departure takes effect on the next family request even if the old
+access token remains cryptographically valid.
+
+Homework, progress, analytics, notification, and resource services must query Family with the
+authenticated parent ID using `ownerParentId` or `memberParentIds`. In particular,
+resource-service must ignore a parent `identity.familyId` or legacy `User.familyId` shortcut and
+must not authorize media from a stale or forged parent family claim. Child identities continue to
+carry `familyId`, `childId`, and `tokenVersion` for child-scoped authorization.
 
 The invitation preview and accept endpoints require an authenticated `parent`; the public login
 and registration routes preserve the invitation fragment in client navigation only. The server
@@ -211,9 +237,12 @@ parent authentication boundary. The member page shows two stable slots, ownershi
 relationship, and the controls permitted to the current parent.
 
 An unauthenticated visitor opening an invitation URL is redirected within the SPA to login while
-preserving the token in the URL fragment, never a query string or server-visible path. After login
-or registration, the client returns to the invitation preview and replaces the token-bearing
-history entry after acceptance.
+preserving the token in the URL fragment, never a query string or server-visible path. The client
+reads it through React Router `useLocation().hash`, preserves the full whitelisted return location
+through both login and registration, and returns only to `/family/invitations`. It does not copy
+the token to query parameters, request URLs, `localStorage`, or `sessionStorage`. After successful
+acceptance, `navigate('/app/family-members', { replace: true })` removes the token-bearing history
+entry so browser Back does not restore it.
 
 ### 8.2 Owner Interactions
 
@@ -242,14 +271,29 @@ clickable text.
 ## 9. Service and Compatibility Impact
 
 User-service owns invitation, membership, and audit writes. Gateway exposes only the public paths
-listed in section 6. Homework, progress, analytics, resource, and notification services retain
-their existing owner/member family lookup and receive regression coverage for second-parent
-access.
+listed in section 6. Homework, progress, analytics, and notification retain their live
+owner/member family lookup. Resource-service replaces its parent `identity.familyId`/
+`User.familyId` shortcut with the same live Family lookup. Every service receives second-parent,
+cross-family, forged-claim, and post-removal regression coverage as applicable.
 
-Existing one-parent families are already valid: their owner appears in `memberParentIds`. A repair
-command must normalize missing owner membership, duplicate IDs, stale `User.familyId`, and legacy
-`User.children` before release. It reports conflicts and does not guess when one parent appears in
-multiple families.
+Historical one-parent families are valid only after their owner is present exactly once in
+`memberParentIds` and their compatibility projections agree with Family. The repair command must
+normalize missing owner membership, duplicate IDs, stale `User.familyId`, and legacy
+`User.children`. It reports conflicts and makes no write when one parent appears in multiple
+families or when the discovered candidate member set would exceed two.
+
+The release upgrade order is mandatory:
+
+1. Keep Task 12 routes and UI disabled.
+2. Run the repair command in dry-run mode and save its report.
+3. Resolve every ambiguous multi-family or over-two-member conflict manually.
+4. Apply deterministic repairs.
+5. Run the command with `--check`; it must report zero pending operations and zero conflicts and
+   exit `0`. Any operation or conflict exits nonzero.
+6. Enable the new schema validation, Task 12 routes, and UI only after the check passes.
+
+This preflight replaces a startup-time global scan. Runtime mutations still enforce the same
+invariants transactionally.
 
 Rollback disables Task 12 routes and UI while preserving invitation/event collections and current
 two-parent relationships. Because existing service authorization already recognizes
@@ -266,6 +310,9 @@ The Task 12 gate requires:
 - numbered `TC-T12-*` cases passing without retries;
 - transaction-capable MongoDB evidence for concurrent acceptance and rollback;
 - owner/member/cross-family authorization across every family service;
+- parent tokens/envelopes without authoritative `familyId`, plus stale/forged parent family-claim
+  rejection in resource-service;
+- two-parent compatibility projection synchronization and a zero-drift release `--check`;
 - frontend regression and production build;
 - desktop and 360px Chromium invitation, co-management, transfer, and removal flows;
 - two consecutive focused Task 12 integration runs with identical totals;

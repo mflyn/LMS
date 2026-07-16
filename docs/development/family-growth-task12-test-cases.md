@@ -14,6 +14,9 @@
 - Cross-service tests use signed gateway identity envelopes and real family relationships.
 - Frontend tests mock only public API envelopes; the browser gate uses the real gateway and APIs.
 - Logs and responses are inspected to prove that clear invitation tokens and digests are absent.
+- Parent authorization tests reject token/envelope family claims and resolve live Family membership,
+  including resource-service media access.
+- Historical projection consistency is a release-preflight check, not a service-startup dependency.
 - No retry converts an unstable test into release evidence.
 
 ## 2. Model and Invitation Lifecycle
@@ -28,6 +31,7 @@
 | `TC-T12-INV-004` | Owner creates after prior invitation elapsed. | Prior row becomes expired and one new invitation is created atomically. | fixed-clock route test |
 | `TC-T12-INV-005` | Owner revokes active invitation twice. | First returns `204`; replay returns `409 FAMILY_INVITATION_NOT_ACTIVE` without another event. | route test |
 | `TC-T12-INV-006` | Inspect API responses, request targets, application logs, errors, and audit events. | Clear token appears in the create response and redacted preview/accept body only; token and digest are absent from request URLs, other responses, logs, errors, and events. | log-capture security test |
+| `TC-T12-INV-007` | Preview and accept well-formed unknown, expired, revoked, and consumed tokens, including with an ineligible parent. | Both endpoints return the same `409`, code, message, and details for every state before eligibility checks; only requestId differs. Missing/malformed input remains `400`. | cross-endpoint contract test |
 
 ## 3. Acceptance and Concurrency
 
@@ -48,6 +52,10 @@
 | `TC-T12-ACCESS-001` | Second parent reads and updates family settings and child profile. | Same success contract as owner. | user-service integration test |
 | `TC-T12-ACCESS-002` | Second parent creates/completes/confirms tasks and manages logs, mistakes, media, reports, reminders, points, and rewards. | Every existing daily operation succeeds for the shared family and remains scoped to it. | selected service regression matrix |
 | `TC-T12-ACCESS-003` | Second parent accesses another family or sibling through forged IDs. | Stable `403`; no foreign data returned or mutated. | cross-service security tests |
+| `TC-T12-ACCESS-004` | Parent sends a forged/stale familyId identity claim, then is removed and retries media access. | Every parent service ignores the claim, resolves live Family, and resource-service denies foreign and post-removal media. | signed-envelope cross-service security test |
+| `TC-T12-AUTH-001` | Register, login, and accept as a parent and inspect JWT payload and Gateway envelope. | No authoritative `familyId` is emitted; accepting succeeds without token refresh. | real auth contract test |
+| `TC-T12-PROJ-001` | Either parent creates or changes a child while two parents are active. | Family childIds and both parents' children/default-child projections commit together and agree. | user-service transaction test |
+| `TC-T12-PROJ-002` | Inject failure while updating either parent's compatibility projection. | Family child/member change and every projection roll back; no partial relationship remains. | transaction rollback test |
 | `TC-T12-GOV-001` | Non-owner attempts invite, revoke, remove, or transfer. | `403 FAMILY_GOVERNANCE_DENIED`; no state/event changes. | user-service route test |
 | `TC-T12-GOV-002` | Owner removes active second parent. | Membership and User projection clear atomically; history remains; one removal event exists. | transaction integration test |
 | `TC-T12-GOV-003` | Second parent leaves. | Same atomic cleanup and history retention with one leave event. | transaction integration test |
@@ -69,6 +77,7 @@
 | `TC-T12-UI-004` | Second parent uses normal family pages. | Navigation and child workflows match owner; governance controls remain absent. | React integration test |
 | `TC-T12-UI-005` | Owner transfers ownership then old owner reloads. | Controls swap immediately according to server response. | React and Chromium test |
 | `TC-T12-UI-006` | Remove or leave after confirmation. | History-retention copy is visible; family route becomes inaccessible to departed member. | React and Chromium test |
+| `TC-T12-UI-007` | Traverse invitation through login and registration, refresh, accept, and browser Back. | `useLocation().hash` survives only the whitelisted auth return; token never enters query/storage, and replace navigation prevents history restoration after acceptance. | React and Chromium history/storage test |
 | `TC-T12-UX-001` | Complete invite, accept, shared task, transfer, and removal at desktop and 360px. | No overflow, overlap, inaccessible controls, or relevant console errors. | Chromium, one worker, zero retries |
 
 ## 6. Repair, Regression, and Gate
@@ -77,6 +86,8 @@
 | --- | --- | --- | --- |
 | `TC-T12-REPAIR-001` | Run repair against missing owner membership, duplicate IDs, and stale compatibility projections. | Deterministic changes are corrected and reported. | repair script test |
 | `TC-T12-REPAIR-002` | Run repair where one parent appears in conflicting families. | Conflict is reported and no guessed reassignment occurs. | repair script test |
+| `TC-T12-REPAIR-003` | Run `--check` before and after deterministic repair. | Pending operations or conflicts exit nonzero; zero operations and zero conflicts exit `0`. | repair CLI test |
+| `TC-T12-REPAIR-004` | Repair discovers more than two candidate parents for one family. | It reports a conflict, writes nothing for that family, and never truncates the member set. | repair script test |
 | `TC-T12-REG-001` | Run Task 12 focused integration twice. | Identical totals, zero failures, no open handles. | Task 12 gate |
 | `TC-T12-REG-002` | Run family backend, frontend, Task 11, production build, docs, and clean-worktree checks. | Every command exits zero and no generated artifact is tracked. | Task 12 gate and CI |
 | `TC-T12-REG-003` | Roll back Task 12 routes/UI with a two-parent family present. | Existing services still authorize both members; no relationship or history is deleted. | rollback integration test |
@@ -87,13 +98,15 @@ Entry requires approved product, overall, detailed, API, and test designs; no op
 BLOCKER or MAJOR finding; and a passing v1.6 baseline.
 
 Exit requires every `TC-T12-*` case to have executable evidence, all Task 12 and regression
-commands to pass without retries, traceability to move all three requirements to `COVERED`, and
-the v1.7 candidate manifest to identify the verified implementation commit and remote CI run.
+commands to pass without retries, and the repair sequence to complete dry-run, conflict resolution,
+apply, then a zero-drift `--check` before Task 12 is enabled. Traceability must move all three
+requirements to `COVERED`, and the v1.7 candidate manifest must identify the verified implementation
+commit and remote CI run.
 
 ## 8. Requirement Traceability
 
 | Requirement | Cases |
 | --- | --- |
-| `FR-FAM-004` | `INV-*`, `ACCEPT-*`, `ACCESS-*`, `API-*`, `UI-001` to `004`, `UX-001` |
+| `FR-FAM-004` | `INV-*`, `ACCEPT-*`, `ACCESS-*`, `AUTH-*`, `PROJ-*`, `API-*`, `UI-001` to `004`, `UI-007`, `UX-001` |
 | `FR-FAM-005` | `GOV-*`, `UI-005` to `006`, `UX-001`, `REG-003` |
-| `NFR-DATA-003` | `MODEL-*`, `ACCEPT-005` to `007`, `GOV-007` to `008`, `REPAIR-*`, `REG-*` |
+| `NFR-DATA-003` | `MODEL-*`, `ACCEPT-005` to `007`, `ACCESS-004`, `AUTH-*`, `PROJ-*`, `GOV-007` to `008`, `REPAIR-*`, `REG-*` |

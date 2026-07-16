@@ -163,12 +163,21 @@ Task 12 uses four mandatory layers:
 2. Replica-set integration tests prove atomic acceptance, departure, removal, transfer, rollback,
    and concurrent single-winner behavior.
 3. Cross-service regression proves that the second parent has ordinary access equal to the owner
-   while unrelated and departed parents remain denied.
+   while unrelated and departed parents remain denied. Parent JWTs/envelopes contain no
+   authoritative family claim; resource-service and every other parent service must ignore a
+   forged or stale `familyId` and resolve live Family owner/member membership.
 4. React and real Chromium tests prove invitation preservation through authentication, member
    controls, immediate permission changes, responsive layout, and accessible confirmation flows.
+   The browser matrix covers both login and registration, Router fragment preservation, persistent
+   storage inspection, and replace-navigation removal of the token-bearing history entry.
 
 Task 12 release evidence cannot use an in-memory standalone MongoDB, mocked transaction helper,
 retry, or only the owner route suite. The focused integration command must pass twice with identical
 totals, followed by family regression, frontend CI/build, Task 11, documentation, generated-artifact,
 and clean-worktree checks. The three Task 12 requirements remain `DESIGN_APPROVED` until all evidence
 is recorded against one candidate commit.
+
+The release preflight keeps Task 12 disabled while the relationship repair command runs in dry-run
+mode, conflicts are resolved, deterministic changes are applied, and `--check` reports zero pending
+operations and conflicts with exit code `0`. A startup-time full-database assertion is not release
+evidence and must not make user-service availability depend on historical compatibility drift.

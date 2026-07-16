@@ -523,7 +523,12 @@ sequenceDiagram
 - **一致性保证：** Family、User、邀请和成员事件全部提交或全部回滚；并发接受最多
   一个成功；所有者始终在成员集合且家庭最多两位家长。
 - **权限切换：** 家长 JWT 不作为家庭关系缓存。加入、退出、移除和转移后的下一次
-  业务请求读取实时 Family 关系。
+  业务请求读取实时 Family 关系。父级 JWT/身份信封不提供授权性 `familyId`；包括
+  resource-service 在内的下游服务忽略伪造或陈旧父级家庭声明。
+- **前端 token：** React Router 从 fragment 读取邀请，登录/注册只保留白名单邀请回跳；
+  接受成功以 replace 导航清除 token-bearing history，且不写浏览器持久存储。
+- **升级前置：** Task 12 保持关闭，关系修复依次执行 dry-run、冲突处理、apply 和
+  `--check`；只有零操作、零冲突且退出码为 `0` 才启用新 schema、路由和 UI。
 
 ## 10. 一致性模式汇总
 

@@ -11,6 +11,7 @@ const authoritativeDocuments = [
   'docs/product/family-learning-tracker.md',
   'docs/architecture/family-learning-tracker-architecture.md',
   'docs/architecture/sequence-diagrams.md',
+  'docs/architecture/decisions/0008-co-parent-membership-governance.md',
   'docs/api/family-learning-tracker-api.md',
   'docs/development/family-growth-requirement-traceability.md',
   'docs/development/family-growth-design-asset-index.md',
@@ -320,6 +321,9 @@ function validate() {
   ) || '';
   const task12Tests = documents.get('docs/development/family-growth-task12-test-cases.md') || '';
   const task12Review = documents.get('docs/development/family-growth-task12-design-review.md') || '';
+  const task12Adr = documents.get(
+    'docs/architecture/decisions/0008-co-parent-membership-governance.md'
+  ) || '';
   for (const requirement of ['FR-FAM-004', 'FR-FAM-005', 'NFR-DATA-003']) {
     for (const [name, markdown] of [
       ['Task 12 design', task12Design],
@@ -335,9 +339,35 @@ function validate() {
     'FamilyParentInvitation',
     'FamilyMembershipEvent',
     'FAMILY_INVITATION_NOT_ACTIVE',
-    'runMongoTransaction'
+    'runMongoTransaction',
+    'useLocation().hash',
+    'resource-service',
+    '`--check`'
   ]) {
     assert(task12Design.includes(requiredText), `Task 12 design is missing ${requiredText}`, errors);
+  }
+  for (const requiredText of [
+    '**Status:** Accepted',
+    'opaque token',
+    'Family.memberParentIds',
+    'User.children',
+    'MongoDB',
+    'resource-service',
+    '`--check`'
+  ]) {
+    assert(task12Adr.includes(requiredText), `ADR-0008 is missing ${requiredText}`, errors);
+  }
+  for (const testId of [
+    'TC-T12-INV-007',
+    'TC-T12-ACCESS-004',
+    'TC-T12-AUTH-001',
+    'TC-T12-PROJ-001',
+    'TC-T12-PROJ-002',
+    'TC-T12-UI-007',
+    'TC-T12-REPAIR-003',
+    'TC-T12-REPAIR-004'
+  ]) {
+    assert(task12Tests.includes(testId), `Task 12 tests are missing ${testId}`, errors);
   }
   assert(
     task12Tests.includes('**Document status:** READY_FOR_REVIEW'),
