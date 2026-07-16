@@ -3,7 +3,7 @@
 **Gate ID:** FGT-T12-GATE-2026-07-16
 **Baseline:** FGT-MVP-1.7
 **Status:** IMPLEMENTED / RELEASE CANDIDATE
-**Implementation evidence commit:** `99515312`
+**Implementation evidence commit:** `d424192e`
 **Requirements:** `FR-FAM-004`, `FR-FAM-005`, `NFR-DATA-003`
 
 ## 1. Automated Evidence

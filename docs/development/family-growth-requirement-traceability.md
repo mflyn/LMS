@@ -3,7 +3,7 @@
 **Document status:** FGT-MVP-1.7 IMPLEMENTED / RELEASE GATE
 **Implementation conformance:** COVERED (38/38)
 **Baseline candidate:** FGT-MVP-1.7
-**Implementation evidence commit:** `99515312`
+**Implementation evidence commit:** `d424192e`
 **Revalidated at:** 2026-07-16
 
 Conformance values are `COVERED`, `DESIGN_APPROVED`, `PARTIAL`, and `GAP`. `plannedTask` and
