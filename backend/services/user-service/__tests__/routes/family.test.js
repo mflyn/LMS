@@ -188,9 +188,17 @@ describe('family routes', () => {
 
   test('database enforces one owned family per parent', async () => {
     const parent = await createParent();
-    await Family.create({ familyName: '第一个家', ownerParentId: parent._id });
+    await Family.create({
+      familyName: '第一个家',
+      ownerParentId: parent._id,
+      memberParentIds: [parent._id]
+    });
 
-    await expect(Family.create({ familyName: '第二个家', ownerParentId: parent._id }))
+    await expect(Family.create({
+      familyName: '第二个家',
+      ownerParentId: parent._id,
+      memberParentIds: [parent._id]
+    }))
       .rejects.toMatchObject({ code: 11000 });
   });
 

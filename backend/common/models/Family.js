@@ -39,4 +39,20 @@ const familySchema = new Schema({
 familySchema.index({ memberParentIds: 1 });
 familySchema.index({ childIds: 1 });
 
+familySchema.pre('validate', function validateParentMembership(next) {
+  const ownerId = this.ownerParentId ? this.ownerParentId.toString() : null;
+  const memberIds = (this.memberParentIds || []).map((id) => id.toString());
+  const uniqueMemberIds = new Set(memberIds);
+
+  if (!ownerId || memberIds.length < 1 || memberIds.length > 2
+    || uniqueMemberIds.size !== memberIds.length || !uniqueMemberIds.has(ownerId)) {
+    this.invalidate(
+      'memberParentIds',
+      'memberParentIds must contain the owner exactly once and at most one additional parent'
+    );
+  }
+
+  next();
+});
+
 module.exports = mongoose.models.Family || mongoose.model('Family', familySchema);

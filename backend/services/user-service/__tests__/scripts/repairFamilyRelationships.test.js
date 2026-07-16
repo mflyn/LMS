@@ -26,9 +26,20 @@ const createChild = (familyId, overrides = {}) => User.create({
 });
 
 describe('family relationship repair command', () => {
+  const insertHistoricalFamily = async (values) => {
+    const _id = values._id || new Family()._id;
+    await Family.collection.insertOne({
+      _id,
+      timezone: 'Asia/Shanghai',
+      childIds: [],
+      ...values
+    });
+    return Family.findById(_id);
+  };
+
   test('dry-run emits auditable changes without writing data', async () => {
     const parent = await createParent();
-    const family = await Family.create({
+    const family = await insertHistoricalFamily({
       familyName: 'Repair Family',
       ownerParentId: parent._id,
       memberParentIds: [],
@@ -61,7 +72,7 @@ describe('family relationship repair command', () => {
 
   test('apply repairs Family, parent, and child links in one transaction', async () => {
     const parent = await createParent();
-    const family = await Family.create({
+    const family = await insertHistoricalFamily({
       familyName: 'Apply Family',
       ownerParentId: parent._id,
       memberParentIds: [],
