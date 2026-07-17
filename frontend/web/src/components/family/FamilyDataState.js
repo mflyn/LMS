@@ -8,6 +8,18 @@ const stateCopy = {
   retryable_error: '暂时无法加载数据，请重试。'
 };
 
+const sourceLabels = {
+  tasks: '任务数据',
+  mistakes: '错题数据',
+  logs: '成长记录',
+  weeklyReport: '周报数据',
+  analytics: '分析数据',
+  progress: '进度数据',
+  homework: '作业数据',
+  notifications: '通知数据',
+  resources: '资源数据'
+};
+
 const errorMessage = (error) => error?.response?.data?.error?.message || error?.message;
 
 const FamilyDataState = ({ state, unavailableSources = [], error, onRetry }) => {
@@ -19,7 +31,7 @@ const FamilyDataState = ({ state, unavailableSources = [], error, onRetry }) => 
       {state === 'error' && errorMessage(error) && <p className="family-form-error">{errorMessage(error)}</p>}
       {state === 'partial' && unavailableSources.length > 0 && (
         <ul aria-label="暂不可用的数据来源">
-          {unavailableSources.map((source) => <li key={source}>{source}</li>)}
+          {unavailableSources.map((source) => <li key={source}>{sourceLabels[source] || source}</li>)}
         </ul>
       )}
       {state === 'retryable_error' && onRetry && (

@@ -61,24 +61,24 @@ const getOrCreateSettings = async (SettingsModel, familyId) => {
   return settings;
 };
 
-const parsePatch = (body) => {
+  const parsePatch = (body) => {
   const details = [];
   OWNERSHIP_FIELDS.forEach((field) => {
     if (Object.prototype.hasOwnProperty.call(body, field)) {
-      details.push({ field, message: `${field} cannot be updated by clients` });
+      details.push({ field, message: `${field} 不允许客户端修改` });
     }
   });
 
   SWITCH_FIELDS.forEach((field) => {
     if (Object.prototype.hasOwnProperty.call(body, field) && typeof body[field] !== 'boolean') {
-      details.push({ field, message: `${field} must be boolean` });
+      details.push({ field, message: `${field} 必须为布尔值` });
     }
   });
 
   if (Object.prototype.hasOwnProperty.call(body, 'weeklyReportDay')) {
     const day = body.weeklyReportDay;
     if (!Number.isInteger(day) || day < 1 || day > 7) {
-      details.push({ field: 'weeklyReportDay', message: 'weeklyReportDay must be an integer from 1 to 7' });
+      details.push({ field: 'weeklyReportDay', message: 'weeklyReportDay 必须为 1 到 7 的整数' });
     }
   }
 
@@ -87,12 +87,12 @@ const parsePatch = (body) => {
     if (!quietHours || typeof quietHours !== 'object'
       || !TIME_PATTERN.test(quietHours.start || '')
       || !TIME_PATTERN.test(quietHours.end || '')) {
-      details.push({ field: 'quietHours', message: 'quietHours.start and quietHours.end must use HH:mm' });
+      details.push({ field: 'quietHours', message: 'quietHours.start 和 quietHours.end 必须使用 HH:mm 格式' });
     }
   }
 
   if (details.length > 0) {
-    const error = new Error('Invalid reminder settings');
+    const error = new Error('提醒设置参数无效');
     error.details = details;
     throw error;
   }
@@ -116,15 +116,15 @@ const createFamilyNotificationsRouter = ({
     try {
       const childId = req.query.childId;
       if (!childId) {
-        return sendError(res, 400, 'VALIDATION_ERROR', 'childId is required');
+        return sendError(res, 400, 'VALIDATION_ERROR', '缺少 childId 参数');
       }
       if (req.query.date && !assertValidLocalDate(req.query.date)) {
-        return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid date');
+        return sendError(res, 400, 'VALIDATION_ERROR', '日期格式无效');
       }
 
       const access = await resolveChildAccess(req.user, childId);
       if (!access) {
-        return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this child reminders');
+        return sendError(res, 403, 'CHILD_ACCESS_DENIED', '无法访问该孩子的提醒');
       }
 
       const familyId = access.family._id.toString();
@@ -146,7 +146,7 @@ const createFamilyNotificationsRouter = ({
       if (error.name === 'ValidationError' || error.name === 'CastError') {
         return sendError(res, 400, 'VALIDATION_ERROR', error.message);
       }
-      return sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error');
+      return sendError(res, 500, 'INTERNAL_ERROR', '服务器内部错误');
     }
   });
 
@@ -154,7 +154,7 @@ const createFamilyNotificationsRouter = ({
     try {
       const access = await resolveFamilyAccess(req.user, req.query.familyId);
       if (!access) {
-        return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this family reminder settings');
+        return sendError(res, 403, 'CHILD_ACCESS_DENIED', '无法访问该家庭的提醒设置');
       }
 
       const familyId = access.familyId;
@@ -164,19 +164,19 @@ const createFamilyNotificationsRouter = ({
       if (error.name === 'ValidationError' || error.name === 'CastError') {
         return sendError(res, 400, 'VALIDATION_ERROR', error.message);
       }
-      return sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error');
+      return sendError(res, 500, 'INTERNAL_ERROR', '服务器内部错误');
     }
   });
 
   router.patch('/settings', authenticateGateway, async (req, res) => {
     try {
       if (req.user.role !== 'parent') {
-        return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Only parents can update reminder settings');
+        return sendError(res, 403, 'CHILD_ACCESS_DENIED', '仅家长可以修改提醒设置');
       }
 
       const access = await resolveFamilyAccess(req.user);
       if (!access) {
-        return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this family reminder settings');
+        return sendError(res, 403, 'CHILD_ACCESS_DENIED', '无法访问该家庭的提醒设置');
       }
 
       const familyId = access.familyId;
@@ -196,7 +196,7 @@ const createFamilyNotificationsRouter = ({
       if (error.name === 'ValidationError' || error.name === 'CastError') {
         return sendError(res, 400, 'VALIDATION_ERROR', error.message);
       }
-      return sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error');
+      return sendError(res, 500, 'INTERNAL_ERROR', '服务器内部错误');
     }
   });
 
