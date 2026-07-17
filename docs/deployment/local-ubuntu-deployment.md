@@ -412,6 +412,30 @@ docker compose -f docker-compose.ubuntu.yml exec mongo mongosh learning-tracker 
 
 该操作只需在首次部署时执行一次。
 
+### 4.9 家庭成员关系修复（Task 12 双家长功能必需）
+
+> **注意**：仅在**已有历史数据**的升级场景才需要执行此步骤。
+> 全新首次部署（数据库为空）不需要此步骤。
+
+项目 Task 12 新增了第二家长共管功能，引入了 `FamilyMembership` 数据模型。
+若服务器上已有家庭数据，启用新代码前必须先完成数据修复，否则双家长功能无法正常使用：
+
+```bash
+# 第 1 步：干跑检查，查看需要修复的内容（不会修改数据）
+MONGO_URI="mongodb://127.0.0.1:27017/learning-tracker?replicaSet=rs0" \
+  npm run repair:family-relationships
+
+# 第 2 步：应用修复
+MONGO_URI="mongodb://127.0.0.1:27017/learning-tracker?replicaSet=rs0" \
+  npm run repair:family-relationships -- --apply
+
+# 第 3 步：验证修复结果（必须返回零操作、零冲突，exit code 0）
+MONGO_URI="mongodb://127.0.0.1:27017/learning-tracker?replicaSet=rs0" \
+  npm run repair:family-relationships:check
+```
+
+`--check` 返回 `exit code 0` 才算通过。如有冲突（如同一家庭超过两个家长候选），需手动解决后再继续。
+
 ---
 
 ## 5. 验证与使用
@@ -476,6 +500,9 @@ docker stats
 ```bash
 sudo systemctl enable docker
 ```
+
+> `docker-compose.ubuntu.yml` 中所有服务均已配置 `restart: always`。
+> 只要 Docker 开机自启，服务器重启后所有容器会自动恢复，无需人工干预。
 
 ### 6.2 创建应用自启服务
 
@@ -565,20 +592,63 @@ sudo systemctl restart docker
 
 需要重启 Docker 后重新 `up -d` 使配置生效。
 
-### 7.3 定期更新
+### 7.3 更新代码
+
+#### 数据安全说明
+
+Docker 业务数据保存在**卷（Volume）**中，与容器生命周期分离。
+以下操作**不会丢失**家庭数据、用户信息、任务记录和附件：
+
+| 操作 | 数据是否保留 |
+|------|:---:|
+| `docker compose down`（不加 `-v`） | ✅ 保留 |
+| `docker compose up -d` | ✅ 保留 |
+| `docker compose up -d --build`（重建镜像） | ✅ 保留 |
+| 服务器重启后 `docker compose up -d` | ✅ 保留 |
+| `docker compose down -v` ⚠️ | ❌ **永久删除** |
+
+**原则**：常规故障排查和代码更新只执行 `down`（不加 `-v`）和 `up -d --build`。
+只有确认要彻底重置整个系统时才使用 `down -v`。
+
+#### 完整更新流程
 
 ```bash
-# 先备份并确认没有本地未提交修改，再切换到已通过发布门禁的新提交
 cd ~/LMS
-git status --short
-git fetch --tags
-RELEASE_COMMIT=替换为已批准的完整提交号
-git checkout --detach "$RELEASE_COMMIT"
-docker compose -f docker-compose.ubuntu.yml build --pull
-docker compose -f docker-compose.ubuntu.yml up -d
 
-# 更新系统
-sudo apt update && sudo apt upgrade -y
+# 1. 拉取最新代码
+git pull origin main
+
+# 2. 若项目根 package.json 依赖有变化，安装后端依赖
+npm ci
+
+# 3. 若前端 package.json 依赖有变化，安装前端依赖
+npm ci --prefix frontend/web
+
+# 4. 检查是否需要执行数据修复（任务 12 双家长等重大功能升级时）
+# 参见 4.9 节
+
+# 5. 重新构建镜像并重启服务（保留数据卷）
+docker compose -f docker-compose.ubuntu.yml down
+docker compose -f docker-compose.ubuntu.yml up -d --build
+
+# 6. 验证服务状态
+docker compose -f docker-compose.ubuntu.yml ps
+curl -s http://127.0.0.1:3000/health
+
+# 7. 若前端使用开发服务器（而非 Docker），重启 npm
+# npm start --prefix frontend/web
+```
+
+#### 仅拉取更新（无依赖变化）
+
+若仅业务代码变化，`package.json` 无改动，可跳过 `npm ci`，直接重建：
+
+```bash
+cd ~/LMS
+git pull origin main
+docker compose -f docker-compose.ubuntu.yml down
+docker compose -f docker-compose.ubuntu.yml up -d --build
+docker compose -f docker-compose.ubuntu.yml ps
 ```
 
 ### 7.4 数据备份
@@ -830,6 +900,19 @@ sudo ufw allow in on tailscale0 to any port 80 proto tcp
 ---
 
 ## 9. 故障排查
+
+### 数据安全提醒
+
+常规故障排查绝对不要使用 `-v` 参数。`down -v` 会永久删除 MongoDB 数据和媒体附件：
+
+```bash
+# ❌ 危险：永久删除全部家庭数据
+docker compose -f docker-compose.ubuntu.yml down -v
+
+# ✅ 安全：保留数据，仅停止并删除容器
+docker compose -f docker-compose.ubuntu.yml down
+docker compose -f docker-compose.ubuntu.yml up -d
+```
 
 ### 服务无法启动
 
