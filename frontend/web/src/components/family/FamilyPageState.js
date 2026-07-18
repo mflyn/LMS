@@ -4,7 +4,7 @@ const stateCopy = {
   loading: '正在加载家庭信息…',
   empty: '尚未添加孩子，完成家庭初始化后可继续管理成长任务。',
   partial: '部分家庭数据暂不可用，其余信息仍可继续查看。',
-  retryable_error: '暂时无法加载家庭信息，请重试。'
+  retryable_error: '暂时无法加载家庭信息，请尝试退出后重新登录。'
 };
 
 const FamilyPageState = ({ state, onRetry }) => {
