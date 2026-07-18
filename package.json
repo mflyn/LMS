@@ -4,8 +4,8 @@
   "description": "小学生学习追踪系统",
   "main": "backend/app.js",
   "scripts": {
-    "start": "node backend/app.js",
-    "dev": "nodemon backend/app.js",
+    "start": "NODE_OPTIONS='--no-deprecation' node backend/app.js",
+    "dev": "NODE_OPTIONS='--no-deprecation' nodemon backend/app.js",
     "test": "jest --coverage --config=backend/jest.config.js --rootDir=backend",
     "test:unit": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.unit.test.js'",
     "test:integration": "jest --config=backend/jest.config.js --rootDir=backend --testMatch='**/__tests__/**/*.integration.test.js'",

@@ -10,6 +10,7 @@ services:
       - "${FAMILY_GATEWAY_HOST_PORT:-3000}:3000"
     environment:
       - NODE_ENV=development
+      - NODE_OPTIONS=--no-deprecation
       - GATEWAY_PORT=3000
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
@@ -49,6 +50,7 @@ services:
       dockerfile: backend/services/user-service/Dockerfile
     environment:
       - NODE_ENV=development
+      - NODE_OPTIONS=--no-deprecation
       - PORT=3001
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
@@ -73,6 +75,7 @@ services:
       dockerfile: backend/services/progress-service/Dockerfile
     environment:
       - NODE_ENV=development
+      - NODE_OPTIONS=--no-deprecation
       - PORT=3002
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
@@ -95,6 +98,7 @@ services:
       dockerfile: backend/services/homework-service/Dockerfile
     environment:
       - NODE_ENV=development
+      - NODE_OPTIONS=--no-deprecation
       - PORT=3003
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
@@ -124,6 +128,7 @@ services:
       dockerfile: backend/services/resource-service/Dockerfile
     environment:
       - NODE_ENV=development
+      - NODE_OPTIONS=--no-deprecation
       - PORT=3005
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
@@ -151,6 +156,7 @@ services:
       dockerfile: backend/services/analytics-service/Dockerfile
     environment:
       - NODE_ENV=development
+      - NODE_OPTIONS=--no-deprecation
       - PORT=3006
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
@@ -177,6 +183,7 @@ services:
       dockerfile: backend/services/notification-service/Dockerfile
     environment:
       - NODE_ENV=development
+      - NODE_OPTIONS=--no-deprecation
       - PORT=3007
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
