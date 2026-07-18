@@ -20,7 +20,14 @@ const FamilyShell = () => {
   }
 
   if (familyStatus === 'error') {
-    return <main className="family-route-state"><FamilyPageState state="retryable_error" onRetry={retry} /></main>;
+    return (
+      <main className="family-route-state">
+        <FamilyPageState state="retryable_error" onRetry={retry} />
+        <button type="button" className="family-button secondary" onClick={logout} style={{ marginTop: 12 }}>
+          退出登录
+        </button>
+      </main>
+    );
   }
 
   return (
