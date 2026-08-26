@@ -1,0 +1,72 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-generation-input-v1.json",
+  "base": {
+    "schemaVersion": "tutor-generation-input-v1",
+    "cycleId": "cycle-1",
+    "kind": "practice",
+    "sourceMistakeSnapshot": {
+      "sourceMistakeId": "mistake-1",
+      "normalizedQuestionText": "直角边为 3 和 4，求斜边。",
+      "normalizedChildAnswerText": "3 + 4 = 7",
+      "subject": "数学"
+    },
+    "confirmedErrorClassification": {
+      "primaryReasonCode": "condition_omitted",
+      "secondaryReasonCodes": [],
+      "sanitizedNote": null
+    },
+    "curriculumRefSnapshot": {
+      "nodeId": "concept-pythagorean",
+      "datasetVersion": "dataset-v1",
+      "displayName": "勾股定理",
+      "subject": "数学",
+      "grade": "八年级",
+      "evidenceHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "prerequisiteSnapshots": [],
+    "promptVersion": "family-tutor-v1",
+    "modelProfile": "default-low-cost",
+    "outputSchemaVersion": "practice-v1",
+    "generationPolicy": {
+      "exerciseCount": 2,
+      "difficultySequence": ["easy", "medium"]
+    }
+  },
+  "presets": {
+    "explanation": {
+      "kind": "explanation",
+      "outputSchemaVersion": "explanation-v1",
+      "generationPolicy": {
+        "detailLevel": "standard",
+        "includePrerequisiteReview": true
+      }
+    }
+  },
+  "valid": [
+    { "name": "minimal-practice-input", "set": {} },
+    { "name": "minimal-explanation-input", "preset": "explanation", "set": {} },
+    { "name": "bounded-prerequisite-snapshot", "set": { "prerequisiteSnapshots": [{
+      "nodeId": "concept-square-root",
+      "datasetVersion": "dataset-v1",
+      "displayName": "平方根",
+      "subject": "数学",
+      "grade": "八年级",
+      "evidenceHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }] } }
+  ],
+  "invalid": [
+    { "name": "prerequisites-must-be-array", "set": { "prerequisiteSnapshots": "not-an-array" } },
+    { "name": "source-snapshot-rejects-child-name", "set": { "sourceMistakeSnapshot.childName": "真实儿童姓名" } },
+    { "name": "source-snapshot-rejects-token", "set": { "sourceMistakeSnapshot.authorizationToken": "secret-token" } },
+    { "name": "source-snapshot-rejects-cookie", "set": { "sourceMistakeSnapshot.cookie": "session=secret" } },
+    { "name": "source-snapshot-rejects-media-url", "set": { "sourceMistakeSnapshot.rawMediaUrl": "https://private.example/media/1" } },
+    { "name": "source-snapshot-rejects-storage-path", "set": { "sourceMistakeSnapshot.storagePath": "/private/child/1.png" } },
+    { "name": "curriculum-snapshot-requires-dataset-version", "set": { "curriculumRefSnapshot.datasetVersion": { "$delete": true } } },
+    { "name": "curriculum-snapshot-rejects-source-uri", "set": { "curriculumRefSnapshot.sourceUri": "file:///private/k12.json" } },
+    { "name": "error-classification-rejects-unknown-code", "set": { "confirmedErrorClassification.primaryReasonCode": "unknown-private-code" } },
+    { "name": "error-classification-primary-not-secondary", "set": { "confirmedErrorClassification.secondaryReasonCodes": ["condition_omitted"] } },
+    { "name": "practice-kind-rejects-explanation-policy", "set": { "generationPolicy": { "detailLevel": "standard", "includePrerequisiteReview": true } } },
+    { "name": "policy-count-matches-difficulty-sequence", "set": { "generationPolicy.exerciseCount": 3 } },
+    { "name": "question-text-has-length-limit", "set": { "sourceMistakeSnapshot.normalizedQuestionText": { "$repeat": "题", "$count": 4001 } } }
+  ]
+}

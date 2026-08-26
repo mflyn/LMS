@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-cycle-attempt-v1.json",
+  "title": "TutorCycleAttempt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "attemptId",
+    "cycleId",
+    "familyId",
+    "childId",
+    "stage",
+    "attemptVersion",
+    "mediaIds",
+    "submissionOperationId",
+    "submittedByChildId",
+    "submittedAt",
+    "review"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-cycle-attempt-v1" },
+    "attemptId": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "cycleId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "familyId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "childId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "stage": { "type": "string", "enum": ["correction", "practice"] },
+    "attemptVersion": { "type": "integer", "minimum": 1 },
+    "mediaIds": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 240 }
+    },
+    "submissionOperationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "submittedByChildId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "submittedAt": { "type": "string", "format": "date-time" },
+    "review": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/review" }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "stage": { "const": "correction" } },
+        "required": ["stage"]
+      },
+      "then": {
+        "properties": {
+          "review": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "$ref": "#/$defs/review",
+                "properties": {
+                  "decision": { "enum": ["approve", "revise"] },
+                  "evidenceSummary": { "const": null }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "stage": { "const": "practice" } },
+        "required": ["stage"]
+      },
+      "then": {
+        "properties": {
+          "review": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "$ref": "#/$defs/review",
+                "properties": {
+                  "decision": { "enum": ["mastered", "revise"] }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "comment",
+        "evidenceSummary",
+        "reviewOperationId",
+        "reviewedByParentId",
+        "reviewedAt",
+        "stateVersionBefore",
+        "stateVersionAfter"
+      ],
+      "properties": {
+        "decision": { "type": "string", "enum": ["approve", "revise", "mastered"] },
+        "comment": { "type": ["string", "null"], "maxLength": 2000 },
+        "evidenceSummary": { "type": ["string", "null"], "maxLength": 2000 },
+        "reviewOperationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "reviewedByParentId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "stateVersionBefore": { "type": "integer", "minimum": 0 },
+        "stateVersionAfter": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "decision": { "const": "revise" } },
+            "required": ["decision"]
+          },
+          "then": {
+            "properties": {
+              "comment": { "type": "string", "minLength": 1, "maxLength": 2000 },
+              "evidenceSummary": { "const": null }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "decision": { "const": "mastered" } },
+            "required": ["decision"]
+          },
+          "then": {
+            "properties": {
+              "evidenceSummary": { "type": "string", "minLength": 1, "maxLength": 2000 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "decision": { "const": "approve" } },
+            "required": ["decision"]
+          },
+          "then": {
+            "properties": { "evidenceSummary": { "const": null } }
+          }
+        }
+      ]
+    }
+  }
+}

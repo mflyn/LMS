@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-artifact-v1.json",
+  "title": "TutorArtifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactId",
+    "familyId",
+    "childId",
+    "cycleId",
+    "kind",
+    "version",
+    "content",
+    "contentHash",
+    "status",
+    "reviewVersion",
+    "approvedByParentId",
+    "approvedAt",
+    "rejectedByParentId",
+    "rejectedAt",
+    "reviewComment",
+    "generator",
+    "curriculumSources",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-artifact-v1" },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "familyId": { "type": "string", "minLength": 1 },
+    "childId": { "type": "string", "minLength": 1 },
+    "cycleId": { "type": "string", "minLength": 1 },
+    "kind": {
+      "type": "string",
+      "enum": ["explanation", "practice"]
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "content": { "type": "object" },
+    "contentHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "status": {
+      "type": "string",
+      "enum": ["candidate", "parent_approved", "rejected"]
+    },
+    "reviewVersion": { "type": "integer", "minimum": 0 },
+    "approvedByParentId": { "type": ["string", "null"], "minLength": 1 },
+    "approvedAt": { "type": ["string", "null"], "format": "date-time" },
+    "rejectedByParentId": { "type": ["string", "null"], "minLength": 1 },
+    "rejectedAt": { "type": ["string", "null"], "format": "date-time" },
+    "reviewComment": { "type": ["string", "null"], "maxLength": 2000 },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generatorType", "deepTutorVersion", "modelProfile", "promptVersion", "outputSchemaVersion", "generatedAt"],
+      "properties": {
+        "generatorType": { "const": "deeptutor" },
+        "deepTutorVersion": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "modelProfile": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "promptVersion": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "outputSchemaVersion": { "type": "string", "enum": ["explanation-v1", "practice-v1"] },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "curriculumSources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": { "$ref": "curriculum-ref-snapshot-v1.json" }
+    },
+    "createdAt": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "kind": { "const": "explanation" },
+            "content": { "$ref": "explanation-content-v1.json" },
+            "generator": {
+              "type": "object",
+              "properties": { "outputSchemaVersion": { "const": "explanation-v1" } }
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": { "const": "practice" },
+            "content": { "$ref": "practice-content-v1.json" },
+            "generator": {
+              "type": "object",
+              "properties": { "outputSchemaVersion": { "const": "practice-v1" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "status": { "const": "candidate" },
+            "reviewVersion": { "const": 0 },
+            "approvedByParentId": { "const": null },
+            "approvedAt": { "const": null },
+            "rejectedByParentId": { "const": null },
+            "rejectedAt": { "const": null },
+            "reviewComment": { "const": null }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "parent_approved" },
+            "reviewVersion": { "type": "integer", "minimum": 1 },
+            "approvedByParentId": { "type": "string", "minLength": 1 },
+            "approvedAt": { "type": "string", "format": "date-time" },
+            "rejectedByParentId": { "const": null },
+            "rejectedAt": { "const": null }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "rejected" },
+            "reviewVersion": { "type": "integer", "minimum": 1 },
+            "approvedByParentId": { "const": null },
+            "approvedAt": { "const": null },
+            "rejectedByParentId": { "type": "string", "minLength": 1 },
+            "rejectedAt": { "type": "string", "format": "date-time" },
+            "reviewComment": { "type": "string", "minLength": 1, "maxLength": 2000 }
+          }
+        }
+      ]
+    }
+  ]
+}

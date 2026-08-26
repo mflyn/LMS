@@ -1,0 +1,34 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-generation-job-request-v1.json",
+  "base": {
+    "schemaVersion": "tutor-generation-job-request-v1",
+    "kind": "explanation",
+    "generationPolicy": {
+      "detailLevel": "standard",
+      "includePrerequisiteReview": true
+    },
+    "operationId": "explanation-job-operation-1",
+    "expectedStateVersion": 0
+  },
+  "presets": {
+    "practice": {
+      "kind": "practice",
+      "generationPolicy": {
+        "exerciseCount": 2,
+        "difficultySequence": ["easy", "medium"]
+      },
+      "operationId": "practice-job-operation-1",
+      "expectedStateVersion": 7
+    }
+  },
+  "valid": [
+    { "name": "explanation-generation-job", "set": {} },
+    { "name": "practice-generation-job", "preset": "practice", "set": {} }
+  ],
+  "invalid": [
+    { "name": "kind-must-match-policy", "set": { "kind": "practice" } },
+    { "name": "practice-count-is-bounded", "preset": "practice", "set": { "generationPolicy.exerciseCount": 6 } },
+    { "name": "client-cannot-submit-child-id", "set": { "childId": "child-1" } },
+    { "name": "expected-state-version-required", "set": { "expectedStateVersion": { "$delete": true } } }
+  ]
+}

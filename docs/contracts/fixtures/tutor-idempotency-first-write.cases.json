@@ -1,0 +1,114 @@
+{
+  "validator": "tutor-idempotency-first-write-v1",
+  "base": {
+    "scenario": "same-hash-race",
+    "transactionBoundary": {
+      "datastore": "homework-service-mongodb",
+      "atomicWrites": [
+        "authoritative-business-write",
+        "cycle-cas",
+        "local-job-or-outbox",
+        "tutor-idempotency-record"
+      ],
+      "irreversibleExternalSideEffectsBeforeCommit": false
+    },
+    "attempts": [
+      {
+        "name": "request-a",
+        "requestPayloadHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "outcome": "committed",
+        "businessWriteCommitted": true,
+        "idempotencyRecordCommitted": true
+      },
+      {
+        "name": "request-b",
+        "requestPayloadHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "outcome": "duplicate-key-aborted",
+        "businessWriteCommitted": false,
+        "idempotencyRecordCommitted": false
+      }
+    ],
+    "expected": {
+      "committedBusinessEffects": 1,
+      "committedIdempotencyRecords": 1,
+      "retryDecision": "replay"
+    }
+  },
+  "presets": {
+    "different-hash-race": {
+      "scenario": "different-hash-race",
+      "attempts": [
+        {
+          "name": "request-a",
+          "requestPayloadHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "outcome": "committed",
+          "businessWriteCommitted": true,
+          "idempotencyRecordCommitted": true
+        },
+        {
+          "name": "request-b",
+          "requestPayloadHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "outcome": "duplicate-key-aborted",
+          "businessWriteCommitted": false,
+          "idempotencyRecordCommitted": false
+        }
+      ],
+      "expected.retryDecision": "conflict"
+    },
+    "crash-before-commit": {
+      "scenario": "crash-before-commit",
+      "attempts": [
+        {
+          "name": "request-a",
+          "requestPayloadHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "outcome": "crash-before-commit",
+          "businessWriteCommitted": false,
+          "idempotencyRecordCommitted": false
+        }
+      ],
+      "expected": {
+        "committedBusinessEffects": 0,
+        "committedIdempotencyRecords": 0,
+        "retryDecision": "execute"
+      }
+    },
+    "crash-after-commit": {
+      "scenario": "crash-after-commit",
+      "attempts": [
+        {
+          "name": "request-a",
+          "requestPayloadHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "outcome": "committed-response-lost",
+          "businessWriteCommitted": true,
+          "idempotencyRecordCommitted": true
+        }
+      ],
+      "expected": {
+        "committedBusinessEffects": 1,
+        "committedIdempotencyRecords": 1,
+        "retryDecision": "replay"
+      }
+    }
+  },
+  "valid": [
+    { "name": "same-hash-first-write-race-has-one-winner", "set": {} },
+    { "name": "same-hash-write-conflict-retry-reloads-winner", "set": { "attempts.1.outcome": "write-conflict-aborted" } },
+    { "name": "different-hash-first-write-race-has-one-winner", "preset": "different-hash-race", "set": {} },
+    { "name": "crash-before-commit-leaves-no-side-effect", "preset": "crash-before-commit", "set": {} },
+    { "name": "response-loss-after-commit-replays", "preset": "crash-after-commit", "set": {} }
+  ],
+  "invalid": [
+    { "name": "same-hash-race-cannot-commit-two-business-effects", "set": { "attempts.1.outcome": "committed", "attempts.1.businessWriteCommitted": true, "attempts.1.idempotencyRecordCommitted": true } },
+    { "name": "duplicate-key-loser-cannot-keep-business-write", "set": { "attempts.1.businessWriteCommitted": true } },
+    { "name": "winner-cannot-commit-business-without-idempotency-record", "set": { "attempts.0.idempotencyRecordCommitted": false } },
+    { "name": "winner-cannot-commit-idempotency-record-without-business", "set": { "attempts.0.businessWriteCommitted": false } },
+    { "name": "public-transaction-cannot-cause-irreversible-external-effect-before-commit", "set": { "transactionBoundary.irreversibleExternalSideEffectsBeforeCommit": true } },
+    { "name": "same-hash-loser-cannot-return-conflict", "set": { "expected.retryDecision": "conflict" } },
+    { "name": "write-conflict-loser-cannot-blindly-execute", "set": { "attempts.1.outcome": "write-conflict-aborted", "expected.retryDecision": "execute" } },
+    { "name": "different-hash-loser-cannot-replay", "preset": "different-hash-race", "set": { "expected.retryDecision": "replay" } },
+    { "name": "crash-before-commit-cannot-replay-nonexistent-result", "preset": "crash-before-commit", "set": { "expected.retryDecision": "replay" } },
+    { "name": "committed-response-loss-cannot-execute-again", "preset": "crash-after-commit", "set": { "expected.retryDecision": "execute" } },
+    { "name": "public-record-does-not-use-processing-placeholder", "set": { "attempts.1.outcome": "processing" } },
+    { "name": "transaction-boundary-cannot-omit-idempotency-write", "set": { "transactionBoundary.atomicWrites": ["authoritative-business-write", "cycle-cas", "local-job-or-outbox"] } }
+  ]
+}

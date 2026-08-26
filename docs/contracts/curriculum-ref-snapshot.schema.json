@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/curriculum-ref-snapshot-v1.json",
+  "title": "CurriculumRefSnapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "source",
+    "datasetVersion",
+    "nodeId",
+    "nodeType",
+    "displayName",
+    "textbookScope",
+    "evidenceSnapshot"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "curriculum-ref-snapshot-v1" },
+    "source": { "type": "string", "enum": ["k12-kgraph", "local-manual"] },
+    "datasetVersion": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "nodeId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "nodeType": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "displayName": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "textbookScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publisher", "subject", "stage", "grade", "volume", "bookId", "chapterId", "sectionId"],
+      "properties": {
+        "publisher": { "type": ["string", "null"], "maxLength": 120 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "stage": { "type": ["string", "null"], "maxLength": 80 },
+        "grade": { "type": ["string", "null"], "maxLength": 80 },
+        "volume": { "type": ["string", "null"], "maxLength": 80 },
+        "bookId": { "type": ["string", "null"], "maxLength": 200 },
+        "chapterId": { "type": ["string", "null"], "maxLength": 200 },
+        "sectionId": { "type": ["string", "null"], "maxLength": 200 }
+      }
+    },
+    "evidenceSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidenceHash", "capturedAt", "sourceUri"],
+      "properties": {
+        "evidenceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "sourceUri": { "type": ["string", "null"], "maxLength": 1000 }
+      }
+    }
+  }
+}

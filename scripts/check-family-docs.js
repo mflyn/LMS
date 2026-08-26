@@ -2,6 +2,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const { createHash } = require('node:crypto');
+const { isDeepStrictEqual } = require('node:util');
+const Ajv2020 = require('ajv/dist/2020');
+const addFormats = require('ajv-formats');
+const { canonicalize } = require('json-canonicalize');
 
 const repositoryRoot = path.resolve(__dirname, '..');
 const authoritativeDocuments = [
@@ -29,6 +34,88 @@ const authoritativeDocuments = [
   'docs/user-guide/parent-guide.md',
   'docs/user-guide/child-guide.md'
 ];
+
+const proposedAiDocuments = [
+  'docs/architecture/family-ai-learning-platform-design.md',
+  'docs/ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md',
+  'docs/ThinkPad_DeepTutor_K12_部署手册/01_功能硬件与系统架构.md',
+  'docs/ThinkPad_DeepTutor_K12_部署手册/02_Ubuntu_Docker_DeepTutor安装.md',
+  'docs/ThinkPad_DeepTutor_K12_部署手册/03_DeepSeek与Embedding配置.md',
+  'docs/ThinkPad_DeepTutor_K12_部署手册/04_K12数据部署及教材扩展.md',
+  'docs/ThinkPad_DeepTutor_K12_部署手册/05_DeepTutor与K12集成设计.md',
+  'docs/ThinkPad_DeepTutor_K12_部署手册/06_运维备份迁移安全许可证.md'
+];
+
+const proposedAiContracts = [
+  'docs/contracts/curriculum-ref.schema.json',
+  'docs/contracts/curriculum-ref-snapshot.schema.json',
+  'docs/contracts/error-classification.schema.json',
+  'docs/contracts/tutor-generation-input.schema.json',
+  'docs/contracts/explanation-content.schema.json',
+  'docs/contracts/practice-content.schema.json',
+  'docs/contracts/tutor-artifact.schema.json',
+  'docs/contracts/tutor-cycle-attempt.schema.json',
+  'docs/contracts/tutor-artifact-review-request.schema.json',
+  'docs/contracts/tutor-correction-review-request.schema.json',
+  'docs/contracts/tutor-cycle-create-request.schema.json',
+  'docs/contracts/tutor-generation-job-request.schema.json',
+  'docs/contracts/tutor-stage-action-request.schema.json',
+  'docs/contracts/tutor-stage-submission-request.schema.json',
+  'docs/contracts/tutor-cycle-state-machine.json',
+  'docs/contracts/tutor-learning-cycle.schema.json',
+  'docs/contracts/tutor-final-review-request.schema.json',
+  'docs/contracts/tutor-final-review-snapshot.schema.json',
+  'docs/contracts/tutor-idempotency-record.schema.json',
+  'docs/contracts/tutor-finalization-command.schema.json',
+  'docs/contracts/mastery-evidence-command-payload.schema.json',
+  'docs/contracts/mistake-review-command-payload.schema.json'
+];
+
+const contractFixtureDirectory = 'docs/contracts/fixtures';
+
+const tutorMutationSemantics = new Map([
+  ['cycle-create', { allowedActorRoles: ['parent'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorLearningCycle' }] }],
+  ['explanation-job', { allowedActorRoles: ['parent'], responseVariants: [{ when: {}, httpStatus: 202, responseResourceType: 'TutorGenerationJob' }] }],
+  ['explanation-artifact-review', { allowedActorRoles: ['parent'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorArtifact' }] }],
+  ['correction-start', { allowedActorRoles: ['parent', 'child'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorLearningCycle' }] }],
+  ['correction-submit', { allowedActorRoles: ['parent', 'child'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorCycleAttempt' }] }],
+  ['correction-review', { allowedActorRoles: ['parent'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorCycleAttempt' }] }],
+  ['practice-job', { allowedActorRoles: ['parent'], responseVariants: [{ when: {}, httpStatus: 202, responseResourceType: 'TutorGenerationJob' }] }],
+  ['practice-artifact-review', { allowedActorRoles: ['parent'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorArtifact' }] }],
+  ['practice-start', { allowedActorRoles: ['parent', 'child'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorLearningCycle' }] }],
+  ['practice-submit', { allowedActorRoles: ['parent', 'child'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorCycleAttempt' }] }],
+  ['final-review', { allowedActorRoles: ['parent'], responseVariants: [
+    { when: { decision: 'revise' }, httpStatus: 200, responseResourceType: 'TutorCycleAttempt' },
+    { when: { decision: 'mastered' }, httpStatus: 202, responseResourceType: 'TutorFinalReview' }
+  ] }],
+  ['cycle-cancel', { allowedActorRoles: ['parent'], responseVariants: [{ when: {}, httpStatus: 200, responseResourceType: 'TutorLearningCycle' }] }]
+]);
+
+function resolveTutorResponseVariant(mutationSemantics, request) {
+  if (!mutationSemantics || !request || Array.isArray(request)) {
+    return null;
+  }
+  const matches = mutationSemantics.responseVariants.filter(variant =>
+    Object.entries(variant.when).every(([field, expected]) => request[field] === expected)
+  );
+  return matches.length === 1 ? matches[0] : null;
+}
+
+function matchesTutorResponseVariant(responseReference, variant) {
+  return Boolean(variant) &&
+    responseReference?.httpStatus === variant.httpStatus &&
+    responseReference?.resourceType === variant.responseResourceType;
+}
+
+function matchesAnyTutorResponseVariant(responseReference, mutationSemantics) {
+  return Boolean(mutationSemantics) && mutationSemantics.responseVariants.some(
+    variant => matchesTutorResponseVariant(responseReference, variant)
+  );
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 function read(relativePath) {
   return fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8');
@@ -124,9 +211,2094 @@ function checkLocalLinks(relativePath, markdown, errors) {
   }
 }
 
+function fencedBlocks(markdown, language) {
+  const pattern = new RegExp(
+    '^```' + language + '\\s*$([\\s\\S]*?)^```\\s*$',
+    'gm'
+  );
+  return [...markdown.matchAll(pattern)].map(match => match[1].trim());
+}
+
+function checkMarkdownStructure(relativePath, markdown, errors) {
+  const fences = markdown.match(/^```/gm) || [];
+  assert(
+    fences.length % 2 === 0,
+    `${relativePath}: unclosed fenced code block`,
+    errors
+  );
+
+  for (const [index, block] of fencedBlocks(markdown, 'json').entries()) {
+    try {
+      JSON.parse(block);
+    } catch (error) {
+      errors.push(`${relativePath}: JSON example ${index + 1} is invalid: ${error.message}`);
+    }
+  }
+
+  for (const [index, block] of fencedBlocks(markdown, 'mermaid').entries()) {
+    assert(
+      /^(?:flowchart|sequenceDiagram|stateDiagram-v2|erDiagram)\b/.test(block),
+      `${relativePath}: Mermaid block ${index + 1} has an unsupported or missing diagram header`,
+      errors
+    );
+  }
+}
+
+function loadJson(relativePath, errors) {
+  const absolutePath = path.join(repositoryRoot, relativePath);
+  assert(fs.existsSync(absolutePath), `${relativePath}: file is missing`, errors);
+  if (!fs.existsSync(absolutePath)) {
+    return {};
+  }
+  try {
+    return JSON.parse(read(relativePath));
+  } catch (error) {
+    errors.push(`${relativePath}: invalid JSON: ${error.message}`);
+    return {};
+  }
+}
+
+function cloneJson(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function applyFixtureSet(base, values) {
+  const result = cloneJson(base);
+  for (const [dotPath, value] of Object.entries(values || {})) {
+    const parts = dotPath.split('.');
+    let cursor = result;
+    for (const part of parts.slice(0, -1)) {
+      if (
+        !Object.hasOwn(cursor, part) ||
+        cursor[part] === null ||
+        typeof cursor[part] !== 'object'
+      ) {
+        cursor[part] = {};
+      }
+      cursor = cursor[part];
+    }
+    const finalPart = parts.at(-1);
+    if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      typeof value.$repeat === 'string' &&
+      Number.isInteger(value.$count) &&
+      value.$count >= 0 &&
+      sameSet(new Set(Object.keys(value)), new Set(['$repeat', '$count']))
+    ) {
+      cursor[finalPart] = value.$repeat.repeat(value.$count);
+    } else if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      Object.keys(value).length === 1 &&
+      value.$delete === true
+    ) {
+      delete cursor[finalPart];
+    } else {
+      cursor[finalPart] = cloneJson(value);
+    }
+  }
+  return result;
+}
+
+const finalReviewHashFields = [
+  'schemaVersion',
+  'finalReviewId',
+  'finalReviewVersion',
+  'cycleId',
+  'familyId',
+  'childId',
+  'sourceMistakeId',
+  'knowledgePointId',
+  'practiceAttemptId',
+  'practiceAttemptVersion',
+  'practiceReviewOperationId',
+  'decision',
+  'evidenceSummary',
+  'reviewedByParentId',
+  'reviewedAt'
+];
+
+function sha256JsonArray(values) {
+  return `sha256:${createHash('sha256')
+    .update(JSON.stringify(values), 'utf8')
+    .digest('hex')}`;
+}
+
+function sha256CanonicalJson(value) {
+  return `sha256:${createHash('sha256')
+    .update(canonicalize(value), 'utf8')
+    .digest('hex')}`;
+}
+
+function computeContentHash(content) {
+  return sha256CanonicalJson(content);
+}
+
+function computeFinalReviewHash(snapshot) {
+  return sha256JsonArray(finalReviewHashFields.map(field => snapshot?.[field]));
+}
+
+function computePayloadHash(payload) {
+  return sha256JsonArray([
+    payload?.schemaVersion,
+    payload?.finalReview?.finalReviewHash
+  ]);
+}
+
+function computeRequestPayloadHash(endpointOperation, resource, request) {
+  const {
+    operationId: _operationId,
+    schemaVersion,
+    ...normalizedRequestFields
+  } = request || {};
+  return sha256CanonicalJson({
+    schemaVersion,
+    endpointOperation,
+    resource,
+    request: normalizedRequestFields
+  });
+}
+
+function computeGenerationRequestHash(generationInput) {
+  return sha256CanonicalJson(generationInput);
+}
+
+function computeTutorResponseId(record) {
+  return sha256CanonicalJson({
+    schemaVersion: 'tutor-idempotency-response-v1',
+    familyId: record?.familyId,
+    childId: record?.childId,
+    endpointOperation: record?.endpointOperation,
+    operationId: record?.operationId,
+    resource: { cycleId: record?.resource?.cycleId },
+    httpStatus: record?.responseReference?.httpStatus,
+    resourceType: record?.responseReference?.resourceType,
+    resourceId: record?.responseReference?.resourceId
+  });
+}
+
+const cycleProjectionFieldGroups = {
+  explanation: [
+    'explanationArtifactId',
+    'explanationArtifactVersion',
+    'explanationContentHash'
+  ],
+  correctionAttempt: [
+    'currentCorrectionAttemptId',
+    'currentCorrectionAttemptVersion'
+  ],
+  practice: ['practiceArtifactId', 'practiceArtifactVersion', 'practiceContentHash'],
+  practiceAttempt: ['currentPracticeAttemptId', 'currentPracticeAttemptVersion']
+};
+
+function cancelledCycleProjectionErrors(value) {
+  const errors = [];
+  const status = value.cancelledFromStatus;
+  const hasAny = fields => fields.some(field => value[field] !== undefined);
+  const hasAll = fields => fields.every(field => value[field] !== undefined);
+  const requireGroup = (name, statuses) => {
+    if (statuses.includes(status) && !hasAll(cycleProjectionFieldGroups[name])) {
+      errors.push(`cancelled cycle from ${status} must retain complete ${name} projection`);
+    }
+  };
+  const forbidGroup = (name, statuses) => {
+    if (statuses.includes(status) && hasAny(cycleProjectionFieldGroups[name])) {
+      errors.push(`cancelled cycle from ${status} must not contain future ${name} projection`);
+    }
+  };
+
+  const preExplanation = [
+    'draft',
+    'explanation_generation_failed',
+    'explanation_pending_review',
+    'explanation_rejected'
+  ];
+  const explanationOnly = ['explanation_approved'];
+  const correctionInProgress = ['correction_in_progress'];
+  const correctionCompleteBeforePractice = [
+    'correction_submitted',
+    'correction_needs_revision',
+    'correction_approved',
+    'practice_generation_failed',
+    'practice_pending_review',
+    'practice_rejected'
+  ];
+  const practiceBeforeSubmission = ['practice_approved'];
+  const practiceInProgress = ['practice_in_progress'];
+  const practiceSubmitted = ['practice_submitted', 'practice_needs_revision'];
+  const afterExplanation = [
+    ...explanationOnly,
+    ...correctionInProgress,
+    ...correctionCompleteBeforePractice,
+    ...practiceBeforeSubmission,
+    ...practiceInProgress,
+    ...practiceSubmitted
+  ];
+  const afterCorrectionSubmission = [
+    ...correctionCompleteBeforePractice,
+    ...practiceBeforeSubmission,
+    ...practiceInProgress,
+    ...practiceSubmitted
+  ];
+  const afterPracticeApproval = [
+    ...practiceBeforeSubmission,
+    ...practiceInProgress,
+    ...practiceSubmitted
+  ];
+
+  forbidGroup('explanation', preExplanation);
+  forbidGroup('correctionAttempt', [...preExplanation, ...explanationOnly]);
+  forbidGroup('practice', [
+    ...preExplanation,
+    ...explanationOnly,
+    ...correctionInProgress,
+    ...correctionCompleteBeforePractice
+  ]);
+  forbidGroup('practiceAttempt', [
+    ...preExplanation,
+    ...explanationOnly,
+    ...correctionInProgress,
+    ...correctionCompleteBeforePractice,
+    ...practiceBeforeSubmission
+  ]);
+  requireGroup('explanation', afterExplanation);
+  requireGroup('correctionAttempt', afterCorrectionSubmission);
+  requireGroup('practice', afterPracticeApproval);
+  requireGroup('practiceAttempt', practiceSubmitted);
+
+  return errors;
+}
+
+function customContractErrors(schemaId, value) {
+  const errors = [];
+
+  if (
+    schemaId.endsWith('/error-classification-v1.json') &&
+    value.primaryReasonCode !== null &&
+    value.secondaryReasonCodes?.includes(value.primaryReasonCode)
+  ) {
+    errors.push('primaryReasonCode must not also appear in secondaryReasonCodes');
+  }
+
+  const validatePracticeContent = practice => {
+    if (!practice || practice.schemaVersion !== 'practice-v1') {
+      return;
+    }
+    const exercises = Array.isArray(practice.exercises) ? practice.exercises : [];
+    const policy = practice.generationPolicy || {};
+    if (policy.exerciseCount !== exercises.length) {
+      errors.push('generationPolicy.exerciseCount must equal exercises.length');
+    }
+    if (
+      Array.isArray(policy.difficultySequence) &&
+      policy.difficultySequence.length !== exercises.length
+    ) {
+      errors.push('difficultySequence length must equal exercises.length');
+    }
+    for (const [index, exercise] of exercises.entries()) {
+      if (
+        Array.isArray(policy.difficultySequence) &&
+        policy.difficultySequence[index] !== exercise.difficulty
+      ) {
+        errors.push(`difficultySequence[${index}] must equal exercises[${index}].difficulty`);
+      }
+    }
+    const exerciseIds = exercises.map(exercise => exercise.exerciseId);
+    if (new Set(exerciseIds).size !== exerciseIds.length) {
+      errors.push('exerciseId values must be unique inside one practice artifact');
+    }
+  };
+
+  if (schemaId.endsWith('/practice-content-v1.json')) {
+    validatePracticeContent(value);
+  }
+
+  if (schemaId.endsWith('/tutor-generation-input-v1.json')) {
+    const classification = value.confirmedErrorClassification || {};
+    if (classification.secondaryReasonCodes?.includes(classification.primaryReasonCode)) {
+      errors.push('generation input primaryReasonCode must not repeat in secondaryReasonCodes');
+    }
+    const policy = value.generationPolicy || {};
+    if (
+      value.kind === 'practice' &&
+      Array.isArray(policy.difficultySequence) &&
+      policy.exerciseCount !== policy.difficultySequence.length
+    ) {
+      errors.push('generation input exerciseCount must match difficultySequence length');
+    }
+  }
+
+  if (schemaId.endsWith('/tutor-cycle-attempt-v1.json')) {
+    const expectedAttemptId = `${value.cycleId}:${value.stage}:${value.attemptVersion}`;
+    if (value.attemptId !== expectedAttemptId) {
+      errors.push('attemptId must equal cycleId:stage:attemptVersion');
+    }
+    if (value.submittedByChildId !== value.childId) {
+      errors.push('submittedByChildId must equal the attempt childId');
+    }
+    if (
+      value.review &&
+      value.review.stateVersionAfter !== value.review.stateVersionBefore + 1
+    ) {
+      errors.push('attempt review must increment the cycle stateVersion exactly once');
+    }
+    if (
+      value.review &&
+      Date.parse(value.review.reviewedAt) < Date.parse(value.submittedAt)
+    ) {
+      errors.push('attempt reviewedAt must not precede submittedAt');
+    }
+  }
+
+  if (schemaId.endsWith('/tutor-artifact-v1.json')) {
+    if (value.contentHash !== computeContentHash(value.content)) {
+      errors.push('contentHash must equal SHA-256 of RFC 8785 JCS(content)');
+    }
+    validatePracticeContent(value.content);
+    const curriculumSourcesByNodeId = new Map();
+    for (const source of value.curriculumSources || []) {
+      if (curriculumSourcesByNodeId.has(source.nodeId)) {
+        const existing = curriculumSourcesByNodeId.get(source.nodeId);
+        errors.push(
+          existing.datasetVersion === source.datasetVersion
+            ? `curriculum source ${source.nodeId} is duplicated`
+            : `curriculum source ${source.nodeId} has conflicting dataset versions`
+        );
+        continue;
+      }
+      curriculumSourcesByNodeId.set(source.nodeId, source);
+    }
+
+    const requireCurriculumSource = (nodeId, context) => {
+      if (!curriculumSourcesByNodeId.has(nodeId)) {
+        errors.push(`${context} ${nodeId} is missing from curriculumSources`);
+        return null;
+      }
+      return curriculumSourcesByNodeId.get(nodeId);
+    };
+
+    for (const nodeId of value.content?.targetCurriculumNodeIds || []) {
+      requireCurriculumSource(nodeId, 'content target');
+    }
+
+    if (value.content?.schemaVersion === 'explanation-v1') {
+      for (const prerequisite of value.content.prerequisites || []) {
+        requireCurriculumSource(prerequisite.curriculumNodeId, 'prerequisite');
+      }
+      for (const citation of value.content.citations || []) {
+        const source = requireCurriculumSource(citation.curriculumNodeId, 'citation');
+        if (source && source.datasetVersion !== citation.datasetVersion) {
+          errors.push(
+            `citation ${citation.curriculumNodeId} datasetVersion must match curriculum source`
+          );
+        }
+      }
+    }
+
+    if (value.content?.schemaVersion === 'practice-v1') {
+      const topLevelTargets = new Set(value.content.targetCurriculumNodeIds || []);
+      for (const exercise of value.content.exercises || []) {
+        for (const nodeId of exercise.targetNodeIds || []) {
+          requireCurriculumSource(nodeId, `exercise ${exercise.exerciseId} target`);
+          if (!topLevelTargets.has(nodeId)) {
+            errors.push(
+              `exercise ${exercise.exerciseId} target ${nodeId} must be a top-level practice target`
+            );
+          }
+        }
+      }
+    }
+  }
+
+  if (schemaId.endsWith('/tutor-learning-cycle-v1.json')) {
+    if (value.activeSourceMistakeKey !== undefined) {
+      const expectedActiveKey = `${value.familyId}:${value.sourceMistakeId}`;
+      if (value.activeSourceMistakeKey !== expectedActiveKey) {
+        errors.push('activeSourceMistakeKey must equal familyId:sourceMistakeId');
+      }
+    }
+    if (value.finalReview) {
+      for (const field of [
+        'cycleId',
+        'familyId',
+        'childId',
+        'sourceMistakeId',
+        'knowledgePointId'
+      ]) {
+        if (value[field] !== value.finalReview[field]) {
+          errors.push(`cycle ${field} must equal finalReview.${field}`);
+        }
+      }
+      if (value.finalReview.finalReviewHash !== computeFinalReviewHash(value.finalReview)) {
+        errors.push('cycle finalReviewHash must match its immutable snapshot');
+      }
+      if (
+        value.currentPracticeAttemptId !== value.finalReview.practiceAttemptId ||
+        value.currentPracticeAttemptVersion !== value.finalReview.practiceAttemptVersion
+      ) {
+        errors.push('cycle finalReview must bind the current practice attempt pointer');
+      }
+    }
+    if (value.status === 'cancelled') {
+      errors.push(...cancelledCycleProjectionErrors(value));
+    }
+  }
+
+  if (schemaId.endsWith('/tutor-final-review-snapshot-v1.json')) {
+    if (value.finalReviewHash !== computeFinalReviewHash(value)) {
+      errors.push('finalReviewHash must match the ordered final-review snapshot fields');
+    }
+  }
+
+  if (schemaId.endsWith('/tutor-idempotency-record-v1.json')) {
+    const mutationSemantics = tutorMutationSemantics.get(value.endpointOperation);
+    if (!mutationSemantics) {
+      errors.push('idempotency endpointOperation must have public mutation semantics');
+    } else {
+      if (!mutationSemantics.allowedActorRoles.includes(value.createdBy?.role)) {
+        errors.push('idempotency createdBy.role is not allowed for endpointOperation');
+      }
+      if (!matchesAnyTutorResponseVariant(value.responseReference, mutationSemantics)) {
+        errors.push(
+          'idempotency responseReference status and resource type must match an endpoint response variant'
+        );
+      }
+    }
+    if (
+      (value.endpointOperation === 'cycle-create' && value.resource?.cycleId !== null) ||
+      (value.endpointOperation !== 'cycle-create' &&
+        (typeof value.resource?.cycleId !== 'string' || value.resource.cycleId.length === 0))
+    ) {
+      errors.push('idempotency resource cycleId must match the endpoint resource shape');
+    }
+    if (Date.parse(value.updatedAt) < Date.parse(value.createdAt)) {
+      errors.push('idempotency updatedAt must not precede createdAt');
+    }
+    if (value.responseReference?.responseId !== computeTutorResponseId(value)) {
+      errors.push('idempotency responseId must match the deterministic result reference');
+    }
+  }
+
+  if (schemaId.endsWith('/tutor-finalization-command-v1.json')) {
+    const finalReview = value.payload?.finalReview;
+    for (const field of ['cycleId', 'familyId', 'childId']) {
+      if (value[field] !== finalReview?.[field]) {
+        errors.push(`command ${field} must equal payload.finalReview.${field}`);
+      }
+    }
+    for (const field of ['finalReviewId', 'finalReviewVersion', 'finalReviewHash']) {
+      if (value[field] !== finalReview?.[field]) {
+        errors.push(`command ${field} must equal payload.finalReview.${field}`);
+      }
+    }
+    if (finalReview?.finalReviewHash !== computeFinalReviewHash(finalReview)) {
+      errors.push('payload finalReviewHash must match the ordered final-review snapshot fields');
+    }
+    if (value.payloadHash !== computePayloadHash(value.payload)) {
+      errors.push('payloadHash must match [payload.schemaVersion, finalReviewHash]');
+    }
+  }
+
+  return errors;
+}
+
+function finalizationBatchErrors(ajv, value) {
+  const errors = [];
+  const snapshotValidator = ajv.getSchema(
+    'https://lms.family.local/schemas/tutor-final-review-snapshot-v1.json'
+  );
+  const commandValidator = ajv.getSchema(
+    'https://lms.family.local/schemas/tutor-finalization-command-v1.json'
+  );
+  const attemptValidator = ajv.getSchema(
+    'https://lms.family.local/schemas/tutor-cycle-attempt-v1.json'
+  );
+  const cycle = value?.cycle || {};
+  const snapshot = cycle.finalReview;
+  const attempt = value?.practiceAttempt || {};
+  const review = attempt.review;
+
+  if (!snapshotValidator || !snapshotValidator(snapshot)) {
+    errors.push(
+      `cycle finalReview is invalid: ${snapshotValidator?.errors ? ajv.errorsText(snapshotValidator.errors) : 'schema unavailable'}`
+    );
+  }
+  if (snapshot?.finalReviewHash !== computeFinalReviewHash(snapshot)) {
+    errors.push('cycle finalReviewHash must match the persisted final-review snapshot');
+  }
+  if (cycle.status !== 'parent_verified') {
+    errors.push('cycle must remain parent_verified until both commands are acknowledged');
+  }
+  for (const field of ['cycleId', 'familyId', 'childId']) {
+    if (cycle[field] !== snapshot?.[field]) {
+      errors.push(`cycle ${field} must equal cycle.finalReview.${field}`);
+    }
+  }
+  if (!attemptValidator || !attemptValidator(attempt)) {
+    errors.push(
+      `practiceAttempt is invalid: ${attemptValidator?.errors ? ajv.errorsText(attemptValidator.errors) : 'schema unavailable'}`
+    );
+  }
+  errors.push(
+    ...customContractErrors(
+      'https://lms.family.local/schemas/tutor-cycle-attempt-v1.json',
+      attempt
+    ).map(message => `practiceAttempt: ${message}`)
+  );
+  for (const field of ['cycleId', 'familyId', 'childId']) {
+    if (attempt[field] !== cycle[field]) {
+      errors.push(`practiceAttempt ${field} must equal cycle.${field}`);
+    }
+  }
+  if (attempt.stage !== 'practice') {
+    errors.push('finalization practiceAttempt must be a practice attempt');
+  }
+  if (
+    cycle.currentPracticeAttemptId !== attempt.attemptId ||
+    cycle.currentPracticeAttemptVersion !== attempt.attemptVersion
+  ) {
+    errors.push('cycle current practice pointer must identify the exact practiceAttempt');
+  }
+  if (
+    snapshot?.practiceAttemptId !== attempt.attemptId ||
+    snapshot?.practiceAttemptVersion !== attempt.attemptVersion ||
+    snapshot?.practiceReviewOperationId !== review?.reviewOperationId
+  ) {
+    errors.push('finalReview must identify the exact reviewed practiceAttempt');
+  }
+  for (const field of ['decision', 'evidenceSummary', 'reviewedByParentId', 'reviewedAt']) {
+    if (!isDeepStrictEqual(snapshot?.[field], review?.[field])) {
+      errors.push(`finalReview ${field} must equal practiceAttempt.review.${field}`);
+    }
+  }
+  if (
+    review?.stateVersionAfter !== cycle.stateVersion ||
+    review?.stateVersionBefore + 1 !== cycle.stateVersion
+  ) {
+    errors.push('practiceAttempt review versions must bind the parent_verified cycle version');
+  }
+  if (
+    review?.reviewedAt !== cycle.lastTransitionAt ||
+    cycle.updatedAt !== cycle.lastTransitionAt
+  ) {
+    errors.push('final review, cycle transition, and update timestamps must match');
+  }
+
+  const commands = Array.isArray(value?.commands) ? value.commands : [];
+  if (commands.length !== 2) {
+    errors.push('finalization batch must contain exactly two commands');
+  }
+  const targets = new Set(commands.map(command => command.target));
+  if (
+    targets.size !== 2 ||
+    !targets.has('progress-service') ||
+    !targets.has('analytics-service')
+  ) {
+    errors.push('finalization batch must contain exactly one command for each target');
+  }
+
+  for (const [index, command] of commands.entries()) {
+    const commandValid = commandValidator ? commandValidator(command) : false;
+    if (!commandValid) {
+      errors.push(
+        `commands[${index}] is invalid: ${commandValidator?.errors ? ajv.errorsText(commandValidator.errors) : 'schema unavailable'}`
+      );
+    }
+    errors.push(
+      ...customContractErrors(
+        'https://lms.family.local/schemas/tutor-finalization-command-v1.json',
+        command
+      ).map(message => `commands[${index}]: ${message}`)
+    );
+    if (command.status !== 'acknowledged' || !command.responseId) {
+      errors.push(`commands[${index}] must be acknowledged with a stable responseId`);
+    }
+    if (!isDeepStrictEqual(command.payload?.finalReview, snapshot)) {
+      errors.push(`commands[${index}] must carry the exact persisted finalReview snapshot`);
+    }
+  }
+
+  return errors;
+}
+
+function artifactReviewCasErrors(ajv, value) {
+  const errors = [];
+  const requestValidator = ajv.getSchema(
+    'https://lms.family.local/schemas/tutor-artifact-review-request-v1.json'
+  );
+  if (!requestValidator || !requestValidator(value?.request)) {
+    errors.push(
+      `review request is invalid: ${requestValidator?.errors ? ajv.errorsText(requestValidator.errors) : 'schema unavailable'}`
+    );
+  }
+
+  const request = value?.request || {};
+  const artifact = value?.artifact || {};
+  const cycle = value?.cycle || {};
+  if (artifact.artifactId !== request.artifactId) {
+    errors.push('request artifactId must match the candidate artifact');
+  }
+  if (artifact.version !== request.artifactVersion) {
+    errors.push('request artifactVersion must match the candidate artifact');
+  }
+  if (artifact.contentHash !== request.contentHash) {
+    errors.push('request contentHash must match the candidate artifact');
+  }
+  if (artifact.contentHash !== computeContentHash(artifact.content)) {
+    errors.push('candidate artifact contentHash must match its canonical content');
+  }
+  if (artifact.reviewVersion !== request.expectedArtifactReviewVersion) {
+    errors.push('artifact reviewVersion CAS failed');
+  }
+  if (artifact.status !== 'candidate') {
+    errors.push('artifact must still be candidate');
+  }
+  if (cycle.stateVersion !== request.expectedStateVersion) {
+    errors.push('cycle stateVersion CAS failed');
+  }
+  const expectedCycleStatus =
+    artifact.kind === 'explanation'
+      ? 'explanation_pending_review'
+      : artifact.kind === 'practice'
+        ? 'practice_pending_review'
+        : null;
+  if (!expectedCycleStatus || cycle.status !== expectedCycleStatus) {
+    errors.push('cycle must still be in the matching pending-review state');
+  }
+  if (artifact.cycleId !== cycle.cycleId) {
+    errors.push('artifact must belong to the reviewed cycle');
+  }
+
+  return errors;
+}
+
+function cycleCreateConsistencyErrors(ajv, value) {
+  const errors = [];
+  const requestValidator = ajv.getSchema(
+    'https://lms.family.local/schemas/tutor-cycle-create-request-v1.json'
+  );
+  if (!requestValidator || !requestValidator(value?.request)) {
+    errors.push(
+      `cycle create request is invalid: ${requestValidator?.errors ? ajv.errorsText(requestValidator.errors) : 'schema unavailable'}`
+    );
+  }
+
+  const request = value?.request || {};
+  const mistake = value?.mistake || {};
+  const knowledgePoint = value?.knowledgePoint || {};
+  for (const record of [mistake, knowledgePoint]) {
+    if (record.familyId !== value.actorFamilyId) {
+      errors.push('source records must belong to the authenticated family');
+    }
+    if (record.childId !== request.childId) {
+      errors.push('source records must belong to the requested child');
+    }
+  }
+  if (mistake.mistakeId !== request.sourceMistakeId) {
+    errors.push('request sourceMistakeId must match the loaded mistake');
+  }
+  if (
+    mistake.knowledgePointId !== request.knowledgePointId ||
+    knowledgePoint.knowledgePointId !== request.knowledgePointId
+  ) {
+    errors.push('mistake and request must reference the loaded knowledge point');
+  }
+  if (request.presentedByGrowthTaskId !== null) {
+    const growthTask = value.growthTask;
+    if (
+      !growthTask ||
+      growthTask.growthTaskId !== request.presentedByGrowthTaskId ||
+      growthTask.familyId !== value.actorFamilyId ||
+      growthTask.childId !== request.childId
+    ) {
+      errors.push('optional growth task entry must belong to the same family and child');
+    }
+  }
+  if (value.activeCycleCountForMistake !== 0) {
+    errors.push('pre-query found another active tutor cycle');
+  }
+  const expectedActiveSourceMistakeKey = `${value.actorFamilyId}:${request.sourceMistakeId}`;
+  if (value.activeSourceMistakeKey !== expectedActiveSourceMistakeKey) {
+    errors.push('activeSourceMistakeKey must be derived from familyId and sourceMistakeId');
+  }
+  if (value.activeSourceMistakeKeyConflict) {
+    errors.push('duplicate activeSourceMistakeKey must return ACTIVE_TUTOR_CYCLE_EXISTS');
+  }
+
+  return errors;
+}
+
+function cycleTransitionErrors(ajv, value) {
+  const errors = [];
+  const cycleValidator = ajv.getSchema(
+    'https://lms.family.local/schemas/tutor-learning-cycle-v1.json'
+  );
+  const before = value?.before || {};
+  const after = value?.after || {};
+
+  for (const [label, cycle] of [
+    ['before', before],
+    ['after', after]
+  ]) {
+    if (!cycleValidator || !cycleValidator(cycle)) {
+      errors.push(
+        `${label} cycle is invalid: ${cycleValidator?.errors ? ajv.errorsText(cycleValidator.errors) : 'schema unavailable'}`
+      );
+    }
+    errors.push(
+      ...customContractErrors(
+        'https://lms.family.local/schemas/tutor-learning-cycle-v1.json',
+        cycle
+      ).map(message => `${label} cycle: ${message}`)
+    );
+  }
+
+  for (const field of [
+    'schemaVersion',
+    'cycleId',
+    'familyId',
+    'childId',
+    'createdByParentId',
+    'sourceMistakeId',
+    'knowledgePointId',
+    'createdAt'
+  ]) {
+    if (!isDeepStrictEqual(before[field], after[field])) {
+      errors.push(`cycle transition must preserve ${field}`);
+    }
+  }
+
+  const stateMachine = JSON.parse(read('docs/contracts/tutor-cycle-state-machine.json'));
+  if (!(stateMachine.states?.[before.status] || []).includes(after.status)) {
+    errors.push(`cycle transition ${before.status} -> ${after.status} is not allowed`);
+  }
+  if (after.stateVersion !== before.stateVersion + 1) {
+    errors.push('cycle transition must increment stateVersion exactly once');
+  }
+  if (
+    Date.parse(after.lastTransitionAt) <= Date.parse(before.lastTransitionAt) ||
+    after.updatedAt !== after.lastTransitionAt
+  ) {
+    errors.push('cycle transition timestamps must advance together');
+  }
+
+  const projectionFields = Object.values(cycleProjectionFieldGroups).flat();
+  if (after.status === 'cancelled') {
+    if (after.cancelledFromStatus !== before.status) {
+      errors.push('cancelledFromStatus must equal the status immediately before cancellation');
+    }
+    for (const field of projectionFields) {
+      if (!isDeepStrictEqual(before[field], after[field])) {
+        errors.push(`cancellation must preserve existing cycle projection field ${field}`);
+      }
+    }
+  }
+
+  for (const [stage, fromStatus, submittedStatus, idField, versionField] of [
+    [
+      'correction',
+      'correction_in_progress',
+      'correction_submitted',
+      'currentCorrectionAttemptId',
+      'currentCorrectionAttemptVersion'
+    ],
+    [
+      'practice',
+      'practice_in_progress',
+      'practice_submitted',
+      'currentPracticeAttemptId',
+      'currentPracticeAttemptVersion'
+    ]
+  ]) {
+    const createsAttempt = before.status === fromStatus && after.status === submittedStatus;
+    if (createsAttempt) {
+      const expectedVersion = (before[versionField] || 0) + 1;
+      if (after[versionField] !== expectedVersion) {
+        errors.push(`${stage} submission must increment its attemptVersion exactly once`);
+      }
+      if (after[idField] !== `${after.cycleId}:${stage}:${expectedVersion}`) {
+        errors.push(`${stage} submission must bind the exact new attemptId`);
+      }
+    } else if (
+      !isDeepStrictEqual(before[idField], after[idField]) ||
+      !isDeepStrictEqual(before[versionField], after[versionField])
+    ) {
+      errors.push(`${stage} attempt projection may change only on ${submittedStatus}`);
+    }
+  }
+
+  return errors;
+}
+
+function cycleReviewTransactionErrors(ajv, value) {
+  const errors = [];
+  const attemptValidator = ajv.getSchema(
+    'https://lms.family.local/schemas/tutor-cycle-attempt-v1.json'
+  );
+  const commandValidator = ajv.getSchema(
+    'https://lms.family.local/schemas/tutor-finalization-command-v1.json'
+  );
+  const before = value?.beforeAttempt || {};
+  const after = value?.afterAttempt || {};
+  const beforeCycle = value?.beforeCycle || {};
+  const afterCycle = value?.afterCycle || {};
+  const endpointOperation = value?.endpointOperation;
+  const requestSchemaId =
+    endpointOperation === 'correction-review'
+      ? 'https://lms.family.local/schemas/tutor-correction-review-request-v1.json'
+      : endpointOperation === 'final-review'
+        ? 'https://lms.family.local/schemas/tutor-final-review-request-v1.json'
+        : null;
+  const requestValidator = requestSchemaId ? ajv.getSchema(requestSchemaId) : null;
+  if (!requestValidator || !requestValidator(value?.request)) {
+    errors.push(
+      `review request is invalid: ${requestValidator?.errors ? ajv.errorsText(requestValidator.errors) : 'schema unavailable'}`
+    );
+  }
+  errors.push(
+    ...cycleTransitionErrors(ajv, { before: beforeCycle, after: afterCycle }).map(
+      message => `cycle: ${message}`
+    )
+  );
+  for (const [label, attempt] of [
+    ['before', before],
+    ['after', after]
+  ]) {
+    if (!attemptValidator || !attemptValidator(attempt)) {
+      errors.push(
+        `${label} attempt is invalid: ${attemptValidator?.errors ? ajv.errorsText(attemptValidator.errors) : 'schema unavailable'}`
+      );
+    }
+    errors.push(
+      ...customContractErrors(
+        'https://lms.family.local/schemas/tutor-cycle-attempt-v1.json',
+        attempt
+      ).map(message => `${label} attempt: ${message}`)
+    );
+  }
+
+  for (const field of [
+    'schemaVersion',
+    'attemptId',
+    'cycleId',
+    'familyId',
+    'childId',
+    'stage',
+    'attemptVersion',
+    'mediaIds',
+    'submissionOperationId',
+    'submittedByChildId',
+    'submittedAt'
+  ]) {
+    if (!isDeepStrictEqual(before[field], after[field])) {
+      errors.push(`attempt review must preserve immutable submission field ${field}`);
+    }
+  }
+  if (before.review !== null) {
+    errors.push('an existing attempt review must never be overwritten');
+  }
+  if (after.review === null) {
+    errors.push('attempt review transition must append one review');
+  }
+
+  const request = value?.request || {};
+  const review = after.review || {};
+  if (request.expectedStateVersion !== beforeCycle.stateVersion) {
+    errors.push('review request expectedStateVersion must equal beforeCycle.stateVersion');
+  }
+  for (const field of ['cycleId', 'familyId', 'childId']) {
+    if (before[field] !== beforeCycle[field] || after[field] !== afterCycle[field]) {
+      errors.push(`reviewed attempt ${field} must equal its cycle ${field}`);
+    }
+  }
+  if (
+    beforeCycle.familyId !== value?.actorFamilyId ||
+    review.reviewedByParentId !== value?.actorParentId
+  ) {
+    errors.push('review transaction must bind the authenticated family and parent');
+  }
+  if (
+    review.stateVersionBefore !== beforeCycle.stateVersion ||
+    review.stateVersionAfter !== afterCycle.stateVersion
+  ) {
+    errors.push('attempt review versions must equal the before and after cycle versions');
+  }
+  if (review.reviewOperationId !== request.operationId) {
+    errors.push('attempt reviewOperationId must equal request.operationId');
+  }
+  if (
+    Date.parse(review.reviewedAt) < Date.parse(after.submittedAt) ||
+    review.reviewedAt !== afterCycle.lastTransitionAt ||
+    afterCycle.updatedAt !== afterCycle.lastTransitionAt
+  ) {
+    errors.push('attempt submission, review, and cycle transition timestamps are inconsistent');
+  }
+
+  const stage = endpointOperation === 'correction-review' ? 'correction' : 'practice';
+  const idField =
+    stage === 'correction' ? 'currentCorrectionAttemptId' : 'currentPracticeAttemptId';
+  const versionField =
+    stage === 'correction'
+      ? 'currentCorrectionAttemptVersion'
+      : 'currentPracticeAttemptVersion';
+  if (
+    before.stage !== stage ||
+    beforeCycle[idField] !== before.attemptId ||
+    beforeCycle[versionField] !== before.attemptVersion ||
+    afterCycle[idField] !== after.attemptId ||
+    afterCycle[versionField] !== after.attemptVersion
+  ) {
+    errors.push(`cycle ${stage} pointer must identify the exact reviewed attempt`);
+  }
+  if (
+    review.decision !== request.decision ||
+    !isDeepStrictEqual(review.comment, request.comment)
+  ) {
+    errors.push('persisted attempt review must match the request decision and comment');
+  }
+
+  const expectedBeforeStatus =
+    endpointOperation === 'correction-review' ? 'correction_submitted' : 'practice_submitted';
+  const expectedAfterStatus =
+    endpointOperation === 'correction-review'
+      ? request.decision === 'approve'
+        ? 'correction_approved'
+        : 'correction_needs_revision'
+      : request.decision === 'mastered'
+        ? 'parent_verified'
+        : 'practice_needs_revision';
+  if (
+    beforeCycle.status !== expectedBeforeStatus ||
+    afterCycle.status !== expectedAfterStatus
+  ) {
+    errors.push('cycle review states must match the endpoint operation and decision');
+  }
+
+  const commands = Array.isArray(value?.commands) ? value.commands : [];
+  if (endpointOperation === 'correction-review') {
+    if (review.evidenceSummary !== null || commands.length !== 0) {
+      errors.push('correction review must not persist mastery evidence or finalization commands');
+    }
+  } else {
+    if (!isDeepStrictEqual(review.evidenceSummary, request.evidenceSummary)) {
+      errors.push('practice review evidenceSummary must equal the final-review request');
+    }
+    if (request.decision === 'mastered') {
+      const snapshot = afterCycle.finalReview;
+      if (
+        snapshot?.practiceAttemptId !== after.attemptId ||
+        snapshot?.practiceAttemptVersion !== after.attemptVersion ||
+        snapshot?.practiceReviewOperationId !== review.reviewOperationId
+      ) {
+        errors.push('mastered finalReview must identify the exact reviewed practice attempt');
+      }
+      for (const field of [
+        'decision',
+        'evidenceSummary',
+        'reviewedByParentId',
+        'reviewedAt'
+      ]) {
+        if (!isDeepStrictEqual(snapshot?.[field], review[field])) {
+          errors.push(`mastered finalReview ${field} must equal the practice attempt review`);
+        }
+      }
+      const targets = new Set(commands.map(command => command.target));
+      if (
+        commands.length !== 2 ||
+        targets.size !== 2 ||
+        !targets.has('progress-service') ||
+        !targets.has('analytics-service') ||
+        commands.some(command => !isDeepStrictEqual(command.payload?.finalReview, snapshot))
+      ) {
+        errors.push('mastered review must create two commands carrying the exact finalReview');
+      }
+      for (const [index, command] of commands.entries()) {
+        if (!commandValidator || !commandValidator(command)) {
+          errors.push(
+            `commands[${index}] is invalid: ${commandValidator?.errors ? ajv.errorsText(commandValidator.errors) : 'schema unavailable'}`
+          );
+        }
+        errors.push(
+          ...customContractErrors(
+            'https://lms.family.local/schemas/tutor-finalization-command-v1.json',
+            command
+          ).map(message => `commands[${index}]: ${message}`)
+        );
+        for (const field of ['cycleId', 'familyId', 'childId']) {
+          if (command[field] !== afterCycle[field]) {
+            errors.push(`commands[${index}] ${field} must equal afterCycle.${field}`);
+          }
+        }
+        for (const field of ['finalReviewId', 'finalReviewVersion', 'finalReviewHash']) {
+          if (command[field] !== snapshot?.[field]) {
+            errors.push(`commands[${index}] ${field} must equal afterCycle.finalReview.${field}`);
+          }
+        }
+        const targetSuffix =
+          command.target === 'progress-service'
+            ? 'progress'
+            : command.target === 'analytics-service'
+              ? 'analytics'
+              : null;
+        const expectedOperationId = targetSuffix
+          ? `${afterCycle.cycleId}:final-review:${snapshot?.finalReviewVersion}:${targetSuffix}`
+          : null;
+        if (!expectedOperationId || command.operationId !== expectedOperationId) {
+          errors.push(`commands[${index}] must use the stable target operationId`);
+        }
+        if (command.status !== 'pending') {
+          errors.push(`commands[${index}] must start in pending state`);
+        }
+      }
+    } else if (afterCycle.finalReview !== undefined || commands.length !== 0) {
+      errors.push('revise review must not create finalReview or finalization commands');
+    }
+  }
+
+  return errors;
+}
+
+function requestPayloadHashErrors(ajv, value) {
+  const errors = [];
+  const stateMachine = JSON.parse(read('docs/contracts/tutor-cycle-state-machine.json'));
+  const mutationCandidates = (stateMachine.publicMutations || []).filter(
+    mutation =>
+      mutation.endpointOperation === value?.endpointOperation &&
+      mutation.route === value?.route
+  );
+  const requestSchemaIds = new Set(
+    mutationCandidates.map(mutation => mutation.requestSchemaId)
+  );
+  if (requestSchemaIds.size > 1) {
+    errors.push(`endpointOperation ${value?.endpointOperation} maps to conflicting schemas`);
+  }
+  const requestSchemaId = mutationCandidates[0]?.requestSchemaId;
+  const requestValidator = requestSchemaId ? ajv.getSchema(requestSchemaId) : null;
+  if (!requestValidator || !requestValidator(value?.request)) {
+    errors.push(
+      `request is invalid for ${value?.endpointOperation}: ${requestValidator?.errors ? ajv.errorsText(requestValidator.errors) : 'schema unavailable'}`
+    );
+  }
+  const discriminatorMatches = mutationCandidates.some(mutation =>
+    Object.entries(mutation.discriminator || {}).every(
+      ([field, expectedValue]) => value?.request?.[field] === expectedValue
+    )
+  );
+  if (!discriminatorMatches) {
+    errors.push(`request discriminator does not match ${value?.route}`);
+  }
+  const resource = value?.resource;
+  const matchedPathParams = value?.matchedPathParams;
+  if (
+    !matchedPathParams ||
+    Array.isArray(matchedPathParams) ||
+    !sameSet(new Set(Object.keys(matchedPathParams)), new Set(['cycleId']))
+  ) {
+    errors.push('matchedPathParams must contain exactly the server-matched cycleId');
+  }
+  if (
+    !resource ||
+    Array.isArray(resource) ||
+    !sameSet(new Set(Object.keys(resource)), new Set(['cycleId']))
+  ) {
+    errors.push('request hash resource must contain exactly cycleId');
+  } else if (value?.endpointOperation === 'cycle-create') {
+    if (resource.cycleId !== null) {
+      errors.push('cycle-create request hash resource.cycleId must be null');
+    }
+  } else if (typeof resource.cycleId !== 'string' || resource.cycleId.length === 0) {
+    errors.push('cycle-scoped request hash resource.cycleId must be the URL cycleId');
+  }
+  if (resource?.cycleId !== matchedPathParams?.cycleId) {
+    errors.push('request hash resource.cycleId must equal matchedPathParams.cycleId');
+  }
+  if (
+    value.requestPayloadHash !==
+    computeRequestPayloadHash(value.endpointOperation, value.resource, value.request)
+  ) {
+    errors.push('requestPayloadHash must match the canonical operation request');
+  }
+  return errors;
+}
+
+function idempotencyDecisionErrors(ajv, value) {
+  const errors = [];
+  const incoming = value?.incoming || {};
+  const actor = value?.actor || {};
+  const authorizedResource = value?.authorizedResource || {};
+  const mutationSemantics = tutorMutationSemantics.get(incoming.endpointOperation);
+  const responseVariant = resolveTutorResponseVariant(
+    mutationSemantics,
+    incoming.request
+  );
+  const actorShapeValid =
+    sameSet(
+      new Set(Object.keys(actor)),
+      new Set([
+        'userId',
+        'role',
+        'accountStatus',
+        'familyId',
+        'childId',
+        'activeParentMembership'
+      ])
+    ) &&
+    typeof actor.userId === 'string' &&
+    actor.userId.length > 0 &&
+    ['parent', 'child'].includes(actor.role) &&
+    ['active', 'disabled', 'deleted'].includes(actor.accountStatus) &&
+    typeof actor.familyId === 'string' &&
+    actor.familyId.length > 0 &&
+    typeof actor.activeParentMembership === 'boolean' &&
+    (actor.role === 'parent'
+      ? actor.childId === null
+      : typeof actor.childId === 'string' && actor.childId.length > 0);
+  const resourceShapeValid =
+    sameSet(
+      new Set(Object.keys(authorizedResource)),
+      new Set(['exists', 'cycleId', 'familyId', 'childId'])
+    ) &&
+    typeof authorizedResource.exists === 'boolean' &&
+    (authorizedResource.cycleId === null ||
+      (typeof authorizedResource.cycleId === 'string' &&
+        authorizedResource.cycleId.length > 0)) &&
+    typeof authorizedResource.familyId === 'string' &&
+    authorizedResource.familyId.length > 0 &&
+    typeof authorizedResource.childId === 'string' &&
+    authorizedResource.childId.length > 0;
+  if (!actorShapeValid) {
+    errors.push('authorization actor context is invalid');
+  }
+  if (!resourceShapeValid) {
+    errors.push('authorization resource context is invalid');
+  }
+
+  const resourceMatchesRequest =
+    authorizedResource.cycleId === incoming.matchedPathParams?.cycleId &&
+    authorizedResource.cycleId === incoming.resource?.cycleId;
+  const commonAuthorization =
+    actorShapeValid &&
+    resourceShapeValid &&
+    actor.accountStatus === 'active' &&
+    authorizedResource.exists === true &&
+    actor.familyId === incoming.actorFamilyId &&
+    actor.familyId === authorizedResource.familyId &&
+    resourceMatchesRequest;
+  const roleAuthorized =
+    Boolean(mutationSemantics?.allowedActorRoles.includes(actor.role)) &&
+    (actor.role === 'parent'
+      ? actor.activeParentMembership === true
+      : actor.activeParentMembership === false &&
+        actor.childId === authorizedResource.childId);
+  const authorized = commonAuthorization && roleAuthorized;
+  const expected = value?.expected || {};
+
+  if (!authorized) {
+    if (
+      !sameSet(
+        new Set(Object.keys(expected)),
+        new Set(['decision', 'status', 'errorCode', 'idempotencyLookup'])
+      ) ||
+      expected.decision !== 'deny' ||
+      expected.status !== 404 ||
+      expected.errorCode !== 'RESOURCE_NOT_FOUND' ||
+      expected.idempotencyLookup !== 'skipped'
+    ) {
+      errors.push('unauthorized request must return 404 before idempotency lookup');
+    }
+    return errors;
+  }
+
+  errors.push(
+    ...requestPayloadHashErrors(ajv, incoming).map(
+      message => `incoming request: ${message}`
+    )
+  );
+
+  const stored = value?.stored;
+  let actualDecision = 'execute';
+  if (stored !== null && stored !== undefined) {
+    const storedSchemaId =
+      'https://lms.family.local/schemas/tutor-idempotency-record-v1.json';
+    const storedValidator = ajv.getSchema(storedSchemaId);
+    if (!storedValidator || !storedValidator(stored)) {
+      errors.push(
+        `stored idempotency record is invalid: ${storedValidator?.errors ? ajv.errorsText(storedValidator.errors) : 'schema unavailable'}`
+      );
+    }
+    errors.push(
+      ...customContractErrors(storedSchemaId, stored).map(
+        message => `stored idempotency record: ${message}`
+      )
+    );
+    const sameScope =
+      stored.familyId === incoming.actorFamilyId &&
+      stored.endpointOperation === incoming.endpointOperation &&
+      stored.operationId === incoming.request?.operationId;
+    if (sameScope) {
+      if (stored.requestPayloadHash !== incoming.requestPayloadHash) {
+        actualDecision = 'conflict';
+      } else {
+        const referencedEntity = value?.referencedEntity;
+        const referenceExistsShape =
+          referencedEntity &&
+          !Array.isArray(referencedEntity) &&
+          sameSet(new Set(Object.keys(referencedEntity)), new Set(['exists'])) &&
+          referencedEntity.exists === false;
+        const referenceLoadedShape =
+          referencedEntity &&
+          !Array.isArray(referencedEntity) &&
+          sameSet(
+            new Set(Object.keys(referencedEntity)),
+            new Set([
+              'exists',
+              'resourceType',
+              'resourceId',
+              'familyId',
+              'childId',
+              'cycleId'
+            ])
+          ) &&
+          referencedEntity.exists === true &&
+          ['resourceType', 'resourceId', 'familyId', 'childId', 'cycleId'].every(
+            field =>
+              typeof referencedEntity[field] === 'string' &&
+              referencedEntity[field].length > 0
+          );
+        if (!referenceExistsShape && !referenceLoadedShape) {
+          errors.push('referencedEntity must be an exact missing or loaded entity projection');
+        }
+
+        const referenceMatches =
+          referenceLoadedShape &&
+          Boolean(mutationSemantics) &&
+          mutationSemantics.allowedActorRoles.includes(stored.createdBy?.role) &&
+          matchesTutorResponseVariant(stored.responseReference, responseVariant) &&
+          referencedEntity.resourceType === stored.responseReference?.resourceType &&
+          referencedEntity.resourceId === stored.responseReference?.resourceId &&
+          referencedEntity.familyId === stored.familyId &&
+          referencedEntity.childId === stored.childId &&
+          referencedEntity.familyId === authorizedResource.familyId &&
+          referencedEntity.childId === authorizedResource.childId &&
+          (stored.endpointOperation === 'cycle-create'
+            ? stored.resource?.cycleId === null &&
+              referencedEntity.resourceType === 'TutorLearningCycle' &&
+              referencedEntity.cycleId === stored.responseReference?.resourceId
+            : referencedEntity.cycleId === stored.resource?.cycleId &&
+              referencedEntity.cycleId === authorizedResource.cycleId);
+        actualDecision = referenceMatches ? 'replay' : 'not-found';
+      }
+    }
+  }
+
+  if (expected.decision !== actualDecision) {
+    errors.push(
+      `idempotency decision must be ${actualDecision}, got ${expected.decision}`
+    );
+  }
+  if (actualDecision === 'execute') {
+    if (!sameSet(new Set(Object.keys(expected)), new Set(['decision']))) {
+      errors.push('execute expectation must contain only decision');
+    }
+  } else if (actualDecision === 'replay') {
+    if (
+      !sameSet(
+        new Set(Object.keys(expected)),
+        new Set(['decision', 'responseReference', 'responseMode'])
+      ) ||
+      expected.responseMode !== 'rebuild-authorized' ||
+      !isDeepStrictEqual(expected.responseReference, stored?.responseReference)
+    ) {
+      errors.push('replay must rebuild the authorized response from the stored reference');
+    }
+    if (
+      stored?.familyId !== authorizedResource.familyId ||
+      stored?.childId !== authorizedResource.childId ||
+      stored?.resource?.cycleId !== authorizedResource.cycleId
+    ) {
+      errors.push('replay record must belong to the currently authorized resource');
+    }
+  } else if (actualDecision === 'not-found') {
+    if (
+      !sameSet(
+        new Set(Object.keys(expected)),
+        new Set(['decision', 'status', 'errorCode', 'reexecute'])
+      ) ||
+      expected.status !== 404 ||
+      expected.errorCode !== 'RESOURCE_NOT_FOUND' ||
+      expected.reexecute !== false
+    ) {
+      errors.push('missing or mismatched replay reference must return 404 without reexecution');
+    }
+  } else if (
+    !sameSet(
+      new Set(Object.keys(expected)),
+      new Set(['decision', 'status', 'errorCode'])
+    ) ||
+    expected.status !== 409 ||
+    expected.errorCode !== 'IDEMPOTENCY_KEY_REUSED'
+  ) {
+    errors.push('conflict must return 409 IDEMPOTENCY_KEY_REUSED');
+  }
+
+  return errors;
+}
+
+function idempotencyFirstWriteErrors(value) {
+  const errors = [];
+  if (
+    !value ||
+    Array.isArray(value) ||
+    !sameSet(
+      new Set(Object.keys(value)),
+      new Set(['scenario', 'transactionBoundary', 'attempts', 'expected'])
+    )
+  ) {
+    errors.push('public Tutor first-write fixture must use the closed transaction projection');
+  }
+  const boundary = value?.transactionBoundary || {};
+  const expectedAtomicWrites = new Set([
+    'authoritative-business-write',
+    'cycle-cas',
+    'local-job-or-outbox',
+    'tutor-idempotency-record'
+  ]);
+  if (
+    !sameSet(
+      new Set(Object.keys(boundary)),
+      new Set([
+        'datastore',
+        'atomicWrites',
+        'irreversibleExternalSideEffectsBeforeCommit'
+      ])
+    ) ||
+    boundary.datastore !== 'homework-service-mongodb' ||
+    !Array.isArray(boundary.atomicWrites) ||
+    !sameSet(new Set(boundary.atomicWrites), expectedAtomicWrites) ||
+    boundary.irreversibleExternalSideEffectsBeforeCommit !== false
+  ) {
+    errors.push('public Tutor first write must use one local transaction with no pre-commit irreversible external side effect');
+  }
+
+  const attempts = Array.isArray(value?.attempts) ? value.attempts : [];
+  if (new Set(attempts.map(attempt => attempt?.name)).size !== attempts.length) {
+    errors.push('first-write attempt names must be unique');
+  }
+  for (const attempt of attempts) {
+    if (
+      !sameSet(
+        new Set(Object.keys(attempt)),
+        new Set([
+          'name',
+          'requestPayloadHash',
+          'outcome',
+          'businessWriteCommitted',
+          'idempotencyRecordCommitted'
+        ])
+      ) ||
+      typeof attempt.name !== 'string' ||
+      !/^sha256:[a-f0-9]{64}$/.test(attempt.requestPayloadHash || '') ||
+      ![
+        'committed',
+        'duplicate-key-aborted',
+        'write-conflict-aborted',
+        'crash-before-commit',
+        'committed-response-lost'
+      ].includes(attempt.outcome) ||
+      typeof attempt.businessWriteCommitted !== 'boolean' ||
+      typeof attempt.idempotencyRecordCommitted !== 'boolean'
+    ) {
+      errors.push('first-write attempt projection is invalid');
+      continue;
+    }
+    const transactionCommitted = ['committed', 'committed-response-lost'].includes(
+      attempt.outcome
+    );
+    if (
+      attempt.businessWriteCommitted !== transactionCommitted ||
+      attempt.idempotencyRecordCommitted !== transactionCommitted
+    ) {
+      errors.push('business and idempotency writes must commit or abort together');
+    }
+  }
+
+  let computedExpected = null;
+  const committedAttempts = attempts.filter(attempt =>
+    ['committed', 'committed-response-lost'].includes(attempt.outcome)
+  );
+  if (value?.scenario === 'same-hash-race') {
+    if (
+      attempts.length !== 2 ||
+      committedAttempts.length !== 1 ||
+      attempts.filter(attempt =>
+        ['duplicate-key-aborted', 'write-conflict-aborted'].includes(attempt.outcome)
+      ).length !== 1 ||
+      attempts[0]?.requestPayloadHash !== attempts[1]?.requestPayloadHash
+    ) {
+      errors.push('same-hash race must have one committed winner and one aborted loser');
+    }
+    computedExpected = {
+      committedBusinessEffects: 1,
+      committedIdempotencyRecords: 1,
+      retryDecision: 'replay'
+    };
+  } else if (value?.scenario === 'different-hash-race') {
+    if (
+      attempts.length !== 2 ||
+      committedAttempts.length !== 1 ||
+      attempts.filter(attempt =>
+        ['duplicate-key-aborted', 'write-conflict-aborted'].includes(attempt.outcome)
+      ).length !== 1 ||
+      attempts[0]?.requestPayloadHash === attempts[1]?.requestPayloadHash
+    ) {
+      errors.push('different-hash race must have one committed winner and one aborted loser');
+    }
+    computedExpected = {
+      committedBusinessEffects: 1,
+      committedIdempotencyRecords: 1,
+      retryDecision: 'conflict'
+    };
+  } else if (value?.scenario === 'crash-before-commit') {
+    if (
+      attempts.length !== 1 ||
+      attempts[0]?.outcome !== 'crash-before-commit' ||
+      committedAttempts.length !== 0
+    ) {
+      errors.push('crash-before-commit must abort the entire local transaction');
+    }
+    computedExpected = {
+      committedBusinessEffects: 0,
+      committedIdempotencyRecords: 0,
+      retryDecision: 'execute'
+    };
+  } else if (value?.scenario === 'crash-after-commit') {
+    if (
+      attempts.length !== 1 ||
+      attempts[0]?.outcome !== 'committed-response-lost' ||
+      committedAttempts.length !== 1
+    ) {
+      errors.push('crash-after-commit must leave both local writes committed');
+    }
+    computedExpected = {
+      committedBusinessEffects: 1,
+      committedIdempotencyRecords: 1,
+      retryDecision: 'replay'
+    };
+  } else {
+    errors.push('unknown public Tutor first-write scenario');
+  }
+
+  if (!isDeepStrictEqual(value?.expected, computedExpected)) {
+    errors.push('first-write expected outcome does not match the atomic transaction result');
+  }
+  return errors;
+}
+
+function idempotencyRecordCommitErrors(ajv, value) {
+  const errors = [];
+  if (
+    !value ||
+    Array.isArray(value) ||
+    !sameSet(
+      new Set(Object.keys(value)),
+      new Set([
+        'actor',
+        'authorizedResource',
+        'incoming',
+        'committedEntity',
+        'actualResult',
+        'persistedRecord',
+        'commitContext'
+      ])
+    )
+  ) {
+    errors.push('idempotency commit fixture must use the closed commit projection');
+  }
+  const actor = value?.actor || {};
+  const incoming = value?.incoming || {};
+  const authorizedResource = value?.authorizedResource || {};
+  const committedEntity = value?.committedEntity || {};
+  const actualResult = value?.actualResult || {};
+  const persistedRecord = value?.persistedRecord || {};
+  const commitContext = value?.commitContext || {};
+  const mutationSemantics = tutorMutationSemantics.get(incoming.endpointOperation);
+  const responseVariant = resolveTutorResponseVariant(
+    mutationSemantics,
+    incoming.request
+  );
+
+  if (
+    !sameSet(
+      new Set(Object.keys(incoming)),
+      new Set([
+        'actorFamilyId',
+        'endpointOperation',
+        'route',
+        'matchedPathParams',
+        'resource',
+        'request',
+        'requestPayloadHash'
+      ])
+    )
+  ) {
+    errors.push('commit incoming request projection must be exact');
+  }
+
+  const actorShapeValid =
+    sameSet(
+      new Set(Object.keys(actor)),
+      new Set([
+        'userId',
+        'role',
+        'accountStatus',
+        'familyId',
+        'childId',
+        'activeParentMembership'
+      ])
+    ) &&
+    typeof actor.userId === 'string' &&
+    actor.userId.length > 0 &&
+    ['parent', 'child'].includes(actor.role) &&
+    ['active', 'disabled', 'deleted'].includes(actor.accountStatus) &&
+    typeof actor.familyId === 'string' &&
+    actor.familyId.length > 0 &&
+    typeof actor.activeParentMembership === 'boolean' &&
+    (actor.role === 'parent'
+      ? actor.childId === null
+      : typeof actor.childId === 'string' && actor.childId.length > 0);
+  const authorizedResourceShapeValid =
+    sameSet(
+      new Set(Object.keys(authorizedResource)),
+      new Set(['exists', 'cycleId', 'familyId', 'childId'])
+    ) &&
+    typeof authorizedResource.exists === 'boolean' &&
+    (authorizedResource.cycleId === null ||
+      (typeof authorizedResource.cycleId === 'string' &&
+        authorizedResource.cycleId.length > 0)) &&
+    typeof authorizedResource.familyId === 'string' &&
+    authorizedResource.familyId.length > 0 &&
+    typeof authorizedResource.childId === 'string' &&
+    authorizedResource.childId.length > 0;
+  if (!actorShapeValid || !authorizedResourceShapeValid) {
+    errors.push('commit actor and authorized resource projections must be exact');
+  }
+
+  errors.push(
+    ...requestPayloadHashErrors(ajv, incoming).map(
+      message => `incoming request: ${message}`
+    )
+  );
+  const storedSchemaId =
+    'https://lms.family.local/schemas/tutor-idempotency-record-v1.json';
+  const storedValidator = ajv.getSchema(storedSchemaId);
+  if (!storedValidator || !storedValidator(persistedRecord)) {
+    errors.push(
+      `persisted idempotency record is invalid: ${storedValidator?.errors ? ajv.errorsText(storedValidator.errors) : 'schema unavailable'}`
+    );
+  }
+  errors.push(
+    ...customContractErrors(storedSchemaId, persistedRecord).map(
+      message => `persisted idempotency record: ${message}`
+    )
+  );
+
+  if (
+    !sameSet(
+      new Set(Object.keys(commitContext)),
+      new Set([
+        'transactionId',
+        'businessMutationCommitId',
+        'idempotencyRecordCommitId',
+        'irreversibleExternalSideEffectsBeforeCommit'
+      ])
+    ) ||
+    typeof commitContext.transactionId !== 'string' ||
+    commitContext.transactionId.length === 0 ||
+    commitContext.businessMutationCommitId !== commitContext.transactionId ||
+    commitContext.idempotencyRecordCommitId !== commitContext.transactionId ||
+    commitContext.irreversibleExternalSideEffectsBeforeCommit !== false
+  ) {
+    errors.push('actual result and idempotency record must share one local commit boundary');
+  }
+
+  const committedEntityShapeValid =
+    sameSet(
+      new Set(Object.keys(committedEntity)),
+      new Set([
+        'transactionId',
+        'resourceType',
+        'resourceId',
+        'familyId',
+        'childId',
+        'cycleId',
+        'facts'
+      ])
+    ) &&
+    ['transactionId', 'resourceType', 'resourceId', 'familyId', 'childId', 'cycleId'].every(
+      field => typeof committedEntity[field] === 'string' && committedEntity[field].length > 0
+    ) &&
+    committedEntity.facts &&
+    !Array.isArray(committedEntity.facts) &&
+    typeof committedEntity.facts === 'object';
+  if (!committedEntityShapeValid) {
+    errors.push('committedEntity must be the closed projection read from the local transaction');
+  }
+
+  let expectedCommittedFacts = null;
+  let expectedCommittedResourceId = null;
+  switch (incoming.endpointOperation) {
+    case 'cycle-create':
+      expectedCommittedFacts = { finalizationOutboxCount: 0 };
+      expectedCommittedResourceId = committedEntity.cycleId;
+      break;
+    case 'explanation-job':
+    case 'practice-job':
+      expectedCommittedFacts = {
+        kind: incoming.request?.kind,
+        finalizationOutboxCount: 0
+      };
+      break;
+    case 'explanation-artifact-review':
+    case 'practice-artifact-review':
+      expectedCommittedFacts = {
+        artifactId: incoming.request?.artifactId,
+        artifactVersion: incoming.request?.artifactVersion,
+        decision: incoming.request?.decision,
+        finalizationOutboxCount: 0
+      };
+      expectedCommittedResourceId = incoming.request?.artifactId;
+      break;
+    case 'correction-start':
+    case 'practice-start':
+    case 'cycle-cancel':
+      expectedCommittedFacts = {
+        action: incoming.request?.action,
+        finalizationOutboxCount: 0
+      };
+      expectedCommittedResourceId = incoming.resource?.cycleId;
+      break;
+    case 'correction-submit':
+    case 'practice-submit':
+      expectedCommittedFacts = {
+        stage: incoming.request?.stage,
+        attemptVersion: incoming.request?.attemptVersion,
+        finalizationOutboxCount: 0
+      };
+      expectedCommittedResourceId =
+        `${incoming.resource?.cycleId}:${incoming.request?.stage}:${incoming.request?.attemptVersion}`;
+      break;
+    case 'correction-review':
+      expectedCommittedFacts = {
+        stage: 'correction',
+        attemptVersion: committedEntity.facts?.attemptVersion,
+        reviewOperationId: incoming.request?.operationId,
+        cycleCurrentAttemptId: committedEntity.facts?.cycleCurrentAttemptId,
+        cycleCurrentAttemptVersion:
+          committedEntity.facts?.cycleCurrentAttemptVersion,
+        decision: incoming.request?.decision,
+        finalizationOutboxCount: 0
+      };
+      if (
+        !new RegExp(`^${escapeRegExp(incoming.resource?.cycleId || '')}:correction:[1-9][0-9]*$`).test(committedEntity.resourceId || '') ||
+        committedEntity.resourceId !== committedEntity.facts?.cycleCurrentAttemptId ||
+        !Number.isInteger(committedEntity.facts?.attemptVersion) ||
+        committedEntity.facts.attemptVersion < 1 ||
+        committedEntity.facts.attemptVersion !==
+          committedEntity.facts?.cycleCurrentAttemptVersion
+      ) {
+        errors.push('correction-review must bind the transaction-updated current correction Attempt');
+      }
+      break;
+    case 'final-review':
+      if (incoming.request?.decision === 'revise') {
+        expectedCommittedFacts = {
+          stage: 'practice',
+          attemptVersion: committedEntity.facts?.attemptVersion,
+          reviewOperationId: incoming.request?.operationId,
+          cycleCurrentAttemptId: committedEntity.facts?.cycleCurrentAttemptId,
+          cycleCurrentAttemptVersion:
+            committedEntity.facts?.cycleCurrentAttemptVersion,
+          decision: 'revise',
+          finalizationOutboxCount: 0
+        };
+        if (
+          !new RegExp(`^${escapeRegExp(incoming.resource?.cycleId || '')}:practice:[1-9][0-9]*$`).test(committedEntity.resourceId || '') ||
+          committedEntity.resourceId !== committedEntity.facts?.cycleCurrentAttemptId ||
+          !Number.isInteger(committedEntity.facts?.attemptVersion) ||
+          committedEntity.facts.attemptVersion < 1 ||
+          committedEntity.facts.attemptVersion !==
+            committedEntity.facts?.cycleCurrentAttemptVersion
+        ) {
+          errors.push('final-review revise must bind the transaction-updated current practice Attempt');
+        }
+      } else if (incoming.request?.decision === 'mastered') {
+        expectedCommittedFacts = {
+          decision: 'mastered',
+          finalizationOutboxCount: 2
+        };
+        expectedCommittedResourceId = `${incoming.resource?.cycleId}:final-review:1`;
+      }
+      break;
+    default:
+      errors.push('committedEntity has no operation-specific binding rule');
+  }
+  if (
+    committedEntityShapeValid &&
+    (committedEntity.transactionId !== commitContext.transactionId ||
+      committedEntity.resourceType !== responseVariant?.responseResourceType ||
+      !isDeepStrictEqual(committedEntity.facts, expectedCommittedFacts) ||
+      (expectedCommittedResourceId !== null &&
+        committedEntity.resourceId !== expectedCommittedResourceId))
+  ) {
+    errors.push('committedEntity must match the request-specific result written in the same transaction');
+  }
+
+  if (
+    !sameSet(
+      new Set(Object.keys(actualResult)),
+      new Set([
+        'httpStatus',
+        'resourceType',
+        'resourceId',
+        'responseId',
+        'familyId',
+        'childId',
+        'cycleId'
+      ])
+    ) ||
+    !Number.isInteger(actualResult.httpStatus) ||
+    actualResult.httpStatus < 200 ||
+    actualResult.httpStatus > 299 ||
+    ['resourceType', 'resourceId', 'responseId', 'familyId', 'childId', 'cycleId'].some(
+      field => typeof actualResult[field] !== 'string' || actualResult[field].length === 0
+    )
+  ) {
+    errors.push('actual result projection is invalid');
+  }
+
+  if (
+    !actorShapeValid ||
+    !authorizedResourceShapeValid ||
+    actor.accountStatus !== 'active' ||
+    incoming.actorFamilyId !== actor.familyId ||
+    actor.familyId !== authorizedResource.familyId ||
+    actor.familyId !== actualResult.familyId ||
+    actor.familyId !== persistedRecord.familyId ||
+    !mutationSemantics?.allowedActorRoles.includes(actor.role) ||
+    (actor.role === 'parent'
+      ? actor.childId !== null || actor.activeParentMembership !== true
+      : actor.childId !== authorizedResource.childId ||
+        actor.activeParentMembership !== false)
+  ) {
+    errors.push('persisted record actor and family must match the authorized first caller');
+  }
+  if (
+    authorizedResource.exists !== true ||
+    authorizedResource.childId !== actualResult.childId ||
+    authorizedResource.childId !== persistedRecord.childId
+  ) {
+    errors.push('persisted record child must match the authorized resource and actual result');
+  }
+  if (
+    persistedRecord.endpointOperation !== incoming.endpointOperation ||
+    persistedRecord.operationId !== incoming.request?.operationId ||
+    persistedRecord.requestPayloadHash !== incoming.requestPayloadHash ||
+    persistedRecord.createdBy?.userId !== actor.userId ||
+    persistedRecord.createdBy?.role !== actor.role
+  ) {
+    errors.push('persisted record identity, hash and creator must match the first request');
+  }
+
+  const actualReference = {
+    httpStatus: actualResult.httpStatus,
+    resourceType: actualResult.resourceType,
+    resourceId: actualResult.resourceId,
+    responseId: actualResult.responseId
+  };
+  const recordWithActualReference = {
+    ...persistedRecord,
+    responseReference: actualReference
+  };
+  if (
+    !mutationSemantics ||
+    !matchesTutorResponseVariant(actualResult, responseVariant) ||
+    !committedEntityShapeValid ||
+    actualResult.resourceType !== committedEntity.resourceType ||
+    actualResult.resourceId !== committedEntity.resourceId ||
+    actualResult.familyId !== committedEntity.familyId ||
+    actualResult.childId !== committedEntity.childId ||
+    actualResult.cycleId !== committedEntity.cycleId ||
+    !isDeepStrictEqual(persistedRecord.responseReference, actualReference) ||
+    actualResult.responseId !== computeTutorResponseId(recordWithActualReference)
+  ) {
+    errors.push('persisted responseReference must be the deterministic projection of the actual result');
+  }
+
+  if (incoming.endpointOperation === 'cycle-create') {
+    if (
+      incoming.resource?.cycleId !== null ||
+      authorizedResource.cycleId !== null ||
+      persistedRecord.resource?.cycleId !== null ||
+      actualResult.cycleId !== actualResult.resourceId ||
+      committedEntity.cycleId !== committedEntity.resourceId
+    ) {
+      errors.push('cycle-create commit must bind the authorized source to the newly created Cycle');
+    }
+  } else if (
+    persistedRecord.resource?.cycleId !== incoming.resource?.cycleId ||
+    persistedRecord.resource?.cycleId !== authorizedResource.cycleId ||
+    persistedRecord.resource?.cycleId !== actualResult.cycleId ||
+    persistedRecord.resource?.cycleId !== committedEntity.cycleId
+  ) {
+    errors.push('persisted record must bind the actual result to the requested authorized Cycle');
+  }
+  return errors;
+}
+
+function generationRequestHashErrors(ajv, value) {
+  const errors = [];
+  const generationInput = value?.generationInput || {};
+  const generationInputSchemaId =
+    'https://lms.family.local/schemas/tutor-generation-input-v1.json';
+  const generationInputValidator = ajv.getSchema(generationInputSchemaId);
+  if (!generationInputValidator || !generationInputValidator(generationInput)) {
+    errors.push(
+      `generationInput is invalid: ${generationInputValidator?.errors ? ajv.errorsText(generationInputValidator.errors) : 'schema unavailable'}`
+    );
+  }
+  errors.push(...customContractErrors(generationInputSchemaId, generationInput));
+  if (value.requestHash !== computeGenerationRequestHash(generationInput)) {
+    errors.push('requestHash must match the canonical deterministic generation input');
+  }
+  return errors;
+}
+
+function buildContractValidators(contractDocuments, errors) {
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictRequired: false,
+    allowUnionTypes: true
+  });
+  addFormats(ajv);
+
+  for (const [relativePath, document] of contractDocuments) {
+    if (!document.$schema) {
+      continue;
+    }
+    try {
+      ajv.addSchema(document);
+    } catch (error) {
+      errors.push(`${relativePath}: JSON Schema registration failed: ${error.message}`);
+    }
+  }
+
+  for (const [relativePath, document] of contractDocuments) {
+    if (!document.$schema || !document.$id) {
+      continue;
+    }
+    try {
+      assert(
+        Boolean(ajv.getSchema(document.$id)),
+        `${relativePath}: JSON Schema did not compile`,
+        errors
+      );
+    } catch (error) {
+      errors.push(`${relativePath}: JSON Schema compilation failed: ${error.message}`);
+    }
+  }
+
+  return ajv;
+}
+
+function validateContractFixtures(ajv, errors) {
+  const absoluteDirectory = path.join(repositoryRoot, contractFixtureDirectory);
+  assert(
+    fs.existsSync(absoluteDirectory),
+    `${contractFixtureDirectory}: fixture directory is missing`,
+    errors
+  );
+  if (!fs.existsSync(absoluteDirectory)) {
+    return 0;
+  }
+
+  const fixtureFiles = fs
+    .readdirSync(absoluteDirectory)
+    .filter(fileName => fileName.endsWith('.cases.json'))
+    .sort();
+  for (const requiredFixture of [
+    'tutor-finalization-batch.cases.json',
+    'tutor-artifact-review-cas.cases.json',
+    'tutor-artifact-review-request.cases.json',
+    'tutor-correction-review-request.cases.json',
+    'tutor-cycle-create-request.cases.json',
+    'tutor-cycle-create-consistency.cases.json',
+    'tutor-cycle-attempt.cases.json',
+    'tutor-cycle-attempt-transition.cases.json',
+    'tutor-generation-input.cases.json',
+    'tutor-generation-job-request.cases.json',
+    'tutor-idempotency-decision.cases.json',
+    'tutor-idempotency-first-write.cases.json',
+    'tutor-idempotency-record-commit.cases.json',
+    'tutor-idempotency-record.cases.json',
+    'tutor-learning-cycle.cases.json',
+    'tutor-learning-cycle-transition.cases.json',
+    'tutor-request-payload-hash.cases.json',
+    'tutor-generation-request-hash.cases.json',
+    'tutor-stage-action-request.cases.json',
+    'tutor-stage-submission-request.cases.json',
+    'tutor-final-review-request.cases.json',
+    'tutor-final-review-snapshot.cases.json'
+  ]) {
+    assert(
+      fixtureFiles.includes(requiredFixture),
+      `${contractFixtureDirectory}: required fixture ${requiredFixture} is missing`,
+      errors
+    );
+  }
+  let caseCount = 0;
+
+  for (const fileName of fixtureFiles) {
+    const relativePath = path.join(contractFixtureDirectory, fileName);
+    const suite = loadJson(relativePath, errors);
+    const validateSchema = suite.schemaId ? ajv.getSchema(suite.schemaId) : null;
+    const isFinalizationBatch = suite.validator === 'tutor-finalization-batch-v1';
+    const isArtifactReviewCas = suite.validator === 'tutor-artifact-review-cas-v1';
+    const isCycleCreateConsistency =
+      suite.validator === 'tutor-cycle-create-consistency-v1';
+    const isCycleTransition =
+      suite.validator === 'tutor-learning-cycle-transition-v1';
+    const isCycleReviewTransaction =
+      suite.validator === 'tutor-cycle-review-transaction-v1';
+    const isRequestPayloadHash = suite.validator === 'tutor-request-payload-hash-v1';
+    const isIdempotencyDecision =
+      suite.validator === 'tutor-idempotency-decision-v1';
+    const isIdempotencyFirstWrite =
+      suite.validator === 'tutor-idempotency-first-write-v1';
+    const isIdempotencyRecordCommit =
+      suite.validator === 'tutor-idempotency-record-commit-v1';
+    const isGenerationRequestHash =
+      suite.validator === 'tutor-generation-request-hash-v1';
+    assert(
+      Boolean(validateSchema) ||
+        isFinalizationBatch ||
+        isArtifactReviewCas ||
+        isCycleCreateConsistency ||
+        isCycleTransition ||
+        isCycleReviewTransaction ||
+        isRequestPayloadHash ||
+        isIdempotencyDecision ||
+        isIdempotencyFirstWrite ||
+        isIdempotencyRecordCommit ||
+        isGenerationRequestHash,
+      `${relativePath}: unknown schemaId or validator ${suite.schemaId || suite.validator}`,
+      errors
+    );
+    if (
+      !validateSchema &&
+      !isFinalizationBatch &&
+      !isArtifactReviewCas &&
+      !isCycleCreateConsistency &&
+      !isCycleTransition &&
+      !isCycleReviewTransaction &&
+      !isRequestPayloadHash &&
+      !isIdempotencyDecision &&
+      !isIdempotencyFirstWrite &&
+      !isIdempotencyRecordCommit &&
+      !isGenerationRequestHash
+    ) {
+      continue;
+    }
+
+    for (const [expectedValid, cases] of [
+      [true, suite.valid],
+      [false, suite.invalid]
+    ]) {
+      assert(Array.isArray(cases), `${relativePath}: fixture cases must be arrays`, errors);
+      for (const fixtureCase of Array.isArray(cases) ? cases : []) {
+        caseCount += 1;
+        const preset = fixtureCase.preset ? suite.presets?.[fixtureCase.preset] : null;
+        assert(
+          !fixtureCase.preset || preset,
+          `${relativePath}: fixture ${fixtureCase.name} references unknown preset ${fixtureCase.preset}`,
+          errors
+        );
+        const fixtureBase = preset ? applyFixtureSet(suite.base, preset) : suite.base;
+        const value = applyFixtureSet(fixtureBase, fixtureCase.set);
+        if (fixtureCase.hashMustMatch && isGenerationRequestHash) {
+          assert(
+            value.requestHash === computeGenerationRequestHash(value.generationInput),
+            `${relativePath}: ${fixtureCase.name} must carry a correct generation hash`,
+            errors
+          );
+        }
+        if (fixtureCase.hashMustMatch && isRequestPayloadHash) {
+          assert(
+            value.requestPayloadHash ===
+              computeRequestPayloadHash(
+                value.endpointOperation,
+                value.resource,
+                value.request
+              ),
+            `${relativePath}: ${fixtureCase.name} must carry a correct public request hash`,
+            errors
+          );
+        }
+        const schemaValid = validateSchema ? validateSchema(value) : true;
+        const semanticErrors = isFinalizationBatch
+          ? finalizationBatchErrors(ajv, value)
+          : isArtifactReviewCas
+            ? artifactReviewCasErrors(ajv, value)
+            : isCycleCreateConsistency
+              ? cycleCreateConsistencyErrors(ajv, value)
+              : isCycleTransition
+                ? cycleTransitionErrors(ajv, value)
+                : isCycleReviewTransaction
+                  ? cycleReviewTransactionErrors(ajv, value)
+                : isRequestPayloadHash
+                  ? requestPayloadHashErrors(ajv, value)
+                  : isIdempotencyDecision
+                    ? idempotencyDecisionErrors(ajv, value)
+                  : isIdempotencyFirstWrite
+                    ? idempotencyFirstWriteErrors(value)
+                  : isIdempotencyRecordCommit
+                    ? idempotencyRecordCommitErrors(ajv, value)
+                  : isGenerationRequestHash
+                    ? generationRequestHashErrors(ajv, value)
+            : customContractErrors(suite.schemaId, value);
+        const actualValid = schemaValid && semanticErrors.length === 0;
+        if (actualValid !== expectedValid) {
+          const validationDetails = [
+            validateSchema?.errors
+              ? ajv.errorsText(validateSchema.errors, { separator: '; ' })
+              : '',
+            ...semanticErrors
+          ]
+            .filter(Boolean)
+            .join('; ');
+          errors.push(
+            `${relativePath}: ${fixtureCase.name} expected ${
+              expectedValid ? 'valid' : 'invalid'
+            }, got ${actualValid ? 'valid' : 'invalid'}${
+              validationDetails ? ` (${validationDetails})` : ''
+            }`
+          );
+        }
+      }
+    }
+
+  }
+
+  return caseCount;
+}
+
 function validate() {
   const errors = [];
   const documents = new Map();
+  const aiDocuments = new Map();
 
   for (const relativePath of authoritativeDocuments) {
     const absolutePath = path.join(repositoryRoot, relativePath);
@@ -144,6 +2316,574 @@ function validate() {
       errors
     );
   }
+
+  for (const relativePath of proposedAiDocuments) {
+    const absolutePath = path.join(repositoryRoot, relativePath);
+    assert(fs.existsSync(absolutePath), `${relativePath}: file is missing`, errors);
+    if (fs.existsSync(absolutePath)) {
+      aiDocuments.set(relativePath, read(relativePath));
+    }
+  }
+
+  for (const [relativePath, markdown] of aiDocuments) {
+    checkLocalLinks(relativePath, markdown, errors);
+    checkMarkdownStructure(relativePath, markdown, errors);
+    assert(
+      !/\b(?:TODO|TBD|FIXME)\b/.test(markdown),
+      `${relativePath}: unresolved placeholder marker`,
+      errors
+    );
+  }
+
+  const contractDocuments = new Map();
+  for (const relativePath of proposedAiContracts) {
+    contractDocuments.set(relativePath, loadJson(relativePath, errors));
+  }
+  const ajv = buildContractValidators(contractDocuments, errors);
+  const contractFixtureCases = validateContractFixtures(ajv, errors);
+
+  const aiDesign =
+    aiDocuments.get('docs/architecture/family-ai-learning-platform-design.md') || '';
+  const thinkPadIndex =
+    aiDocuments.get('docs/ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md') || '';
+  const deepTutorDeployment =
+    aiDocuments.get('docs/ThinkPad_DeepTutor_K12_部署手册/02_Ubuntu_Docker_DeepTutor安装.md') || '';
+  const k12Deployment =
+    aiDocuments.get('docs/ThinkPad_DeepTutor_K12_部署手册/04_K12数据部署及教材扩展.md') || '';
+  const aiIntegration =
+    aiDocuments.get('docs/ThinkPad_DeepTutor_K12_部署手册/05_DeepTutor与K12集成设计.md') || '';
+
+  assert(
+    aiDesign.includes('**Document status:** DRAFT FOR REVIEW'),
+    'AI platform design must remain DRAFT FOR REVIEW until implementation approval',
+    errors
+  );
+  assert(
+    thinkPadIndex.includes('DeepTutor、') && thinkPadIndex.includes('K12-KGraph 属于拟议扩展'),
+    'ThinkPad index must identify DeepTutor/K12 as a proposed extension',
+    errors
+  );
+
+  for (const manualPath of proposedAiDocuments.slice(2)) {
+    const fileName = path.basename(manualPath);
+    assert(
+      thinkPadIndex.includes(fileName),
+      `ThinkPad index is missing ${fileName}`,
+      errors
+    );
+  }
+
+  const curriculumRefSchema =
+    contractDocuments.get('docs/contracts/curriculum-ref.schema.json') || {};
+  const errorClassificationSchema =
+    contractDocuments.get('docs/contracts/error-classification.schema.json') || {};
+  const tutorGenerationInputSchema =
+    contractDocuments.get('docs/contracts/tutor-generation-input.schema.json') || {};
+  const tutorArtifactSchema =
+    contractDocuments.get('docs/contracts/tutor-artifact.schema.json') || {};
+  const tutorCycleAttemptSchema =
+    contractDocuments.get('docs/contracts/tutor-cycle-attempt.schema.json') || {};
+  const correctionReviewRequestSchema =
+    contractDocuments.get('docs/contracts/tutor-correction-review-request.schema.json') || {};
+  const tutorCycleStateMachine =
+    contractDocuments.get('docs/contracts/tutor-cycle-state-machine.json') || {};
+  const tutorLearningCycleSchema =
+    contractDocuments.get('docs/contracts/tutor-learning-cycle.schema.json') || {};
+  const tutorGenerationJobRequestSchema =
+    contractDocuments.get('docs/contracts/tutor-generation-job-request.schema.json') || {};
+  const tutorStageActionRequestSchema =
+    contractDocuments.get('docs/contracts/tutor-stage-action-request.schema.json') || {};
+  const tutorStageSubmissionRequestSchema =
+    contractDocuments.get('docs/contracts/tutor-stage-submission-request.schema.json') || {};
+  const finalReviewRequestSchema =
+    contractDocuments.get('docs/contracts/tutor-final-review-request.schema.json') || {};
+  const finalReviewSnapshotSchema =
+    contractDocuments.get('docs/contracts/tutor-final-review-snapshot.schema.json') || {};
+  const tutorIdempotencyRecordSchema =
+    contractDocuments.get('docs/contracts/tutor-idempotency-record.schema.json') || {};
+  const finalizationCommandSchema =
+    contractDocuments.get('docs/contracts/tutor-finalization-command.schema.json') || {};
+
+  assert(
+    curriculumRefSchema.properties?.schemaVersion?.const === 'curriculum-ref-v1',
+    'CurriculumRef contract must be curriculum-ref-v1',
+    errors
+  );
+  for (const field of [
+    'source',
+    'datasetVersion',
+    'nodeId',
+    'mappingStatus',
+    'mappingSource',
+    'textbookScope',
+    'evidenceSnapshot'
+  ]) {
+    assert(
+      curriculumRefSchema.required?.includes(field),
+      `CurriculumRef contract is missing required field ${field}`,
+      errors
+    );
+  }
+  for (const field of ['reviewedByParentId', 'reviewedAt']) {
+    assert(
+      curriculumRefSchema.required?.includes(field),
+      `CurriculumRef contract is missing audit field ${field}`,
+      errors
+    );
+  }
+
+  const canonicalReasonCodes = new Set([
+    'concept_gap',
+    'formula_selection',
+    'condition_omitted',
+    'calculation',
+    'unit_conversion',
+    'method_or_process',
+    'application',
+    'reading_or_interpretation',
+    'careless',
+    'unknown'
+  ]);
+  assert(
+    sameSet(
+      new Set(errorClassificationSchema.$defs?.reasonCode?.enum || []),
+      canonicalReasonCodes
+    ),
+    'ErrorClassification reason codes differ from the canonical v1 set',
+    errors
+  );
+  assert(
+    errorClassificationSchema.properties?.primaryReasonCode &&
+      errorClassificationSchema.properties?.secondaryReasonCodes,
+    'ErrorClassification must define one primary and optional secondary reasons',
+    errors
+  );
+  assert(
+    sameSet(
+      new Set(tutorGenerationInputSchema.$defs?.reasonCode?.enum || []),
+      canonicalReasonCodes
+    ),
+    'TutorGenerationInput must reuse the canonical reason-code vocabulary',
+    errors
+  );
+  for (const nestedDefinition of [
+    'sourceMistakeSnapshot',
+    'confirmedErrorSnapshot',
+    'generationCurriculumSnapshot',
+    'explanationPolicy',
+    'practicePolicy'
+  ]) {
+    assert(
+      tutorGenerationInputSchema.$defs?.[nestedDefinition]?.additionalProperties === false,
+      `TutorGenerationInput ${nestedDefinition} must use a closed field allowlist`,
+      errors
+    );
+  }
+
+  assert(
+    tutorCycleAttemptSchema.required?.includes('review') &&
+      tutorCycleAttemptSchema.properties?.review,
+    'TutorCycleAttempt must explicitly represent an unreviewed or once-reviewed attempt',
+    errors
+  );
+  assert(
+    sameSet(
+      new Set(tutorCycleAttemptSchema.properties?.stage?.enum || []),
+      new Set(['correction', 'practice'])
+    ),
+    'TutorCycleAttempt stage must be correction or practice',
+    errors
+  );
+  assert(
+    tutorGenerationJobRequestSchema.additionalProperties === false &&
+      tutorStageActionRequestSchema.additionalProperties === false &&
+      tutorStageSubmissionRequestSchema.additionalProperties === false,
+    'All shared tutor mutation requests must reject extra fields',
+    errors
+  );
+
+  const artifactStatuses = new Set(tutorArtifactSchema.properties?.status?.enum || []);
+  assert(
+    sameSet(
+      artifactStatuses,
+      new Set(['candidate', 'parent_approved', 'rejected'])
+    ),
+    'TutorArtifact status set is inconsistent',
+    errors
+  );
+  assert(
+    sameSet(
+      new Set(correctionReviewRequestSchema.properties?.decision?.enum || []),
+      new Set(['approve', 'revise'])
+    ),
+    'Correction review decision must be approve or revise',
+    errors
+  );
+  assert(
+    sameSet(
+      new Set(finalReviewRequestSchema.properties?.decision?.enum || []),
+      new Set(['mastered', 'revise'])
+    ),
+    'Final review request decision must be mastered or revise',
+    errors
+  );
+  assert(
+    finalReviewSnapshotSchema.properties?.decision?.const === 'mastered',
+    'MVP persisted final review decision must be mastered',
+    errors
+  );
+
+  const cycleStates = tutorCycleStateMachine.states || {};
+  const publicMutations = tutorCycleStateMachine.publicMutations || [];
+  assert(
+    sameSet(
+      new Set(publicMutations.map(mutation => mutation.endpointOperation)),
+      new Set(tutorMutationSemantics.keys())
+    ),
+    'Tutor public mutation semantics must cover every endpointOperation exactly once',
+    errors
+  );
+  assert(
+    sameSet(
+      new Set(tutorIdempotencyRecordSchema.properties?.endpointOperation?.enum || []),
+      new Set(publicMutations.map(mutation => mutation.endpointOperation))
+    ),
+    'TutorIdempotencyRecord endpointOperation enum must match public Tutor mutations',
+    errors
+  );
+  const schemaByEndpointOperation = new Map();
+  for (const mutation of publicMutations) {
+    const mutationSemantics = tutorMutationSemantics.get(mutation.endpointOperation);
+    assert(
+      mutationSemantics &&
+        sameSet(
+          new Set(mutation.allowedActorRoles || []),
+          new Set(mutationSemantics.allowedActorRoles)
+        ),
+      `Tutor public mutation ${mutation.endpointOperation} has inconsistent allowedActorRoles`,
+      errors
+    );
+    assert(
+      isDeepStrictEqual(
+        mutation.responseVariants,
+        mutationSemantics?.responseVariants
+      ),
+      `Tutor public mutation ${mutation.endpointOperation} has inconsistent responseVariants`,
+      errors
+    );
+    assert(
+      /^POST \/api\/tutor(?:-|\/)/.test(mutation.route || ''),
+      `Tutor public mutation has invalid route ${mutation.route}`,
+      errors
+    );
+    assert(
+      Boolean(ajv.getSchema(mutation.requestSchemaId)),
+      `Tutor public mutation ${mutation.endpointOperation} has unavailable request schema`,
+      errors
+    );
+    const existingSchemaId = schemaByEndpointOperation.get(mutation.endpointOperation);
+    assert(
+      !existingSchemaId,
+      `Tutor endpointOperation ${mutation.endpointOperation} must identify exactly one public route`,
+      errors
+    );
+    schemaByEndpointOperation.set(mutation.endpointOperation, mutation.requestSchemaId);
+  }
+  const normalizeTutorRoute = route => route.replace('/{id}/', '/:cycleId/');
+  const documentedTutorMutationRoutes = new Set(
+    [...aiDesign.matchAll(/^POST (\/api\/tutor[^\s]*)$/gm)].map(match =>
+      `POST ${normalizeTutorRoute(match[1])}`
+    )
+  );
+  assert(
+    sameSet(
+      documentedTutorMutationRoutes,
+      new Set(publicMutations.map(mutation => mutation.route))
+    ),
+    'Public Tutor POST routes must match the state-machine mutation contract manifest',
+    errors
+  );
+  const requestHashFixture = loadJson(
+    'docs/contracts/fixtures/tutor-request-payload-hash.cases.json',
+    errors
+  );
+  const requestHashFixtureRoutes = new Set(
+    (requestHashFixture.valid || []).map(fixtureCase => {
+      const preset = fixtureCase.preset
+        ? requestHashFixture.presets?.[fixtureCase.preset]
+        : null;
+      const fixtureBase = preset
+        ? applyFixtureSet(requestHashFixture.base, preset)
+        : requestHashFixture.base;
+      const value = applyFixtureSet(fixtureBase, fixtureCase.set);
+      return `${value.route}|${value.endpointOperation}`;
+    })
+  );
+  assert(
+    sameSet(
+      requestHashFixtureRoutes,
+      new Set(
+        publicMutations.map(
+          mutation => `${mutation.route}|${mutation.endpointOperation}`
+        )
+      )
+    ),
+    'requestPayloadHash fixtures must cover every public Tutor mutation route and operation',
+    errors
+  );
+  assert(
+    sameSet(
+      new Set(tutorLearningCycleSchema.$defs?.status?.enum || []),
+      new Set(Object.keys(cycleStates))
+    ),
+    'TutorLearningCycle status enum must match the state machine exactly',
+    errors
+  );
+  for (const state of [
+    'explanation_pending_review',
+    'explanation_approved',
+    'explanation_rejected',
+    'practice_pending_review',
+    'practice_approved',
+    'practice_rejected',
+    'parent_verified',
+    'closed'
+  ]) {
+    assert(Object.hasOwn(cycleStates, state), `Tutor cycle state machine is missing ${state}`, errors);
+  }
+  assert(
+    cycleStates.explanation_pending_review?.includes('explanation_approved') &&
+      !cycleStates.explanation_pending_review?.includes('correction_in_progress'),
+    'Explanation candidate must pass explicit parent approval before correction',
+    errors
+  );
+  assert(
+    cycleStates.practice_pending_review?.includes('practice_approved') &&
+      !cycleStates.practice_pending_review?.includes('practice_in_progress'),
+    'Practice candidate must pass explicit parent approval before child practice',
+    errors
+  );
+  assert(
+    sameSet(
+      new Set(cycleStates.practice_submitted || []),
+      new Set(['practice_needs_revision', 'parent_verified', 'cancelled'])
+    ) && sameSet(new Set(cycleStates.parent_verified || []), new Set(['closed'])),
+    'Final review must be accepted once from practice_submitted, then only close',
+    errors
+  );
+  assert(
+    isDeepStrictEqual(tutorCycleStateMachine.reviewTransitions?.['correction-review'], {
+      requestSchemaVersion: 'tutor-correction-review-request-v1',
+      from: 'correction_submitted',
+      decisions: {
+        approve: 'correction_approved',
+        revise: 'correction_needs_revision'
+      }
+    }),
+    'Correction review decisions must map to the matching cycle states',
+    errors
+  );
+  assert(
+    isDeepStrictEqual(tutorCycleStateMachine.reviewTransitions?.['final-review'], {
+      requestSchemaVersion: 'tutor-final-review-request-v1',
+      from: 'practice_submitted',
+      decisions: {
+        mastered: 'parent_verified',
+        revise: 'practice_needs_revision'
+      }
+    }),
+    'Final review decisions must map to the matching cycle states',
+    errors
+  );
+  for (const [state, targets] of Object.entries(cycleStates)) {
+    assert(Array.isArray(targets), `Tutor cycle state ${state} transitions must be an array`, errors);
+    for (const target of Array.isArray(targets) ? targets : []) {
+      assert(
+        Object.hasOwn(cycleStates, target),
+        `Tutor cycle state ${state} points to unknown state ${target}`,
+        errors
+      );
+    }
+  }
+  const reachableStates = new Set();
+  const pendingStates = [tutorCycleStateMachine.initialState];
+  while (pendingStates.length > 0) {
+    const state = pendingStates.pop();
+    if (!state || reachableStates.has(state)) {
+      continue;
+    }
+    reachableStates.add(state);
+    pendingStates.push(...(cycleStates[state] || []));
+  }
+  assert(
+    sameSet(reachableStates, new Set(Object.keys(cycleStates))),
+    'Tutor cycle state machine contains a state unreachable from its initial state',
+    errors
+  );
+  for (const terminalState of tutorCycleStateMachine.terminalStates || []) {
+    assert(
+      Array.isArray(cycleStates[terminalState]) && cycleStates[terminalState].length === 0,
+      `Tutor cycle terminal state ${terminalState} must not have outgoing transitions`,
+      errors
+    );
+  }
+
+  for (const field of [
+    'target',
+    'operationId',
+    'payloadHash',
+    'status',
+    'attemptCount',
+    'nextAttemptAt',
+    'leaseOwner',
+    'leaseExpiresAt',
+    'responseId'
+  ]) {
+    assert(
+      finalizationCommandSchema.required?.includes(field),
+      `TutorFinalizationCommand contract is missing required field ${field}`,
+      errors
+    );
+  }
+  assert(
+    finalizationCommandSchema.properties?.finalReviewVersion?.const === 1,
+    'TutorFinalizationCommand MVP finalReviewVersion must be immutable version 1',
+    errors
+  );
+
+  const contentSchemaIds = new Map([
+    ['explanation-v1', 'https://lms.family.local/schemas/explanation-content-v1.json'],
+    ['practice-v1', 'https://lms.family.local/schemas/practice-content-v1.json']
+  ]);
+  let validatedContentExamples = 0;
+  for (const [index, block] of fencedBlocks(aiDesign, 'json').entries()) {
+    let value;
+    try {
+      value = JSON.parse(block);
+    } catch {
+      continue;
+    }
+    const schemaId = contentSchemaIds.get(value.schemaVersion);
+    if (!schemaId) {
+      continue;
+    }
+    validatedContentExamples += 1;
+    const validateSchema = ajv.getSchema(schemaId);
+    const schemaValid = validateSchema ? validateSchema(value) : false;
+    const semanticErrors = customContractErrors(schemaId, value);
+    assert(
+      schemaValid && semanticErrors.length === 0,
+      `AI platform design JSON example ${index + 1} violates ${value.schemaVersion}: ${[
+        validateSchema?.errors
+          ? ajv.errorsText(validateSchema.errors, { separator: '; ' })
+          : 'schema unavailable',
+        ...semanticErrors
+      ]
+        .filter(Boolean)
+        .join('; ')}`,
+      errors
+    );
+  }
+  assert(
+    validatedContentExamples === 2,
+    `AI platform design has ${validatedContentExamples} validated content examples, expected 2`,
+    errors
+  );
+  assert(
+    contractFixtureCases >= 25,
+    `AI contract fixture coverage has ${contractFixtureCases} cases, expected at least 25`,
+    errors
+  );
+
+  for (const contractPath of proposedAiContracts) {
+    assert(
+      aiDesign.includes(path.basename(contractPath)),
+      `AI platform design does not reference ${path.basename(contractPath)}`,
+      errors
+    );
+  }
+
+  for (const obsoleteText of [
+    'explanation_ready',
+    'practice_ready',
+    'start_turn(operationId)',
+    '"errorTypes"',
+    '"provider": "k12-kgraph"',
+    '家长提交新的审核版本',
+    'expectedReviewVersion',
+    'finalDecision',
+    'needs_review',
+    'superseded'
+  ]) {
+    assert(
+      !aiDesign.includes(obsoleteText) && !aiIntegration.includes(obsoleteText),
+      `AI draft contains obsolete contract text: ${obsoleteText}`,
+      errors
+    );
+  }
+
+  for (const requiredText of [
+    '/explanation-review',
+    '/practice-review',
+    'artifactId + artifactVersion',
+    'parent_approved',
+    'uncertain_manual_reconcile',
+    'TutorFinalizationCommand',
+    'leaseExpiresAt',
+    'dead_letter',
+    'FINAL_REVIEW_ALREADY_ACCEPTED',
+    'TutorFinalReviewSnapshot',
+    'finalReviewHash',
+    'expectedArtifactReviewVersion',
+    'expectedStateVersion',
+    'presentedByGrowthTaskId',
+    'activeSourceMistakeKey',
+    'ACTIVE_TUTOR_CYCLE_EXISTS',
+    'RFC8785-JCS',
+    'requestPayloadHash',
+    'tutor-generation-input-v1',
+    'unique(cycleId, kind, version)',
+    'unique(cycleId, finalReviewVersion, target)',
+    'unique(operationId)',
+    '{ familyId: 1, stage: 1, submissionOperationId: 1 }',
+    '{ familyId: 1, stage: 1, "review.reviewOperationId": 1 }'
+  ]) {
+    assert(aiDesign.includes(requiredText), `AI platform design is missing ${requiredText}`, errors);
+  }
+
+  for (const requiredText of [
+    'admin-validation',
+    'lms-integration',
+    '"enabled": true',
+    'lms-adapter',
+    'mcp_tools=[]',
+    'exec_enabled=false',
+    'compose.admin-validation.yaml',
+    'uncertain_manual_reconcile',
+    '/srv/edu-stack/secrets',
+    'chmod 0600',
+    '/run/secrets/deeptutor_adapter_password'
+  ]) {
+    assert(
+      deepTutorDeployment.includes(requiredText) || aiIntegration.includes(requiredText),
+      `DeepTutor deployment/integration docs are missing ${requiredText}`,
+      errors
+    );
+  }
+
+  const k12Commit = '8716b6a80850790f509c01286f43e5bfe6858f49';
+  const k12RequirementsHash =
+    '2c62bda639afa971e160914febe789f588ca1ccb0c85460d2e0b72f98d5215a0';
+  const k12DatasetRevision = 'd8522c2b336ee435aa51daa39ca0dd736f56fa53';
+  for (const requiredText of [k12Commit, k12RequirementsHash, k12DatasetRevision]) {
+    assert(k12Deployment.includes(requiredText), `K12 deployment is missing pin ${requiredText}`, errors);
+  }
+  assert(
+    k12Deployment.indexOf('git checkout --detach "$K12_COMMIT"') <
+      k12Deployment.indexOf('python -m pip install -r requirements.txt'),
+    'K12 deployment must checkout the reviewed commit before installing dependencies',
+    errors
+  );
 
   const product = documents.get('docs/product/family-learning-tracker.md') || '';
   const architecture =
@@ -545,6 +3285,9 @@ function validate() {
 
   return {
     documents: documents.size,
+    proposedAiDocuments: aiDocuments.size,
+    proposedAiContracts: proposedAiContracts.length,
+    contractFixtureCases,
     requirements: productIds.size
   };
 }
@@ -553,7 +3296,10 @@ if (require.main === module) {
   try {
     const result = validate();
     process.stdout.write(
-      `Family documentation gate passed: ${result.documents} documents, ` +
+      `Family documentation gate passed: ${result.documents} approved documents, ` +
+        `${result.proposedAiDocuments} proposed AI documents, ` +
+        `${result.proposedAiContracts} AI contracts, ` +
+        `${result.contractFixtureCases} contract fixture cases, ` +
         `${result.requirements} requirements.\n`
     );
   } catch (error) {
@@ -564,6 +3310,8 @@ if (require.main === module) {
 
 module.exports = {
   authoritativeDocuments,
+  proposedAiDocuments,
+  proposedAiContracts,
   requirementIds,
   validate
 };

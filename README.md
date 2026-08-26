@@ -93,6 +93,10 @@ E2E、Compose build/health、私有媒体 smoke 和 Git hygiene。单项测试�
 - [部署与运维边界](./docs/deployment/README.md)
 - [用户指南](./docs/user-guide/README.md)
 
+拟议中的 DeepTutor、K12-KGraph 和家长人工审核学习扩展见
+[家庭 AI 学习管理平台设计](./docs/architecture/family-ai-learning-platform-design.md)。
+该设计当前不是已上线能力，也不改变上述家庭成长 MVP 的发布结论。
+
 ## 生产边界
 
 仓库中的 Compose 和 Kubernetes 资产用于开发、验收和受控发布，不构成生产环境

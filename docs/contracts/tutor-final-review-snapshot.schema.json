@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-final-review-snapshot-v1.json",
+  "title": "TutorFinalReviewSnapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "finalReviewId",
+    "finalReviewVersion",
+    "finalReviewHash",
+    "cycleId",
+    "familyId",
+    "childId",
+    "sourceMistakeId",
+    "knowledgePointId",
+    "practiceAttemptId",
+    "practiceAttemptVersion",
+    "practiceReviewOperationId",
+    "decision",
+    "evidenceSummary",
+    "reviewedByParentId",
+    "reviewedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-final-review-snapshot-v1" },
+    "finalReviewId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "finalReviewVersion": { "const": 1 },
+    "finalReviewHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "cycleId": { "type": "string", "minLength": 1 },
+    "familyId": { "type": "string", "minLength": 1 },
+    "childId": { "type": "string", "minLength": 1 },
+    "sourceMistakeId": { "type": "string", "minLength": 1 },
+    "knowledgePointId": { "type": "string", "minLength": 1 },
+    "practiceAttemptId": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "practiceAttemptVersion": { "type": "integer", "minimum": 1 },
+    "practiceReviewOperationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "decision": { "const": "mastered" },
+    "evidenceSummary": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "reviewedByParentId": { "type": "string", "minLength": 1 },
+    "reviewedAt": { "type": "string", "format": "date-time" }
+  }
+}

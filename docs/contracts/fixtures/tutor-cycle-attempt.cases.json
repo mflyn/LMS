@@ -1,0 +1,93 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-cycle-attempt-v1.json",
+  "base": {
+    "schemaVersion": "tutor-cycle-attempt-v1",
+    "attemptId": "cycle-1:correction:1",
+    "cycleId": "cycle-1",
+    "familyId": "family-1",
+    "childId": "child-1",
+    "stage": "correction",
+    "attemptVersion": 1,
+    "mediaIds": ["media-correction-1"],
+    "submissionOperationId": "submit-correction-1",
+    "submittedByChildId": "child-1",
+    "submittedAt": "2026-08-26T09:00:00.000Z",
+    "review": null
+  },
+  "presets": {
+    "correction-approved": {
+      "review": {
+        "decision": "approve",
+        "comment": null,
+        "evidenceSummary": null,
+        "reviewOperationId": "review-correction-1",
+        "reviewedByParentId": "parent-1",
+        "reviewedAt": "2026-08-26T09:10:00.000Z",
+        "stateVersionBefore": 6,
+        "stateVersionAfter": 7
+      }
+    },
+    "correction-revise": {
+      "review": {
+        "decision": "revise",
+        "comment": "请补充判断斜边的过程",
+        "evidenceSummary": null,
+        "reviewOperationId": "review-correction-1",
+        "reviewedByParentId": "parent-1",
+        "reviewedAt": "2026-08-26T09:10:00.000Z",
+        "stateVersionBefore": 6,
+        "stateVersionAfter": 7
+      }
+    },
+    "practice-mastered": {
+      "attemptId": "cycle-1:practice:1",
+      "stage": "practice",
+      "mediaIds": ["media-practice-1"],
+      "submissionOperationId": "submit-practice-1",
+      "review": {
+        "decision": "mastered",
+        "comment": null,
+        "evidenceSummary": "家长确认两道同类题均独立完成",
+        "reviewOperationId": "review-practice-1",
+        "reviewedByParentId": "parent-1",
+        "reviewedAt": "2026-08-26T10:00:00.000Z",
+        "stateVersionBefore": 13,
+        "stateVersionAfter": 14
+      }
+    },
+    "practice-revise": {
+      "attemptId": "cycle-1:practice:1",
+      "stage": "practice",
+      "mediaIds": ["media-practice-1"],
+      "submissionOperationId": "submit-practice-1",
+      "review": {
+        "decision": "revise",
+        "comment": "第二题步骤不完整，请重做",
+        "evidenceSummary": null,
+        "reviewOperationId": "review-practice-1",
+        "reviewedByParentId": "parent-1",
+        "reviewedAt": "2026-08-26T10:00:00.000Z",
+        "stateVersionBefore": 13,
+        "stateVersionAfter": 14
+      }
+    }
+  },
+  "valid": [
+    { "name": "unreviewed-correction-attempt", "set": {} },
+    { "name": "approved-correction-attempt", "preset": "correction-approved", "set": {} },
+    { "name": "revision-comment-stays-on-correction-attempt", "preset": "correction-revise", "set": {} },
+    { "name": "mastered-practice-attempt", "preset": "practice-mastered", "set": {} },
+    { "name": "revision-comment-stays-on-practice-attempt", "preset": "practice-revise", "set": {} }
+  ],
+  "invalid": [
+    { "name": "attempt-id-must-bind-cycle-stage-version", "set": { "attemptId": "cycle-1:correction:2" } },
+    { "name": "submitter-must-match-child", "set": { "submittedByChildId": "child-2" } },
+    { "name": "media-ids-are-unique", "set": { "mediaIds": ["media-1", "media-1"] } },
+    { "name": "correction-cannot-be-mastered", "preset": "correction-approved", "set": { "review.decision": "mastered", "review.evidenceSummary": "不允许" } },
+    { "name": "correction-review-has-no-final-evidence", "preset": "correction-approved", "set": { "review.evidenceSummary": "不允许" } },
+    { "name": "revise-requires-comment", "preset": "correction-revise", "set": { "review.comment": "" } },
+    { "name": "mastered-requires-evidence", "preset": "practice-mastered", "set": { "review.evidenceSummary": "" } },
+    { "name": "review-state-version-increments-once", "preset": "correction-approved", "set": { "review.stateVersionAfter": 8 } },
+    { "name": "review-cannot-precede-submission", "preset": "correction-approved", "set": { "review.reviewedAt": "2026-08-26T08:59:59.000Z" } }
+  ]
+}

@@ -11,6 +11,11 @@ Conformance values are `COVERED`, `DESIGN_APPROVED`, `PARTIAL`, and `GAP`. `plan
 Task 1~12 scope. Every row below was reconciled against PRD 10.4, the current
 design asset index, merged code, focused tests, and the unified release gate.
 
+> [家庭 AI 学习平台设计](../architecture/family-ai-learning-platform-design.md)中的
+> DeepTutor、K12-KGraph 和教学闭环是后续拟议范围，尚未分配 Requirement，
+> 不包含在本矩阵的 38/38 `COVERED` 结论中。进入实现时必须新增需求与证据行，不能复用
+> 当前完成率表示 AI 能力已经交付。
+
 ## Current full-gate evidence
 
 - Implementation behavior was established on clean `main` commit

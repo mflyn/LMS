@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-correction-review-request-v1.json",
+  "title": "TutorCorrectionReviewRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "decision",
+    "comment",
+    "operationId",
+    "expectedStateVersion"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-correction-review-request-v1" },
+    "decision": { "type": "string", "enum": ["approve", "revise"] },
+    "comment": { "type": ["string", "null"], "maxLength": 2000 },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "expectedStateVersion": { "type": "integer", "minimum": 0 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "decision": { "const": "revise" } },
+        "required": ["decision"]
+      },
+      "then": {
+        "properties": {
+          "comment": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        }
+      }
+    }
+  ]
+}

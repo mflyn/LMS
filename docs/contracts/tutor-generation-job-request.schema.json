@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-generation-job-request-v1.json",
+  "title": "TutorGenerationJobRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "generationPolicy", "operationId", "expectedStateVersion"],
+  "properties": {
+    "schemaVersion": { "const": "tutor-generation-job-request-v1" },
+    "kind": { "type": "string", "enum": ["explanation", "practice"] },
+    "generationPolicy": {
+      "oneOf": [
+        { "$ref": "tutor-generation-input-v1.json#/$defs/explanationPolicy" },
+        { "$ref": "tutor-generation-input-v1.json#/$defs/practicePolicy" }
+      ]
+    },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "expectedStateVersion": { "type": "integer", "minimum": 0 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "kind": { "const": "explanation" } },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "generationPolicy": { "$ref": "tutor-generation-input-v1.json#/$defs/explanationPolicy" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "kind": { "const": "practice" } },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "generationPolicy": { "$ref": "tutor-generation-input-v1.json#/$defs/practicePolicy" }
+        }
+      }
+    }
+  ]
+}

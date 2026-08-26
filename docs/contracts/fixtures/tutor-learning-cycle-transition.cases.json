@@ -1,0 +1,148 @@
+{
+  "validator": "tutor-learning-cycle-transition-v1",
+  "base": {
+    "before": {
+      "schemaVersion": "tutor-learning-cycle-v1",
+      "cycleId": "cycle-1",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "createdByParentId": "parent-1",
+      "sourceMistakeId": "mistake-1",
+      "knowledgePointId": "knowledge-1",
+      "presentedByGrowthTaskId": null,
+      "activeSourceMistakeKey": "family-1:mistake-1",
+      "status": "draft",
+      "stateVersion": 0,
+      "lastTransitionAt": "2026-08-26T08:00:00.000Z",
+      "createdAt": "2026-08-26T08:00:00.000Z",
+      "updatedAt": "2026-08-26T08:00:00.000Z"
+    },
+    "after": {
+      "schemaVersion": "tutor-learning-cycle-v1",
+      "cycleId": "cycle-1",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "createdByParentId": "parent-1",
+      "sourceMistakeId": "mistake-1",
+      "knowledgePointId": "knowledge-1",
+      "presentedByGrowthTaskId": null,
+      "activeSourceMistakeKey": "family-1:mistake-1",
+      "status": "explanation_generating",
+      "stateVersion": 1,
+      "lastTransitionAt": "2026-08-26T08:01:00.000Z",
+      "createdAt": "2026-08-26T08:00:00.000Z",
+      "updatedAt": "2026-08-26T08:01:00.000Z"
+    }
+  },
+  "presets": {
+    "start-correction-first": {
+      "before": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "explanation_approved", "stateVersion": 4, "lastTransitionAt": "2026-08-26T08:30:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T08:30:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b"
+      },
+      "after": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "correction_in_progress", "stateVersion": 5, "lastTransitionAt": "2026-08-26T08:35:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T08:35:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b"
+      }
+    },
+    "retry-correction": {
+      "before": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "correction_needs_revision", "stateVersion": 7, "lastTransitionAt": "2026-08-26T09:10:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:10:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+        "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1
+      },
+      "after": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "correction_in_progress", "stateVersion": 8, "lastTransitionAt": "2026-08-26T09:15:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:15:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+        "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1
+      }
+    },
+    "submit-correction-first": {
+      "before": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "correction_in_progress", "stateVersion": 5, "lastTransitionAt": "2026-08-26T08:35:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T08:35:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b"
+      },
+      "after": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "correction_submitted", "stateVersion": 6, "lastTransitionAt": "2026-08-26T09:00:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:00:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+        "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1
+      }
+    },
+    "start-practice-first": {
+      "before": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "practice_approved", "stateVersion": 11, "lastTransitionAt": "2026-08-26T09:30:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:30:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b", "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1,
+        "practiceArtifactId": "artifact-practice-1", "practiceArtifactVersion": 1, "practiceContentHash": "sha256:1f4d6155da210dc38c14e4fda493578f17f28421d7200d1e31796a47b40ae5e7"
+      },
+      "after": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "practice_in_progress", "stateVersion": 12, "lastTransitionAt": "2026-08-26T09:35:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:35:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b", "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1,
+        "practiceArtifactId": "artifact-practice-1", "practiceArtifactVersion": 1, "practiceContentHash": "sha256:1f4d6155da210dc38c14e4fda493578f17f28421d7200d1e31796a47b40ae5e7"
+      }
+    },
+    "submit-practice-first": {
+      "before": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "practice_in_progress", "stateVersion": 12, "lastTransitionAt": "2026-08-26T09:35:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:35:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b", "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1,
+        "practiceArtifactId": "artifact-practice-1", "practiceArtifactVersion": 1, "practiceContentHash": "sha256:1f4d6155da210dc38c14e4fda493578f17f28421d7200d1e31796a47b40ae5e7"
+      },
+      "after": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "practice_submitted", "stateVersion": 13, "lastTransitionAt": "2026-08-26T09:50:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:50:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b", "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1,
+        "practiceArtifactId": "artifact-practice-1", "practiceArtifactVersion": 1, "practiceContentHash": "sha256:1f4d6155da210dc38c14e4fda493578f17f28421d7200d1e31796a47b40ae5e7", "currentPracticeAttemptId": "cycle-1:practice:1", "currentPracticeAttemptVersion": 1
+      }
+    },
+    "cancel-correction-submitted": {
+      "before": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "activeSourceMistakeKey": "family-1:mistake-1", "status": "correction_submitted", "stateVersion": 6, "lastTransitionAt": "2026-08-26T09:00:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:00:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b", "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1
+      },
+      "after": {
+        "schemaVersion": "tutor-learning-cycle-v1", "cycleId": "cycle-1", "familyId": "family-1", "childId": "child-1", "createdByParentId": "parent-1", "sourceMistakeId": "mistake-1", "knowledgePointId": "knowledge-1", "presentedByGrowthTaskId": null,
+        "status": "cancelled", "stateVersion": 7, "lastTransitionAt": "2026-08-26T09:05:00.000Z", "createdAt": "2026-08-26T08:00:00.000Z", "updatedAt": "2026-08-26T09:05:00.000Z", "cancelledFromStatus": "correction_submitted", "cancelledAt": "2026-08-26T09:05:00.000Z",
+        "explanationArtifactId": "artifact-explanation-1", "explanationArtifactVersion": 1, "explanationContentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b", "currentCorrectionAttemptId": "cycle-1:correction:1", "currentCorrectionAttemptVersion": 1
+      }
+    }
+  },
+  "valid": [
+    { "name": "allowed-transition-preserves-ownership", "set": {} },
+    { "name": "first-correction-start-has-no-attempt", "preset": "start-correction-first", "set": {} },
+    { "name": "correction-retry-preserves-prior-attempt", "preset": "retry-correction", "set": {} },
+    { "name": "first-correction-submission-binds-version-one", "preset": "submit-correction-first", "set": {} },
+    { "name": "first-practice-start-has-no-attempt", "preset": "start-practice-first", "set": {} },
+    { "name": "first-practice-submission-binds-version-one", "preset": "submit-practice-first", "set": {} },
+    { "name": "cancellation-records-source-and-preserves-history", "preset": "cancel-correction-submitted", "set": {} }
+  ],
+  "invalid": [
+    { "name": "family-changed", "set": { "after.familyId": "family-2", "after.activeSourceMistakeKey": "family-2:mistake-1" } },
+    { "name": "child-changed", "set": { "after.childId": "child-2" } },
+    { "name": "source-mistake-changed", "set": { "after.sourceMistakeId": "mistake-2", "after.activeSourceMistakeKey": "family-1:mistake-2" } },
+    { "name": "knowledge-point-changed", "set": { "after.knowledgePointId": "knowledge-2" } },
+    { "name": "cycle-id-changed", "set": { "after.cycleId": "cycle-2" } },
+    { "name": "created-by-parent-changed", "set": { "after.createdByParentId": "parent-2" } },
+    { "name": "created-at-changed", "set": { "after.createdAt": "2026-08-26T08:00:30.000Z" } },
+    { "name": "state-version-not-incremented", "set": { "after.stateVersion": 0 } },
+    { "name": "transition-not-in-state-machine", "set": { "after.status": "explanation_pending_review" } },
+    { "name": "transition-time-not-advanced", "set": { "after.lastTransitionAt": "2026-08-26T08:00:00.000Z" } },
+    { "name": "first-correction-start-cannot-forge-attempt", "preset": "start-correction-first", "set": { "after.currentCorrectionAttemptId": "cycle-1:correction:1", "after.currentCorrectionAttemptVersion": 1 } },
+    { "name": "correction-retry-cannot-drop-prior-attempt", "preset": "retry-correction", "set": { "after.currentCorrectionAttemptId": { "$delete": true }, "after.currentCorrectionAttemptVersion": { "$delete": true } } },
+    { "name": "correction-submission-version-must-increment", "preset": "submit-correction-first", "set": { "after.currentCorrectionAttemptVersion": 2, "after.currentCorrectionAttemptId": "cycle-1:correction:2" } },
+    { "name": "correction-submission-id-must-match-version", "preset": "submit-correction-first", "set": { "after.currentCorrectionAttemptId": "cycle-1:correction:99" } },
+    { "name": "first-practice-start-cannot-forge-attempt", "preset": "start-practice-first", "set": { "after.currentPracticeAttemptId": "cycle-1:practice:1", "after.currentPracticeAttemptVersion": 1 } },
+    { "name": "practice-submission-id-must-match-version", "preset": "submit-practice-first", "set": { "after.currentPracticeAttemptId": "cycle-1:practice:99" } },
+    { "name": "cancellation-source-must-match-before", "preset": "cancel-correction-submitted", "set": { "after.cancelledFromStatus": "draft" } },
+    { "name": "cancellation-cannot-drop-history", "preset": "cancel-correction-submitted", "set": { "after.currentCorrectionAttemptId": { "$delete": true }, "after.currentCorrectionAttemptVersion": { "$delete": true } } },
+    { "name": "cancellation-cannot-add-future-practice", "preset": "cancel-correction-submitted", "set": { "after.practiceArtifactId": "artifact-future", "after.practiceArtifactVersion": 1, "after.practiceContentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" } }
+  ]
+}

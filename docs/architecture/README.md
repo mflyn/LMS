@@ -30,6 +30,11 @@ The Task 1-7 baseline is a family-growth tracker, not a school LMS. Active famil
 
 `interaction-service`, teacher/admin/classroom management, video meetings, announcements and complex message flows are compatibility or future work. They are not required by the current family-growth gate.
 
+## Proposed Extensions
+
+- [Family AI learning platform design](./family-ai-learning-platform-design.md) — draft architecture for integrating the LMS with DeepTutor, K12-KGraph, and parent-reviewed handwriting workflows. The LMS remains the authority; none of the draft routes or models are part of the approved baseline yet.
+- [ThinkPad X230i deployment supplement](../ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md) — staged, low-resource validation and operations guidance for the proposed extension.
+
 ## Documentation Rule
 
 When architecture changes, update the main architecture document, the relevant ADR, the API contract if routes change, and `docs/development/family-growth-requirement-traceability.md`.

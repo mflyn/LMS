@@ -1,0 +1,391 @@
+{
+  "validator": "tutor-idempotency-decision-v1",
+  "base": {
+    "stored": {
+      "schemaVersion": "tutor-idempotency-record-v1",
+      "outcome": "succeeded",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "endpointOperation": "final-review",
+      "operationId": "final-review-operation-1",
+      "resource": { "cycleId": "cycle-1" },
+      "requestPayloadHash": "sha256:d98d93ab2b52deab458b84053aa1c8e74f3079af83015b7d8ccf10687f17533b",
+      "responseReference": {
+        "httpStatus": 202,
+        "resourceType": "TutorFinalReview",
+        "resourceId": "cycle-1:final-review:1",
+        "responseId": "sha256:41cb7ac8605d5a59d7fcf845af19d8a5a79ccac2c320f944c9818bbf91bd50ae"
+      },
+      "createdBy": { "userId": "parent-1", "role": "parent" },
+      "createdAt": "2026-08-26T10:00:00.000Z",
+      "updatedAt": "2026-08-26T10:00:00.000Z"
+    },
+    "actor": {
+      "userId": "parent-1",
+      "role": "parent",
+      "accountStatus": "active",
+      "familyId": "family-1",
+      "childId": null,
+      "activeParentMembership": true
+    },
+    "authorizedResource": {
+      "exists": true,
+      "cycleId": "cycle-1",
+      "familyId": "family-1",
+      "childId": "child-1"
+    },
+    "referencedEntity": {
+      "exists": true,
+      "resourceType": "TutorFinalReview",
+      "resourceId": "cycle-1:final-review:1",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "cycleId": "cycle-1"
+    },
+    "incoming": {
+      "actorFamilyId": "family-1",
+      "endpointOperation": "final-review",
+      "route": "POST /api/tutor-cycles/:cycleId/final-review",
+      "matchedPathParams": { "cycleId": "cycle-1" },
+      "resource": { "cycleId": "cycle-1" },
+      "request": {
+        "schemaVersion": "tutor-final-review-request-v1",
+        "decision": "mastered",
+        "evidenceSummary": "家长确认两道同类题均由孩子独立完成",
+        "comment": null,
+        "operationId": "final-review-operation-1",
+        "expectedStateVersion": 12
+      },
+      "requestPayloadHash": "sha256:d98d93ab2b52deab458b84053aa1c8e74f3079af83015b7d8ccf10687f17533b"
+    },
+    "expected": {
+      "decision": "replay",
+      "responseMode": "rebuild-authorized",
+      "responseReference": {
+        "httpStatus": 202,
+        "resourceType": "TutorFinalReview",
+        "resourceId": "cycle-1:final-review:1",
+        "responseId": "sha256:41cb7ac8605d5a59d7fcf845af19d8a5a79ccac2c320f944c9818bbf91bd50ae"
+      }
+    }
+  },
+  "presets": {
+    "cross-cycle-conflict": {
+      "authorizedResource.cycleId": "cycle-2",
+      "incoming.matchedPathParams.cycleId": "cycle-2",
+      "incoming.resource.cycleId": "cycle-2",
+      "incoming.requestPayloadHash": "sha256:6b50f7c1c58a77663da385e8dad8b20cc2c95a967c0df660234fcde782634f5d",
+      "expected": {
+        "decision": "conflict",
+        "status": 409,
+        "errorCode": "IDEMPOTENCY_KEY_REUSED"
+      }
+    },
+    "same-cycle-body-conflict": {
+      "incoming.request.evidenceSummary": "变更后的审核证据",
+      "incoming.requestPayloadHash": "sha256:57947e93b1299f5ca5df4775c2bec5f26320022a08ede7542411c70ceb061935",
+      "expected": {
+        "decision": "conflict",
+        "status": 409,
+        "errorCode": "IDEMPOTENCY_KEY_REUSED"
+      }
+    },
+    "review-endpoints-are-independent": {
+      "incoming.endpointOperation": "correction-review",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/correction-review",
+      "incoming.request": {
+        "schemaVersion": "tutor-correction-review-request-v1",
+        "decision": "approve",
+        "comment": null,
+        "operationId": "final-review-operation-1",
+        "expectedStateVersion": 12
+      },
+      "incoming.requestPayloadHash": "sha256:9ad0205b82308937723a93a438f424819e97c70fb227bc8e5fcb5ab3c62fc341",
+      "expected": { "decision": "execute" }
+    },
+    "artifact-review-endpoints-are-independent": {
+      "stored.endpointOperation": "explanation-artifact-review",
+      "stored.operationId": "shared-artifact-review-key",
+      "stored.requestPayloadHash": "sha256:52a8dedf3a87d2d9725fc82abc5b2b0b256bd4dd8247eaad58abd04451304694",
+      "stored.responseReference.resourceType": "TutorArtifact",
+      "stored.responseReference.httpStatus": 200,
+      "stored.responseReference.resourceId": "artifact-explanation-1",
+      "stored.responseReference.responseId": "sha256:1737c7f46b84293028763a63dc68e12a12a440b2c0bf9ef18b7a68fc60cd5a87",
+      "stored.createdBy.userId": "parent-1",
+      "incoming.endpointOperation": "practice-artifact-review",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/practice-review",
+      "incoming.request": {
+        "schemaVersion": "tutor-artifact-review-request-v1",
+        "artifactId": "artifact-practice-1",
+        "artifactVersion": 1,
+        "contentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+        "decision": "approve",
+        "comment": null,
+        "operationId": "shared-artifact-review-key",
+        "expectedArtifactReviewVersion": 0,
+        "expectedStateVersion": 3
+      },
+      "incoming.requestPayloadHash": "sha256:47b3f9e98818de9d617eb8f6be3e1c9d0036a1d67d54a8c0c2d7fd6e410aed3d",
+      "expected": { "decision": "execute" }
+    },
+    "submission-endpoints-are-independent": {
+      "stored.endpointOperation": "correction-submit",
+      "stored.operationId": "shared-submit-key",
+      "stored.requestPayloadHash": "sha256:a06b7e8bff9130e0d113161bf2b733388573ad2d6eec62cf5dd260db677739f3",
+      "stored.responseReference.resourceType": "TutorCycleAttempt",
+      "stored.responseReference.httpStatus": 200,
+      "stored.responseReference.resourceId": "cycle-1:correction:1",
+      "stored.responseReference.responseId": "sha256:d6e35f523b7c2f8882c813eb79b2aeb59b610f1ab38d317f9ba889dbb10ed04e",
+      "stored.createdBy.role": "child",
+      "stored.createdBy.userId": "child-user-1",
+      "incoming.endpointOperation": "practice-submit",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/practice-submissions",
+      "incoming.request": {
+        "schemaVersion": "tutor-stage-submission-request-v1",
+        "stage": "practice",
+        "mediaIds": ["media-practice-1"],
+        "attemptVersion": 1,
+        "operationId": "shared-submit-key",
+        "expectedStateVersion": 12
+      },
+      "incoming.requestPayloadHash": "sha256:9e9d7090688817253e408d174f11c1ae64a41ddc20d2f5abcdcf563f43f11618",
+      "expected": { "decision": "execute" }
+    },
+    "authorized-child-practice-replay": {
+      "stored.endpointOperation": "practice-submit",
+      "stored.operationId": "practice-submit-operation-1",
+      "stored.requestPayloadHash": "sha256:9e9d7090688817253e408d174f11c1ae64a41ddc20d2f5abcdcf563f43f11618",
+      "stored.responseReference.resourceType": "TutorCycleAttempt",
+      "stored.responseReference.httpStatus": 200,
+      "stored.responseReference.resourceId": "cycle-1:practice:1",
+      "stored.responseReference.responseId": "sha256:793b4d71b6cac173e141b7d91b1a822e05782c265329d84e838c7fa5eb9a6971",
+      "stored.createdBy.userId": "parent-1",
+      "actor": {
+        "userId": "child-user-1",
+        "role": "child",
+        "accountStatus": "active",
+        "familyId": "family-1",
+        "childId": "child-1",
+        "activeParentMembership": false
+      },
+      "referencedEntity": {
+        "exists": true,
+        "resourceType": "TutorCycleAttempt",
+        "resourceId": "cycle-1:practice:1",
+        "familyId": "family-1",
+        "childId": "child-1",
+        "cycleId": "cycle-1"
+      },
+      "incoming.endpointOperation": "practice-submit",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/practice-submissions",
+      "incoming.request": {
+        "schemaVersion": "tutor-stage-submission-request-v1",
+        "stage": "practice",
+        "mediaIds": ["media-practice-1"],
+        "attemptVersion": 1,
+        "operationId": "practice-submit-operation-1",
+        "expectedStateVersion": 12
+      },
+      "incoming.requestPayloadHash": "sha256:9e9d7090688817253e408d174f11c1ae64a41ddc20d2f5abcdcf563f43f11618",
+      "expected": {
+        "decision": "replay",
+        "responseMode": "rebuild-authorized",
+        "responseReference": {
+          "httpStatus": 200,
+          "resourceType": "TutorCycleAttempt",
+          "resourceId": "cycle-1:practice:1",
+          "responseId": "sha256:793b4d71b6cac173e141b7d91b1a822e05782c265329d84e838c7fa5eb9a6971"
+        }
+      }
+    },
+    "cycle-create-replay": {
+      "stored.endpointOperation": "cycle-create",
+      "stored.operationId": "cycle-create-operation-1",
+      "stored.resource.cycleId": null,
+      "stored.requestPayloadHash": "sha256:e7515fdafe8a3755a000f1a2ad2642666b2c915d7b854433039676c362098bf7",
+      "stored.responseReference.resourceType": "TutorLearningCycle",
+      "stored.responseReference.resourceId": "cycle-created-1",
+      "stored.responseReference.httpStatus": 200,
+      "stored.responseReference.responseId": "sha256:2f07aaf3768e36936f37084548a4d501c516f951c247bbee0d0725a6341f1d62",
+      "authorizedResource.cycleId": null,
+      "referencedEntity": {
+        "exists": true,
+        "resourceType": "TutorLearningCycle",
+        "resourceId": "cycle-created-1",
+        "familyId": "family-1",
+        "childId": "child-1",
+        "cycleId": "cycle-created-1"
+      },
+      "incoming.endpointOperation": "cycle-create",
+      "incoming.route": "POST /api/tutor-cycles",
+      "incoming.matchedPathParams.cycleId": null,
+      "incoming.resource.cycleId": null,
+      "incoming.request": {
+        "schemaVersion": "tutor-cycle-create-request-v1",
+        "childId": "child-1",
+        "sourceMistakeId": "mistake-1",
+        "knowledgePointId": "knowledge-1",
+        "presentedByGrowthTaskId": null,
+        "operationId": "cycle-create-operation-1"
+      },
+      "incoming.requestPayloadHash": "sha256:e7515fdafe8a3755a000f1a2ad2642666b2c915d7b854433039676c362098bf7",
+      "expected": {
+        "decision": "replay",
+        "responseMode": "rebuild-authorized",
+        "responseReference": {
+          "httpStatus": 200,
+          "resourceType": "TutorLearningCycle",
+          "resourceId": "cycle-created-1",
+          "responseId": "sha256:2f07aaf3768e36936f37084548a4d501c516f951c247bbee0d0725a6341f1d62"
+        }
+      }
+    },
+    "final-review-revise-replay": {
+      "stored.operationId": "final-review-revise-operation-1",
+      "stored.requestPayloadHash": "sha256:0a62c11ad9b062993589473b84f89113f3828084d9cdf46a162e8c6ec654b492",
+      "stored.responseReference.httpStatus": 200,
+      "stored.responseReference.resourceType": "TutorCycleAttempt",
+      "stored.responseReference.resourceId": "cycle-1:practice:1",
+      "stored.responseReference.responseId": "sha256:93725464985a4587bc54ddb113a86e6e12a20bb47c0225c7f4f8603e123af9cc",
+      "referencedEntity.resourceType": "TutorCycleAttempt",
+      "referencedEntity.resourceId": "cycle-1:practice:1",
+      "incoming.request": {
+        "schemaVersion": "tutor-final-review-request-v1",
+        "decision": "revise",
+        "evidenceSummary": null,
+        "comment": "需要继续练习",
+        "operationId": "final-review-revise-operation-1",
+        "expectedStateVersion": 12
+      },
+      "incoming.requestPayloadHash": "sha256:0a62c11ad9b062993589473b84f89113f3828084d9cdf46a162e8c6ec654b492",
+      "expected": {
+        "decision": "replay",
+        "responseMode": "rebuild-authorized",
+        "responseReference": {
+          "httpStatus": 200,
+          "resourceType": "TutorCycleAttempt",
+          "resourceId": "cycle-1:practice:1",
+          "responseId": "sha256:93725464985a4587bc54ddb113a86e6e12a20bb47c0225c7f4f8603e123af9cc"
+        }
+      }
+    },
+    "artifact-other-child-reference": {
+      "stored.endpointOperation": "practice-artifact-review",
+      "stored.operationId": "artifact-review-operation-1",
+      "stored.requestPayloadHash": "sha256:636f15ad977a25443655a73986cd53e6199d1fc0ce2f0ec4b9d2cc61a4a41b9e",
+      "stored.responseReference.resourceType": "TutorArtifact",
+      "stored.responseReference.httpStatus": 200,
+      "stored.responseReference.resourceId": "artifact-1",
+      "stored.responseReference.responseId": "sha256:6e981a79d7655a1af81cd02a296a09a533cc60b61885648673b34a010df25658",
+      "referencedEntity": {
+        "exists": true,
+        "resourceType": "TutorArtifact",
+        "resourceId": "artifact-1",
+        "familyId": "family-1",
+        "childId": "child-2",
+        "cycleId": "cycle-1"
+      },
+      "incoming.endpointOperation": "practice-artifact-review",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/practice-review",
+      "incoming.request": {
+        "schemaVersion": "tutor-artifact-review-request-v1",
+        "artifactId": "artifact-1",
+        "artifactVersion": 1,
+        "contentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+        "decision": "approve",
+        "comment": null,
+        "operationId": "artifact-review-operation-1",
+        "expectedArtifactReviewVersion": 0,
+        "expectedStateVersion": 3
+      },
+      "incoming.requestPayloadHash": "sha256:636f15ad977a25443655a73986cd53e6199d1fc0ce2f0ec4b9d2cc61a4a41b9e",
+      "expected": {
+        "decision": "not-found",
+        "status": 404,
+        "errorCode": "RESOURCE_NOT_FOUND",
+        "reexecute": false
+      }
+    },
+    "colon-collision-is-different-tuple": {
+      "stored.familyId": "family",
+      "stored.endpointOperation": "final-review",
+      "stored.operationId": "x:practice-submit:y",
+      "stored.responseReference.responseId": "sha256:3d604ce22bc45b49d35ea4f7b90f93be49a73340d9effa0563e0f23422e75a00",
+      "referencedEntity.familyId": "family",
+      "actor.familyId": "family:final-review:x",
+      "authorizedResource.familyId": "family:final-review:x",
+      "incoming.actorFamilyId": "family:final-review:x",
+      "incoming.endpointOperation": "practice-submit",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/practice-submissions",
+      "incoming.request": {
+        "schemaVersion": "tutor-stage-submission-request-v1",
+        "stage": "practice",
+        "mediaIds": ["media-practice-1"],
+        "attemptVersion": 1,
+        "operationId": "y",
+        "expectedStateVersion": 12
+      },
+      "incoming.requestPayloadHash": "sha256:9e9d7090688817253e408d174f11c1ae64a41ddc20d2f5abcdcf563f43f11618",
+      "expected": { "decision": "execute" }
+    },
+    "deny": {
+      "expected": {
+        "decision": "deny",
+        "status": 404,
+        "errorCode": "RESOURCE_NOT_FOUND",
+        "idempotencyLookup": "skipped"
+      }
+    },
+    "reference-not-found": {
+      "expected": {
+        "decision": "not-found",
+        "status": 404,
+        "errorCode": "RESOURCE_NOT_FOUND",
+        "reexecute": false
+      }
+    }
+  },
+  "valid": [
+    { "name": "missing-tuple-record-executes-after-authorization", "set": { "stored": null, "expected": { "decision": "execute" } } },
+    { "name": "authorized-parent-replays-valid-final-review-reference", "set": {} },
+    { "name": "final-review-revise-replays-reviewed-practice-attempt", "preset": "final-review-revise-replay", "set": {} },
+    { "name": "authorized-child-replays-parent-created-attempt-by-current-policy", "preset": "authorized-child-practice-replay", "set": {} },
+    { "name": "cycle-create-replay-validates-created-cycle-reference", "preset": "cycle-create-replay", "set": {} },
+    { "name": "same-tuple-and-different-cycle-conflicts", "preset": "cross-cycle-conflict", "set": {} },
+    { "name": "same-tuple-and-different-body-conflicts", "preset": "same-cycle-body-conflict", "set": {} },
+    { "name": "same-operation-id-across-review-endpoints-executes", "preset": "review-endpoints-are-independent", "set": {} },
+    { "name": "artifact-review-operations-have-independent-tuples", "preset": "artifact-review-endpoints-are-independent", "set": {} },
+    { "name": "same-operation-id-across-submission-endpoints-executes", "preset": "submission-endpoints-are-independent", "set": {} },
+    { "name": "colon-concatenation-collision-does-not-match-tuples", "preset": "colon-collision-is-different-tuple", "set": {} },
+    { "name": "sibling-cannot-replay-identical-request", "preset": "authorized-child-practice-replay", "set": { "actor.userId": "child-user-2", "actor.childId": "child-2", "expected": { "decision": "deny", "status": 404, "errorCode": "RESOURCE_NOT_FOUND", "idempotencyLookup": "skipped" } } },
+    { "name": "cross-family-parent-cannot-replay", "preset": "deny", "set": { "actor.userId": "parent-other", "actor.familyId": "family-2" } },
+    { "name": "removed-parent-cannot-replay", "preset": "deny", "set": { "actor.activeParentMembership": false } },
+    { "name": "disabled-user-cannot-replay", "preset": "deny", "set": { "actor.accountStatus": "disabled" } },
+    { "name": "child-cannot-call-parent-only-final-review", "preset": "deny", "set": { "actor": { "userId": "child-user-1", "role": "child", "accountStatus": "active", "familyId": "family-1", "childId": "child-1", "activeParentMembership": false } } },
+    { "name": "deleted-cycle-cannot-replay", "preset": "deny", "set": { "authorizedResource.exists": false } },
+    { "name": "authorization-denial-skips-invalid-hash-processing", "preset": "authorized-child-practice-replay", "set": { "actor.userId": "child-user-2", "actor.childId": "child-2", "incoming.requestPayloadHash": "not-a-hash", "expected": { "decision": "deny", "status": 404, "errorCode": "RESOURCE_NOT_FOUND", "idempotencyLookup": "skipped" } } },
+    { "name": "missing-reference-returns-404-without-reexecution", "preset": "reference-not-found", "set": { "referencedEntity": { "exists": false } } },
+    { "name": "attempt-reference-from-another-cycle-cannot-replay", "preset": "authorized-child-practice-replay", "set": { "stored.responseReference.resourceId": "cycle-2:practice:1", "stored.responseReference.responseId": "sha256:02bb4eac990f08f49716aa303e98cdbe914ea2a489c0077dc322b7ac5a2c129b", "referencedEntity.resourceId": "cycle-2:practice:1", "referencedEntity.cycleId": "cycle-2", "expected": { "decision": "not-found", "status": 404, "errorCode": "RESOURCE_NOT_FOUND", "reexecute": false } } },
+    { "name": "artifact-reference-from-another-child-cannot-replay", "preset": "artifact-other-child-reference", "set": {} },
+    { "name": "reference-from-another-family-cannot-replay", "preset": "reference-not-found", "set": { "referencedEntity.familyId": "family-2" } },
+    { "name": "loaded-resource-id-must-match-response-reference", "preset": "reference-not-found", "set": { "referencedEntity.resourceId": "cycle-1:final-review:other" } },
+    { "name": "loaded-resource-type-must-match-response-reference", "preset": "reference-not-found", "set": { "referencedEntity.resourceType": "TutorArtifact" } }
+  ],
+  "invalid": [
+    { "name": "sibling-denial-cannot-be-replay", "preset": "authorized-child-practice-replay", "set": { "actor.userId": "child-user-2", "actor.childId": "child-2" } },
+    { "name": "authorized-replay-cannot-skip-idempotency", "set": { "expected": { "decision": "deny", "status": 404, "errorCode": "RESOURCE_NOT_FOUND", "idempotencyLookup": "skipped" } } },
+    { "name": "replay-must-use-current-authorized-rebuild", "set": { "expected.responseMode": "cached-full-response" } },
+    { "name": "replay-reference-must-match-record", "set": { "expected.responseReference.responseId": "different-response" } },
+    { "name": "stored-record-child-must-match-authorized-resource", "set": { "stored.childId": "child-2" } },
+    { "name": "stored-full-response-is-never-valid", "set": { "stored.response": { "evidenceSummary": "sensitive evidence" } } },
+    { "name": "final-review-record-cannot-reference-artifact", "set": { "stored.responseReference.resourceType": "TutorArtifact", "referencedEntity.resourceType": "TutorArtifact" } },
+    { "name": "mastered-cannot-replay-practice-attempt", "preset": "final-review-revise-replay", "set": { "incoming.request.decision": "mastered", "incoming.request.evidenceSummary": "家长确认两道同类题均由孩子独立完成", "incoming.request.comment": null, "incoming.requestPayloadHash": "sha256:d98d93ab2b52deab458b84053aa1c8e74f3079af83015b7d8ccf10687f17533b", "stored.requestPayloadHash": "sha256:d98d93ab2b52deab458b84053aa1c8e74f3079af83015b7d8ccf10687f17533b" } },
+    { "name": "revise-cannot-replay-final-review", "set": { "incoming.request.decision": "revise", "incoming.request.evidenceSummary": null, "incoming.request.comment": "需要继续练习", "incoming.requestPayloadHash": "sha256:0a62c11ad9b062993589473b84f89113f3828084d9cdf46a162e8c6ec654b492", "stored.requestPayloadHash": "sha256:0a62c11ad9b062993589473b84f89113f3828084d9cdf46a162e8c6ec654b492" } },
+    { "name": "final-review-record-cannot-be-created-by-child", "set": { "stored.createdBy.role": "child", "stored.createdBy.userId": "child-user-1" } },
+    { "name": "missing-reference-cannot-execute-again", "set": { "referencedEntity": { "exists": false }, "expected": { "decision": "execute" } } },
+    { "name": "other-cycle-reference-cannot-be-replayed", "preset": "authorized-child-practice-replay", "set": { "stored.responseReference.resourceId": "cycle-2:practice:1", "stored.responseReference.responseId": "sha256:02bb4eac990f08f49716aa303e98cdbe914ea2a489c0077dc322b7ac5a2c129b", "referencedEntity.resourceId": "cycle-2:practice:1", "referencedEntity.cycleId": "cycle-2" } },
+    { "name": "colon-collision-cannot-be-treated-as-same-scope", "preset": "colon-collision-is-different-tuple", "set": { "expected": { "decision": "replay", "responseMode": "rebuild-authorized", "responseReference": { "httpStatus": 202, "resourceType": "TutorFinalReview", "resourceId": "cycle-1:final-review:1", "responseId": "sha256:3d604ce22bc45b49d35ea4f7b90f93be49a73340d9effa0563e0f23422e75a00" } } } },
+    { "name": "referenced-entity-projection-must-be-closed", "set": { "referencedEntity.storagePath": "/private/child-1" } },
+    { "name": "conflict-must-use-stable-error-code", "preset": "cross-cycle-conflict", "set": { "expected.errorCode": "CONFLICT" } }
+  ]
+}

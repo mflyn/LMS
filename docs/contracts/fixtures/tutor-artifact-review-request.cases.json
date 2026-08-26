@@ -1,0 +1,24 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-artifact-review-request-v1.json",
+  "base": {
+    "schemaVersion": "tutor-artifact-review-request-v1",
+    "artifactId": "artifact-1",
+    "artifactVersion": 1,
+    "contentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+    "decision": "approve",
+    "comment": null,
+    "operationId": "artifact-review-operation-1",
+    "expectedArtifactReviewVersion": 0,
+    "expectedStateVersion": 3
+  },
+  "valid": [
+    { "name": "approve-with-two-expected-versions", "set": {} },
+    { "name": "reject-with-comment", "set": { "decision": "reject", "comment": "答案不正确" } }
+  ],
+  "invalid": [
+    { "name": "negative-artifact-review-version", "set": { "expectedArtifactReviewVersion": -1 } },
+    { "name": "negative-cycle-state-version", "set": { "expectedStateVersion": -1 } },
+    { "name": "reject-without-comment", "set": { "decision": "reject", "comment": null } },
+    { "name": "client-supplies-only-generic-version", "set": { "reviewVersion": 0 } }
+  ]
+}

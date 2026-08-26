@@ -1,0 +1,29 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-final-review-snapshot-v1.json",
+  "base": {
+    "schemaVersion": "tutor-final-review-snapshot-v1",
+    "finalReviewId": "cycle-1:final-review:1",
+    "finalReviewVersion": 1,
+    "finalReviewHash": "sha256:8b54714633fcdf42c3cfe9d69c9439bc148e622a577cb29e9bf7ef9a65d1be4c",
+    "cycleId": "cycle-1",
+    "familyId": "family-1",
+    "childId": "child-1",
+    "sourceMistakeId": "mistake-1",
+    "knowledgePointId": "knowledge-1",
+    "practiceAttemptId": "cycle-1:practice:1",
+    "practiceAttemptVersion": 1,
+    "practiceReviewOperationId": "final-review-operation-1",
+    "decision": "mastered",
+    "evidenceSummary": "家长确认两道同类题均独立完成",
+    "reviewedByParentId": "parent-1",
+    "reviewedAt": "2026-08-26T10:00:00.000Z"
+  },
+  "valid": [
+    { "name": "server-computed-mastered-snapshot", "set": {} }
+  ],
+  "invalid": [
+    { "name": "legacy-needs-review-decision", "set": { "decision": "needs_review" } },
+    { "name": "content-changed-with-stale-hash", "set": { "evidenceSummary": "家长修改了审核证据" } },
+    { "name": "arbitrary-format-valid-hash", "set": { "finalReviewHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } }
+  ]
+}

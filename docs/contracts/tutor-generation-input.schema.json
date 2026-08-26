@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-generation-input-v1.json",
+  "title": "TutorGenerationInput v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cycleId",
+    "kind",
+    "sourceMistakeSnapshot",
+    "confirmedErrorClassification",
+    "curriculumRefSnapshot",
+    "prerequisiteSnapshots",
+    "promptVersion",
+    "modelProfile",
+    "outputSchemaVersion",
+    "generationPolicy"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-generation-input-v1" },
+    "cycleId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "kind": { "type": "string", "enum": ["explanation", "practice"] },
+    "sourceMistakeSnapshot": { "$ref": "#/$defs/sourceMistakeSnapshot" },
+    "confirmedErrorClassification": { "$ref": "#/$defs/confirmedErrorSnapshot" },
+    "curriculumRefSnapshot": { "$ref": "#/$defs/generationCurriculumSnapshot" },
+    "prerequisiteSnapshots": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/generationCurriculumSnapshot" }
+    },
+    "promptVersion": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "modelProfile": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "outputSchemaVersion": { "type": "string", "enum": ["explanation-v1", "practice-v1"] },
+    "generationPolicy": {
+      "oneOf": [
+        { "$ref": "#/$defs/explanationPolicy" },
+        { "$ref": "#/$defs/practicePolicy" }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "kind": { "const": "explanation" } },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "outputSchemaVersion": { "const": "explanation-v1" },
+          "generationPolicy": { "$ref": "#/$defs/explanationPolicy" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "kind": { "const": "practice" } },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "outputSchemaVersion": { "const": "practice-v1" },
+          "generationPolicy": { "$ref": "#/$defs/practicePolicy" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "reasonCode": {
+      "type": "string",
+      "enum": [
+        "concept_gap",
+        "formula_selection",
+        "condition_omitted",
+        "calculation",
+        "unit_conversion",
+        "method_or_process",
+        "application",
+        "reading_or_interpretation",
+        "careless",
+        "unknown"
+      ]
+    },
+    "sourceMistakeSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceMistakeId", "normalizedQuestionText", "normalizedChildAnswerText", "subject"],
+      "properties": {
+        "sourceMistakeId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "normalizedQuestionText": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "normalizedChildAnswerText": { "type": ["string", "null"], "maxLength": 4000 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 80 }
+      }
+    },
+    "confirmedErrorSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primaryReasonCode", "secondaryReasonCodes", "sanitizedNote"],
+      "properties": {
+        "primaryReasonCode": { "$ref": "#/$defs/reasonCode" },
+        "secondaryReasonCodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/reasonCode" }
+        },
+        "sanitizedNote": { "type": ["string", "null"], "maxLength": 500 }
+      }
+    },
+    "generationCurriculumSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId", "datasetVersion", "displayName", "subject", "grade", "evidenceHash"],
+      "properties": {
+        "nodeId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "datasetVersion": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "grade": { "type": ["string", "null"], "maxLength": 80 },
+        "evidenceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "explanationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["detailLevel", "includePrerequisiteReview"],
+      "properties": {
+        "detailLevel": { "type": "string", "enum": ["brief", "standard"] },
+        "includePrerequisiteReview": { "type": "boolean" }
+      }
+    },
+    "practicePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exerciseCount", "difficultySequence"],
+      "properties": {
+        "exerciseCount": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "difficultySequence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": { "type": "string", "enum": ["easy", "medium", "hard"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "validator": "tutor-generation-request-hash-v1",
+  "base": {
+    "operationId": "generation-operation-1",
+    "generationInput": {
+      "schemaVersion": "tutor-generation-input-v1",
+      "cycleId": "cycle-1",
+      "kind": "practice",
+      "sourceMistakeSnapshot": {
+        "sourceMistakeId": "mistake-1",
+        "normalizedQuestionText": "直角边为 3 和 4，求斜边。",
+        "normalizedChildAnswerText": "3 + 4 = 7",
+        "subject": "数学"
+      },
+      "confirmedErrorClassification": {
+        "primaryReasonCode": "condition_omitted",
+        "secondaryReasonCodes": [],
+        "sanitizedNote": null
+      },
+      "curriculumRefSnapshot": {
+        "nodeId": "concept-pythagorean",
+        "datasetVersion": "dataset-v1",
+        "displayName": "勾股定理",
+        "subject": "数学",
+        "grade": "八年级",
+        "evidenceHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "prerequisiteSnapshots": [],
+      "promptVersion": "family-tutor-v1",
+      "modelProfile": "default-low-cost",
+      "outputSchemaVersion": "practice-v1",
+      "generationPolicy": {
+        "exerciseCount": 2,
+        "difficultySequence": ["easy", "medium"]
+      }
+    },
+    "requestHash": "sha256:07a5ebdf295d259fc3248c8273a75440c62e2b7ca28865535759c0168fb98ca5",
+    "attempt": 0,
+    "leaseOwner": null,
+    "externalTurnId": null
+  },
+  "valid": [
+    { "name": "schema-valid-canonical-generation-input", "set": {} },
+    { "name": "operation-id-does-not-change-generation-hash", "set": { "operationId": "generation-operation-2" } },
+    { "name": "runtime-fields-do-not-change-generation-hash", "set": { "attempt": 2, "leaseOwner": "worker-2", "externalTurnId": "turn-9" } },
+    {
+      "name": "same-generation-input-different-key-order",
+      "set": {
+        "generationInput": {
+          "generationPolicy": { "difficultySequence": ["easy", "medium"], "exerciseCount": 2 },
+          "outputSchemaVersion": "practice-v1",
+          "modelProfile": "default-low-cost",
+          "promptVersion": "family-tutor-v1",
+          "prerequisiteSnapshots": [],
+          "curriculumRefSnapshot": {
+            "evidenceHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "grade": "八年级",
+            "subject": "数学",
+            "displayName": "勾股定理",
+            "datasetVersion": "dataset-v1",
+            "nodeId": "concept-pythagorean"
+          },
+          "confirmedErrorClassification": {
+            "sanitizedNote": null,
+            "secondaryReasonCodes": [],
+            "primaryReasonCode": "condition_omitted"
+          },
+          "sourceMistakeSnapshot": {
+            "subject": "数学",
+            "normalizedChildAnswerText": "3 + 4 = 7",
+            "normalizedQuestionText": "直角边为 3 和 4，求斜边。",
+            "sourceMistakeId": "mistake-1"
+          },
+          "kind": "practice",
+          "cycleId": "cycle-1",
+          "schemaVersion": "tutor-generation-input-v1"
+        }
+      }
+    }
+  ],
+  "invalid": [
+    { "name": "source-snapshot-changed-with-stale-hash", "set": { "generationInput.sourceMistakeSnapshot.normalizedQuestionText": "题目内容已改变" } },
+    { "name": "dataset-version-changed-with-stale-hash", "set": { "generationInput.curriculumRefSnapshot.datasetVersion": "dataset-v2" } },
+    { "name": "prompt-version-changed-with-stale-hash", "set": { "generationInput.promptVersion": "family-tutor-v2" } },
+    { "name": "model-profile-changed-with-stale-hash", "set": { "generationInput.modelProfile": "higher-quality" } },
+    { "name": "output-schema-changed-with-stale-hash", "set": { "generationInput.outputSchemaVersion": "explanation-v1" } },
+    { "name": "generation-policy-changed-with-stale-hash", "set": { "generationInput.generationPolicy.exerciseCount": 3 } },
+    { "name": "runtime-field-leaks-into-generation-input", "set": { "generationInput.attempt": 1 } },
+    { "name": "arbitrary-format-valid-generation-hash", "set": { "requestHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } },
+    {
+      "name": "hash-correct-but-private-and-structurally-invalid-input",
+      "hashMustMatch": true,
+      "set": {
+        "generationInput.sourceMistakeSnapshot.childName": "真实儿童姓名",
+        "generationInput.sourceMistakeSnapshot.authorizationToken": "secret-token",
+        "generationInput.prerequisiteSnapshots": "not-an-array",
+        "requestHash": "sha256:46306eed14be225ae67524a68071c8102f778850d0e1e0122ce30ad1fd672a1d"
+      }
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/practice-content-v1.json",
+  "title": "PracticeContent v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "targetCurriculumNodeIds", "instructions", "exercises", "generationPolicy"],
+  "properties": {
+    "schemaVersion": { "const": "practice-v1" },
+    "targetCurriculumNodeIds": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "instructions": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "exercises": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["exerciseId", "difficulty", "questionMarkdown", "targetNodeIds", "answerForParent", "rubric"],
+        "properties": {
+          "exerciseId": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "difficulty": { "type": "string", "enum": ["easy", "normal", "hard"] },
+          "questionMarkdown": { "type": "string", "minLength": 1, "maxLength": 6000 },
+          "targetNodeIds": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+          },
+          "answerForParent": { "type": "string", "minLength": 1, "maxLength": 6000 },
+          "rubric": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": { "type": "string", "minLength": 1, "maxLength": 1000 }
+          }
+        }
+      }
+    },
+    "generationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exerciseCount", "difficultySequence"],
+      "properties": {
+        "exerciseCount": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "difficultySequence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": { "type": "string", "enum": ["easy", "normal", "hard"] }
+        }
+      }
+    }
+  }
+}

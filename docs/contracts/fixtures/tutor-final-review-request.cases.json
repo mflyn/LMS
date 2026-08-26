@@ -1,0 +1,23 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-final-review-request-v1.json",
+  "base": {
+    "schemaVersion": "tutor-final-review-request-v1",
+    "decision": "mastered",
+    "evidenceSummary": "家长确认两道同类题均由孩子独立完成",
+    "comment": null,
+    "operationId": "final-review-operation-1",
+    "expectedStateVersion": 12
+  },
+  "valid": [
+    { "name": "mastered-with-evidence", "set": {} },
+    { "name": "revise-with-comment", "set": { "decision": "revise", "evidenceSummary": null, "comment": "公式正确，但仍需独立完成一道题" } }
+  ],
+  "invalid": [
+    { "name": "mastered-without-evidence", "set": { "evidenceSummary": null } },
+    { "name": "revise-without-comment", "set": { "decision": "revise", "evidenceSummary": null, "comment": null } },
+    { "name": "revise-with-final-evidence", "set": { "decision": "revise", "comment": "继续练习" } },
+    { "name": "legacy-needs-review-decision", "set": { "decision": "needs_review" } },
+    { "name": "negative-state-version", "set": { "expectedStateVersion": -1 } },
+    { "name": "client-supplies-final-review-hash", "set": { "finalReviewHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" } }
+  ]
+}

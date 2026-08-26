@@ -1,0 +1,20 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-cycle-create-request-v1.json",
+  "base": {
+    "schemaVersion": "tutor-cycle-create-request-v1",
+    "childId": "child-1",
+    "sourceMistakeId": "mistake-1",
+    "knowledgePointId": "knowledge-1",
+    "presentedByGrowthTaskId": null,
+    "operationId": "cycle-create-operation-1"
+  },
+  "valid": [
+    { "name": "mistake-based-cycle", "set": {} },
+    { "name": "optional-growth-task-entry", "set": { "presentedByGrowthTaskId": "growth-task-1" } }
+  ],
+  "invalid": [
+    { "name": "missing-source-mistake", "set": { "sourceMistakeId": "" } },
+    { "name": "missing-knowledge-point", "set": { "knowledgePointId": "" } },
+    { "name": "client-supplies-family-id", "set": { "familyId": "family-1" } }
+  ]
+}

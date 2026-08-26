@@ -10,6 +10,10 @@
 权威设计输入。图中的客户端请求默认经过 API Gateway；只有星星发放和媒体引用
 协议使用独立服务凭据绕过公开 gateway 路由。
 
+DeepTutor、K12-KGraph 和家长人工审核学习闭环的后续时序单独记录在
+[家庭 AI 学习平台设计](family-ai-learning-platform-design.md#10-核心时序图)中。它们是
+拟议扩展，不属于本文的 FGT-MVP-1.7 已实现时序。
+
 ## 1. 家长注册、创建家庭、添加孩子和设置 PIN
 
 ```mermaid

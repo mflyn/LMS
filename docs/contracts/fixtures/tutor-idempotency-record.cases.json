@@ -1,0 +1,110 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-idempotency-record-v1.json",
+  "base": {
+    "schemaVersion": "tutor-idempotency-record-v1",
+    "outcome": "succeeded",
+    "familyId": "family-1",
+    "childId": "child-1",
+    "endpointOperation": "practice-submit",
+    "operationId": "practice-submit-operation-1",
+    "resource": { "cycleId": "cycle-1" },
+    "requestPayloadHash": "sha256:9e9d7090688817253e408d174f11c1ae64a41ddc20d2f5abcdcf563f43f11618",
+    "responseReference": {
+      "httpStatus": 200,
+      "resourceType": "TutorCycleAttempt",
+      "resourceId": "cycle-1:practice:1",
+      "responseId": "sha256:793b4d71b6cac173e141b7d91b1a822e05782c265329d84e838c7fa5eb9a6971"
+    },
+    "createdBy": {
+      "userId": "child-user-1",
+      "role": "child"
+    },
+    "createdAt": "2026-08-26T09:50:00.000Z",
+    "updatedAt": "2026-08-26T09:50:00.000Z"
+  },
+  "valid": [
+    { "name": "minimal-parent-child-operation-reference", "set": {} },
+    {
+      "name": "parent-can-create-cycle",
+      "set": {
+        "endpointOperation": "cycle-create",
+        "operationId": "cycle-create-operation-1",
+        "resource.cycleId": null,
+        "requestPayloadHash": "sha256:e7515fdafe8a3755a000f1a2ad2642666b2c915d7b854433039676c362098bf7",
+        "responseReference.httpStatus": 200,
+        "responseReference.resourceType": "TutorLearningCycle",
+        "responseReference.resourceId": "cycle-1",
+        "responseReference.responseId": "sha256:dffc3275147566ab4e4b828df27a1737c7955eab93da9457eee649f2040b13fe",
+        "createdBy.userId": "parent-1",
+        "createdBy.role": "parent"
+      }
+    },
+    {
+      "name": "final-review-revise-can-reference-reviewed-practice-attempt",
+      "set": {
+        "endpointOperation": "final-review",
+        "operationId": "final-review-revise-operation-1",
+        "requestPayloadHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "responseReference.httpStatus": 200,
+        "responseReference.resourceType": "TutorCycleAttempt",
+        "responseReference.resourceId": "cycle-1:practice:1",
+        "responseReference.responseId": "sha256:93725464985a4587bc54ddb113a86e6e12a20bb47c0225c7f4f8603e123af9cc",
+        "createdBy.userId": "parent-1",
+        "createdBy.role": "parent"
+      }
+    },
+    {
+      "name": "final-review-mastered-can-reference-final-review",
+      "set": {
+        "endpointOperation": "final-review",
+        "operationId": "final-review-operation-1",
+        "requestPayloadHash": "sha256:d98d93ab2b52deab458b84053aa1c8e74f3079af83015b7d8ccf10687f17533b",
+        "responseReference.httpStatus": 202,
+        "responseReference.resourceType": "TutorFinalReview",
+        "responseReference.resourceId": "cycle-1:final-review:1",
+        "responseReference.responseId": "sha256:41cb7ac8605d5a59d7fcf845af19d8a5a79ccac2c320f944c9818bbf91bd50ae",
+        "createdBy.userId": "parent-1",
+        "createdBy.role": "parent"
+      }
+    },
+    {
+      "name": "parent-can-start-correction-on-parent-child-operation",
+      "set": {
+        "endpointOperation": "correction-start",
+        "operationId": "correction-start-operation-1",
+        "responseReference.resourceType": "TutorLearningCycle",
+        "responseReference.resourceId": "cycle-1",
+        "responseReference.responseId": "sha256:f3e49432c11afadd345f77b99e6245fc849c7159e25dcd68b63b6294e1005cec",
+        "createdBy.userId": "parent-1",
+        "createdBy.role": "parent"
+      }
+    },
+    {
+      "name": "operation-id-may-contain-colons-because-scope-is-a-tuple",
+      "set": {
+        "operationId": "device:offline:practice-submit:1",
+        "responseReference.responseId": "sha256:19412049e1f4a06bfd2b8bbdcd40b43ef9f20d189b8cc2d1852ec24c8bf1d959"
+      }
+    }
+  ],
+  "invalid": [
+    { "name": "cycle-scoped-operation-requires-cycle", "set": { "resource.cycleId": null } },
+    { "name": "cycle-create-forbids-client-cycle", "set": { "endpointOperation": "cycle-create" } },
+    { "name": "final-review-cannot-reference-artifact", "set": { "endpointOperation": "final-review", "createdBy.userId": "parent-1", "createdBy.role": "parent", "responseReference.resourceType": "TutorArtifact" } },
+    { "name": "final-review-cannot-cross-revise-status-with-mastered-resource", "set": { "endpointOperation": "final-review", "createdBy.userId": "parent-1", "createdBy.role": "parent", "responseReference.httpStatus": 200, "responseReference.resourceType": "TutorFinalReview" } },
+    { "name": "final-review-cannot-cross-mastered-status-with-revise-resource", "set": { "endpointOperation": "final-review", "createdBy.userId": "parent-1", "createdBy.role": "parent", "responseReference.httpStatus": 202, "responseReference.resourceType": "TutorCycleAttempt" } },
+    { "name": "practice-submit-cannot-reference-final-review", "set": { "responseReference.resourceType": "TutorFinalReview" } },
+    { "name": "final-review-cannot-be-created-by-child", "set": { "endpointOperation": "final-review", "responseReference.resourceType": "TutorFinalReview" } },
+    { "name": "parent-only-generation-job-cannot-be-created-by-child", "set": { "endpointOperation": "practice-job", "responseReference.resourceType": "TutorGenerationJob" } },
+    { "name": "persisted-ambiguous-scope-key-is-forbidden", "set": { "scopeKey": "family-1:practice-submit:practice-submit-operation-1" } },
+    { "name": "full-response-body-is-forbidden", "set": { "response": { "childAnswer": "sensitive answer" } } },
+    { "name": "signed-media-url-is-forbidden", "set": { "responseReference.signedMediaUrl": "https://example.test/private?signature=secret" } },
+    { "name": "automatic-expiry-is-not-part-of-mvp-record", "set": { "expiresAt": "2026-09-26T09:50:00.000Z" } },
+    { "name": "processing-placeholder-is-not-a-public-record", "set": { "outcome": "processing", "responseReference": { "$delete": true } } },
+    { "name": "child-id-is-required-for-deletion-scope", "set": { "childId": { "$delete": true } } },
+    { "name": "response-reference-is-required", "set": { "responseReference": { "$delete": true } } },
+    { "name": "arbitrary-response-id-is-forbidden", "set": { "responseReference.responseId": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } },
+    { "name": "unsupported-endpoint-operation", "set": { "endpointOperation": "unknown-operation" } },
+    { "name": "updated-at-cannot-precede-created-at", "set": { "updatedAt": "2026-08-26T09:49:59.000Z" } }
+  ]
+}

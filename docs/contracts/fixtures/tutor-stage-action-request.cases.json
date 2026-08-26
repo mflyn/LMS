@@ -1,0 +1,34 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-stage-action-request-v1.json",
+  "base": {
+    "schemaVersion": "tutor-stage-action-request-v1",
+    "action": "start-correction",
+    "comment": null,
+    "operationId": "start-correction-operation-1",
+    "expectedStateVersion": 4
+  },
+  "presets": {
+    "start-practice": {
+      "action": "start-practice",
+      "operationId": "start-practice-operation-1",
+      "expectedStateVersion": 11
+    },
+    "cancel": {
+      "action": "cancel",
+      "comment": "家长停止本轮练习",
+      "operationId": "cancel-operation-1",
+      "expectedStateVersion": 6
+    }
+  },
+  "valid": [
+    { "name": "start-correction", "set": {} },
+    { "name": "start-practice", "preset": "start-practice", "set": {} },
+    { "name": "cancel-with-reason", "preset": "cancel", "set": {} }
+  ],
+  "invalid": [
+    { "name": "start-action-rejects-comment", "set": { "comment": "不应提交" } },
+    { "name": "cancel-requires-reason", "preset": "cancel", "set": { "comment": null } },
+    { "name": "unknown-action", "set": { "action": "skip-review" } },
+    { "name": "client-cannot-submit-family-id", "set": { "familyId": "family-1" } }
+  ]
+}

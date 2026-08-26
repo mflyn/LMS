@@ -1,0 +1,384 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-learning-cycle-v1.json",
+  "title": "TutorLearningCycle v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cycleId",
+    "familyId",
+    "childId",
+    "createdByParentId",
+    "sourceMistakeId",
+    "knowledgePointId",
+    "presentedByGrowthTaskId",
+    "status",
+    "stateVersion",
+    "lastTransitionAt",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-learning-cycle-v1" },
+    "cycleId": { "type": "string", "minLength": 1 },
+    "familyId": { "type": "string", "minLength": 1 },
+    "childId": { "type": "string", "minLength": 1 },
+    "createdByParentId": { "type": "string", "minLength": 1 },
+    "sourceMistakeId": { "type": "string", "minLength": 1 },
+    "knowledgePointId": { "type": "string", "minLength": 1 },
+    "presentedByGrowthTaskId": { "type": ["string", "null"], "minLength": 1 },
+    "activeSourceMistakeKey": { "type": "string", "minLength": 3, "maxLength": 500 },
+    "status": { "$ref": "#/$defs/status" },
+    "stateVersion": { "type": "integer", "minimum": 0 },
+    "lastTransitionAt": { "type": "string", "format": "date-time" },
+    "explanationArtifactId": { "type": "string", "minLength": 1 },
+    "explanationArtifactVersion": { "type": "integer", "minimum": 1 },
+    "explanationContentHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "currentCorrectionAttemptId": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "currentCorrectionAttemptVersion": { "type": "integer", "minimum": 1 },
+    "practiceArtifactId": { "type": "string", "minLength": 1 },
+    "practiceArtifactVersion": { "type": "integer", "minimum": 1 },
+    "practiceContentHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "currentPracticeAttemptId": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "currentPracticeAttemptVersion": { "type": "integer", "minimum": 1 },
+    "finalReview": { "$ref": "tutor-final-review-snapshot-v1.json" },
+    "closedAt": { "type": "string", "format": "date-time" },
+    "cancelledFromStatus": { "$ref": "#/$defs/cancellableStatus" },
+    "cancelledAt": { "type": "string", "format": "date-time" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "dependentRequired": {
+    "explanationArtifactId": ["explanationArtifactVersion", "explanationContentHash"],
+    "explanationArtifactVersion": ["explanationArtifactId", "explanationContentHash"],
+    "explanationContentHash": ["explanationArtifactId", "explanationArtifactVersion"],
+    "currentCorrectionAttemptId": ["currentCorrectionAttemptVersion"],
+    "currentCorrectionAttemptVersion": ["currentCorrectionAttemptId"],
+    "practiceArtifactId": ["practiceArtifactVersion", "practiceContentHash"],
+    "practiceArtifactVersion": ["practiceArtifactId", "practiceContentHash"],
+    "practiceContentHash": ["practiceArtifactId", "practiceArtifactVersion"],
+    "currentPracticeAttemptId": ["currentPracticeAttemptVersion"],
+    "currentPracticeAttemptVersion": ["currentPracticeAttemptId"]
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/nonTerminalStatus" } },
+        "required": ["status"]
+      },
+      "then": { "required": ["activeSourceMistakeKey"] },
+      "else": { "not": { "required": ["activeSourceMistakeKey"] } }
+    },
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/preExplanationStatus" } },
+        "required": ["status"]
+      },
+      "then": {
+        "allOf": [
+          { "$ref": "#/$defs/forbidExplanationBinding" },
+          { "$ref": "#/$defs/forbidCorrectionAttempt" },
+          { "$ref": "#/$defs/forbidPracticeBinding" },
+          { "$ref": "#/$defs/forbidPracticeAttempt" }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/explanationBoundStatus" } },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["explanationArtifactId", "explanationArtifactVersion", "explanationContentHash"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/beforeCorrectionAttemptStatus" } },
+        "required": ["status"]
+      },
+      "then": { "$ref": "#/$defs/forbidCorrectionAttempt" }
+    },
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/correctionAttemptRequiredStatus" } },
+        "required": ["status"]
+      },
+      "then": { "required": ["currentCorrectionAttemptId", "currentCorrectionAttemptVersion"] }
+    },
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/beforePracticeBindingStatus" } },
+        "required": ["status"]
+      },
+      "then": { "$ref": "#/$defs/forbidPracticeBinding" }
+    },
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/practiceBoundStatus" } },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["practiceArtifactId", "practiceArtifactVersion", "practiceContentHash"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/beforePracticeAttemptStatus" } },
+        "required": ["status"]
+      },
+      "then": { "$ref": "#/$defs/forbidPracticeAttempt" }
+    },
+    {
+      "if": {
+        "properties": { "status": { "$ref": "#/$defs/practiceAttemptRequiredStatus" } },
+        "required": ["status"]
+      },
+      "then": { "required": ["currentPracticeAttemptId", "currentPracticeAttemptVersion"] }
+    },
+    {
+      "if": {
+        "properties": { "status": { "enum": ["parent_verified", "closed"] } },
+        "required": ["status"]
+      },
+      "then": { "required": ["finalReview"] },
+      "else": { "not": { "required": ["finalReview"] } }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "closed" } },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["closedAt"],
+        "not": { "anyOf": [{ "required": ["cancelledAt"] }, { "required": ["cancelledFromStatus"] }] }
+      },
+      "else": { "not": { "required": ["closedAt"] } }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "cancelled" } },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["cancelledAt", "cancelledFromStatus"],
+        "not": { "anyOf": [{ "required": ["finalReview"] }, { "required": ["closedAt"] }] }
+      },
+      "else": {
+        "not": { "anyOf": [{ "required": ["cancelledAt"] }, { "required": ["cancelledFromStatus"] }] }
+      }
+    }
+  ],
+  "$defs": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "explanation_generating",
+        "explanation_generation_failed",
+        "explanation_pending_review",
+        "explanation_rejected",
+        "explanation_approved",
+        "correction_in_progress",
+        "correction_submitted",
+        "correction_needs_revision",
+        "correction_approved",
+        "practice_generating",
+        "practice_generation_failed",
+        "practice_pending_review",
+        "practice_rejected",
+        "practice_approved",
+        "practice_in_progress",
+        "practice_submitted",
+        "practice_needs_revision",
+        "parent_verified",
+        "closed",
+        "cancelled"
+      ]
+    },
+    "cancellableStatus": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "explanation_generation_failed",
+        "explanation_pending_review",
+        "explanation_rejected",
+        "explanation_approved",
+        "correction_in_progress",
+        "correction_submitted",
+        "correction_needs_revision",
+        "correction_approved",
+        "practice_generation_failed",
+        "practice_pending_review",
+        "practice_rejected",
+        "practice_approved",
+        "practice_in_progress",
+        "practice_submitted",
+        "practice_needs_revision"
+      ]
+    },
+    "nonTerminalStatus": {
+      "enum": [
+        "draft",
+        "explanation_generating",
+        "explanation_generation_failed",
+        "explanation_pending_review",
+        "explanation_rejected",
+        "explanation_approved",
+        "correction_in_progress",
+        "correction_submitted",
+        "correction_needs_revision",
+        "correction_approved",
+        "practice_generating",
+        "practice_generation_failed",
+        "practice_pending_review",
+        "practice_rejected",
+        "practice_approved",
+        "practice_in_progress",
+        "practice_submitted",
+        "practice_needs_revision",
+        "parent_verified"
+      ]
+    },
+    "preExplanationStatus": {
+      "enum": [
+        "draft",
+        "explanation_generating",
+        "explanation_generation_failed",
+        "explanation_pending_review",
+        "explanation_rejected"
+      ]
+    },
+    "explanationBoundStatus": {
+      "enum": [
+        "explanation_approved",
+        "correction_in_progress",
+        "correction_submitted",
+        "correction_needs_revision",
+        "correction_approved",
+        "practice_generating",
+        "practice_generation_failed",
+        "practice_pending_review",
+        "practice_rejected",
+        "practice_approved",
+        "practice_in_progress",
+        "practice_submitted",
+        "practice_needs_revision",
+        "parent_verified",
+        "closed"
+      ]
+    },
+    "beforeCorrectionAttemptStatus": {
+      "enum": [
+        "draft",
+        "explanation_generating",
+        "explanation_generation_failed",
+        "explanation_pending_review",
+        "explanation_rejected",
+        "explanation_approved"
+      ]
+    },
+    "correctionAttemptRequiredStatus": {
+      "enum": [
+        "correction_submitted",
+        "correction_needs_revision",
+        "correction_approved",
+        "practice_generating",
+        "practice_generation_failed",
+        "practice_pending_review",
+        "practice_rejected",
+        "practice_approved",
+        "practice_in_progress",
+        "practice_submitted",
+        "practice_needs_revision",
+        "parent_verified",
+        "closed"
+      ]
+    },
+    "beforePracticeBindingStatus": {
+      "enum": [
+        "draft",
+        "explanation_generating",
+        "explanation_generation_failed",
+        "explanation_pending_review",
+        "explanation_rejected",
+        "explanation_approved",
+        "correction_in_progress",
+        "correction_submitted",
+        "correction_needs_revision",
+        "correction_approved",
+        "practice_generating",
+        "practice_generation_failed",
+        "practice_pending_review",
+        "practice_rejected"
+      ]
+    },
+    "practiceBoundStatus": {
+      "enum": [
+        "practice_approved",
+        "practice_in_progress",
+        "practice_submitted",
+        "practice_needs_revision",
+        "parent_verified",
+        "closed"
+      ]
+    },
+    "beforePracticeAttemptStatus": {
+      "enum": [
+        "draft",
+        "explanation_generating",
+        "explanation_generation_failed",
+        "explanation_pending_review",
+        "explanation_rejected",
+        "explanation_approved",
+        "correction_in_progress",
+        "correction_submitted",
+        "correction_needs_revision",
+        "correction_approved",
+        "practice_generating",
+        "practice_generation_failed",
+        "practice_pending_review",
+        "practice_rejected",
+        "practice_approved"
+      ]
+    },
+    "practiceAttemptRequiredStatus": {
+      "enum": ["practice_submitted", "practice_needs_revision", "parent_verified", "closed"]
+    },
+    "forbidExplanationBinding": {
+      "not": {
+        "anyOf": [
+          { "type": "object", "required": ["explanationArtifactId"] },
+          { "type": "object", "required": ["explanationArtifactVersion"] },
+          { "type": "object", "required": ["explanationContentHash"] }
+        ]
+      }
+    },
+    "forbidCorrectionAttempt": {
+      "not": {
+        "anyOf": [
+          { "type": "object", "required": ["currentCorrectionAttemptId"] },
+          { "type": "object", "required": ["currentCorrectionAttemptVersion"] }
+        ]
+      }
+    },
+    "forbidPracticeBinding": {
+      "not": {
+        "anyOf": [
+          { "type": "object", "required": ["practiceArtifactId"] },
+          { "type": "object", "required": ["practiceArtifactVersion"] },
+          { "type": "object", "required": ["practiceContentHash"] }
+        ]
+      }
+    },
+    "forbidPracticeAttempt": {
+      "not": {
+        "anyOf": [
+          { "type": "object", "required": ["currentPracticeAttemptId"] },
+          { "type": "object", "required": ["currentPracticeAttemptVersion"] }
+        ]
+      }
+    }
+  }
+}

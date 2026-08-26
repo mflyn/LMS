@@ -1,0 +1,346 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-artifact-v1.json",
+  "base": {
+    "schemaVersion": "tutor-artifact-v1",
+    "artifactId": "artifact-1",
+    "familyId": "family-1",
+    "childId": "child-1",
+    "cycleId": "cycle-1",
+    "kind": "explanation",
+    "version": 1,
+    "content": {
+      "schemaVersion": "explanation-v1",
+      "learningObjective": "理解勾股定理的适用条件",
+      "targetCurriculumNodeIds": ["concept-pythagorean"],
+      "prerequisites": [],
+      "explanation": {
+        "summaryMarkdown": "先确认题目是直角三角形。",
+        "workedExampleMarkdown": "设两条直角边为 3 和 4，则斜边为 5。",
+        "commonPitfalls": ["没有先确认直角条件"]
+      },
+      "correctionPrompt": "请先标出直角边和斜边。",
+      "parentRubric": ["能识别斜边", "能说明适用条件"],
+      "citations": [
+        {
+          "curriculumNodeId": "concept-pythagorean",
+          "datasetVersion": "dataset-v1"
+        }
+      ]
+    },
+    "contentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+    "status": "candidate",
+    "reviewVersion": 0,
+    "approvedByParentId": null,
+    "approvedAt": null,
+    "rejectedByParentId": null,
+    "rejectedAt": null,
+    "reviewComment": null,
+    "generator": {
+      "generatorType": "deeptutor",
+      "deepTutorVersion": "1.5.6",
+      "modelProfile": "default-low-cost",
+      "promptVersion": "family-tutor-v1",
+      "outputSchemaVersion": "explanation-v1",
+      "generatedAt": "2026-08-25T09:30:00.000Z"
+    },
+    "curriculumSources": [
+      {
+        "schemaVersion": "curriculum-ref-snapshot-v1",
+        "source": "k12-kgraph",
+        "datasetVersion": "dataset-v1",
+        "nodeId": "concept-pythagorean",
+        "nodeType": "Concept",
+        "displayName": "勾股定理",
+        "textbookScope": {
+          "publisher": "人教版",
+          "subject": "数学",
+          "stage": "初中",
+          "grade": "八年级",
+          "volume": "下册",
+          "bookId": "book-8b",
+          "chapterId": "chapter-17",
+          "sectionId": "section-17-1"
+        },
+        "evidenceSnapshot": {
+          "evidenceHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capturedAt": "2026-08-25T09:00:00.000Z",
+          "sourceUri": null
+        }
+      }
+    ],
+    "createdAt": "2026-08-25T09:30:00.000Z"
+  },
+  "valid": [
+    { "name": "candidate-with-canonical-content-hash", "set": {} },
+    {
+      "name": "same-content-different-object-key-order",
+      "set": {
+        "content": {
+          "citations": [
+            {
+              "datasetVersion": "dataset-v1",
+              "curriculumNodeId": "concept-pythagorean"
+            }
+          ],
+          "parentRubric": ["能识别斜边", "能说明适用条件"],
+          "correctionPrompt": "请先标出直角边和斜边。",
+          "explanation": {
+            "commonPitfalls": ["没有先确认直角条件"],
+            "workedExampleMarkdown": "设两条直角边为 3 和 4，则斜边为 5。",
+            "summaryMarkdown": "先确认题目是直角三角形。"
+          },
+          "prerequisites": [],
+          "targetCurriculumNodeIds": ["concept-pythagorean"],
+          "learningObjective": "理解勾股定理的适用条件",
+          "schemaVersion": "explanation-v1"
+        }
+      }
+    },
+    {
+      "name": "practice-candidate",
+      "set": {
+        "kind": "practice",
+        "content": {
+          "schemaVersion": "practice-v1",
+          "targetCurriculumNodeIds": ["concept-pythagorean"],
+          "instructions": "独立完成，不使用计算器。",
+          "exercises": [
+            {
+              "exerciseId": "exercise-1",
+              "difficulty": "easy",
+              "questionMarkdown": "直角边为 6 和 8，求斜边。",
+              "targetNodeIds": ["concept-pythagorean"],
+              "answerForParent": "10",
+              "rubric": ["识别斜边", "公式正确", "计算正确"]
+            }
+          ],
+          "generationPolicy": {
+            "exerciseCount": 1,
+            "difficultySequence": ["easy"]
+          }
+        },
+        "contentHash": "sha256:1f4d6155da210dc38c14e4fda493578f17f28421d7200d1e31796a47b40ae5e7",
+        "generator.outputSchemaVersion": "practice-v1"
+      }
+    },
+    {
+      "name": "explanation-with-snapshotted-prerequisite",
+      "set": {
+        "content.prerequisites": [
+          {
+            "curriculumNodeId": "concept-square-root",
+            "name": "平方与平方根",
+            "whyNeeded": "需要完成平方运算并理解开方"
+          }
+        ],
+        "contentHash": "sha256:9e778a60ae2d0c873ab74d0ed9841680778f3ff35810e692e49f182dac39ad1d",
+        "curriculumSources.1": {
+          "schemaVersion": "curriculum-ref-snapshot-v1",
+          "source": "k12-kgraph",
+          "datasetVersion": "dataset-v1",
+          "nodeId": "concept-square-root",
+          "nodeType": "Concept",
+          "displayName": "平方与平方根",
+          "textbookScope": {
+            "publisher": "人教版",
+            "subject": "数学",
+            "stage": "初中",
+            "grade": "八年级",
+            "volume": "下册",
+            "bookId": "book-8b",
+            "chapterId": "chapter-16",
+            "sectionId": "section-16-1"
+          },
+          "evidenceSnapshot": {
+            "evidenceHash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "capturedAt": "2026-08-25T09:00:00.000Z",
+            "sourceUri": null
+          }
+        }
+      }
+    },
+    {
+      "name": "parent-approved",
+      "set": {
+        "status": "parent_approved",
+        "reviewVersion": 1,
+        "approvedByParentId": "parent-1",
+        "approvedAt": "2026-08-25T10:00:00.000Z"
+      }
+    },
+    {
+      "name": "rejected",
+      "set": {
+        "status": "rejected",
+        "reviewVersion": 1,
+        "rejectedByParentId": "parent-1",
+        "rejectedAt": "2026-08-25T10:00:00.000Z",
+        "reviewComment": "例题答案不完整"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "approved-and-rejected",
+      "set": {
+        "status": "parent_approved",
+        "reviewVersion": 1,
+        "approvedByParentId": "parent-1",
+        "approvedAt": "2026-08-25T10:00:00.000Z",
+        "rejectedByParentId": "parent-2",
+        "rejectedAt": "2026-08-25T10:05:00.000Z"
+      }
+    },
+    { "name": "empty-content", "set": { "content": {} } },
+    { "name": "missing-generator-fields", "set": { "generator": {} } },
+    { "name": "missing-curriculum-sources", "set": { "curriculumSources": [] } },
+    { "name": "target-node-without-snapshot", "set": { "content.targetCurriculumNodeIds.0": "concept-missing" } },
+    { "name": "citation-node-without-snapshot", "set": { "content.citations.0.curriculumNodeId": "concept-missing" } },
+    { "name": "citation-dataset-version-mismatch", "set": { "content.citations.0.datasetVersion": "unauthorized-version" } },
+    {
+      "name": "prerequisite-without-snapshot",
+      "set": {
+        "content.prerequisites": [
+          {
+            "curriculumNodeId": "concept-missing",
+            "name": "不存在的前置知识",
+            "whyNeeded": "反例"
+          }
+        ]
+      }
+    },
+    {
+      "name": "practice-target-outside-top-level-targets",
+      "set": {
+        "kind": "practice",
+        "content": {
+          "schemaVersion": "practice-v1",
+          "targetCurriculumNodeIds": ["concept-pythagorean"],
+          "instructions": "独立完成，不使用计算器。",
+          "exercises": [
+            {
+              "exerciseId": "exercise-1",
+              "difficulty": "easy",
+              "questionMarkdown": "计算平方根。",
+              "targetNodeIds": ["concept-square-root"],
+              "answerForParent": "2",
+              "rubric": ["计算正确"]
+            }
+          ],
+          "generationPolicy": {
+            "exerciseCount": 1,
+            "difficultySequence": ["easy"]
+          }
+        },
+        "generator.outputSchemaVersion": "practice-v1",
+        "curriculumSources.1": {
+          "schemaVersion": "curriculum-ref-snapshot-v1",
+          "source": "k12-kgraph",
+          "datasetVersion": "dataset-v1",
+          "nodeId": "concept-square-root",
+          "nodeType": "Concept",
+          "displayName": "平方与平方根",
+          "textbookScope": {
+            "publisher": "人教版",
+            "subject": "数学",
+            "stage": "初中",
+            "grade": "八年级",
+            "volume": "下册",
+            "bookId": "book-8b",
+            "chapterId": "chapter-16",
+            "sectionId": "section-16-1"
+          },
+          "evidenceSnapshot": {
+            "evidenceHash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "capturedAt": "2026-08-25T09:00:00.000Z",
+            "sourceUri": null
+          }
+        }
+      }
+    },
+    {
+      "name": "same-node-with-conflicting-dataset-version",
+      "set": {
+        "curriculumSources.1": {
+          "schemaVersion": "curriculum-ref-snapshot-v1",
+          "source": "k12-kgraph",
+          "datasetVersion": "dataset-v2",
+          "nodeId": "concept-pythagorean",
+          "nodeType": "Concept",
+          "displayName": "勾股定理",
+          "textbookScope": {
+            "publisher": "人教版",
+            "subject": "数学",
+            "stage": "初中",
+            "grade": "八年级",
+            "volume": "下册",
+            "bookId": "book-8b",
+            "chapterId": "chapter-17",
+            "sectionId": "section-17-1"
+          },
+          "evidenceSnapshot": {
+            "evidenceHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "capturedAt": "2026-08-26T09:00:00.000Z",
+            "sourceUri": null
+          }
+        }
+      }
+    },
+    { "name": "candidate-with-approval", "set": { "approvedByParentId": "parent-1", "approvedAt": "2026-08-25T10:00:00.000Z" } },
+    { "name": "explanation-text-changed-with-stale-hash", "set": { "content.explanation.summaryMarkdown": "正文已改变，但保留旧 hash" } },
+    { "name": "target-node-changed-with-stale-hash", "set": { "content.targetCurriculumNodeIds.0": "concept-other" } },
+    { "name": "arbitrary-format-valid-content-hash", "set": { "contentHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } },
+    {
+      "name": "practice-question-changed-with-stale-hash",
+      "set": {
+        "kind": "practice",
+        "content": {
+          "schemaVersion": "practice-v1",
+          "targetCurriculumNodeIds": ["concept-pythagorean"],
+          "instructions": "独立完成，不使用计算器。",
+          "exercises": [
+            {
+              "exerciseId": "exercise-1",
+              "difficulty": "easy",
+              "questionMarkdown": "直角边为 9 和 12，求斜边。",
+              "targetNodeIds": ["concept-pythagorean"],
+              "answerForParent": "15",
+              "rubric": ["识别斜边", "公式正确", "计算正确"]
+            }
+          ],
+          "generationPolicy": {
+            "exerciseCount": 1,
+            "difficultySequence": ["easy"]
+          }
+        },
+        "generator.outputSchemaVersion": "practice-v1"
+      }
+    },
+    {
+      "name": "practice-answer-and-rubric-changed-with-stale-hash",
+      "set": {
+        "kind": "practice",
+        "content": {
+          "schemaVersion": "practice-v1",
+          "targetCurriculumNodeIds": ["concept-pythagorean"],
+          "instructions": "独立完成，不使用计算器。",
+          "exercises": [
+            {
+              "exerciseId": "exercise-1",
+              "difficulty": "easy",
+              "questionMarkdown": "直角边为 6 和 8，求斜边。",
+              "targetNodeIds": ["concept-pythagorean"],
+              "answerForParent": "错误答案",
+              "rubric": ["只检查最终数字"]
+            }
+          ],
+          "generationPolicy": {
+            "exerciseCount": 1,
+            "difficultySequence": ["easy"]
+          }
+        },
+        "generator.outputSchemaVersion": "practice-v1"
+      }
+    }
+  ]
+}

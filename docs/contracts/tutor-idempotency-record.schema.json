@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-idempotency-record-v1.json",
+  "title": "TutorIdempotencyRecord v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "outcome",
+    "familyId",
+    "childId",
+    "endpointOperation",
+    "operationId",
+    "resource",
+    "requestPayloadHash",
+    "responseReference",
+    "createdBy",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-idempotency-record-v1" },
+    "outcome": { "const": "succeeded" },
+    "familyId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "childId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "endpointOperation": {
+      "type": "string",
+      "enum": [
+        "cycle-create",
+        "explanation-job",
+        "explanation-artifact-review",
+        "correction-start",
+        "correction-submit",
+        "correction-review",
+        "practice-job",
+        "practice-artifact-review",
+        "practice-start",
+        "practice-submit",
+        "final-review",
+        "cycle-cancel"
+      ]
+    },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cycleId"],
+      "properties": {
+        "cycleId": { "type": ["string", "null"], "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "requestPayloadHash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "responseReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["httpStatus", "resourceType", "resourceId", "responseId"],
+      "properties": {
+        "httpStatus": { "type": "integer", "minimum": 200, "maximum": 299 },
+        "resourceType": {
+          "type": "string",
+          "enum": [
+            "TutorLearningCycle",
+            "TutorGenerationJob",
+            "TutorArtifact",
+            "TutorCycleAttempt",
+            "TutorFinalReview"
+          ]
+        },
+        "resourceId": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "responseId": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "createdBy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "role"],
+      "properties": {
+        "userId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "role": { "type": "string", "enum": ["parent", "child"] }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}

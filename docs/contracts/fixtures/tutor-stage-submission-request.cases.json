@@ -1,0 +1,30 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-stage-submission-request-v1.json",
+  "base": {
+    "schemaVersion": "tutor-stage-submission-request-v1",
+    "stage": "correction",
+    "mediaIds": ["media-correction-1", "media-correction-2"],
+    "attemptVersion": 1,
+    "operationId": "submit-correction-operation-1",
+    "expectedStateVersion": 5
+  },
+  "presets": {
+    "practice": {
+      "stage": "practice",
+      "mediaIds": ["media-practice-1"],
+      "operationId": "submit-practice-operation-1",
+      "expectedStateVersion": 12
+    }
+  },
+  "valid": [
+    { "name": "ordered-correction-media", "set": {} },
+    { "name": "ordered-practice-media", "preset": "practice", "set": {} }
+  ],
+  "invalid": [
+    { "name": "media-list-cannot-be-empty", "set": { "mediaIds": [] } },
+    { "name": "media-list-cannot-repeat-id", "set": { "mediaIds": ["media-1", "media-1"] } },
+    { "name": "attempt-version-starts-at-one", "set": { "attemptVersion": 0 } },
+    { "name": "client-cannot-submit-child-id", "set": { "childId": "child-1" } },
+    { "name": "expected-state-version-required", "set": { "expectedStateVersion": { "$delete": true } } }
+  ]
+}

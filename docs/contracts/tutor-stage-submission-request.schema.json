@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-stage-submission-request-v1.json",
+  "title": "TutorStageSubmissionRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "stage",
+    "mediaIds",
+    "attemptVersion",
+    "operationId",
+    "expectedStateVersion"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-stage-submission-request-v1" },
+    "stage": { "type": "string", "enum": ["correction", "practice"] },
+    "mediaIds": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 240 }
+    },
+    "attemptVersion": { "type": "integer", "minimum": 1 },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "expectedStateVersion": { "type": "integer", "minimum": 0 }
+  }
+}

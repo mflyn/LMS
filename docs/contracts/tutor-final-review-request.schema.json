@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-final-review-request-v1.json",
+  "title": "TutorFinalReviewRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "decision",
+    "evidenceSummary",
+    "comment",
+    "operationId",
+    "expectedStateVersion"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-final-review-request-v1" },
+    "decision": { "type": "string", "enum": ["mastered", "revise"] },
+    "evidenceSummary": { "type": ["string", "null"], "maxLength": 2000 },
+    "comment": { "type": ["string", "null"], "maxLength": 2000 },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "expectedStateVersion": { "type": "integer", "minimum": 0 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "decision": { "const": "mastered" } },
+        "required": ["decision"]
+      },
+      "then": {
+        "properties": {
+          "evidenceSummary": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "decision": { "const": "revise" } },
+        "required": ["decision"]
+      },
+      "then": {
+        "properties": {
+          "evidenceSummary": { "const": null },
+          "comment": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        }
+      }
+    }
+  ]
+}

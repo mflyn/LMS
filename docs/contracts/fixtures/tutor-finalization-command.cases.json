@@ -1,0 +1,128 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-finalization-command-v1.json",
+  "base": {
+    "schemaVersion": "tutor-finalization-command-v1",
+    "commandId": "command-1",
+    "cycleId": "cycle-1",
+    "familyId": "family-1",
+    "childId": "child-1",
+    "finalReviewId": "cycle-1:final-review:1",
+    "finalReviewVersion": 1,
+    "finalReviewHash": "sha256:8b54714633fcdf42c3cfe9d69c9439bc148e622a577cb29e9bf7ef9a65d1be4c",
+    "target": "progress-service",
+    "operationId": "cycle-1:final-review:1:progress",
+    "payloadHash": "sha256:b8837f925445bf700320429bddd8a93f5ba4d7f6ef31ea7a603260f389a75ea4",
+    "payload": {
+      "schemaVersion": "mastery-evidence-command-payload-v1",
+      "finalReview": {
+        "schemaVersion": "tutor-final-review-snapshot-v1",
+        "finalReviewId": "cycle-1:final-review:1",
+        "finalReviewVersion": 1,
+        "finalReviewHash": "sha256:8b54714633fcdf42c3cfe9d69c9439bc148e622a577cb29e9bf7ef9a65d1be4c",
+        "cycleId": "cycle-1",
+        "familyId": "family-1",
+        "childId": "child-1",
+        "sourceMistakeId": "mistake-1",
+        "knowledgePointId": "knowledge-1",
+        "practiceAttemptId": "cycle-1:practice:1",
+        "practiceAttemptVersion": 1,
+        "practiceReviewOperationId": "final-review-operation-1",
+        "decision": "mastered",
+        "evidenceSummary": "家长确认两道同类题均独立完成",
+        "reviewedByParentId": "parent-1",
+        "reviewedAt": "2026-08-26T10:00:00.000Z"
+      }
+    },
+    "status": "pending",
+    "attemptCount": 0,
+    "nextAttemptAt": null,
+    "leaseOwner": null,
+    "leaseExpiresAt": null,
+    "responseId": null,
+    "lastErrorCode": null,
+    "lastErrorMessage": null,
+    "createdAt": "2026-08-25T10:00:00.000Z",
+    "updatedAt": "2026-08-25T10:00:00.000Z"
+  },
+  "valid": [
+    { "name": "pending", "set": {} },
+    {
+      "name": "leased",
+      "set": {
+        "status": "leased",
+        "leaseOwner": "worker-1",
+        "leaseExpiresAt": "2026-08-25T10:05:00.000Z"
+      }
+    },
+    {
+      "name": "retry-wait",
+      "set": {
+        "status": "retry_wait",
+        "attemptCount": 1,
+        "nextAttemptAt": "2026-08-25T10:10:00.000Z",
+        "lastErrorCode": "TARGET_TIMEOUT",
+        "lastErrorMessage": "progress-service timed out"
+      }
+    },
+    {
+      "name": "acknowledged",
+      "set": {
+        "status": "acknowledged",
+        "attemptCount": 1,
+        "responseId": "mastery-event-1"
+      }
+    },
+    {
+      "name": "dead-letter",
+      "set": {
+        "status": "dead_letter",
+        "attemptCount": 5,
+        "lastErrorCode": "TARGET_REJECTED",
+        "lastErrorMessage": "payload permanently rejected"
+      }
+    },
+    {
+      "name": "analytics-pending",
+      "set": {
+        "target": "analytics-service",
+        "operationId": "cycle-1:final-review:1:analytics",
+        "payloadHash": "sha256:678841716e67754d03d618ff4cebdd79e178bfcafeb582e92d308066a9133f7d",
+        "payload": {
+          "schemaVersion": "mistake-review-command-payload-v1",
+          "finalReview": {
+            "schemaVersion": "tutor-final-review-snapshot-v1",
+            "finalReviewId": "cycle-1:final-review:1",
+            "finalReviewVersion": 1,
+            "finalReviewHash": "sha256:8b54714633fcdf42c3cfe9d69c9439bc148e622a577cb29e9bf7ef9a65d1be4c",
+            "cycleId": "cycle-1",
+            "familyId": "family-1",
+            "childId": "child-1",
+            "sourceMistakeId": "mistake-1",
+            "knowledgePointId": "knowledge-1",
+            "practiceAttemptId": "cycle-1:practice:1",
+            "practiceAttemptVersion": 1,
+            "practiceReviewOperationId": "final-review-operation-1",
+            "decision": "mastered",
+            "evidenceSummary": "家长确认两道同类题均独立完成",
+            "reviewedByParentId": "parent-1",
+            "reviewedAt": "2026-08-26T10:00:00.000Z"
+          }
+        }
+      }
+    }
+  ],
+  "invalid": [
+    { "name": "acknowledged-without-response", "set": { "status": "acknowledged", "attemptCount": 1 } },
+    { "name": "leased-without-lease", "set": { "status": "leased" } },
+    { "name": "retry-without-schedule", "set": { "status": "retry_wait", "attemptCount": 1, "lastErrorCode": "TARGET_TIMEOUT", "lastErrorMessage": "timeout" } },
+    { "name": "dead-letter-without-error", "set": { "status": "dead_letter", "attemptCount": 5 } },
+    { "name": "pending-with-stale-lease", "set": { "leaseOwner": "worker-old", "leaseExpiresAt": "2026-08-25T10:05:00.000Z" } },
+    { "name": "pending-with-stale-response", "set": { "responseId": "response-old" } },
+    { "name": "empty-target-payload", "set": { "payload": {} } },
+    { "name": "target-payload-mismatch", "set": { "target": "analytics-service" } },
+    { "name": "payload-envelope-mismatch", "set": { "payload.finalReview.cycleId": "cycle-other" } },
+    { "name": "final-review-hash-mismatch", "set": { "payload.finalReview.finalReviewHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } },
+    { "name": "payload-hash-mismatch", "set": { "payloadHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } },
+    { "name": "content-changed-with-stale-hashes", "set": { "payload.finalReview.evidenceSummary": "审核证据被修改" } }
+  ]
+}

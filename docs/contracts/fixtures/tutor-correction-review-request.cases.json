@@ -1,0 +1,20 @@
+{
+  "schemaId": "https://lms.family.local/schemas/tutor-correction-review-request-v1.json",
+  "base": {
+    "schemaVersion": "tutor-correction-review-request-v1",
+    "decision": "approve",
+    "comment": null,
+    "operationId": "correction-review-operation-1",
+    "expectedStateVersion": 8
+  },
+  "valid": [
+    { "name": "approve", "set": {} },
+    { "name": "revise-with-comment", "set": { "decision": "revise", "comment": "请重新写出判断斜边的步骤" } }
+  ],
+  "invalid": [
+    { "name": "revise-without-comment", "set": { "decision": "revise", "comment": null } },
+    { "name": "unknown-decision", "set": { "decision": "reject" } },
+    { "name": "negative-state-version", "set": { "expectedStateVersion": -1 } },
+    { "name": "client-supplies-reviewer", "set": { "reviewedByParentId": "parent-1" } }
+  ]
+}

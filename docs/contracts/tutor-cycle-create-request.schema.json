@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-cycle-create-request-v1.json",
+  "title": "TutorCycleCreateRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "childId",
+    "sourceMistakeId",
+    "knowledgePointId",
+    "presentedByGrowthTaskId",
+    "operationId"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-cycle-create-request-v1" },
+    "childId": { "type": "string", "minLength": 1 },
+    "sourceMistakeId": { "type": "string", "minLength": 1 },
+    "knowledgePointId": { "type": "string", "minLength": 1 },
+    "presentedByGrowthTaskId": { "type": ["string", "null"], "minLength": 1 },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 240 }
+  }
+}

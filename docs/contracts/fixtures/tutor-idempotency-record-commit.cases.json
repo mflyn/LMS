@@ -1,0 +1,315 @@
+{
+  "validator": "tutor-idempotency-record-commit-v1",
+  "base": {
+    "actor": {
+      "userId": "child-user-1",
+      "role": "child",
+      "accountStatus": "active",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "activeParentMembership": false
+    },
+    "authorizedResource": {
+      "exists": true,
+      "cycleId": "cycle-1",
+      "familyId": "family-1",
+      "childId": "child-1"
+    },
+    "incoming": {
+      "actorFamilyId": "family-1",
+      "endpointOperation": "practice-submit",
+      "route": "POST /api/tutor-cycles/:cycleId/practice-submissions",
+      "matchedPathParams": { "cycleId": "cycle-1" },
+      "resource": { "cycleId": "cycle-1" },
+      "request": {
+        "schemaVersion": "tutor-stage-submission-request-v1",
+        "stage": "practice",
+        "mediaIds": ["media-practice-1"],
+        "attemptVersion": 1,
+        "operationId": "practice-submit-operation-1",
+        "expectedStateVersion": 12
+      },
+      "requestPayloadHash": "sha256:9e9d7090688817253e408d174f11c1ae64a41ddc20d2f5abcdcf563f43f11618"
+    },
+    "committedEntity": {
+      "transactionId": "homework-txn-1",
+      "resourceType": "TutorCycleAttempt",
+      "resourceId": "cycle-1:practice:1",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "cycleId": "cycle-1",
+      "facts": {
+        "stage": "practice",
+        "attemptVersion": 1,
+        "finalizationOutboxCount": 0
+      }
+    },
+    "actualResult": {
+      "httpStatus": 200,
+      "resourceType": "TutorCycleAttempt",
+      "resourceId": "cycle-1:practice:1",
+      "responseId": "sha256:793b4d71b6cac173e141b7d91b1a822e05782c265329d84e838c7fa5eb9a6971",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "cycleId": "cycle-1"
+    },
+    "persistedRecord": {
+      "schemaVersion": "tutor-idempotency-record-v1",
+      "outcome": "succeeded",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "endpointOperation": "practice-submit",
+      "operationId": "practice-submit-operation-1",
+      "resource": { "cycleId": "cycle-1" },
+      "requestPayloadHash": "sha256:9e9d7090688817253e408d174f11c1ae64a41ddc20d2f5abcdcf563f43f11618",
+      "responseReference": {
+        "httpStatus": 200,
+        "resourceType": "TutorCycleAttempt",
+        "resourceId": "cycle-1:practice:1",
+        "responseId": "sha256:793b4d71b6cac173e141b7d91b1a822e05782c265329d84e838c7fa5eb9a6971"
+      },
+      "createdBy": { "userId": "child-user-1", "role": "child" },
+      "createdAt": "2026-08-26T11:00:00.000Z",
+      "updatedAt": "2026-08-26T11:00:00.000Z"
+    },
+    "commitContext": {
+      "transactionId": "homework-txn-1",
+      "businessMutationCommitId": "homework-txn-1",
+      "idempotencyRecordCommitId": "homework-txn-1",
+      "irreversibleExternalSideEffectsBeforeCommit": false
+    }
+  },
+  "presets": {
+    "parent-submission": {
+      "actor": {
+        "userId": "parent-1",
+        "role": "parent",
+        "accountStatus": "active",
+        "familyId": "family-1",
+        "childId": null,
+        "activeParentMembership": true
+      },
+      "persistedRecord.createdBy": { "userId": "parent-1", "role": "parent" }
+    },
+    "cycle-create": {
+      "actor": {
+        "userId": "parent-1",
+        "role": "parent",
+        "accountStatus": "active",
+        "familyId": "family-1",
+        "childId": null,
+        "activeParentMembership": true
+      },
+      "authorizedResource.cycleId": null,
+      "incoming.endpointOperation": "cycle-create",
+      "incoming.route": "POST /api/tutor-cycles",
+      "incoming.matchedPathParams.cycleId": null,
+      "incoming.resource.cycleId": null,
+      "incoming.request": {
+        "schemaVersion": "tutor-cycle-create-request-v1",
+        "childId": "child-1",
+        "sourceMistakeId": "mistake-1",
+        "knowledgePointId": "knowledge-1",
+        "presentedByGrowthTaskId": null,
+        "operationId": "cycle-create-operation-1"
+      },
+      "incoming.requestPayloadHash": "sha256:e7515fdafe8a3755a000f1a2ad2642666b2c915d7b854433039676c362098bf7",
+      "committedEntity": {
+        "transactionId": "homework-txn-1",
+        "resourceType": "TutorLearningCycle",
+        "resourceId": "cycle-1",
+        "familyId": "family-1",
+        "childId": "child-1",
+        "cycleId": "cycle-1",
+        "facts": { "finalizationOutboxCount": 0 }
+      },
+      "actualResult": {
+        "httpStatus": 200,
+        "resourceType": "TutorLearningCycle",
+        "resourceId": "cycle-1",
+        "responseId": "sha256:dffc3275147566ab4e4b828df27a1737c7955eab93da9457eee649f2040b13fe",
+        "familyId": "family-1",
+        "childId": "child-1",
+        "cycleId": "cycle-1"
+      },
+      "persistedRecord.endpointOperation": "cycle-create",
+      "persistedRecord.operationId": "cycle-create-operation-1",
+      "persistedRecord.resource.cycleId": null,
+      "persistedRecord.requestPayloadHash": "sha256:e7515fdafe8a3755a000f1a2ad2642666b2c915d7b854433039676c362098bf7",
+      "persistedRecord.responseReference": {
+        "httpStatus": 200,
+        "resourceType": "TutorLearningCycle",
+        "resourceId": "cycle-1",
+        "responseId": "sha256:dffc3275147566ab4e4b828df27a1737c7955eab93da9457eee649f2040b13fe"
+      },
+      "persistedRecord.createdBy": { "userId": "parent-1", "role": "parent" }
+    },
+    "final-review-revise": {
+      "actor": {
+        "userId": "parent-1",
+        "role": "parent",
+        "accountStatus": "active",
+        "familyId": "family-1",
+        "childId": null,
+        "activeParentMembership": true
+      },
+      "incoming.endpointOperation": "final-review",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/final-review",
+      "incoming.request": {
+        "schemaVersion": "tutor-final-review-request-v1",
+        "decision": "revise",
+        "evidenceSummary": null,
+        "comment": "需要继续练习",
+        "operationId": "final-review-revise-operation-1",
+        "expectedStateVersion": 12
+      },
+      "incoming.requestPayloadHash": "sha256:0a62c11ad9b062993589473b84f89113f3828084d9cdf46a162e8c6ec654b492",
+      "committedEntity.resourceType": "TutorCycleAttempt",
+      "committedEntity.resourceId": "cycle-1:practice:1",
+      "committedEntity.facts": {
+        "stage": "practice",
+        "attemptVersion": 1,
+        "reviewOperationId": "final-review-revise-operation-1",
+        "cycleCurrentAttemptId": "cycle-1:practice:1",
+        "cycleCurrentAttemptVersion": 1,
+        "decision": "revise",
+        "finalizationOutboxCount": 0
+      },
+      "actualResult.httpStatus": 200,
+      "actualResult.resourceType": "TutorCycleAttempt",
+      "actualResult.resourceId": "cycle-1:practice:1",
+      "actualResult.responseId": "sha256:93725464985a4587bc54ddb113a86e6e12a20bb47c0225c7f4f8603e123af9cc",
+      "persistedRecord.endpointOperation": "final-review",
+      "persistedRecord.operationId": "final-review-revise-operation-1",
+      "persistedRecord.requestPayloadHash": "sha256:0a62c11ad9b062993589473b84f89113f3828084d9cdf46a162e8c6ec654b492",
+      "persistedRecord.responseReference": {
+        "httpStatus": 200,
+        "resourceType": "TutorCycleAttempt",
+        "resourceId": "cycle-1:practice:1",
+        "responseId": "sha256:93725464985a4587bc54ddb113a86e6e12a20bb47c0225c7f4f8603e123af9cc"
+      },
+      "persistedRecord.createdBy": { "userId": "parent-1", "role": "parent" }
+    },
+    "correction-review": {
+      "actor": {
+        "userId": "parent-1",
+        "role": "parent",
+        "accountStatus": "active",
+        "familyId": "family-1",
+        "childId": null,
+        "activeParentMembership": true
+      },
+      "incoming.endpointOperation": "correction-review",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/correction-review",
+      "incoming.request": {
+        "schemaVersion": "tutor-correction-review-request-v1",
+        "decision": "approve",
+        "comment": null,
+        "operationId": "correction-review-operation-1",
+        "expectedStateVersion": 8
+      },
+      "incoming.requestPayloadHash": "sha256:55a5c707a84995fb5f30d53d36ffe53cdc5793e7e9d846855d66e046b28d0427",
+      "committedEntity.resourceType": "TutorCycleAttempt",
+      "committedEntity.resourceId": "cycle-1:correction:1",
+      "committedEntity.facts": {
+        "stage": "correction",
+        "attemptVersion": 1,
+        "reviewOperationId": "correction-review-operation-1",
+        "cycleCurrentAttemptId": "cycle-1:correction:1",
+        "cycleCurrentAttemptVersion": 1,
+        "decision": "approve",
+        "finalizationOutboxCount": 0
+      },
+      "actualResult.httpStatus": 200,
+      "actualResult.resourceType": "TutorCycleAttempt",
+      "actualResult.resourceId": "cycle-1:correction:1",
+      "actualResult.responseId": "sha256:2df2fd1d029596688adc0b51d55297120d878f604870ac167afdc65e9a6689a3",
+      "persistedRecord.endpointOperation": "correction-review",
+      "persistedRecord.operationId": "correction-review-operation-1",
+      "persistedRecord.requestPayloadHash": "sha256:55a5c707a84995fb5f30d53d36ffe53cdc5793e7e9d846855d66e046b28d0427",
+      "persistedRecord.responseReference": {
+        "httpStatus": 200,
+        "resourceType": "TutorCycleAttempt",
+        "resourceId": "cycle-1:correction:1",
+        "responseId": "sha256:2df2fd1d029596688adc0b51d55297120d878f604870ac167afdc65e9a6689a3"
+      },
+      "persistedRecord.createdBy": { "userId": "parent-1", "role": "parent" }
+    },
+    "final-review-mastered": {
+      "actor": {
+        "userId": "parent-1",
+        "role": "parent",
+        "accountStatus": "active",
+        "familyId": "family-1",
+        "childId": null,
+        "activeParentMembership": true
+      },
+      "incoming.endpointOperation": "final-review",
+      "incoming.route": "POST /api/tutor-cycles/:cycleId/final-review",
+      "incoming.request": {
+        "schemaVersion": "tutor-final-review-request-v1",
+        "decision": "mastered",
+        "evidenceSummary": "家长确认两道同类题均由孩子独立完成",
+        "comment": null,
+        "operationId": "final-review-operation-1",
+        "expectedStateVersion": 12
+      },
+      "incoming.requestPayloadHash": "sha256:d98d93ab2b52deab458b84053aa1c8e74f3079af83015b7d8ccf10687f17533b",
+      "committedEntity.resourceType": "TutorFinalReview",
+      "committedEntity.resourceId": "cycle-1:final-review:1",
+      "committedEntity.facts": {
+        "decision": "mastered",
+        "finalizationOutboxCount": 2
+      },
+      "actualResult.httpStatus": 202,
+      "actualResult.resourceType": "TutorFinalReview",
+      "actualResult.resourceId": "cycle-1:final-review:1",
+      "actualResult.responseId": "sha256:41cb7ac8605d5a59d7fcf845af19d8a5a79ccac2c320f944c9818bbf91bd50ae",
+      "persistedRecord.endpointOperation": "final-review",
+      "persistedRecord.operationId": "final-review-operation-1",
+      "persistedRecord.requestPayloadHash": "sha256:d98d93ab2b52deab458b84053aa1c8e74f3079af83015b7d8ccf10687f17533b",
+      "persistedRecord.responseReference": {
+        "httpStatus": 202,
+        "resourceType": "TutorFinalReview",
+        "resourceId": "cycle-1:final-review:1",
+        "responseId": "sha256:41cb7ac8605d5a59d7fcf845af19d8a5a79ccac2c320f944c9818bbf91bd50ae"
+      },
+      "persistedRecord.createdBy": { "userId": "parent-1", "role": "parent" }
+    }
+  },
+  "valid": [
+    { "name": "child-submission-record-binds-exact-actual-result", "set": {} },
+    { "name": "parent-submission-record-binds-actual-parent", "preset": "parent-submission", "set": {} },
+    { "name": "cycle-create-record-binds-new-cycle", "preset": "cycle-create", "set": {} },
+    { "name": "final-review-revise-binds-reviewed-attempt-and-returns-200", "preset": "final-review-revise", "set": {} },
+    { "name": "correction-review-binds-current-reviewed-attempt", "preset": "correction-review", "set": {} },
+    { "name": "final-review-mastered-binds-final-review-and-returns-202", "preset": "final-review-mastered", "set": {} }
+  ],
+  "invalid": [
+    { "name": "synchronized-wrong-attempt-cannot-bypass-transaction-binding", "set": { "committedEntity.resourceId": "cycle-1:practice:2", "actualResult.resourceId": "cycle-1:practice:2", "actualResult.responseId": "sha256:b1e19a5f6b7097550331b57cdd18d6adaca4d16bafcfa177e68092f95921bb48", "persistedRecord.responseReference.resourceId": "cycle-1:practice:2", "persistedRecord.responseReference.responseId": "sha256:b1e19a5f6b7097550331b57cdd18d6adaca4d16bafcfa177e68092f95921bb48" } },
+    { "name": "committed-entity-must-share-transaction", "set": { "committedEntity.transactionId": "homework-txn-2" } },
+    { "name": "final-review-revise-cannot-return-final-review", "preset": "final-review-revise", "set": { "committedEntity.resourceType": "TutorFinalReview", "committedEntity.resourceId": "cycle-1:final-review:1", "actualResult.httpStatus": 202, "actualResult.resourceType": "TutorFinalReview", "actualResult.resourceId": "cycle-1:final-review:1", "actualResult.responseId": "sha256:31899603634ee0944c97971a0b5962c934fefef940af0edf660d938aace1f0a8", "persistedRecord.responseReference.httpStatus": 202, "persistedRecord.responseReference.resourceType": "TutorFinalReview", "persistedRecord.responseReference.resourceId": "cycle-1:final-review:1", "persistedRecord.responseReference.responseId": "sha256:31899603634ee0944c97971a0b5962c934fefef940af0edf660d938aace1f0a8" } },
+    { "name": "final-review-mastered-cannot-return-practice-attempt", "preset": "final-review-mastered", "set": { "committedEntity.resourceType": "TutorCycleAttempt", "committedEntity.resourceId": "cycle-1:practice:1", "actualResult.httpStatus": 200, "actualResult.resourceType": "TutorCycleAttempt", "actualResult.resourceId": "cycle-1:practice:1", "actualResult.responseId": "sha256:f411ad9ef1fbd5fbf0dece4fc56fef00b944b9d8a9d25c41dd600966b1d6434c", "persistedRecord.responseReference.httpStatus": 200, "persistedRecord.responseReference.resourceType": "TutorCycleAttempt", "persistedRecord.responseReference.resourceId": "cycle-1:practice:1", "persistedRecord.responseReference.responseId": "sha256:f411ad9ef1fbd5fbf0dece4fc56fef00b944b9d8a9d25c41dd600966b1d6434c" } },
+    { "name": "final-review-revise-cannot-create-finalization-outbox", "preset": "final-review-revise", "set": { "committedEntity.facts.finalizationOutboxCount": 2 } },
+    { "name": "final-review-mastered-must-create-two-finalization-outbox-records", "preset": "final-review-mastered", "set": { "committedEntity.facts.finalizationOutboxCount": 0 } },
+    { "name": "final-review-revise-synchronized-other-attempt-is-rejected", "preset": "final-review-revise", "set": { "committedEntity.resourceId": "cycle-1:practice:2", "actualResult.resourceId": "cycle-1:practice:2", "actualResult.responseId": "sha256:fdea7ba4d3bcbd4b1e5249e75a3ac8873a1a4aa92cc15fb33ba7484b0a5f2406", "persistedRecord.responseReference.resourceId": "cycle-1:practice:2", "persistedRecord.responseReference.responseId": "sha256:fdea7ba4d3bcbd4b1e5249e75a3ac8873a1a4aa92cc15fb33ba7484b0a5f2406" } },
+    { "name": "correction-review-synchronized-other-attempt-is-rejected", "preset": "correction-review", "set": { "committedEntity.resourceId": "cycle-1:correction:2", "actualResult.resourceId": "cycle-1:correction:2", "actualResult.responseId": "sha256:0ab16a7f35fbac002bdb98aade5997db61e2595385f1671b8b0b5a786732a5c8", "persistedRecord.responseReference.resourceId": "cycle-1:correction:2", "persistedRecord.responseReference.responseId": "sha256:0ab16a7f35fbac002bdb98aade5997db61e2595385f1671b8b0b5a786732a5c8" } },
+    { "name": "committed-review-attempt-id-must-match-cycle-current-pointer", "preset": "final-review-revise", "set": { "committedEntity.facts.cycleCurrentAttemptId": "cycle-1:practice:2" } },
+    { "name": "committed-review-attempt-version-must-match-cycle-current-version", "preset": "final-review-revise", "set": { "committedEntity.facts.attemptVersion": 2 } },
+    { "name": "committed-review-operation-must-match-request", "preset": "final-review-revise", "set": { "committedEntity.facts.reviewOperationId": "different-review-operation" } },
+    { "name": "current-attempt-without-this-review-cannot-be-committed", "preset": "final-review-revise", "set": { "committedEntity.facts.reviewOperationId": null } },
+    { "name": "created-by-user-must-be-first-actor", "set": { "persistedRecord.createdBy.userId": "child-user-2" } },
+    { "name": "created-by-role-must-be-actual-role-even-if-endpoint-allows-both", "set": { "persistedRecord.createdBy.role": "parent", "persistedRecord.createdBy.userId": "parent-1" } },
+    { "name": "record-family-must-match-actual-result", "set": { "actualResult.familyId": "family-2" } },
+    { "name": "record-child-must-match-actual-result", "set": { "actualResult.childId": "child-2" } },
+    { "name": "record-operation-must-come-from-request", "set": { "incoming.request.operationId": "practice-submit-operation-2" } },
+    { "name": "record-hash-must-come-from-request", "set": { "persistedRecord.requestPayloadHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } },
+    { "name": "record-http-status-must-match-actual-result", "set": { "actualResult.httpStatus": 201 } },
+    { "name": "record-resource-id-must-match-actual-result", "set": { "persistedRecord.responseReference.resourceId": "cycle-1:practice:2" } },
+    { "name": "response-id-cannot-be-arbitrary", "set": { "actualResult.responseId": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "persistedRecord.responseReference.responseId": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } },
+    { "name": "actual-result-cycle-must-match-authorized-cycle", "set": { "actualResult.cycleId": "cycle-2" } },
+    { "name": "business-and-record-must-share-transaction", "set": { "commitContext.idempotencyRecordCommitId": "homework-txn-2" } },
+    { "name": "irreversible-external-side-effect-cannot-precede-local-commit", "set": { "commitContext.irreversibleExternalSideEffectsBeforeCommit": true } },
+    { "name": "cycle-create-record-cannot-bind-different-created-cycle", "preset": "cycle-create", "set": { "actualResult.cycleId": "cycle-2" } }
+  ]
+}

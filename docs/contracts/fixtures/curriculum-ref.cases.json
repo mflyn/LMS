@@ -1,0 +1,39 @@
+{
+  "schemaId": "https://lms.family.local/schemas/curriculum-ref-v1.json",
+  "base": {
+    "schemaVersion": "curriculum-ref-v1",
+    "source": "k12-kgraph",
+    "datasetVersion": "git:8716b6a80850790f509c01286f43e5bfe6858f49+hf:d8522c2b336ee435aa51daa39ca0dd736f56fa53",
+    "nodeId": "concept-pythagorean",
+    "nodeType": "Concept",
+    "displayName": "勾股定理",
+    "mappingStatus": "confirmed",
+    "mappingSource": "k12_search",
+    "reviewedByParentId": "parent-1",
+    "reviewedAt": "2026-08-25T10:00:00.000Z",
+    "textbookScope": {
+      "publisher": "人教版",
+      "subject": "数学",
+      "stage": "初中",
+      "grade": "八年级",
+      "volume": "下册",
+      "bookId": "book-8b",
+      "chapterId": "chapter-17",
+      "sectionId": "section-17-1"
+    },
+    "evidenceSnapshot": {
+      "evidenceHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "capturedAt": "2026-08-25T09:00:00.000Z",
+      "sourceUri": null
+    }
+  },
+  "valid": [
+    { "name": "suggested-without-review", "set": { "mappingStatus": "suggested", "reviewedByParentId": null, "reviewedAt": null } },
+    { "name": "parent-confirmed", "set": {} },
+    { "name": "parent-rejected", "set": { "mappingStatus": "rejected" } }
+  ],
+  "invalid": [
+    { "name": "suggested-with-parent-audit", "set": { "mappingStatus": "suggested" } },
+    { "name": "rejected-without-parent-audit", "set": { "mappingStatus": "rejected", "reviewedByParentId": null, "reviewedAt": null } }
+  ]
+}

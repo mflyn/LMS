@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-artifact-review-request-v1.json",
+  "title": "TutorArtifactReviewRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactId",
+    "artifactVersion",
+    "contentHash",
+    "decision",
+    "comment",
+    "operationId",
+    "expectedArtifactReviewVersion",
+    "expectedStateVersion"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-artifact-review-request-v1" },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "artifactVersion": { "type": "integer", "minimum": 1 },
+    "contentHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "decision": { "type": "string", "enum": ["approve", "reject"] },
+    "comment": { "type": ["string", "null"], "maxLength": 2000 },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "expectedArtifactReviewVersion": { "type": "integer", "minimum": 0 },
+    "expectedStateVersion": { "type": "integer", "minimum": 0 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "decision": { "const": "reject" } },
+        "required": ["decision"]
+      },
+      "then": {
+        "properties": {
+          "comment": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        }
+      }
+    }
+  ]
+}

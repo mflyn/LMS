@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/error-classification-v1.json",
+  "title": "ErrorClassification v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "diagnosisStatus",
+    "primaryReasonCode",
+    "secondaryReasonCodes",
+    "source",
+    "confidence",
+    "parentNote",
+    "classifiedByParentId",
+    "classifiedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "error-classification-v1" },
+    "diagnosisStatus": {
+      "type": "string",
+      "enum": ["unreviewed", "ai_suggested", "parent_confirmed"]
+    },
+    "primaryReasonCode": {
+      "$ref": "#/$defs/reasonCodeOrNull"
+    },
+    "secondaryReasonCodes": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/reasonCode" }
+    },
+    "source": {
+      "type": "string",
+      "enum": ["parent_review", "ai_candidate", "not_classified"]
+    },
+    "confidence": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "parentNote": { "type": ["string", "null"], "maxLength": 1000 },
+    "classifiedByParentId": { "type": ["string", "null"], "minLength": 1 },
+    "classifiedAt": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "$defs": {
+    "reasonCode": {
+      "type": "string",
+      "enum": [
+        "concept_gap",
+        "formula_selection",
+        "condition_omitted",
+        "calculation",
+        "unit_conversion",
+        "method_or_process",
+        "application",
+        "reading_or_interpretation",
+        "careless",
+        "unknown"
+      ]
+    },
+    "reasonCodeOrNull": {
+      "oneOf": [
+        { "$ref": "#/$defs/reasonCode" },
+        { "type": "null" }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "diagnosisStatus": { "const": "unreviewed" },
+        "primaryReasonCode": { "const": null },
+        "secondaryReasonCodes": { "type": "array", "maxItems": 0 },
+        "source": { "const": "not_classified" },
+        "confidence": { "const": null },
+        "parentNote": { "const": null },
+        "classifiedByParentId": { "const": null },
+        "classifiedAt": { "const": null }
+      }
+    },
+    {
+      "properties": {
+        "diagnosisStatus": { "const": "ai_suggested" },
+        "primaryReasonCode": { "$ref": "#/$defs/reasonCode" },
+        "source": { "const": "ai_candidate" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "parentNote": { "const": null },
+        "classifiedByParentId": { "const": null },
+        "classifiedAt": { "const": null }
+      }
+    },
+    {
+      "properties": {
+        "diagnosisStatus": { "const": "parent_confirmed" },
+        "primaryReasonCode": { "$ref": "#/$defs/reasonCode" },
+        "source": { "const": "parent_review" },
+        "confidence": { "const": null },
+        "classifiedByParentId": { "type": "string", "minLength": 1 },
+        "classifiedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  ]
+}

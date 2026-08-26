@@ -991,3 +991,17 @@ MongoDB 必须以名为 `rs0` 的副本集运行。Compose 使用单节点副本
 - 专业体育测评、医疗健康判断和艺术等级评价。
 - 新增微服务或复杂事件编排。
 - 生产级定时任务系统。
+
+## 11. 拟议的家庭 AI 学习扩展
+
+DeepTutor、K12-KGraph 和家长人工审核手写订正的后续方案见
+[家庭 AI 学习管理平台完整设计](family-ai-learning-platform-design.md)。该方案遵守并保留
+本文的家庭隔离、Gateway 身份信封、私有媒体和服务数据所有权，不把 DeepTutor 或 K12
+变成新的业务权威方。
+
+该文档当前状态为 `DRAFT FOR REVIEW`。其中的 `CurriculumRef`、
+`TutorLearningCycle`、`TutorCycleAttempt`、`TutorGenerationInput`、`TutorGenerationJob`、
+`TutorArtifact`、API 路由和
+feature flag 尚未进入 FGT-MVP-1.7 实现。正式开发时必须先批准对应增量设计，并同步
+更新 PRD、API 契约、需求追踪、权限拒绝路径、迁移/回滚和发布 Gate；不能仅依据草案
+修改生产数据或对外开放服务。

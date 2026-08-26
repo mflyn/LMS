@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/mastery-evidence-command-payload-v1.json",
+  "title": "MasteryEvidenceCommandPayload v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "finalReview"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "mastery-evidence-command-payload-v1" },
+    "finalReview": { "$ref": "tutor-final-review-snapshot-v1.json" }
+  }
+}

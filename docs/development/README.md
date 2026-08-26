@@ -33,6 +33,13 @@
 旧 Task Gate 只证明对应历史范围。FGT-MVP-1.7 发布判定使用已纳入 Task 12 的统一
 发布 Gate；目标环境启用前还必须完成 Task 12 Gate 规定的数据修复检查。
 
+## 后续 AI 学习扩展边界
+
+[家庭 AI 学习平台设计](../architecture/family-ai-learning-platform-design.md)是后续
+DeepTutor、K12-KGraph 和家长人工审核教学闭环的设计草案。
+它不属于 Task 1～12 或当前 38 项需求；其中路由、模型和 feature flag 只有在新增
+Requirement、详细设计、测试用例、迁移/回滚和独立 Gate 后才能进入实现基线。
+
 ## 环境要求
 
 - Node.js 22，与 CI 和家庭服务生产镜像一致。

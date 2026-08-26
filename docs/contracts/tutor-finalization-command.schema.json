@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/tutor-finalization-command-v1.json",
+  "title": "TutorFinalizationCommand v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "commandId",
+    "cycleId",
+    "familyId",
+    "childId",
+    "finalReviewId",
+    "finalReviewVersion",
+    "finalReviewHash",
+    "target",
+    "operationId",
+    "payloadHash",
+    "payload",
+    "status",
+    "attemptCount",
+    "nextAttemptAt",
+    "leaseOwner",
+    "leaseExpiresAt",
+    "responseId",
+    "lastErrorCode",
+    "lastErrorMessage",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tutor-finalization-command-v1" },
+    "commandId": { "type": "string", "minLength": 1 },
+    "cycleId": { "type": "string", "minLength": 1 },
+    "familyId": { "type": "string", "minLength": 1 },
+    "childId": { "type": "string", "minLength": 1 },
+    "finalReviewId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "finalReviewVersion": { "const": 1 },
+    "finalReviewHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "target": {
+      "type": "string",
+      "enum": ["progress-service", "analytics-service"]
+    },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "payloadHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "payload": { "type": "object" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "leased", "retry_wait", "acknowledged", "dead_letter"]
+    },
+    "attemptCount": { "type": "integer", "minimum": 0 },
+    "nextAttemptAt": { "type": ["string", "null"], "format": "date-time" },
+    "leaseOwner": { "type": ["string", "null"], "maxLength": 200 },
+    "leaseExpiresAt": { "type": ["string", "null"], "format": "date-time" },
+    "responseId": { "type": ["string", "null"], "maxLength": 240 },
+    "lastErrorCode": { "type": ["string", "null"], "maxLength": 120 },
+    "lastErrorMessage": { "type": ["string", "null"], "maxLength": 2000 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "target": { "const": "progress-service" },
+            "payload": { "$ref": "mastery-evidence-command-payload-v1.json" }
+          }
+        },
+        {
+          "properties": {
+            "target": { "const": "analytics-service" },
+            "payload": { "$ref": "mistake-review-command-payload-v1.json" }
+          }
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "status": { "const": "pending" },
+            "attemptCount": { "const": 0 },
+            "nextAttemptAt": { "const": null },
+            "leaseOwner": { "const": null },
+            "leaseExpiresAt": { "const": null },
+            "responseId": { "const": null },
+            "lastErrorCode": { "const": null },
+            "lastErrorMessage": { "const": null }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "leased" },
+            "attemptCount": { "type": "integer", "minimum": 0 },
+            "nextAttemptAt": { "const": null },
+            "leaseOwner": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "leaseExpiresAt": { "type": "string", "format": "date-time" },
+            "responseId": { "const": null },
+            "lastErrorCode": { "const": null },
+            "lastErrorMessage": { "const": null }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "retry_wait" },
+            "attemptCount": { "type": "integer", "minimum": 1 },
+            "nextAttemptAt": { "type": "string", "format": "date-time" },
+            "leaseOwner": { "const": null },
+            "leaseExpiresAt": { "const": null },
+            "responseId": { "const": null },
+            "lastErrorCode": { "type": "string", "minLength": 1, "maxLength": 120 },
+            "lastErrorMessage": { "type": "string", "minLength": 1, "maxLength": 2000 }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "acknowledged" },
+            "attemptCount": { "type": "integer", "minimum": 1 },
+            "nextAttemptAt": { "const": null },
+            "leaseOwner": { "const": null },
+            "leaseExpiresAt": { "const": null },
+            "responseId": { "type": "string", "minLength": 1, "maxLength": 240 },
+            "lastErrorCode": { "const": null },
+            "lastErrorMessage": { "const": null }
+          }
+        },
+        {
+          "properties": {
+            "status": { "const": "dead_letter" },
+            "attemptCount": { "type": "integer", "minimum": 1 },
+            "nextAttemptAt": { "const": null },
+            "leaseOwner": { "const": null },
+            "leaseExpiresAt": { "const": null },
+            "responseId": { "const": null },
+            "lastErrorCode": { "type": "string", "minLength": 1, "maxLength": 120 },
+            "lastErrorMessage": { "type": "string", "minLength": 1, "maxLength": 2000 }
+          }
+        }
+      ]
+    }
+  ]
+}

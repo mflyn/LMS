@@ -8,7 +8,7 @@
 >
 > 媒体安全边界：8GB 机器使用 `trusted-local`，只允许可信家庭成员在私有局域网上传。该模式会严格检查并规范化图片/PDF，但不运行 ClamAV，不等于恶意软件已扫描。互联网暴露或不可信上传必须迁移到容量充足且通过独立扫描 Gate 的 `secure-production` 环境。
 >
-> 部署边界：本文只部署家庭成长 MVP（LMS）。DeepTutor、AutoClaw 和本地大模型不是首轮必需组件；DeepTutor 后续应先调用云端模型 API，不在这台旧电脑上部署 GPU 推理。
+> 部署边界：本文只部署家庭成长 MVP（LMS）。DeepTutor、K12-KGraph 和本地大模型不是首轮必需组件；DeepTutor 后续应先调用云端模型 API，不在这台旧电脑上部署 GPU 推理。
 
 ---
 
@@ -63,7 +63,7 @@ https://ubuntu.com/download/server
 | 检查项 | 备注 |
 |--------|------|
 | 硬盘类型 | 必须优先使用 SSD；120GB 是下限，240GB 更从容 |
-| 内存 | 8GB 只适合 LMS；要同时运行 DeepTutor 容器，建议升级到 16GB |
+| 内存 | 8GB 适合 LMS 常驻；DeepTutor 只能在受监控的生成窗口按需运行。若要求 LMS + DeepTutor 全天同时可用，建议升级到 16GB |
 | 散热 | 清灰、检查风扇；持续运行时观察温度和异常噪声 |
 | 电源 | 笔记本电池是否保留应以厂商说明为准；台式机建议配小型 UPS 防止突然断电 |
 | 网络 | 优先有线网络；在路由器中为服务器创建 DHCP 地址保留 |
@@ -860,6 +860,38 @@ sudo env \
 ```
 
 恢复目录中应有 `mongo.archive`、`media.tar.gz`、`environment.env`、Compose 文件和 Git 提交号。将 `mongo.archive` 恢复到空的测试 MongoDB 容器时，使用 `mongorestore --archive=... --oplogReplay`；验证数据和媒体均可读取后再删除测试目录。
+
+### 7.5 教育 AI 扩展运行档位（拟议，尚未实现）
+
+当前 `docker-compose.ubuntu.yml` 只负责已实现的家庭成长 LMS，不包含 DeepTutor
+或 K12-KGraph。相关业务和数据设计见
+[家庭 AI 学习管理平台完整设计](../architecture/family-ai-learning-platform-design.md)，
+X230i 安装验证见
+[ThinkPad 家庭 AI 学习平台部署手册](../ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md)。
+
+在适配代码、契约测试和 feature flag 尚未完成前，不要把 AI 容器手工并入当前生产
+Compose。推荐按以下档位运行：
+
+| 档位 | 常驻内容 | 使用方式 |
+| --- | --- | --- |
+| LMS 基线 | 当前 Ubuntu Compose | 家庭日常使用；优先保证账号、任务、错题和附件 |
+| AI 生成窗口 | LMS + 限制资源的 DeepTutor | 家长集中生成讲解/练习；停止 K12 抽取并观察 `docker stats` |
+| 课程维护窗口 | LMS 保持或进入维护状态，停止 DeepTutor | 在其他机器或单并发处理一个章节，完成后发布版本化课程卡片 |
+
+正式集成必须遵守：
+
+- 孩子 iPad 和家长日常端只访问 LMS；DeepTutor Web 仅为管理员回环调试入口。
+- DeepTutor FastAPI 和 K12 Graph API 只在内部网络可达，不增加公网端口。
+- LMS 是任务、错题、附件、家长审核和掌握度的唯一权威方。
+- 原始手写图片不发送给云端模型；AI 只接收家长确认的错因、课程引用和去身份化摘要。
+- 8 GB 主机不运行本地大模型、重型 OCR、Neo4j、全量 MinerU 或 Bench/Train 常驻任务。
+- `MemAvailable` 长期低于 1 GB、swap 持续增长或发生 OOM 时，先停止 DeepTutor。
+- DeepTutor、K12、prompt/schema/adapter 版本要与 LMS 备份使用同一 `backupId` 记录。
+
+AI 扩展启用后，7.4 节备份还必须加入 DeepTutor `/app/data`、K12 卡片和
+`datasetVersion` manifest、镜像 digest、prompt/schema/adapter 版本。联合备份、恢复
+顺序和回滚清单见
+[教育 AI 扩展运维手册](../ThinkPad_DeepTutor_K12_部署手册/06_运维备份迁移安全许可证.md)。
 
 ## 8. 安全与远程访问
 

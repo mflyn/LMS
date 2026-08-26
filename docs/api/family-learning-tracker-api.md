@@ -1330,3 +1330,20 @@ Idempotency-Key: redeem-reward-001-20260618
 | Task 11 | [Family End-to-End Design](../superpowers/specs/2026-07-12-family-growth-task11-e2e-design.md) | [Task 11 测试用例](../development/family-growth-task11-test-cases.md) | [Task 11 Gate](../development/family-growth-task11-gate.md) |
 | Task 12 | [第二家长共管详细设计](../superpowers/specs/2026-07-16-family-growth-task12-co-parent-design.md) | [Task 12 测试用例](../development/family-growth-task12-test-cases.md) | [Task 12 Gate](../development/family-growth-task12-gate.md) |
 | 错题 PDF 与多附件增量 | [详细设计](../superpowers/specs/2026-07-15-family-growth-mistake-pdf-multi-attachments-design.md) | [测试设计与用例](../development/family-growth-mistake-pdf-multi-attachments-test-cases.md) | [增量 Gate](../development/family-growth-mistake-pdf-multi-attachments-gate.md) |
+
+## 13. 拟议 AI 学习 API 边界
+
+[家庭 AI 学习管理平台完整设计](../architecture/family-ai-learning-platform-design.md#11-api-设计草案)
+包含课程候选、诊断确认、讲解生成、订正审核、变式练习和掌握证据的增量 API 草案。
+这些路由不属于本文的 `APPROVED` 契约，当前客户端和服务不得假设其存在。
+
+将任一草案接口提升为正式契约前，至少需要：
+
+1. 批准增量 PRD/架构和数据所有权；
+2. 明确家长、孩子和内部服务的权限矩阵及拒绝路径；
+3. 为 `familyId + childId`、私有媒体、幂等生成任务和人工审核状态增加测试；
+4. 定义 schema/数据迁移、feature flag、备份和回滚；
+5. 更新本契约、需求追踪、相关时序图和发布 Gate。
+
+DeepTutor 和 K12 Graph API 不通过公共 Gateway 直接暴露给孩子；任何正式
+集成只允许 LMS 通过受控内部适配器访问。

@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "tutor-cycle-state-machine-v1",
+  "initialState": "draft",
+  "terminalStates": ["closed", "cancelled"],
+  "publicMutations": [
+    {
+      "endpointOperation": "cycle-create",
+      "route": "POST /api/tutor-cycles",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-cycle-create-request-v1.json",
+      "allowedActorRoles": ["parent"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorLearningCycle" }
+      ]
+    },
+    {
+      "endpointOperation": "explanation-job",
+      "route": "POST /api/tutor-cycles/:cycleId/explanation-jobs",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-generation-job-request-v1.json",
+      "allowedActorRoles": ["parent"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 202, "responseResourceType": "TutorGenerationJob" }
+      ],
+      "discriminator": { "kind": "explanation" }
+    },
+    {
+      "endpointOperation": "explanation-artifact-review",
+      "route": "POST /api/tutor-cycles/:cycleId/explanation-review",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-artifact-review-request-v1.json",
+      "allowedActorRoles": ["parent"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorArtifact" }
+      ]
+    },
+    {
+      "endpointOperation": "correction-start",
+      "route": "POST /api/tutor-cycles/:cycleId/start-correction",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-stage-action-request-v1.json",
+      "allowedActorRoles": ["parent", "child"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorLearningCycle" }
+      ],
+      "discriminator": { "action": "start-correction" }
+    },
+    {
+      "endpointOperation": "correction-submit",
+      "route": "POST /api/tutor-cycles/:cycleId/correction-submissions",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-stage-submission-request-v1.json",
+      "allowedActorRoles": ["parent", "child"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorCycleAttempt" }
+      ],
+      "discriminator": { "stage": "correction" }
+    },
+    {
+      "endpointOperation": "correction-review",
+      "route": "POST /api/tutor-cycles/:cycleId/correction-review",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-correction-review-request-v1.json",
+      "allowedActorRoles": ["parent"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorCycleAttempt" }
+      ]
+    },
+    {
+      "endpointOperation": "practice-job",
+      "route": "POST /api/tutor-cycles/:cycleId/practice-jobs",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-generation-job-request-v1.json",
+      "allowedActorRoles": ["parent"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 202, "responseResourceType": "TutorGenerationJob" }
+      ],
+      "discriminator": { "kind": "practice" }
+    },
+    {
+      "endpointOperation": "practice-artifact-review",
+      "route": "POST /api/tutor-cycles/:cycleId/practice-review",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-artifact-review-request-v1.json",
+      "allowedActorRoles": ["parent"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorArtifact" }
+      ]
+    },
+    {
+      "endpointOperation": "practice-start",
+      "route": "POST /api/tutor-cycles/:cycleId/start-practice",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-stage-action-request-v1.json",
+      "allowedActorRoles": ["parent", "child"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorLearningCycle" }
+      ],
+      "discriminator": { "action": "start-practice" }
+    },
+    {
+      "endpointOperation": "practice-submit",
+      "route": "POST /api/tutor-cycles/:cycleId/practice-submissions",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-stage-submission-request-v1.json",
+      "allowedActorRoles": ["parent", "child"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorCycleAttempt" }
+      ],
+      "discriminator": { "stage": "practice" }
+    },
+    {
+      "endpointOperation": "final-review",
+      "route": "POST /api/tutor-cycles/:cycleId/final-review",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-final-review-request-v1.json",
+      "allowedActorRoles": ["parent"],
+      "responseVariants": [
+        {
+          "when": { "decision": "revise" },
+          "httpStatus": 200,
+          "responseResourceType": "TutorCycleAttempt"
+        },
+        {
+          "when": { "decision": "mastered" },
+          "httpStatus": 202,
+          "responseResourceType": "TutorFinalReview"
+        }
+      ]
+    },
+    {
+      "endpointOperation": "cycle-cancel",
+      "route": "POST /api/tutor-cycles/:cycleId/cancel",
+      "requestSchemaId": "https://lms.family.local/schemas/tutor-stage-action-request-v1.json",
+      "allowedActorRoles": ["parent"],
+      "responseVariants": [
+        { "when": {}, "httpStatus": 200, "responseResourceType": "TutorLearningCycle" }
+      ],
+      "discriminator": { "action": "cancel" }
+    }
+  ],
+  "reviewTransitions": {
+    "correction-review": {
+      "requestSchemaVersion": "tutor-correction-review-request-v1",
+      "from": "correction_submitted",
+      "decisions": {
+        "approve": "correction_approved",
+        "revise": "correction_needs_revision"
+      }
+    },
+    "final-review": {
+      "requestSchemaVersion": "tutor-final-review-request-v1",
+      "from": "practice_submitted",
+      "decisions": {
+        "mastered": "parent_verified",
+        "revise": "practice_needs_revision"
+      }
+    }
+  },
+  "states": {
+    "draft": ["explanation_generating", "cancelled"],
+    "explanation_generating": ["explanation_pending_review", "explanation_generation_failed"],
+    "explanation_generation_failed": ["explanation_generating", "cancelled"],
+    "explanation_pending_review": ["explanation_approved", "explanation_rejected", "cancelled"],
+    "explanation_rejected": ["explanation_generating", "cancelled"],
+    "explanation_approved": ["correction_in_progress", "cancelled"],
+    "correction_in_progress": ["correction_submitted", "cancelled"],
+    "correction_submitted": ["correction_needs_revision", "correction_approved", "cancelled"],
+    "correction_needs_revision": ["correction_in_progress", "cancelled"],
+    "correction_approved": ["practice_generating", "cancelled"],
+    "practice_generating": ["practice_pending_review", "practice_generation_failed"],
+    "practice_generation_failed": ["practice_generating", "cancelled"],
+    "practice_pending_review": ["practice_approved", "practice_rejected", "cancelled"],
+    "practice_rejected": ["practice_generating", "cancelled"],
+    "practice_approved": ["practice_in_progress", "cancelled"],
+    "practice_in_progress": ["practice_submitted", "cancelled"],
+    "practice_submitted": ["practice_needs_revision", "parent_verified", "cancelled"],
+    "practice_needs_revision": ["practice_in_progress", "cancelled"],
+    "parent_verified": ["closed"],
+    "closed": [],
+    "cancelled": []
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "validator": "tutor-request-payload-hash-v1",
+  "base": {
+    "actorFamilyId": "family-1",
+    "endpointOperation": "final-review",
+    "route": "POST /api/tutor-cycles/:cycleId/final-review",
+    "matchedPathParams": { "cycleId": "cycle-1" },
+    "resource": { "cycleId": "cycle-1" },
+    "request": {
+      "schemaVersion": "tutor-final-review-request-v1",
+      "decision": "mastered",
+      "evidenceSummary": "家长确认两道同类题均由孩子独立完成",
+      "comment": null,
+      "operationId": "final-review-operation-1",
+      "expectedStateVersion": 12
+    },
+    "requestPayloadHash": "sha256:d98d93ab2b52deab458b84053aa1c8e74f3079af83015b7d8ccf10687f17533b"
+  },
+  "valid": [
+    { "name": "final-review-canonical-request", "set": {} },
+    {
+      "name": "same-request-different-key-order",
+      "set": {
+        "request": {
+          "expectedStateVersion": 12,
+          "operationId": "final-review-operation-1",
+          "comment": null,
+          "evidenceSummary": "家长确认两道同类题均由孩子独立完成",
+          "decision": "mastered",
+          "schemaVersion": "tutor-final-review-request-v1"
+        }
+      }
+    },
+    { "name": "operation-id-excluded-from-payload-hash", "set": { "request.operationId": "final-review-operation-2" } },
+    {
+      "name": "cycle-create-request",
+      "set": {
+        "endpointOperation": "cycle-create",
+        "route": "POST /api/tutor-cycles",
+        "matchedPathParams": { "cycleId": null },
+        "resource": { "cycleId": null },
+        "request": {
+          "schemaVersion": "tutor-cycle-create-request-v1",
+          "childId": "child-1",
+          "sourceMistakeId": "mistake-1",
+          "knowledgePointId": "knowledge-1",
+          "presentedByGrowthTaskId": null,
+          "operationId": "cycle-create-operation-1"
+        },
+        "requestPayloadHash": "sha256:e7515fdafe8a3755a000f1a2ad2642666b2c915d7b854433039676c362098bf7"
+      }
+    },
+    {
+      "name": "explanation-artifact-review-request",
+      "set": {
+        "endpointOperation": "explanation-artifact-review",
+        "route": "POST /api/tutor-cycles/:cycleId/explanation-review",
+        "request": {
+          "schemaVersion": "tutor-artifact-review-request-v1",
+          "artifactId": "artifact-1",
+          "artifactVersion": 1,
+          "contentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+          "decision": "approve",
+          "comment": null,
+          "operationId": "artifact-review-operation-1",
+          "expectedArtifactReviewVersion": 0,
+          "expectedStateVersion": 3
+        },
+        "requestPayloadHash": "sha256:52a8dedf3a87d2d9725fc82abc5b2b0b256bd4dd8247eaad58abd04451304694"
+      }
+    },
+    {
+      "name": "practice-artifact-review-request",
+      "set": {
+        "endpointOperation": "practice-artifact-review",
+        "route": "POST /api/tutor-cycles/:cycleId/practice-review",
+        "request": {
+          "schemaVersion": "tutor-artifact-review-request-v1",
+          "artifactId": "artifact-1",
+          "artifactVersion": 1,
+          "contentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+          "decision": "approve",
+          "comment": null,
+          "operationId": "artifact-review-operation-1",
+          "expectedArtifactReviewVersion": 0,
+          "expectedStateVersion": 3
+        },
+        "requestPayloadHash": "sha256:636f15ad977a25443655a73986cd53e6199d1fc0ce2f0ec4b9d2cc61a4a41b9e"
+      }
+    },
+    {
+      "name": "correction-review-request",
+      "set": {
+        "endpointOperation": "correction-review",
+        "route": "POST /api/tutor-cycles/:cycleId/correction-review",
+        "request": {
+          "schemaVersion": "tutor-correction-review-request-v1",
+          "decision": "approve",
+          "comment": null,
+          "operationId": "correction-review-operation-1",
+          "expectedStateVersion": 8
+        },
+        "requestPayloadHash": "sha256:55a5c707a84995fb5f30d53d36ffe53cdc5793e7e9d846855d66e046b28d0427"
+      }
+    },
+    {
+      "name": "explanation-generation-job-request",
+      "set": {
+        "endpointOperation": "explanation-job",
+        "route": "POST /api/tutor-cycles/:cycleId/explanation-jobs",
+        "request": {
+          "schemaVersion": "tutor-generation-job-request-v1",
+          "kind": "explanation",
+          "generationPolicy": { "detailLevel": "standard", "includePrerequisiteReview": true },
+          "operationId": "explanation-job-operation-1",
+          "expectedStateVersion": 0
+        },
+        "requestPayloadHash": "sha256:59acf349c8b5213f8eac717ec418f5fb6966c938c004477867d014176f27c7d7"
+      }
+    },
+    {
+      "name": "start-correction-request",
+      "set": {
+        "endpointOperation": "correction-start",
+        "route": "POST /api/tutor-cycles/:cycleId/start-correction",
+        "request": {
+          "schemaVersion": "tutor-stage-action-request-v1",
+          "action": "start-correction",
+          "comment": null,
+          "operationId": "correction-start-operation-1",
+          "expectedStateVersion": 4
+        },
+        "requestPayloadHash": "sha256:6f4053ec2a4ccdfdbeba651952dde6a1811b90491e255eefa6db0865b04869b9"
+      }
+    },
+    {
+      "name": "correction-submission-request",
+      "set": {
+        "endpointOperation": "correction-submit",
+        "route": "POST /api/tutor-cycles/:cycleId/correction-submissions",
+        "request": {
+          "schemaVersion": "tutor-stage-submission-request-v1",
+          "stage": "correction",
+          "mediaIds": ["media-correction-1", "media-correction-2"],
+          "attemptVersion": 1,
+          "operationId": "correction-submit-operation-1",
+          "expectedStateVersion": 5
+        },
+        "requestPayloadHash": "sha256:31fa5e95a2b81b068745f473b764f71a1fc9e1aae15140bb2aac76ebe3230c64"
+      }
+    },
+    {
+      "name": "practice-generation-job-request",
+      "set": {
+        "endpointOperation": "practice-job",
+        "route": "POST /api/tutor-cycles/:cycleId/practice-jobs",
+        "request": {
+          "schemaVersion": "tutor-generation-job-request-v1",
+          "kind": "practice",
+          "generationPolicy": { "exerciseCount": 2, "difficultySequence": ["easy", "medium"] },
+          "operationId": "practice-job-operation-1",
+          "expectedStateVersion": 8
+        },
+        "requestPayloadHash": "sha256:d8371a7f18b01508489301fadb43b35915368d59392ccb31c24141d989afcba6"
+      }
+    },
+    {
+      "name": "start-practice-request",
+      "set": {
+        "endpointOperation": "practice-start",
+        "route": "POST /api/tutor-cycles/:cycleId/start-practice",
+        "request": {
+          "schemaVersion": "tutor-stage-action-request-v1",
+          "action": "start-practice",
+          "comment": null,
+          "operationId": "practice-start-operation-1",
+          "expectedStateVersion": 11
+        },
+        "requestPayloadHash": "sha256:34af4976996c4f842891a0714890ac5fad30e0ccb03646789aa4dc92b7422699"
+      }
+    },
+    {
+      "name": "practice-submission-request",
+      "set": {
+        "endpointOperation": "practice-submit",
+        "route": "POST /api/tutor-cycles/:cycleId/practice-submissions",
+        "request": {
+          "schemaVersion": "tutor-stage-submission-request-v1",
+          "stage": "practice",
+          "mediaIds": ["media-practice-1"],
+          "attemptVersion": 1,
+          "operationId": "practice-submit-operation-1",
+          "expectedStateVersion": 12
+        },
+        "requestPayloadHash": "sha256:9e9d7090688817253e408d174f11c1ae64a41ddc20d2f5abcdcf563f43f11618"
+      }
+    },
+    {
+      "name": "cycle-cancel-request",
+      "set": {
+        "endpointOperation": "cycle-cancel",
+        "route": "POST /api/tutor-cycles/:cycleId/cancel",
+        "request": {
+          "schemaVersion": "tutor-stage-action-request-v1",
+          "action": "cancel",
+          "comment": "家长停止本轮练习",
+          "operationId": "cycle-cancel-operation-1",
+          "expectedStateVersion": 6
+        },
+        "requestPayloadHash": "sha256:8cd11307be7391f80232991d430670a5e8ba4c358279864b1f2a9f8b0d56db82"
+      }
+    }
+  ],
+  "invalid": [
+    { "name": "evidence-changed-with-stale-hash", "set": { "request.evidenceSummary": "审核证据已改变" } },
+    { "name": "comment-changed-with-stale-hash", "set": { "request.comment": "新的审核备注" } },
+    { "name": "expected-state-version-changed-with-stale-hash", "set": { "request.expectedStateVersion": 13 } },
+    { "name": "arbitrary-format-valid-request-hash", "set": { "requestPayloadHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } },
+    { "name": "url-cycle-changed-with-stale-hash", "set": { "resource.cycleId": "cycle-2" } },
+    { "name": "route-and-operation-must-match-manifest", "hashMustMatch": true, "set": { "route": "POST /api/tutor-cycles/:cycleId/practice-review" } },
+    {
+      "name": "endpoint-discriminator-cannot-select-wrong-generation-kind",
+      "hashMustMatch": true,
+      "set": {
+        "endpointOperation": "explanation-job",
+        "route": "POST /api/tutor-cycles/:cycleId/explanation-jobs",
+        "request": {
+          "schemaVersion": "tutor-generation-job-request-v1",
+          "kind": "practice",
+          "generationPolicy": { "exerciseCount": 2, "difficultySequence": ["easy", "medium"] },
+          "operationId": "wrong-kind-op",
+          "expectedStateVersion": 0
+        },
+        "requestPayloadHash": "sha256:4c93c17a949b8f9fc162a305fe1ef8988c64d1af90ad06c0deb61946279532c3"
+      }
+    }
+  ]
+}

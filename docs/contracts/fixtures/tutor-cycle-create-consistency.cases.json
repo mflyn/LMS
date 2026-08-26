@@ -1,0 +1,65 @@
+{
+  "validator": "tutor-cycle-create-consistency-v1",
+  "base": {
+    "actorFamilyId": "family-1",
+    "request": {
+      "schemaVersion": "tutor-cycle-create-request-v1",
+      "childId": "child-1",
+      "sourceMistakeId": "mistake-1",
+      "knowledgePointId": "knowledge-1",
+      "presentedByGrowthTaskId": null,
+      "operationId": "cycle-create-operation-1"
+    },
+    "mistake": {
+      "mistakeId": "mistake-1",
+      "familyId": "family-1",
+      "childId": "child-1",
+      "knowledgePointId": "knowledge-1"
+    },
+    "knowledgePoint": {
+      "knowledgePointId": "knowledge-1",
+      "familyId": "family-1",
+      "childId": "child-1"
+    },
+    "growthTask": null,
+    "activeCycleCountForMistake": 0,
+    "activeSourceMistakeKey": "family-1:mistake-1",
+    "activeSourceMistakeKeyConflict": false
+  },
+  "valid": [
+    { "name": "same-family-child-mistake-and-knowledge-point", "set": {} },
+    {
+      "name": "same-child-optional-growth-task-entry",
+      "set": {
+        "request.presentedByGrowthTaskId": "growth-task-1",
+        "growthTask": {
+          "growthTaskId": "growth-task-1",
+          "familyId": "family-1",
+          "childId": "child-1"
+        }
+      }
+    }
+  ],
+  "invalid": [
+    { "name": "mistake-from-other-family", "set": { "mistake.familyId": "family-2" } },
+    { "name": "mistake-from-sibling", "set": { "mistake.childId": "child-2" } },
+    { "name": "mistake-points-to-other-knowledge-point", "set": { "mistake.knowledgePointId": "knowledge-2" } },
+    { "name": "knowledge-point-from-other-family", "set": { "knowledgePoint.familyId": "family-2" } },
+    { "name": "knowledge-point-from-sibling", "set": { "knowledgePoint.childId": "child-2" } },
+    { "name": "request-references-other-mistake", "set": { "request.sourceMistakeId": "mistake-2" } },
+    { "name": "another-active-cycle-found-by-pre-query", "set": { "activeCycleCountForMistake": 1 } },
+    { "name": "active-key-not-derived-from-family-and-mistake", "set": { "activeSourceMistakeKey": "family-1:mistake-2" } },
+    { "name": "concurrent-insert-hits-unique-index", "set": { "activeSourceMistakeKeyConflict": true } },
+    {
+      "name": "growth-task-from-other-child",
+      "set": {
+        "request.presentedByGrowthTaskId": "growth-task-1",
+        "growthTask": {
+          "growthTaskId": "growth-task-1",
+          "familyId": "family-1",
+          "childId": "child-2"
+        }
+      }
+    }
+  ]
+}

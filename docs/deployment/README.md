@@ -65,6 +65,7 @@ RUN_FAMILY_SECURITY_SCAN=1 npm run test:family-security-scan
 | Kubernetes | [Kubernetes 部署说明](../../deployment/kubernetes/README.md) | 外部 Secret、最小工作负载和安全创建流程 |
 | 配置与基础设施评审 | [修订记录](../development/family-growth-config-infra-remediation.md) | Compose、Kustomize、Secret 和发布门禁证据 |
 | PDF 与多附件安全 Gate | [增量 Gate](../development/family-growth-mistake-pdf-multi-attachments-gate.md) | 两档安全配置、自动化证据和真实扫描审批边界 |
+| 拟议 AI 学习扩展 | [总体设计](../architecture/family-ai-learning-platform-design.md) / [X230i 手册](../ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md) | DeepTutor 和 K12 的分阶段部署；尚未进入当前 Compose 或发布 Gate |
 
 ## 部署边界
 
@@ -76,6 +77,9 @@ RUN_FAMILY_SECURITY_SCAN=1 npm run test:family-security-scan
   已完成生产发布验收。
 - 当前仓库清单用于开发和验收。生产环境仍需要托管数据库或多成员副本集、外部
   Secret、监控、备份和独立运维评审。
+- 当前 `docker-compose.ubuntu.yml` 不包含 DeepTutor 或 K12-KGraph。
+  这些拟议组件不得手工暴露为孩子入口；适配代码、权限测试、feature flag、联合备份和
+  回滚 Gate 完成后，才能加入家庭正式运行栈。
 
 ## 本地验收与故障处理
 

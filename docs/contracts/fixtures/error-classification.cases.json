@@ -1,0 +1,70 @@
+{
+  "schemaId": "https://lms.family.local/schemas/error-classification-v1.json",
+  "base": {
+    "schemaVersion": "error-classification-v1",
+    "diagnosisStatus": "unreviewed",
+    "primaryReasonCode": null,
+    "secondaryReasonCodes": [],
+    "source": "not_classified",
+    "confidence": null,
+    "parentNote": null,
+    "classifiedByParentId": null,
+    "classifiedAt": null
+  },
+  "valid": [
+    { "name": "unreviewed", "set": {} },
+    {
+      "name": "ai-suggested",
+      "set": {
+        "diagnosisStatus": "ai_suggested",
+        "primaryReasonCode": "formula_selection",
+        "secondaryReasonCodes": ["condition_omitted"],
+        "source": "ai_candidate",
+        "confidence": 0.82
+      }
+    },
+    {
+      "name": "parent-confirmed",
+      "set": {
+        "diagnosisStatus": "parent_confirmed",
+        "primaryReasonCode": "formula_selection",
+        "secondaryReasonCodes": ["condition_omitted"],
+        "source": "parent_review",
+        "parentNote": "忽略了直角三角形条件",
+        "classifiedByParentId": "parent-1",
+        "classifiedAt": "2026-08-25T10:00:00.000Z"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "unreviewed-with-parent-data",
+      "set": {
+        "primaryReasonCode": "concept_gap",
+        "source": "parent_review",
+        "confidence": 1,
+        "classifiedByParentId": "parent-1",
+        "classifiedAt": "2026-08-25T10:00:00.000Z"
+      }
+    },
+    {
+      "name": "ai-suggested-without-confidence",
+      "set": {
+        "diagnosisStatus": "ai_suggested",
+        "primaryReasonCode": "concept_gap",
+        "source": "ai_candidate"
+      }
+    },
+    {
+      "name": "primary-duplicated-in-secondary",
+      "set": {
+        "diagnosisStatus": "parent_confirmed",
+        "primaryReasonCode": "concept_gap",
+        "secondaryReasonCodes": ["concept_gap"],
+        "source": "parent_review",
+        "classifiedByParentId": "parent-1",
+        "classifiedAt": "2026-08-25T10:00:00.000Z"
+      }
+    }
+  ]
+}

@@ -19,6 +19,8 @@
 | 测试与发布 | [开发与测试入口](./development/README.md) / [统一发布 Gate](./development/family-growth-v1.6-release-gate.md) / [PDF 与多附件 Gate](./development/family-growth-mistake-pdf-multi-attachments-gate.md) | 本地命令、测试层次和发布判定 |
 | 部署 | [部署入口](./deployment/README.md) | Compose、Ubuntu、Kubernetes、Secret 和回滚 |
 | 使用 | [用户指南](./user-guide/README.md) | 家长和孩子的操作流程 |
+| 拟议 AI 学习扩展 | [家庭 AI 学习平台设计](./architecture/family-ai-learning-platform-design.md) / [X230i 部署手册](./ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md) | LMS、DeepTutor、K12-KGraph 和家长人工审核的未来方案；不属于当前实现 |
+| 拟议 AI 机器契约 | [AI 契约目录](./contracts/) | `CurriculumRef`、错因、教学制品、状态机和最终收敛命令的唯一字段真相；仍属草案 |
 
 ## 文档结构
 
@@ -26,9 +28,11 @@
 docs/
 ├── product/       # 产品需求和范围
 ├── architecture/  # 总体架构、ADR 和时序图
+├── contracts/     # 拟议 AI 扩展的机器可读 JSON 契约
 ├── api/           # 当前 API 契约
 ├── development/   # 详细设计、计划、测试用例、Gate 和基线证据
 ├── deployment/    # 当前部署与运维边界
+├── ThinkPad_DeepTutor_K12_部署手册/ # 拟议 AI 扩展的低资源部署验证
 ├── superpowers/   # Task 5-12 已批准的设计与实施计划
 └── user-guide/    # 家长和孩子用户指南
 ```
@@ -43,6 +47,8 @@ docs/
 3. API 契约定义前后端可观察行为。
 4. 需求追踪矩阵连接需求、设计、代码和测试。
 5. v1.6 manifest 记录历史基线；统一发布 Gate 和 Task 12 Gate 记录 v1.7 候选证据。
+6. AI 学习平台设计只定义后续扩展方向；其中的模型、路由和状态机在实现、测试、Gate
+   和迁移审批完成前，不得覆盖当前 PRD、架构和 API 基线。
 
 发生冲突时，先停止修改并通过设计评审确定应更新的权威来源，不能只调整某一份
 说明来掩盖代码或契约差异。
@@ -56,5 +62,7 @@ npm run docs:family:check
 git diff --check
 ```
 
-发布候选还必须执行 `npm run release:family`。文档 Gate 会检查本地链接、标题锚点、
-38 项需求集合、实现与设计状态、基线证据以及三个 README 入口中的真实命令和过时模板内容。
+发布候选还必须执行 `npm run release:family`。文档 Gate 分别报告已批准基线和拟议 AI
+扩展：前者检查本地链接、标题锚点、38 项需求、实现状态和基线证据；后者额外检查 8 份
+草案文档、13 份机器契约、代码块/图表结构、审核门禁、DeepTutor 安全与未知结果边界、
+outbox 字段以及 K12 代码/数据版本固定。草案通过 Gate 不代表已经实现或获准发布。

@@ -1,0 +1,95 @@
+{
+  "validator": "tutor-artifact-review-cas-v1",
+  "base": {
+    "request": {
+      "schemaVersion": "tutor-artifact-review-request-v1",
+      "artifactId": "artifact-1",
+      "artifactVersion": 1,
+      "contentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+      "decision": "approve",
+      "comment": null,
+      "operationId": "artifact-review-operation-1",
+      "expectedArtifactReviewVersion": 0,
+      "expectedStateVersion": 3
+    },
+    "artifact": {
+      "artifactId": "artifact-1",
+      "cycleId": "cycle-1",
+      "kind": "explanation",
+      "version": 1,
+      "content": {
+        "schemaVersion": "explanation-v1",
+        "learningObjective": "理解勾股定理的适用条件",
+        "targetCurriculumNodeIds": ["concept-pythagorean"],
+        "prerequisites": [],
+        "explanation": {
+          "summaryMarkdown": "先确认题目是直角三角形。",
+          "workedExampleMarkdown": "设两条直角边为 3 和 4，则斜边为 5。",
+          "commonPitfalls": ["没有先确认直角条件"]
+        },
+        "correctionPrompt": "请先标出直角边和斜边。",
+        "parentRubric": ["能识别斜边", "能说明适用条件"],
+        "citations": [
+          {
+            "curriculumNodeId": "concept-pythagorean",
+            "datasetVersion": "dataset-v1"
+          }
+        ]
+      },
+      "contentHash": "sha256:097dd3aeba584808ce8bbd48daaf2671f151ab9f3f350f4bc2ef18563721519b",
+      "status": "candidate",
+      "reviewVersion": 0
+    },
+    "cycle": {
+      "cycleId": "cycle-1",
+      "status": "explanation_pending_review",
+      "stateVersion": 3
+    }
+  },
+  "valid": [
+    { "name": "matching-artifact-and-cycle-versions", "set": {} },
+    {
+      "name": "matching-practice-review",
+      "set": {
+        "artifact.kind": "practice",
+        "artifact.content": {
+          "schemaVersion": "practice-v1",
+          "targetCurriculumNodeIds": ["concept-pythagorean"],
+          "instructions": "独立完成，不使用计算器。",
+          "exercises": [
+            {
+              "exerciseId": "exercise-1",
+              "difficulty": "easy",
+              "questionMarkdown": "直角边为 6 和 8，求斜边。",
+              "targetNodeIds": ["concept-pythagorean"],
+              "answerForParent": "10",
+              "rubric": ["识别斜边", "公式正确", "计算正确"]
+            }
+          ],
+          "generationPolicy": {
+            "exerciseCount": 1,
+            "difficultySequence": ["easy"]
+          }
+        },
+        "artifact.contentHash": "sha256:1f4d6155da210dc38c14e4fda493578f17f28421d7200d1e31796a47b40ae5e7",
+        "request.contentHash": "sha256:1f4d6155da210dc38c14e4fda493578f17f28421d7200d1e31796a47b40ae5e7",
+        "cycle.status": "practice_pending_review"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "cycle-cancelled-after-page-opened",
+      "set": {
+        "cycle.status": "cancelled",
+        "cycle.stateVersion": 4
+      }
+    },
+    { "name": "cycle-version-changed", "set": { "cycle.stateVersion": 4 } },
+    { "name": "artifact-review-version-changed", "set": { "artifact.reviewVersion": 1 } },
+    { "name": "artifact-no-longer-candidate", "set": { "artifact.status": "parent_approved" } },
+    { "name": "artifact-belongs-to-other-cycle", "set": { "artifact.cycleId": "cycle-2" } },
+    { "name": "artifact-content-changed-with-stale-matching-hashes", "set": { "artifact.content.explanation.summaryMarkdown": "正文已被异常改写" } },
+    { "name": "artifact-and-request-use-same-arbitrary-hash", "set": { "artifact.contentHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "request.contentHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" } }
+  ]
+}
