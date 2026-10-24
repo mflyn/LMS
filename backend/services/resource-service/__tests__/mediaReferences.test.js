@@ -3,7 +3,9 @@ process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test
 
 const express = require('express');
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const { MongoMemoryReplSet } = require('../../../../node_modules/mongodb-memory-server');
 
 const { errorHandler } = require('../../../common/middleware/errorHandler');
@@ -68,8 +70,8 @@ const unbindCommandFor = (command, {
   }))
 });
 
-const postCommand = (action, command, token = SERVICE_TOKEN) => {
-  let operation = request(app).post(`/api/internal/media/references/${action}`);
+const postCommand = async (action, command, token = SERVICE_TOKEN) => {
+  let operation = (await request(app)).post(`/api/internal/media/references/${action}`);
   if (token !== null) operation = operation.set('x-service-token', token);
   return operation.send(command);
 };

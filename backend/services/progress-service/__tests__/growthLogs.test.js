@@ -4,7 +4,9 @@ process.env.INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'test
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close } = createHttpTestHarness();
+afterEach(close);
 const app = require('../server');
 const GrowthLog = require('../models/GrowthLog');
 const { createTask5Fixtures } = require('./helpers/task5Fixtures');
@@ -95,7 +97,7 @@ describe('Task 5 growth logs', () => {
   test('TC-T5-LOG-003 parent creates a log with server-derived ownership', async () => {
     const f = await createTask5Fixtures();
     const path = '/api/growth-logs';
-    const response = await request(app).post(path)
+    const response = await (await request(app)).post(path)
       .set(f.headers(f.parentA, 'POST', path))
       .send({
         childId: f.childA1._id,
@@ -105,7 +107,8 @@ describe('Task 5 growth logs', () => {
         parentNote: 'steady rhythm'
       });
 
-    expect(response.status).toBe(201);
+    expect({ status: response.status, code: response.body.error?.code })
+      .toEqual({ status: 201, code: undefined });
     expect(response.body.data.log).toEqual(expect.objectContaining({
       familyId: f.familyA._id.toString(),
       childId: f.childA1._id.toString(),
@@ -116,7 +119,7 @@ describe('Task 5 growth logs', () => {
   test('TC-T5-LOG-004 child creates only a self growth log', async () => {
     const f = await createTask5Fixtures();
     const path = '/api/growth-logs';
-    const response = await request(app).post(path)
+    const response = await (await request(app)).post(path)
       .set(f.headers(f.childA1, 'POST', path))
       .send({
         childId: f.childA1._id,
@@ -135,7 +138,7 @@ describe('Task 5 growth logs', () => {
   test('TC-T5-LOG-005 route denies sibling and other-family child creation', async () => {
     const f = await createTask5Fixtures();
     const path = '/api/growth-logs';
-    const response = await request(app).post(path)
+    const response = await (await request(app)).post(path)
       .set(f.headers(f.childA1, 'POST', path))
       .send({
         childId: f.childA2._id,
@@ -149,7 +152,7 @@ describe('Task 5 growth logs', () => {
     expect(await GrowthLog.countDocuments()).toBe(0);
 
     const listPath = `/api/growth-logs?childId=${f.childA2._id}`;
-    const listResponse = await request(app).get(listPath)
+    const listResponse = await (await request(app)).get(listPath)
       .set(f.headers(f.childA1, 'GET', listPath));
     expect(listResponse.status).toBe(403);
     expect(listResponse.body.error.code).toBe('CHILD_ACCESS_DENIED');
@@ -158,7 +161,7 @@ describe('Task 5 growth logs', () => {
   test('TC-T5-LOG-006 child cannot create or patch parent and ownership fields', async () => {
     const f = await createTask5Fixtures();
     const createPath = '/api/growth-logs';
-    const deniedCreate = await request(app).post(createPath)
+    const deniedCreate = await (await request(app)).post(createPath)
       .set(f.headers(f.childA1, 'POST', createPath))
       .send({
         childId: f.childA1._id,
@@ -180,7 +183,7 @@ describe('Task 5 growth logs', () => {
       updatedBy: f.parentA._id
     });
     const patchPath = `/api/growth-logs/${log._id}`;
-    const deniedPatch = await request(app).patch(patchPath)
+    const deniedPatch = await (await request(app)).patch(patchPath)
       .set(f.headers(f.childA1, 'PATCH', patchPath))
       .send({ parentNote: 'forged' });
     expect(deniedPatch.status).toBe(403);
@@ -199,11 +202,11 @@ describe('Task 5 growth logs', () => {
       updatedBy: f.parentA._id
     });
     const listPath = `/api/growth-logs?childId=${f.childA1._id}`;
-    const list = await request(app).get(listPath).set(f.headers(f.parentB, 'GET', listPath));
+    const list = await (await request(app)).get(listPath).set(f.headers(f.parentB, 'GET', listPath));
     expect(list.status).toBe(403);
 
     const patchPath = `/api/growth-logs/${log._id}`;
-    const patch = await request(app).patch(patchPath)
+    const patch = await (await request(app)).patch(patchPath)
       .set(f.headers(f.parentB, 'PATCH', patchPath)).send({ parentNote: 'intrusion' });
     expect(patch.status).toBe(403);
   });
@@ -216,7 +219,7 @@ describe('Task 5 growth logs', () => {
       { familyId: f.familyA._id, childId: f.childA1._id, date: '2026-06-19', dimension: 'academic', content: 'math', createdBy: f.parentA._id, updatedBy: f.parentA._id }
     ]);
     const path = `/api/growth-logs?childId=${f.childA1._id}&from=2026-06-18&to=2026-06-19&dimension=physical&page=1&pageSize=1`;
-    const response = await request(app).get(path).set(f.headers(f.parentA, 'GET', path));
+    const response = await (await request(app)).get(path).set(f.headers(f.parentA, 'GET', path));
 
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual(expect.objectContaining({ page: 1, pageSize: 1, total: 2 }));
@@ -231,13 +234,13 @@ describe('Task 5 growth logs', () => {
       dimension: 'academic', content: 'math', createdBy: f.parentA._id, updatedBy: f.parentA._id
     });
     const path = `/api/growth-logs/${log._id}`;
-    const childPatch = await request(app).patch(path)
+    const childPatch = await (await request(app)).patch(path)
       .set(f.headers(f.childA1, 'PATCH', path))
       .send({ durationMinutes: 30, childReflection: 'understood' });
     expect(childPatch.status).toBe(200);
     expect(childPatch.body.data.log.updatedBy).toBe(f.childA1._id.toString());
 
-    const parentPatch = await request(app).patch(path)
+    const parentPatch = await (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path))
       .send({ parentNote: 'reviewed' });
     expect(parentPatch.status).toBe(200);
@@ -252,7 +255,7 @@ describe('Task 5 growth logs', () => {
       `/api/growth-logs?childId=${f.childA1._id}&dimension=unknown`
     ];
     for (const path of paths) {
-      const response = await request(app).get(path).set(f.headers(f.parentA, 'GET', path));
+      const response = await (await request(app)).get(path).set(f.headers(f.parentA, 'GET', path));
       expect(response.status).toBe(400);
       expect(response.body).toEqual({
         success: false,

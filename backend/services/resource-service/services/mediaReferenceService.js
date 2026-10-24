@@ -59,6 +59,7 @@ const normalizeCommand = (command = {}, action) => {
     const field = reference && reference.field;
     if (!validObjectId(mediaId)
       || typeof field !== 'string'
+      || field === 'completionMediaIds'
       || !MediaReference.MEDIA_RESOURCE_FIELDS[resourceType].includes(field)) {
       throw validationError('Invalid media reference identity');
     }
@@ -250,12 +251,14 @@ const createMediaReferenceService = ({
     }
     const current = new Date(Number(now()));
     const expired = await MediaReferenceModel.find({
+      field: { $ne: 'completionMediaIds' },
       state: 'prepared',
       leaseExpiresAt: { $lte: current }
     }).sort({ leaseExpiresAt: 1, _id: 1 }).limit(limit).select('_id').lean();
     if (expired.length === 0) return { reclaimed: 0 };
 
     const result = await MediaReferenceModel.deleteMany({
+      field: { $ne: 'completionMediaIds' },
       _id: { $in: expired.map((reference) => reference._id) },
       state: 'prepared',
       leaseExpiresAt: { $lte: current }
@@ -265,7 +268,7 @@ const createMediaReferenceService = ({
 
   const releasePreparedForDeletedMedia = async ({ mediaId, releasedAt, session }) => {
     const query = MediaReferenceModel.updateMany(
-      { mediaId, state: 'prepared' },
+      { mediaId, state: 'prepared', field: { $ne: 'completionMediaIds' } },
       {
         $set: {
           state: 'released',

@@ -5,7 +5,9 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
   || 'gateway-lifecycle-identity-secret-at-least-32-chars';
 
 const express = require('express');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 
 const serviceHosts = {
   user: 'http://127.0.0.1:31001',
@@ -43,7 +45,7 @@ describe('gateway server lifecycle', () => {
       identitySecret: process.env.GATEWAY_IDENTITY_SECRET
     });
 
-    const response = await request(app).get('/health');
+    const response = await (await request(app)).get('/health');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: 'ok', service: 'api-gateway' });
@@ -63,8 +65,8 @@ describe('gateway server lifecycle', () => {
       }
     });
 
-    await request(app).get('/health').expect(200);
-    await request(app).get('/health').expect(429);
+    await (await request(app)).get('/health').expect(200);
+    await (await request(app)).get('/health').expect(429);
   });
 
   test('requires the user service but allows the legacy data service to be absent', () => {

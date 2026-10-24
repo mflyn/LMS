@@ -4,7 +4,9 @@ process.env.INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'test
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const app = require('../server');
 const StarLedgerEntry = require('../models/StarLedgerEntry');
 const { createTask5Fixtures } = require('./helpers/task5Fixtures');
@@ -24,9 +26,9 @@ describe('Task 5 internal stars', () => {
       confirmedByParentId: f.parentA._id
     };
     const attempts = [
-      request(app).post(path).send(payload),
-      request(app).post(path).set('x-service-token', 'wrong-token').send(payload),
-      request(app).post(path).set(f.headers(f.parentA, 'POST', path)).send(payload)
+      (await request(app)).post(path).send(payload),
+      (await request(app)).post(path).set('x-service-token', 'wrong-token').send(payload),
+      (await request(app)).post(path).set(f.headers(f.parentA, 'POST', path)).send(payload)
     ];
     for (const attempt of attempts) {
       const response = await attempt;
@@ -39,7 +41,7 @@ describe('Task 5 internal stars', () => {
   test('TC-T5-STAR-003 valid service command awards exactly one star', async () => {
     const f = await createTask5Fixtures();
     const path = '/api/internal/stars/award';
-    const response = await request(app).post(path)
+    const response = await (await request(app)).post(path)
       .set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN)
       .send({
         familyId: f.familyA._id,
@@ -61,8 +63,8 @@ describe('Task 5 internal stars', () => {
       taskId: new mongoose.Types.ObjectId(),
       confirmedByParentId: f.parentA._id
     };
-    const first = await request(app).post(path).set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN).send(payload);
-    const replay = await request(app).post(path).set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN).send(payload);
+    const first = await (await request(app)).post(path).set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN).send(payload);
+    const replay = await (await request(app)).post(path).set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN).send(payload);
     expect(replay.status).toBe(200);
     expect(replay.body.data.awarded).toBe(false);
     expect(replay.body.data.ledgerEntryId).toBe(first.body.data.ledgerEntryId);
@@ -78,8 +80,8 @@ describe('Task 5 internal stars', () => {
       taskId: new mongoose.Types.ObjectId(),
       confirmedByParentId: f.parentA._id
     };
-    const responses = await Promise.all(Array.from({ length: 5 }, () => (
-      request(app).post(path).set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN).send(payload)
+    const responses = await Promise.all(Array.from({ length: 5 }, async () => (
+      (await request(app)).post(path).set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN).send(payload)
     )));
     responses.forEach((response) => expect(response.status).toBe(200));
     expect(responses.filter((response) => response.body.data.awarded)).toHaveLength(1);
@@ -94,13 +96,13 @@ describe('Task 5 internal stars', () => {
       { familyId: f.familyA._id, childId: f.childA1._id, confirmedByParentId: f.parentB._id }
     ];
     for (const values of cases) {
-      const response = await request(app).post(path)
+      const response = await (await request(app)).post(path)
         .set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN)
         .send({ ...values, taskId: new mongoose.Types.ObjectId() });
       expect(response.status).toBe(403);
       expect(response.body.error.code).toBe('CHILD_ACCESS_DENIED');
     }
-    const invalid = await request(app).post(path)
+    const invalid = await (await request(app)).post(path)
       .set('x-service-token', process.env.INTERNAL_SERVICE_TOKEN)
       .send({ familyId: 'invalid', childId: f.childA1._id, taskId: 'invalid', confirmedByParentId: f.parentA._id });
     expect(invalid.status).toBe(400);

@@ -1,4 +1,6 @@
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const Role = require('../../../../common/models/Role');
 const User = require('../../../../common/models/User');
 const { createApp } = require('../../server');
@@ -47,7 +49,7 @@ describe('family auth response contract', () => {
   });
 
   test('register returns the family success envelope', async () => {
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/auth/register')
       .send(parentRegistration());
 
@@ -66,7 +68,7 @@ describe('family auth response contract', () => {
   test('login returns the family success envelope', async () => {
     await User.create(parentRegistration());
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/auth/login')
       .send({ username: 'contract_parent', password: 'FamilyPass123!' });
 
@@ -84,11 +86,11 @@ describe('family auth response contract', () => {
 
   test('change password returns the family success envelope', async () => {
     await User.create(parentRegistration());
-    const login = await request(app)
+    const login = await (await request(app))
       .post('/api/auth/login')
       .send({ username: 'contract_parent', password: 'FamilyPass123!' });
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/auth/change-password')
       .set('Authorization', `Bearer ${login.body.data.token}`)
       .send({
@@ -102,7 +104,7 @@ describe('family auth response contract', () => {
   });
 
   test('invalid credentials return UNAUTHENTICATED', async () => {
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/auth/login')
       .send({ username: 'missing_parent', password: 'FamilyPass123!' });
 
@@ -111,11 +113,11 @@ describe('family auth response contract', () => {
 
   test('incorrect old password returns UNAUTHENTICATED', async () => {
     await User.create(parentRegistration());
-    const login = await request(app)
+    const login = await (await request(app))
       .post('/api/auth/login')
       .send({ username: 'contract_parent', password: 'FamilyPass123!' });
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/auth/change-password')
       .set('Authorization', `Bearer ${login.body.data.token}`)
       .send({
@@ -128,9 +130,9 @@ describe('family auth response contract', () => {
   });
 
   test('duplicate registration returns RESOURCE_CONFLICT', async () => {
-    await request(app).post('/api/auth/register').send(parentRegistration());
+    await (await request(app)).post('/api/auth/register').send(parentRegistration());
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/auth/register')
       .send(parentRegistration({ email: 'another-parent@example.com' }));
 
@@ -138,7 +140,7 @@ describe('family auth response contract', () => {
   });
 
   test('invalid registration returns the validation error envelope', async () => {
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/auth/register')
       .send(parentRegistration({ username: '' }));
 

@@ -60,16 +60,30 @@ const createPrivateMediaStore = ({
     const temporaryPath = path.join(privateRoot, `.${storageKey}.${process.pid}.tmp`);
 
     await initialize();
-    let published = false;
+    let published = false, temporaryOwned = false;
     try {
-      await fsPromises.writeFile(temporaryPath, buffer, { flag: 'wx', mode: 0o600 });
-      await fsPromises.chmod(temporaryPath, 0o600);
+      const file = await fsPromises.open(temporaryPath, 'wx', 0o600);
+      temporaryOwned = true;
+      try {
+        await file.writeFile(buffer);
+        await file.chmod(0o600);
+        await file.sync();
+      } finally { await file.close(); }
       await fsPromises.link(temporaryPath, objectPath);
       published = true;
       await fsPromises.unlink(temporaryPath);
+      temporaryOwned = false;
+      // A caller may persist metadata only after bytes and the published directory entry are durable.
+      await flushDirectory();
     } catch (error) {
-      await fsPromises.rm(temporaryPath, { force: true }).catch(() => undefined);
-      if (published) await fsPromises.rm(objectPath, { force: true }).catch(() => undefined);
+      const cleanupErrors = [];
+      for (const ownedPath of [temporaryOwned && temporaryPath, published && objectPath].filter(Boolean)) {
+        try { await fsPromises.rm(ownedPath, { force: true }); } catch (cause) { cleanupErrors.push(cause); }
+      }
+      if (temporaryOwned || published) {
+        try { await flushDirectory(); } catch (cause) { cleanupErrors.push(cause); }
+      }
+      if (cleanupErrors.length) throw new AggregateError([error, ...cleanupErrors], 'Media write and cleanup failed');
       if (error.code === 'EEXIST') throw conflictError();
       throw error;
     }
@@ -98,7 +112,20 @@ const createPrivateMediaStore = ({
     }
   };
 
-  return { initialize, read, remove, resolveStoragePath, writeCanonical };
+  const flushDirectory = async () => {
+    const directory = await fsPromises.open(privateRoot, 'r');
+    try { await directory.sync(); } finally { await directory.close(); }
+  };
+
+  const syncDirectory = async () => {
+    const stat = await fsPromises.lstat(privateRoot);
+    if (!stat.isDirectory() || stat.isSymbolicLink() || await fsPromises.realpath(privateRoot) !== privateRoot) {
+      throw new Error('Invalid private media root');
+    }
+    await flushDirectory();
+  };
+
+  return { initialize, read, remove, syncDirectory, resolveStoragePath, writeCanonical };
 };
 
 module.exports = {

@@ -1,4 +1,6 @@
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const mongoose = require('mongoose');
 const { createApp } = require('../server');
 
@@ -12,7 +14,7 @@ describe('Progress Service 服务器测试', () => {
   // 测试健康检查端点
   describe('GET /health', () => {
     it('应该返回服务健康状态', async () => {
-      const response = await request(app).get('/health');
+      const response = await (await request(app)).get('/health');
       
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('status', 'ok');
@@ -23,7 +25,7 @@ describe('Progress Service 服务器测试', () => {
   // 测试认证中间件
   describe('认证中间件', () => {
     it('没有用户信息时应该返回401', async () => {
-      const response = await request(app).get('/api/progress/123');
+      const response = await (await request(app)).get('/api/progress/123');
       
       expect(response.status).toBe(401);
       expect(response.body.error).toEqual(expect.objectContaining({
@@ -33,7 +35,7 @@ describe('Progress Service 服务器测试', () => {
     });
     
     it('有用户信息时应该通过认证', async () => {
-      const response = await request(app)
+      const response = await (await request(app))
         .get('/api/progress/123')
         .set('x-user-id', '123')
         .set('x-user-role', 'student');
@@ -46,7 +48,7 @@ describe('Progress Service 服务器测试', () => {
   // 测试角色检查中间件
   describe('角色检查中间件', () => {
     it('角色不匹配时应该返回403', async () => {
-      const response = await request(app)
+      const response = await (await request(app))
         .post('/api/progress/update')
         .set('x-user-id', '123')
         .set('x-user-role', 'student')
@@ -66,7 +68,7 @@ describe('Progress Service 服务器测试', () => {
     });
     
     it('角色匹配时应该通过检查', async () => {
-      const response = await request(app)
+      const response = await (await request(app))
         .post('/api/progress/update')
         .set('x-user-id', '123')
         .set('x-user-role', 'teacher')
@@ -87,7 +89,7 @@ describe('Progress Service 服务器测试', () => {
   describe('错误处理中间件', () => {
     it('应该处理路由错误', async () => {
       // 创建一个会导致错误的请求
-      const response = await request(app)
+      const response = await (await request(app))
         .post('/api/progress/update')
         .set('x-user-id', '123')
         .set('x-user-role', 'teacher')
@@ -111,7 +113,7 @@ describe('Progress Service 服务器测试', () => {
   // 测试路由是否正确挂载
   describe('路由挂载', () => {
     it('应该正确挂载进度路由', async () => {
-      const response = await request(app)
+      const response = await (await request(app))
         .get('/api/progress/123')
         .set('x-user-id', '123')
         .set('x-user-role', 'teacher');

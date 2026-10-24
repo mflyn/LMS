@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 
 describe('homework-service server lifecycle', () => {
   test('exports lifecycle factories without connecting or listening during import', () => {
@@ -30,7 +32,7 @@ describe('homework-service server lifecycle', () => {
     growthTaskRouter.get('/lifecycle-probe', (req, res) => res.json({ success: true }));
     const { createApp } = require('../server');
 
-    const response = await request(createApp({ growthTaskRouter })).get('/api/growth-tasks/lifecycle-probe');
+    const response = await (await request(createApp({ growthTaskRouter }))).get('/api/growth-tasks/lifecycle-probe');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ success: true });
@@ -60,7 +62,7 @@ describe('homework-service server lifecycle', () => {
       appLogger: { info: jest.fn() }
     });
 
-    expect(order).toEqual(['validate', 'connect', 'media-app', 'listen:3003', 'queue']);
+    expect(order).toEqual(['validate', 'connect', 'media-app', 'queue', 'listen:3003']);
   });
 
   test('ENABLE_RABBITMQ=false disables the optional broker in production', async () => {

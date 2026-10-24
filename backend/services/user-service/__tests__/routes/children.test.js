@@ -1,5 +1,7 @@
 const express = require('express');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../../../../common/models/User');
@@ -53,7 +55,7 @@ const expectStatus = (response, expected) => {
 };
 
 const createFamily = async (app, parent, familyName = '测试家庭') => {
-  const response = await request(app)
+  const response = await (await request(app))
     .post('/api/families')
     .set(parentHeaders(parent, 'POST', '/api/families'))
     .send({ familyName });
@@ -63,7 +65,7 @@ const createFamily = async (app, parent, familyName = '测试家庭') => {
 };
 
 const createChild = async (app, parent, childName = '小明') => {
-  const response = await request(app)
+  const response = await (await request(app))
     .post('/api/children')
     .set(parentHeaders(parent, 'POST', '/api/children'))
     .send({
@@ -104,7 +106,7 @@ describe('children routes', () => {
     }));
     expect(secondChild.name).toBe('小红');
 
-    const listResponse = await request(app)
+    const listResponse = await (await request(app))
       .get('/api/children')
       .set(parentHeaders(parent, 'GET', '/api/children'));
 
@@ -119,7 +121,7 @@ describe('children routes', () => {
     const update = jest.spyOn(User, 'updateMany')
       .mockRejectedValueOnce(new Error('parent child link failed'));
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/children')
       .set(parentHeaders(parent, 'POST', '/api/children'))
       .send({ name: '不应残留的孩子', grade: 3 });
@@ -138,13 +140,13 @@ describe('children routes', () => {
     await createFamily(app, parentB, 'B 家');
     const childB = await createChild(app, parentB, '别人家的孩子');
 
-    const readResponse = await request(app)
+    const readResponse = await (await request(app))
       .get(`/api/children/${childB.childId}`)
       .set(parentHeaders(parentA, 'GET', `/api/children/${childB.childId}`));
 
     expect(readResponse.status).toBe(403);
 
-    const editResponse = await request(app)
+    const editResponse = await (await request(app))
       .patch(`/api/children/${childB.childId}`)
       .set(parentHeaders(parentA, 'PATCH', `/api/children/${childB.childId}`))
       .send({ name: '不应修改' });
@@ -158,7 +160,7 @@ describe('children routes', () => {
     const child = await createChild(app, parent);
     const endpoint = `/api/children/${child.childId}`;
 
-    const canonical = await request(app)
+    const canonical = await (await request(app))
       .patch(endpoint)
       .set(parentHeaders(parent, 'PATCH', endpoint))
       .send({ textbookVersion: '苏教版', sportsPreferences: ['游泳'] });
@@ -172,7 +174,7 @@ describe('children routes', () => {
       { curriculumVersion: '错误别名' },
       { sportPreferences: ['错误别名'] }
     ]) {
-      const response = await request(app)
+      const response = await (await request(app))
         .patch(endpoint)
         .set(parentHeaders(parent, 'PATCH', endpoint))
         .send(alias);
@@ -187,13 +189,13 @@ describe('children routes', () => {
     const firstChild = await createChild(app, parent, '小明');
     await createChild(app, parent, '小红');
 
-    await request(app)
+    await (await request(app))
       .post(`/api/children/${firstChild.childId}/pin`)
       .set(parentHeaders(parent, 'POST', `/api/children/${firstChild.childId}/pin`))
       .send({ pin: '1234' })
       .expect(200);
 
-    const loginResponse = await request(app)
+    const loginResponse = await (await request(app))
       .post('/api/auth/child-pin-login')
       .send({
         familyId: family.familyId,
@@ -214,7 +216,7 @@ describe('children routes', () => {
     }));
     expect(decoded.exp - decoded.iat).toBeLessThanOrEqual(12 * 60 * 60);
 
-    const siblingsResponse = await request(app)
+    const siblingsResponse = await (await request(app))
       .get('/api/children')
       .set(signedHeaders(decoded, 'GET', '/api/children'));
 
@@ -228,7 +230,7 @@ describe('children routes', () => {
     const endpoint = `/api/children/${child.childId}/pin`;
 
     for (const pin of ['123', '1234567']) {
-      const response = await request(app)
+      const response = await (await request(app))
         .post(endpoint)
         .set(parentHeaders(parent, 'POST', endpoint))
         .send({ pin });
@@ -237,7 +239,7 @@ describe('children routes', () => {
     }
 
     for (const pin of ['1234', '123456']) {
-      await request(app)
+      await (await request(app))
         .post(endpoint)
         .set(parentHeaders(parent, 'POST', endpoint))
         .send({ pin })
@@ -250,14 +252,14 @@ describe('children routes', () => {
     const family = await createFamily(app, parent);
     const child = await createChild(app, parent);
     const endpoint = `/api/children/${child.childId}/pin`;
-    await request(app)
+    await (await request(app))
       .post(endpoint)
       .set(parentHeaders(parent, 'POST', endpoint))
       .send({ pin: '1234' })
       .expect(200);
 
     for (let attempt = 1; attempt <= 4; attempt += 1) {
-      const response = await request(app).post('/api/auth/child-pin-login').send({
+      const response = await (await request(app)).post('/api/auth/child-pin-login').send({
         familyId: family.familyId,
         childId: child.childId,
         pin: '9999'
@@ -266,7 +268,7 @@ describe('children routes', () => {
       expect(response.body.error.code).toBe('INVALID_CHILD_CREDENTIALS');
     }
 
-    const locked = await request(app).post('/api/auth/child-pin-login').send({
+    const locked = await (await request(app)).post('/api/auth/child-pin-login').send({
       familyId: family.familyId,
       childId: child.childId,
       pin: '9999'
@@ -280,7 +282,7 @@ describe('children routes', () => {
     const childId = new mongoose.Types.ObjectId().toString();
 
     for (let attempt = 1; attempt <= 4; attempt += 1) {
-      const response = await request(app).post('/api/auth/child-pin-login').send({
+      const response = await (await request(app)).post('/api/auth/child-pin-login').send({
         familyId,
         childId,
         pin: '9999'
@@ -289,7 +291,7 @@ describe('children routes', () => {
       expect(response.body.error.code).toBe('INVALID_CHILD_CREDENTIALS');
     }
 
-    const locked = await request(app).post('/api/auth/child-pin-login').send({
+    const locked = await (await request(app)).post('/api/auth/child-pin-login').send({
       familyId,
       childId,
       pin: '9999'
@@ -303,27 +305,27 @@ describe('children routes', () => {
     const family = await createFamily(app, parent);
     const child = await createChild(app, parent);
     const pinEndpoint = `/api/children/${child.childId}/pin`;
-    await request(app)
+    await (await request(app))
       .post(pinEndpoint)
       .set(parentHeaders(parent, 'POST', pinEndpoint))
       .send({ pin: '1234' })
       .expect(200);
 
-    const login = await request(app).post('/api/auth/child-pin-login').send({
+    const login = await (await request(app)).post('/api/auth/child-pin-login').send({
       familyId: family.familyId,
       childId: child.childId,
       pin: '1234'
     });
     const oldIdentity = jwt.decode(login.body.data.token);
 
-    await request(app)
+    await (await request(app))
       .post(pinEndpoint)
       .set(parentHeaders(parent, 'POST', pinEndpoint))
       .send({ pin: '5678' })
       .expect(200);
 
     const profileEndpoint = `/api/children/${child.childId}`;
-    const staleResponse = await request(app)
+    const staleResponse = await (await request(app))
       .get(profileEndpoint)
       .set(signedHeaders(oldIdentity, 'GET', profileEndpoint));
 

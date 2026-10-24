@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 
 const MEDIA_RESOURCE_FIELDS = Object.freeze({
   child: Object.freeze(['avatarMediaId']),
-  growth_task: Object.freeze(['attachmentMediaIds']),
+  growth_task: Object.freeze(['attachmentMediaIds', 'completionMediaIds']),
   family_mistake: Object.freeze(['questionMediaId', 'childAnswerMediaId'])
 });
 const MEDIA_RESOURCE_TYPES = Object.freeze(Object.keys(MEDIA_RESOURCE_FIELDS));

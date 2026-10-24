@@ -7,7 +7,9 @@ jest.mock('../services/starAwardClient', () => ({
   validateClientConfig: jest.fn()
 }));
 
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close } = createHttpTestHarness();
+afterEach(close);
 const express = require('express');
 const app = require('../server');
 const GrowthTask = require('../models/GrowthTask');
@@ -99,7 +101,7 @@ const sagaApp = (awardTaskStar) => {
 };
 
 const createTask = async (parent, child, overrides = {}) => {
-  const response = await request(app)
+  const response = await (await request(app))
     .post('/api/growth-tasks')
     .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
     .send(taskPayload(child, overrides));
@@ -110,7 +112,7 @@ const createTask = async (parent, child, overrides = {}) => {
 
 describe('growth task routes', () => {
   test('deployment health probe returns service status', async () => {
-    const response = await request(app).get('/health');
+    const response = await (await request(app)).get('/health');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: 'ok', service: 'homework-service' });
@@ -125,7 +127,7 @@ describe('growth task routes', () => {
   ])('parent creates a %s growth task for own child', async (dimension, overrides) => {
     const { parent, family, child } = await createFamilyFixture(dimension);
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(taskPayload(child, { dimension, ...overrides }));
@@ -145,7 +147,7 @@ describe('growth task routes', () => {
     const familyA = await createFamilyFixture('A');
     const familyB = await createFamilyFixture('B');
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post('/api/growth-tasks')
       .set(userHeaders(familyA.parent, 'POST', '/api/growth-tasks'))
       .send(taskPayload(familyB.child));
@@ -166,7 +168,7 @@ describe('growth task routes', () => {
       dueDate: addLocalDateDays(today, 1)
     });
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get('/api/growth-tasks')
       .set(userHeaders(parent, 'GET', `/api/growth-tasks?childId=${child._id}&scope=today`))
       .query({ childId: child._id.toString(), scope: 'today' });
@@ -187,7 +189,7 @@ describe('growth task routes', () => {
       dueDate: addLocalDateDays(weekStart, 7)
     });
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get('/api/growth-tasks')
       .set(userHeaders(parent, 'GET', `/api/growth-tasks?childId=${child._id}&scope=week`))
       .query({ childId: child._id.toString(), scope: 'week' });
@@ -211,7 +213,7 @@ describe('growth task routes', () => {
       unit: 'count'
     });
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get('/api/growth-tasks')
       .set(userHeaders(parent, 'GET', `/api/growth-tasks?childId=${child._id}&dimension=physical`))
       .query({ childId: child._id.toString(), dimension: 'physical' });
@@ -235,7 +237,7 @@ describe('growth task routes', () => {
       unit: 'count'
     });
 
-    const response = await request(app)
+    const response = await (await request(app))
       .patch(`/api/growth-tasks/${task.taskId}/complete`)
       .set(userHeaders(child, 'PATCH', `/api/growth-tasks/${task.taskId}/complete`))
       .send({
@@ -262,13 +264,13 @@ describe('growth task routes', () => {
     const { parent, child } = await createFamilyFixture('确认');
     const task = await createTask(parent, child);
 
-    await request(app)
+    await (await request(app))
       .patch(`/api/growth-tasks/${task.taskId}/complete`)
       .set(userHeaders(child, 'PATCH', `/api/growth-tasks/${task.taskId}/complete`))
       .send({ actualMinutes: 25, difficulty: 'normal' })
       .expect(200);
 
-    const response = await request(app)
+    const response = await (await request(app))
       .patch(`/api/growth-tasks/${task.taskId}/confirm`)
       .set(userHeaders(parent, 'PATCH', `/api/growth-tasks/${task.taskId}/confirm`))
       .send({ parentFeedback: '完成得很认真' });
@@ -286,13 +288,13 @@ describe('growth task routes', () => {
     const { parent, child } = await createFamilyFixture('权限');
     const task = await createTask(parent, child);
 
-    await request(app)
+    await (await request(app))
       .patch(`/api/growth-tasks/${task.taskId}/complete`)
       .set(userHeaders(child, 'PATCH', `/api/growth-tasks/${task.taskId}/complete`))
       .send({ actualMinutes: 20, difficulty: 'normal' })
       .expect(200);
 
-    const response = await request(app)
+    const response = await (await request(app))
       .patch(`/api/growth-tasks/${task.taskId}/confirm`)
       .set(userHeaders(child, 'PATCH', `/api/growth-tasks/${task.taskId}/confirm`))
       .send({ parentFeedback: '孩子不能确认' });
@@ -310,7 +312,7 @@ describe('growth task routes', () => {
       expect(todayTask.dueDate).toBe('2030-01-02');
 
       const endpoint = `/api/growth-tasks?childId=${child._id}&scope=today`;
-      const response = await request(app)
+      const response = await (await request(app))
         .get('/api/growth-tasks')
         .set(userHeaders(parent, 'GET', endpoint))
         .query({ childId: child._id.toString(), scope: 'today' });
@@ -324,7 +326,7 @@ describe('growth task routes', () => {
 
   test('rejects repeatRule on create and edit', async () => {
     const { parent, child } = await createFamilyFixture('重复');
-    const createResponse = await request(app)
+    const createResponse = await (await request(app))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(taskPayload(child, { repeatRule: 'daily' }));
@@ -333,7 +335,7 @@ describe('growth task routes', () => {
 
     const task = await createTask(parent, child);
     const endpoint = `/api/growth-tasks/${task.taskId}`;
-    const editResponse = await request(app)
+    const editResponse = await (await request(app))
       .patch(endpoint)
       .set(userHeaders(parent, 'PATCH', endpoint))
       .send({ repeatRule: 'weekly' });
@@ -343,14 +345,14 @@ describe('growth task routes', () => {
 
   test('rejects private media when disabled and rejects legacy attachments', async () => {
     const { parent, child } = await createFamilyFixture('媒体');
-    const legacy = await request(app)
+    const legacy = await (await request(app))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(taskPayload(child, { attachments: [{ url: 'https://public.example/child.jpg' }] }));
     expect(legacy.status).toBe(400);
     expect(legacy.body.error.code).toBe('VALIDATION_ERROR');
 
-    const privateMedia = await request(app)
+    const privateMedia = await (await request(app))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(taskPayload(child, { attachmentMediaIds: ['507f1f77bcf86cd799439011'] }));
@@ -364,7 +366,7 @@ describe('growth task routes', () => {
     await createTask(parent, child, { title: '任务二' });
 
     const invalidEndpoint = `/api/growth-tasks?childId=${child._id}&status=unknown`;
-    const invalid = await request(app)
+    const invalid = await (await request(app))
       .get('/api/growth-tasks')
       .set(userHeaders(parent, 'GET', invalidEndpoint))
       .query({ childId: child._id.toString(), status: 'unknown' });
@@ -372,7 +374,7 @@ describe('growth task routes', () => {
     expect(invalid.body.error.code).toBe('VALIDATION_ERROR');
 
     const pageEndpoint = `/api/growth-tasks?childId=${child._id}&page=1&pageSize=1`;
-    const page = await request(app)
+    const page = await (await request(app))
       .get('/api/growth-tasks')
       .set(userHeaders(parent, 'GET', pageEndpoint))
       .query({ childId: child._id.toString(), page: 1, pageSize: 1 });
@@ -395,7 +397,7 @@ describe('growth task routes', () => {
     ];
 
     for (const [method, signedUrl, requestUrl, body] of cases) {
-      let operation = request(app)[method](requestUrl)
+      let operation = (await request(app))[method](requestUrl)
         .set(userHeaders(familyA.parent, method.toUpperCase(), signedUrl));
       if (body) operation = operation.send(body);
       const response = await operation;
@@ -408,19 +410,19 @@ describe('growth task routes', () => {
     const { parent, child } = await createFamilyFixture('归档');
     const pending = await createTask(parent, child, { title: '待删除' });
     const pendingEndpoint = `/api/growth-tasks/${pending.taskId}`;
-    const deleted = await request(app)
+    const deleted = await (await request(app))
       .delete(pendingEndpoint)
       .set(userHeaders(parent, 'DELETE', pendingEndpoint));
     expect(deleted.body.data.deleted).toBe(false);
     expect(deleted.body.data.task.status).toBe('cancelled');
     const retained = await GrowthTask.findById(pending.taskId);
     expect(retained.status).toBe('cancelled');
-    const cancelledReplay = await request(app)
+    const cancelledReplay = await (await request(app))
       .delete(pendingEndpoint)
       .set(userHeaders(parent, 'DELETE', pendingEndpoint));
     expect(cancelledReplay.body.data.task.status).toBe('cancelled');
 
-    const editCancelled = await request(app)
+    const editCancelled = await (await request(app))
       .patch(pendingEndpoint)
       .set(userHeaders(parent, 'PATCH', pendingEndpoint))
       .send({ title: '不得改写已取消任务' });
@@ -429,13 +431,13 @@ describe('growth task routes', () => {
 
     const completed = await createTask(parent, child, { title: '待归档' });
     const completeEndpoint = `/api/growth-tasks/${completed.taskId}/complete`;
-    await request(app)
+    await (await request(app))
       .patch(completeEndpoint)
       .set(userHeaders(parent, 'PATCH', completeEndpoint))
       .send({ actualMinutes: 5 })
       .expect(200);
     const completedEndpoint = `/api/growth-tasks/${completed.taskId}`;
-    const archived = await request(app)
+    const archived = await (await request(app))
       .delete(completedEndpoint)
       .set(userHeaders(parent, 'DELETE', completedEndpoint));
     expect(archived.body.data.task.status).toBe('archived');
@@ -451,7 +453,7 @@ describe('growth task routes', () => {
     });
 
     const endpoint = `/api/growth-tasks/${created.taskId}`;
-    const response = await request(app)
+    const response = await (await request(app))
       .delete(endpoint)
       .set(userHeaders(parent, 'DELETE', endpoint));
 
@@ -469,7 +471,7 @@ describe('growth task routes', () => {
     await GrowthTask.findByIdAndUpdate(created.taskId, { status: 'completed', completedAt: new Date() });
     const awardTaskStar = jest.fn().mockResolvedValue({ awarded: true, ledgerEntryId: 'ledger-1', starBalance: 1 });
     const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
-    const response = await request(sagaApp(awardTaskStar)).patch(endpoint)
+    const response = await (await request(sagaApp(awardTaskStar))).patch(endpoint)
       .set(userHeaders(parent, 'PATCH', endpoint)).send({ parentFeedback: '做得好' });
     expect(response.status).toBe(200);
     expect(response.body.data.task).toEqual(expect.objectContaining({ status: 'confirmed', starAwardState: 'awarded' }));
@@ -485,7 +487,7 @@ describe('growth task routes', () => {
     await GrowthTask.findByIdAndUpdate(created.taskId, { status: 'completed', completedAt: new Date() });
     const error = Object.assign(new Error('timeout'), { code: 'STAR_AWARD_PENDING', status: 503 });
     const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
-    const response = await request(sagaApp(jest.fn().mockRejectedValue(error))).patch(endpoint)
+    const response = await (await request(sagaApp(jest.fn().mockRejectedValue(error)))).patch(endpoint)
       .set(userHeaders(parent, 'PATCH', endpoint)).send({ parentFeedback: '保留反馈' });
     expect(response.status).toBe(503);
     expect(response.body.error.code).toBe('STAR_AWARD_PENDING');
@@ -500,7 +502,7 @@ describe('growth task routes', () => {
       status: 'confirmed', starAwardState: 'pending', confirmedAt, parentFeedback: '原反馈'
     });
     const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
-    const response = await request(sagaApp(jest.fn().mockResolvedValue({ awarded: false, ledgerEntryId: 'ledger-1', starBalance: 1 })))
+    const response = await (await request(sagaApp(jest.fn().mockResolvedValue({ awarded: false, ledgerEntryId: 'ledger-1', starBalance: 1 }))))
       .patch(endpoint).set(userHeaders(parent, 'PATCH', endpoint)).send({ parentFeedback: '不得覆盖' });
     expect(response.status).toBe(200);
     expect(response.body.data.task).toEqual(expect.objectContaining({ starAwardState: 'awarded', parentFeedback: '原反馈' }));
@@ -513,7 +515,7 @@ describe('growth task routes', () => {
     await GrowthTask.findByIdAndUpdate(created.taskId, { status: 'confirmed', starAwardState: 'awarded', confirmedAt: new Date() });
     const awardTaskStar = jest.fn();
     const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
-    const response = await request(sagaApp(awardTaskStar)).patch(endpoint)
+    const response = await (await request(sagaApp(awardTaskStar))).patch(endpoint)
       .set(userHeaders(parent, 'PATCH', endpoint)).send({});
     expect(response.status).toBe(200);
     expect(awardTaskStar).not.toHaveBeenCalled();
@@ -526,7 +528,7 @@ describe('growth task routes', () => {
     const awardTaskStar = jest.fn().mockResolvedValue({ awarded: true, ledgerEntryId: 'ledger-1', starBalance: 1 });
     const testApp = sagaApp(awardTaskStar);
     const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
-    const execute = () => request(testApp).patch(endpoint)
+    const execute = async () => (await request(testApp)).patch(endpoint)
       .set(userHeaders(parent, 'PATCH', endpoint)).send({ parentFeedback: '并发反馈' });
     const responses = await Promise.all([execute(), execute()]);
     expect(responses.map((item) => item.status)).toEqual([200, 200]);
@@ -540,9 +542,9 @@ describe('growth task routes', () => {
     const awardTaskStar = jest.fn();
     const testApp = sagaApp(awardTaskStar);
     const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
-    const invalidState = await request(testApp).patch(endpoint)
+    const invalidState = await (await request(testApp)).patch(endpoint)
       .set(userHeaders(first.parent, 'PATCH', endpoint)).send({});
-    const forbidden = await request(testApp).patch(endpoint)
+    const forbidden = await (await request(testApp)).patch(endpoint)
       .set(userHeaders(second.parent, 'PATCH', endpoint)).send({});
     expect(invalidState.status).toBe(409);
     expect(invalidState.body.error.code).toBe('TASK_STATE_CONFLICT');
@@ -560,9 +562,9 @@ describe('growth task routes', () => {
       .mockRejectedValueOnce(new Error('write conflict'));
     const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
 
-    const response = await request(sagaApp(jest.fn().mockResolvedValue({
+    const response = await (await request(sagaApp(jest.fn().mockResolvedValue({
       awarded: true, ledgerEntryId: 'ledger-1', starBalance: 1
-    }))).patch(endpoint).set(userHeaders(parent, 'PATCH', endpoint)).send({});
+    })))).patch(endpoint).set(userHeaders(parent, 'PATCH', endpoint)).send({});
 
     expect(response.status).toBe(503);
     expect(response.body.error.code).toBe('STAR_AWARD_PENDING');
@@ -587,9 +589,9 @@ describe('growth task routes', () => {
     });
     const endpoint = `/api/growth-tasks/${created.taskId}/confirm`;
 
-    const response = await request(sagaApp(jest.fn().mockResolvedValue({
+    const response = await (await request(sagaApp(jest.fn().mockResolvedValue({
       awarded: false, ledgerEntryId: 'ledger-1', starBalance: 1
-    }))).patch(endpoint).set(userHeaders(parent, 'PATCH', endpoint)).send({});
+    })))).patch(endpoint).set(userHeaders(parent, 'PATCH', endpoint)).send({});
 
     expect(response.status).toBe(200);
     expect(response.body.data.task.starAwardState).toBe('awarded');

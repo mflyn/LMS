@@ -51,7 +51,8 @@ const createMediaService = ({
   processor = createPrivateMediaProcessor(),
   scanner = null,
   securityProfile = 'trusted-local',
-  transactionRunner
+  transactionRunner,
+  completionUploadService
 } = {}) => {
   if (!MediaAssetModel || typeof MediaAssetModel.create !== 'function') {
     throw new Error('MediaAssetModel is required');
@@ -78,6 +79,7 @@ const createMediaService = ({
     throw new Error('MediaReferenceModel is required');
   }
   if (typeof transactionRunner !== 'function') throw new Error('transactionRunner is required');
+  if (completionUploadService && typeof completionUploadService.upload !== 'function') throw new Error('Invalid completion upload service');
 
   const assertIdentity = (identity) => {
     if (!identity || !validObjectId(String(identity.id || ''))
@@ -167,6 +169,16 @@ const createMediaService = ({
       malwareScannedAt = new Date(Number(now()));
     }
     const stored = await mediaStore.writeCanonical(prepared.buffer);
+    if (purpose === 'task_completion' && completionUploadService) {
+      // The durable completion uploader owns pre-write compensation and unknown-result recovery.
+      // Never pass its errors through the legacy create-and-delete catch below.
+      const asset = await completionUploadService.upload({ identity, metadata: {
+        familyId: scope.familyId, childId: scope.childId, uploadedBy: scope.actorId, purpose,
+        mimeType: prepared.mimeType, displayName: prepared.displayName, sizeBytes: prepared.sizeBytes,
+        pageCount: prepared.pageCount, storageKey: stored.storageKey, malwareScanStatus, malwareScannedAt
+      } });
+      return publicMediaDescriptor(asset, { includePurpose: true });
+    }
     let asset;
     try {
       asset = await MediaAssetModel.create({

@@ -1,6 +1,7 @@
 const { AppError } = require('../../../common/middleware/errorTypes');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
+const Retirement = require('../models/MediaOrphanRetirement');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -32,12 +33,15 @@ const createMediaCleanupService = ({
     }
     const cutoff = new Date(Number(now()) - retentionDays * DAY_MS);
     const candidates = await MediaAssetModel.find({
+      privacyDeletionRecorded: { $ne: true },
+      orphanRetirementId: { $exists: false },
       status: 'deleted',
       deletedAt: { $lte: cutoff }
     }).sort({ deletedAt: 1, _id: 1 }).limit(limit).lean();
     const mediaIds = [];
 
     for (const asset of candidates) {
+      if (await Retirement.exists({ mediaId: asset._id })) continue;
       const activeReferences = await MediaReferenceModel.countDocuments({
         mediaId: asset._id,
         state: { $in: ['prepared', 'bound'] }
@@ -53,6 +57,8 @@ const createMediaCleanupService = ({
       await mediaStore.remove(asset.storageKey);
       const removed = await MediaAssetModel.deleteOne({
         _id: asset._id,
+        privacyDeletionRecorded: { $ne: true },
+        orphanRetirementId: { $exists: false },
         status: 'deleted',
         deletedAt: { $lte: cutoff }
       });

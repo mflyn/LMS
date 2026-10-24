@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { UnauthorizedError, ForbiddenError } = require('../common/middleware/errorTypes');
+const { UnauthorizedError } = require('../common/middleware/errorTypes');
 const {
   assertIdentitySecret,
   createIdentityHeaders,
@@ -9,6 +9,7 @@ const {
 
 const stripClientIdentity = (req, res, next) => {
   stripClientIdentityHeaders(req.headers);
+  delete req.headers['x-service-token'];
   next();
 };
 
@@ -29,8 +30,13 @@ const createAuthenticateToken = ({
       return next(new UnauthorizedError('No token provided'));
     }
 
+    let user;
     try {
-      const user = jwtImpl.verify(token, jwtSecret);
+      user = jwtImpl.verify(token, jwtSecret);
+    } catch (_error) {
+      return next(new UnauthorizedError('Invalid or expired token'));
+    }
+    try {
       req.user = user;
       Object.assign(req.headers, createIdentityHeaders({
         method: req.method,
@@ -42,7 +48,7 @@ const createAuthenticateToken = ({
       }));
       return next();
     } catch (error) {
-      return next(new ForbiddenError('Invalid or expired token'));
+      return next(error);
     }
   };
 };

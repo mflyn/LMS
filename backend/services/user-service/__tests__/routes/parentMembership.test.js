@@ -1,7 +1,9 @@
 const crypto = require('crypto');
 const express = require('express');
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 
 const Family = require('../../../../common/models/Family');
 const FamilyMembershipEvent = require('../../../../common/models/FamilyMembershipEvent');
@@ -56,7 +58,7 @@ const createFamily = async (owner, overrides = {}) => {
 };
 const createInvitation = async (app, owner, family) => {
   const path = `/api/families/${family._id}/parent-invitations`;
-  return request(app).post(path).set(headers(owner, 'POST', path)).send({});
+  return (await request(app)).post(path).set(headers(owner, 'POST', path)).send({});
 };
 const expectInactiveInvitation = async (app, parent, token) => {
   const expected = {
@@ -69,7 +71,7 @@ const expectInactiveInvitation = async (app, parent, token) => {
   };
   for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
     const body = path.endsWith('/accept') ? { token, familyRole: 'guardian' } : { token };
-    const response = await request(app).post(path).set(headers(parent, 'POST', path)).send(body);
+    const response = await (await request(app)).post(path).set(headers(parent, 'POST', path)).send(body);
     expect(response.status).toBe(409);
     expect(response.body).toEqual(expected);
   }
@@ -101,7 +103,7 @@ describe('Task 12 parent membership routes', () => {
     })).toBe(1);
 
     const activePath = `/api/families/${family._id}/parent-invitations/active`;
-    const active = await request(app).get(activePath).set(headers(owner, 'GET', activePath));
+    const active = await (await request(app)).get(activePath).set(headers(owner, 'GET', activePath));
     expect(active.status).toBe(200);
     expect(active.body.data.invitation).toEqual(expect.objectContaining({
       invitationId: invitation.invitationId,
@@ -118,8 +120,8 @@ describe('Task 12 parent membership routes', () => {
     const path = `/api/families/${family._id}/parent-invitations`;
     const activePath = `${path}/active`;
 
-    const created = await request(app).post(path).set(headers(outsider, 'POST', path)).send({});
-    const listed = await request(app).get(activePath).set(headers(outsider, 'GET', activePath));
+    const created = await (await request(app)).post(path).set(headers(outsider, 'POST', path)).send({});
+    const listed = await (await request(app)).get(activePath).set(headers(outsider, 'GET', activePath));
 
     for (const response of [created, listed]) {
       expect(response.status).toBe(403);
@@ -154,8 +156,8 @@ describe('Task 12 parent membership routes', () => {
     const created = await createInvitation(app, owner, family);
     const path = `/api/families/${family._id}/parent-invitations/${created.body.data.invitation.invitationId}`;
 
-    await request(app).delete(path).set(headers(owner, 'DELETE', path)).expect(204);
-    const replay = await request(app).delete(path).set(headers(owner, 'DELETE', path));
+    await (await request(app)).delete(path).set(headers(owner, 'DELETE', path)).expect(204);
+    const replay = await (await request(app)).delete(path).set(headers(owner, 'DELETE', path));
 
     expect(replay.status).toBe(409);
     expect(replay.body.error.code).toBe('FAMILY_INVITATION_NOT_ACTIVE');
@@ -174,7 +176,7 @@ describe('Task 12 parent membership routes', () => {
     const token = created.body.data.invitation.token;
 
     const previewPath = '/api/parent-invitations/preview';
-    const preview = await request(app)
+    const preview = await (await request(app))
       .post(previewPath)
       .set(headers(member, 'POST', previewPath))
       .send({ token });
@@ -185,7 +187,7 @@ describe('Task 12 parent membership routes', () => {
     }));
 
     const acceptPath = '/api/parent-invitations/accept';
-    const accepted = await request(app)
+    const accepted = await (await request(app))
       .post(acceptPath)
       .set(headers(member, 'POST', acceptPath))
       .send({ token, familyRole: 'father' });
@@ -207,7 +209,7 @@ describe('Task 12 parent membership routes', () => {
     expect(await FamilyMembershipEvent.countDocuments({ action: 'member_joined' })).toBe(1);
 
     const familyPath = '/api/families/me';
-    const read = await request(app).get(familyPath).set(headers(member, 'GET', familyPath));
+    const read = await (await request(app)).get(familyPath).set(headers(member, 'GET', familyPath));
     expect(read.body.data.family.parents).toEqual(accepted.body.data.family.parents);
     await expectInactiveInvitation(app, member, token);
   });
@@ -230,7 +232,7 @@ describe('Task 12 parent membership routes', () => {
 
     for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
       const body = path.endsWith('/accept') ? { token, familyRole: 'guardian' } : { token };
-      const response = await request(app)
+      const response = await (await request(app))
         .post(path)
         .set(headers(ineligibleParent, 'POST', path))
         .send(body);
@@ -255,7 +257,7 @@ describe('Task 12 parent membership routes', () => {
     for (const path of ['/api/parent-invitations/preview', '/api/parent-invitations/accept']) {
       for (const token of [created.body.data.invitation.token, unknownToken]) {
         const body = path.endsWith('/accept') ? { token, familyRole: 'guardian' } : { token };
-        const response = await request(app)
+        const response = await (await request(app))
           .post(path)
           .set(identityHeaders(nonParent, 'POST', path))
           .send(body);
@@ -274,7 +276,7 @@ describe('Task 12 parent membership routes', () => {
     const created = await createInvitation(app, owner, family);
     const path = '/api/parent-invitations/accept';
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post(path)
       .set(headers(candidate, 'POST', path))
       .send({ token: created.body.data.invitation.token, familyRole: 'guardian' });
@@ -299,7 +301,7 @@ describe('Task 12 parent membership routes', () => {
     const created = await createInvitation(app, owner, family);
     const path = '/api/parent-invitations/accept';
 
-    const alreadyMember = await request(app).post(path).set(headers(existingMember, 'POST', path)).send({
+    const alreadyMember = await (await request(app)).post(path).set(headers(existingMember, 'POST', path)).send({
       token: created.body.data.invitation.token,
       familyRole: 'guardian'
     });
@@ -308,7 +310,7 @@ describe('Task 12 parent membership routes', () => {
 
     family.memberParentIds.addToSet(third._id);
     await family.save();
-    const full = await request(app).post(path).set(headers(candidate, 'POST', path)).send({
+    const full = await (await request(app)).post(path).set(headers(candidate, 'POST', path)).send({
       token: created.body.data.invitation.token,
       familyRole: 'guardian'
     });
@@ -339,7 +341,7 @@ describe('Task 12 parent membership routes', () => {
     ];
 
     for (const [method, path, signedHeaders, body] of cases) {
-      const response = await request(app)[method](path).set(signedHeaders).send(body);
+      const response = await (await request(app))[method](path).set(signedHeaders).send(body);
       expect(response.status).toBe(400);
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
     }
@@ -352,13 +354,13 @@ describe('Task 12 parent membership routes', () => {
     const family = await createFamily(owner);
     const invite = await createInvitation(app, owner, family);
     const acceptPath = '/api/parent-invitations/accept';
-    await request(app).post(acceptPath).set(headers(member, 'POST', acceptPath)).send({
+    await (await request(app)).post(acceptPath).set(headers(member, 'POST', acceptPath)).send({
       token: invite.body.data.invitation.token,
       familyRole: 'guardian'
     }).expect(200);
 
     const childPath = '/api/children';
-    const childResponse = await request(app)
+    const childResponse = await (await request(app))
       .post(childPath)
       .set(headers(member, 'POST', childPath))
       .send({ name: '共管孩子', grade: 3 });
@@ -381,13 +383,13 @@ describe('Task 12 parent membership routes', () => {
     const family = await createFamily(owner);
     const invite = await createInvitation(app, owner, family);
     const acceptPath = '/api/parent-invitations/accept';
-    await request(app).post(acceptPath).set(headers(member, 'POST', acceptPath)).send({
+    await (await request(app)).post(acceptPath).set(headers(member, 'POST', acceptPath)).send({
       token: invite.body.data.invitation.token,
       familyRole: 'mother'
     }).expect(200);
 
     const ownerPath = `/api/families/${family._id}/owner`;
-    const transferred = await request(app)
+    const transferred = await (await request(app))
       .patch(ownerPath)
       .set(headers(owner, 'PATCH', ownerPath))
       .send({ newOwnerParentId: member._id.toString() });
@@ -395,7 +397,7 @@ describe('Task 12 parent membership routes', () => {
     expect(transferred.body.data.family.ownerParentId).toBe(member._id.toString());
 
     const removePath = `/api/families/${family._id}/members/${owner._id}`;
-    await request(app).delete(removePath).set(headers(member, 'DELETE', removePath)).expect(204);
+    await (await request(app)).delete(removePath).set(headers(member, 'DELETE', removePath)).expect(204);
     const formerOwner = await User.findById(owner._id);
     expect(formerOwner.familyId).toBeUndefined();
     expect(formerOwner.children).toEqual([]);
@@ -408,27 +410,27 @@ describe('Task 12 parent membership routes', () => {
     const family = await createFamily(owner);
     const invite = await createInvitation(app, owner, family);
     const acceptPath = '/api/parent-invitations/accept';
-    await request(app).post(acceptPath).set(headers(member, 'POST', acceptPath)).send({
+    await (await request(app)).post(acceptPath).set(headers(member, 'POST', acceptPath)).send({
       token: invite.body.data.invitation.token,
       familyRole: 'guardian'
     }).expect(200);
 
     const ownerLeavePath = `/api/families/${family._id}/members/me`;
-    const ownerLeave = await request(app)
+    const ownerLeave = await (await request(app))
       .delete(ownerLeavePath)
       .set(headers(owner, 'DELETE', ownerLeavePath));
     expect(ownerLeave.status).toBe(409);
     expect(ownerLeave.body.error.code).toBe('OWNER_TRANSFER_REQUIRED');
 
     const transferPath = `/api/families/${family._id}/owner`;
-    const nonOwnerTransfer = await request(app)
+    const nonOwnerTransfer = await (await request(app))
       .patch(transferPath)
       .set(headers(member, 'PATCH', transferPath))
       .send({ newOwnerParentId: owner._id.toString() });
     expect(nonOwnerTransfer.status).toBe(403);
     expect(nonOwnerTransfer.body.error.code).toBe('FAMILY_GOVERNANCE_DENIED');
 
-    const memberLeave = await request(app)
+    const memberLeave = await (await request(app))
       .delete(ownerLeavePath)
       .set(headers(member, 'DELETE', ownerLeavePath));
     expect(memberLeave.status).toBe(204);
@@ -472,7 +474,7 @@ describe('Task 12 parent membership routes', () => {
       { newOwnerParentId: 'not-an-object-id', status: 400 }
     ];
     for (const testCase of cases) {
-      const response = await request(app)
+      const response = await (await request(app))
         .patch(path)
         .set(headers(owner, 'PATCH', path))
         .send({ newOwnerParentId: testCase.newOwnerParentId });
@@ -531,7 +533,7 @@ describe('Task 12 parent membership routes', () => {
     const invite = await createInvitation(app, owner, family);
     const token = invite.body.data.invitation.token;
     const path = '/api/parent-invitations/accept';
-    const accept = (parent) => request(app)
+    const accept = async (parent) => (await request(app))
       .post(path)
       .set(headers(parent, 'POST', path))
       .send({ token, familyRole: 'guardian' });

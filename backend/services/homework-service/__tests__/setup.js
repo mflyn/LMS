@@ -4,7 +4,7 @@ process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test
 process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET || 'test-gateway-identity-secret-32-bytes-long';
 process.env.INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'test-internal-service-token-32-bytes';
 
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const { MongoMemoryServer, MongoMemoryReplSet } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 
 let mongoServer;
@@ -13,7 +13,9 @@ const createMongoServer = async () => {
   let lastError;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      return await MongoMemoryServer.create();
+      return expect.getState().testPath.includes('/services/growthTaskCompletion')
+        ? await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } })
+        : await MongoMemoryServer.create();
     } catch (error) {
       lastError = error;
       if (!/Port "\d+" already in use/.test(error.message) || attempt === 3) throw error;

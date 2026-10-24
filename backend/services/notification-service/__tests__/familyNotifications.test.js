@@ -6,7 +6,9 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
 
 const express = require('express');
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const User = require('../../../common/models/User');
 const Family = require('../../../common/models/Family');
@@ -128,7 +130,7 @@ describe('Task 7 family notifications', () => {
 
     const app = createApp({ familyNotificationsRouter, logger: silentLogger });
 
-    await request(app)
+    await (await request(app))
       .get('/api/notifications/family/probe')
       .expect(200, { ok: true });
   });
@@ -214,7 +216,7 @@ describe('Task 7 family notifications', () => {
     const { parent, family } = await createFamilyFixture('settingsDefault');
     const app = buildFamilyNotificationApp();
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get('/api/notifications/settings')
       .set(signedHeaders(parent, 'GET', '/api/notifications/settings'));
 
@@ -240,7 +242,7 @@ describe('Task 7 family notifications', () => {
     const { parent, family } = await createFamilyFixture('settingsApp');
     const { createApp } = require('../app');
 
-    const response = await request(createApp({ logger: silentLogger }))
+    const response = await (await request(createApp({ logger: silentLogger })))
       .get('/api/notifications/settings')
       .set(signedHeaders(parent, 'GET', '/api/notifications/settings'));
 
@@ -252,7 +254,7 @@ describe('Task 7 family notifications', () => {
     const { parent, family } = await createFamilyFixture('settingsPatch');
     const app = buildFamilyNotificationApp();
 
-    const response = await request(app)
+    const response = await (await request(app))
       .patch('/api/notifications/settings')
       .set(signedHeaders(parent, 'PATCH', '/api/notifications/settings'))
       .send({
@@ -270,7 +272,7 @@ describe('Task 7 family notifications', () => {
       updatedByParentId: parent._id.toString()
     }));
 
-    const rejected = await request(app)
+    const rejected = await (await request(app))
       .patch('/api/notifications/settings')
       .set(signedHeaders(parent, 'PATCH', '/api/notifications/settings'))
       .send({ familyId: new mongoose.Types.ObjectId().toString() });
@@ -283,7 +285,7 @@ describe('Task 7 family notifications', () => {
     const { parent } = await createFamilyFixture('settingsInvalid');
     const app = buildFamilyNotificationApp();
 
-    const response = await request(app)
+    const response = await (await request(app))
       .patch('/api/notifications/settings')
       .set(signedHeaders(parent, 'PATCH', '/api/notifications/settings'))
       .send({
@@ -308,20 +310,20 @@ describe('Task 7 family notifications', () => {
     const familyB = await createFamilyFixture('settingsChildB');
     const app = buildFamilyNotificationApp();
 
-    const readOwn = await request(app)
+    const readOwn = await (await request(app))
       .get('/api/notifications/settings')
       .set(signedHeaders(familyA.child, 'GET', '/api/notifications/settings'));
     expect(readOwn.status).toBe(200);
     expect(readOwn.body.data.settings.familyId).toBe(familyA.family._id.toString());
 
-    const patchOwn = await request(app)
+    const patchOwn = await (await request(app))
       .patch('/api/notifications/settings')
       .set(signedHeaders(familyA.child, 'PATCH', '/api/notifications/settings'))
       .send({ taskReminderEnabled: false });
     expect(patchOwn.status).toBe(403);
     expect(patchOwn.body.error.code).toBe('CHILD_ACCESS_DENIED');
 
-    const readOther = await request(app)
+    const readOther = await (await request(app))
       .get(`/api/notifications/settings?familyId=${familyB.family._id}`)
       .set(signedHeaders(familyA.child, 'GET', `/api/notifications/settings?familyId=${familyB.family._id}`));
     expect(readOther.status).toBe(403);
@@ -331,7 +333,7 @@ describe('Task 7 family notifications', () => {
   test('TC-T7-NOTIFY-001/002/003/004/006 derives task, overdue, mistake, dimension and weekly reminders', async () => {
     const { parent, child } = await createFamilyFixture('notifyAll');
     const settingsApp = buildFamilyNotificationApp();
-    await request(settingsApp)
+    await (await request(settingsApp))
       .patch('/api/notifications/settings')
       .set(signedHeaders(parent, 'PATCH', '/api/notifications/settings'))
       .send({ weeklyReportDay: 2 });
@@ -349,7 +351,7 @@ describe('Task 7 family notifications', () => {
     const app = buildFamilyNotificationApp({ sourceRepository });
     const path = `/api/notifications/family?childId=${child._id}&date=2026-07-07`;
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get(path)
       .set(signedHeaders(parent, 'GET', path));
 
@@ -388,7 +390,7 @@ describe('Task 7 family notifications', () => {
   test('TC-T7-NOTIFY-005/007/008 suppresses completed dimensions, dedupes sources and honors disabled categories', async () => {
     const { parent, child } = await createFamilyFixture('notifyFiltered');
     const settingsApp = buildFamilyNotificationApp();
-    await request(settingsApp)
+    await (await request(settingsApp))
       .patch('/api/notifications/settings')
       .set(signedHeaders(parent, 'PATCH', '/api/notifications/settings'))
       .send({
@@ -414,7 +416,7 @@ describe('Task 7 family notifications', () => {
     const app = buildFamilyNotificationApp({ sourceRepository });
     const path = `/api/notifications/family?childId=${child._id}&date=2026-07-07`;
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get(path)
       .set(signedHeaders(parent, 'GET', path));
 
@@ -435,7 +437,7 @@ describe('Task 7 family notifications', () => {
     });
     const path = `/api/notifications/family?childId=${child._id}`;
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get(path)
       .set(signedHeaders(parent, 'GET', path));
 
@@ -450,19 +452,19 @@ describe('Task 7 family notifications', () => {
     const app = buildFamilyNotificationApp({ sourceRepository });
     const otherChildPath = `/api/notifications/family?childId=${familyB.child._id}&date=2026-07-07`;
 
-    const parentOther = await request(app)
+    const parentOther = await (await request(app))
       .get(otherChildPath)
       .set(signedHeaders(familyA.parent, 'GET', otherChildPath));
     expect(parentOther.status).toBe(403);
     expect(parentOther.body.error.code).toBe('CHILD_ACCESS_DENIED');
 
-    const childOther = await request(app)
+    const childOther = await (await request(app))
       .get(otherChildPath)
       .set(signedHeaders(familyA.child, 'GET', otherChildPath));
     expect(childOther.status).toBe(403);
     expect(childOther.body.error.code).toBe('CHILD_ACCESS_DENIED');
 
-    const anonymous = await request(app).get(otherChildPath);
+    const anonymous = await (await request(app)).get(otherChildPath);
     expect(anonymous.status).toBe(401);
     expect(anonymous.body.error.code).toBe('INVALID_IDENTITY_ENVELOPE');
   });
@@ -480,7 +482,7 @@ describe('Task 7 family notifications', () => {
     const app = buildFamilyNotificationApp({ sourceRepository });
     const path = `/api/notifications/family?childId=${child._id}&date=2026-07-07`;
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get(path)
       .set(signedHeaders(parent, 'GET', path));
 
@@ -509,7 +511,7 @@ describe('Task 7 family notifications', () => {
     const app = buildFamilyNotificationApp({ sourceRepository });
     const path = `/api/notifications/family?childId=${child._id}&date=2026-07-07`;
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get(path)
       .set(signedHeaders(parent, 'GET', path));
 

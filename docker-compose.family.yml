@@ -100,6 +100,9 @@ services:
       - NODE_ENV=development
       - NODE_OPTIONS=--no-deprecation
       - PORT=3003
+      - COMPLETION_PROTOCOL_MODE=${COMPLETION_PROTOCOL_MODE:-legacy}
+      - COMPLETION_WRITES_PAUSED=${COMPLETION_WRITES_PAUSED:-false}
+      - COMPLETION_RETIREMENT_SERVICE_TOKEN=${COMPLETION_RETIREMENT_SERVICE_TOKEN:-}
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
@@ -130,6 +133,13 @@ services:
       - NODE_ENV=development
       - NODE_OPTIONS=--no-deprecation
       - PORT=3005
+      - COMPLETION_PROTOCOL_MODE=${COMPLETION_PROTOCOL_MODE:-legacy}
+      - COMPLETION_WRITES_PAUSED=${COMPLETION_WRITES_PAUSED:-false}
+      - COMPLETION_DELETION_JOURNAL_ROOT=/var/lib/family-growth/completion-journal
+      - COMPLETION_STORAGE_CONFIRMED=${COMPLETION_STORAGE_CONFIRMED:-false}
+      - COMPLETION_RETIREMENT_SERVICE_TOKEN=${COMPLETION_RETIREMENT_SERVICE_TOKEN:-}
+      - COMPLETION_ORPHAN_CLEANUP_ENABLED=${COMPLETION_ORPHAN_CLEANUP_ENABLED:-false}
+      - HOMEWORK_SERVICE_URL=http://homework-service:3003
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-32-characters-minimum}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
       - GATEWAY_IDENTITY_SECRET=${GATEWAY_IDENTITY_SECRET:-dev-gateway-identity-secret-32chars}
@@ -139,6 +149,7 @@ services:
       - MEDIA_SIGNING_SECRET=${MEDIA_SIGNING_SECRET:-dev-media-signing-secret-32-characters}
     volumes:
       - resource-data:/var/lib/family-growth/private-media
+      - completion-journal:/var/lib/family-growth/completion-journal
     depends_on:
       mongo-init:
         condition: service_completed_successfully
@@ -238,3 +249,4 @@ networks:
 volumes:
   mongo-data:
   resource-data:
+  completion-journal:
