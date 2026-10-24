@@ -304,6 +304,58 @@ const refused = async extra => {
   expect(result.reasons.every(code => [INVALID, PENDING, NOT_READY].includes(code))).toBe(true);
   expect(await snapshot()).toEqual(before);
 };
+test('D2B-05 reference query grows per group and preserves every corruption witness', async () => {
+  const { proof, op } = await groupFixture('prepared');
+  const before = await snapshot(), open = db.collection.bind(db), queries = [];
+  jest.spyOn(db, 'collection').mockImplementation(name => {
+    const collection = open(name), find = collection.find.bind(collection);
+    if (name === 'mediareferences') collection.find = (filter, ...args) => {
+      if (filter.$or?.some(item => item._id?.$in) && filter.$or.some(item => item.mediaId?.$in)) queries.push(filter);
+      return find(filter, ...args);
+    };
+    return collection;
+  });
+  expect((await run()).checked).toBe(true);
+  jest.restoreAllMocks(); expect(await snapshot()).toEqual(before);
+  expect(queries.length).toBeGreaterThan(0);
+  const actual = queries[0], aliases = value => ({ $in: [new ObjectId(value), value] });
+  const groupScope = group => ({ familyId: aliases(group.familyId), resourceId: aliases(group.resourceId),
+    resourceType: group.resourceType, field: group.field });
+  const expected = { $or: [
+    { mediaId: aliases(proof.tombstone.mediaId) },
+    { _id: { $in: proof.referenceEffects.flatMap(pair => [new ObjectId(pair.after._id), pair.after._id]) } },
+    ...proof.operations.flatMap(({ after }) => [
+      { ...groupScope(after), operationId: after.operationId },
+      ...after.references.map(ref => ({ ...groupScope(after), mediaId: aliases(ref.mediaId) }))
+    ])
+  ] };
+  const refs = db.collection('mediareferences'), row = native(proof.referenceEffects[0].after);
+  const variants = [row, ...['familyId', 'resourceId', 'mediaId', '_id'].map(field => ({ ...row, [field]: String(row[field]) })),
+    { ...row, childId: new ObjectId(oid(999)) },
+    { ...row, _id: new ObjectId(oid(998)), mediaId: new ObjectId(oid(999)) },
+    { ...row, _id: new ObjectId(oid(998)), operationId: uuid(999) },
+    { ...row, familyId: new ObjectId(oid(999)), resourceId: new ObjectId(oid(999)), mediaId: new ObjectId(oid(999)) },
+    { ...row, _id: new ObjectId(oid(998)), familyId: new ObjectId(oid(999)), resourceId: new ObjectId(oid(999)) },
+    { ...row, _id: new ObjectId(oid(998)), mediaId: new ObjectId(oid(999)), operationId: uuid(999) },
+    { ...row, _id: new ObjectId(oid(998)), resourceId: new ObjectId(oid(999)), mediaId: new ObjectId(op.references[1].mediaId) }
+  ];
+  for (const variant of variants) {
+    await refs.deleteMany({}); await refs.insertOne(variant);
+    expect(await refs.find(actual).toArray()).toEqual(await refs.find(expected).toArray());
+  }
+  expect(actual.$or.length).toBeLessThanOrEqual(proof.operations.length + 2);
+});
+test.each(['familyId', 'resourceId', 'mediaId', 'childId', 'unexpected media', 'unproven generation'])(
+  'D2B-05 compact reference lookup still rejects %s corruption', async kind => {
+    await groupFixture('prepared'); expect((await run()).checked).toBe(true);
+    const refs = db.collection('mediareferences'), row = await refs.findOne({ mediaId: new ObjectId(oid(7)) });
+    const changes = kind === 'childId' ? { childId: new ObjectId(oid(999)) }
+      : kind === 'unexpected media' ? { mediaId: new ObjectId(oid(999)) }
+        : kind === 'unproven generation' ? { operationId: uuid(999) } : { [kind]: String(row[kind]) };
+    await refs.updateOne({ _id: row._id }, { $set: changes });
+    await blocked(kind === 'unproven generation' ? PENDING : INVALID);
+  }
+);
 test.each(['committed', 'prepared', 'history'].flatMap(kind => [false, true].map(cleaned => [kind, cleaned])))
 ('D2B-03 actual %s group cleaned=%s passes with full audit unchanged', async (kind, cleaned) => {
   await groupFixture(kind, cleaned); const before = await snapshot();

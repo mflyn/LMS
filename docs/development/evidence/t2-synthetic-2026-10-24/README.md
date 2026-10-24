@@ -1,7 +1,7 @@
 # T2 合成工程证据索引
 
 本目录是可随 Git 检出使用的脱敏摘要，不是新的测试运行，不替换本地完整报告。
-T2 为 APPROVED / CLOSED，仅限 ENGINEERING_SYNTHETIC_ONLY；最新业务全量仍 FAILED。
+T2 为 APPROVED / CLOSED，仅限 ENGINEERING_SYNTHETIC_ONLY；批准时业务全量为 FAILED，原报告保留。
 [批准记录](../../family-self-directed-learning-t2-closure-approval.json)和[执行记录](../../family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)保持权威。
 
 ## 历史独立验收
@@ -12,12 +12,14 @@ T2 为 APPROVED / CLOSED，仅限 ENGINEERING_SYNTHETIC_ONLY；最新业务全�
 
 ## 最新全量失败
 
+本标题保留历史链接锚点，以下为批准时的失败报告，不代表后续修订的运行结果。
+
 原归档目录 `release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/`。
 `npm run test:family-regression -- --json --outputFile=/tmp/t2-approved-p2-family-20261024.json`：
 143套件（142 passed / 1 failed），3943项（3942 passed / 1 failed / 0 pending），exit1。
 唯一失败 `D2B-05 real connected proof bytes exceed 16MiB before the 100-file ceiling`：
 预期 USER_DELETION_EVIDENCE_INVALID、nativeErrors为空，实际 mediareferences 查询 MongoServerError code50，
-返回 USER_DELETION_READINESS_NOT_READY。该高级恢复预检未接入当前页面运行路径，仍为 REMAINDER_DEFERRED，未修复/未关闭。
+返回 USER_DELETION_READINESS_NOT_READY。当时该查询缺陷未修复；后续修订单独记录，不能覆盖本报告。该高级恢复预检未接入当前页面运行路径，仍为 REMAINDER_DEFERRED。
 
 ## 限定范围关闭验证
 
@@ -32,6 +34,7 @@ T2 为 APPROVED / CLOSED，仅限 ENGINEERING_SYNTHETIC_ONLY；最新业务全�
 - [本次提交核查](../../family-self-directed-learning-t2-github-handoff.md)：提交范围、验证与未授权事项。
 - [提交前验证摘要](github-preflight.json)：本轮新跑的组件/HTTP/浏览器结果、保留的失败、干净检出53项lint错误及敏感信息扫描归类；不能冒称CI全绿。
 - [PR #27 lint修订验证](pr27-lint-fix.json)：独立记录53项错误修复后的干净检出lint、当前家庭后端回归及历史计数差异；不覆盖上述历史失败或后置状态。
+- [PR #27 D2B-05查询修订](pr27-d2b-query-fix.json)：保留上次CI超时结果，独立记录本次查询诊断、永久反例与完整回归；不代表启用/完成高级恢复或真机验收。
 
 完整JSON/日志及浏览器截图仍留在本地忽略目录，不随本次PR上传；远端摘要不是这些文件的完整备份。
 文档链接均指向可入库索引，校验器不得依赖本地忽略目录存在，也不得跳过普通链接校验。

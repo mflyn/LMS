@@ -107,8 +107,14 @@ const opKey = value => canonicalize(Object.fromEntries([...Object.keys(SCOPE), '
 const slotKey = value => canonicalize(Object.fromEntries(['familyId', 'resourceType', 'resourceId', 'field', 'mediaId'].map(key => [key, value[key]])));
 const groupQuery = value => ({ familyId: aliases(value.familyId), resourceId: aliases(value.resourceId),
   resourceType: value.resourceType, field: value.field, operationId: value.operationId });
-const slotQuery = value => ({ familyId: aliases(value.familyId), resourceId: aliases(value.resourceId),
-  resourceType: value.resourceType, field: value.field, mediaId: aliases(value.mediaId) });
+// Factor the shared scope instead of expanding one OR branch per media slot.
+// Keep both the whole generation and every slot, including corrupt/rebound rows.
+const groupReferenceQuery = group => {
+  const { operationId, ...shared } = groupQuery(group);
+  return { ...shared, $or: [{ operationId }, {
+    mediaId: { $in: group.references.flatMap(ref => [queryId(ref.mediaId), ref.mediaId]) }
+  }] };
+};
 const nullableTime = value => value === null ? null : time(value);
 const operationSnapshot = row => {
   assert(Array.isArray(row.references) && row.references.length >= 1 && row.references.length <= 10);
@@ -167,7 +173,7 @@ const loadCurrent = async (proof, r) => {
   const references = await r.bounded('mediareferences', { $or: [
     { mediaId: aliases(target) },
     { _id: { $in: proof.referenceEffects.flatMap(pair => [queryId(pair.after._id), pair.after._id]) } },
-    ...groups.flatMap(group => [groupQuery(group), ...group.references.map(ref => slotQuery({ ...group, ...ref }))])
+    ...groups.map(groupReferenceQuery)
   ] }, LIMITS.MAX_EFFECTS);
   const slots = new Map();
   for (const row of references) {
@@ -194,8 +200,7 @@ const assertAppliedClosure = async (root, r, cache) => {
       assert(rows.length, PENDING); assert(rows.length === 1);
       const group = operationSnapshot(rows[0]); ownerScope(group, proof);
       assert(opKey(group) === key && group.version > 0 && ['COMMITTED', 'ABORTED'].includes(group.state), PENDING);
-      const refs = await r.bounded('mediareferences', { $or: [groupQuery(group),
-        ...group.references.map(item => slotQuery({ ...group, ...item }))] }, LIMITS.MAX_EFFECTS);
+      const refs = await r.bounded('mediareferences', groupReferenceQuery(group), LIMITS.MAX_EFFECTS);
       const slots = new Map();
       for (const row of refs) {
         const value = referenceSnapshot(row); ownerScope(value, proof);

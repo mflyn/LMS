@@ -1,0 +1,218 @@
+{
+  "scope": "PR27_D2B05_QUERY_TIMEOUT_FIX_SYNTHETIC_ONLY",
+  "baselineCommit": "a0478275948e907763e5dcae7e7ef4bc30bf5a56",
+  "previousCi": {
+    "run": 40096601369,
+    "commit": "a0478275948e907763e5dcae7e7ef4bc30bf5a56",
+    "url": "https://github.com/mflyn/LMS/actions/runs/40096601369",
+    "status": "completed",
+    "conclusion": "failure",
+    "lint": "PASS",
+    "docs": "PASS",
+    "suites": {
+      "total": 143,
+      "passed": 142,
+      "failed": 1
+    },
+    "tests": {
+      "total": 3951,
+      "passed": 3950,
+      "failed": 1
+    },
+    "affectedSuitesPassed": 20,
+    "failure": {
+      "id": "D2B-05",
+      "name": "real connected proof bytes exceed 16MiB before the 100-file ceiling",
+      "collection": "mediareferences",
+      "mongoCode": 50,
+      "expected": "USER_DELETION_EVIDENCE_INVALID",
+      "actual": "USER_DELETION_READINESS_NOT_READY",
+      "disposition": "REMAINDER_DEFERRED"
+    },
+    "laterReleaseSteps": "NOT_RUN_AFTER_REGRESSION_FAILURE",
+    "notMerged": true,
+    "notDeployed": true
+  },
+  "rootCause": "Repeated shared-scope predicates in per-media OR branches caused expensive collection filtering near the existing 5000ms limit. Factor by operation group without narrowing witness coverage.",
+  "diagnosticBefore": {
+    "file": "/tmp/d2b-before-queries.json",
+    "sha256": "c557ef6ff0a714fc831564db970eea4db6a282881defe1462cb1e6b8a85379a0",
+    "measuredQueries": 16,
+    "branches": {
+      "min": 885,
+      "max": 888
+    },
+    "queryBytes": {
+      "min": 294194,
+      "max": 295085
+    },
+    "elapsedMs": {
+      "min": 3799.7505410000012,
+      "max": 4717.240625
+    },
+    "returnedRows": [
+      720
+    ],
+    "maxTimeMS": [
+      5000
+    ],
+    "firstQueryPlan": "SUBPLAN -> LIMIT -> PROJECTION_SIMPLE -> COLLSCAN"
+  },
+  "diagnosticAfter": {
+    "file": "/tmp/d2b-after-queries.json",
+    "sha256": "25afc858863e1525f82d1b4113fb7f519f8606b713e97b5a34331526ff118ca7",
+    "measuredQueries": 16,
+    "branches": {
+      "min": 83,
+      "max": 84
+    },
+    "queryBytes": {
+      "min": 110722,
+      "max": 111181
+    },
+    "elapsedMs": {
+      "min": 610.6160420000015,
+      "max": 687.7957910000005
+    },
+    "returnedRows": [
+      720
+    ],
+    "maxTimeMS": [
+      5000
+    ],
+    "firstQueryPlan": "SUBPLAN -> LIMIT -> PROJECTION_SIMPLE -> COLLSCAN"
+  },
+  "diagnosticsNote": "Synthetic MongoDB fixture, temporary observational query hook. Timings are observations, not SLA. The full regression has no diagnostic hook or test name filter.",
+  "baselineDiagnostic": {
+    "file": "/tmp/d2b-before.json",
+    "sha256": "281a9baabf59c0b69712bcf82399aec276f99113a6a1cb0ad13c4873bb5610f3",
+    "success": true,
+    "suites": 1,
+    "suitesPassed": 1,
+    "suitesFailed": 0,
+    "tests": 132,
+    "passed": 1,
+    "failed": 0,
+    "pending": 131,
+    "seconds": 101.438,
+    "failures": []
+  },
+  "regressionRed": {
+    "file": "/tmp/d2b-red.json",
+    "sha256": "ba5d4905d003902f918423725c8baf7973c3fb30ee2a2c0e4b5e757577bce357",
+    "success": false,
+    "suites": 1,
+    "suitesPassed": 0,
+    "suitesFailed": 1,
+    "tests": 139,
+    "passed": 6,
+    "failed": 1,
+    "pending": 132,
+    "seconds": 7.443,
+    "failures": [
+      "D2B-05 reference query grows per group and preserves every corruption witness"
+    ]
+  },
+  "regressionGreen": {
+    "file": "/tmp/d2b-green.json",
+    "sha256": "f1b894813459f174e700e82745dd5af6e021f9de7e4343ba4817b8714c6c4132",
+    "success": true,
+    "suites": 1,
+    "suitesPassed": 1,
+    "suitesFailed": 0,
+    "tests": 139,
+    "passed": 8,
+    "failed": 0,
+    "pending": 131,
+    "seconds": 47.44,
+    "failures": []
+  },
+  "targetedNote": "Pending counts above are tests excluded by focused testNamePattern, not test.skip or gate exclusions. All are included in the full regression below.",
+  "familyRegression": {
+    "file": "/tmp/d2b-family.json",
+    "sha256": "639dfb7d76cc31194c9840a54cba6ee4a077208b04f88eb0ddb9beab85a89f28",
+    "success": false,
+    "suites": 143,
+    "suitesPassed": 140,
+    "suitesFailed": 3,
+    "tests": 3958,
+    "passed": 3945,
+    "failed": 13,
+    "pending": 0,
+    "seconds": 756.562,
+    "failures": [
+      "family baseline documentation gate the repeatable documentation audit succeeds",
+      "approved T1 and bounded T2 closure boundaries accepts the approved closure while keeping historical OPEN records",
+      "approved T1 and bounded T2 closure boundaries accepts explicit synthetic T2 approval without granting device or deployment approval",
+      "approved T1 and bounded T2 closure boundaries validates a checkout without ignored local evidence files or directories",
+      "approved T1 and bounded T2 closure boundaries accepts one T2 row with normalized Markdown whitespace",
+      "backend/.env.example accepts unique safe controls with quoted-export-crlf",
+      "backend/.env.example accepts unique safe controls with quoted-comment-cr",
+      "docker-compose.ubuntu.env.example accepts unique safe controls with quoted-export-crlf",
+      "docker-compose.ubuntu.env.example accepts unique safe controls with quoted-comment-cr",
+      "backend/.env.example gate accepts all five unique defaults with quoted-export-crlf",
+      "backend/.env.example gate accepts all five unique defaults with quoted-comment-cr",
+      "docker-compose.ubuntu.env.example gate accepts all five unique defaults with quoted-export-crlf",
+      "docker-compose.ubuntu.env.example gate accepts all five unique defaults with quoted-comment-cr"
+    ]
+  },
+  "familyFailureExplanation": "All 13 failures in 3 documentation/configuration suites came from renaming the historical README heading without preserving its inbound anchor. Restore the original heading; retain this failed full run and separately rerun all family-common tests. D2B-05 passed in this run. Do not label this run green.",
+  "familyCommand": "npm run test:family-regression -- --json --outputFile=/tmp/d2b-family.json",
+  "afterAnchorRepair": {
+    "file": "/tmp/d2b-common.json",
+    "sha256": "5dd239eb02a8c44cb64256f218ba47b62169cde87c4052588d67764a353a6fe0",
+    "success": true,
+    "suites": 41,
+    "suitesPassed": 41,
+    "suitesFailed": 0,
+    "tests": 662,
+    "passed": 662,
+    "failed": 0,
+    "pending": 0,
+    "seconds": 31.929,
+    "failures": []
+  },
+  "afterAnchorRepairCommand": "npx jest --config=backend/jest.family-common.config.js --runInBand --coverage=false --json --outputFile=/tmp/d2b-common.json",
+  "testsAdded": 7,
+  "originalTestAstPreserved": true,
+  "historicalArtifactsVerified": 148,
+  "lint": {
+    "command": "npm run lint",
+    "scope": "clean export of current tracked files without ignored historical snapshots",
+    "exitCode": 0
+  },
+  "docs": {
+    "command": "npm run docs:family:check",
+    "exitCode": 0
+  },
+  "sensitiveDiffScan": {
+    "tool": "gitleaks 8.30.1 stdin --redact",
+    "exitCode": 0,
+    "findings": 0
+  },
+  "review": {
+    "scope": "production query and added tests only",
+    "selfReview": "no additional findings",
+    "independentReadOnlyReview": "no actionable findings; node syntax and diff checks passed; reviewer did not run tests",
+    "residualRisk": "Query plans still use COLLSCAN. Timing observations do not replace full regression or CI; existing later-generation tests complement the new loadCurrent query comparison."
+  },
+  "unchanged": [
+    "5000ms query limit",
+    "test timeouts",
+    "existing assertions",
+    "indexes",
+    "read limits",
+    "scope and BSON validation",
+    "production routing",
+    "feature flags",
+    "CI rules"
+  ],
+  "retained": {
+    "historicalFailures": "PRESERVED",
+    "device": "DEVICE_PENDING",
+    "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED",
+    "merge": "NOT_AUTHORIZED",
+    "deploy": "NOT_AUTHORIZED"
+  },
+  "ciAfterPush": "PENDING_NEW_RUN; this local report does not claim remote success"
+}
