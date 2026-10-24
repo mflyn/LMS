@@ -1,6 +1,6 @@
-# 家庭成长跟踪架构设计
+# 家庭自主学习总体架构与成长跟踪基础
 
-**Document status:** APPROVED
+**Document status:** FGT BASELINE APPROVED / SELF-DIRECTED INCREMENT PLANNED
 **Baseline candidate:** FGT-MVP-1.7
 **Decision records:**
 
@@ -18,7 +18,10 @@ Task 5~12 的详细设计由对应 spec 和 gate 承载；跨服务调用顺序�
 
 ## 1. 架构目标
 
-家庭成长跟踪第一阶段的目标是把现有学校级 LMS 收敛为一个轻量、稳定、可演示的家庭成长闭环：
+长期目标是家庭自主学习：孩子逐步承担计划、执行、自检、求助和复盘，家长提供适龄支持。
+三层基线为已确认长期目标、FGT-MVP-1.7 已实现基础、SL-01 至 SL-07 PLANNED 增量；不新增服务或
+扩大数学 MVP 范围。§2–§11 保留既有基础约束，§12 是当前待实现契约；实现/发布不能由文档状态代替。
+家庭成长跟踪基础已将学校级 LMS 收敛为以下闭环：
 
 ```text
 家长账号
@@ -1005,3 +1008,433 @@ DeepTutor、K12-KGraph 和家长人工审核手写订正的后续方案见
 feature flag 尚未进入 FGT-MVP-1.7 实现。正式开发时必须先批准对应增量设计，并同步
 更新 PRD、API 契约、需求追踪、权限拒绝路径、迁移/回滚和发布 Gate；不能仅依据草案
 修改生产数据或对外开放服务。
+
+## 12. 自主学习 MVP 增量架构契约（PLANNED）
+
+本节把 `SL-01` 至 `SL-07` 固定在现有家庭成长架构内。它是 T1 至 T9 的实现约束，不改变
+FGT-MVP-1.7 当前已实现状态。完整交互与分期见
+[家庭自主学习系统设计](family-self-directed-learning-system-design.md)，执行状态见
+[自主学习 MVP 增量 Gate](../development/family-self-directed-learning-mvp-gate.md)。
+
+### 12.1 服务所有权
+
+| 计划需求 | 写模型所有者 | 跨服务边界 | 禁止事项 |
+| --- | --- | --- | --- |
+| `SL-01` 图片作品 | `homework-service` 写任务完成快照与命令记录；`resource-service` 写媒体和引用 | 继续使用 prepare/commit/unbind 媒体引用协议 | 不保存底层路径、签名 URL 或跨 purpose 复用 mediaId |
+| `SL-02` 独立求助 | `homework-service` 写任务当前求助 | 家长查询仍通过 Gateway 和任务 API | 不增加聊天、通知 worker 或掌握度写入 |
+| `SL-03` 自检清单 | `homework-service` 写任务清单及版本 | 前端只提交允许字段和预期版本 | 不建立儿童画像或独立客户端 |
+| `SL-04` 日计划 | `homework-service` 独占写 `DailyLearningPlan` | Gateway 只代理精确日计划路径 | 不复制任务状态或修改 `dueDate` |
+| `SL-05` 来源连接 | `analytics-service` 写错题来源；`homework-service` 写订正任务来源 | 所有者服务用内部凭据读取最小归属投影 | 不跨服务写数据库，不建设一次性分布式向导 |
+| `SL-06` 周复盘 | `progress-service` 继续写成长反思；`analytics-service` 继续写周报反馈 | 复用当前公开接口 | 不让孩子修改冻结周报统计 |
+| `SL-07` 部署验证 | 无新业务写模型 | 复用 Compose、备份和恢复流程 | 不把配置存在当成真实部署证据 |
+
+本轮不新增微服务。第二家长、孩子 PIN、Gateway 身份信封、家庭实时成员关系、LocalDate、
+单次 GrowthTask、不可变星星流水和私有媒体边界全部沿用现有 ADR。
+
+### 12.2 `GrowthTask` 计划字段
+
+`GrowthTask` 采用加法兼容字段：
+
+```text
+checklistSnapshot[]
+  itemId
+  label
+  required
+checklistVersion
+completionVersion
+completionEvidence?
+  checkedItemIds[]
+  completionMediaIds[]
+  difficulty?
+  needsHelp?
+  childNote?
+  submittedByActor
+  childSubmittedAt
+completionMediaReferenceState?   // stable|pending_recovery
+helpVersion
+helpRequest?
+  status                         // pending|resolved
+  helpType
+  note?
+  requestedByActor
+  requestedAt
+  resolvedByParentId?
+  parentResponse?
+  resolvedAt?
+sourceTaskId?
+sourceMistakeId?
+```
+
+关键规则：
+
+- 老任务字段缺失时读取投影为清单 `[]`、`checklistVersion=0`、`completionVersion=0`、
+  `helpVersion=0`，GET 不因投影默认值写数据库。
+- 创建任务时未提供或显式提供空清单，保存 `checklistSnapshot=[]`、`checklistVersion=0`；
+  创建时提供非空有效清单，保存 `checklistVersion=1`。后续修改才从当前版本 CAS 递增。
+- 第一次改变对应内容的写入在同一原子条件更新中按需初始化版本，并从 0 递增到 1；
+  历史无媒体确认是唯一例外，只把缺失 `completionVersion` 持久化为 0。不得批量重写全部任务。
+- `checklistSnapshot` 最多 5 项，`itemId` 在任务内唯一，`label` 为 1 至 100 字。
+- `completionMediaIds` 是最多 10 项的有序唯一集合，媒体必须属于相同 `familyId + childId`、
+  active 且 purpose 为 `task_completion`。
+- `pending|completed` 可提交新完成快照；`confirmed|cancelled|archived` 拒绝修改。
+- 家长确认使用其读取到的 `completionVersion` 做 CAS；确认成功后完成内容冻结。
+- 存在活动完成意图或媒体引用处于 `pending_recovery` 时，完成新写、清单编辑、任务编辑、确认、
+  取消和归档都受第 12.3 节的服务端互斥条件保护；恢复后重新读取并校验版本。
+- 当前求助与任务主状态正交；请求或处理求助不能完成任务、发星或修改知识点。
+- 家长代录保存认证 actor 和 `subjectChildId`；客户端不得提交审计身份或服务端时间。
+
+求助 request 的安全重放必须同时满足：当前记录仍为 pending、
+`currentHelpVersion === expectedHelpVersion + 1`、规范化后的 `helpType + note` 完全相同，且
+认证 actor 与 `requestedByActor` 相同。否则返回 `409 VERSION_CONFLICT`。resolve 严格使用
+`expectedHelpVersion` 做 CAS；旧版本 resolve 返回 `409 VERSION_CONFLICT`，客户端重新 GET 后
+由用户决定是否再次处理，不自动重复操作。
+
+### 12.3 完成命令幂等与并发
+
+`GrowthTaskCompletionOperation` 只保存最小命令记录：作用域、`operationId`、`remoteOperationId`、规范请求哈希、
+目标版本、不可变成功响应投影 `successResponse`、稳定失败结果和恢复状态，不保存图片正文或签名 URL。
+
+`successResponse` 固定为完成接口的 HTTP 200 响应体，字段为 `success=true` 及 `data.task` 中的
+`taskId/status/checklistVersion/completionVersion/completionMediaIds/completionMediaReferenceState/parentConfirmed/completedAt`。
+其中媒体 ID 保持原顺序；status 固定 completed，引用状态为 stable，parentConfirmed 为 false。
+投影与作品发布在同一事务中写入，只有命令进入 SUCCEEDED 才返回。后续作品更新、确认或归档
+不修改该投影；原命令重放必须读取投影，不能从当前任务拼装旧版本，也不再次修改 completedAt。
+重放响应表示原命令结果，当前状态由 GET 获取；旧媒体 ID 不赋予读取权，媒体访问仍实时授权。
+投影随命令记录和任务生命周期保留，本轮不单独 TTL 清理，不保存备注或作品正文历史。
+
+任务内部另保存当前完成命令的最小 pending 意图：目标版本、完成此次收敛所需的最小规范业务 patch
+及其哈希、有序目标 mediaId、旧稳定引用代次、媒体差集、操作阶段和
+`mediaRemoteOutcomeUncertain`。业务 patch 只包含规范化后的 `checkedItemIds`、`actualMinutes`、
+`actualAmount`、`difficulty`、`needsHelp`、`childNote` 和服务端认证 actor，不包含图片正文、签名 URL
+或客户端审计时间。它只在 pending 恢复期间保存，命令成功或稳定失败收敛后从任务隐藏字段清除；
+命令记录只保留哈希、成功响应投影或稳定失败结果及必要阶段信息。这样受控恢复可以脱离客户端原请求发布同一证据，
+但不会形成长期多版本作品正文库。这些隐藏字段不作为已完成作品返回；公开 status、完成证据和
+媒体列表在新引用 commit 前保持上一份稳定快照。
+
+媒体差集按 mediaId 计算并保留目标顺序：新增集合只包含目标中尚未绑定的媒体，保留集合沿用旧
+稳定引用的 `bindingOperationId`/代次，移除集合记录待释放媒体及其精确旧绑定 operation。只有新增
+集合执行 prepare/commit；发布新稳定证据后，只有移除集合执行 unbind。每个阶段不发送空媒体命令；
+新增集合为空时跳过 prepare/commit，纯重排或只修改非媒体完成字段时直接以本地事务发布规范 patch。
+删除部分或全部媒体时仍必须处理非空移除集合；纯重排仍递增完成版本，但不改变任何媒体绑定代次。
+
+唯一作用域为：
+
+```text
+familyId + childId + taskId + actorId + action + operationId
+```
+
+客户端 `operationId` 只标识上述本地命令，不能直接作为远程媒体命令的身份。homework-service
+为每条新命令生成服务端 UUID `remoteOperationId`，远程标识与首次命令占位同事务持久化，
+包括新增集合为空的命令；它不是公开请求字段，也不进入公开成功响应。不同 actor 使用同一 UUID 必须分配不同远程标识。
+本地命令集合建立全局 remoteOperationId 唯一索引，并保留原完整业务作用域唯一索引。首次占位的
+唯一竞争必须区分：本地命令键竞争重读原命令；仅远程标识碰撞且占位事务确认已回滚、尚无远程调用时
+才可重新分配 UUID。提交结果未知时先查原本地命令/恢复同一事务提交结果，不得另建映射或发送候选标识。
+持久化映射不可变，和本地终态记录一起保留、不单独 TTL；恢复/终态重放绝不重新生成远程标识。
+所有进程和运维恢复只从已确认提交的命令记录读取该值；缺失映射时阻断并告警，禁止回退到客户端 UUID。
+
+内部 operationId 必须取持久化 remoteOperationId：prepare/commit/abort 和 status 的 operation 模式
+继续使用内部字段名 `operationId`，其值来自该映射；响应 operationId 必须等于映射值且摘要/作用域匹配
+才可驱动本地状态。新增引用的 `bindingOperationId` 等于该远程标识；保留引用沿用原绑定代次。
+unbind 的命令 operationId 也使用当前命令的远程标识（releaseOperationId 的来源），但每个移除项的
+bindingOperationId 必须是持久化的旧远程绑定代次，不能用当前标识替换。references 模式不携带命令标识。
+commandHash 仍覆盖本地完整 scope（含客户端 operationId、actor/action）和规范正文，不包含生成的远程标识；
+请求哈希比较不能因重试而变化。远端唯一键的 operationId 属于独立的服务端命名空间，不增加公开 actor 字段。
+
+处理顺序固定为：实时授权、请求 schema 校验、规范请求哈希、幂等查询、本地版本 CAS 与命令
+占位、远程媒体收敛、公开结果和响应。相同作用域与相同哈希重放原结果；相同作用域但不同哈希返回
+`409 IDEMPOTENCY_KEY_REUSED`。授权失败发生在幂等结果返回之前，已经离开家庭的家长或错误
+孩子不能借重放读取历史结果。
+
+每个任务最多一个活动完成命令。任务隐藏字段 `activeCompletionOperation` 保存完整命令作用域，
+创建占位的 CAS 除版本/状态外必须要求该字段为空，缺失旧字段等同空；与命令创建在同一事务中提交。
+占位起即标记 pending_recovery，直到成功或稳定失败收敛。新 operationId（包括不同 actor 使用相同
+UUID）不得覆盖活动意图；恢复每次本地更新都校验完整 owner、当前阶段和目标版本，旧执行器不能
+清除新 owner 或重复发布。只有相同 scope、哈希、operationId 的活动命令可以进入恢复。
+
+完成新写、清单编辑、任务编辑、确认、取消和归档在各自最终原子写入中统一要求无活动完成意图且
+引用状态非 pending_recovery，否则返回 `503 MEDIA_REFERENCE_PENDING`；不得只在读后做预检查。
+任务材料有独立 pending 引用时也阻止新完成占位。鉴权/schema/同 key 异正文冲突和已终态命令重放
+先于该锁检查；因此先前成功命令仍可重放其投影，不能恢复另一个活动命令。独立求助仅局部更新
+help 字段，不改任务主状态或完成意图，不必持有此锁。恢复结束后新写调用方必须重新 GET。
+
+首次执行必须按以下顺序收敛，不能先调用远端再记录本地意图：
+
+1. 在同一 MongoDB 事务中，以期望版本、任务状态和无活动完成意图做 CAS，创建 PREPUBLISH 命令占位，并在任务上持久化
+   最小规范业务 patch、pending 意图、目标顺序、稳定引用代次、新增/保留/移除集合和
+   `mediaRemoteOutcomeUncertain=false`；失败则整体不落库。
+2. 以 CAS 将 `mediaRemoteOutcomeUncertain` 设置为 `true`，确认成功后才调用 resource-service
+   prepare；只有非空新增集合调用 prepare/commit，并始终使用已保存的 `remoteOperationId` 与目标代次。
+3. commit 成功（或新增集合为空）后用事务/CAS 发布完成证据和新稳定引用、递增 `completionVersion`，
+   同时固化成功响应投影并转入 `PUBLISHED_CLEANUP`；保留集合继续使用原绑定代次。
+   移除集合全部收敛后，以本地事务将命令置 SUCCEEDED、引用状态置 stable 并清除 pending 元数据及
+   活动 owner。移除集合为空可在发布事务中直接成功。解绑期间公开新作品但引用状态仍为 pending_recovery。
+4. 网络超时、5xx、畸形响应、数据库结果未知或 unbind 未收敛时保留 pending 意图并返回
+   `503 MEDIA_REFERENCE_PENDING`。客户端只能以完全相同的 `PATCH` 请求和原 `operationId`
+   重放；GET 不触发恢复并保持无副作用。运维恢复也只能读取已持久化意图重放同一命令。
+
+请求 schema、数量和重复 mediaId 等本地校验必须在命令占位前完成。仅首次进程内 prepare
+直接返回经过认证、结构完整且带有匹配 commandHash 的 ABORTED 终态的稳定业务拒绝时，
+homework-service 才使用当前命令阶段和目标代次做事务/CAS，把命令记录为失败、把
+`mediaRemoteOutcomeUncertain` 收敛为 false、清除 pending 意图并恢复上一稳定引用状态。该路径
+不得递增 `completionVersion`，不得改写完成证据或 `completedAt`，也不得执行 bind/unbind。
+相同 scope、请求哈希和 operationId 重放同一失败结果；用户修正请求后必须使用新的 `operationId`。
+不存在、跨家庭、跨孩子、错误 purpose 和不可用媒体继续使用既有不可枚举的公开错误映射。
+恢复执行不得凭后来收到的稳定 4xx 清理 pending 意图，因为此前调用可能已经到达远端；裸
+`400/403/404/409` 不证明 operation 已终止，必须查询或执行下述 abort。首次稳定拒绝后的本地事务
+结果未知时同样返回 `503 MEDIA_REFERENCE_PENDING` 并只允许原命令恢复。
+
+#### 远程 operation 终态与租约
+
+T1 为 `growth_task.completionMediaIds` 的非空新增集合增加 resource-service 所有的
+`MediaReferenceOperation`，现有其他字段的引用协议不迁移。记录唯一键为
+`{familyId, childId, resourceType, resourceId, field, operationId}`，保存规范引用身份集合、
+`commandHash`、服务端计算的引用集合摘要、`PREPARED|COMMITTED|ABORTED`、leaseExpiresAt、
+terminalAt 和最小稳定失败码；不保存业务 patch、媒体内容或存储路径。commandHash 为 homework
+对完整本地命令 scope（含 actor/action）和规范正文的摘要；四个内部端点都校验同键的摘要及引用
+集合一致，不一致返回 `409 MEDIA_OPERATION_CONFLICT`。这里的 operationId 是持久化 remoteOperationId，
+不是客户端 UUID；不同 actor 的合法本地命令不会因客户端 UUID 相同碰撞。内部同键异摘要仍保持 pending
+并告警，不放宽为凭冲突清锁；它表示映射/请求不变量被破坏，不是正常的跨 actor 分支。
+
+prepare/commit/abort 使用同一 MongoDB 事务写 operation 和其新增引用；终止与提交必须竞争同一 operation 记录。
+每次写入按状态和记录版本 CAS，唯一键冲突/事务写冲突后重新读取状态，不得只读 operation 后仅写引用。
+租约由 resource-service 时钟判定，沿用配置的 900 秒默认值；同 operation 重试不续租。
+以下 ABSENT 是没有 operation 行的查询投影，不是持久状态：
+
+| 当前 operation | prepare | commit | abort |
+| --- | --- | --- | --- |
+| ABSENT | 验证新增媒体并原子创建 PREPARED 和全部 prepared 引用；确定的业务拒绝原子存 ABORTED | 409 MEDIA_OPERATION_NOT_PREPARED，不创建引用 | 原子创建 ABORTED 终止标记，即使引用尚不存在 |
+| PREPARED，租约有效 | 返回原 lease，不重建或续租 | 全部引用同代次且有效，原子置 bound/COMMITTED | 原子释放本 operation 的 prepared 引用并置 ABORTED |
+| PREPARED，租约已过期 | 原子过期终止并返回 ABORTED | 原子过期终止并返回 ABORTED | 原子过期终止并返回 ABORTED |
+| COMMITTED | 返回原 COMMITTED，不重绑 | 返回原 COMMITTED，不重绑 | 返回 COMMITTED，不解绑，提交已胜出 |
+| ABORTED | 返回原 ABORTED，不创建引用 | 返回原 ABORTED，不提交引用 | 返回原 ABORTED |
+
+租约过期原子转为 ABORTED，失败码为 MEDIA_OPERATION_EXPIRED，同时将该 operation 的 prepared
+引用置 released；过期边界为 `now >= leaseExpiresAt`。请求处理路径负责过期收敛，不依赖 worker。
+确定的媒体业务拒绝必须提交 ABORTED 后才响应，不能在事务内抛异常使终止标记也回滚；鉴权/schema
+失败、事务结果未知和摘要冲突不携带可用于终止本地命令的证明。ABORTED 稳定码首次写入后不改写。
+abort 主动终止使用 MEDIA_OPERATION_ABORTED；prepare 的媒体业务拒绝沿用既有不可枚举错误映射。
+
+新协议的后台回收不得直接删除 prepared 引用：如启用回收，应调用相同的过期终止事务。其他代次、
+意外 bound、部分丢失等不满足 operation 不变量时整个事务拒绝并告警，不释放别人的引用。
+完成作品隐私删除遵守下方专门契约：PREPARED 必须整组终止；COMMITTED 不反转终态，但目标媒体
+的 bound 可凭持久删除凭证释放。不能仅改单条 prepared 而遗留 PREPARED operation。
+所有重试事务重新读取记录并采样服务器时间，不沿用上次事务的租约判断。
+终态记录不做 TTL 删除，媒体物理清理也保留最小 operation 终止标记；COMMITTED 后的正常 unbind
+只改变引用，不反转 operation。旧 prepare/commit 重放只报告终态，不复活已解绑引用。终态清理
+需另行设计请求代次淘汰/授权与数据生命周期，不能以删除记录作为恢复手段。
+
+T1 同时增加仅服务凭据可用、不会经 Gateway 公开的只读 status 和有写入的 abort 接口。
+受控引用状态对账携带完整 scope、operationId、commandHash 和规范新增集合，返回 operation 的
+`ABSENT|PREPARED|COMMITTED|ABORTED`、匹配摘要、leaseExpiresAt、服务端 leaseExpired、稳定失败码，
+以及每个目标身份的 `absent|prepared|bound|released` 和必要的绑定 operation，不返回媒体内容或路径。
+查询不能以请求 operationId 过滤掉其他代次；必须报告实际代次供调用方判断。absent 无绑定代次，
+只说明完整引用身份不存在，不声称某个 operation 已执行。对账先从本地事务记录确定阶段，再按以下规则收敛：
+
+- PREPUBLISH：仅对账非空新增集合。absent 不能作为失败终态证据；operation ABSENT 或租约过期
+  调用原 operation 的 abort。PREPARED 且租约有效继续 commit，commit 会再次按服务器时钟检查租约。
+  只有匹配摘要的 COMMITTED 且全部新增引用 bound 于该 operation（或具有下述精确隐私删除凭证）才能发布；只有匹配摘要的 ABORTED
+  才能把本地命令收敛为 FAILED，清除 pending 意图并保留上一稳定作品和版本。abort 返回 COMMITTED
+  表示提交竞争胜出，继续发布，不能回滚或解绑新增集合。摘要冲突、引用不一致、查询/终止结果未知
+  保持 pending 并告警。不存在单纯根据 absent/released 清锁的分支。
+- 新增集合为空时不进行全称状态判断；PREPUBLISH 直接发布本地 patch，再进入解绑阶段。
+- `PUBLISHED_CLEANUP`：发布后不得回滚已发布作品，不再 prepare/commit、不重复发布或递增版本。
+  只按持久化移除集合及精确旧绑定代次对账：bound 且代次相同则以当前 remoteOperationId 重放 unbind；
+  released 且代次相同视为已解除；absent 视为该完整身份已无引用（依靠活动命令锁禁止并发重绑）。
+  不要求 releaseOperationId 相等，沿用现有 unbind 的目标状态幂等语义；它只用于内部审计。
+  其他绑定代次或 prepared 状态阻断并告警。有效混合 bound/released/absent 逐项收敛，不把已释放项
+  再绑定。移除集合全部收敛后才能终结成功；移除集合为空直接完成本地终结。
+  此阶段使用 status 的 references 查询模式读取移除集合，不把它当作原新增集合计算摘要；不得调用 abort。
+- 查询失败或本地提交结果未知时保持 `MEDIA_REFERENCE_PENDING`；先读取命令阶段和 owner，
+  已 SUCCEEDED/FAILED 则重放终态，否则沿原阶段恢复。不能靠远端新增集合推断本地是否发布成功。
+
+该状态查询只提供事实，不自行修改引用。homework-service 不直接读取 resource-service 数据库；
+所有自动或运维恢复都必须先重新授权，再读取已持久化意图并遵守上述规则。
+本地 owner/阶段 CAS 与远端终态一起防御重复执行器：迟到 abort 无法推翻 COMMITTED，迟到 prepare/commit
+无法推翻 ABORTED；本地失败释放锁前必须收到确定远端终态。远端 ABORTED 后本地落库未知时重读同终态恢复。
+
+在调用 prepare 前设置不确定标记，关闭“远端可能已收到请求但本地没有恢复记录”的崩溃窗口。
+恢复不得猜测成功，也不得创建第二个 operationId。
+
+完成写入同时校验 `expectedCompletionVersion`、`expectedChecklistVersion` 和任务状态。
+任一版本过期返回 `409 VERSION_CONFLICT` 且不改变任务、命令或媒体引用。家长确认与孩子更新
+竞争时最多一方成功，家长不能确认读取后已被替换的作品。
+
+#### 完成作品隐私删除（PLANNED）
+
+这是 SL-01 的安全闭环，不是全量家庭数据删除。现有任务 DELETE 仅取消/归档，并不解除媒体引用；
+§4 的既有媒体 DELETE 保留 bound 的行为仍是已实现基础。以下扩展仅适用于新 purpose=task_completion，
+必须在 T1/T2 启用完成作品前实现，不能把旧实现声称为已经满足。
+
+复用 `DELETE /api/media/:mediaId`：当前家庭任一家长或孩子本人经实时 scope 校验可请求；孩子不能删
+兄弟姐妹媒体，已离家家长不得操作。无新角色或上传者特权。确认/归档冻结教学内容，不剥夺媒体隐私删除。
+UI 明示删除整份媒体会影响其所有完成作品引用，需明确确认；孩子可请家长代办，但服务端仍记录实际 actor。
+
+resource-service 是删除与引用的唯一写入者。对 task_completion 在同一事务内：
+
+1. 将资产置 deleted（首次 deletedAt 不变），写入最小 `MediaDeletionTombstone`，保存 scope/mediaId、
+   实际 actorId/role、服务器 deletedAt 和固定原因 user_requested；无图片正文、文件名、备注或存储路径。
+   每个释放的 bound 另保存精确 resourceType/resourceId/field/bindingOperationId/releasedAt 删除凭证。
+   资产 tombstone 以 mediaId 唯一，释放凭证以完整 scope/引用身份/bindingOperationId 唯一；首次字段不可覆盖，
+   重复请求读取原记录，不因不同重试 actor 重写首次事实。
+2. 对涉及的 PREPARED operation 竞争原记录 CAS，整组 ABORTED 并释放其全部 prepared；对已 COMMITTED
+   记录竞争版本 CAS 但不反转状态，仅释放该媒体的 completionMediaIds bound 引用、持久保存对应凭证。
+   禁止静默解除其他 purpose/字段引用，异常 scope/字段阻断并告警。全部操作原子提交，未知结果重试原 DELETE。
+3. prepare 对 active MediaAsset 执行实际写入的 referenceFence CAS（不只是读取状态），删除同样写该资产；
+   避免“删除看不到尚未提交 prepare、prepare 又读到旧 active”的写偏差。commit 与删除竞争同 operation，
+   事务重试重查状态。删除后不能创建新引用，迟到的旧 COMMITTED 仅重放终态，不能重绑。
+
+删除成功后授权读取、签名内容读取和新 prepare 均拒绝；重复 DELETE 返回 204，保留首次时间和 actor，
+从 tombstone 仍需校验权限。丢响应不重复审计或重置 30 天起点。资源已不存在且无凭证时沿用原 404。
+任务只保留原 mediaId 和教学确认事实，显示“作品已删除”；不修改 completionVersion、confirmedAt、星星或
+不可变成功响应。GET/旧成功重放中的 mediaId 从来不是读取授权；UI 不得把不可读占位显示为仍可审核的图片。
+
+COMMITTED 后本地发布未知的恢复：status 返回同 scope、媒体身份及绑定代次的 privacyDeletion 凭证。
+新增集合每项必须为同代次 bound，或有匹配该 remoteOperationId 的持久隐私删除凭证，才可发布原业务 patch
+并显示不可读占位。普通 released/absent、客户端声明或其他代次凭证绝不能替代 bound。远端仍 ABORTED 时
+按原失败路径；无新增集合时无需远端提交。PUBLISHED_CLEANUP 可接受精确凭证/已 released/absent，禁止重绑。
+这消除“已提交后隐私删除导致永久 pending”，不放宽远程终态与家庭隔离。
+
+物理清理在 deletedAt 和最后释放时间两者都满 30 天且无 prepared/bound 后才有资格执行；30 天不是自动
+删除完成承诺，须记录清理命令实际执行和残留。删除凭证及 operation 终态保留，不随内容清理删除/TTL。
+备份可能仍有正文：现有示例为 7 日/4 周/12 月快照，不得声称 30 天后所有副本消失。恢复只能在隔离停读写
+环境进行，合并截至恢复切换时完整的最新删除凭证、重新应用禁读/释放并核对后才开放；凭证不可用时停止恢复上线。
+仅有早于最后已确认删除的日志或无法证明日志完整时也不得上线，不能以恢复出旧快照就认定恢复成功。
+本轮要求在受保护备份介质保存独立删除凭证日志，并在删除成功前确认本地持久性；受控恢复必须取得完整日志。
+T1 第三批服务层实现说明（仍未启用生产入口）：
+
+- 最小资产事实为 MediaDeletionTombstone；精确 bound 释放事实单独存入 MediaDeletionReceipt，
+  两者与资产禁读、operation CAS、引用释放同事务提交，无 TTL，不保存正文/文件名/路径。
+- prepare/commit 和删除复用资产 __v 的真实写入作为 referenceFence。新删除事务设置
+  privacyDeletionRecorded=true，旧清理在选择及删除资产时排除该标记，不影响旧协议历史删除。
+  标记只作清理分流；权限与恢复证明仍以 tombstone/精确 receipt 为准，不依赖此布尔值。
+- createMediaDeletionJournal 要求显式的绝对目录及已存在的受保护父目录，不提供工作目录默认值。
+  逐媒体固定最小 JSON，0600 文件/0700 目录；临时文件 fsync、原子硬链接发布、目录和父目录 fsync，
+  重试核验相同内容，不覆盖首次事实。数据库提交后日志确认失败返回 pending，不能先报告成功。
+  部署时必须指定实际受保护介质；仅在临时目录测试不等于备份/恢复验收通过。
+- 独立清理先在事务中检查删除/最后释放均满 30 天、无活跃引用且凭证存在，确认日志持久性，
+  再在事务外幂等移除文件，最后重新检查并事务删除资产与 released 引用。文件已移除但数据库失败
+  时保留禁读元数据重试，绝不重建文件或删除凭证/operation；不将文件系统副作用放进可重试事务回调。
+
+T8 演练旧快照恢复不复活内容，记录实际快照保留/清理日期。立即销毁全部备份或全量家庭导出/删除另行授权，
+不在本轮实现；任何已删除内容不得因代码回滚重新开放，应保留 tombstone 并前进修复。
+
+T1 第四批传输信任边界（独立模块，尚未生产接入）：公共 mediaReferenceClient 通过按需导出新增
+completion client，旧工厂不加载新协议。client 只把调用者提供的持久化 remoteOperationId 转换为
+内部 operationId，不生成映射或直接读取任一服务数据库；映射的持久化保证仍由 homework 占位事务承担。
+严格验证请求 scope/非空引用集合，响应校验远程身份、摘要、完整集合、终态/租约形状与精确删除凭证。
+错误响应不等于终态证据；裸 4xx/5xx、超时或不完整/矛盾响应均 pending，不返回远端敏感错误信息，
+不自动重试或跟随重定向。仅经验证的 200 ABORTED 返回为终态数据，后续本地清锁必须再遵守阶段规则。
+历史终态的当前 absent/其他代次不会被过滤或改写为成功绑定，不能仅凭 client 校验成功就发布作品。
+本批测试使用真实临时副本集的服务契约 adapter，不宣称已有新 HTTP handler；生产入口继续拒绝新字段，
+status/abort 仍未注册。公共 client 的业务注入及 homework 编排另批实施，路由启用须单独确认。
+
+T1 第五批在独立 service/client 增加精确代次 unbind：当前远程标识只写 releaseOperationId 审计，
+不创建空 operation，不使用新增集合 commandHash；各移除项携带原 bindingOperationId。
+bound 必须属于对应旧 COMMITTED operation 的规范集合，同一事务按每个旧 operation 版本 CAS、
+每行代次/状态 CAS 释放；不改变历史终态。同代次 released 保留首次审计，absent 如实返回；
+其他代次或 prepared（含过期）整批冲突，不能以 unbind 代替整组 abort。
+响应 operation=null，client 验证完整 released/absent 集合及每项旧代次凭证；普通解绑不产生删除凭证。
+这些结果不代替 homework 的发布后 owner/阶段 CAS，生产路由与业务注入仍未启用。
+
+T1 第六批在 homework 增加独立 completion service 与媒体编排：
+
+- GrowthTask 加法定义版本、清单与稳定 completionEvidence，历史字段缺失按版本 0 投影，无迁移写入。
+  completionMediaBindings、activeCompletionOperation、completionPending 默认不被查询选出；
+  编排显式读取，公开只读投影排除隐藏状态，pending patch 不提前变成稳定证据。
+- 初次占位在本地事务内 CAS 任务状态/版本/无 owner，同时保存完整 owner、最小 patch、差异集合、
+  规范 hash 和唯一 remoteOperationId。远程标识跨事务重试保留，只有确认回滚的映射唯一冲突可重分配；
+  结果未知不能发出未经确认持久化的标识。所有远端 I/O 均在本地事务外，经公共 client 执行。
+- 独立完成意图使用 completionPending.remoteOutcomeUncertain，不与旧材料状态混用。
+  标记 CAS 确认后才 prepare；恢复先 status，ABSENT/过期先 abort，COMMITTED 逐项检查当前绑定或
+  精确隐私删除凭证。裸错误、普通 released/absent 和其他代次不足以发布。
+- 每次本地推进重新鉴权，并按完整 owner、phase、operation/任务版本、目标版本与 hash 同事务 CAS。
+  发布同时更新证据、完成版本和不可变成功响应；纯重排保留旧绑定代次。PUBLISHED_CLEANUP 仅做
+  旧代次 status/unbind，全部收敛才 SUCCEEDED/清 owner，迟到执行器不能覆盖新 owner 或重复发布。
+  终态重放重新鉴权后返回历史投影，不从当前任务重建；GET/read 不恢复。
+- 本批仅通过合成副本集与真实服务契约 adapter 验证，不代表内部 HTTP 已接通。旧完成、确认、编辑、
+  取消、归档写入口尚未统一接入新锁；这些改造和生产组合须另行确认，新服务不得在此前写真实任务。
+  隔离测试验证生产工厂仍只注入旧附件服务，GET 不加载新模块、不执行恢复、不暴露 pending patch。
+
+T1 第七批确认并发实现补充（独立服务，未生产接入）：确认以实时家长授权为前提，同事务 CAS
+completed/期望 completionVersion、无 activeCompletionOperation/完成 pending、两类引用稳定以及任务
+__v，保存首位确认者/时间/反馈并转 confirmed、starAwardState=pending。历史无完成媒体的缺失版本
+在该事务初始化为 0，不递增作品版本；与完成服务的占位写同一任务文档，最多一方成功。
+外部发星不进入可重试事务回调，复用既有 starAwardClient/Task 5 账本，不在 homework 写奖励库。
+结果未知保留 pending，原版本重试后以同 taskId 幂等恢复；本地第二事务再次授权与 CAS pending→awarded。
+共管家长可以恢复发星，但只能保留原任务确认审计，不能替换作品、反馈、时间或确认人。
+本批不接旧 HTTP handler，不改已存在的奖励算法，也不宣称已实现确认与所有旧写入口的生产互斥。
+
+T1 第八批独立 mutation 服务补齐非材料任务编辑、取消/归档的事务互斥。最终写入使用同一任务
+文档的 owner/pending、两类引用状态、状态/版本/__v CAS，与完成占位及确认事务串行竞争。
+普通编辑只允许 pending；pending 删除仅取消，completed/已发星 confirmed 删除仅归档，
+confirmed 发星 pending 拒绝归档。任务、完成证据、绑定和账本不删除，首次取消/确认事实不覆盖。
+未知提交返回 503 后重新读取当前状态，不复用旧文档写入；取消/归档重复调用无写入。
+材料变更和清单编辑未纳入该服务，旧路由保持未接入，不能在统一切换验收前对真实任务调用新服务。
+
+### 12.4 `DailyLearningPlan`
+
+```text
+DailyLearningPlan
+  familyId
+  childId
+  localDate
+  items[]
+    taskId
+    childEstimatedMinutes?
+    estimateRecordedBy? { actorId, role }
+  version
+  updatedByActor { actorId, role }
+  createdAt
+  updatedAt
+```
+
+- 唯一索引为 `{familyId, childId, localDate}`；同一计划最多 20 项且 taskId 不重复。
+- GET 不存在时返回空 items 和 `version=0`，不隐式创建。
+- PUT 首次创建必须携带 `expectedVersion=0`，成功后版本为 1；后续使用 CAS 递增。
+- 版本或首次唯一索引竞争返回 `409 VERSION_CONFLICT`。
+- 只允许修改家庭当地“今天”；历史计划只读，未来计划不在本轮实现。
+- 新加入项必须是同家庭同孩子的 pending 任务；已完成项可保留为当日事实，取消或归档项不可行动。
+- 估时仍用 childEstimatedMinutes（可空或 1..240 整数），短/中/长只是 5/15/30 分钟快捷值；
+  不保存估时等级，不代表时限或能力。estimateRecordedBy 在估时新增/变化时由认证 actor 写入，未变则保留；
+  清空估时清空归属，缺失旧归属显示 unknown、不推断为孩子。updatedByActor 记录本次计划写入者。
+  客户端不能提交这些审计字段；排序不改估时归属，家长代录不计为孩子独立估时。
+- 日计划只是排序投影，不复制或写入任务状态，不覆盖家长的 `estimatedMinutes`。
+- Gateway 只能把精确的日计划路径代理给 `homework-service`，不得接管既有 `/api/children` 路由。
+
+### 12.5 来源关联和失败边界
+
+`FamilyMistake.sourceTaskId`、`GrowthTask.sourceTaskId` 和 `GrowthTask.sourceMistakeId` 均为可选。
+写入前由资源所有者服务通过带内部凭据、同时包含 `sourceId + familyId + childId` 的最小读取
+验证来源存在且符合预期类型。公开调用中，来源不存在与来源属于其他家庭或孩子统一返回同一
+`404 RESOURCE_NOT_FOUND` 响应；真实原因只进入脱敏内部审计，不能形成资源存在性侧信道。
+来源之后不可用时公开读取只返回“来源不可用”，不能泄露其他孩子的标题或媒体。
+
+任务到错题、错题到订正任务是两个显式用户操作，不提供跨服务原子事务。一个步骤成功而下
+一步失败时保留已完成内容并允许重试。`task_completion` mediaId 不能直接保存为
+`mistake_answer`；首版由家长在错题流程重新上传正确 purpose 的媒体。
+
+### 12.6 迁移、发布兼容和回滚
+
+1. 首次发布只增加可选字段、`DailyLearningPlan`、本地完成命令记录、resource 所有的
+   `MediaReferenceOperation` 及必要索引，不删除或重命名旧字段。
+2. 老数据通过读取默认值和按需原子初始化兼容；没有实际冲突时不编写批量迁移脚本，且不得批量重写全部任务。
+   历史 `completed` 任务缺少 `completionVersion` 时投影为 0；没有完成媒体且缺少
+   `completionMediaReferenceState` 时投影为 `stable`。新客户端用
+   `expectedCompletionVersion=0` 可以确认这类记录。确认 CAS 同时把缺失版本持久化为 0，
+   但不递增版本；只有替换完成证据才递增 `completionVersion`。同一确认 CAS 继续把
+   `starAwardState` 置为 `pending`，后续沿用现有可恢复发星命令，版本初始化本身不发星。
+   重复确认不得重复发星。
+3. 索引在启用写入口前创建并检查冲突。冲突只输出匿名资源 ID 清单，停止启用，不自动删除儿童记录。
+   本地 remoteOperationId 唯一索引和 resource 的 operation 复合唯一索引必须就绪；status/abort/prepare/commit 与软删除/清理路径同版本
+   部署，通过终态/租约用例后才开放 completionMediaIds 写入，禁止新字段走旧的无 operation 协议。
+4. 新完成和确认写接口强制要求 operation/version 字段。旧客户端缺失这些字段返回
+   `400 CLIENT_UPGRADE_REQUIRED`，不能退回无版本写入；前后端必须协调发布并提示 iPad 刷新。
+5. 旧任务仍可读取、列出、取消或归档；“旧数据可读”不等于旧写客户端继续获准修改完成证据。
+6. 回滚首先关闭新增页面和写入口，保留新字段、索引、本地和远端命令记录、媒体引用和日计划；
+   保留不可变的本地 remoteOperationId 映射，未终结命令只能由理解映射及新协议的版本恢复，不降级资源服务绕过终态检查。
+   T0 尚无已上线完成命令；若发布前发现缺失映射的试验记录，停止启用并单独评审修复，不能猜测补值或批量删除。
+7. 一旦接收增强写入，不得仅回滚到会绕过冻结/版本规则的旧后端继续写；优先前进修复。
+8. 恢复旧数据快照会丢失新作品或计划时，必须停写、备份当前状态、列出 RPO 并取得明确数据回退授权。
+
+上述增量未改变现有架构决策，因此 T0 不新增 ADR。未来若引入后台调度、独立作品版本聚合、
+持久复习队列、跨服务事件流或新的数据权威源，必须另立 ADR。

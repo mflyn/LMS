@@ -58,6 +58,7 @@ node_modules/.cache/mongodb-memory-server/
 /playwright-report/
 /test-results/
 /.task11-runtime/
+/.playwright-mcp/
 
 # IDE
 .idea/

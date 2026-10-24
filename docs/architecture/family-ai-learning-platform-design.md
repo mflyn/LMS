@@ -9,6 +9,8 @@
 
 相关现有文档：
 
+- [家庭自主学习理论与总体方案](../research/family-self-directed-learning-theory-and-program.md)
+- [家庭自主学习系统设计](family-self-directed-learning-system-design.md)
 - [家庭成长跟踪架构设计](family-learning-tracker-architecture.md)
 - [家庭成长跟踪 API](../api/family-learning-tracker-api.md)
 - [家庭成长跟踪跨服务时序图](sequence-diagrams.md)

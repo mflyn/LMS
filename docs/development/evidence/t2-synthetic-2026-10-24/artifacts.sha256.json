@@ -1,0 +1,745 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/README.md",
+      "bytes": 4242,
+      "sha256": "c80b5cc5e57672bbf0300bcd49995657bfd3637330322e54cdc0162bbb56a9d7"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-directory_await.json",
+      "bytes": 7954,
+      "sha256": "24e9ab0c9225bd24fff9453be6384857255dda5f2707054d64a52eecc1ade608"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-directory_await.log",
+      "bytes": 3014,
+      "sha256": "da6576d9c1fa8cfd6e3999ef18d149e2cfee427cdfee8d8dfcb447a7cc73075d"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-directory_sync.json",
+      "bytes": 7954,
+      "sha256": "26e0964912513c01bd14d9fb0fbafb1d6f7fe839e23adfed8421c6444da9984a"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-directory_sync.log",
+      "bytes": 3013,
+      "sha256": "cb4c69e563aa6aac12fcda2b077e422a1c0e23fc8b543f6ded81b8166cf78e3b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-file_await.json",
+      "bytes": 7262,
+      "sha256": "0b9b9b8bd9182d0a6e3395e2329265f66269c5c42f42dc80f7122d27156bd4c1"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-file_await.log",
+      "bytes": 2437,
+      "sha256": "723dcfafad2f413c8bba41465df7470a5734c6b7f94f7060c22af24cd8df31ed"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-file_sync.json",
+      "bytes": 6913,
+      "sha256": "1ff60673b076e8c4789dddeea3aa303a470c07a44b1453eb694d255967769b21"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-file_sync.log",
+      "bytes": 2272,
+      "sha256": "288e198abaddf6ad9e3802e3b288a77aad9f519337aa4eb6b2c6f42f85981d4d"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-sync-mutation.cjs",
+      "bytes": 963,
+      "sha256": "c3d662d4e3d954795f9e7aed7ba7d129562725c72644a8beda5a19a3659bbc27"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-assembly.json",
+      "bytes": 37095,
+      "sha256": "2548a98ee08ce4234aec65fe1e20aca436b75fc135fd173d94195fce9e625211"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/.last-run.json",
+      "bytes": 96,
+      "sha256": "d6d55a3547a8af6997b774077baea1d7ebf4cd3c012df2780c78f4c83ef4fecd"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-a-late-real-exp-f5cf5-the-newly-logged-in-sibling/error-context.md",
+      "bytes": 9165,
+      "sha256": "e53380fa5d6a9b88f3a9912699cc1a0c334c0a95369388a164c6cb546e7e7287"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 80441,
+      "sha256": "1b3ef29c3bdffb3ab3d2591f065b383d96b9b4062d308ce19b7335a1d44d450c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 82200,
+      "sha256": "f7f2566e26b971c1a415b2daf91a24983ecc4134cb90fd747fa133be1c956dea"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 79533,
+      "sha256": "17089af09d6a9b7416494f2a1e5b666befb395c145bc8dd9453c6a3421235e0b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 81832,
+      "sha256": "6445a12b07fa648043b6a08b8084cf03a5b67920d0be9b33905e9a2489d34dbf"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 62964,
+      "sha256": "c6cf7e752ebb4431d04387602e22ca9dda087354e94efdbdf0dfdddf844e2abd"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 78731,
+      "sha256": "c897ba10355493c1671988a87842eb298df9b2b8e8076b9229b2373b9dea6525"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 42173,
+      "sha256": "3c1c68549cc5834a93d8c12c3927b6ed7fa3ef8813f18871fc8d148352b719c1"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61806,
+      "sha256": "0333918a9936df134c9857fda8e222511c1b869b3f8eafac58c7e72b2e7adabf"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final.log",
+      "bytes": 2510,
+      "sha256": "31840d44a4448ca2824431c80c9ad911bc0c7f34113c701bd7e09ba3ff7bce12"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 80441,
+      "sha256": "1b3ef29c3bdffb3ab3d2591f065b383d96b9b4062d308ce19b7335a1d44d450c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 82200,
+      "sha256": "f7f2566e26b971c1a415b2daf91a24983ecc4134cb90fd747fa133be1c956dea"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 79533,
+      "sha256": "17089af09d6a9b7416494f2a1e5b666befb395c145bc8dd9453c6a3421235e0b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 81832,
+      "sha256": "6445a12b07fa648043b6a08b8084cf03a5b67920d0be9b33905e9a2489d34dbf"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 62964,
+      "sha256": "05ab75ea130814f76ec39e8c9ecc16ba7ef9804b00bfbd04e6ff43586d71f6a5"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 78726,
+      "sha256": "16c2df7716c1551fbd632ee683d4b66f3d20d341b3babef7087f836e240c5e13"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 42175,
+      "sha256": "37fda05b7985d09dbe72cf04c472a5fccb0f2137e259a1f5debdf25b61069ab0"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-final/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61806,
+      "sha256": "0333918a9936df134c9857fda8e222511c1b869b3f8eafac58c7e72b2e7adabf"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified.log",
+      "bytes": 2509,
+      "sha256": "0d12a5f885803058193e5263f230b03a281415ccf3511d65a51a2f0d7260c4ae"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 80441,
+      "sha256": "1b3ef29c3bdffb3ab3d2591f065b383d96b9b4062d308ce19b7335a1d44d450c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 82200,
+      "sha256": "f7f2566e26b971c1a415b2daf91a24983ecc4134cb90fd747fa133be1c956dea"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 79533,
+      "sha256": "17089af09d6a9b7416494f2a1e5b666befb395c145bc8dd9453c6a3421235e0b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 81832,
+      "sha256": "6445a12b07fa648043b6a08b8084cf03a5b67920d0be9b33905e9a2489d34dbf"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 62964,
+      "sha256": "298a308f8548383bd3f99f50d6f89ad7f2fa6f42638084a6d292a8a58af1b166"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 78726,
+      "sha256": "16c2df7716c1551fbd632ee683d4b66f3d20d341b3babef7087f836e240c5e13"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 42175,
+      "sha256": "37fda05b7985d09dbe72cf04c472a5fccb0f2137e259a1f5debdf25b61069ab0"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser-verified/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61846,
+      "sha256": "57b6f2f5137adb87942c2423f9d7c2bb0348d176f662a059c7aab3929cb0d31f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/.last-run.json",
+      "bytes": 444,
+      "sha256": "c70c80ff8915c79d263b220cc5956af1daddcb16114570849c62f010a268f8da"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/completion-a-late-real-exp-f5cf5-the-newly-logged-in-sibling/error-context.md",
+      "bytes": 5575,
+      "sha256": "ef06587c0a956b0ed55e52ed85037a5db678e9d01a4910c49890d508dc1401bd"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/completion-a-late-real-rev-02b37-the-newly-logged-in-sibling/error-context.md",
+      "bytes": 5579,
+      "sha256": "96e68b0c6499ab462a703620521cfd8e1ff6d16839c55c2a279fd1e351856282"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/completion-a-sibling-login-a457c-nse-from-the-previous-actor/error-context.md",
+      "bytes": 5614,
+      "sha256": "cbef46325293e4b1d6705066f72368f3455ad266f595c216fdb2c605ec0fcc86"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/completion-lost-public-res-3348a-ommand-without-republishing/error-context.md",
+      "bytes": 5596,
+      "sha256": "f1c89c8a78190d130fc99bd2e2b3ba881985ad0b2fbf6255b4ff7bc040e2e77c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/completion-real-expired-JW-c17fe-original-durable-completion/error-context.md",
+      "bytes": 5580,
+      "sha256": "f2260f280399ce8b603ebcaca28047a9e1378a665af3c76f862f4835c48cf974"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/error-context.md",
+      "bytes": 5599,
+      "sha256": "0a576cc19f15e2841115daaca973588f17e5f5bc062c953593668c0140bc2230"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/completion-remote-committe-99814-sumes-the-durable-operation/error-context.md",
+      "bytes": 5612,
+      "sha256": "c9861f8edb8ba1251ac659b2ea66f3e6aff7d9c1a4cae2adef6d3c75c30b7a5b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-browser/completion-remote-committe-f4dcb-sumes-the-durable-operation/error-context.md",
+      "bytes": 5641,
+      "sha256": "f2d1561f8d35228a37997daaeb75bb1bab745600cd961cc9af81bb46641c002f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-family.json",
+      "bytes": 1402226,
+      "sha256": "b36646b193e9763c78ef8c6be61d085abb63976d0fd27b1f758698c52fe7b206"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-frontend.json",
+      "bytes": 134861,
+      "sha256": "196c4fbc27351d5a67a33747bc36b9ce2c0a860770317c04baa8b8f6000d8dbd"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-http-diagnostic.json",
+      "bytes": 8050,
+      "sha256": "c11d0eb02ff922281b2993ef5e8fdb7dd7701ee62bb5c99ee5c782c46bbf083a"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-http-latest.json",
+      "bytes": 7523,
+      "sha256": "8338e9babbb440972f14a203ea33dae908069677b797bb8ddeee9e3b41da1dbb"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-http.json",
+      "bytes": 9951,
+      "sha256": "41674f68223481c557476af7d199b0f0a70da29822d5bd135c1419800dd5fd43"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-red-http.json",
+      "bytes": 8741,
+      "sha256": "9dc7f41f3c31c2a9f2d1cc0980f2fcb2fdf18acb907d884d628374566be6944c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-red-unit.json",
+      "bytes": 13740,
+      "sha256": "f4d0ee31b0df1377cd561f166b6f1367e9a29b1b34ae885f03df6ba32a795e5b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-task11.log",
+      "bytes": 2295,
+      "sha256": "606c64c0322c30b95663736a442ae83dae27d59cdcb5155c56b49c66d618b46d"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-task11/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-task12.log",
+      "bytes": 1869,
+      "sha256": "60a8810d28a3680b706f0016c0843a8d792f4b24663b62101d8474e44d4a2fe9"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-task12/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-unit-latest.json",
+      "bytes": 14729,
+      "sha256": "c59d4bd92d96225bc41b959141729ea6f856a8d6b861db7a63889a2b6913c6ab"
+    },
+    {
+      "file": "release-gate-artifacts/t2-three-p2-2026-10-24/source-manifest.json",
+      "bytes": 27856,
+      "sha256": "0ee1bcc8eb72092f395da6271b2fafeed9debd1820cd8b3f73c9f88cc92fc82b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/README.md",
+      "bytes": 6822,
+      "sha256": "fcb43f3835c3a05937240d5fba2dfa983c06441b48d2d1f2068263edfae3d158"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/approval.json",
+      "bytes": 1121,
+      "sha256": "1fcc91355cf36599134c28f389f3e01087c83c8d584e79ec2c1d9f05f3458563"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/artifact-manifest.json",
+      "bytes": 20678,
+      "sha256": "8e7b646ce355745e0731481aae6f39da500b82225fbaf947bbe6fb751404c351"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 80441,
+      "sha256": "1b3ef29c3bdffb3ab3d2591f065b383d96b9b4062d308ce19b7335a1d44d450c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 82200,
+      "sha256": "f7f2566e26b971c1a415b2daf91a24983ecc4134cb90fd747fa133be1c956dea"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 79533,
+      "sha256": "17089af09d6a9b7416494f2a1e5b666befb395c145bc8dd9453c6a3421235e0b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 81832,
+      "sha256": "6445a12b07fa648043b6a08b8084cf03a5b67920d0be9b33905e9a2489d34dbf"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 62967,
+      "sha256": "df804a5ffd2ce6125d693e5e34c03d1affeea7d6d35782b4a7b5f2d53ce4502c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 78731,
+      "sha256": "c897ba10355493c1671988a87842eb298df9b2b8e8076b9229b2373b9dea6525"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 42173,
+      "sha256": "3c1c68549cc5834a93d8c12c3927b6ed7fa3ef8813f18871fc8d148352b719c1"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61846,
+      "sha256": "57b6f2f5137adb87942c2423f9d7c2bb0348d176f662a059c7aab3929cb0d31f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/asset-manifest.json",
+      "bytes": 369,
+      "sha256": "1ff296001d245e3c35414b03a34eca436aa13e3ff9dc89a3ca06953424a21410"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/index.html",
+      "bytes": 725,
+      "sha256": "ac1710e35b3c7637115fc6ff64fe0cc0d35e128eff56e546dc10d76edc7b2590"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/manifest.json",
+      "bytes": 1,
+      "sha256": "36a9e7f1c95b82ffb99743e0c5c4ce95d83c9a430aac59f84ef3cbfab6145068"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/static/css/main.103eacb5.css",
+      "bytes": 26056,
+      "sha256": "7582d2af6e419fca36a1396850dd64839755bffcbd11f9bfbb81a76adfd92729"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/static/css/main.103eacb5.css.map",
+      "bytes": 41471,
+      "sha256": "cfaef1700f2a6602b0f012919a1410c44a3a60ba67f2c26641f26b7583b164b4"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/static/js/main.6f7b5b6c.js",
+      "bytes": 490559,
+      "sha256": "e930b81cb86dedf1b7be7370aaa2ba9a4eb82d3c3f44f9b70ac439ed03cb5f41"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/static/js/main.6f7b5b6c.js.LICENSE.txt",
+      "bytes": 9848,
+      "sha256": "e1fbcf71f7be0607c9a6647e771ca5e4c0d9c0a025976d4560f3f511c843f68b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/static/js/main.6f7b5b6c.js.map",
+      "bytes": 1893131,
+      "sha256": "f725b11338d3d3774a865958cd82a9bb72ba21eae15cfc13b79cf77a444c6a73"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/closeout-source-manifest.json",
+      "bytes": 31306,
+      "sha256": "89047912ceaf90717b44c822a2cf528f7a94568bf1c20922275234dbe32c9cf4"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/closeout-validation.json",
+      "bytes": 3257,
+      "sha256": "ba3412de24b5751aa1e8905212d4ca4bffbc5a353c63048a1af8d07b54e9d744"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/browser.log",
+      "bytes": 2510,
+      "sha256": "2fdafceac3072471362b6eab668e8e0d1cdd5d7119aec3be99aa3394cb0b918f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/build.log",
+      "bytes": 1125,
+      "sha256": "618ed0bfb025878ab5a2920de1f9ffe55ad487e5f37dc72d85e925204023cf27"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/family.json",
+      "bytes": 2031000,
+      "sha256": "38d372ae7dc764661aa07238fc6b4a9cd3b34f7ac1d497a11b465ba432742a62"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/family.log",
+      "bytes": 1541028,
+      "sha256": "ac31a2162edd3d90f853f732aa57ac129f24de9339361110968d61ef8172ac9d"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/frontend.json",
+      "bytes": 187063,
+      "sha256": "cb5967d2eaa8330c988519e23ef96bfc4c5213a1d1c4d5f9ccf53e9b5d934187"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/frontend.log",
+      "bytes": 2526,
+      "sha256": "028d6c51d25a7da3aa19e612871f688a176a0c04439c4aa23ca57213cecda14f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/http.json",
+      "bytes": 10260,
+      "sha256": "8bb528fa2a8694dcf47a9c747b6a532ee85e7f3dc0c1e8f3d519adc1752019a4"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/http.log",
+      "bytes": 869,
+      "sha256": "19100ede719354a098ac7c8d6a4d91af4483c7db6d22cb5f2e61f3e22405061f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-directory_await.json",
+      "bytes": 10527,
+      "sha256": "1d036868ff8a97e0d05aadd123e36fc1a553cccaf30ba8fb277b8688afb727c0"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-directory_await.log",
+      "bytes": 3039,
+      "sha256": "17517319ef7b6e3a6a20ce9354a5990cc1f5f932f6bbef8d85f46603ac1e3fea"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-directory_sync.json",
+      "bytes": 10527,
+      "sha256": "4b55bd740d5fee4ddcc76c5eb349e9432b757554b7424827126877da2596082f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-directory_sync.log",
+      "bytes": 3038,
+      "sha256": "fea0ff857aa883fa2d564003bc31da17954abed1a1f429f87fd963c0324ff711"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-file_await.json",
+      "bytes": 9706,
+      "sha256": "707ef531ffad791ecfe3e6b55459b8641ff127ac75fa7973d7717cb2e17b4d82"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-file_await.log",
+      "bytes": 2461,
+      "sha256": "4ab7f17a2aafac46e878fc2fa92936008699d6ad5069aa5ae5bc3e2c5e46f995"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-file_sync.json",
+      "bytes": 9358,
+      "sha256": "eea828c9cc6b70360ab70d39fc85d943ae0498b25aba8d92661ebc56c6b82b63"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-file_sync.log",
+      "bytes": 2297,
+      "sha256": "25da59ccd22404f522ca954995dc270aa33288b6e0f1d6538008bf54c9ce9ff9"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/task11.log",
+      "bytes": 2295,
+      "sha256": "a0333450223099dad81a3282ebdbca9fedd6cfea7e23e2dee4598b9ba1404cd8"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/task12.log",
+      "bytes": 1869,
+      "sha256": "0022ab09caabe2523df60cef650c8912f7fc7a79e0d95037d3318a899a9e4e34"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/unit.json",
+      "bytes": 21046,
+      "sha256": "f6b6ac7b2ac6147ca25027a1c4e8da069df74fff085306c1a7b683553bc0a964"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/unit.log",
+      "bytes": 2489,
+      "sha256": "c95a2df2d59079a4b39bfc6937a94cce31cf4602915cbba7e2b10f9cdd1e511e"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/tested-source-manifest.json",
+      "bytes": 27856,
+      "sha256": "0ee1bcc8eb72092f395da6271b2fafeed9debd1820cd8b3f73c9f88cc92fc82b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/boundary-red.json",
+      "bytes": 35228,
+      "sha256": "352fe446d450618739ee332c7e4eec56abe1c9bb58e69222936576e8fa9e8c2a"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/boundary-red.log",
+      "bytes": 5511,
+      "sha256": "10509ee527f9980447767e1c0e1a2943dcbce9b8c6c7223207038c9a911ca347"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/cache-red.json",
+      "bytes": 34790,
+      "sha256": "c70da52d6aa12288faf8dd10175f30496cf35960ab2c56f9645422b224b01e3a"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/cache-red.log",
+      "bytes": 5285,
+      "sha256": "a7d85628c7f5cd77da9b1e66ef72ad419f012fd31704c2f09502c8447c8d0fcf"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/docs-green.json",
+      "bytes": 30281,
+      "sha256": "df348c93aa02fd48e640eec95c670c120ae796329220e15af37e5be7d23470ee"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/docs-green.log",
+      "bytes": 4198,
+      "sha256": "36ac9e55fb4a213896c328520f66833c8b5f222ed7a835c53f97aa8db509033d"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/docs-red.json",
+      "bytes": 33122,
+      "sha256": "5f49a3c6c864ff1d277a154bfdf108c599d01e7c4575ea57bba39289f05000f3"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/family-common.json",
+      "bytes": 352389,
+      "sha256": "efd061b49abb8402d1de4385391db611282fd66bf8ac5cd69a2967e2b04ce978"
+    },
+    {
+      "file": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/family-common.log",
+      "bytes": 26214,
+      "sha256": "2afad6e43126c40c650d3b7f72c3744d226d4169d6f12dc2e4141a3bdd02ea84"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/README.md",
+      "bytes": 3895,
+      "sha256": "20373206a05b0c9b57b94e99f96e86db886988376cb8fe42adc8e2614272f08b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/artifact-manifest.json",
+      "bytes": 4700,
+      "sha256": "f5b05323202de5d81b0304e5b7b427379bd7ebcd4ef32bb99814cf25a879002d"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/current-source-manifest.json",
+      "bytes": 292802,
+      "sha256": "5ed44a4c0fc3a94c394a49bd6eb204aefa1455bed874acb332e514f779f83494"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-green.json",
+      "bytes": 32372,
+      "sha256": "4bde60c92e53553618c23833428f3eecf8d7b1a7a9c143f4cf3f5a58615fa173"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-green.log",
+      "bytes": 4388,
+      "sha256": "94f74a1a1a8d33d4f17c794447798287e7dfdb298f6144934a81a4dd432ac870"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-link-failure.json",
+      "bytes": 56296,
+      "sha256": "9481448f70b653e9648abbc2609c7d1f0cffd4e73527ccb212c57c435b04f94a"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-link-failure.log",
+      "bytes": 10459,
+      "sha256": "4b80d412674836de590d7015960ce1a72007b97a23987151eac692a9e61e039f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-red.json",
+      "bytes": 247329,
+      "sha256": "804736f3f0f677a89bba8eb8e32f41d205adf27ec05c55d76a9dac9880448c31"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-red.log",
+      "bytes": 66981,
+      "sha256": "55383102be80dc9f12bea9ca248e054cc4ba5e3c6622fc3bd6eaba8a8a27ff2c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family-common-link-failure.json",
+      "bytes": 423588,
+      "sha256": "2d610a8bb43bd00bf3b40cab04feebfa2ae7ff9899cd7be182309ada020aad23"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family-common-link-failure.log",
+      "bytes": 62485,
+      "sha256": "1a5dafd5e7ffd55e02a419428c4af2ac193d61ade2bcf381dd15224cd5f63270"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family-common.json",
+      "bytes": 354495,
+      "sha256": "8021b41467c3fc7a5f9257c9ceffa5aa53d7f37594d844f4c381bf97c324439f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family-common.log",
+      "bytes": 26220,
+      "sha256": "2bd571a54c2b0e9eb6f3b3f5468f3d9b3ae3441222789f5103dc92532256be7b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family.json",
+      "bytes": 2044664,
+      "sha256": "4a04d3098807b09bd7232c455b2cafa10f8f9caf69b6cfd95a219e0dc73973f1"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family.log",
+      "bytes": 1543685,
+      "sha256": "e2becf7787846f7c755f0f647ef4e2acac4f527828f798ee2ec2f6e15191859c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/tested-source-manifest.json",
+      "bytes": 278582,
+      "sha256": "dbdf32d6212f3b623c4f75563c5d17c662454b237c8fb83c8781a7faed733ff6"
+    },
+    {
+      "file": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/validation.json",
+      "bytes": 2896,
+      "sha256": "2430acc11f946d117e6c3670857b852e343882f27534a0ed9c7d13a2e9fdbf03"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/README.md",
+      "bytes": 2531,
+      "sha256": "efb00b8bc16e1e960970496a9d9544bfa3ee75e79a4ecaa41f5d1685b591510c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/approval.json",
+      "bytes": 2913,
+      "sha256": "0708a50a70de8fd4c6b78bd28deda47e7e1800b0a89f254c1571f030d54dd263"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/artifact-manifest.json",
+      "bytes": 4037,
+      "sha256": "8da6ab477c308ffe952c7c8f77d3e132ac67160e6c500139a6e4e5206c963ff6"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs-green.json",
+      "bytes": 34669,
+      "sha256": "d01d54a7c48645223a0c12c848bc241a074516ff82139f4388004c7c890009c7"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs-green.log",
+      "bytes": 4819,
+      "sha256": "f3c6eff1201805cfba6d1f0e0c55fdb079e45a0636e55e624b3c3c87607d693d"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs-red.json",
+      "bytes": 216380,
+      "sha256": "2ec137e449e45997c0a11d9466fe12173ace4c69e9f66642f8197e58e2262363"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs-red.log",
+      "bytes": 53417,
+      "sha256": "82204ee19431ec3a8c19a9e00a589f00500b4d5838120c652f2f7e174ab4fca4"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs.json",
+      "bytes": 39143,
+      "sha256": "57b4cfbbe8c9933f799d8f124026e1132d409d0820fd3a9988516b2913647675"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs.log",
+      "bytes": 5936,
+      "sha256": "cddf4a9a58989fb3bd58f4a47b8d49cd09170b3fb1f9a12bbd772c4c1e33d6bf"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/family-common-green.json",
+      "bytes": 356850,
+      "sha256": "7bb501d0f0ba6b8ebfb6b49f532f7515663d27620cc0cfee97a11e03fd75c99f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/family-common-green.log",
+      "bytes": 26240,
+      "sha256": "7fccfce0940d9ee7fb91e96d16f5ff7d36ec8e2c36076a1a956370aef813832c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/family-common.json",
+      "bytes": 361311,
+      "sha256": "5dbfd0819eb5e58ef71621d49ee6f028b76bb9d168d581b3998f717155c7562b"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/family-common.log",
+      "bytes": 28522,
+      "sha256": "69c707777d281c0c5287078b6982e9ee8d592e1ca4a64bdf5c2f935969ce29f7"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/preserved-evidence-manifest.json",
+      "bytes": 23377,
+      "sha256": "8d30f67b92be4d9e6002fe4ce86eaf58e129b830390286fdb4cf6c4a1540b69c"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/source-manifest.json",
+      "bytes": 456715,
+      "sha256": "bcab47bfd4affb8b3589adfde208dfa248f0c83ad18a2a2d863504a9d20add9f"
+    },
+    {
+      "file": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/validation.json",
+      "bytes": 4852,
+      "sha256": "e207f90506788f4e63acbd78cee1b075efcfe3ec1554259c58d5ce070f79d29e"
+    }
+  ]
+}

@@ -33,6 +33,33 @@
 旧 Task Gate 只证明对应历史范围。FGT-MVP-1.7 发布判定使用已纳入 Task 12 的统一
 发布 Gate；目标环境启用前还必须完成 Task 12 Gate 规定的数据修复检查。
 
+## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）
+
+[自主学习 MVP 开发计划](../superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md)
+将最新[系统设计](../architecture/family-self-directed-learning-system-design.md)中的六个工作包
+拆成 T0–T9，包含代码落点、依赖、验证、家庭发布和四周试点。SL 编号仅为计划追踪编号，
+不属于当前已实现的 38 项需求。DeepTutor、K12、长期项目等继续留在 MVP 验证后的储备范围。
+
+[自主学习 MVP 增量 Gate](./family-self-directed-learning-mvp-gate.md)记录 T0 契约基线、
+SL-01 至 SL-07 的 planned 状态、既有测试失败、T1 至 T9 证据以及工程完成与家庭验证的
+独立结论。T0 不提供功能实现证据，不能据此开放新增写接口。
+
+[T1 验收清单归并](./family-self-directed-learning-t1-acceptance-reconciliation.md)对应第 1–26 批与
+原 35 个历史条目，区分独立实现、正式装配与后续任务边界；四个收尾工作包现已关闭，
+不将历史复选框重复计为新开发任务，也不将混合条目的后续责任计为已完成。
+
+[T1 总门禁关闭评审材料](./family-self-directed-learning-t1-acceptance-reconciliation.md#6-t1-总门禁关闭评审材料)
+已核对 A01–A35；T1 后端工程总门禁及 R4 汇总项已获用户批准 CLOSED，裁决见 Gate §18.40 和归并表 §6.4。
+仅限既定合成验收，不代表前端、真实家庭部署或 Git 发布完成。
+
+[T2 详细设计](../superpowers/specs/2026-10-23-family-self-directed-learning-t2-design.md)与
+[T2 执行、测试及评审记录](./family-self-directed-learning-t2-execution.md)已获用户设计批准，
+T2-1 基线修复与门禁 P2、T2-R 公开恢复后端及 owner/pending P2 已获用户验收关闭。
+2026-10-24 用户批准 T2-G 未完成高级恢复/新回收后置，不再阻塞 T2-2 至 T2-6 页面开发；保留既有运行安全依赖。
+当前批准见[执行记录 §17](family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)：三项 P2 CLOSED，T2 工程总门禁 APPROVED / CLOSED，关闭范围 ENGINEERING_SYNTHETIC_ONLY。最新全量仍 FAILED（3942/3943通过，D2B-05 后置），历史失败分别保留。真实设备 DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，后置范围 REMAINDER_DEFERRED；不自动启动 T3–T9。
+[T2 退出恢复与安全回收补充设计](../superpowers/specs/2026-10-23-family-self-directed-learning-t2-recovery-retention-design.md)
+原已批准接口、模型、专用凭据、24 小时保留期及每批 50 个参数保留在历史设计；T2-G 已有部分实现，未完成部分后置，不代表真实环境已启用。
+
 ## 后续 AI 学习扩展边界
 
 [家庭 AI 学习平台设计](../architecture/family-ai-learning-platform-design.md)是后续

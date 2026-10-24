@@ -1,13 +1,16 @@
-# 家庭成长跟踪系统
+# 家庭自主学习系统
 
-家庭成长跟踪系统是一套面向家庭的孩子成长任务与反馈工具。当前 MVP 由家长和
-孩子共同使用，围绕德智体美劳五个维度记录任务、完成情况、复盘、反馈和正向
-激励，不以学校、班级、教师或课程管理作为主流程。
+长期主目标是帮助孩子逐步学会自主计划、执行、自检、求助、订正和复盘，家长提供适龄支持。
+家庭成长跟踪是已实现基础，继续覆盖德智体美劳；不以学校管理、打卡排名或 AI 自动决策为目标。
 
-当前实现覆盖 Task 1-11。产品范围、实现证据和发布边界分别以
+当前实现基础为 FGT-MVP-1.7（历史 Task 1–12、38/38 COVERED）。当前自主学习增量 SL-01 至 SL-07
+全部 PLANNED：T0 契约及评审门禁已完成，T1 后端及 T2 页面工程已在限定合成范围验收关闭，T3–T9 待执行；真机 DEVICE_PENDING，高级恢复与新回收 REMAINDER_DEFERRED，最新全量仍有 D2B-05 失败，不表示整体增量或自主学习成效已经验证，也不授权真实部署。产品范围、实现证据和发布边界分别以
 [产品需求](./docs/product/family-learning-tracker.md)、
 [FGT-MVP-1.6 基线候选](./docs/development/family-growth-baseline-v1.6-manifest.md)
 和[统一发布 Gate](./docs/development/family-growth-v1.6-release-gate.md)为准。
+当前增量以[开发计划](./docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md)和
+[增量 Gate](./docs/development/family-self-directed-learning-mvp-gate.md)为准；Task 12 证据见
+[第二家长 Gate](./docs/development/family-growth-task12-gate.md)。
 
 ## MVP 能力
 
