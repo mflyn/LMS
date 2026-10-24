@@ -106,8 +106,7 @@ test.each(templates)('%s gate rejects swapped credential and cleanup defaults', 
   });
 });
 
-test.each(templates.flatMap(file => ['quoted-export-crlf', 'quoted-comment-cr'].map(style => [file, style])))
-  ('%s gate accepts all five unique defaults with %s', (file, style) => {
+test.each(templates.flatMap(file => ['quoted-export-crlf', 'quoted-comment-cr'].map(style => [file, style])))('%s gate accepts all five unique defaults with %s', (file, style) => {
     withTemplate(file, source => {
       for (const [key, value] of Object.entries({ ...controls, [token]: '', [cleanup]: 'false' })) {
         source = source.replace(`${key}=${value}`, `${style === 'quoted-export-crlf' ? 'export ' : ''}${key} = '${value}' # safe default`);

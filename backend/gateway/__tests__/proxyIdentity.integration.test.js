@@ -63,8 +63,7 @@ describe('gateway proxy identity envelope', () => {
     expect(response.body.data.originalUrl).toBe('/api/families');
   });
 
-  test.each(['/api/auth/login', '/api/media', '/api/media/asset/content?signature=synthetic'])
-    ('never forwards client service credentials on %s', async url => {
+  test.each(['/api/auth/login', '/api/media', '/api/media/asset/content?signature=synthetic'])('never forwards client service credentials on %s', async url => {
       const gateway = createApp({ serviceHosts: { user: upstreamUrl, resource: upstreamUrl },
         jwtSecret: process.env.JWT_SECRET, identitySecret: process.env.GATEWAY_IDENTITY_SECRET });
       const token = jwt.sign({ id: '6656875da7f86a0012c2a201', role: 'parent' }, process.env.JWT_SECRET);

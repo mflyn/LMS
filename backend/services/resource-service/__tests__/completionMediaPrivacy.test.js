@@ -181,7 +181,7 @@ test('retention cleanup waits 30 days, removes bytes and rows, but preserves exa
   expect(await Asset.findById(assets[0]._id)).toBeNull(); expect(await Reference.countDocuments()).toBe(0);
   expect(await op(command)).toEqual(terminal); expect(await Tombstone.countDocuments()).toBe(1);
   expect((await status(command)).references[0]).toMatchObject({ state: 'absent', privacyDeletion: proof });
-  const { operationId, commandHash, ...referenceScope } = command;
+  const { operationId: _operationId, commandHash: _commandHash, ...referenceScope } = command;
   expect((await operations.status({ ...referenceScope, mode: 'references' })).references[0].privacyDeletion).toEqual(proof);
   await del(assets[0], second);
   await Family.updateOne({ _id: family._id }, { $pull: { memberParentIds: second.id } });

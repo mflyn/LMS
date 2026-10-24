@@ -106,8 +106,7 @@ test('equivalent differently named and hidden unique indexes still enforce the c
   await collection.createIndex({ phase: 1 });
   const before = await snapshot(); expect((await run()).ready).toBe(true); expect(await snapshot()).toEqual(before);
 });
-test.each([{}, { sparse: true }, { partialFilterExpression: { phase: 'PREPUBLISH' } }])
-  ('an extra public UUID unique index %p is refused even with both correct indexes present', async options => {
+test.each([{}, { sparse: true }, { partialFilterExpression: { phase: 'PREPUBLISH' } }])('an extra public UUID unique index %p is refused even with both correct indexes present', async options => {
   await collection.createIndex({ operationId: 1 }, { unique: true, ...options });
   const before = await snapshot(); await blocked('UNEXPECTED_UNIQUE_INDEX'); expect(await snapshot()).toEqual(before);
 });
@@ -156,8 +155,7 @@ test.each(['PREPUBLISH', 'PUBLISHED_CLEANUP', 'SUCCEEDED', 'FAILED'])('missing m
   const value = command(phase); delete value.remoteOperationId; await collection.insertOne(value);
   const before = await snapshot(); await blocked('REMOTE_MAPPING_INVALID'); expect(await snapshot()).toEqual(before);
 });
-test.each([null, '', 'not-a-uuid', 42, {}, [], [randomUUID()], '123E4567-E89B-42D3-A456-426614174000'])
-  ('noncanonical remote mapping %p cannot pass native ledger validation', async value => {
+test.each([null, '', 'not-a-uuid', 42, {}, [], [randomUUID()], '123E4567-E89B-42D3-A456-426614174000'])('noncanonical remote mapping %p cannot pass native ledger validation', async value => {
     await collection.insertOne({ ...command(), remoteOperationId: value });
     const before = await snapshot(); await blocked('REMOTE_MAPPING_INVALID'); expect(await snapshot()).toEqual(before);
   });

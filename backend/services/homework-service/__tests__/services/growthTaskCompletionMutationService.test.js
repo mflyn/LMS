@@ -58,8 +58,7 @@ test('remove cancels a pending task without physical deletion and preserves the 
   await remove(second); expect(await row()).toEqual(before); expect(await Task.countDocuments()).toBe(1);
 });
 
-test.each(['familyId', 'childId', 'status', 'completionVersion', 'completionPending', 'starAwardState', 'confirmedAt', 'checklistSnapshot'])
-  ('edit rejects protected field %s without writes', async field => {
+test.each(['familyId', 'childId', 'status', 'completionVersion', 'completionPending', 'starAwardState', 'confirmedAt', 'checklistSnapshot'])('edit rejects protected field %s without writes', async field => {
     const before = await row(); await expect(edit({ [field]: 'untrusted' })).rejects.toMatchObject({ code: 'VALIDATION_ERROR', statusCode: 400 });
     expect(await row()).toEqual(before);
   });

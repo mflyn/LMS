@@ -441,7 +441,7 @@ test('transaction retry samples the clock again and aborts if the lease expired'
 
 test('references status reports actual binding generations without command identity and never writes', async () => {
   const command = await fixture(); await service.prepare(command);
-  const { operationId, commandHash, ...input } = command;
+  const { operationId, commandHash: _commandHash, ...input } = command;
   const before = await refs(command);
   const result = await service.status({ ...input, mode: 'references' });
   expect(result.operation).toBeNull();
@@ -452,7 +452,7 @@ test('references status reports actual binding generations without command ident
 
 test.each(['prepare', 'commit', 'unbind'])('legacy %s cannot bypass the completion operation protocol', async (action) => {
   const command = await fixture(); await service.prepare(command);
-  const { commandHash, ...input } = command;
+  const { commandHash: _commandHash, ...input } = command;
   if (action === 'unbind') input.references = input.references.map((ref) => ({ ...ref, bindingOperationId: input.operationId }));
   await expect(legacy[action](input)).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
   expect((await refs(command)).every((ref) => ref.state === 'prepared')).toBe(true);

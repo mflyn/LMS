@@ -658,8 +658,7 @@ test.each([{}, [], { operationId: 'different' }, { actorId: 'different' }, { rem
   expect(await snapshot()).toEqual(before); expect(mediaCalls).toHaveLength(calls);
 });
 
-test.each(['page=0', 'pageSize=51', 'pageSize=1.5', 'page=9007199254740992', 'actorId=anything', 'familyId=anything', 'childId=anything', 'page=1&page=2'])
-('T2-R-002 rejects unsafe discovery query %s', async query => {
+test.each(['page=0', 'pageSize=51', 'pageSize=1.5', 'page=9007199254740992', 'actorId=anything', 'familyId=anything', 'childId=anything', 'page=1&page=2'])('T2-R-002 rejects unsafe discovery query %s', async query => {
   const application = await gateway(), before = await snapshot();
   expectError(await publicCall(application, 'GET', PREFIX + '/completion-recoveries?' + query, undefined, child), 400, 'VALIDATION_ERROR');
   expect(await snapshot()).toEqual(before); expect(mediaCalls).toHaveLength(0);
@@ -723,8 +722,7 @@ test('T2-R-001 paginates all dates in task order and excludes other actors and t
   expect(await snapshot()).toEqual(before); expect(mediaCalls).toHaveLength(calls);
 });
 
-test.each(['missing owner', 'missing owner and pending', 'missing operation', 'wrong hash', 'incomplete collection'])
-('T2-R-004 inconsistent intent %s cannot masquerade as no recovery', async kind => {
+test.each(['missing owner', 'missing owner and pending', 'missing operation', 'wrong hash', 'incomplete collection'])('T2-R-004 inconsistent intent %s cannot masquerade as no recovery', async kind => {
   const application = await gateway(), task = await seed(), c = command({ completionMediaIds: [await media('task_completion')] });
   dropCompletionAction = 'prepare';
   expectError(await publicCall(application, 'PATCH', url(task) + '/complete', c, child), 503, 'MEDIA_REFERENCE_PENDING');
@@ -1016,7 +1014,7 @@ test('R4-G2: committed abort acknowledgement loss survives BSON and formal app r
   expect(stable.activeCompletionOperation).toBeUndefined(); expect(stable.completionPending).toBeUndefined();
   expect(stable.completionVersion ?? 0).toBe(0); expect(stable.status).toBe('pending');
   expect(stable.completionMediaReferenceState).toBe('stable'); expect(stable.completionMediaBindings || []).toEqual([]);
-  const { activeCompletionOperation, completionPending, ...unchangedTask } = beforeAbort;
+  const { activeCompletionOperation: _activeCompletionOperation, completionPending: _completionPending, ...unchangedTask } = beforeAbort;
   expect(stable).toEqual({ ...unchangedTask, __v: beforeAbort.__v + 1,
     completionMediaReferenceState: 'stable', updatedAt: expect.any(Date) });
   expect(stable.updatedAt.getTime()).toBeGreaterThanOrEqual(beforeAbort.updatedAt.getTime());

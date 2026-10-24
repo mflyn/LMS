@@ -90,8 +90,7 @@ test.each([
 });
 
 test.each(['updateOne', 'updateMany', 'findOneAndUpdate', 'replaceOne', 'findOneAndReplace',
-  'deleteOne', 'deleteMany', 'findOneAndDelete', 'bulkWrite', 'save'])
-('UDR-008 append-only model rejects %s including validation-bypass options', async method => {
+  'deleteOne', 'deleteMany', 'findOneAndDelete', 'bulkWrite', 'save'])('UDR-008 append-only model rejects %s including validation-bypass options', async method => {
   const value = fixture(), document = await Recovery.create(value);
   const before = await Recovery.collection.findOne({ _id: value._id });
   let change;

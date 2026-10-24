@@ -104,7 +104,7 @@ test('completion uses the full operation contract and exact generation while leg
   expect((await newClient.prepare(clientCommand(body))).operation.state).toBe('PREPARED');
   expect((await newClient.commit(clientCommand(body))).operation.state).toBe('COMMITTED');
   expect((await newClient.status({ ...clientCommand(body), mode: 'operation' })).operation.state).toBe('COMMITTED');
-  const { commandHash, ...unbind } = { ...body, operationId: randomUUID(),
+  const { commandHash: _commandHash, ...unbind } = { ...body, operationId: randomUUID(),
     references: body.references.map(ref => ({ ...ref, bindingOperationId: body.operationId })) };
   expect((await newClient.unbind(clientCommand(unbind))).references).toMatchObject([{ state: 'released', bindingOperationId: body.operationId }]);
   expect(await Reference.countDocuments({ field: 'attachmentMediaIds', state: 'bound' })).toBe(1);
@@ -137,11 +137,11 @@ test.each(['commandHash', 'mode', 'remoteOperationId'])('legacy field cannot dow
   expect(await Reference.countDocuments()).toBe(0);
 });
 test.each(['status', 'abort'])('legacy %s has no operation protocol fallback', async action => {
-  const { commandHash, ...body } = wire({ references: [{ mediaId: id(), field: 'attachmentMediaIds' }] });
+  const { commandHash: _commandHash, ...body } = wire({ references: [{ mediaId: id(), field: 'attachmentMediaIds' }] });
   expect((await post(action, body)).status).toBe(400); expectNoDispatch();
 });
 test('missing completion digest is rejected by the completion provider without fallback', async () => {
-  const { commandHash, ...body } = wire();
+  const { commandHash: _commandHash, ...body } = wire();
   expect((await post('prepare', body)).status).toBe(400);
   expect(completion.prepare).toHaveBeenCalledTimes(1); expect(legacy.prepare).not.toHaveBeenCalled();
 });
@@ -285,8 +285,7 @@ const invalidReplays = [
   ['commit', 'prepared', rows => rows.map(row => ({ ...row, state: 'prepared' }))],
   ['commit', 'released', rows => rows.map(row => ({ ...row, state: 'released' }))]
 ];
-test.each(['create', 'patch'].flatMap(scenario => invalidReplays.map(([action, label, corrupt]) => [scenario, action, label, corrupt])))
-  ('%s rejects %s replay with %s without publishing or clearing intent', async (scenario, action, label, corrupt) => {
+test.each(['create', 'patch'].flatMap(scenario => invalidReplays.map(([action, label, corrupt]) => [scenario, action, label, corrupt])))('%s rejects %s replay with %s without publishing or clearing intent', async (scenario, action, label, corrupt) => {
     const { task } = await startMaterialCommitLoss(scenario);
     const before = await Task.findById(task._id).select(materialHidden).lean();
     const execute = legacy[action].getMockImplementation();

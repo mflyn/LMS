@@ -78,8 +78,7 @@ test('missing collection is not auto-created', async () => {
   await collection.drop(); await blocked('OPERATION_COLLECTION_MISSING');
   expect(await mongoose.connection.db.listCollections({ name: NAME }).toArray()).toEqual([]);
 });
-test.each(['missing', 'nonunique', 'sparse', 'partial', 'wrong-key', 'collation', 'prepareUnique'])
-  ('rejects %s in place of the committed full scope constraint', async kind => {
+test.each(['missing', 'nonunique', 'sparse', 'partial', 'wrong-key', 'collation', 'prepareUnique'])('rejects %s in place of the committed full scope constraint', async kind => {
     await collection.dropIndexes();
     if (kind !== 'missing') await collection.createIndex(kind === 'wrong-key' ? { operationId: 1 } : KEY, {
       name: 'candidate', unique: !['nonunique', 'prepareUnique'].includes(kind),
@@ -142,8 +141,7 @@ test.each([
   await collection.insertOne(command(patch)); const before = await snapshot();
   await blocked('OPERATION_IDENTITY_INVALID'); expect(await snapshot()).toEqual(before);
 });
-test.each(['missing', 'scalar', 'empty', 'eleven', 'duplicate', 'null item', 'string id', 'wrong field', 'unsorted', 'wrong hash', 'newline hash'])
-  ('rejects native reference corruption: %s', async kind => {
+test.each(['missing', 'scalar', 'empty', 'eleven', 'duplicate', 'null item', 'string id', 'wrong field', 'unsorted', 'wrong hash', 'newline hash'])('rejects native reference corruption: %s', async kind => {
     const value = command();
     if (kind === 'missing') delete value.references;
     if (kind === 'scalar') value.references = value.references[0];

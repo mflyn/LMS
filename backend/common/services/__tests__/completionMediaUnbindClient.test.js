@@ -18,7 +18,7 @@ test('maps only persisted remote identity; preserves old binding and omits comma
   input.remoteOperationId = CURRENT.toUpperCase(); input.references[0].bindingOperationId = OLD.toUpperCase();
   await expect(client.unbind(input)).resolves.toEqual(result());
   const wire = transport.post.mock.calls[0][1];
-  const { remoteOperationId, ...expected } = command();
+  const { remoteOperationId: _remoteOperationId, ...expected } = command();
   expect(wire).toEqual({ ...expected, operationId: CURRENT });
   expect(Object.keys(wire)).not.toContain('remoteOperationId'); expect(Object.keys(wire)).not.toContain('commandHash');
   expect(transport.post.mock.calls[0][0]).toMatch(/\/unbind$/);

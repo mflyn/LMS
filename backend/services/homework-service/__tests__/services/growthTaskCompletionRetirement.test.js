@@ -72,8 +72,7 @@ test('T2-G-002 claim before remote prepare protects pending body', async () => {
 });
 
 test.each(['completionEvidence.completionMediaIds', 'completionMediaBindings', 'completionPending.mediaIds',
-  'completionPending.previousBindings', 'completionPending.additionIds', 'completionPending.removalBindings'])
-('T2-G-009 archived historical no-guard task protects %s', async field => {
+  'completionPending.previousBindings', 'completionPending.additionIds', 'completionPending.removalBindings'])('T2-G-009 archived historical no-guard task protects %s', async field => {
   const value = /Bindings$/.test(field) ? [{ mediaId: new mongoose.Types.ObjectId(input.mediaId), bindingOperationId: randomUUID() }]
     : [new mongoose.Types.ObjectId(input.mediaId)];
   await Task.collection.updateOne({ _id: task._id }, { $set: { status: 'archived', [field]: value } });
@@ -82,8 +81,7 @@ test.each(['completionEvidence.completionMediaIds', 'completionMediaBindings', '
   expect((await Guard.findOne({ mediaId: input.mediaId })).state).toBe('available');
 });
 
-test.each(['unknown family', 'wrong child', 'child removed', 'child projection changed'])
-('T2-G-008 rejects %s without creating a guard', async kind => {
+test.each(['unknown family', 'wrong child', 'child removed', 'child projection changed'])('T2-G-008 rejects %s without creating a guard', async kind => {
   if (kind === 'unknown family') input.familyId = String(id());
   if (kind === 'wrong child') input.childId = String(id());
   if (kind === 'child removed') await Family.updateOne({ _id: family._id }, { $set: { childIds: [] } });
@@ -201,8 +199,7 @@ test('T2-G-003 duplicate first-upsert retry re-reads retired state instead of gr
   expect((await Guard.findOne()).state).toBe('retired');
 });
 
-test.each([null, [], {}, { mediaId: 'invalid' }, { retirementId: 'invalid' }, { actorId: 'not allowed' }])
-('T2-G-008 strict request rejects %j without writes', async extra => {
+test.each([null, [], {}, { mediaId: 'invalid' }, { retirementId: 'invalid' }, { actorId: 'not allowed' }])('T2-G-008 strict request rejects %j without writes', async extra => {
   const payload = extra === null || Array.isArray(extra) ? extra : Object.keys(extra).length ? { ...input, ...extra } : {};
   await expect(service.retire(payload)).rejects.toMatchObject({ statusCode: 400, code: 'VALIDATION_ERROR' });
   expect(await Guard.countDocuments()).toBe(0);
@@ -213,8 +210,7 @@ const application = () => {
   app.use('/api/internal/completion-media-retirements', createCompletionMediaRetirementRouter({ env, service }));
   app.use(errorHandler); return app;
 };
-test.each([undefined, env.MEDIA_REFERENCE_SERVICE_TOKEN, env.INTERNAL_SERVICE_TOKEN, env.GATEWAY_IDENTITY_SECRET])
-('T2-G-008 internal HTTP denies missing or unrelated service credentials (%#)', async supplied => {
+test.each([undefined, env.MEDIA_REFERENCE_SERVICE_TOKEN, env.INTERNAL_SERVICE_TOKEN, env.GATEWAY_IDENTITY_SECRET])('T2-G-008 internal HTTP denies missing or unrelated service credentials (%#)', async supplied => {
   let call = (await request(application())).post('/api/internal/completion-media-retirements')
     .set('x-user-id', parent.id).set('x-user-role', 'parent');
   if (supplied) call = call.set('x-service-token', supplied);
@@ -234,8 +230,7 @@ test('T2-G-008 dedicated internal HTTP returns scoped result and rejects query o
   expect(result.body).toEqual({ success: true, data: { ...input, state: 'granted' } });
 });
 test.each([undefined, '', ' '.repeat(32), env.MEDIA_REFERENCE_SERVICE_TOKEN,
-  env.INTERNAL_SERVICE_TOKEN, env.GATEWAY_IDENTITY_SECRET])
-('T2-G-008 invalid or reused configured credential fails closed (%#)', configured => {
+  env.INTERNAL_SERVICE_TOKEN, env.GATEWAY_IDENTITY_SECRET])('T2-G-008 invalid or reused configured credential fails closed (%#)', configured => {
   expect(() => createCompletionMediaRetirementRouter({ env: { ...env, COMPLETION_RETIREMENT_SERVICE_TOKEN: configured }, service }))
     .toThrow('COMPLETION_RETIREMENT_CREDENTIAL_INVALID');
 });
@@ -271,8 +266,7 @@ describe('T2-G status read-only retirement evidence', () => {
       .rejects.toMatchObject({ statusCode: 409, code: 'MEDIA_RETIREMENT_CONFLICT' });
     expect(await statusSnapshot()).toEqual(before);
   });
-  test.each(['unknown family', 'wrong child', 'child removed', 'child projection changed', 'child role changed'])
-  ('live %s is denied even with an existing retired guard', async kind => {
+  test.each(['unknown family', 'wrong child', 'child removed', 'child projection changed', 'child role changed'])('live %s is denied even with an existing retired guard', async kind => {
     await seed('retired'); let command = { ...input };
     if (kind === 'unknown family') command.familyId = String(id());
     if (kind === 'wrong child') command.childId = String(id());
@@ -312,8 +306,7 @@ describe('T2-G status read-only retirement evidence', () => {
     await expect(service.status(input)).rejects.toMatchObject({ statusCode: 503, code: 'MEDIA_RETIREMENT_PENDING' });
     expect(await statusSnapshot()).toEqual(before);
   });
-  test.each([null, [], {}, { mediaId: 'invalid' }, { retirementId: 'invalid' }, { actorId: 'unexpected' }])
-  ('strict invalid body %j writes nothing', async extra => {
+  test.each([null, [], {}, { mediaId: 'invalid' }, { retirementId: 'invalid' }, { actorId: 'unexpected' }])('strict invalid body %j writes nothing', async extra => {
     const body = extra === null || Array.isArray(extra) ? extra : Object.keys(extra).length ? { ...input, ...extra } : {};
     const before = await statusSnapshot();
     await expect(service.status(body)).rejects.toMatchObject({ statusCode: 400, code: 'VALIDATION_ERROR' });
@@ -334,8 +327,7 @@ describe('T2-G status read-only retirement evidence', () => {
     expect(result.body).toEqual({ success: true, data: { ...input, state } });
     expect(await statusSnapshot()).toEqual(before);
   });
-  test.each([undefined, env.MEDIA_REFERENCE_SERVICE_TOKEN, env.INTERNAL_SERVICE_TOKEN, env.GATEWAY_IDENTITY_SECRET])
-  ('HTTP rejects absent/shared credentials before body or query validation (%#)', async supplied => {
+  test.each([undefined, env.MEDIA_REFERENCE_SERVICE_TOKEN, env.INTERNAL_SERVICE_TOKEN, env.GATEWAY_IDENTITY_SECRET])('HTTP rejects absent/shared credentials before body or query validation (%#)', async supplied => {
     const before = await statusSnapshot();
     let call = (await request(application())).post(statusPath + '?override=true')
       .set('x-user-id', parent.id).set('x-user-role', 'parent');

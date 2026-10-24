@@ -509,8 +509,7 @@ test.each(['prepare', 'commit', 'unbind'])('mutation composition: lost %s blocks
   expect(await Ledger.countDocuments()).toBe(0);
 });
 
-test.each([false, true].flatMap(confirmed => [false, true].map(lost => [confirmed, lost])))
-  ('mutation composition: archive confirmed=%s lost-response=%s retains exact image generations and audit', async (confirmed, lost) => {
+test.each([false, true].flatMap(confirmed => [false, true].map(lost => [confirmed, lost])))('mutation composition: archive confirmed=%s lost-response=%s retains exact image generations and audit', async (confirmed, lost) => {
     const sequence = await replacement();
     const completed = await complete(sequence.next); expect(completed.status).toBe(200);
     if (confirmed) { expect((await confirm(2, second)).status).toBe(200); await oneStar(); }
@@ -614,8 +613,7 @@ test.each(['prepare', 'commit'])('BSON reconstruction: lost %s recovers only the
   expect((await confirm()).status).toBe(200); await oneStar();
 });
 
-test.each(['remove-all', 'mixed'].flatMap(kind => ['before', 'after'].map(stage => [kind, stage])))
-('BSON reconstruction: %s cleanup interrupted %s unbind retains publication and exact old generation', async (kind, stage) => {
+test.each(['remove-all', 'mixed'].flatMap(kind => ['before', 'after'].map(stage => [kind, stage])))('BSON reconstruction: %s cleanup interrupted %s unbind retains publication and exact old generation', async (kind, stage) => {
   const sequence = await replacement();
   if (kind === 'remove-all') sequence.next = command([], 1);
   if (stage === 'before') blockMedia = 'unbind'; else dropMedia = 'unbind';
@@ -670,7 +668,7 @@ test.each(['COMMITTED', 'ABORTED'])('BSON reconstruction: historical %s and a se
   const oldAfter = await RemoteOperation.findOne({ operationId: old.remoteOperationId }).lean();
   if (terminal === 'ABORTED') expect(oldAfter).toEqual(oldRemote);
   else {
-    const { version, updatedAt, ...facts } = oldRemote;
+    const { version, updatedAt: _updatedAt, ...facts } = oldRemote;
     expect(oldAfter).toMatchObject({ ...facts, version: version + 1 });
     expect(await Reference.findOne({ mediaId: first.completionMediaIds[0] }).lean()).toMatchObject({
       state: 'released', operationId: old.remoteOperationId, releaseOperationId: current.remoteOperationId });
@@ -770,8 +768,7 @@ const interruptedPrivacyCompletion = async state => {
   return { ids, body, local, remote, asset: await Asset.findById(ids[0]).lean() };
 };
 
-test.each(['PREPARED', 'COMMITTED'].flatMap(state => ['rollback', 'lost-ack'].map(fault => [state, fault])))
-('BSON recovery before cleanup retry: %s with %s preserves business and media baselines', async (state, fault) => {
+test.each(['PREPARED', 'COMMITTED'].flatMap(state => ['rollback', 'lost-ack'].map(fault => [state, fault])))('BSON recovery before cleanup retry: %s with %s preserves business and media baselines', async (state, fault) => {
   const { ids, body, local, asset } = await interruptedPrivacyCompletion(state);
   expect((await deleteMedia(ids[0])).status).toBe(204);
   const facts = await deletionFacts(ids[0]), text = await journalText(ids[0]);
@@ -1002,8 +999,7 @@ test.each(['journal', 'remove'])('BSON privacy: %s failure retains evidence and 
   await expect(store.read(asset.storageKey)).rejects.toMatchObject({ code: 'RESOURCE_NOT_FOUND' });
 });
 
-test.each(['PREPARED', 'COMMITTED'].flatMap(state => ['rollback', 'lost-ack'].map(fault => [state, fault])))
-('BSON cleanup commit: %s with %s preserves proofs and converges after physical removal', async (state, fault) => {
+test.each(['PREPARED', 'COMMITTED'].flatMap(state => ['rollback', 'lost-ack'].map(fault => [state, fault])))('BSON cleanup commit: %s with %s preserves proofs and converges after physical removal', async (state, fault) => {
   const { ids, body, local, asset } = await interruptedPrivacyCompletion(state);
   expect((await deleteMedia(ids[0])).status).toBe(204);
   const facts = await deletionFacts(ids[0]), text = await journalText(ids[0]);

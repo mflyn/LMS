@@ -326,7 +326,7 @@ test('ABSENT status followed by a winning delayed commit is published, never tre
   const post=transport.post.getMockImplementation();let raced=false;
   transport.post.mockImplementation(async(url,wire,...args)=>{
     const result=await post(url,wire,...args);
-    if(!raced&&url.endsWith('/status')){raced=true;const {mode,...command}=wire;await remote.prepare(command);await remote.commit(command);}
+    if(!raced&&url.endsWith('/status')){raced=true;const {mode: _mode,...command}=wire;await remote.prepare(command);await remote.commit(command);}
     return result;
   });
   await expect(invoke(c)).resolves.toMatchObject({success:true});expect((await record(c)).phase).toBe('SUCCEEDED');

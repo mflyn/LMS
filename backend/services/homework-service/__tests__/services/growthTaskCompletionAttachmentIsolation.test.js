@@ -58,8 +58,7 @@ test.each(['mutate', 'resume'].flatMap(method => [
   for (const action of Object.values(client)) expect(action).not.toHaveBeenCalled();
 });
 
-test.each(['activeCompletionOperation', 'completionPending', 'completionVersion', 'checklistVersion', 'completionMediaReferenceState'])
-  ('final claim CAS rejects a concurrent %s change even without a document version increment', async field => {
+test.each(['activeCompletionOperation', 'completionPending', 'completionVersion', 'checklistVersion', 'completionMediaReferenceState'])('final claim CAS rejects a concurrent %s change even without a document version increment', async field => {
     const original = Task.findOneAndUpdate.bind(Task); let changed;
     jest.spyOn(Task, 'findOneAndUpdate').mockImplementationOnce(async (...args) => {
       const value = field === 'activeCompletionOperation' ? { actorId: id() }

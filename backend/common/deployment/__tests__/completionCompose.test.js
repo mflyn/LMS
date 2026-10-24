@@ -71,8 +71,7 @@ test.each(negativeCases)('%s rejects %s %s declarations', (file, _key, _name, mu
   withTemplate(file, mutate, () => expect(() => validate()).toThrow());
 });
 
-test.each(templates.flatMap(file => ['quoted-export-crlf', 'quoted-comment-cr'].map(style => [file, style])))
-  ('%s accepts unique safe controls with %s', (file, style) => {
+test.each(templates.flatMap(file => ['quoted-export-crlf', 'quoted-comment-cr'].map(style => [file, style])))('%s accepts unique safe controls with %s', (file, style) => {
     withTemplate(file, source => {
       for (const [key, value] of Object.entries(defaults)) {
         source = source.replace(`${key}=${value}`, `${style === 'quoted-export-crlf' ? 'export ' : ''}${key} = '${value}' # safe default`);

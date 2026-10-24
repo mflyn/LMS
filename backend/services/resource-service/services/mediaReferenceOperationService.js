@@ -335,7 +335,7 @@ const createMediaReferenceOperationService = ({
         if (updated.matchedCount !== 1) throw retryRace();
       }
       // Release IDs are audit-only; proofs are selected per requested old binding, including absent rows.
-      const { operationId, ...projection } = command;
+      const { operationId: _operationId, ...projection } = command;
       const released = await readReferences(projection, session);
       const proofs = await readProofs(projection, released, session);
       return response(projection, null, released, currentTime(), proofs);

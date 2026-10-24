@@ -31,6 +31,7 @@ T2 为 APPROVED / CLOSED，仅限 ENGINEERING_SYNTHETIC_ONLY；最新业务全�
 - [原始归档哈希清单](artifacts.sha256.json)：本地归档的仓库相对路径、字节长度和SHA-256；不包含令牌、日志正文或媒体内容。
 - [本次提交核查](../../family-self-directed-learning-t2-github-handoff.md)：提交范围、验证与未授权事项。
 - [提交前验证摘要](github-preflight.json)：本轮新跑的组件/HTTP/浏览器结果、保留的失败、干净检出53项lint错误及敏感信息扫描归类；不能冒称CI全绿。
+- [PR #27 lint修订验证](pr27-lint-fix.json)：独立记录53项错误修复后的干净检出lint、当前家庭后端回归及历史计数差异；不覆盖上述历史失败或后置状态。
 
 完整JSON/日志及浏览器截图仍留在本地忽略目录，不随本次PR上传；远端摘要不是这些文件的完整备份。
 文档链接均指向可入库索引，校验器不得依赖本地忽略目录存在，也不得跳过普通链接校验。

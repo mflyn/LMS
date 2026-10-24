@@ -35,11 +35,11 @@ const fixture = async () => {
 };
 const status = c => client.status({ ...c, mode: 'operation' });
 const refStatus = c => {
-  const { remoteOperationId, commandHash, ...scope } = c;
+  const { remoteOperationId: _remoteOperationId, commandHash: _commandHash, ...scope } = c;
   return client.status({ ...scope, mode: 'references' });
 };
 const removal = c => {
-  const { commandHash, remoteOperationId, ...scope } = c;
+  const { commandHash: _commandHash, remoteOperationId, ...scope } = c;
   return { ...scope, remoteOperationId: randomUUID(),
     references: c.references.map(ref => ({ ...ref, bindingOperationId: remoteOperationId })) };
 };

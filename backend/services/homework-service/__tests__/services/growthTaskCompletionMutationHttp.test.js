@@ -164,8 +164,7 @@ test.each(['PATCH', 'DELETE'])('%s rejects unsigned and tampered identities and 
   const after = await row(); fail(await send(method, {}, parent, '', valid), 401, 'IDENTITY_ENVELOPE_REPLAYED');
   expect(await row()).toEqual(after); if (method === 'PATCH') expect(after).toEqual(before);
 });
-test.each(['PATCH', 'DELETE'].flatMap(method => ['child', 'outsider', 'departed'].map(kind => [method, kind])))
-  ('%s denies %s before body validation', async (method, kind) => {
+test.each(['PATCH', 'DELETE'].flatMap(method => ['child', 'outsider', 'departed'].map(kind => [method, kind])))('%s denies %s before body validation', async (method, kind) => {
     if (kind === 'departed') await Family.updateOne({ _id: family._id }, { $pull: { memberParentIds: second.id } });
     const identity = kind === 'child' ? child : kind === 'outsider' ? outsider : second, before = await row();
     fail(await send(method, { status: 'injected' }, identity), 403, 'CHILD_ACCESS_DENIED');
@@ -250,8 +249,7 @@ test.each(['PATCH', 'DELETE'])('lost public %s response recovers from persisted 
   else { expect(after.title).toBe('Revised'); expect(after.completionVersion).toEqual(before.completionVersion); }
   expect(await Ledger.countDocuments()).toBe(0); expect(await Operation.countDocuments()).toBe(0);
 });
-test.each(['edit', 'remove'].flatMap(label => ['rollback', 'lost-ack'].map(kind => [label, kind])))
-  ('%s transaction %s is not a false success and retries current state', async (label, kind) => {
+test.each(['edit', 'remove'].flatMap(label => ['rollback', 'lost-ack'].map(kind => [label, kind])))('%s transaction %s is not a false success and retries current state', async (label, kind) => {
     const before = await row(); transactionFault = { label, kind };
     fail(await (label === 'edit' ? edit() : remove()), 503, 'MEDIA_REFERENCE_PENDING'); expect(transactionFault).toBeNull();
     const persisted = await row();

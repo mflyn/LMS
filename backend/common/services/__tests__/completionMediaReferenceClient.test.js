@@ -28,7 +28,7 @@ test.each(['prepare', 'commit', 'abort', 'status'])('%s uses explicit remote map
   const { client, transport } = fixture(envelope(data));
   const input = { ...command(), ...(action === 'status' ? { mode: 'operation' } : {}) };
   await expect(client[action](input)).resolves.toEqual(data);
-  const { remoteOperationId, ...wire } = input;
+  const { remoteOperationId: _remoteOperationId, ...wire } = input;
   expect(transport.post).toHaveBeenCalledWith(`http://resource-service:3005/api/internal/media/references/${action}`,
     { ...wire, operationId: REMOTE }, { headers: { 'x-service-token': TOKEN }, timeout: 2000, maxRedirects: 0 });
   expect(input.remoteOperationId).toBe(REMOTE);
@@ -37,7 +37,7 @@ test.each(['prepare', 'commit', 'abort', 'status'])('%s uses explicit remote map
 test('reference status sends no command identity and preserves another current generation', async () => {
   const data = result('COMMITTED'); data.operation = null; data.references[0].bindingOperationId = OTHER;
   const { client, transport } = fixture(envelope(data));
-  const { remoteOperationId, commandHash, ...scope } = command();
+  const { remoteOperationId: _remoteOperationId, commandHash: _commandHash, ...scope } = command();
   const input = { ...scope, mode: 'references' };
   await expect(client.status(input)).resolves.toEqual(data);
   expect(transport.post.mock.calls[0][1]).toEqual(input);
@@ -66,7 +66,7 @@ test.each([
 });
 
 test.each(['remoteOperationId', 'operationId', 'commandHash'])('references mode rejects %s', async field => {
-  const { client, transport } = fixture(); const { remoteOperationId, commandHash, ...scope } = command();
+  const { client, transport } = fixture(); const { remoteOperationId: _remoteOperationId, commandHash: _commandHash, ...scope } = command();
   await expect(client.status({ ...scope, mode: 'references', [field]: REMOTE })).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
   expect(transport.post).not.toHaveBeenCalled();
 });
@@ -196,7 +196,7 @@ test.each(['MEDIA_OPERATION_EXPIRED', 'MEDIA_OPERATION_ABORTED', 'RESOURCE_NOT_F
 
 test('references status accepts exact deleted binding proof without asserting an operation terminal', async () => {
   const data = deleted(); data.operation = null;
-  const { client } = fixture(envelope(data)); const { remoteOperationId, commandHash, ...scope } = command();
+  const { client } = fixture(envelope(data)); const { remoteOperationId: _remoteOperationId, commandHash: _commandHash, ...scope } = command();
   await expect(client.status({ ...scope, mode: 'references' })).resolves.toEqual(data);
 });
 

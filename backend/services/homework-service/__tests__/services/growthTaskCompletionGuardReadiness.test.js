@@ -47,8 +47,7 @@ test.each(['missing', 'partial', 'sparse', 'ttl', 'extra unique', 'collation'])(
   }
   await blocked(kind === 'ttl' ? 'TTL_FORBIDDEN' : kind === 'extra unique' ? 'UNEXPECTED_UNIQUE_INDEX' : 'INDEX_INVALID');
 });
-test.each(['_id', 'familyId', 'childId', 'mediaId', 'revision', 'state', 'retirementId', 'retiredAt', 'createdAt'])
-('rejects malformed native guard %s', async field => {
+test.each(['_id', 'familyId', 'childId', 'mediaId', 'revision', 'state', 'retirementId', 'retiredAt', 'createdAt'])('rejects malformed native guard %s', async field => {
   const row = guard(); row[field] = field === 'revision' ? 0 : String(row[field]);
   if (field === 'state') row[field] = 'RETIRED'; if (field === 'retirementId') row[field] += '\n';
   await db.collection('completionmediaguards').insertOne(row); await blocked('MEDIA_GUARD_INVALID');
@@ -57,8 +56,7 @@ test('available guard cannot retain retirement evidence', async () => {
   await db.collection('completionmediaguards').insertOne({ ...guard(), state: 'available' }); await blocked('MEDIA_GUARD_INVALID');
 });
 test.each(['completionEvidence.completionMediaIds', 'completionMediaBindings.mediaId', 'completionPending.mediaIds',
-  'completionPending.previousBindings.mediaId', 'completionPending.additionIds', 'completionPending.removalBindings.mediaId'])
-('all-status native task query rejects retired media in %s', async path => {
+  'completionPending.previousBindings.mediaId', 'completionPending.additionIds', 'completionPending.removalBindings.mediaId'])('all-status native task query rejects retired media in %s', async path => {
   const row = guard(); await db.collection('completionmediaguards').insertOne(row);
   await db.collection('growthtasks').updateOne({ _id: id() }, { $set: { familyId: row.familyId, childId: row.childId,
     status: 'archived', [path]: [row.mediaId] } }, { upsert: true });
@@ -73,7 +71,11 @@ test('other family or child use cannot collide with the guard scope', async () =
 });
 test('query failure closes cursor and is sanitized', async () => {
   const open = db.collection.bind(db), target = open('completionmediaguards'), close = jest.fn().mockResolvedValue();
-  jest.spyOn(target, 'find').mockReturnValue({ close, async *[Symbol.asyncIterator]() { throw Error('mongodb://private-error'); } });
+  jest.spyOn(target, 'find').mockReturnValue({
+    close,
+    [Symbol.asyncIterator]() { return this; },
+    async next() { throw Error('mongodb://private-error'); }
+  });
   jest.spyOn(db, 'collection').mockImplementation(name => name === 'completionmediaguards' ? target : open(name));
   await blocked('READINESS_QUERY_FAILED'); expect(close).toHaveBeenCalled();
 });
