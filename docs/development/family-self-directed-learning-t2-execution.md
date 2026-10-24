@@ -4,10 +4,10 @@
 **Design approval:** APPROVED（2026-10-23，含原设计与退出恢复/安全回收补充设计）
 **Implementation:** T2-1、T2-R 后端 CLOSED；T2-2 至 T2-6 合成工程验收 CLOSED（§17）；T2-G REMAINDER_DEFERRED；T1 CLOSED，T3–T9 未启动
 **Production:** NOT_AUTHORIZED；**Device:** DEVICE_PENDING
-**Latest acceptance:** 2026-10-24 用户明确批准限定合成范围的工程验收及总门禁关闭，见 §17；§16 最新全量仍 FAILED（D2B-05），不以批准改写测试结果。
+**Latest acceptance:** §17 限定合成工程原批准不变；§18 用户批准单独关闭 D2B-05 查询超时。修复提交 e744cba1 的 CI 全量通过，§16–§17 原批准时的 FAILED 快照保留。
 **Current follow-up:** DEVICE_PENDING；T8_PENDING / NOT_AUTHORIZED；高级恢复与新回收 REMAINDER_DEFERRED。不自动启动 T3–T9。
 
-下文历次批次中的 OPEN/待批准为当时事实；当前授权以 §17 为准。§11 范围裁决及所有未关闭义务继续有效。
+下文历次批次中的 OPEN/待批准为当时事实；工程批准以 §17 为准，查询缺陷关闭及专用分支 Git 授权以 §18 为准。§11 范围裁决及所有未关闭义务继续有效。
 
 ## 1. 权威输入与版本
 
@@ -40,10 +40,10 @@
 | T2-3 | privateMediaRules、集合控件/受限适配、完成媒体生命周期 | 十图/格式/大小/部分失败、删除/授权失效与异步隔离通过，原 PDF 能力不回归 | CLOSED（§17，限定合成工程） |
 | T2-4 | ChildTaskPage、ChildTodayPage、ChildTaskCompletion 测试 | 完成/修改/回看/反馈/只读、版本与离页状态正确 | CLOSED（§17，限定合成工程） |
 | T2-5 | TasksPage、TaskCompletionReview 测试、家长代录 | 详情审核所见版本、共管恢复、首次审计及防串孩子正确 | CLOSED（§17，限定合成工程） |
-| T2-6 | T2 enabled 合成运行器、浏览器/集成测试、关闭材料 | 真正的新协议 HTTP + 页面闭环、完整回归/QA、独立评审、用户总裁决 | CLOSED（§17）；全量仍有 D2B-05 失败，DEVICE_PENDING |
+| T2-6 | T2 enabled 合成运行器、浏览器/集成测试、关闭材料 | 真正的新协议 HTTP + 页面闭环、完整回归/QA、独立评审、用户总裁决 | CLOSED（§17）；D2B-05 查询缺陷单独关闭见 §18，原失败保留；DEVICE_PENDING |
 
 T2-1 和 T2-R 原关闭不变；T2-2 至 T2-6 依据最新明确批准关闭，证据及排除项见 §16–§17。
-文档校验锁定唯一 T2 CLOSED 行、明确批准及 ENGINEERING_SYNTHETIC_ONLY 范围，拒绝漏行、矛盾状态、改绿全量或扩大设备/部署授权；T1 CLOSED 和 T3–T9 NOT_STARTED 不改变。
+文档校验锁定唯一 T2 CLOSED 行、明确批准及 ENGINEERING_SYNTHETIC_ONLY 范围，拒绝漏行、矛盾状态、改绿历史失败快照或扩大设备/部署授权；T1 CLOSED 和 T3–T9 NOT_STARTED 不改变。
 
 ## 3. 可追踪测试矩阵（原计划；当前证据与后置范围见 §12）
 
@@ -1228,6 +1228,8 @@ T8真实Ubuntu/NAS、备份、隔离恢复、容量/保留与部署需单独授�
 
 ## 17. T2 限定合成范围批准关闭（2026-10-24）
 
+> 历史批准快照：本节“最新”指原批准时点；原指令、全量失败及禁止事项不回写。后续查询缺陷关闭及当前分支提交/推送授权另见 §18。
+
 **Decision:** APPROVED / CLOSED。**Scope:** ENGINEERING_SYNTHETIC_ONLY。
 **Latest full regression:** FAILED / exit1；D2B-05 REMAINDER_DEFERRED，未关闭。
 
@@ -1267,3 +1269,41 @@ T8真实Ubuntu/NAS、备份、隔离恢复、容量/保留与部署需单独授�
 本轮不重跑业务全量、前端/HTTP/浏览器或构建；§16全量失败仍为最新结果，不将662项公共模块计数累加为新的业务全量。
 历史三处归档132份文件哈希保留并核对；仅10份既有文档/校验器/测试文件变化，无业务源码或真实配置修改。
 回滚仅纠正文档/状态校验，不重置继承工作区或删除历史证据。
+
+## 18. D2B-05 查询超时复审与批准关闭（2026-10-24）
+
+**Decision:** APPROVED / CLOSED。**Scope:** QUERY_ONLY。**Fix:** `e744cba1`。
+用户批准：“复审通过，更新门禁和评审记录，关闭 D2B-05 查询超时问题，验证后提交推送当前分支并同步 PR #27。保留历史失败证据、DEVICE_PENDING 和高级恢复及新回收的后置状态，暂不合并、不部署。”
+中断后的继续指令再次确认完成关闭记录、保留原批准时失败快照，以及相同的 Git/部署边界。
+
+### 18.1 复审结论和关闭依据
+
+- 查询改写满足布尔分配律，group/ref 字段在调用前已严格校验；完整代次和重绑槽位两类引用均保留。
+- 目标媒体和已记录引用ID查询未删除；字符串BSON身份仍被读后严格拒绝，跨孩子异常仍由 ownerScope 拒绝，不通过提前过滤隐藏。
+- 保留5000ms上限、读取上限、完整集合/精确代次、游标关闭及只读无副作用；没有接入高级恢复生产路由。
+- 新增7项永久回归，结构反例在旧实现失败（预期最多3个分支、实际5），修复后通过；原测试AST完整保留。
+- 复审实际运行完整相关套件：139项通过、0失败/跳过，exit0，162.329秒；`npm run docs:family:check` 和 `git diff --check` 通过。未发现新增问题。
+- [修复后CI](https://github.com/mflyn/LMS/actions/runs/40099315976) 后端143/3958、前端40/490、集成、构建、浏览器5项、合成Compose及清洁检查均通过；与 e744cba1 匹配。手动性能/安全扫描/镜像发布/部署未运行，不计为通过。
+
+复审报告 `/tmp/d2b-review.json` SHA-256：`e8ab3fca62df4066cd349c53c95c13834c42b9d169996f669d108fffe53ccc5e`。
+148份历史归档和修复/CI的19/30份归档哈希均一致；原失败不删除、不改写。修复前后的观测耗时见[修复摘要](evidence/t2-synthetic-2026-10-24/pr27-d2b-query-fix.json)，不是性能SLA。
+
+### 18.2 状态分离及本轮验证
+
+原 `family-self-directed-learning-t2-closure-approval.json` 不修改：其中 FAILED/1项失败/REMAINDER_DEFERRED 是原批准时点事实。
+门禁将该快照命名为 `T2 approval-time full regression`，另列修复后CI和 `D2B-05 query timeout: APPROVED / CLOSED / QUERY_ONLY`；不把缺陷关闭扩大为高级恢复能力完成。
+在既有校验器内补充正例及缺失/扩大/重复关闭、替换CI证据的4项负向用例；原历史失败不可改绿、DEVICE_PENDING、REMAINDER_DEFERRED 和禁止真实部署等反例继续保留。
+新用例配旧状态/校验器先得到6失败、58通过（exit1），用于证明缺少关闭记录和历史/当前分离时不能通过；不删除该红灯证据。
+本轮实际验证（Node22.23.3）：
+
+- `npx jest --config=backend/jest.family-common.config.js --runInBand --coverage=false --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js`：64项通过，0失败/跳过，exit0（6.68秒）。
+- `npx jest --config=backend/jest.family-common.config.js --runInBand --coverage=false`：41套件667项通过，0失败/跳过，exit0（31.172秒）。比原662项新增1项正例、4项负向用例，没有删减原测试。
+- `npm run docs:family:check` 和 `npm run lint`：干净跟踪文件导出副本中通过，不依赖本地忽略归档；没有修改lint规则或删除历史JS快照。
+- `git diff --check`、增量Gitleaks扫描通过（零命中）；原批准JSON逐字不变，148份历史归档哈希一致。
+
+本轮仅文档和门禁校验变化，不用上述公共模块结果冒称新跑业务全量；推送后CI另行对应新提交，结果同步PR。
+红/绿及公共模块报告、命令日志与哈希清单独立保留在本地 `release-gate-artifacts/t2-pr27-d2b-close-2026-10-24/`，不覆盖先前修复及失败归档。
+自查确认历史失败字段仍严格校验，新增当前查询缺陷状态与已核实CI分离；没有关闭D2B整批、增加产品能力或放宽设备/部署边界。
+
+仅授权提交/推送 `codex/t2-synthetic-acceptance` 并同步 PR #27；不合并、不部署、不操作真实孩子数据/NAS。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、高级恢复与新回收及 D01/T2-G、D2b剩余/D3/D4/E、C-CACHE-P3 的 REMAINDER_DEFERRED 保持。默认关闭配置、旧客户端升级拒绝及现有安全运行依赖不变。

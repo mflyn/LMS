@@ -46,3 +46,12 @@ T2 为 APPROVED / CLOSED，仅限 ENGINEERING_SYNTHETIC_ONLY；批准时业务�
 真机 DEVICE_PENDING；真实家庭部署/备份/隔离恢复为 T8_PENDING / NOT_AUTHORIZED；
 高级恢复与新回收、D01/T2-G、D2b/D3/D4/E、C-CACHE-P3 均 REMAINDER_DEFERRED。
 PR用于保存与评审，不合并、不部署、不启用新回收、不自动开始T3–T9。
+
+## D2B-05 查询缺陷关闭
+
+2026-10-24 用户复审通过并批准查询超时缺陷 APPROVED / CLOSED / QUERY_ONLY；不是 D2B 整批或高级恢复/新回收验收完成。
+修复提交 `e744cba1` 对应[CI 40099315976](https://github.com/mflyn/LMS/actions/runs/40099315976)：后端143套件3958项及完整发布门禁通过，上传产物 `release-gate-artifacts` 可核查。
+该次CI日志已脱敏归档于本地 `release-gate-artifacts/t2-pr27-d2b-ci-2026-10-24/`，其 `artifact-manifest.json` 记录30份文件哈希；修复诊断/红绿验证另存 `t2-pr27-d2b-fix-2026-10-24/`（19份）。
+独立复审重跑相关139项通过、无失败/跳过，报告哈希和用户批准原文见[执行记录 §18](../../family-self-directed-learning-t2-execution.md#18-d2b-05-查询超时复审与批准关闭2026-10-24)。
+本轮新增关闭校验的红绿验证另行记录，不修改 `pr27-d2b-query-fix.json` 中提交前的失败/待CI状态，也不修改原 T2 批准文件、旧失败或148份历史归档。
+DEVICE_PENDING、REMAINDER_DEFERRED、T8_PENDING / NOT_AUTHORIZED 保持；当前仅授权专用分支提交/推送及PR同步，不合并、不部署。

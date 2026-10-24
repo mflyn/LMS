@@ -122,6 +122,17 @@ describe('approved T1 and bounded T2 closure boundaries', () => {
     }
   });
 
+  test('closes only the approved D2B-05 query defect while preserving the failed approval snapshot', () => {
+    const header = read(gate).split('\n## ')[0];
+    expect(header).toContain('**T2 approval-time full regression:** FAILED / D2B-05 / REMAINDER_DEFERRED');
+    expect(header).toContain('**T2 latest full regression:** PASSED / CI 40099315976 / e744cba1');
+    expect(header).toContain('**D2B-05 query timeout:** APPROVED / CLOSED / QUERY_ONLY');
+    expect(JSON.parse(read(approval)).latestFullRegression).toMatchObject({ status: 'FAILED', failedTests: 1, disposition: 'REMAINDER_DEFERRED' });
+    expect(header).toContain('**T2 deferred:** REMAINDER_DEFERRED');
+    expect(header).toContain('**T2 device:** DEVICE_PENDING');
+    expect(() => validate()).not.toThrow();
+  });
+
   test.each([
     ['current T1 regresses', gate, '| T1 | CLOSED |', '| T1 | IN_PROGRESS |', 'exactly one CLOSED T1 row'],
     ['duplicate CLOSED row', gate, '| T1 | CLOSED |', '| T1 | CLOSED | duplicate |\n| T1 | CLOSED |', 'exactly one CLOSED T1 row'],
@@ -153,7 +164,11 @@ describe('approved T1 and bounded T2 closure boundaries', () => {
     ['full regression failure count erased', approval, '"failedTests": 1', '"failedTests": 0', 'T2 approval must preserve the failed full regression and deferred D2B-05 evidence'],
     ['D2B-05 incorrectly closed', approval, '"disposition": "REMAINDER_DEFERRED"', '"disposition": "CLOSED"', 'T2 approval must preserve the failed full regression and deferred D2B-05 evidence'],
     ['failure evidence replaced', approval, 't2-p2-approved-acceptance-2026-10-24/family.json', 't2-engineering-closure-2026-10-24/family.json', 'T2 approval must preserve the failed full regression and deferred D2B-05 evidence'],
-    ['full regression header green invented', gate, '**T2 latest full regression:** FAILED / D2B-05 / REMAINDER_DEFERRED', '**T2 latest full regression:** PASSED', 'T2 latest full regression must remain FAILED / D2B-05 / REMAINDER_DEFERRED'],
+    ['historical regression header green invented', gate, '**T2 approval-time full regression:** FAILED / D2B-05 / REMAINDER_DEFERRED', '**T2 approval-time full regression:** PASSED', 'T2 approval-time full regression must remain FAILED / D2B-05 / REMAINDER_DEFERRED'],
+    ['query closure missing', gate, '**D2B-05 query timeout:** APPROVED / CLOSED / QUERY_ONLY', '', 'D2B-05 query timeout must remain APPROVED / CLOSED / QUERY_ONLY'],
+    ['query closure expands to recovery', gate, '**D2B-05 query timeout:** APPROVED / CLOSED / QUERY_ONLY', '**D2B-05 query timeout:** APPROVED / CLOSED / FULL_RECOVERY', 'D2B-05 query timeout must remain APPROVED / CLOSED / QUERY_ONLY'],
+    ['query closure duplicated', gate, '**D2B-05 query timeout:** APPROVED / CLOSED / QUERY_ONLY', '**D2B-05 query timeout:** APPROVED / CLOSED / QUERY_ONLY\n**D2B-05 query timeout:** OPEN', 'D2B-05 query timeout must remain APPROVED / CLOSED / QUERY_ONLY'],
+    ['query CI evidence replaced', gate, '**T2 latest full regression:** PASSED / CI 40099315976 / e744cba1', '**T2 latest full regression:** PASSED / CI 40096601369 / a0478275', 'T2 latest full regression must remain PASSED / CI 40099315976 / e744cba1'],
     ['Git authorization invented', approval, '"git_commit_or_push", ', '', 'T2 approval must preserve prohibited operations'],
     ['T2 approval record scope widens', approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY'],
     ['T2 defect reopened', approval, '"T2-P2-JWT": "CLOSED"', '"T2-P2-JWT": "OPEN"', 'T2 approval record must close exactly the three reviewed P2 defects'],

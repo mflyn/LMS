@@ -490,9 +490,10 @@ operationId、expectedCompletionVersion；确认命令携带所见 completionVer
 不新建上传协议、恢复框架或审批链。后置项仍未验收，恢复启用需完成其原安全测试。
 2026-10-24 页面实现已完成，工程证据与自查/独立复核见[执行记录 §12](../../development/family-self-directed-learning-t2-execution.md#12-mvp-页面闭环工程交付2026-10-24)。
 共享会话、私有媒体和审核版本按严格边界验证；高级恢复未继续扩展。仅合成验证，不部署、不提交或推送 Git。
-2026-10-24 最新用户明确批准 T2-2 至 T2-6 限定合成范围工程验收及总门禁关闭；T2 CLOSED（ENGINEERING_SYNTHETIC_ONLY），三项 P2 CLOSED。最新全量仍 FAILED：143套件142通过/1失败，3943项3942通过/1失败，D2B-05 保留后置且未关闭。
+2026-10-24 用户明确批准 T2-2 至 T2-6 限定合成范围工程验收及总门禁关闭；T2 CLOSED（ENGINEERING_SYNTHETIC_ONLY），三项 P2 CLOSED。该批准时全量为 FAILED：143套件142通过/1失败，3943项3942通过/1失败；此原始失败快照保留，不随后续缺陷修复改写。
 JWT 过期、完成快照兼容投影和上传正文同步三项 P2 均 CLOSED；原两项页面 P2 关闭不变。
-最新全量结果、前端40/490、HTTP2/14及浏览器14项等已有证据见[执行记录 §16](../../development/family-self-directed-learning-t2-execution.md#16-三项-p2-批准关闭与工程验收再申请2026-10-24)；当前批准及状态验证见[执行记录 §17](../../development/family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)。旧收口及旧失败证据原样保留，不以工程批准冒称全量全绿，不自动启动 T3–T9。
+原批准时全量结果、前端40/490、HTTP2/14及浏览器14项等已有证据见[执行记录 §16](../../development/family-self-directed-learning-t2-execution.md#16-三项-p2-批准关闭与工程验收再申请2026-10-24)；工程批准及状态验证见[执行记录 §17](../../development/family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)。旧收口及旧失败证据原样保留，不以工程批准冒称全量全绿，不自动启动 T3–T9。
+后续 D2B-05 查询超时修复 e744cba1 经复审及用户批准，QUERY_ONLY / CLOSED；CI 40099315976 后端143/3958及完整发布门禁通过。当前记录与专用分支提交/推送授权见[执行记录 §18](../../development/family-self-directed-learning-t2-execution.md#18-d2b-05-查询超时复审与批准关闭2026-10-24)，不关闭 D2B 整批、高级恢复或新回收。
 真实 iPad 条目保持未勾选 / DEVICE_PENDING；T8_PENDING / NOT_AUTHORIZED 和高级恢复/新回收 REMAINDER_DEFERRED 不随工程关闭，T3–T9 不自动启动。
 
 依赖：T1。模式：标准。对应工作包 1 前端。

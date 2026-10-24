@@ -2,10 +2,10 @@
 
 > **2026-10-24 最新范围裁决：** 用户批准取消高级恢复/新孤儿回收对页面开发的前置阻塞。
 > T2-G 未完成范围及用户删除恢复 D2b 剩余、D3/D4/E 为 REMAINDER_DEFERRED，D01 未关闭；
-> §21 及后续旧进度为历史快照，不表示继续扩展这些模块。最新用户明确批准 T2 限定合成工程总门禁关闭（§22.6），T1 CLOSED 不变；D2B-05 失败保留。
+> §21 及后续旧进度为历史快照，不表示继续扩展这些模块。T2 限定合成工程总门禁已关闭（§22.6），T1 CLOSED 不变；D2B-05 查询超时单独批准关闭（§22.7），原失败保留。
 > T2-2 至 T2-6 合成范围汇总验收 CLOSED；保留权限、幂等、版本、隐私删除和现有启动预检，不自动启动 T3–T9。
 > 当前页面退出条件及真实试点限制以[执行记录 §11](family-self-directed-learning-t2-execution.md#11-2026-10-24-mvp-范围调整与页面运行依赖)为准。
-> 不把后置等同测试通过，也不授权真实部署或 Git 发布。
+> 不把后置等同测试通过；§22.7 仅追加当前专用分支提交/推送及 PR 同步授权，不授权合并或真实部署。
 
 **Status:** T0 CONTRACT BASELINE
 **Increment:** SELF-DIRECTED-LEARNING-MVP-1
@@ -18,10 +18,12 @@
 **T1 closure scope:** BACKEND_SYNTHETIC_ONLY
 **Production deployment:** NOT_AUTHORIZED
 
-**T2 latest review:** 三项 P2 APPROVED / CLOSED；限定合成范围工程验收及总门禁 APPROVED / CLOSED，见 §22.6 及[执行记录 §17](family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)。最新全量仍 FAILED，D2B-05 后置且未关闭。
+**T2 latest review:** 限定合成工程及三项 P2 原关闭不变；D2B-05 查询超时复审通过、用户批准 CLOSED（§22.7）。原批准时的失败快照保留，高级恢复及新回收仍后置。
 **T2 closure scope:** ENGINEERING_SYNTHETIC_ONLY
 **T2 approval:** APPROVED
-**T2 latest full regression:** FAILED / D2B-05 / REMAINDER_DEFERRED
+**T2 approval-time full regression:** FAILED / D2B-05 / REMAINDER_DEFERRED
+**T2 latest full regression:** PASSED / CI 40099315976 / e744cba1
+**D2B-05 query timeout:** APPROVED / CLOSED / QUERY_ONLY
 **T2 device:** DEVICE_PENDING
 **T2 deployment:** T8_PENDING / NOT_AUTHORIZED
 **T2 deferred:** REMAINDER_DEFERRED
@@ -74,7 +76,7 @@
 | --- | --- | --- |
 | T0 | CONTRACT_BASELINE | PRD、架构、API、追踪、Gate 和文档校验固定；不含功能实现 |
 | T1 | CLOSED | 用户批准后端工程总门禁，仅限合成验收；R4 汇总关闭见 §18.40，不代表前端或真实部署完成 |
-| T2 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；T2-1/T2-R 及三项 P2 CLOSED，T2-2 至 T2-6 汇总批准关闭（§22.6 / 执行记录 §17）；全量仍 FAILED（D2B-05）；DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，T2-G REMAINDER_DEFERRED |
+| T2 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；T2-1/T2-R 及三项 P2 CLOSED，T2-2 至 T2-6 汇总批准关闭（§22.6 / 执行记录 §17）；D2B-05 查询缺陷单独 CLOSED（§22.7），原失败快照保留；DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，T2-G REMAINDER_DEFERRED |
 | T3 | NOT_STARTED | 未完成任务可求助，家长处理且无任务/奖励副作用 |
 | T4 | NOT_STARTED | 清单版本、代录审计和一年级/四年级交互通过 |
 | T5 | NOT_STARTED | 日计划首次并发、CAS、LocalDate 和 Gateway 路由通过 |
@@ -3873,6 +3875,8 @@ DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、T2-G/D01、D2b/D3/D4/E、C-CACHE-
 
 ### 22.6 T2 限定合成工程批准关闭（2026-10-24）
 
+> 本节为原批准快照，下述“最新”指该次批准时点；不随 §22.7 的查询缺陷关闭或后续 CI 成功改写。
+
 **Decision:** APPROVED / CLOSED。用户明确批准 T2 限定合成范围工程验收及总门禁关闭，并要求保留本轮 D2B-05 失败、不写全量全绿。
 T2-2 至 T2-6 CLOSED；T2-1/T2-R、三项 P2 和 T1 原关闭保持。
 批准原文、退出条件与保留义务见[执行记录 §17](family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)，
@@ -3886,3 +3890,18 @@ D2B-05 code50 继续 REMAINDER_DEFERRED，未修复、未关闭；原报告不�
 关闭范围仅 ENGINEERING_SYNTHETIC_ONLY；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、高级恢复/新回收 REMAINDER_DEFERRED 保留。
 不关闭 D01/T2-G 或高级恢复验收，不自动启动 T3–T9，不将 SL-01 标为整体 COVERED。
 默认关闭、旧客户端升级拒绝和全部现有安全运行依赖不变；仅合成验证，不部署、不提交或推送 Git。
+
+### 22.7 D2B-05 查询超时批准关闭（2026-10-24）
+
+**Decision:** APPROVED / CLOSED。**Scope:** QUERY_ONLY。
+用户明确批准复审通过，关闭 D2B-05 查询超时，更新门禁及评审记录，验证后提交/推送当前分支并同步 PR #27；不合并、不部署。
+此次关闭仅针对 `userDeletionRecoveryReadiness` 重复展开引用查询导致的 MongoDB code50，不是 D2B 整批、高级恢复或新回收的验收关闭。
+
+修复提交 `e744cba13c303852515e599e7617269819d8d615`：按组提取共同条件，保留完整代次、媒体槽位、ObjectId/字符串异常见证及最终家庭/孩子校验；没有增加超时、放宽断言、删减测试或改变默认开关。
+[CI 40099315976](https://github.com/mflyn/LMS/actions/runs/40099315976) 成功：后端143套件3958项、前端40套件490项，Task 11/12 集成、5项浏览器测试、构建和合成 Compose 门禁通过。
+CI 的临时合并测试提交 `72d1878df8ef52ffdd5ff1fd176ca648ddf7165d` 不是实际合并；本轮也不设置自动合并。
+复审另行无名称筛选重跑相关套件139项通过，文档门禁通过；未发现新增正确性/安全问题。查询仍可使用 COLLSCAN，合成耗时不作为任意规模的性能保证。
+
+原 §22.6、[批准正本](family-self-directed-learning-t2-closure-approval.json)、3943项历史失败、上次CI的3951项中1项失败，以及修复过程中13项文档锚点失败均保留，不拼接成“历史全绿”。
+新增关闭记录与本轮状态验证见[执行记录 §18](family-self-directed-learning-t2-execution.md#18-d2b-05-查询超时复审与批准关闭2026-10-24)；原修复证据见[证据索引](evidence/t2-synthetic-2026-10-24/README.md#d2b-05-查询缺陷关闭)。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、D01/T2-G、D2b剩余/D3/D4/E、C-CACHE-P3 的 REMAINDER_DEFERRED 不变；不启用 cleanup/restore，不修改产品代码或真实数据，不自动启动 T3–T9。

@@ -3376,7 +3376,9 @@ function validate() {
   for (const [key, value] of [
     ['T2 closure scope', 'ENGINEERING_SYNTHETIC_ONLY'],
     ['T2 approval', 'APPROVED'],
-    ['T2 latest full regression', 'FAILED / D2B-05 / REMAINDER_DEFERRED'],
+    ['T2 approval-time full regression', 'FAILED / D2B-05 / REMAINDER_DEFERRED'],
+    ['T2 latest full regression', 'PASSED / CI 40099315976 / e744cba1'],
+    ['D2B-05 query timeout', 'APPROVED / CLOSED / QUERY_ONLY'],
     ['T2 device', 'DEVICE_PENDING'],
     ['T2 deployment', 'T8_PENDING / NOT_AUTHORIZED'],
     ['T2 deferred', 'REMAINDER_DEFERRED']

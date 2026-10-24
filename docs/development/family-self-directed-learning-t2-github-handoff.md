@@ -2,7 +2,8 @@
 
 **Scope:** ENGINEERING_SYNTHETIC_ONLY；T2 APPROVED / CLOSED。
 **Git authorization:** 2026-10-24 用户授权整理提交范围、核查敏感信息与证据、提交并推送专用分支、创建PR；不合并、不部署。
-**Retained:** D2B-05 FAILED / REMAINDER_DEFERRED；DEVICE_PENDING；T8_PENDING / NOT_AUTHORIZED。
+**D2B-05 query timeout:** APPROVED / CLOSED / QUERY_ONLY（用户复审批准，见末节）。
+**Retained:** 原 D2B-05 失败快照；DEVICE_PENDING；高级恢复/新回收 REMAINDER_DEFERRED；T8_PENDING / NOT_AUTHORIZED。
 
 ## 提交范围
 
@@ -110,3 +111,12 @@ D2B-05本轮未复现，但没有修改其源码/断言，不能据此关闭稳�
 推送后的CI需单独核对，不以本地专项通过冒称CI成功。
 本次只修复已存在测试暴露的查询缺陷，不完成/启用高级恢复或新回收；D01、T2-G、D2b/D3/D4/E等仍为 REMAINDER_DEFERRED，真机仍 DEVICE_PENDING。
 原限定合成验收批准文件保留当时的FAILED全量记录；不修改其历史状态，不部署、不操作真实数据。
+
+## D2B-05 复审批准关闭（2026-10-24）
+
+用户确认复审通过并批准关闭查询超时，授权更新记录、验证后提交/推送当前分支及同步 PR #27；不合并、不部署。
+修复提交 e744cba1 的[CI 40099315976](https://github.com/mflyn/LMS/actions/runs/40099315976)已经成功，后端143套件3958项、前端40套件490项、集成/浏览器/构建/合成Compose通过；复审另跑相关139项全部通过。
+查询等价、完整引用集合、异常BSON及跨孩子校验均复审通过，原测试语句保留，未发现新增问题。
+关闭范围仅 QUERY_ONLY，不是 D2B 整批或高级恢复验收关闭；DEVICE_PENDING 和全部后置义务不变。
+本轮仅更新文档和状态校验；验证、批准原文、历史失败保护及 Git 授权见[执行记录 §18](family-self-directed-learning-t2-execution.md#18-d2b-05-查询超时复审与批准关闭2026-10-24)。
+上述各轮“最新/未关闭/未授权”按当时事实保留；旧批准正本不回写，后续裁决不抹去失败。
