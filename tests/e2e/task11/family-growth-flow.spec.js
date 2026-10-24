@@ -176,7 +176,8 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await childPage.getByLabel('实际完成数量').fill('500');
   await childPage.getByLabel('我的一句话').fill('我按计划完成了。');
   await childPage.getByRole('button', { name: '提交完成情况' }).click();
-  await expect(childPage.getByRole('status')).toContainText('等待家长确认');
+  await expect(childPage.getByText('等待家长确认', { exact: true })).toBeVisible();
+  await expect(childPage.getByText('作品版本 1')).toBeVisible();
 
   await childPage.getByRole('link', { name: '错题' }).click();
   await childPage.getByRole('button', { name: '记录新错题' }).click();
@@ -205,9 +206,11 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
 
   await page.reload();
   await page.getByRole('button', { name: '确认 跳绳 500 个' }).click();
-  const dialog = page.getByRole('dialog', { name: '家长确认' });
-  await dialog.getByLabel('家长反馈').fill('完成得很认真。');
+  const dialog = page.getByRole('dialog', { name: '作品查看与审核' });
+  await dialog.getByRole('textbox', { name: '家长反馈' }).fill('完成得很认真。');
   await dialog.getByRole('button', { name: '确认并发放星星' }).click();
+  await expect(dialog.getByText('星星已到账')).toBeVisible();
+  await dialog.getByRole('button', { name: '关闭', exact: true }).click();
   await expect(page.getByRole('heading', { name: '跳绳 500 个' }).locator('xpath=ancestor::article'))
     .toContainText('已确认');
 

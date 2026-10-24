@@ -1,8 +1,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
-require('../../../backend/tests/task11/testEnvironment');
-const { createFamilyRuntime } = require('../../../backend/tests/task11/serviceRuntime');
+const { createT2Runtime } = require('../../../backend/tests/t2/serviceRuntime');
 const { redactRuntimeError } = require('../../../backend/tests/task11/testEnvironment');
 
 const repositoryRoot = path.resolve(__dirname, '../../..');
@@ -78,7 +77,10 @@ process.once('uncaughtException', fail);
 process.once('unhandledRejection', fail);
 
 const start = async () => {
-  runtime = await createFamilyRuntime();
+  runtime = await createT2Runtime();
+  const Role = require('../../../backend/common/models/Role');
+  await Role.create([{ name: 'parent', description: 'Synthetic parent', permissions: [] },
+    { name: 'student', description: 'Synthetic child', permissions: [] }]);
   frontend = spawn('npm', ['start'], {
     cwd: path.join(repositoryRoot, 'frontend/web'),
     env: {

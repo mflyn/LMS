@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { useAuth } from './AuthContext';
 import { getMyFamily } from '../services/familyApi';
 import { resetChildScope } from '../services/childScope';
+import { captureSession, expireParentSession, isSessionCurrent } from '../services/familySession';
 
 const FamilyContext = createContext(null);
 
@@ -17,28 +18,30 @@ const apiErrorCode = (error) => error?.response?.data?.error?.code;
 const apiStatus = (error) => error?.response?.status;
 
 export const FamilyProvider = ({ children }) => {
-  const { logout, status: authStatus } = useAuth();
+  const { status: authStatus, sessionSnapshot } = useAuth();
   const [familyState, setFamilyState] = useState(EMPTY_FAMILY_STATE);
   const familyStateRef = useRef(familyState);
   const requestVersion = useRef(0);
+  const owner = useRef(null);
 
   familyStateRef.current = familyState;
 
   const loadFamily = useCallback(async () => {
+    const snapshot = captureSession('parent');
+    const version = ++requestVersion.current;
     if (authStatus !== 'authenticated') {
       setFamilyState(EMPTY_FAMILY_STATE);
       return;
     }
 
-    const version = requestVersion.current + 1;
-    requestVersion.current = version;
+    if (!snapshot) return;
     setFamilyState((current) => (
       current.status === 'ready' ? current : { ...current, status: 'unknown' }
     ));
 
     try {
-      const payload = await getMyFamily();
-      if (requestVersion.current !== version) return;
+      const payload = await getMyFamily({ session: snapshot });
+      if (requestVersion.current !== version || !isSessionCurrent(snapshot)) return;
 
       const childrenForFamily = Array.isArray(payload?.children) ? payload.children : [];
       const selectedChildId = childrenForFamily.some((child) => child.childId === payload?.defaultChildId)
@@ -53,10 +56,10 @@ export const FamilyProvider = ({ children }) => {
         childScopeVersion: current.childScopeVersion + 1
       }));
     } catch (error) {
-      if (requestVersion.current !== version) return;
+      if (requestVersion.current !== version || !isSessionCurrent(snapshot)) return;
 
       if (apiStatus(error) === 401) {
-        logout();
+        expireParentSession(snapshot);
         setFamilyState(EMPTY_FAMILY_STATE);
         return;
       }
@@ -80,13 +83,20 @@ export const FamilyProvider = ({ children }) => {
         selectedChildId: null
       }));
     }
-  }, [authStatus, logout]);
+  }, [authStatus]);
 
   useEffect(() => {
+    if (owner.current !== sessionSnapshot) {
+      resetChildScope({ previousChildId: familyStateRef.current.selectedChildId, nextChildId: null });
+      owner.current = sessionSnapshot;
+      setFamilyState(current => ({ ...EMPTY_FAMILY_STATE, childScopeVersion: current.childScopeVersion + 1 }));
+    }
     loadFamily();
-  }, [loadFamily]);
+    return () => { requestVersion.current += 1; };
+  }, [loadFamily, sessionSnapshot]);
 
   const selectChild = useCallback((childId) => {
+    if (!isSessionCurrent(owner.current)) return;
     const current = familyStateRef.current;
     if (current.status !== 'ready' || current.selectedChildId === childId) return;
     if (!current.children.some((child) => child.childId === childId)) return;
@@ -99,21 +109,23 @@ export const FamilyProvider = ({ children }) => {
     }));
   }, []);
 
-  const selectedChild = familyState.children.find(
-    (child) => child.childId === familyState.selectedChildId
+  // Hide the previous actor's data in the render before the reload effect runs.
+  const visibleState = owner.current === sessionSnapshot && authStatus === 'authenticated' ? familyState : EMPTY_FAMILY_STATE;
+  const selectedChild = visibleState.children.find(
+    (child) => child.childId === visibleState.selectedChildId
   ) || null;
 
   const value = useMemo(() => ({
-    familyStatus: familyState.status,
-    family: familyState.family,
-    children: familyState.children,
+    familyStatus: visibleState.status,
+    family: visibleState.family,
+    children: visibleState.children,
     selectedChild,
-    selectedChildId: familyState.selectedChildId,
-    childScopeVersion: familyState.childScopeVersion,
+    selectedChildId: visibleState.selectedChildId,
+    childScopeVersion: visibleState.childScopeVersion,
     selectChild,
     retry: loadFamily,
     reload: loadFamily
-  }), [familyState, selectedChild, selectChild, loadFamily]);
+  }), [visibleState, selectedChild, selectChild, loadFamily]);
 
   return <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>;
 };

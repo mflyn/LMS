@@ -1,34 +1,12 @@
 import axios from 'axios';
-import { expireParentSession, loadParentSession } from './familySession';
-
-const parentRequestConfig = () => {
-  const session = loadParentSession();
-  if (!session) {
-    const error = new Error('Parent session is required');
-    error.response = { status: 401, data: { error: { code: 'UNAUTHENTICATED' } } };
-    throw error;
-  }
-
-  return {
-    headers: {
-      Authorization: `Bearer ${session.token}`
-    }
-  };
-};
+import { requestWithSession, sessionRequestOptions } from './familySession';
 
 const unwrap = (response) => response?.data?.data ?? response?.data;
 
-const parentRequest = async (request) => {
-  try {
-    return await request(parentRequestConfig());
-  } catch (error) {
-    if (error?.response?.status === 401) expireParentSession();
-    throw error;
-  }
-};
+const parentRequest = (request, options) => requestWithSession('parent', request, options);
 
-export const getMyFamily = async () => {
-  const response = await parentRequest((config) => axios.get('/api/families/me', config));
+export const getMyFamily = async (options) => {
+  const response = await parentRequest((config) => axios.get('/api/families/me', config), sessionRequestOptions(options));
   return unwrap(response);
 };
 
@@ -75,19 +53,6 @@ export const transferFamilyOwnership = (familyId, newOwnerParentId) => parentPat
   { newOwnerParentId }
 );
 
-const requestConfig = (config, { signal, headers } = {}) => {
-  const nextConfig = {
-    ...config,
-    headers: {
-      ...config.headers,
-      ...headers
-    }
-  };
-
-  if (signal) nextConfig.signal = signal;
-  return nextConfig;
-};
-
 const queryString = (params = {}) => {
   const query = new URLSearchParams();
 
@@ -100,11 +65,12 @@ const queryString = (params = {}) => {
   return value ? `?${value}` : '';
 };
 
-const parentGet = async (path, params, signal) => {
+const parentGet = async (path, params, signal, expectedSession) => {
+  const options = sessionRequestOptions(signal, expectedSession);
   const response = await parentRequest((config) => axios.get(
     `${path}${queryString(params)}`,
-    requestConfig(config, { signal })
-  ));
+    config
+  ), options);
   return unwrap(response);
 };
 
@@ -118,8 +84,8 @@ const parentPost = async (path, body, options) => {
   const response = await parentRequest((config) => axios.post(
     path,
     mutationPayload(body),
-    requestConfig(config, options)
-  ));
+    config
+  ), options);
   return unwrap(response);
 };
 
@@ -127,13 +93,13 @@ const parentPatch = async (path, body, options) => {
   const response = await parentRequest((config) => axios.patch(
     path,
     mutationPayload(body),
-    requestConfig(config, options)
-  ));
+    config
+  ), options);
   return unwrap(response);
 };
 
 const parentDelete = async (path, options) => {
-  const response = await parentRequest((config) => axios.delete(path, requestConfig(config, options)));
+  const response = await parentRequest((config) => axios.delete(path, config), options);
   return unwrap(response);
 };
 
@@ -148,11 +114,36 @@ export const setChildPin = (childId, pin) => parentPost(
 );
 
 export const listGrowthTasks = (params, signal) => parentGet('/api/growth-tasks', params, signal);
-export const getGrowthTask = (taskId, signal) => parentGet(`/api/growth-tasks/${taskId}`, undefined, signal);
+// Preserve the existing (id, signal, session) GET form and the common four-position form.
+const getOptions = (signal, expectedSession, fourth) => fourth !== undefined
+  || (signal == null && expectedSession && (typeof expectedSession.addEventListener === 'function'
+    || 'signal' in expectedSession || 'session' in expectedSession))
+  ? sessionRequestOptions(expectedSession, fourth) : sessionRequestOptions(signal, expectedSession);
+export const getGrowthTask = (taskId, signal, expectedSession, fourth) => parentGet(
+  `/api/growth-tasks/${encodeURIComponent(taskId)}`, undefined, getOptions(signal, expectedSession, fourth)
+);
 export const createGrowthTask = (payload) => parentPost('/api/growth-tasks', payload);
 export const updateGrowthTask = (taskId, payload) => parentPatch(`/api/growth-tasks/${taskId}`, payload);
-export const completeGrowthTask = (taskId, payload) => parentPatch(`/api/growth-tasks/${taskId}/complete`, payload);
-export const confirmGrowthTask = (taskId, payload) => parentPatch(`/api/growth-tasks/${taskId}/confirm`, payload);
+const pick = (body, fields) => Object.fromEntries(fields.filter(field => body?.[field] !== undefined).map(field => [field, body[field]]));
+export const completeGrowthTask = (taskId, payload, signal, expectedSession) => parentPatch(
+  `/api/growth-tasks/${encodeURIComponent(taskId)}/complete`,
+  pick(payload, ['operationId', 'expectedCompletionVersion', 'expectedChecklistVersion', 'checkedItemIds', 'completionMediaIds',
+    'actualMinutes', 'actualAmount', 'difficulty', 'needsHelp', 'childNote']), sessionRequestOptions(signal, expectedSession)
+);
+export const confirmGrowthTask = (taskId, payload, signal, expectedSession) => parentPatch(
+  `/api/growth-tasks/${encodeURIComponent(taskId)}/confirm`, pick(payload, ['expectedCompletionVersion', 'parentFeedback']),
+  sessionRequestOptions(signal, expectedSession)
+);
+export const getCompletionRecovery = (taskId, signal, expectedSession, fourth) => parentGet(
+  `/api/growth-tasks/${encodeURIComponent(taskId)}/completion-recovery`, undefined, getOptions(signal, expectedSession, fourth)
+);
+export const listCompletionRecoveries = (params, signal, expectedSession) => parentGet(
+  '/api/growth-tasks/completion-recoveries', pick(params, ['page', 'pageSize']), sessionRequestOptions(signal, expectedSession)
+);
+export const recoverTaskCompletion = (taskId, operationId, signal, expectedSession) => parentPost(
+  `/api/growth-tasks/${encodeURIComponent(taskId)}/completion-operations/${encodeURIComponent(operationId)}/recover`, {},
+  sessionRequestOptions(signal, expectedSession)
+);
 export const cancelOrArchiveGrowthTask = (taskId) => parentDelete(`/api/growth-tasks/${taskId}`);
 
 export const listGrowthLogs = (params, signal) => parentGet('/api/growth-logs', params, signal);
@@ -192,13 +183,17 @@ export const redeemReward = async (rewardId, idempotencyKey) => {
   });
 };
 
-export const uploadPrivateMedia = ({ file, purpose, childId }, signal) => {
+export const uploadPrivateMedia = ({ file, purpose, childId }, signal, expectedSession) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('purpose', purpose);
   if (childId) formData.append('childId', childId);
-  return parentPost('/api/media', formData, { signal });
+  return parentPost('/api/media', formData, sessionRequestOptions(signal, expectedSession));
 };
 
-export const getPrivateMediaAccess = (mediaId, signal) => parentGet(`/api/media/${mediaId}/access`, undefined, signal);
-export const deletePrivateMedia = (mediaId) => parentDelete(`/api/media/${mediaId}`);
+export const getPrivateMediaAccess = (mediaId, signal, expectedSession) => parentGet(
+  `/api/media/${mediaId}/access`, undefined, signal, expectedSession
+);
+export const deletePrivateMedia = (mediaId, signal, expectedSession) => parentDelete(
+  `/api/media/${mediaId}`, sessionRequestOptions(signal, expectedSession)
+);
