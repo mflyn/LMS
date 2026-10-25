@@ -626,7 +626,7 @@ const fileReads = () => {
 // Stop immediately AFTER the first real closure, avoiding quadratic rechecks of
 // a 100-node connected store. This harness never claims a complete store check.
 const firstClosure = async () => {
-  const enteredNextPass = jest.fn(), collection = db.collection.bind(db), nativeErrors = [];
+  const enteredNextPass = jest.fn(), collection = db.collection.bind(db), nativeErrors = [], discoveryReads = [];
   const connection = { db: new Proxy(db, { get(target, key) {
     if (key !== 'collection') return typeof target[key] === 'function' ? target[key].bind(target) : target[key];
     return name => {
@@ -634,6 +634,9 @@ const firstClosure = async () => {
       c.find = (filter, ...args) => {
         if (name === 'mediauserdeletionrecoveries' && Object.keys(filter).length === 0) {
           enteredNextPass(); throw Error('private-sentinel boundary marker');
+        }
+        if (name === 'mediauserdeletionrecoveries' && Object.keys(filter).length === 1 && filter.mediaId?.$in) {
+          discoveryReads.push(filter.mediaId.$in[1]);
         }
         const cursor = find(filter, ...args), toArray = cursor.toArray.bind(cursor);
         cursor.toArray = async () => {
@@ -649,8 +652,24 @@ const firstClosure = async () => {
   } };
   const result = await inspect({ connection, journal: reader });
   expect(result.ready).toBe(false); expect(result.complete).toBe(false); expect(sessions).toHaveBeenCalledTimes(1);
-  return { result, enteredNextPass, nativeErrors };
+  return { result, enteredNextPass, nativeErrors, discoveryReads };
 };
+test('D2B budget discovers each connected member once per paused closure without skipping audit', async () => {
+  await graphFixture(4, true, 1); const before = await snapshot();
+  const { result, enteredNextPass, nativeErrors, discoveryReads } = await firstClosure();
+  expect(result.reasons).toEqual([NOT_READY]); expect(nativeErrors).toEqual([]);
+  expect(enteredNextPass).toHaveBeenCalledTimes(1);
+  expect(new Set(discoveryReads).size).toBe(13);
+  expect(discoveryReads).toHaveLength(13);
+  expect(await snapshot()).toEqual(before);
+});
+test.each(['foreign child', 'string BSON'])('D2B budget discovery never caches across checks: %s', async damage => {
+  await graphFixture(3); expect((await run()).checked).toBe(true);
+  await db.collection('mediauserdeletionrecoveries').updateOne({ mediaId: new ObjectId(oid(10001)) },
+    { $set: { childId: damage === 'foreign child' ? new ObjectId(oid(999)) : oid(2) } });
+  const before = await snapshot();
+  expect((await inspect()).reasons).toEqual([INVALID]); expect(await snapshot()).toEqual(before);
+});
 test.each([[50, true, true], [51, true, false], [100, false, true], [101, false, false]])
 ('D2B-05 real connected %s proofs paired=%s share classification and dependency budget (fits=%s)', async (count, paired, fits) => {
   await graphFixture(count, paired); const before = await snapshot(), records = fileReads();

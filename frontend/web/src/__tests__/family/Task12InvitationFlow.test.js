@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import axios from 'axios';
 import App from '../../App';
 import {
@@ -23,17 +23,22 @@ describe('Task 12 invitation authentication return', () => {
     window.history.pushState({}, 'invitation', '/family/invitations#token=fragment-secret');
   });
 
-  test('TC-T12-UI-003 preserves fragment through login and clears it after acceptance', async () => {
+  const expectPreviewReady = async () => expect(await screen.findByText('明明的家')).toBeInTheDocument();
+
+  test.each([false, true])('TC-T12-UI-003 preserves fragment through login and clears it after acceptance (delayed preview=%s)', async delayed => {
     axios.post.mockResolvedValueOnce({
       data: { data: { token: 'parent-token', user: { id: 'parent-b', name: '第二家长', role: 'parent' } } }
     });
-    previewParentInvitation.mockResolvedValue({
+    const preview = {
       invitation: {
         familyName: '明明的家',
         owner: { name: '明明妈妈' },
         expiresAt: '2026-07-19T08:00:00.000Z'
       }
-    });
+    };
+    let releasePreview;
+    previewParentInvitation.mockImplementation(() => delayed
+      ? new Promise(resolve => { releasePreview = () => resolve(preview); }) : Promise.resolve(preview));
     acceptParentInvitation.mockResolvedValue({ family: { familyId: 'family-a' } });
     getMyFamily.mockResolvedValue({
       family: {
@@ -58,7 +63,16 @@ describe('Task 12 invitation authentication return', () => {
 
     expect(await screen.findByRole('heading', { name: '加入家庭' })).toBeInTheDocument();
     expect(previewParentInvitation).toHaveBeenCalledWith('fragment-secret');
-    expect(screen.getByText('明明的家')).toBeInTheDocument();
+    if (delayed) {
+      expect(screen.getByText('正在核验邀请…')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '接受邀请' })).not.toBeInTheDocument();
+      let settled = false;
+      const ready = expectPreviewReady().then(() => { settled = true; });
+      await Promise.resolve();
+      expect(settled).toBe(false);
+      await act(async () => releasePreview());
+      await ready;
+    } else await expectPreviewReady();
 
     fireEvent.change(screen.getByLabelText('家庭身份'), { target: { value: 'guardian' } });
     fireEvent.click(screen.getByRole('button', { name: '接受邀请' }));

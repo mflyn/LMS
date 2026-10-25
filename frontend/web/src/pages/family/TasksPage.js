@@ -179,9 +179,11 @@ const ScopedTasksPage = () => {
     }
   };
 
-  const openAction = (type, task) => {
+  const openAction = (type, task, trigger) => {
     if (task.childId !== selectedChildId) return;
     if (type === 'complete' || type === 'confirm' || type === 'review') {
+      // Safari pointer activation does not focus buttons automatically.
+      trigger?.focus();
       setReview({ taskId: task.taskId, childId: selectedChildId, mode: type === 'complete' ? 'complete' : 'review' });
       return;
     }
@@ -220,10 +222,10 @@ const ScopedTasksPage = () => {
               <p>{item.area} · 截止 {item.dueDate}</p>
             </div>
             <div className="family-inline-actions">
-              <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`查看 ${item.title}`} onClick={() => openAction('review', item)}>查看作品</button>
+              <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`查看 ${item.title}`} onClick={event => openAction('review', item, event.currentTarget)}>查看作品</button>
               {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.title}`} onClick={() => openEdit(item)}>编辑</button>}
-              {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`完成 ${item.title}`} onClick={() => openAction('complete', item)}>完成</button>}
-              {item.status === 'completed' && <button type="button" className="family-button primary" disabled={resource.state === 'loading'} aria-label={`确认 ${item.title}`} onClick={() => openAction('confirm', item)}>确认</button>}
+              {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`完成 ${item.title}`} onClick={event => openAction('complete', item, event.currentTarget)}>完成</button>}
+              {item.status === 'completed' && <button type="button" className="family-button primary" disabled={resource.state === 'loading'} aria-label={`确认 ${item.title}`} onClick={event => openAction('confirm', item, event.currentTarget)}>确认</button>}
               {!['cancelled', 'archived'].includes(item.status) && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`${item.status === 'pending' ? '取消' : '归档'} ${item.title}`} onClick={() => openAction('remove', item)}>{item.status === 'pending' ? '取消' : '归档'}</button>}
             </div>
           </article>

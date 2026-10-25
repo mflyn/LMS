@@ -36,6 +36,7 @@ test('loads detail and confirms the displayed version, never a list version', as
   await waitFor(() => expect(api.confirmGrowthTask).toHaveBeenCalledTimes(1));
   expect(api.confirmGrowthTask.mock.calls[0][1]).toEqual({ expectedCompletionVersion: 2, parentFeedback: '很好' });
   expect(await screen.findByText('首次反馈')).toBeInTheDocument();
+  expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
 });
 
 test('version conflict reloads new evidence but never auto-confirms it', async () => {
@@ -47,6 +48,7 @@ test('version conflict reloads new evidence but never auto-confirms it', async (
   });
   await user.click(screen.getByRole('button', { name: '确认并发放星星' }));
   await screen.findByText(/作品版本.*3/);
+  expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
   expect(api.confirmGrowthTask).toHaveBeenCalledTimes(1);
   expect(api.confirmGrowthTask.mock.calls[0][1].expectedCompletionVersion).toBe(2);
 });
@@ -57,6 +59,7 @@ test('lost confirm response retains the displayed version and original feedback 
   await user.type(screen.getByRole('textbox', { name: '家长反馈' }), '原反馈');
   await user.click(screen.getByRole('button', { name: '确认并发放星星' }));
   await user.click(await screen.findByRole('button', { name: /重试本次/ }));
+  expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
   expect(api.confirmGrowthTask).toHaveBeenCalledTimes(2);
   expect(api.confirmGrowthTask.mock.calls[1][1]).toEqual(api.confirmGrowthTask.mock.calls[0][1]);
 });

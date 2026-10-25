@@ -56,6 +56,7 @@ test('switching children discards a late recovery list for the same parent', asy
   fireEvent.click(screen.getByRole('button', { name: '检查待恢复提交' }));
   fireEvent.click(await screen.findByRole('button', { name: `查看待恢复提交 ${id(4)}` }));
   expect(onOpen).toHaveBeenCalledWith({ taskId: id(4), childId: id(8) });
+  expect(screen.getByRole('button', { name: `查看待恢复提交 ${id(4)}` })).toHaveFocus();
 });
 
 test('an empty filtered page does not hide later recoveries for the selected child', async () => {

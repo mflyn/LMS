@@ -1307,3 +1307,13 @@ T8真实Ubuntu/NAS、备份、隔离恢复、容量/保留与部署需单独授�
 
 仅授权提交/推送 `codex/t2-synthetic-acceptance` 并同步 PR #27；不合并、不部署、不操作真实孩子数据/NAS。
 DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、高级恢复与新回收及 D01/T2-G、D2b剩余/D3/D4/E、C-CACHE-P3 的 REMAINDER_DEFERRED 保持。默认关闭配置、旧客户端升级拒绝及现有安全运行依赖不变。
+
+## 19. Ubuntu QA 后四项 P2 修订（2026-10-25）
+
+本轮在54886573之后补齐动态弹窗焦点、WebKit真实上传故障点、邀请preview异步等待，并优化既有只读闭包的重复发现/键查找。
+修订核实、方案、自查、红绿证据与限制见[评审记录](family-self-directed-learning-t2-qa-p2-review.md)；[服务器隔离步骤](family-self-directed-learning-t2-server-test.md)仅准备，未执行。
+独立代码评审未发现可执行新问题，审查范围为9个已跟踪JS及新增FamilyDialog测试；审查员核对既有证据并自行执行diff检查，没有冒称重跑全部测试。
+本机前端499项、readiness142项、T2正式HTTP14项、Chromium/WebKit各14项、Task12浏览器1项通过；完整回归和静态检查详见该轮证据摘要。
+三项UI/测试问题为IMPLEMENTED / READY_FOR_QA；QA-T2-D2B-BUDGET-001为IMPLEMENTED / SERVER_VALIDATION_PENDING，仍需原Ubuntu2CPU/3GiB预算复验。
+§17原批准失败和§18查询缺陷关闭保持原样，不把测试级预算超时混同Mongo code50，不提前关闭新增QA问题或后置能力。
+本轮用户授权验证后提交推送当前分支并同步PR #27，暂不合并、不部署；DEVICE_PENDING及REMAINDER_DEFERRED不变。

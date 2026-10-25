@@ -76,6 +76,24 @@ test('real pages: upload, refresh, parent review, child feedback; four viewports
     await parentPage.getByRole('textbox', { name: '家长反馈' }).fill('Synthetic first feedback');
     await parentPage.getByRole('button', { name: '确认并发放星星' }).click();
     await expect(parentPage.getByText('星星已到账')).toBeVisible();
+    // No extra click after the focused confirmation form is removed.
+    const reviewDialog = parentPage.getByRole('dialog', { name: '作品查看与审核' });
+    await expect.poll(() => reviewDialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    await parentPage.keyboard.press('Tab');
+    expect(await reviewDialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    await parentPage.keyboard.press('Shift+Tab');
+    expect(await reviewDialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    await parentPage.keyboard.press('Escape');
+    await expect(reviewDialog).toHaveCount(0);
+    await expect(parentPage.getByRole('button', { name: `查看 ${task.title}`, exact: true })).toBeFocused();
+    await parentPage.getByRole('button', { name: `查看 ${task.title}`, exact: true }).click();
+    await expect(reviewDialog).toBeVisible();
+    await parentPage.getByRole('button', { name: '隐私删除完成图片 1', exact: true }).click();
+    await expect(parentPage.getByRole('button', { name: '取消', exact: true })).toBeFocused();
+    await parentPage.keyboard.press('Escape');
+    await expect(parentPage.getByRole('button', { name: '确认隐私删除' })).toHaveCount(0);
+    await expect(reviewDialog).toBeVisible();
+    await expect(parentPage.getByRole('button', { name: '隐私删除完成图片 1', exact: true })).toBeFocused();
     await page.reload();
     await expect(page.getByText('Synthetic first feedback')).toBeVisible();
     await expect(page.getByRole('button', { name: '修改本次完成' })).toHaveCount(0);
@@ -358,19 +376,18 @@ test('parent viewing version one cannot confirm a concurrent unseen version two'
 test('partial upload preserves successful images, then submits ten images and removes references without deleting assets', async ({ page }) => {
   const task = await newTask('Synthetic ten images');
   await childLogin(page); await page.goto(runtime.webUrl + taskPath(task));
-  let droppedUpload = false;
-  await page.route('**/api/media', async route => {
-    if (droppedUpload || route.request().method() !== 'POST') return route.continue();
-    const response = await route.fetch();
-    expect(response.status()).toBe(201);
-    droppedUpload = true;
-    await route.abort('failed');
-  });
+  // Drop the committed response without replaying browser-specific multipart bodies.
+  runtime.dropNextResponse({ service: 'resource-service', method: 'POST', path: '/api/media' });
   await page.getByLabel('添加完成图片').setInputFiles(Array.from({ length: 10 }, (_, index) => ({
     name: `synthetic-${index}.png`, mimeType: fixture.image.mimeType, buffer: fixture.image.bytes
   })));
   await expect(page.getByText('已添加 9/10')).toBeVisible();
-  expect(droppedUpload).toBe(true);
+  expect(runtime.droppedResponses).toEqual([{ service: 'resource-service', method: 'POST', path: '/api/media', status: 201 }]);
+  const partial = await runtime.inspect();
+  const uploaded = partial.database.Asset.filter(row => row.purpose === 'task_completion');
+  expect(uploaded).toHaveLength(10);
+  expect(uploaded.every(row => row.status === 'active')).toBe(true);
+  expect(partial.files.filter(row => row.path.startsWith('media/'))).toHaveLength(10);
   await expect(page.getByRole('alert')).toContainText('已成功的图片会保留');
   await page.getByLabel('添加完成图片').setInputFiles({ name: 'replacement.png', mimeType: fixture.image.mimeType, buffer: fixture.image.bytes });
   await expect(page.getByText('已添加 10/10')).toBeVisible();

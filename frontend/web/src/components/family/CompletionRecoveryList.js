@@ -32,7 +32,7 @@ const ScopedList = ({ session, childId, onOpen }) => {
       {!items.length && <p>本页没有当前孩子的待恢复提交。</p>}
       <ul>{items.map(row => <li key={row.taskId}>
         {session.role === 'student' ? <Link to={`/child/tasks/${row.taskId}`}>查看待恢复提交 {row.taskId}</Link>
-          : <button type="button" onClick={() => onOpen(row)}>查看待恢复提交 {row.taskId}</button>}
+          : <button type="button" onClick={event => { event.currentTarget.focus(); onOpen(row); }}>查看待恢复提交 {row.taskId}</button>}
       </li>)}</ul>
       <div className="task-completion-actions">
         <button type="button" aria-label="待恢复提交上一页" title="上一页" disabled={page === 1}

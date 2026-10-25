@@ -3905,3 +3905,11 @@ CI 的临时合并测试提交 `72d1878df8ef52ffdd5ff1fd176ca648ddf7165d` 不是
 原 §22.6、[批准正本](family-self-directed-learning-t2-closure-approval.json)、3943项历史失败、上次CI的3951项中1项失败，以及修复过程中13项文档锚点失败均保留，不拼接成“历史全绿”。
 新增关闭记录与本轮状态验证见[执行记录 §18](family-self-directed-learning-t2-execution.md#18-d2b-05-查询超时复审与批准关闭2026-10-24)；原修复证据见[证据索引](evidence/t2-synthetic-2026-10-24/README.md#d2b-05-查询缺陷关闭)。
 DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、D01/T2-G、D2b剩余/D3/D4/E、C-CACHE-P3 的 REMAINDER_DEFERRED 不变；不启用 cleanup/restore，不修改产品代码或真实数据，不自动启动 T3–T9。
+
+### 22.8 Ubuntu QA 后修订交接（2026-10-25）
+
+新增QA-T2-FOCUS-001、QA-T2-WEBKIT-FIXTURE-001、QA-T12-INVITATION-WAIT-001已修订并本地验证，IMPLEMENTED / READY_FOR_QA。
+QA-T2-D2B-BUDGET-001的闭包去重及键查找优化已实现，IMPLEMENTED / SERVER_VALIDATION_PENDING；原Ubuntu2CPU/3GiB的120秒预算仍须复验，不用本机通过关闭。
+[修订及独立代码评审](family-self-directed-learning-t2-qa-p2-review.md)和[隔离测试步骤](family-self-directed-learning-t2-server-test.md)作为本轮交接入口。
+原批准快照、历史失败及QUERY_ONLY关闭不变，DEVICE_PENDING、高级恢复/新回收REMAINDER_DEFERRED保持。
+用户授权提交推送当前专用分支、同步PR #27并检查CI；不合并、不部署、不自动开启后置功能。新CI按新提交单独记录，不覆盖旧失败。

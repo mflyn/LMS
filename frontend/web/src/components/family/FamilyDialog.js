@@ -12,43 +12,67 @@ const FOCUSABLE = [
 
 const FamilyDialog = ({ labelledBy, onClose, children }) => {
   const dialogRef = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
   useEffect(() => {
     const previousFocus = document.activeElement;
+    const previousParent = previousFocus?.parentElement;
     const root = document.getElementById('root');
     const previousHidden = root?.getAttribute('aria-hidden');
+    const previousInert = root?.getAttribute('inert');
+    const dialog = dialogRef.current;
+    const available = node => node instanceof HTMLElement && !node.matches(':disabled')
+      && !node.closest('[hidden], [inert], [aria-hidden="true"]')
+      && getComputedStyle(node).display !== 'none' && getComputedStyle(node).visibility !== 'hidden';
+    const controls = () => Array.from(dialog.querySelectorAll(FOCUSABLE)).filter(available);
+    const focusInside = () => (controls()[0] || dialog).focus();
+    const ensureFocus = () => {
+      if (!dialog.contains(document.activeElement) || !available(document.activeElement)) focusInside();
+    };
+    focusInside();
     root?.setAttribute('aria-hidden', 'true');
-    dialogRef.current?.querySelector(FOCUSABLE)?.focus();
+    root?.setAttribute('inert', '');
+    // Removing or disabling the focused form does not reliably emit focusin.
+    const observer = new MutationObserver(ensureFocus);
+    observer.observe(dialog, { childList: true, subtree: true, attributes: true,
+      attributeFilter: ['disabled', 'hidden', 'tabindex', 'style', 'class', 'aria-hidden'] });
+    const handleKeyDown = event => {
+      if (event.defaultPrevented) return;
+      if (event.key === 'Escape') {
+        event.preventDefault(); closeRef.current(); return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = controls(), first = focusable[0], last = focusable.at(-1);
+      const active = document.activeElement;
+      if (!first || !focusable.includes(active)) {
+        event.preventDefault(); (event.shiftKey ? last || dialog : first || dialog).focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener('focusin', ensureFocus);
+    // Bubble so an inner privacy prompt can consume Escape before the outer dialog.
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      observer.disconnect();
+      document.removeEventListener('focusin', ensureFocus);
+      document.removeEventListener('keydown', handleKeyDown);
       if (root) {
         if (previousHidden === null) root.removeAttribute('aria-hidden');
         else root.setAttribute('aria-hidden', previousHidden);
+        if (previousInert === null) root.removeAttribute('inert');
+        else root.setAttribute('inert', previousInert);
       }
-      previousFocus?.focus?.();
+      if (previousFocus?.isConnected && available(previousFocus)) previousFocus.focus?.();
+      else if (previousParent?.isConnected) {
+        Array.from(previousParent.querySelectorAll(FOCUSABLE)).find(available)?.focus();
+      }
     };
   }, []);
-
-  const handleKeyDown = (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      onClose();
-      return;
-    }
-    if (event.key !== 'Tab') return;
-
-    const focusable = Array.from(dialogRef.current?.querySelectorAll(FOCUSABLE) || []);
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
 
   return createPortal(
     <div className="family-dialog-backdrop">
@@ -58,7 +82,7 @@ const FamilyDialog = ({ labelledBy, onClose, children }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
-        onKeyDown={handleKeyDown}
+        tabIndex={-1}
       >
         {children}
       </section>

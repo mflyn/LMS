@@ -144,6 +144,7 @@ const referenceSnapshot = row => {
 const ownerScope = (value, proof) => assert(value.familyId === proof.tombstone.familyId && value.childId === proof.tombstone.childId);
 const loadCurrent = async (proof, r) => {
   const target = proof.tombstone.mediaId, groups = proof.operations.map(pair => pair.after);
+  const groupsByKey = new Map(groups.map(group => [opKey(group), group]));
   const foreign = await r.read('mediareferenceoperations', { 'references.mediaId': aliases(target), $and: [
     { $or: [{ familyId: { $ne: queryId(proof.tombstone.familyId) } }, { childId: { $ne: queryId(proof.tombstone.childId) } }] },
     { $or: [{ state: { $ne: 'ABORTED' } }, { version: { $ne: 0 } }] }
@@ -156,8 +157,9 @@ const loadCurrent = async (proof, r) => {
   const ledgers = new Map();
   for (const row of rows) {
     const value = operationSnapshot(row); ownerScope(value, proof);
-    assert(!ledgers.has(opKey(value))); ledgers.set(opKey(value), value);
-    const expected = groups.find(group => opKey(group) === opKey(value));
+    const key = opKey(value);
+    assert(!ledgers.has(key)); ledgers.set(key, value);
+    const expected = groupsByKey.get(key);
     if (!expected) {
       assert(value.state === 'ABORTED' && value.version === 0 && value.leaseExpiresAt === null
         && ['RESOURCE_NOT_FOUND', 'MEDIA_OPERATION_ABORTED'].includes(value.failureCode)
@@ -180,10 +182,13 @@ const loadCurrent = async (proof, r) => {
     const ref = referenceSnapshot(row); ownerScope(ref, proof); assert(!slots.has(slotKey(ref)));
     slots.set(slotKey(ref), ref);
   }
-  return { groups, ledgers, slots };
+  return { groups, groupsByKey, ledgers, slots };
 };
 const assertAppliedClosure = async (root, r, cache) => {
   const records = new Map(), queued = new Set([root.tombstone.mediaId]), queue = [root.tombstone.mediaId], laterGroups = new Map();
+  // Only discovery is deduplicated within this paused closure. Each visited node
+  // still runs its audit/current-state checks; another root gets fresh reads.
+  const discovered = new Set();
   const assetRows = new Map();
   const assetFor = async mediaId => {
     if (!assetRows.has(mediaId)) {
@@ -215,13 +220,15 @@ const assertAppliedClosure = async (root, r, cache) => {
   for (let index = 0; index < queue.length; index++) {
     const proof = await cache.read(queue[index]);
     const audit = await assertAudit(proof, r), current = await loadCurrent(proof, r);
+    discovered.add(proof.tombstone.mediaId);
     records.set(proof.tombstone.mediaId, { proof, audit, current });
     const groups = [...current.groups];
-    for (const ref of current.slots.values()) if (!current.groups.some(group => opKey(group) === opKey(ref))) {
+    for (const ref of current.slots.values()) if (!current.groupsByKey.has(opKey(ref))) {
       groups.push((await laterFor(ref, proof)).group);
     }
     const members = new Set(groups.flatMap(group => group.references.map(item => item.mediaId)));
     for (const mediaId of members) {
+      if (discovered.has(mediaId)) continue;
       const rows = await r.bounded('mediauserdeletionrecoveries', { mediaId: aliases(mediaId) }, 2);
       assert(rows.length <= 1);
       if (rows.length) {
@@ -229,6 +236,7 @@ const assertAppliedClosure = async (root, r, cache) => {
         const external = await cache.read(mediaId); assert(equal(expected, external));
         if (!queued.has(mediaId)) { queued.add(mediaId); queue.push(mediaId); }
       }
+      discovered.add(mediaId);
     }
   }
   const proofs = cache.values();
@@ -258,12 +266,13 @@ const assertAppliedClosure = async (root, r, cache) => {
     }
   };
   for (const { proof, current } of records.values()) {
+    const effects = new Map(proof.referenceEffects.map(pair => [JSON.stringify([slotKey(pair.after), opKey(pair.after)]), pair]));
     for (const group of current.groups) proveOperationVersionChain({ from: group, to: current.ledgers.get(opKey(group)), proofs });
     for (const ref of current.slots.values()) {
-      const group = current.groups.find(value => opKey(value) === opKey(ref));
+      const group = current.groupsByKey.get(opKey(ref));
       if (group) {
         assert(group.references.some(item => item.mediaId === ref.mediaId));
-        const effect = proof.referenceEffects.find(pair => slotKey(pair.after) === slotKey(ref) && opKey(pair.after) === opKey(ref));
+        const effect = effects.get(JSON.stringify([slotKey(ref), opKey(ref)]));
         if (effect) assert(equal(effect.after, ref));
       } else assert(laterGroups.has(opKey(ref)), PENDING);
     }
@@ -280,7 +289,7 @@ const assertAppliedClosure = async (root, r, cache) => {
           continue;
         }
         const later = captured || laterGroups.get(opKey(ref))?.group; assert(later, PENDING);
-        const effect = proof.referenceEffects.find(pair => slotKey(pair.after) === slotKey(ref) && opKey(pair.after) === opKey(group));
+        const effect = effects.get(JSON.stringify([slotKey(ref), opKey(group)]));
         assert((effect?.after.releasedAt || group.terminalAt) <= later.createdAt);
       } else await memberApplied(current.ledgers.get(opKey(group)), ref, item.mediaId, proof);
     }
