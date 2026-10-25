@@ -1346,3 +1346,15 @@ DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、高级恢复与新回收及 D01/T
 本次只同步文档；验证、提交推送后，须等新提交CI通过，才将PR #27转为Ready，以merge commit合并并核对main的CI。
 每个最终SHA及CI结果在PR单独记录；当前授权不表示已合并，不覆盖原批准或R1预算失败快照。
 真机DEVICE_PENDING、高级恢复/新回收及全部后置范围不变，不部署、不访问真实数据/NAS，不启用cleanup/restore。
+
+### 19.4 四项独立证据收口与最新授权（2026-10-25）
+
+**Current independent QA:** VERIFIED_CLOSED_FOR_AUTOMATED_SCOPE（四项，非产品/真机/发布批准）
+**Current authorization:** COMMIT_PUSH_PR_SYNC_ALLOWED / NO_MERGE_DEPLOY
+
+四项独立QA文档已补齐并经用户确认复审通过；最新授权为验证后提交推送当前分支、同步PR #27并检查CI。§19.3中的条件合并安排仍暂停；已提交推送的a9e21fe6不回滚，不转Ready或合并，CI成功也不解除限制。复审和授权详见[评审记录 §6.2](family-self-directed-learning-t2-qa-p2-review.md#62-四项文档收口复审通过及提交授权)。
+R1前三项和R2预算项的结论、源候选、各轮验证和限制见[评审记录 §6](family-self-directed-learning-t2-qa-p2-review.md#6-四项最终独立-qa-与本地收口2026-10-25)，
+持久索引见[四项独立证据](evidence/t2-synthetic-2026-10-24/pr27-independent-qa-closure.json)。
+R1 85份及R2 60份冻结归档核验一致；当前五份资源代码/注册/最终测试与R2一致，其他文档/门禁变更单独披露。
+原预算失败、旧批准和开发补验记录不重写；本次不重跑服务器服务、不改业务实现、不触碰真实数据或后置功能。
+DEVICE_PENDING、T8未验收、真实学习效果与高级恢复/新回收后置保持，不能把本次文档验证冒称这些能力已完成。

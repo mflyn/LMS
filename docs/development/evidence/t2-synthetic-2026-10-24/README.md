@@ -55,3 +55,14 @@ PR用于保存与评审，不合并、不部署、不启用新回收、不自动
 独立复审重跑相关139项通过、无失败/跳过，报告哈希和用户批准原文见[执行记录 §18](../../family-self-directed-learning-t2-execution.md#18-d2b-05-查询超时复审与批准关闭2026-10-24)。
 本轮新增关闭校验的红绿验证另行记录，不修改 `pr27-d2b-query-fix.json` 中提交前的失败/待CI状态，也不修改原 T2 批准文件、旧失败或148份历史归档。
 DEVICE_PENDING、REMAINDER_DEFERRED、T8_PENDING / NOT_AUTHORIZED 保持；当前仅授权专用分支提交/推送及PR同步，不合并、不部署。
+
+## 四项 P2 独立复评最终索引
+
+[可携带独立证据索引](pr27-independent-qa-closure.json)区分R1前三项关闭及原D2B失败、R2预算最终关闭和开发自测。
+四项当前均 VERIFIED_CLOSED_FOR_AUTOMATED_SCOPE；问题/修订/关闭理由及当前授权见[评审记录 §6](../../family-self-directed-learning-t2-qa-p2-review.md#6-四项最终独立-qa-与本地收口2026-10-25)。
+索引记录源归档相对标识、清单哈希、关键文件的原始与归档哈希、九文件候选和命令/结果；不包含真实账号、服务器地址、令牌或原始日志正文。
+原始证据仍在独立QA的冻结目录：R1 `t0-t2-p2-independent-2026-10-25`（85份）、R2 `t0-t2-d2b-followup-2026-10-25/r2`（60份）。本次逐项哈希核验，未复制/改写/移动原目录。
+这是持久可追溯索引，不是原始证据完整备份；源清单未提供sourceSha256的派生文件以archiveSha256校验，不伪造原始哈希。
+R2最终测试包含四条深隔离加强断言，全量3972项是独立一次完整运行；不同于开发早先全量后的单独补验，后续CI3988项也另有文档门禁增量。
+四项文档收口复审通过；用户最新授权验证后提交推送当前分支、同步PR #27并检查CI，先前条件合并继续暂停。已推送a9e21fe6不回滚；不转Ready、不合并、不部署。复审记录见[§6.2](../../family-self-directed-learning-t2-qa-p2-review.md#62-四项文档收口复审通过及提交授权)。
+历史失败、DEVICE_PENDING、T8待验收和全部REMAINDER_DEFERRED不变。

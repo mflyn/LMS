@@ -5,7 +5,7 @@
 > §21 及后续旧进度为历史快照，不表示继续扩展这些模块。T2 限定合成工程总门禁已关闭（§22.6），T1 CLOSED 不变；D2B-05 查询超时单独批准关闭（§22.7），原失败保留。
 > T2-2 至 T2-6 合成范围汇总验收 CLOSED；保留权限、幂等、版本、隐私删除和现有启动预检，不自动启动 T3–T9。
 > 当前页面退出条件及真实试点限制以[执行记录 §11](family-self-directed-learning-t2-execution.md#11-2026-10-24-mvp-范围调整与页面运行依赖)为准。
-> 不把后置等同测试通过；§22.7 仅追加当前专用分支提交/推送及 PR 同步授权，不授权合并或真实部署。
+> 不把后置等同测试通过；最新四项独立QA及仅本地收口边界见§22.11，暂停此前条件合并，不授权部署。
 
 **Status:** T0 CONTRACT BASELINE
 **Increment:** SELF-DIRECTED-LEARNING-MVP-1
@@ -3944,3 +3944,15 @@ VERIFIED_CLOSED / AUTOMATED_SYNTHETIC_ONLY；§22.8 的 READY_FOR_QA 保留为�
 原独立R1的D2B超时和原批准失败不回写；预算缺陷后续关闭与三项自动化QA关闭分开记录。
 本次仅授权文档验证后提交推送，等待新提交CI通过再将PR #27转为Ready并以merge commit合并main，随后核对main的CI；不是部署授权。
 DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED及全部REMAINDER_DEFERRED保持；不关闭高级恢复/新回收，不更改默认开关或旧客户端拒绝策略。
+
+### 22.11 四项独立 QA 最终收口与合并暂停（2026-10-25）
+
+**Current independent QA:** VERIFIED_CLOSED_FOR_AUTOMATED_SCOPE（四项，非产品/真机/发布批准）
+**Current authorization:** COMMIT_PUSH_PR_SYNC_ALLOWED / NO_MERGE_DEPLOY
+
+FOCUS、WEBKIT-FIXTURE、INVITATION-WAIT三项由R1独立复评关闭，D2B-BUDGET由R2最终九文件候选的同限额独立回归关闭。
+根因、候选映射、完整计数、原始/归档SHA-256及历史失败链见[评审记录 §6](family-self-directed-learning-t2-qa-p2-review.md#6-四项最终独立-qa-与本地收口2026-10-25)。
+R2家庭144套件3972项从始至终使用最终深隔离断言；后续CI3988项另含16项文档状态反例，不能混称同一轮或同一九文件候选。
+§22.10的条件合并授权已由用户“仅本地修改，暂不合并”取代。2026-10-25四项文档收口复审通过后，用户另授权验证后提交推送当前分支、同步PR #27并检查CI；不转Ready、不合并、不部署，不设置自动合并。a9e21fe6此前已推送，不回滚或改写。
+复审核对R1/R2身份、计数与哈希、开发/独立证据区分及历史失败无新增问题，详见[复审通过记录 §6.2](family-self-directed-learning-t2-qa-p2-review.md#62-四项文档收口复审通过及提交授权)。新提交CI独立留证，不用既有CI成功代替。
+原批准失败、R1超时、开发红灯与旧QUERY_ONLY关闭保持；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED和全部REMAINDER_DEFERRED不变。
