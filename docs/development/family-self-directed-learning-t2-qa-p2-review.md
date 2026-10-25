@@ -2,7 +2,7 @@
 
 **日期：** 2026-10-25。**范围：** 四项 QA P2 的本地修订、验证和 PR #27 交接。
 **基线：** `548865738e8b5fb9ac67f20f51e4edb05df0a2f7`。
-原限定合成批准及 QUERY_ONLY 关闭不变；§1–3 保留当时交接状态，最新预算问题批准关闭见 §4，不关闭高级恢复验收。
+原限定合成批准及 QUERY_ONLY 关闭不变；§1–3 保留当时交接状态，预算问题批准关闭见 §4，三项独立 QA 关闭及条件合并授权见 §5，不关闭高级恢复验收。
 
 ## 1. 核实、方案与自查
 
@@ -55,3 +55,37 @@ Ubuntu 2CPU/3GiB 原预算下 readiness142项、家庭144套件3972项、正式H
 最终隔离断言单独补验6项，复审四套件331项及两类别名变异通过，不把补验拼接成最终源码全量重跑。
 保留原批准失败及固定4dff6871超时，候选原始归档不改写。C-CACHE-P3、高级恢复和新回收继续后置。
 本次授权仅更新关闭记录及校验，覆盖此前交接中的Git授权描述：暂不提交、推送、合并或部署。
+
+## 5. 三项独立 QA 关闭与条件合并授权（2026-10-25）
+
+用户批准同步以下独立复评结论；§3 的 READY_FOR_QA 是此前交接快照，不再代表这三项的当前状态。
+本次只同步已存在的独立证据，不把开发自测或后续 CI 替代独立 QA，不更改业务代码。
+
+| QA ID | 当前状态 | 独立验证依据 |
+| --- | --- | --- |
+| QA-T2-FOCUS-001 | VERIFIED_CLOSED / AUTOMATED_SYNTHETIC_ONLY | 焦点组件反例及两地完整前端；Chromium/WebKit 确认后不额外点击，验证 Tab/ShiftTab、Escape、存活入口返回和内层取消返回 |
+| QA-T2-WEBKIT-FIXTURE-001 | VERIFIED_CLOSED / AUTOMATED_SYNTHETIC_ONLY | Chromium/WebKit 完整 T2 各14项，retries=0；真实201后丢响应，页面9/10与数据库10图，补图后提交、版本2移除、9个精确绑定及全部资产/正文保留 |
+| QA-T12-INVITATION-WAIT-001 | VERIFIED_CLOSED / AUTOMATED_SYNTHETIC_ONLY | 受控延迟预览反例、Mac/Ubuntu完整前端及Task12真实浏览器；身份、回跳、fragment清理和本地不泄漏Token |
+
+独立证据来自 `t0-t2-p2-independent-2026-10-25/REPORT.md`（R1，§3），固定候选
+`4dff6871d2d3bec2d4c34729fe3ae20a35317e97`。Ubuntu限额为2CPU/3GiB/无swap，
+Node22.23.4/Debian12容器用户空间；浏览器运行于Mac正式应用工厂的合成环境，不是Ubuntu跨机浏览器或真实iPad。
+Mac及Ubuntu前端各41套件499项通过，Mac Chromium/WebKit T2各14项、Task12浏览器1项通过。
+从该候选至 `07ffca67` 的 frontend/web 和 tests/e2e 无源码差异，可复用该独立证据。
+
+本次逐项核对原85份归档哈希一致；原始日志/截图继续本地保留，不上传Git。可携带证据指纹：
+
+| 原文件 | SHA-256 |
+| --- | --- |
+| REPORT.md | `7ff50bf2fcebf4df629350adf262d7ecd358e976c756f8b566742d2001147b84` |
+| results.json | `7c293b0131ca59042e284a58539bab0305c1e0addb9d794b6ef136fc8ee2516f` |
+| manifest.json | `f93289af03ecc55db297e6c3c89e7cdeaa82257e6bc9d8a9e5342d8864cc5456` |
+| verification.json | `fabc19494655c088a5e53b2a2312908082943d5de1de77089f3c78a7aa176a1c` |
+
+原R1报告整体仍为 NOT_ALL_GREEN：当时D2B readiness为141通过/1超时；本次不改写该失败。
+D2B预算问题的后续修订、独立复审和用户批准另见 §4 及预算续项，不能追溯抹去R1失败。
+
+本次授权：文档验证、提交推送当前分支，等待新提交CI通过后将PR #27转为Ready，使用merge commit合入main，再检查main的CI。
+此为条件授权而非已合并声明；提交SHA、PR及main的最终CI结果分别在PR记录，不修改历史批准快照。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、D01/T2-G、D2b剩余/D3/D4/E、C-CACHE-P3及高级恢复/新回收REMAINDER_DEFERRED保持。
+不部署、不启用后置能力、不访问真实数据或NAS，默认关闭配置和旧客户端升级拒绝不变。

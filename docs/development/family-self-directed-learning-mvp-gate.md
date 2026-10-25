@@ -3934,3 +3934,13 @@ Ubuntu同限额完整readiness142项、家庭144套件3972项、正式HTTP14项�
 
 关闭校验：文档门禁、80项状态测试（原64项加16项反例）、受影响校验器/测试lint及diff检查通过；54份归档与原批准快照不变。
 命令及范围见[本轮验证](family-self-directed-learning-t2-d2b-budget-followup.md#61-本次关闭记录验证)，不据此声称业务全量重新执行。
+
+### 22.10 三项独立 QA 关闭与合并条件（2026-10-25）
+
+用户批准同步 QA-T2-FOCUS-001、QA-T2-WEBKIT-FIXTURE-001、QA-T12-INVITATION-WAIT-001 为
+VERIFIED_CLOSED / AUTOMATED_SYNTHETIC_ONLY；§22.8 的 READY_FOR_QA 保留为历史交接状态。
+固定4dff6871独立复评的85份归档核对一致，相关前端及浏览器源码至07ffca67未变。
+逐项结论、可携带证据指纹及环境边界见[评审记录 §5](family-self-directed-learning-t2-qa-p2-review.md#5-三项独立-qa-关闭与条件合并授权2026-10-25)。
+原独立R1的D2B超时和原批准失败不回写；预算缺陷后续关闭与三项自动化QA关闭分开记录。
+本次仅授权文档验证后提交推送，等待新提交CI通过再将PR #27转为Ready并以merge commit合并main，随后核对main的CI；不是部署授权。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED及全部REMAINDER_DEFERRED保持；不关闭高级恢复/新回收，不更改默认开关或旧客户端拒绝策略。

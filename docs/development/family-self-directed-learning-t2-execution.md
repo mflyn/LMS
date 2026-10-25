@@ -1336,3 +1336,13 @@ DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、高级恢复与新回收及 D01/T
 原批准失败和固定4dff6871超时保留，不改历史归档、不冒称最终断言重新执行过全量；仅更新当前关闭状态。
 本次P3不包含后置C-CACHE-P3。D01/T2-G、D2b剩余/D3/D4/E、高级恢复、新回收继续后置，真机及真实部署未验收。
 本轮只做文档与状态校验，不提交、推送、合并或部署，不扩大已批准的合成范围。
+
+### 19.3 三项独立 QA 关闭及 PR 合并交接（2026-10-25）
+
+用户批准同步三项已有独立复评：QA-T2-FOCUS-001、QA-T2-WEBKIT-FIXTURE-001、QA-T12-INVITATION-WAIT-001
+均为 VERIFIED_CLOSED / AUTOMATED_SYNTHETIC_ONLY。§19 的 READY_FOR_QA 是历史交接，不再是当前状态。
+依据为固定4dff6871的独立R1报告；85份归档哈希一致，前端和浏览器源码至07ffca67未变，未重新冒称执行这些独立测试。
+详细证据及哈希见[评审记录 §5](family-self-directed-learning-t2-qa-p2-review.md#5-三项独立-qa-关闭与条件合并授权2026-10-25)。
+本次只同步文档；验证、提交推送后，须等新提交CI通过，才将PR #27转为Ready，以merge commit合并并核对main的CI。
+每个最终SHA及CI结果在PR单独记录；当前授权不表示已合并，不覆盖原批准或R1预算失败快照。
+真机DEVICE_PENDING、高级恢复/新回收及全部后置范围不变，不部署、不访问真实数据/NAS，不启用cleanup/restore。
