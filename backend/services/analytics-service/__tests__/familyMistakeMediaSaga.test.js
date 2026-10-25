@@ -3,7 +3,9 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
   || 'test-gateway-identity-secret-32-bytes-long';
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const mongoose = require('mongoose');
 
 const Family = require('../../../common/models/Family');
@@ -95,7 +97,7 @@ describe('Task 6 family mistake media route contract', () => {
     const app = createApp({ familyMistakeMediaService });
     const createPath = mistakePath();
 
-    const created = await request(app)
+    const created = await (await request(app))
       .post(createPath)
       .set(signedHeaders(parentA(), 'POST', createPath))
       .send(basePayload({ questionMediaId: QUESTION_MEDIA_A1 }));
@@ -112,7 +114,7 @@ describe('Task 6 family mistake media route contract', () => {
     expect(created.body.data.mistake.questionMediaId).toBe(QUESTION_MEDIA_A1);
 
     const patchPath = mistakePath(`/${created.body.data.mistake.mistakeId}`);
-    const patched = await request(app)
+    const patched = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(childA1(), 'PATCH', patchPath))
       .send({
@@ -140,7 +142,7 @@ describe('Task 6 family mistake media route contract', () => {
     const app = createApp();
     const path = mistakePath();
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post(path)
       .set(signedHeaders(parentA(), 'POST', path))
       .send(basePayload({ questionMediaId: QUESTION_MEDIA_A1 }));
@@ -177,7 +179,7 @@ describe('Task 6 family mistake media route contract', () => {
     const app = createApp({ familyMistakeMediaService });
     const path = mistakePath(`/${pendingMistake._id}`);
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get(path)
       .set(signedHeaders(parentA(), 'GET', path));
 
@@ -201,7 +203,7 @@ describe('Task 6 family mistake media route contract', () => {
     ];
 
     for (const body of badBodies) {
-      const response = await request(app)
+      const response = await (await request(app))
         .post(mistakePath())
         .set(signedHeaders(parentA(), 'POST', mistakePath()))
         .send(basePayload(body));
@@ -239,7 +241,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     const app = createApp({ familyMistakeMediaService: service });
     const createPath = mistakePath();
 
-    const created = await request(app)
+    const created = await (await request(app))
       .post(createPath)
       .set(signedHeaders(parentA(), 'POST', createPath))
       .send(basePayload({
@@ -264,7 +266,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     mediaReferenceClient.prepare.mockClear();
     mediaReferenceClient.commit.mockClear();
     const patchPath = mistakePath(`/${created.body.data.mistake.mistakeId}`);
-    const reordered = await request(app)
+    const reordered = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({
@@ -285,7 +287,7 @@ describe('Task 6 family mistake media owner-state service', () => {
       }]
     }));
 
-    const appended = await request(app)
+    const appended = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({ questionMediaIds: [QUESTION_MEDIA_A2, QUESTION_MEDIA_A1, QUESTION_MEDIA_A3], reviewed: true });
@@ -330,7 +332,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     const app = createApp({ familyMistakeMediaService: service });
     const path = mistakePath();
 
-    const createResponse = await request(app)
+    const createResponse = await (await request(app))
       .post(path)
       .set(signedHeaders(parentA(), 'POST', path))
       .send(basePayload({ questionMediaId: QUESTION_MEDIA_A1 }));
@@ -346,7 +348,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     expect(pending.questionMediaId).toBeUndefined();
 
     const detailPath = mistakePath(`/${pending._id}`);
-    const detailResponse = await request(app)
+    const detailResponse = await (await request(app))
       .get(detailPath)
       .set(signedHeaders(parentA(), 'GET', detailPath));
 
@@ -374,7 +376,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     const app = createApp({ familyMistakeMediaService: service });
     const path = mistakePath();
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post(path)
       .set(signedHeaders(parentA(), 'POST', path))
       .send(basePayload({ questionMediaId: QUESTION_MEDIA_A1 }));
@@ -420,7 +422,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     const app = createApp({ familyMistakeMediaService: service });
     const patchPath = mistakePath(`/${boundMistake._id}`);
 
-    const response = await request(app)
+    const response = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({
@@ -480,7 +482,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     const app = createApp({ familyMistakeMediaService: service });
     const patchPath = mistakePath(`/${boundMistake._id}`);
 
-    const replaceResponse = await request(app)
+    const replaceResponse = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({ questionMediaId: QUESTION_MEDIA_A1_REPLACEMENT });
@@ -505,7 +507,7 @@ describe('Task 6 family mistake media owner-state service', () => {
       { mediaId: QUESTION_MEDIA_A1_REPLACEMENT, field: 'questionMediaId', state: 'released' }
     ]);
 
-    const removeResponse = await request(app)
+    const removeResponse = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({ questionMediaId: null });
@@ -562,7 +564,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     const app = createApp({ familyMistakeMediaService: service });
     const patchPath = mistakePath(`/${boundMistake._id}`);
 
-    const patchResponse = await request(app)
+    const patchResponse = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({ questionMediaId: QUESTION_MEDIA_A1_REPLACEMENT });
@@ -596,7 +598,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     ]);
 
     const detailPath = mistakePath(`/${boundMistake._id}`);
-    const detailResponse = await request(app)
+    const detailResponse = await (await request(app))
       .get(detailPath)
       .set(signedHeaders(parentA(), 'GET', detailPath));
 
@@ -654,7 +656,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     const app = createApp({ familyMistakeMediaService: service });
     const patchPath = mistakePath(`/${boundMistake._id}`);
 
-    const failed = await request(app)
+    const failed = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({
@@ -674,7 +676,7 @@ describe('Task 6 family mistake media owner-state service', () => {
     expect(await FamilyMistakeStateEvent.countDocuments({ mistakeId: boundMistake._id })).toBe(0);
 
     const detailPath = mistakePath(`/${boundMistake._id}`);
-    const recovered = await request(app)
+    const recovered = await (await request(app))
       .get(detailPath)
       .set(signedHeaders(parentA(), 'GET', detailPath));
 

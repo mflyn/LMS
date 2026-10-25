@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv');
 const { createHash } = require('node:crypto');
 const { isDeepStrictEqual } = require('node:util');
 const Ajv2020 = require('ajv/dist/2020');
@@ -45,6 +46,14 @@ const proposedAiDocuments = [
   'docs/ThinkPad_DeepTutor_K12_部署手册/05_DeepTutor与K12集成设计.md',
   'docs/ThinkPad_DeepTutor_K12_部署手册/06_运维备份迁移安全许可证.md'
 ];
+
+const proposedSelfDirectedDocuments = [
+  'docs/research/family-self-directed-learning-theory-and-program.md',
+  'docs/architecture/family-self-directed-learning-system-design.md',
+  'docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md',
+  'docs/development/family-self-directed-learning-mvp-gate.md'
+];
+const selfDirectedContractProbes = 16;
 
 const proposedAiContracts = [
   'docs/contracts/curriculum-ref.schema.json',
@@ -141,6 +150,164 @@ function sameSet(actual, expected) {
   );
 }
 
+function boundedSection(markdown, startMarker, endMarker) {
+  const start = markdown.indexOf(startMarker);
+  const end = markdown.indexOf(endMarker, start + startMarker.length);
+  return start >= 0 && end > start ? markdown.slice(start, end) : '';
+}
+
+const stableMediaContractMarkers = Object.freeze([
+  '稳定业务拒绝',
+  '不得递增 `completionVersion`',
+  '新的 `operationId`',
+  '仅首次进程内 prepare',
+  '恢复执行不得凭后来收到的稳定 4xx',
+  '清除 pending 意图',
+  '受控引用状态对账',
+  '最小规范业务 patch',
+  '新增集合',
+  '保留集合',
+  '移除集合',
+  '不发送空媒体命令',
+  '不可变成功响应投影',
+  '`successResponse`',
+  '每个任务最多一个活动完成命令',
+  '`activeCompletionOperation`',
+  '`PUBLISHED_CLEANUP`',
+  '发布后不得回滚已发布作品',
+  '新增集合为空时不进行全称状态判断',
+  '移除集合全部收敛后',
+  '`MediaReferenceOperation`',
+  'absent 不能作为失败终态证据',
+  '终止与提交必须竞争同一 operation 记录',
+  '租约过期原子转为 ABORTED',
+  '终态记录不做 TTL 删除',
+  'commandHash',
+  '`remoteOperationId`',
+  '远程标识与首次命令占位同事务持久化',
+  '内部 operationId 必须取持久化 remoteOperationId',
+  'remoteOperationId 唯一索引',
+  '不同 actor 使用同一 UUID 必须分配不同远程标识'
+]);
+
+function stableMediaContractErrors(section) {
+  const errors = stableMediaContractMarkers
+    .filter(marker => !section.includes(marker))
+    .map(marker => `missing ${marker}`);
+  if (/稳定业务拒绝[\s\S]{0,600}保留 pending 意图/.test(section)) {
+    errors.push('stable rejection must not retain the pending intent');
+  }
+  return errors;
+}
+
+const helpReplayContractMarkers = Object.freeze([
+  '安全重放必须同时满足',
+  '`currentHelpVersion === expectedHelpVersion + 1`',
+  '规范化后的 `helpType + note` 完全相同',
+  '认证 actor 与 `requestedByActor` 相同',
+  '旧版本 resolve 返回 `409 VERSION_CONFLICT`'
+]);
+
+function helpReplayContractErrors(section) {
+  return helpReplayContractMarkers
+    .filter(marker => !section.includes(marker))
+    .map(marker => `missing ${marker}`);
+}
+
+function completionEvidenceContractErrors(model) {
+  return ['helpType', 'supportLevelUsed']
+    .filter(field => model.includes(field))
+    .map(field => `completionEvidence must not contain ${field}`);
+}
+
+const checklistInitializationMarkers = Object.freeze([
+  '未提供或显式提供空清单',
+  '`checklistVersion=0`',
+  '提供非空有效清单',
+  '`checklistVersion=1`'
+]);
+
+function checklistInitializationErrors(section) {
+  return checklistInitializationMarkers
+    .filter(marker => !section.includes(marker))
+    .map(marker => `missing ${marker}`);
+}
+
+const valueGateTextRules = [
+  ['evidence', '复用已有作品、口述、订正或延迟再练习'],
+  ['evidence', '同一孩子、可比学习目标/内容、难度、支持程度和回忆间隔'],
+  ['evidence', '至少两次不同日期的正式观察，与基线中可比的学习证据对照'],
+  ['evidence', '难度或支持变化无法解释时标为不可比'],
+  ['evidence', '不强制新增考试、刷题、成绩总分、排名或后台采集'],
+  ['decision', '按以下顺序判定，首个命中即停止：FAIL → PARTIAL → PASS，否则 PARTIAL'],
+  ['decision', '安全/身心停止条件和未解决的负向证据优先于主动性积极例子'],
+  ['pass', '足够且可解释的可比学习证据，未见明显、未解决的学习效果下降'],
+  ['pass', '全部前提同时满足且未命中 FAIL/PARTIAL'],
+  ['partial', '缺少可比学习证据、结果不确定或成人代办无法区分'],
+  ['partial', '已观察到的学习下降尚未解决或调整后复核不足'],
+  ['fail', '安全暂停仍未解决'],
+  ['fail', '持续且未解决的冲突、疲劳、睡眠/运动挤占、屏幕依赖'],
+  ['fail', '核心流程阻碍家庭且调整后仍不能使用'],
+  ['decision', '证据缺失不能视为“没有下降”，也不能据此判孩子退步或 FAIL'],
+  ['decision', '调整支架、任务难度或负担，约定下一次自然学习机会复核'],
+  ['decision', '学习下降本身不自动判 FAIL'],
+  ['decision', '调整后持续不可用或命中原安全/身心停止条件才判 FAIL'],
+  ['decision', '若调整后已有至少两次不同日期的可比复核证据表明负向问题已解决，且全部其他前提满足，才可重新判 PASS；']
+];
+
+const valueGateExamples = [
+  ['TC-SL-VALUE-007', '主动性改善但学习下降', 'PARTIAL'],
+  ['TC-SL-VALUE-008', '无可比学习证据', 'PARTIAL'],
+  ['TC-SL-VALUE-009', '难度或支持变化导致不可比', 'PARTIAL'],
+  ['TC-SL-VALUE-010', '学习效果稳定且适龄主动性证据充分', 'PASS'],
+  ['TC-SL-VALUE-011', '工程成功但家庭证据缺失', 'PARTIAL'],
+  ['TC-SL-VALUE-012', '睡眠/冲突停止条件优先', 'FAIL'],
+  ['TC-SL-VALUE-013', '成人代办无法区分', 'PARTIAL'],
+  ['TC-SL-VALUE-014', '下降调整后仍持续不可用', 'FAIL'],
+  ['TC-SL-VALUE-015', '下降已解决且可比复核充分', 'PASS']
+];
+
+function valueGateSections(markdown) {
+  const body = boundedSection(markdown, '## 14. T9 轻量价值验收规程', '## 15. R1–R8');
+  const evidence = boundedSection(body, '### 14.1 基线与最少证据', '### 14.2 判定、停止与缺失');
+  const decision = boundedSection(body, '### 14.2 判定、停止与缺失', '### 14.3 合成判定反例');
+  const examplesStart = body.indexOf('### 14.3 合成判定反例');
+  const examples = examplesStart >= 0 ? body.slice(examplesStart) : '';
+  const definitions = Object.fromEntries(['PASS', 'PARTIAL', 'FAIL'].map(label => [
+    label, decision.split('\n').filter(line => new RegExp(`^\\|\\s*${label}\\s*\\|`).test(line))
+  ]));
+  const row = label => definitions[label].length === 1 ? definitions[label][0] : '';
+  return { evidence, decision, examples, definitions, pass: row('PASS'), partial: row('PARTIAL'), fail: row('FAIL') };
+}
+
+function valueGateContractErrors(markdown) {
+  const sections = valueGateSections(markdown);
+  const errors = valueGateTextRules
+    .filter(([section, marker]) => !sections[section].includes(marker))
+    .map(([section, marker]) => `missing ${section} clause: ${marker}`);
+  for (const [label, definitions] of Object.entries(sections.definitions)) {
+    if (definitions.length !== 1) {
+      errors.push(`decision section must contain exactly one ${label} definition`);
+      continue;
+    }
+    const cells = definitions[0].split('|').slice(1, -1).map(cell => cell.trim());
+    if (cells.length !== 2 || !cells[1]) {
+      errors.push(`invalid ${label} definition row`);
+    }
+  }
+  // These are documentation fixtures, not an evaluator of real children's learning.
+  const rows = sections.examples.split('\n').filter(line => line.startsWith('| TC-SL-VALUE-'))
+    .map(line => line.split('|').slice(1, -1).map(cell => cell.trim()));
+  for (const [id, scenario, expected] of valueGateExamples) {
+    const matches = rows.filter(row => row[0] === id);
+    if (matches.length !== 1 || matches[0].length !== 4 ||
+        !matches[0][1].includes(scenario) || matches[0][2] !== expected || !matches[0][3]) {
+      errors.push(`invalid synthetic example ${id}: expected ${expected}`);
+    }
+  }
+  return errors;
+}
+
 const headingCache = new Map();
 
 function headingSlug(text) {
@@ -211,31 +378,180 @@ function checkLocalLinks(relativePath, markdown, errors) {
   }
 }
 
+function scanFencedBlocks(markdown) {
+  const blocks = [];
+  const lines = markdown.split(/\r?\n/);
+  let openFence = null;
+
+  for (const line of lines) {
+    if (!openFence) {
+      const match = line.match(/^( {0,3})(`{3,}|~{3,})[ \t]*([^\s`~]*)[^\r\n]*$/);
+      if (!match) {
+        continue;
+      }
+      openFence = {
+        marker: match[2][0],
+        length: match[2].length,
+        language: match[3].toLowerCase(),
+        lines: []
+      };
+      continue;
+    }
+
+    const closing = line.match(/^( {0,3})(`{3,}|~{3,})[ \t]*$/);
+    if (
+      closing &&
+      closing[2][0] === openFence.marker &&
+      closing[2].length >= openFence.length
+    ) {
+      blocks.push({
+        language: openFence.language,
+        content: openFence.lines.join('\n').trim()
+      });
+      openFence = null;
+      continue;
+    }
+    openFence.lines.push(line);
+  }
+
+  return { blocks, unclosed: openFence !== null };
+}
+
 function fencedBlocks(markdown, language) {
-  const pattern = new RegExp(
-    '^```' + language + '\\s*$([\\s\\S]*?)^```\\s*$',
-    'gm'
-  );
-  return [...markdown.matchAll(pattern)].map(match => match[1].trim());
+  return scanFencedBlocks(markdown).blocks
+    .filter(block => block.language === language)
+    .map(block => block.content);
+}
+
+function duplicateJsonKeys(source) {
+  let cursor = 0;
+  const duplicates = [];
+
+  const skipWhitespace = () => {
+    while (/\s/.test(source[cursor] || '')) {
+      cursor += 1;
+    }
+  };
+
+  const parseString = () => {
+    const start = cursor;
+    cursor += 1;
+    while (cursor < source.length) {
+      if (source[cursor] === '\\') {
+        cursor += 2;
+        continue;
+      }
+      if (source[cursor] === '"') {
+        cursor += 1;
+        return JSON.parse(source.slice(start, cursor));
+      }
+      cursor += 1;
+    }
+    throw new Error('unterminated JSON string');
+  };
+
+  const expect = expected => {
+    skipWhitespace();
+    if (source[cursor] !== expected) {
+      throw new Error(`expected ${expected} at offset ${cursor}`);
+    }
+    cursor += 1;
+  };
+
+  const parseValue = pathParts => {
+    skipWhitespace();
+    if (source[cursor] === '{') {
+      parseObject(pathParts);
+      return;
+    }
+    if (source[cursor] === '[') {
+      parseArray(pathParts);
+      return;
+    }
+    if (source[cursor] === '"') {
+      parseString();
+      return;
+    }
+    while (cursor < source.length && !/[\s,\]}]/.test(source[cursor])) {
+      cursor += 1;
+    }
+  };
+
+  const parseObject = pathParts => {
+    expect('{');
+    const keys = new Set();
+    skipWhitespace();
+    if (source[cursor] === '}') {
+      cursor += 1;
+      return;
+    }
+    while (cursor < source.length) {
+      skipWhitespace();
+      const key = parseString();
+      if (keys.has(key)) {
+        duplicates.push([...pathParts, key].join('.'));
+      }
+      keys.add(key);
+      expect(':');
+      parseValue([...pathParts, key]);
+      skipWhitespace();
+      if (source[cursor] === '}') {
+        cursor += 1;
+        return;
+      }
+      expect(',');
+    }
+  };
+
+  const parseArray = pathParts => {
+    expect('[');
+    let index = 0;
+    skipWhitespace();
+    if (source[cursor] === ']') {
+      cursor += 1;
+      return;
+    }
+    while (cursor < source.length) {
+      parseValue([...pathParts, String(index)]);
+      index += 1;
+      skipWhitespace();
+      if (source[cursor] === ']') {
+        cursor += 1;
+        return;
+      }
+      expect(',');
+    }
+  };
+
+  parseValue([]);
+  return duplicates;
 }
 
 function checkMarkdownStructure(relativePath, markdown, errors) {
-  const fences = markdown.match(/^```/gm) || [];
+  const scan = scanFencedBlocks(markdown);
   assert(
-    fences.length % 2 === 0,
+    !scan.unclosed,
     `${relativePath}: unclosed fenced code block`,
     errors
   );
 
-  for (const [index, block] of fencedBlocks(markdown, 'json').entries()) {
+  const jsonBlocks = scan.blocks.filter(block => block.language === 'json');
+  for (const [index, { content: block }] of jsonBlocks.entries()) {
     try {
       JSON.parse(block);
+      const duplicateKeys = duplicateJsonKeys(block);
+      assert(
+        duplicateKeys.length === 0,
+        `${relativePath}: JSON example ${index + 1} contains duplicate keys: ${duplicateKeys.join(', ')}`,
+        errors
+      );
     } catch (error) {
       errors.push(`${relativePath}: JSON example ${index + 1} is invalid: ${error.message}`);
     }
   }
 
-  for (const [index, block] of fencedBlocks(markdown, 'mermaid').entries()) {
+  const mermaidBlocks = scan.blocks.filter(block => block.language === 'mermaid');
+  for (const [index, { content: block }] of mermaidBlocks.entries()) {
     assert(
       /^(?:flowchart|sequenceDiagram|stateDiagram-v2|erDiagram)\b/.test(block),
       `${relativePath}: Mermaid block ${index + 1} has an unsupported or missing diagram header`,
@@ -2299,6 +2615,7 @@ function validate() {
   const errors = [];
   const documents = new Map();
   const aiDocuments = new Map();
+  const selfDirectedDocuments = new Map();
 
   for (const relativePath of authoritativeDocuments) {
     const absolutePath = path.join(repositoryRoot, relativePath);
@@ -2326,6 +2643,24 @@ function validate() {
   }
 
   for (const [relativePath, markdown] of aiDocuments) {
+    checkLocalLinks(relativePath, markdown, errors);
+    checkMarkdownStructure(relativePath, markdown, errors);
+    assert(
+      !/\b(?:TODO|TBD|FIXME)\b/.test(markdown),
+      `${relativePath}: unresolved placeholder marker`,
+      errors
+    );
+  }
+
+  for (const relativePath of proposedSelfDirectedDocuments) {
+    const absolutePath = path.join(repositoryRoot, relativePath);
+    assert(fs.existsSync(absolutePath), `${relativePath}: file is missing`, errors);
+    if (fs.existsSync(absolutePath)) {
+      selfDirectedDocuments.set(relativePath, read(relativePath));
+    }
+  }
+
+  for (const [relativePath, markdown] of selfDirectedDocuments) {
     checkLocalLinks(relativePath, markdown, errors);
     checkMarkdownStructure(relativePath, markdown, errors);
     assert(
@@ -2909,6 +3244,22 @@ function validate() {
   const quickStart = documents.get('docs/user-guide/quick-start.md') || '';
   const parentGuide = documents.get('docs/user-guide/parent-guide.md') || '';
   const childGuide = documents.get('docs/user-guide/child-guide.md') || '';
+  const selfDirectedResearch =
+    selfDirectedDocuments.get(
+      'docs/research/family-self-directed-learning-theory-and-program.md'
+    ) || '';
+  const selfDirectedDesign =
+    selfDirectedDocuments.get(
+      'docs/architecture/family-self-directed-learning-system-design.md'
+    ) || '';
+  const selfDirectedPlan =
+    selfDirectedDocuments.get(
+      'docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md'
+    ) || '';
+  const selfDirectedGate =
+    selfDirectedDocuments.get(
+      'docs/development/family-self-directed-learning-mvp-gate.md'
+    ) || '';
   const ubuntuEnvironment = read('docker-compose.ubuntu.env.example');
   const ubuntuCompose = read('docker-compose.ubuntu.yml');
 
@@ -2937,6 +3288,681 @@ function validate() {
       errors
     );
   }
+
+
+  const plannedSelfDirectedRequirements = [
+    'SL-01',
+    'SL-02',
+    'SL-03',
+    'SL-04',
+    'SL-05',
+    'SL-06',
+    'SL-07'
+  ];
+  for (const requirement of plannedSelfDirectedRequirements) {
+    for (const [name, markdown] of [
+      ['PRD', product],
+      ['architecture', architecture],
+      ['API', api],
+      ['traceability', traceability],
+      ['self-directed Gate', selfDirectedGate]
+    ]) {
+      assert(
+        markdown.includes(requirement),
+        `${name} is missing planned autonomous-learning requirement ${requirement}`,
+        errors
+      );
+    }
+    assert(
+      new RegExp('\\| `' + requirement + '` \\|[^\\n]+\\| PLANNED \\|').test(traceability),
+      `traceability must keep ${requirement} in a PLANNED row`,
+      errors
+    );
+    assert(
+      new RegExp('\\| `' + requirement + '` \\|[^\\n]+\\| PLANNED \\|').test(selfDirectedGate),
+      `self-directed Gate must keep ${requirement} in a PLANNED row`,
+      errors
+    );
+  }
+
+  // Only the current status table counts; historical OPEN records remain immutable.
+  const taskStatusTable = boundedSection(selfDirectedGate, '## 3. T0 至 T9 执行状态', '## 4. 固定接口和并发语义');
+  const taskStatusRows = taskStatusTable.split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('|'))
+    .map(line => line.split('|').map(cell => cell.trim()));
+  for (const task of Array.from({ length: 10 }, (_, index) => `T${index}`)) {
+    assert(selfDirectedPlan.includes(`### ${task}：`), `self-directed plan is missing ${task}`, errors);
+    assert(taskStatusRows.some(cells => cells[1] === task), `self-directed Gate is missing ${task}`, errors);
+  }
+  assert(
+    selfDirectedGate.includes('| T0 | CONTRACT_BASELINE |'),
+    'self-directed Gate must record T0 as CONTRACT_BASELINE',
+    errors
+  );
+  const t1Rows = taskStatusTable.match(/^\| T1 \|.*$/gm) || [];
+  assert(t1Rows.length === 1 && t1Rows[0].startsWith('| T1 | CLOSED |'),
+    'self-directed Gate must have exactly one CLOSED T1 row in the current status table', errors);
+  const gateHeader = selfDirectedGate.split('\n## ')[0];
+  for (const [key, value, message] of [
+    ['T1 closure scope', 'BACKEND_SYNTHETIC_ONLY', 'closure scope must remain BACKEND_SYNTHETIC_ONLY'],
+    ['Production deployment', 'NOT_AUTHORIZED', 'production deployment must remain NOT_AUTHORIZED']
+  ]) {
+    const lines = gateHeader.split('\n').filter(line => line.startsWith(`**${key}:**`));
+    assert(lines.length === 1 && lines[0] === `**${key}:** ${value}`, message, errors);
+  }
+  const reconciliation = read('docs/development/family-self-directed-learning-t1-acceptance-reconciliation.md');
+  const reconciliationHeader = reconciliation.split('\n## ')[0];
+  for (const task of ['T1', 'R4']) {
+    const lines = reconciliationHeader.split('\n').filter(line => line.startsWith(`**${task}:**`));
+    assert(lines.length === 1 && lines[0] === `**${task}:** CLOSED`,
+      `reconciliation ${task} must be CLOSED`, errors);
+  }
+  for (const [document, marker, message] of [
+    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）', 'approved T1 plan status and bounded T2 closure'],
+    [selfDirectedPlan, '- [x] R4 入口验收及 T1 关闭：CLOSED', 'approved R4 plan checkbox'],
+    [reconciliation, '| R4 正式入口验收及 T1 关闭 | CLOSED |', 'approved R4 reconciliation row'],
+    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2 closure'],
+    [read('docs/deployment/completion-operations.md'), '**Status:** CLOSED（R1–R4 及 T1 后端工程总门禁', 'operations must reflect T1 backend closure']
+  ]) {
+    assert(document.includes(marker), message, errors);
+  }
+  for (const marker of ['| R3-LEARNING | CLOSED |', '| R3 门禁 P2 | CLOSED |', '| T0 | APPROVED / CLOSED |']) {
+    assert(selfDirectedGate.includes(marker), `self-directed Gate is missing approved closure ${marker}`, errors);
+  }
+  const t2Rows = taskStatusRows.filter(cells => cells[1] === 'T2');
+  assert(t2Rows.length === 1 && t2Rows[0][2] === 'CLOSED',
+    'self-directed Gate must have exactly one CLOSED T2 row in the current status table', errors);
+  for (const [key, value] of [
+    ['T2 closure scope', 'ENGINEERING_SYNTHETIC_ONLY'],
+    ['T2 approval', 'APPROVED'],
+    ['T2 approval-time full regression', 'FAILED / D2B-05 / REMAINDER_DEFERRED'],
+    ['T2 latest full regression', 'PASSED / CI 40099315976 / e744cba1'],
+    ['D2B-05 query timeout', 'APPROVED / CLOSED / QUERY_ONLY'],
+    ['T2 device', 'DEVICE_PENDING'],
+    ['T2 deployment', 'T8_PENDING / NOT_AUTHORIZED'],
+    ['T2 deferred', 'REMAINDER_DEFERRED']
+  ]) {
+    const lines = gateHeader.split('\n').filter(line => line.startsWith(`**${key}:**`));
+    assert(lines.length === 1 && lines[0] === `**${key}:** ${value}`,
+      `${key} must remain ${value}`, errors);
+  }
+  const t2Execution = read('docs/development/family-self-directed-learning-t2-execution.md');
+  const t2ExecutionStatus = t2Execution.split('\n## ')[0].split('\n')
+    .filter(line => line.startsWith('**Status:**'));
+  assert(t2ExecutionStatus.length === 1 &&
+    t2ExecutionStatus[0] === '**Status:** T2 CLOSED / ENGINEERING_SYNTHETIC_ONLY / T2-G REMAINDER_DEFERRED',
+  'T2 execution status must retain the bounded closed gate', errors);
+  for (const file of [
+    'family-self-directed-learning-mvp-gate.md',
+    'family-self-directed-learning-t2-execution.md',
+    'family-self-directed-learning-t2-qa-p2-review.md',
+    'family-self-directed-learning-t2-d2b-budget-followup.md'
+  ]) {
+    const document = read(`docs/development/${file}`);
+    for (const [key, value] of [
+      ['D2B budget', 'APPROVED / CLOSED / SYNTHETIC_ONLY'],
+      ['D2B isolation P3', 'APPROVED / CLOSED'],
+      ['D2B retained', 'HISTORICAL_FAILURES_PRESERVED / DEVICE_PENDING / REMAINDER_DEFERRED / T8_PENDING / NOT_AUTHORIZED']
+    ]) {
+      const lines = document.split('\n').filter(line => line.startsWith(`**${key}:**`));
+      assert(lines.length === 1 && lines[0] === `**${key}:** ${value}`,
+        `${file}: ${key} must remain uniquely ${value}`, errors);
+    }
+  }
+  try {
+    const approval = JSON.parse(read('docs/development/family-self-directed-learning-t2-closure-approval.json'));
+    assert(approval.schemaVersion === 1 && approval.task === 'T2' && approval.status === 'APPROVED' &&
+      approval.gateStatus === 'CLOSED' && approval.date === '2026-10-24' &&
+      approval.source === 'latest_direct_user_instruction' &&
+      approval.instruction === '批准 T2 限定合成范围的工程验收及总门禁关闭，同步更新门禁、评审记录、实施计划和状态校验。保留本轮 D2B-05 失败证据，不将全量写为全绿；真机保持 DEVICE_PENDING，高级恢复与新回收继续后置，不部署、不提交或推送 Git。',
+    'T2 approval record must retain the latest explicit closure instruction', errors);
+    assert(approval.scope === 'ENGINEERING_SYNTHETIC_ONLY',
+      'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY', errors);
+    assert(approval.batchStatus === 'CLOSED' &&
+      isDeepStrictEqual(approval.batches, ['T2-2', 'T2-3', 'T2-4', 'T2-5', 'T2-6']) &&
+      isDeepStrictEqual(approval.defects, {
+        'T2-P2-JWT': 'CLOSED', 'T2-P2-SNAPSHOT': 'CLOSED', 'T2-P2-BODY-SYNC': 'CLOSED'
+      }), 'T2 approval record must close exactly the three reviewed P2 defects and approved batches', errors);
+    assert(isDeepStrictEqual(approval.latestFullRegression, {
+      status: 'FAILED', exitCode: 1, suites: 143, passedSuites: 142, failedSuites: 1,
+      tests: 3943, passedTests: 3942, failedTests: 1, pendingTests: 0,
+      failureId: 'D2B-05', disposition: 'REMAINDER_DEFERRED',
+      evidence: 'release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family.json'
+    }), 'T2 approval must preserve the failed full regression and deferred D2B-05 evidence', errors);
+    assert(isDeepStrictEqual(approval.notAuthorized, [
+      'real_child_data', 'real_NAS_operations', 'deployment', 'git_commit_or_push',
+      'automatic_start_of_T3-T9'
+    ]), 'T2 approval must preserve prohibited operations', errors);
+    assert(isDeepStrictEqual(approval.retained, {
+      device: 'DEVICE_PENDING', deployment: 'T8_PENDING / NOT_AUTHORIZED',
+      advancedRecoveryAndNewCleanup: 'REMAINDER_DEFERRED', T1: 'CLOSED',
+      'T3-T9': 'NOT_STARTED', 'SL-01': 'PLANNED'
+    }), 'T2 approval record must preserve pending and deferred boundaries', errors);
+  } catch (error) {
+    errors.push('T2 approval record must be present and valid JSON');
+  }
+  for (const task of Array.from({ length: 7 }, (_, index) => `T${index + 3}`)) {
+    assert(
+      taskStatusTable.includes(`| ${task} | NOT_STARTED |`),
+      `self-directed Gate must keep ${task} as NOT_STARTED`,
+      errors
+    );
+  }
+
+  for (const [name, markdown, marker] of [
+    ['research', selfDirectedResearch, '状态：拟议方案'],
+    ['design', selfDirectedDesign, '状态：拟议设计'],
+    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）'],
+    ['Gate', selfDirectedGate, '**Status:** T0 CONTRACT BASELINE']
+  ]) {
+    assert(markdown.includes(marker), `self-directed ${name} must remain explicitly planned`, errors);
+    assert(
+      !/[ \t]+$/m.test(markdown),
+      `self-directed ${name} contains trailing whitespace`,
+      errors
+    );
+  }
+
+  for (const [name, markdown, sectionMarker] of [
+    ['PRD', product, '## 14. 自主学习 MVP 增量需求（PLANNED）'],
+    ['architecture', architecture, '## 12. 自主学习 MVP 增量架构契约（PLANNED）'],
+    ['API', api, '## 14. 自主学习 MVP 增量 API 契约（PLANNED）']
+  ]) {
+    assert(
+      markdown.includes(sectionMarker),
+      `${name} must keep the autonomous-learning increment explicitly PLANNED`,
+      errors
+    );
+  }
+
+  const canonicalSelfDirectedContracts = [
+    ['architecture', architecture],
+    ['API', api],
+    ['system design', selfDirectedDesign],
+    ['plan', selfDirectedPlan],
+    ['Gate', selfDirectedGate]
+  ];
+  for (const [name, markdown] of canonicalSelfDirectedContracts) {
+    assert(
+      markdown.includes('IDEMPOTENCY_KEY_REUSED'),
+      `${name} is missing the canonical idempotency error`,
+      errors
+    );
+    assert(
+      !markdown.includes('IDEMPOTENCY_CONFLICT'),
+      `${name} contains obsolete IDEMPOTENCY_CONFLICT`,
+      errors
+    );
+  }
+
+  for (const [name, markdown] of [
+    ['architecture', architecture],
+    ['API', api],
+    ['Gate', selfDirectedGate]
+  ]) {
+    for (const requiredText of [
+      'mediaRemoteOutcomeUncertain',
+      'GET 不触发恢复',
+      'expectedCompletionVersion=0',
+      '404 RESOURCE_NOT_FOUND'
+    ]) {
+      assert(
+        markdown.includes(requiredText),
+        `${name} is missing canonical T0 contract text ${requiredText}`,
+        errors
+      );
+    }
+  }
+
+  for (const [name, markdown] of [
+    ['architecture', architecture],
+    ['API', api]
+  ]) {
+    assert(
+      markdown.includes('历史无媒体确认是唯一例外'),
+      `${name} must exempt legacy confirmation from the generic first-write version increment`,
+      errors
+    );
+  }
+
+  for (const requiredText of [
+    '无活动 owner CAS：命令占位 + remoteOperationId + 规范 patch + pending 意图 + 媒体差集',
+    'CAS mediaRemoteOutcomeUncertain=true',
+    '完全相同 PATCH + 原 operationId 重试',
+    'GET 不触发恢复',
+    'T0 已完成契约基线'
+  ]) {
+    assert(
+      selfDirectedDesign.includes(requiredText),
+      `system design is missing remediated T0 sequence/status text ${requiredText}`,
+      errors
+    );
+  }
+
+  const completionSequenceStart = selfDirectedDesign.indexOf('### 9.2 上传作品并完成任务');
+  const completionSequenceEnd = selfDirectedDesign.indexOf('### 9.3 家长审核与订正');
+  assert(
+    completionSequenceStart >= 0 && completionSequenceEnd > completionSequenceStart,
+    'system design is missing the bounded section 9.2 completion sequence',
+    errors
+  );
+  const completionSequence = selfDirectedDesign.slice(completionSequenceStart, completionSequenceEnd);
+  const completionSequenceSteps = [
+    '无活动 owner CAS：命令占位 + remoteOperationId + 规范 patch + pending 意图 + 媒体差集',
+    'CAS mediaRemoteOutcomeUncertain=true',
+    'prepare 新增集合/持久化 remoteOperationId 与目标代次',
+    'commit 新增集合/同一 remoteOperationId 与目标代次',
+    '原子发布证据、递增版本、固化响应投影，进入 PUBLISHED_CLEANUP',
+    '当前 remoteOperationId / 精确旧 bindingOperationId unbind',
+    '原子置 SUCCEEDED/stable，清除 pending 和 owner'
+  ];
+  let previousSequenceStep = -1;
+  for (const step of completionSequenceSteps) {
+    const currentSequenceStep = completionSequence.indexOf(step);
+    assert(
+      currentSequenceStep > previousSequenceStep,
+      `system design completion sequence is missing or misorders ${step}`,
+      errors
+    );
+    previousSequenceStep = currentSequenceStep;
+  }
+  assert(
+    completionSequence.includes('GET 不触发恢复'),
+    'system design section 9.2 must keep GET recovery side-effect free',
+    errors
+  );
+
+  const implementationStatusStart = selfDirectedDesign.indexOf('## 15. 编码实施顺序');
+  const implementationStatusEnd = selfDirectedDesign.indexOf('### 15.1');
+  const implementationStatus = selfDirectedDesign.slice(
+    implementationStatusStart,
+    implementationStatusEnd
+  );
+  assert(
+    implementationStatusStart >= 0 && implementationStatusEnd > implementationStatusStart,
+    'system design is missing the bounded implementation-status section',
+    errors
+  );
+  assert(
+    implementationStatus.includes('T0 已完成契约基线') &&
+      implementationStatus.includes('T1 后端工程已关闭，仅限既定合成验收') &&
+      implementationStatus.includes('T2 合成工程已关闭，T3–T9 待执行'),
+    'system design must record T0 complete, T1 closed and T2 closed in section 15',
+    errors
+  );
+
+  const sourceContractStart = api.indexOf('### 14.5 `SL-05`');
+  const sourceContractEnd = api.indexOf('### 14.6 `SL-06`');
+  const sourceContract = api.slice(sourceContractStart, sourceContractEnd);
+  assert(
+    sourceContractStart >= 0 && sourceContractEnd > sourceContractStart,
+    'API is missing the bounded SL-05 source contract section',
+    errors
+  );
+  assert(
+    /来源不存在、属于其他\s+家庭或属于其他孩子，对公开调用统一返回相同的 `404 RESOURCE_NOT_FOUND` 响应/.test(
+      sourceContract
+    ),
+    'SL-05 source contract must use one public 404 for absent and cross-scope sources',
+    errors
+  );
+  assert(
+    !/(?:跨家庭|跨孩子|scope)[^\n]*(?:统一)?返回 `?403|`?403[^\n]*(?:跨家庭|跨孩子|scope)/.test(
+      sourceContract
+    ),
+    'SL-05 source contract must not define public 403 semantics for cross-scope sources',
+    errors
+  );
+
+  const apiConfirmationStart = api.indexOf('#### 家长确认所见作品版本');
+  const apiConfirmationEnd = api.indexOf('### 14.3 `SL-02`');
+  assert(
+    apiConfirmationStart >= 0 && apiConfirmationEnd > apiConfirmationStart,
+    'API is missing the bounded legacy confirmation contract section',
+    errors
+  );
+  const apiConfirmationContract = api
+    .slice(apiConfirmationStart, apiConfirmationEnd)
+    .replace(/\s+/g, ' ');
+  for (const requiredText of [
+    'expectedCompletionVersion=0',
+    '把缺失版本持久化为 0',
+    '确认本身不 递增 `completionVersion`',
+    '`starAwardState` 置为 pending',
+    '版本初始化不单独发星，也不能使重复确认再次发星'
+  ]) {
+    assert(
+      apiConfirmationContract.includes(requiredText),
+      `API legacy confirmation contract is missing ${requiredText}`,
+      errors
+    );
+  }
+
+  const architectureMigrationStart = architecture.indexOf('### 12.6 迁移、发布兼容和回滚');
+  const architectureMigrationEnd = architecture.indexOf(
+    '上述增量未改变现有架构决策',
+    architectureMigrationStart
+  );
+  assert(
+    architectureMigrationStart >= 0 && architectureMigrationEnd > architectureMigrationStart,
+    'architecture is missing the bounded section 12.6 migration contract',
+    errors
+  );
+  const architectureMigrationContract = architecture
+    .slice(architectureMigrationStart, architectureMigrationEnd)
+    .replace(/\s+/g, ' ');
+  for (const requiredText of [
+    'expectedCompletionVersion=0',
+    '把缺失版本持久化为 0',
+    '但不递增版本',
+    '`starAwardState` 置为 `pending`',
+    '沿用现有可恢复发星命令',
+    '版本初始化本身不发星',
+    '重复确认不得重复发星'
+  ]) {
+    assert(
+      architectureMigrationContract.includes(requiredText),
+      `architecture legacy confirmation contract is missing ${requiredText}`,
+      errors
+    );
+  }
+
+  assert(
+    /先在本地事务中[\s\S]{0,160}pending[\s\S]{0,240}(?:prepare|远程媒体调用)/.test(api),
+    'API must persist the completion intent before remote media prepare',
+    errors
+  );
+
+  const stableMediaSections = [
+    ['architecture', boundedSection(
+      architecture,
+      '### 12.3 完成命令幂等与并发',
+      '### 12.4 `DailyLearningPlan`'
+    )],
+    ['API', boundedSection(api, '#### 完成任务', '#### 家长确认所见作品版本')],
+    ['system design', boundedSection(selfDirectedDesign, '### 7.3 孩子完成任务', '### 7.4 周反思')],
+    ['plan', boundedSection(selfDirectedPlan, '### T1：', '### T2：')],
+    ['Gate', boundedSection(selfDirectedGate, '### 4.1 完成作品', '### 4.2 清单与求助')]
+  ];
+  for (const [name, section] of stableMediaSections) {
+    assert(section.length > 0, `${name} is missing its bounded stable-media section`, errors);
+    for (const contractError of stableMediaContractErrors(section)) {
+      errors.push(`${name} stable-media contract ${contractError}`);
+    }
+  }
+  for (const caseId of [
+    'TC-SL-REMOTE-ID-001',
+    'TC-SL-REMOTE-ID-002',
+    'TC-SL-REMOTE-ID-003',
+    'TC-SL-REMOTE-ID-004'
+  ]) {
+    assert(
+      stableMediaSections.find(([name]) => name === 'plan')[1].includes(caseId) &&
+        selfDirectedGate.includes(caseId),
+      `remote identity acceptance case must be tracked in T1 and Gate: ${caseId}`,
+      errors
+    );
+  }
+
+  const architectureCompletionModel = boundedSection(
+    architecture,
+    'completionEvidence?',
+    'completionMediaReferenceState?'
+  );
+  const systemDesignCompletionModel = boundedSection(
+    selfDirectedDesign,
+    'completionEvidence?',
+    '```'
+  );
+  for (const [name, model] of [
+    ['architecture', architectureCompletionModel],
+    ['system design', systemDesignCompletionModel]
+  ]) {
+    assert(model.length > 0, `${name} is missing the bounded completionEvidence model`, errors);
+    for (const contractError of completionEvidenceContractErrors(model)) {
+      errors.push(`${name} ${contractError}`);
+    }
+  }
+  for (const requiredText of [
+    '`helpType` 只属于当前 `helpRequest`',
+    '`needsHelp` 继续表示完成时的困难回顾',
+    '`supportLevelUsed` 继续作为 P2 储备',
+    '`other`：其他，由简短 `note` 补充',
+    '具体字段和路由已进入正式 API 契约'
+  ]) {
+    assert(
+      selfDirectedDesign.includes(requiredText),
+      `system design is missing help-field boundary ${requiredText}`,
+      errors
+    );
+  }
+
+  const alternativeFenceProbeErrors = [];
+  checkMarkdownStructure(
+    'self-directed-json-fence-probe.md',
+    '  ~~~json\n  {"operationId":"one","operationId":"two"}\n  ~~~\n',
+    alternativeFenceProbeErrors
+  );
+  assert(
+    alternativeFenceProbeErrors.some(error => error.includes('duplicate keys: operationId')),
+    'Markdown JSON validation must reject duplicate keys inside indented tilde fences',
+    errors
+  );
+
+  const helpReplaySections = [
+    ['architecture', boundedSection(
+      architecture,
+      '### 12.2 `GrowthTask` 计划字段',
+      '### 12.3 完成命令幂等与并发'
+    )],
+    ['API', boundedSection(api, '### 14.3 `SL-02`', '### 14.4 `SL-04`')],
+    ['system design', boundedSection(
+      selfDirectedDesign,
+      '#### 进行中独立求助（P1）',
+      '### 5.4 任务模板（P2，非首期）'
+    )],
+    ['plan', boundedSection(selfDirectedPlan, '### T3：', '### T4：')],
+    ['Gate', boundedSection(selfDirectedGate, '### 4.2 清单与求助', '### 4.3 日计划')]
+  ];
+  for (const [name, section] of helpReplaySections) {
+    assert(section.length > 0, `${name} is missing its bounded help replay section`, errors);
+    for (const contractError of helpReplayContractErrors(section)) {
+      errors.push(`${name} help replay contract ${contractError}`);
+    }
+  }
+
+  const completionModelMutant = architectureCompletionModel.replace(
+    '  needsHelp?',
+    '  needsHelp?\n  helpType?'
+  );
+  assert(
+    completionEvidenceContractErrors(completionModelMutant).length > 0,
+    'completionEvidence contract probe must reject reintroducing helpType',
+    errors
+  );
+  const reservedFieldMutant = architectureCompletionModel.replace(
+    '  needsHelp?',
+    '  needsHelp?\n  supportLevelUsed?'
+  );
+  assert(
+    reservedFieldMutant !== architectureCompletionModel &&
+      completionEvidenceContractErrors(reservedFieldMutant)
+        .some(error => error.includes('supportLevelUsed')),
+    'completionEvidence contract probe must reject reintroducing supportLevelUsed',
+    errors
+  );
+  for (const marker of [
+    '不可变成功响应投影',
+    '每个任务最多一个活动完成命令',
+    '发布后不得回滚已发布作品',
+    'absent 不能作为失败终态证据',
+    '租约过期原子转为 ABORTED',
+    '`remoteOperationId`',
+    '远程标识与首次命令占位同事务持久化',
+    '内部 operationId 必须取持久化 remoteOperationId',
+    'remoteOperationId 唯一索引',
+    '不同 actor 使用同一 UUID 必须分配不同远程标识'
+  ]) {
+    const original = stableMediaSections[0][1];
+    const mutant = original.replaceAll(marker, 'removed-contract-rule');
+    assert(
+      mutant !== original && stableMediaContractErrors(mutant).includes(`missing ${marker}`),
+      `completion contract probe must reject removing ${marker}`,
+      errors
+    );
+  }
+  const helpReplayMutant = helpReplaySections[0][1].replace(
+    '认证 actor 与 `requestedByActor` 相同',
+    '认证 actor 无需与 `requestedByActor` 相同'
+  );
+  assert(
+    helpReplayContractErrors(helpReplayMutant).length > 0,
+    'help replay contract probe must reject removing actor equality',
+    errors
+  );
+  const stableMediaMutant = stableMediaSections[1][1].replace(
+    '清除 pending 意图',
+    '保留 pending 意图'
+  );
+  assert(
+    stableMediaContractErrors(stableMediaMutant).length > 0,
+    'stable-media contract probe must reject retaining pending after a stable rejection',
+    errors
+  );
+
+  const checklistInitializationSections = [
+    ['architecture', boundedSection(
+      architecture,
+      '### 12.2 `GrowthTask` 计划字段',
+      '### 12.3 完成命令幂等与并发'
+    )],
+    ['API', boundedSection(api, '#### 家长创建或更新清单', '#### 完成任务')],
+    ['system design', boundedSection(
+      selfDirectedDesign,
+      '### 5.3 `GrowthTask` 的 P1 最小扩展',
+      '### 5.4 任务模板（P2，非首期）'
+    )],
+    ['plan', boundedSection(selfDirectedPlan, '### T4：', '### T5：')],
+    ['Gate', boundedSection(selfDirectedGate, '### 4.2 清单与求助', '### 4.3 日计划')]
+  ];
+  for (const [name, section] of checklistInitializationSections) {
+    assert(section.length > 0, `${name} is missing its bounded checklist section`, errors);
+    for (const contractError of checklistInitializationErrors(section)) {
+      errors.push(`${name} checklist initialization contract ${contractError}`);
+    }
+  }
+  const checklistMutant = checklistInitializationSections[1][1].replace(
+    '`checklistVersion=1`',
+    '`checklistVersion=0`'
+  );
+  assert(
+    checklistInitializationErrors(checklistMutant).length > 0,
+    'checklist initialization probe must reject a non-empty version of zero',
+    errors
+  );
+
+  for (const error of valueGateContractErrors(selfDirectedGate)) {
+    errors.push(`self-directed value gate ${error}`);
+  }
+  const valueGateBody = boundedSection(selfDirectedGate, '## 14. T9 轻量价值验收规程', '## 15. R1–R8');
+  for (const [, marker] of valueGateTextRules) {
+    const mutant = selfDirectedGate.replace(valueGateBody, valueGateBody.split(marker).join('REMOVED_CLAUSE'));
+    assert(valueGateContractErrors(`${mutant}\nHistorical note: ${marker}`).length > 0,
+      `value gate probe must reject removed normative clause: ${marker}`, errors);
+  }
+  for (const [id, , expected] of valueGateExamples) {
+    const row = valueGateBody.split('\n').find(line => line.startsWith(`| ${id} |`));
+    const mutant = row ? selfDirectedGate.replace(row, row.replace(`| ${expected} |`, '| WRONG |')) : selfDirectedGate;
+    assert(valueGateContractErrors(mutant).length > 0,
+      `value gate probe must reject incorrect synthetic result: ${id}`, errors);
+  }
+  const valueGateStructuralMutants = [];
+  const valueGateDecision = valueGateSections(selfDirectedGate).decision;
+  for (const label of ['PASS', 'PARTIAL', 'FAIL']) {
+    const row = valueGateDecision.split('\n').find(line => line.startsWith(`| ${label} |`));
+    assert(Boolean(row), `value gate probe needs the normative ${label} definition`, errors);
+    if (!row) continue;
+    valueGateStructuralMutants.push(
+      [`${label} definition moved to history`,
+        selfDirectedGate.replace(valueGateBody, valueGateBody.replace(row, '')) + `\nHistorical copy:\n${row}`],
+      [`duplicate ${label} definition`,
+        selfDirectedGate.replace(valueGateBody, valueGateBody.replace(row, `${row}\n${row}`))]
+    );
+  }
+  const resumePassClause = '若调整后已有至少两次不同日期的可比复核证据表明负向问题已解决，且全部其他前提满足，才可重新判 PASS；';
+  assert(valueGateDecision.includes(resumePassClause), 'value gate probe needs the normative resume-PASS threshold', errors);
+  valueGateStructuralMutants.push(['resume-PASS threshold deleted, history retained',
+    selfDirectedGate.replace(valueGateBody, valueGateBody.replace(resumePassClause, '')) + `\nHistorical copy:\n${resumePassClause}`]);
+  for (const [name, mutant] of valueGateStructuralMutants) {
+    assert(valueGateContractErrors(mutant).length > 0,
+      `value gate probe must reject ${name}`, errors);
+  }
+
+  for (const requiredText of [
+    '一周轻量无干预基线 → P0 人工预演与最小 P1 实现 → 四周正式家庭验证',
+    'T1–T8 完成后执行 T9 四周正式家庭验证'
+  ]) {
+    assert(
+      selfDirectedResearch.includes(requiredText),
+      `self-directed research conclusion is missing implementation order ${requiredText}`,
+      errors
+    );
+  }
+
+  for (const [name, markdown, markers] of [
+    ['PRD direction', product, ['LONG-TERM DIRECTION CONFIRMED', 'FGT-MVP-1.7 已实现基础', 'SL-01 至 SL-07 全部 PLANNED']],
+    ['architecture direction', architecture, ['长期目标是家庭自主学习', 'FGT-MVP-1.7 已实现基础']],
+    ['value gate', selfDirectedGate, ['## 14. T9 轻量价值验收规程', 'BASELINE_MISSING', 'BASELINE_CONTAMINATED', '| PASS |', '| PARTIAL |', '| FAIL |', '缺失不计零、不插补', '独立复评状态：']],
+    ['privacy lifecycle', architecture, ['MediaDeletionTombstone', 'referenceFence', '最后释放时间两者都满 30 天', '凭证不可用时停止恢复上线']],
+    ['privacy API', api, ['#### 完成作品隐私删除（PLANNED）', 'privacyDeletion', '其他 released/absent', '全量家庭数据导出/删除']],
+    ['estimate API', api, ['estimateRecordedBy', 'updatedByActor', '同值/仅排序保留原归属', '旧记录无归属返回 null']],
+    ['device path', selfDirectedDesign, ['TC-SL-IPAD-001', 'TC-SL-IPAD-002', 'TC-SL-IPAD-003', 'TC-SL-IPAD-004', 'DEVICE_PENDING', '不能改后缀冒充格式']],
+    ['review record', selfDirectedGate, ['## 13. R1–R8', '### 13.1 方案自审（实施前）', '方案自审结论：通过']]
+  ]) {
+    for (const marker of markers) {
+      assert(markdown.includes(marker), `${name} is missing review contract ${marker}`, errors);
+    }
+  }
+  for (const [name, markdown] of canonicalSelfDirectedContracts) {
+    for (const marker of ['privacyDeletion', 'estimateRecordedBy', 'updatedByActor']) {
+      assert(markdown.includes(marker), `${name} is missing revised contract ${marker}`, errors);
+    }
+  }
+  const interactionApi = boundedSection(selfDirectedDesign, '### 7.1 日计划', '### 7.4 周反思');
+  assert(
+    interactionApi.length > 0 && !/```json\b/.test(interactionApi) &&
+      !selfDirectedDesign.includes('编码前必须补充正式契约'),
+    'system design must reference canonical API instead of duplicate P1 request JSON or stale contract status',
+    errors
+  );
+
+  for (const requiredText of [
+    'operationId',
+    'expectedCompletionVersion',
+    'expectedChecklistVersion',
+    'expectedHelpVersion',
+    'expectedVersion',
+    'MEDIA_REFERENCE_PENDING',
+    'VERSION_CONFLICT',
+    'IDEMPOTENCY_KEY_REUSED',
+    '旧客户端',
+    '按需原子初始化',
+    '不得批量重写'
+  ]) {
+    assert(
+      selfDirectedGate.includes(requiredText),
+      `self-directed Gate is missing T0 contract marker ${requiredText}`,
+      errors
+    );
+  }
+
+  assert(
+    traceability.includes('COVERED (38/38)') &&
+      traceability.includes('自主学习增量不计入 38/38'),
+    'traceability must preserve the implemented 38/38 baseline and separate the planned increment',
+    errors
+  );
   for (const obsoleteText of [
     '小学生学习追踪系统',
     '最大并发用户：10000',
@@ -3251,19 +4277,37 @@ function validate() {
     errors
   );
 
-  const ubuntuTemplateKeys = new Set(
-    [...ubuntuEnvironment.matchAll(/^([A-Z][A-Z0-9_]*)=/gm)].map(match => match[1])
-  );
+  const ubuntuTemplateKeys = new Set(Object.keys(dotenv.parse(ubuntuEnvironment)));
   const ubuntuRequiredSecretKeys = new Set(
     [...ubuntuCompose.matchAll(/\$\{([A-Z][A-Z0-9_]*):\?set [^}]+\}/g)].map(
       match => match[1]
     )
   );
+  const completionDefaults = {
+    COMPLETION_PROTOCOL_MODE: 'legacy',
+    COMPLETION_WRITES_PAUSED: 'false',
+    COMPLETION_STORAGE_CONFIRMED: 'false',
+    COMPLETION_RETIREMENT_SERVICE_TOKEN: '',
+    COMPLETION_ORPHAN_CLEANUP_ENABLED: 'false'
+  };
   assert(
-    sameSet(ubuntuTemplateKeys, ubuntuRequiredSecretKeys),
-    'docker-compose.ubuntu.env.example keys differ from Ubuntu Compose required secrets',
+    sameSet(ubuntuTemplateKeys, new Set([...ubuntuRequiredSecretKeys, ...Object.keys(completionDefaults)])),
+    'docker-compose.ubuntu.env.example keys differ from Ubuntu Compose required secrets and completion controls',
     errors
   );
+  for (const [file, source] of [
+    ['docker-compose.ubuntu.env.example', ubuntuEnvironment],
+    ['backend/.env.example', read('backend/.env.example')]
+  ]) {
+    const effective = dotenv.parse(source);
+    // Template controls are single-line assignments. Count before parser last-value-wins collapse.
+    const declarations = source.split(/\r\n?|\n/).flatMap(line => Object.keys(dotenv.parse(line)));
+    for (const [key, value] of Object.entries(completionDefaults)) {
+      assert(declarations.filter(name => name === key).length === 1,
+        `${file} must declare ${key} exactly once`, errors);
+      assert(effective[key] === value, `${file} must default ${key}=${value}`, errors);
+    }
+  }
 
   for (const requiredText of [
     'npm run release:family',
@@ -3286,6 +4330,9 @@ function validate() {
   return {
     documents: documents.size,
     proposedAiDocuments: aiDocuments.size,
+    proposedSelfDirectedDocuments: selfDirectedDocuments.size,
+    selfDirectedContractProbes,
+    valueGateContractProbes: valueGateTextRules.length + valueGateExamples.length + valueGateStructuralMutants.length,
     proposedAiContracts: proposedAiContracts.length,
     contractFixtureCases,
     requirements: productIds.size
@@ -3296,7 +4343,10 @@ if (require.main === module) {
   try {
     const result = validate();
     process.stdout.write(
-      `Family documentation gate passed: ${result.documents} approved documents, ` +
+      `Family documentation gate passed: ${result.documents} baseline documents, ` +
+        `${result.proposedSelfDirectedDocuments} proposed self-directed-learning documents, ` +
+        `${result.selfDirectedContractProbes} self-directed contract probes, ` +
+        `${result.valueGateContractProbes} value-gate text probes, ` +
         `${result.proposedAiDocuments} proposed AI documents, ` +
         `${result.proposedAiContracts} AI contracts, ` +
         `${result.contractFixtureCases} contract fixture cases, ` +
@@ -3311,6 +4361,7 @@ if (require.main === module) {
 module.exports = {
   authoritativeDocuments,
   proposedAiDocuments,
+  proposedSelfDirectedDocuments,
   proposedAiContracts,
   requirementIds,
   validate

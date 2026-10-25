@@ -2,13 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
 import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
+import TaskCompletionReview from '../../components/family/TaskCompletionReview';
+import CompletionRecoveryList from '../../components/family/CompletionRecoveryList';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { useDraftMedia } from '../../hooks/useDraftMedia';
+import { captureSession } from '../../services/familySession';
 import {
   cancelOrArchiveGrowthTask,
-  completeGrowthTask,
-  confirmGrowthTask,
   createGrowthTask,
   listGrowthTasks,
   updateGrowthTask
@@ -48,8 +49,8 @@ const numeric = (value) => (value === '' ? undefined : Number(value));
 const errorCode = (error) => error?.response?.data?.error?.code;
 const errorMessage = (error) => error?.response?.data?.error?.message || error?.message || '操作失败，请重试。';
 
-const TasksPage = () => {
-  const { selectedChild, selectedChildId } = useFamily();
+const ScopedTasksPage = () => {
+  const { family, selectedChild, selectedChildId, childScopeVersion } = useFamily();
   const [filters, setFilters] = useState({ scope: '', dimension: '', status: '' });
   const load = useCallback(
     ({ childId, signal }) => listGrowthTasks({ childId, ...filters, pageSize: 100 }, signal),
@@ -62,7 +63,7 @@ const TasksPage = () => {
   const [editor, setEditor] = useState(null);
   const [form, setForm] = useState(emptyForm());
   const [action, setAction] = useState(null);
-  const [actionForm, setActionForm] = useState({ actualMinutes: '', actualAmount: '', difficulty: 'normal', needsHelp: false, childNote: '', parentFeedback: '' });
+  const [review, setReview] = useState(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -76,6 +77,7 @@ const TasksPage = () => {
     mediaDrafts.cancel();
     setEditor(null);
     setAction(null);
+    setReview(null);
     setMessage('');
     setError('');
     setBusy(false);
@@ -86,14 +88,14 @@ const TasksPage = () => {
     setEditor(null);
   };
 
-  const replaceTask = (nextTask) => {
+  const replaceTask = useCallback((nextTask) => {
     setItems((current) => {
       const exists = current.some((item) => item.taskId === nextTask.taskId);
       return exists
         ? current.map((item) => (item.taskId === nextTask.taskId ? nextTask : item))
         : [nextTask, ...current];
     });
-  };
+  }, []);
 
   const openCreate = () => {
     setForm(emptyForm());
@@ -102,6 +104,7 @@ const TasksPage = () => {
   };
 
   const openEdit = (task) => {
+    if (task.childId !== selectedChildId) return;
     setForm({ ...emptyForm(), ...task, attachmentMediaIds: task.attachmentMediaIds || [] });
     setEditor({ mode: 'edit', task });
     setError('');
@@ -109,6 +112,7 @@ const TasksPage = () => {
 
   const saveTask = async (event) => {
     event.preventDefault();
+    if (editor?.mode === 'edit' && editor.task.childId !== selectedChildId) return;
     const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
@@ -146,30 +150,18 @@ const TasksPage = () => {
         setError(errorMessage(taskError));
       }
     } finally {
-      setBusy(false);
+      if (mutationGuard.isCurrentScope(mutationScope)) setBusy(false);
     }
   };
 
   const submitAction = async (event) => {
     event.preventDefault();
+    if (!action || action.task.childId !== selectedChildId) return;
     const mutationScope = mutationGuard.captureScope();
     setBusy(true);
     setError('');
     try {
-      let result;
-      if (action.type === 'complete') {
-        result = await completeGrowthTask(action.task.taskId, {
-          actualMinutes: numeric(actionForm.actualMinutes),
-          actualAmount: numeric(actionForm.actualAmount),
-          difficulty: actionForm.difficulty,
-          needsHelp: actionForm.needsHelp,
-          childNote: actionForm.childNote || undefined
-        });
-      } else if (action.type === 'confirm') {
-        result = await confirmGrowthTask(action.task.taskId, { parentFeedback: actionForm.parentFeedback || undefined });
-      } else {
-        result = await cancelOrArchiveGrowthTask(action.task.taskId);
-      }
+      const result = await cancelOrArchiveGrowthTask(action.task.taskId);
       if (!mutationGuard.isCurrentScope(mutationScope)) return;
       replaceTask(result.task);
       setAction(null);
@@ -183,13 +175,19 @@ const TasksPage = () => {
         resource.reload();
       } else setError(errorMessage(taskError));
     } finally {
-      setBusy(false);
+      if (mutationGuard.isCurrentScope(mutationScope)) setBusy(false);
     }
   };
 
-  const openAction = (type, task) => {
+  const openAction = (type, task, trigger) => {
+    if (task.childId !== selectedChildId) return;
+    if (type === 'complete' || type === 'confirm' || type === 'review') {
+      // Safari pointer activation does not focus buttons automatically.
+      trigger?.focus();
+      setReview({ taskId: task.taskId, childId: selectedChildId, mode: type === 'complete' ? 'complete' : 'review' });
+      return;
+    }
     setAction({ type, task });
-    setActionForm({ actualMinutes: '', actualAmount: '', difficulty: 'normal', needsHelp: false, childNote: '', parentFeedback: '' });
     setError('');
   };
 
@@ -224,14 +222,23 @@ const TasksPage = () => {
               <p>{item.area} · 截止 {item.dueDate}</p>
             </div>
             <div className="family-inline-actions">
+              <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`查看 ${item.title}`} onClick={event => openAction('review', item, event.currentTarget)}>查看作品</button>
               {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.title}`} onClick={() => openEdit(item)}>编辑</button>}
-              {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`完成 ${item.title}`} onClick={() => openAction('complete', item)}>完成</button>}
-              {item.status === 'completed' && <button type="button" className="family-button primary" disabled={resource.state === 'loading'} aria-label={`确认 ${item.title}`} onClick={() => openAction('confirm', item)}>确认</button>}
+              {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`完成 ${item.title}`} onClick={event => openAction('complete', item, event.currentTarget)}>完成</button>}
+              {item.status === 'completed' && <button type="button" className="family-button primary" disabled={resource.state === 'loading'} aria-label={`确认 ${item.title}`} onClick={event => openAction('confirm', item, event.currentTarget)}>确认</button>}
               {!['cancelled', 'archived'].includes(item.status) && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`${item.status === 'pending' ? '取消' : '归档'} ${item.title}`} onClick={() => openAction('remove', item)}>{item.status === 'pending' ? '取消' : '归档'}</button>}
             </div>
           </article>
         ))}
       </div>
+
+      <CompletionRecoveryList role="parent" childId={selectedChildId}
+        onOpen={row => setReview({ taskId: row.taskId, childId: row.childId, mode: 'review' })} />
+      {review && review.childId === selectedChildId && (
+        <TaskCompletionReview key={`${family?.familyId}-${selectedChildId}-${childScopeVersion}-${review.taskId}`}
+          taskId={review.taskId} familyId={family?.familyId} childId={selectedChildId}
+          initialMode={review.mode} onClose={() => setReview(null)} onTask={replaceTask} />
+      )}
 
       {editor && (
         <FamilyDialog labelledBy="task-editor-title" onClose={closeEditor}>
@@ -259,15 +266,20 @@ const TasksPage = () => {
       {action && (
         <FamilyDialog labelledBy="task-action-title" onClose={() => setAction(null)}>
           <form onSubmit={submitAction}>
-            <div className="family-page-heading"><h2 id="task-action-title">{action.type === 'complete' ? '记录完成' : action.type === 'confirm' ? '家长确认' : action.task.status === 'pending' ? '取消任务' : '归档任务'}</h2><button type="button" className="family-button secondary" onClick={() => setAction(null)}>关闭</button></div>
-            {action.type === 'complete' && <div className="family-form-grid"><label>实际用时（分钟）<input type="number" min="0" value={actionForm.actualMinutes} onChange={(event) => setActionForm((value) => ({ ...value, actualMinutes: event.target.value }))} /></label><label>实际数量<input type="number" min="0" value={actionForm.actualAmount} onChange={(event) => setActionForm((value) => ({ ...value, actualAmount: event.target.value }))} /></label><label>难度<select value={actionForm.difficulty} onChange={(event) => setActionForm((value) => ({ ...value, difficulty: event.target.value }))}><option value="easy">简单</option><option value="normal">适中</option><option value="hard">困难</option></select></label><label className="family-checkbox"><input type="checkbox" checked={actionForm.needsHelp} onChange={(event) => setActionForm((value) => ({ ...value, needsHelp: event.target.checked }))} />需要帮助</label><label className="family-field-wide">孩子备注<textarea value={actionForm.childNote} onChange={(event) => setActionForm((value) => ({ ...value, childNote: event.target.value }))} /></label></div>}
-            {action.type === 'confirm' && <label>家长反馈<textarea aria-label="家长反馈" value={actionForm.parentFeedback} onChange={(event) => setActionForm((value) => ({ ...value, parentFeedback: event.target.value }))} /></label>}
-            <button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>{action.type === 'complete' ? '提交完成记录' : action.type === 'confirm' ? '确认并发放星星' : `确认${action.task.status === 'pending' ? '取消' : '归档'}`}</button>
+            <div className="family-page-heading"><h2 id="task-action-title">{action.task.status === 'pending' ? '取消任务' : '归档任务'}</h2><button type="button" className="family-button secondary" onClick={() => setAction(null)}>关闭</button></div>
+            <button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>{`确认${action.task.status === 'pending' ? '取消' : '归档'}`}</button>
           </form>
         </FamilyDialog>
       )}
     </section>
   );
+};
+
+const TasksPage = () => {
+  const { family, selectedChildId, childScopeVersion } = useFamily();
+  const session = captureSession('parent');
+  return <ScopedTasksPage key={JSON.stringify([family?.familyId, selectedChildId, childScopeVersion,
+    session?.actorId, session?.revision])} />;
 };
 
 export default TasksPage;

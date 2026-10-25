@@ -218,6 +218,14 @@ const growthTaskSchema = new Schema({
     type: Boolean,
     select: false
   },
+  mediaCompletionFence: {
+    type: new Schema({
+      completionVersion: { type: Number, required: true, min: 0, validate: Number.isSafeInteger },
+      checklistVersion: { type: Number, required: true, min: 0, validate: Number.isSafeInteger }
+    }, { _id: false, strict: 'throw' }),
+    default: undefined,
+    select: false
+  },
   completedAt: Date,
   confirmedAt: Date,
   confirmedByParentId: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -227,6 +235,7 @@ const growthTaskSchema = new Schema({
 });
 
 growthTaskSchema.index({ familyId: 1, childId: 1, dueDate: 1 });
+growthTaskSchema.add(require('./growthTaskCompletionFields'));
 growthTaskSchema.index({ familyId: 1, childId: 1, dimension: 1, status: 1 });
 
 growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next) {
@@ -240,7 +249,8 @@ growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next)
     this.mediaBindingPhase,
     this.mediaPendingTaskPatch,
     this.mediaMutationKind,
-    this.mediaRemoteOutcomeUncertain
+    this.mediaRemoteOutcomeUncertain,
+    this.mediaCompletionFence
   ];
   const mediaIdStrings = (entries) => entries.map((entry) => String(entry.mediaId ?? entry));
   const hasUniqueIds = (entries) => {

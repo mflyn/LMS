@@ -4,7 +4,9 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 
 const {
   CHILD_A2_ID,
@@ -194,7 +196,7 @@ describe('Task 6 family mistakes', () => {
     const app = createApp();
     const path = mistakePath();
 
-    const response = await request(app)
+    const response = await (await request(app))
       .post(path)
       .set(signedHeaders(parentA(), 'POST', path))
       .send({
@@ -223,7 +225,7 @@ describe('Task 6 family mistakes', () => {
     const app = createApp();
     const path = mistakePath();
 
-    const own = await request(app)
+    const own = await (await request(app))
       .post(path)
       .set(signedHeaders(childA1(), 'POST', path))
       .send({
@@ -235,7 +237,7 @@ describe('Task 6 family mistakes', () => {
     expect(own.status).toBe(201);
     expect(own.body.data.mistake.childId).toBe(CHILD_A1_ID);
 
-    const sibling = await request(app)
+    const sibling = await (await request(app))
       .post(path)
       .set(signedHeaders(childA1(), 'POST', path))
       .send({
@@ -252,14 +254,14 @@ describe('Task 6 family mistakes', () => {
     const mistake = await seedMistake();
 
     const forbiddenPath = mistakePath(`/${mistake._id}`);
-    const forbidden = await request(app)
+    const forbidden = await (await request(app))
       .patch(forbiddenPath)
       .set(signedHeaders(childA1(), 'PATCH', forbiddenPath))
       .send({ subject: 'science', parentNote: 'private parent note' });
     expect(forbidden.status).toBe(403);
     expect(forbidden.body.error.code).toBe('FIELD_ACCESS_DENIED');
 
-    const allowed = await request(app)
+    const allowed = await (await request(app))
       .patch(forbiddenPath)
       .set(signedHeaders(childA1(), 'PATCH', forbiddenPath))
       .send({ reviewed: true, mastered: true, reviewReminderDate: '2026-06-24' });
@@ -279,13 +281,13 @@ describe('Task 6 family mistakes', () => {
 
     const detailPath = mistakePath(`/${mistake._id}`);
     for (const user of [parentB(), childA2()]) {
-      const detail = await request(app)
+      const detail = await (await request(app))
         .get(detailPath)
         .set(signedHeaders(user, 'GET', detailPath));
       expect(detail.status).toBe(403);
       expect(detail.body.error.code).toBe('CHILD_ACCESS_DENIED');
 
-      const patch = await request(app)
+      const patch = await (await request(app))
         .patch(detailPath)
         .set(signedHeaders(user, 'PATCH', detailPath))
         .send({ reviewed: true });
@@ -333,7 +335,7 @@ describe('Task 6 family mistakes', () => {
     ]);
     const path = mistakePath(`?childId=${CHILD_A1_ID}&subject=math&reviewed=false&page=1&pageSize=1`);
 
-    const response = await request(app)
+    const response = await (await request(app))
       .get(path)
       .set(signedHeaders(parentA(), 'GET', path));
 
@@ -356,7 +358,7 @@ describe('Task 6 family mistakes', () => {
         `?childId=${CHILD_A1_ID}&reviewStatus=${reviewStatus}`
         + '&reviewReminderFrom=2026-06-22&reviewReminderTo=2026-06-24'
       );
-      const statusResponse = await request(app)
+      const statusResponse = await (await request(app))
         .get(statusPath)
         .set(signedHeaders(parentA(), 'GET', statusPath));
 
@@ -369,7 +371,7 @@ describe('Task 6 family mistakes', () => {
   test('TC-T6-MISTAKE-008/013/014 rejects invalid fields and preserves source when state event write fails', async () => {
     const app = createApp();
     const createPath = mistakePath();
-    const invalid = await request(app)
+    const invalid = await (await request(app))
       .post(createPath)
       .set(signedHeaders(parentA(), 'POST', createPath))
       .send({
@@ -386,7 +388,7 @@ describe('Task 6 family mistakes', () => {
     const createEvent = FamilyMistakeStateEvent.create;
     FamilyMistakeStateEvent.create = jest.fn().mockRejectedValueOnce(new Error('event store down'));
     const patchPath = mistakePath(`/${mistake._id}`);
-    const response = await request(app)
+    const response = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({ reviewed: true });
@@ -409,7 +411,7 @@ describe('Task 6 family mistakes', () => {
     FamilyMistakeStateEvent.create = createSpy;
 
     const patchPath = mistakePath(`/${mistake._id}`);
-    const response = await request(app)
+    const response = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({ reviewed: true });
@@ -435,7 +437,7 @@ describe('Task 6 family mistakes', () => {
     });
 
     const patchPath = mistakePath(`/${mistake._id}`);
-    const response = await request(app)
+    const response = await (await request(app))
       .patch(patchPath)
       .set(signedHeaders(parentA(), 'PATCH', patchPath))
       .send({ reviewed: true });
@@ -593,7 +595,7 @@ describe('Task 4 canonical mistake attachment arrays', () => {
       }]
     ]) {
       const path = mistakePath(`/${mistake._id}`);
-      const response = await request(app)
+      const response = await (await request(app))
         .get(path)
         .set(signedHeaders(parentA(), 'GET', path));
 

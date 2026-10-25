@@ -10,6 +10,7 @@ export const PDF_MIME_TYPE = 'application/pdf';
 
 const RULES_BY_PURPOSE = Object.freeze({
   child_avatar: Object.freeze({ acceptedMimeTypes: IMAGE_MIME_TYPES, maxItems: 1 }),
+  task_completion: Object.freeze({ acceptedMimeTypes: IMAGE_MIME_TYPES, maxItems: 10 }),
   task_attachment: Object.freeze({
     acceptedMimeTypes: Object.freeze([...IMAGE_MIME_TYPES, PDF_MIME_TYPE]),
     maxItems: 100
@@ -30,6 +31,10 @@ export const mediaRulesForPurpose = (purpose) => RULES_BY_PURPOSE[purpose] || IM
 
 export const validatePrivateMediaFile = (file, purpose) => {
   const rules = mediaRulesForPurpose(purpose);
+  if (purpose === 'task_completion' && file
+    && (/^image\/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name || ''))) {
+    return { code: 'MEDIA_TYPE_NOT_ALLOWED', message: '请将 HEIC/HEIF 转换为 JPEG 或 PNG 后上传；也可将相机格式设为“兼容性最佳”。' };
+  }
   if (!file || !rules.acceptedMimeTypes.includes(file.type)) {
     return {
       code: 'MEDIA_TYPE_NOT_ALLOWED',

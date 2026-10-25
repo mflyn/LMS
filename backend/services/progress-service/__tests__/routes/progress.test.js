@@ -1,4 +1,6 @@
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const express = require('express');
 const mongoose = require('mongoose');
 const progressRouter = require('../../routes/progress');
@@ -50,7 +52,7 @@ describe('进度路由测试', () => {
       });
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .get(`/api/progress/${mockStudentId}`)
         .set('x-user-id', mockTeacherId.toString())
         .set('x-user-role', 'teacher');
@@ -81,7 +83,7 @@ describe('进度路由测试', () => {
       });
 
       // 发送请求 - 学生2尝试查看学生1的进度
-      const response = await request(app)
+      const response = await (await request(app))
         .get(`/api/progress/${mockStudentId1}`)
         .set('x-user-id', mockStudentId2.toString())
         .set('x-user-role', 'student');
@@ -112,7 +114,7 @@ describe('进度路由测试', () => {
       });
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .get(`/api/progress/${mockStudentId}`)
         .set('x-user-id', mockStudentId.toString())
         .set('x-user-role', 'student');
@@ -131,7 +133,7 @@ describe('进度路由测试', () => {
       const mockTeacherId = new mongoose.Types.ObjectId();
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .post('/api/progress/update')
         .set('x-user-id', mockTeacherId.toString())
         .set('x-user-role', 'teacher')
@@ -177,7 +179,7 @@ describe('进度路由测试', () => {
       });
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .post('/api/progress/update')
         .set('x-user-id', mockTeacherId.toString())
         .set('x-user-role', 'teacher')
@@ -210,7 +212,7 @@ describe('进度路由测试', () => {
       const mockSubjectId = new mongoose.Types.ObjectId();
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .post('/api/progress/update')
         .set('x-user-id', mockStudentId.toString())
         .set('x-user-role', 'student')

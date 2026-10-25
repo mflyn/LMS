@@ -1,4 +1,6 @@
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const express = require('express');
 const mongoose = require('mongoose');
 const reportsRouter = require('../../routes/reports');
@@ -77,7 +79,7 @@ describe('报告路由测试', () => {
       ]);
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .get(`/api/reports/class/${mockClassId}`)
         .set('x-user-id', mockTeacherId.toString())
         .set('x-user-role', 'teacher')
@@ -101,7 +103,7 @@ describe('报告路由测试', () => {
       const mockStudentId = new mongoose.Types.ObjectId();
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .get(`/api/reports/class/${mockClassId}`)
         .set('x-user-id', mockStudentId.toString())
         .set('x-user-role', 'student');
@@ -175,7 +177,7 @@ describe('报告路由测试', () => {
       Progress.find = jest.fn().mockReturnValue(query);
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .get('/api/reports/comparison')
         .set('x-user-id', mockTeacherId.toString())
         .set('x-user-role', 'teacher')
@@ -201,7 +203,7 @@ describe('报告路由测试', () => {
       const mockTeacherId = new mongoose.Types.ObjectId();
 
       // 发送请求（没有提供学生ID列表）
-      const response = await request(app)
+      const response = await (await request(app))
         .get('/api/reports/comparison')
         .set('x-user-id', mockTeacherId.toString())
         .set('x-user-role', 'teacher');
@@ -217,7 +219,7 @@ describe('报告路由测试', () => {
       const mockStudentId2 = new mongoose.Types.ObjectId();
 
       // 发送请求
-      const response = await request(app)
+      const response = await (await request(app))
         .get('/api/reports/comparison')
         .set('x-user-id', mockStudentId.toString())
         .set('x-user-role', 'student')

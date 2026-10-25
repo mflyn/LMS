@@ -4,7 +4,9 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
 const express = require('express');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 
 const mockConnect = jest.fn().mockResolvedValue(undefined);
 const mockListen = jest.fn();
@@ -40,8 +42,8 @@ describe('analytics-service Task 6 startup contract', () => {
       weeklyReportsRouter
     });
 
-    await request(app).get('/api/mistakes/probe').expect(200, { ok: 'mistakes' });
-    await request(app).get('/api/reports/weekly/probe').expect(200, { ok: 'reports' });
+    await (await request(app)).get('/api/mistakes/probe').expect(200, { ok: 'mistakes' });
+    await (await request(app)).get('/api/reports/weekly/probe').expect(200, { ok: 'reports' });
     expect(mockConnect).not.toHaveBeenCalled();
     expect(mockListen).not.toHaveBeenCalled();
   });

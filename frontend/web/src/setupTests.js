@@ -1,4 +1,11 @@
 import '@testing-library/jest-dom';
+import { randomFillSync } from 'crypto';
+
+// Match browser Web Crypto for command UUIDs; production never uses test randomness.
+if (typeof window.crypto?.getRandomValues !== 'function') {
+  Object.defineProperty(window, 'crypto', { configurable: true,
+    value: { getRandomValues: values => randomFillSync(values) } });
+}
 
 const formatConsoleValue = (value) => {
   if (value instanceof Error) return value.stack || value.message;

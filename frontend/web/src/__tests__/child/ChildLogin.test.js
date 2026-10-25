@@ -55,6 +55,7 @@ describe('child PIN login', () => {
     expect(childPinLogin).toHaveBeenCalledWith({ familyId: 'family-a', childId: 'child-a1', pin: '1234' });
     const stored = JSON.parse(localStorage.getItem(CHILD_SESSION_KEY));
     expect(stored).toEqual({
+      revision: expect.any(String),
       token: 'child-token',
       child: { childId: 'child-a1', familyId: 'family-a', name: '小雨' }
     });

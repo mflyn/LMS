@@ -1,0 +1,32 @@
+.task-completion-panel { min-width: 0; color: #202b28; }
+.task-completion-evidence { margin-top: 20px; padding-top: 20px; border-top: 1px solid #dce4df; }
+.task-completion-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; }
+.task-completion-heading h2 { margin: 0; font-size: 22px; }
+.task-completion-version { color: #53655c; font-size: 14px; }
+.task-completion-evidence h3 { margin: 20px 0 12px; font-size: 17px; }
+.task-completion-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 16px; margin: 20px 0; }
+.task-completion-facts div { min-width: 0; }
+.task-completion-facts dt { color: #53655c; font-size: 14px; }
+.task-completion-facts dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.task-completion-form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.task-completion-form legend { margin: 8px 0 16px; font-size: 17px; font-weight: 600; }
+.task-completion-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 16px; }
+.task-completion-form label { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin-bottom: 16px; }
+.task-completion-form input:not([type="checkbox"]), .task-completion-form select, .task-completion-form textarea {
+  box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #a5b5ad; border-radius: 6px;
+  color: #202b28; background: #fff; font: inherit; letter-spacing: 0;
+}
+.task-completion-form textarea { min-height: 90px; resize: vertical; }
+.task-completion-form .task-completion-checkbox { flex-direction: row; align-items: center; }
+.task-completion-checkbox input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: #276b50; }
+.task-completion-checklist { padding-left: 0; list-style: none; line-height: 1.8; overflow-wrap: anywhere; }
+.task-completion-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+.task-completion-panel button { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; max-width: 100%; padding: 10px 16px; border: 1px solid #9eaea5; border-radius: 6px;
+  background: #fff; color: #285640; font: inherit; letter-spacing: 0; cursor: pointer; overflow-wrap: anywhere; }
+.task-completion-panel button.task-completion-primary { background: #276b50; border-color: #276b50; color: #fff; }
+.task-completion-panel button:disabled { opacity: .55; cursor: not-allowed; }
+.task-completion-panel :focus-visible { outline: 3px solid #2e78b7; outline-offset: 3px; }
+.task-completion-error { color: #a32838; overflow-wrap: anywhere; }
+.task-completion-copy { white-space: pre-wrap; overflow-wrap: anywhere; }
+.task-completion-feedback { margin-top: 24px; padding-top: 4px; border-top: 1px solid #dce4df; }

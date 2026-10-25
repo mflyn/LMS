@@ -1,0 +1,129 @@
+{
+  "scope": "PR27_LINT_FIX_SYNTHETIC_ONLY",
+  "baselineCommit": "dca60cce5eb6c953510bc6ab3d5ae0b7ebe11fb5",
+  "originalCi": {
+    "run": 40093526966,
+    "status": "FAILURE",
+    "failedStep": "02-lint",
+    "errors": 53,
+    "url": "https://github.com/mflyn/LMS/actions/runs/40093526966"
+  },
+  "fixes": {
+    "files": 21,
+    "noUnexpectedMultiline": 29,
+    "noUnusedVars": 23,
+    "requireYield": 1,
+    "ruleChanges": false,
+    "testSkips": false,
+    "assertionChanges": false,
+    "timeoutChanges": false
+  },
+  "lint": {
+    "command": "npm run lint",
+    "scope": "clean copy of current Git-tracked files",
+    "exitCode": 0,
+    "errors": 0,
+    "localArchiveAttempt": {
+      "exitCode": 1,
+      "errors": 4,
+      "reason": "Ignored historical JSX snapshots are not part of the PR; preserved without adding ignore rules."
+    }
+  },
+  "docs": {
+    "command": "npm run docs:family:check",
+    "scope": "clean copy without ignored evidence",
+    "exitCode": 0
+  },
+  "regression": {
+    "command": "npm run test:family-regression -- --json --outputFile=/tmp/t2-pr27-family.json",
+    "suites": 143,
+    "suitesPassed": 143,
+    "suitesFailed": 0,
+    "tests": 3951,
+    "passed": 3951,
+    "failed": 0,
+    "pending": 0,
+    "success": true,
+    "testsUnchangedFromPrHead": true,
+    "historicalCountChanges": [
+      {
+        "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+        "before": 51,
+        "after": 59
+      }
+    ],
+    "countDifferenceReason": "The prior PR head already included 8 additional documentation closure checks; this lint fix changes no test cases or assertions. Dynamic UUID/date titles and redacted historical titles are not stable inventory keys.",
+    "failures": []
+  },
+  "historicalRegressionRetained": {
+    "suites": 143,
+    "suitesPassed": 142,
+    "suitesFailed": 1,
+    "tests": 3943,
+    "passed": 3942,
+    "failed": 1,
+    "pending": 0,
+    "success": false,
+    "failureId": "D2B-05",
+    "disposition": "REMAINDER_DEFERRED"
+  },
+  "sensitiveDiffScan": {
+    "tool": "gitleaks 8.30.1 stdin --redact",
+    "exitCode": 0,
+    "findings": 0
+  },
+  "retained": {
+    "device": "DEVICE_PENDING",
+    "advancedRecoveryAndCleanup": "REMAINDER_DEFERRED",
+    "merge": "NOT_AUTHORIZED",
+    "deploy": "NOT_AUTHORIZED",
+    "historicalFailures": "PRESERVED"
+  },
+  "artifacts": [
+    {
+      "file": "family.json",
+      "bytes": 1411052,
+      "sha256": "d9470dc98cc0727d72e97799576f028f5b092ad187d1a58a64281d34100e0599"
+    },
+    {
+      "file": "family.log",
+      "bytes": 1540986,
+      "sha256": "1f8aa953ce8d2415be1f8e91c2d2664d302e4615a2c41e202686b3776eca40ac"
+    },
+    {
+      "file": "clean-lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "file": "lint.log",
+      "bytes": 890,
+      "sha256": "43d6444dd522a1c04eb416a532ce9c5b73ed6ba5273a84c7e3bbeecef8a244bb"
+    },
+    {
+      "file": "docs.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "secrets.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": "secrets.log",
+      "bytes": 144,
+      "sha256": "722ace853b1b09cc09acb875c0c46bc2905cc3606dd6efcc6950267f236c19c4"
+    },
+    {
+      "file": "original-ci.log",
+      "bytes": 21891,
+      "sha256": "2d64d2917858251cc998b8fddab2bd8f58ba112b758c1f69ab4d5c6b36269684"
+    },
+    {
+      "file": "ast.json",
+      "bytes": 3278,
+      "sha256": "d91e81232cc76f9642726fbca400c6fe711b3edf56046b94eb6fcba1d6fd38cc"
+    }
+  ]
+}

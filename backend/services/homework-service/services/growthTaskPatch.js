@@ -142,9 +142,17 @@ const entriesToMongoSet = (entries) => {
   return mongoSet;
 };
 
+const validateGrowthTaskValues = async (TaskModel, values) => {
+  if (!Object.keys(values).length) return;
+  // Cast separately to avoid Mongoose hanging when all selected paths fail casting.
+  const cast = TaskModel.castObject(values);
+  await TaskModel.validate(cast, Object.keys(values));
+};
+
 module.exports = {
   parseGrowthTaskCreate,
   parseGrowthTaskPatch,
   entriesToMongoSet,
+  validateGrowthTaskValues,
   normalizeAttachmentMediaIds
 };

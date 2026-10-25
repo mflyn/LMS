@@ -17,19 +17,21 @@ jest.mock('../routes/behavior', () => mockRouterFor());
 jest.mock('../routes/performance', () => mockRouterFor());
 jest.mock('../routes/integration', () => mockRouterFor('/integration'));
 
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const app = require('../server');
 
 describe('Analytics Service app contract', () => {
   test('returns health without starting the production listener', async () => {
-    const response = await request(app).get('/health');
+    const response = await (await request(app)).get('/health');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: 'ok', service: 'analytics-service' });
   });
 
   test('returns 404 for an unknown route', async () => {
-    const response = await request(app).get('/non-existent-route');
+    const response = await (await request(app)).get('/non-existent-route');
 
     expect(response.status).toBe(404);
   });
@@ -42,7 +44,7 @@ describe('Analytics Service app contract', () => {
     '/api/analytics/behavior/student/123',
     '/api/analytics/performance/student/123'
   ])('mounts legacy analytics route %s', async (path) => {
-    const response = await request(app).get(path);
+    const response = await (await request(app)).get(path);
 
     expect(response.status).toBe(200);
   });

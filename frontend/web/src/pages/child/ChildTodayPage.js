@@ -1,8 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FamilyDataState from '../../components/family/FamilyDataState';
+import CompletionRecoveryList from '../../components/family/CompletionRecoveryList';
 import { useChildDataResource } from '../../hooks/useChildDataResource';
 import { listOwnReminders, listOwnTasks } from '../../services/childApi';
+import { captureSession, isSessionCurrent, loadChildSession, subscribeSessionChanges } from '../../services/familySession';
 
 const DIMENSION_LABELS = {
   moral: '德育',
@@ -15,7 +17,7 @@ const DIMENSION_LABELS = {
 const STATUS_LABELS = {
   pending: '待完成',
   completed: '等待家长确认',
-  confirmed: '已获得星星',
+  confirmed: '已确认',
   cancelled: '已取消',
   archived: '已归档'
 };
@@ -34,19 +36,19 @@ const ResourceError = ({ label, resource }) => {
   );
 };
 
-const ChildTodayPage = () => {
+const ChildTodayContent = ({ session }) => {
   const loadTasks = useCallback(
-    ({ signal }) => listOwnTasks({ scope: 'today', pageSize: 100 }, signal),
-    []
+    ({ signal }) => listOwnTasks({ scope: 'today', pageSize: 100 }, { signal, session }),
+    [session]
   );
   const loadReminders = useCallback(async ({ signal }) => {
-    const result = await listOwnReminders({}, signal);
+    const result = await listOwnReminders({}, { signal, session });
     return {
       data: result,
       partial: Boolean(result?.meta?.partial),
       unavailableSources: result?.meta?.unavailableSources || []
     };
-  }, []);
+  }, [session]);
   const tasks = useChildDataResource({ load: loadTasks });
   const reminders = useChildDataResource({ load: loadReminders });
   const taskItems = tasks.data?.items || [];
@@ -80,9 +82,11 @@ const ChildTodayPage = () => {
                 <span className={`child-dimension is-${item.dimension}`}>{DIMENSION_LABELS[item.dimension] || item.dimension}</span>
                 <strong>{item.title}</strong>
                 <span>{STATUS_LABELS[item.status] || item.status}</span>
+                {item.starAwardState === 'awarded' && <span>星星已到账</span>}
+                {item.starAwardState === 'pending' && <span>星星待到账</span>}
               </>
             );
-            return item.status === 'pending' ? (
+            return ['pending', 'completed', 'confirmed'].includes(item.status) ? (
               <Link className="child-task-row" to={`/child/tasks/${item.taskId}`} key={item.taskId}>{content}</Link>
             ) : (
               <article className="child-task-row" key={item.taskId}>{content}</article>
@@ -91,6 +95,7 @@ const ChildTodayPage = () => {
         </div>
       </section>
 
+      <CompletionRecoveryList role="student" childId={session.actorId} />
       <section className="child-section" aria-labelledby="child-reminders-title">
         <h2 id="child-reminders-title">今日提醒</h2>
         {reminders.data && reminderItems.length === 0 && <p className="child-empty-copy">今天暂无提醒。</p>}
@@ -102,6 +107,17 @@ const ChildTodayPage = () => {
       </section>
     </section>
   );
+};
+
+const ChildTodayPage = () => {
+  const [, setGeneration] = useState(0);
+  useEffect(() => subscribeSessionChanges(() => setGeneration(value => value + 1)), []);
+  const identity = { session: captureSession('student'), child: loadChildSession()?.child };
+  if (!identity.session || !identity.child || !isSessionCurrent(identity.session)) {
+    return <p role="alert">请重新登录后查看今天的任务。</p>;
+  }
+  return <ChildTodayContent key={JSON.stringify([identity.session.actorId, identity.child.familyId,
+    identity.child.childId, identity.session.revision])} session={identity.session} />;
 };
 
 export default ChildTodayPage;

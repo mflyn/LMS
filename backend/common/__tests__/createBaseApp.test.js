@@ -1,4 +1,6 @@
-const request = require('supertest');
+const { createHttpTestHarness } = require('../test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 
 describe('createBaseApp security middleware', () => {
   const originalSensitiveLimit = process.env.SENSITIVE_RATE_LIMIT_MAX_REQUESTS;
@@ -26,9 +28,9 @@ describe('createBaseApp security middleware', () => {
       res.json({ success: true });
     });
 
-    await request(app).post('/api/auth/child-pin-login').send({ pin: '0000' }).expect(200);
-    await request(app).post('/api/auth/child-pin-login').send({ pin: '0000' }).expect(200);
-    const limited = await request(app).post('/api/auth/child-pin-login').send({ pin: '0000' });
+    await (await request(app)).post('/api/auth/child-pin-login').send({ pin: '0000' }).expect(200);
+    await (await request(app)).post('/api/auth/child-pin-login').send({ pin: '0000' }).expect(200);
+    const limited = await (await request(app)).post('/api/auth/child-pin-login').send({ pin: '0000' });
 
     expect(limited.status).toBe(429);
     expect(limited.body).toEqual({

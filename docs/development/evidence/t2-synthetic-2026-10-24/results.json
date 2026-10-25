@@ -1,0 +1,923 @@
+{
+  "schemaVersion": 1,
+  "scope": "ENGINEERING_SYNTHETIC_ONLY",
+  "derivedFromExistingReports": true,
+  "latestFullRegressionSource": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family.json",
+  "latestFullRegressionStatus": "FAILED",
+  "failureDisposition": "REMAINDER_DEFERRED",
+  "device": "DEVICE_PENDING",
+  "deployment": "T8_PENDING / NOT_AUTHORIZED",
+  "note": "Historical runs, not new verification. Original private logs and media are excluded.",
+  "unreadableJson": [
+    "release-gate-artifacts/t2-engineering-closure-2026-10-24/build/manifest.json"
+  ],
+  "results": [
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-directory_await.json",
+      "sourceSha256": "24e9ab0c9225bd24fff9453be6384857255dda5f2707054d64a52eecc1ade608",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 12,
+      "passed": 0,
+      "failed": 2,
+      "pending": 10,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits directory sync before publish/success and closes both handles"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-directory_sync.json",
+      "sourceSha256": "26e0964912513c01bd14d9fb0fbafb1d6f7fe839e23adfed8421c6444da9984a",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 12,
+      "passed": 0,
+      "failed": 2,
+      "pending": 10,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits directory sync before publish/success and closes both handles"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-file_await.json",
+      "sourceSha256": "0b9b9b8bd9182d0a6e3395e2329265f66269c5c42f42dc80f7122d27156bd4c1",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 12,
+      "passed": 1,
+      "failed": 1,
+      "pending": 10,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-body-mutant-final-file_sync.json",
+      "sourceSha256": "1ff60673b076e8c4789dddeea3aa303a470c07a44b1453eb694d255967769b21",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 12,
+      "passed": 1,
+      "failed": 1,
+      "pending": 10,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-assembly.json",
+      "sourceSha256": "2548a98ee08ce4234aec65fe1e20aca436b75fc135fd173d94195fce9e625211",
+      "success": true,
+      "suites": 1,
+      "passedSuites": 1,
+      "failedSuites": 0,
+      "tests": 106,
+      "passed": 106,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-family.json",
+      "sourceSha256": "b36646b193e9763c78ef8c6be61d085abb63976d0fd27b1f758698c52fe7b206",
+      "success": false,
+      "suites": 143,
+      "passedSuites": 142,
+      "failedSuites": 1,
+      "tests": 3926,
+      "passed": 3925,
+      "failed": 1,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionProductionAssembly.test.js",
+          "name": "gateway JWT, child token version and live family boundaries reject without writes"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-frontend.json",
+      "sourceSha256": "196c4fbc27351d5a67a33747bc36b9ce2c0a860770317c04baa8b8f6000d8dbd",
+      "success": true,
+      "suites": 40,
+      "passedSuites": 40,
+      "failedSuites": 0,
+      "tests": 490,
+      "passed": 490,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-http-diagnostic.json",
+      "sourceSha256": "c11d0eb02ff922281b2993ef5e8fdb7dd7701ee62bb5c99ee5c782c46bbf083a",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 9,
+      "passed": 7,
+      "failed": 2,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/tests/t2/completion.integration.test.js",
+          "name": "T2 real login and official HTTP completion protocol sibling, foreign family and stale child cannot read or change work; public internal endpoints stay closed"
+        },
+        {
+          "file": "backend/tests/t2/completion.integration.test.js",
+          "name": "T2 real login and official HTTP completion protocol normal privacy deletion invalidates a prior capability without changing teaching state, reward or first deletion audit"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-http-latest.json",
+      "sourceSha256": "8338e9babbb440972f14a203ea33dae908069677b797bb8ddeee9e3b41da1dbb",
+      "success": true,
+      "suites": 2,
+      "passedSuites": 2,
+      "failedSuites": 0,
+      "tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-http.json",
+      "sourceSha256": "41674f68223481c557476af7d199b0f0a70da29822d5bd135c1419800dd5fd43",
+      "success": false,
+      "suites": 2,
+      "passedSuites": 1,
+      "failedSuites": 1,
+      "tests": 14,
+      "passed": 12,
+      "failed": 2,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/tests/t2/completion.integration.test.js",
+          "name": "T2 real login and official HTTP completion protocol sibling, foreign family and stale child cannot read or change work; public internal endpoints stay closed"
+        },
+        {
+          "file": "backend/tests/t2/completion.integration.test.js",
+          "name": "T2 real login and official HTTP completion protocol normal privacy deletion invalidates a prior capability without changing teaching state, reward or first deletion audit"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-red-http.json",
+      "sourceSha256": "9dc7f41f3c31c2a9f2d1cc0980f2fcb2fdf18acb907d884d628374566be6944c",
+      "success": false,
+      "suites": 2,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 14,
+      "passed": 0,
+      "failed": 1,
+      "pending": 13,
+      "failures": [
+        {
+          "file": "backend/tests/t2/completion.integration.test.js",
+          "name": "T2 real login and official HTTP completion protocol a replacement snapshot clears omitted compatibility values and replays without republishing or changing first audit"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-red-unit.json",
+      "sourceSha256": "f4d0ee31b0df1377cd561f166b6f1367e9a29b1b34ae885f03df6ba32a795e5b",
+      "success": false,
+      "suites": 2,
+      "passedSuites": 0,
+      "failedSuites": 2,
+      "tests": 12,
+      "passed": 6,
+      "failed": 6,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store file synchronization failure rejects and cleans only this unpublished upload"
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store directory synchronization failure rejects and cleans only this unpublished upload"
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits directory sync before publish/success and closes both handles"
+        },
+        {
+          "file": "backend/gateway/__tests__/productionErrorContract.test.js",
+          "name": "production error contract expired real JWT is an authentication failure, not a permission denial"
+        },
+        {
+          "file": "backend/gateway/__tests__/productionErrorContract.test.js",
+          "name": "production error contract invalid real JWT is an authentication failure, not a permission denial"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-three-p2-2026-10-24/lms-t2-three-p2-unit-latest.json",
+      "sourceSha256": "c59d4bd92d96225bc41b959141729ea6f856a8d6b861db7a63889a2b6913c6ab",
+      "success": true,
+      "suites": 3,
+      "passedSuites": 3,
+      "failedSuites": 0,
+      "tests": 37,
+      "passed": 37,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/family.json",
+      "sourceSha256": "38d372ae7dc764661aa07238fc6b4a9cd3b34f7ac1d497a11b465ba432742a62",
+      "success": true,
+      "suites": 143,
+      "passedSuites": 143,
+      "failedSuites": 0,
+      "tests": 3926,
+      "passed": 3926,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/frontend.json",
+      "sourceSha256": "cb5967d2eaa8330c988519e23ef96bfc4c5213a1d1c4d5f9ccf53e9b5d934187",
+      "success": true,
+      "suites": 40,
+      "passedSuites": 40,
+      "failedSuites": 0,
+      "tests": 490,
+      "passed": 490,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/http.json",
+      "sourceSha256": "8bb528fa2a8694dcf47a9c747b6a532ee85e7f3dc0c1e8f3d519adc1752019a4",
+      "success": true,
+      "suites": 2,
+      "passedSuites": 2,
+      "failedSuites": 0,
+      "tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-directory_await.json",
+      "sourceSha256": "1d036868ff8a97e0d05aadd123e36fc1a553cccaf30ba8fb277b8688afb727c0",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 12,
+      "passed": 0,
+      "failed": 2,
+      "pending": 10,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits directory sync before publish/success and closes both handles"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-directory_sync.json",
+      "sourceSha256": "4b55bd740d5fee4ddcc76c5eb349e9432b757554b7424827126877da2596082f",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 12,
+      "passed": 0,
+      "failed": 2,
+      "pending": 10,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits directory sync before publish/success and closes both handles"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-file_await.json",
+      "sourceSha256": "707ef531ffad791ecfe3e6b55459b8641ff127ac75fa7973d7717cb2e17b4d82",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 12,
+      "passed": 1,
+      "failed": 1,
+      "pending": 10,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/mutant-file_sync.json",
+      "sourceSha256": "eea828c9cc6b70360ab70d39fc85d943ae0498b25aba8d92661ebc56c6b82b63",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 12,
+      "passed": 1,
+      "failed": 1,
+      "pending": 10,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "name": "private canonical media store awaits file sync before publish/success and closes both handles"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/review/unit.json",
+      "sourceSha256": "f6b6ac7b2ac6147ca25027a1c4e8da069df74fff085306c1a7b683553bc0a964",
+      "success": true,
+      "suites": 3,
+      "passedSuites": 3,
+      "failedSuites": 0,
+      "tests": 37,
+      "passed": 37,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/boundary-red.json",
+      "sourceSha256": "352fe446d450618739ee332c7e4eec56abe1c9bb58e69222936576e8fa9e8c2a",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 50,
+      "passed": 0,
+      "failed": 1,
+      "pending": 49,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and T2 synthetic closure boundaries rejects T2 closure scope widens without changing files"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/cache-red.json",
+      "sourceSha256": "c70da52d6aa12288faf8dd10175f30496cf35960ab2c56f9645422b224b01e3a",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 51,
+      "passed": 0,
+      "failed": 1,
+      "pending": 50,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and T2 synthetic closure boundaries does not depend on the ignored local evidence archive for approval"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/docs-green.json",
+      "sourceSha256": "df348c93aa02fd48e640eec95c670c120ae796329220e15af37e5be7d23470ee",
+      "success": true,
+      "suites": 1,
+      "passedSuites": 1,
+      "failedSuites": 0,
+      "tests": 51,
+      "passed": 51,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/docs-red.json",
+      "sourceSha256": "5f49a3c6c864ff1d277a154bfdf108c599d01e7c4575ea57bba39289f05000f3",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 35,
+      "passed": 0,
+      "failed": 1,
+      "pending": 34,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and T2 synthetic closure boundaries records approved T2 engineering closure without granting device or deployment approval"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-engineering-closure-2026-10-24/validation/family-common.json",
+      "sourceSha256": "efd061b49abb8402d1de4385391db611282fd66bf8ac5cd69a2967e2b04ce978",
+      "success": true,
+      "suites": 41,
+      "passedSuites": 41,
+      "failedSuites": 0,
+      "tests": 654,
+      "passed": 654,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-green.json",
+      "sourceSha256": "4bde60c92e53553618c23833428f3eecf8d7b1a7a9c143f4cf3f5a58615fa173",
+      "success": true,
+      "suites": 1,
+      "passedSuites": 1,
+      "failedSuites": 0,
+      "tests": 53,
+      "passed": 53,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-link-failure.json",
+      "sourceSha256": "9481448f70b653e9648abbc2609c7d1f0cffd4e73527ccb212c57c435b04f94a",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 53,
+      "passed": 48,
+      "failed": 5,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "family baseline documentation gate the repeatable documentation audit succeeds"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries accepts the approved closure while keeping historical OPEN records"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries keeps T2 pending after defect approval without granting device or deployment approval"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries does not depend on the ignored local evidence archive for approval"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries accepts one T2 row with normalized Markdown whitespace"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/docs-red.json",
+      "sourceSha256": "804736f3f0f677a89bba8eb8e32f41d205adf27ec05c55d76a9dac9880448c31",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 53,
+      "passed": 30,
+      "failed": 23,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "family baseline documentation gate the repeatable documentation audit succeeds"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries accepts the approved closure while keeping historical OPEN records"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries keeps T2 pending after defect approval without granting device or deployment approval"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries does not depend on the ignored local evidence archive for approval"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 closes before approval without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 progress is lost without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 row is missing without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 duplicate row without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 conflicting row before without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 conflicting row after without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 whitespace duplicate without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 whitespace conflict before without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 whitespace conflict after without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 whitespace premature closure without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 approval is missing without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 execution closes prematurely without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 approval invented without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 gate closed without approval without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 batches closed without approval without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 design status regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 plan status regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries rejects T2 navigation regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries accepts one T2 row with normalized Markdown whitespace"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family-common-link-failure.json",
+      "sourceSha256": "2d610a8bb43bd00bf3b40cab04feebfa2ae7ff9899cd7be182309ada020aad23",
+      "success": false,
+      "suites": 41,
+      "passedSuites": 38,
+      "failedSuites": 3,
+      "tests": 656,
+      "passed": 643,
+      "failed": 13,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "family baseline documentation gate the repeatable documentation audit succeeds"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries accepts the approved closure while keeping historical OPEN records"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries keeps T2 pending after defect approval without granting device or deployment approval"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries does not depend on the ignored local evidence archive for approval"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 closure and pending T2 acceptance boundaries accepts one T2 row with normalized Markdown whitespace"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionCompose.test.js",
+          "name": "backend/.env.example accepts unique safe controls with quoted-export-crlf"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionCompose.test.js",
+          "name": "backend/.env.example accepts unique safe controls with quoted-comment-cr"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionCompose.test.js",
+          "name": "docker-compose.ubuntu.env.example accepts unique safe controls with quoted-export-crlf"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionCompose.test.js",
+          "name": "docker-compose.ubuntu.env.example accepts unique safe controls with quoted-comment-cr"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionRetentionConfiguration.test.js",
+          "name": "backend/.env.example gate accepts all five unique defaults with quoted-export-crlf"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionRetentionConfiguration.test.js",
+          "name": "backend/.env.example gate accepts all five unique defaults with quoted-comment-cr"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionRetentionConfiguration.test.js",
+          "name": "docker-compose.ubuntu.env.example gate accepts all five unique defaults with quoted-export-crlf"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionRetentionConfiguration.test.js",
+          "name": "docker-compose.ubuntu.env.example gate accepts all five unique defaults with quoted-comment-cr"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family-common.json",
+      "sourceSha256": "8021b41467c3fc7a5f9257c9ceffa5aa53d7f37594d844f4c381bf97c324439f",
+      "success": true,
+      "suites": 41,
+      "passedSuites": 41,
+      "failedSuites": 0,
+      "tests": 656,
+      "passed": 656,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family.json",
+      "sourceSha256": "4a04d3098807b09bd7232c455b2cafa10f8f9caf69b6cfd95a219e0dc73973f1",
+      "success": false,
+      "suites": 143,
+      "passedSuites": 142,
+      "failedSuites": 1,
+      "tests": 3943,
+      "passed": 3942,
+      "failed": 1,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRecoveryReadiness.test.js",
+          "name": "D2B-05 real connected proof bytes exceed 16MiB before the 100-file ceiling",
+          "messages": [
+            "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 8\n\n  Object {\n-   \"nativeErrors\": Array [],\n+   \"nativeErrors\": Array [\n+     Object {\n+       \"code\": 50,\n+       \"name\": \"mediareferences\",\n+       \"type\": \"MongoServerError\",\n+     },\n+   ],\n    \"nextPass\": 0,\n    \"reasons\": Array [\n-     \"USER_DELETION_EVIDENCE_INVALID\",\n+     \"USER_DELETION_READINESS_NOT_READY\",\n    ],\n  }\n    at Object.toEqual (<repository>/backend/services/resource-service/__tests__/userDeletionRecoveryReadiness.test.js:619:6)"
+          ]
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs-green.json",
+      "sourceSha256": "d01d54a7c48645223a0c12c848bc241a074516ff82139f4388004c7c890009c7",
+      "success": true,
+      "suites": 1,
+      "passedSuites": 1,
+      "failedSuites": 0,
+      "tests": 59,
+      "passed": 59,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs-red.json",
+      "sourceSha256": "2ec137e449e45997c0a11d9466fe12173ace4c69e9f66642f8197e58e2262363",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 59,
+      "passed": 30,
+      "failed": 29,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "family baseline documentation gate the repeatable documentation audit succeeds"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries accepts the approved closure while keeping historical OPEN records"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries accepts explicit synthetic T2 approval without granting device or deployment approval"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries does not depend on the ignored local evidence archive for approval"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 closure regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 progress is lost without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 row is missing without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 duplicate row without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 conflicting row before without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 conflicting row after without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 whitespace duplicate without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 whitespace conflict before without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 whitespace conflict after without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 whitespace regression without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 approval is missing without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 execution loses scope without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 approval regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 gate regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 batches regress without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects full regression green invented without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects full regression failure count erased without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects D2B-05 incorrectly closed without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects failure evidence replaced without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects full regression header green invented without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects Git authorization invented without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 design status regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 plan status regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries rejects T2 navigation regresses without changing files"
+        },
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries accepts one T2 row with normalized Markdown whitespace"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/docs.json",
+      "sourceSha256": "57b4cfbbe8c9933f799d8f124026e1132d409d0820fd3a9988516b2913647675",
+      "success": false,
+      "suites": 1,
+      "passedSuites": 0,
+      "failedSuites": 1,
+      "tests": 59,
+      "passed": 58,
+      "failed": 1,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries accepts one T2 row with normalized Markdown whitespace"
+        }
+      ]
+    },
+    {
+      "source": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/family-common-green.json",
+      "sourceSha256": "7bb501d0f0ba6b8ebfb6b49f532f7515663d27620cc0cfee97a11e03fd75c99f",
+      "success": true,
+      "suites": 41,
+      "passedSuites": 41,
+      "failedSuites": 0,
+      "tests": 662,
+      "passed": 662,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "source": "release-gate-artifacts/t2-synthetic-approval-2026-10-24/family-common.json",
+      "sourceSha256": "5dbfd0819eb5e58ef71621d49ee6f028b76bb9d168d581b3998f717155c7562b",
+      "success": false,
+      "suites": 41,
+      "passedSuites": 40,
+      "failedSuites": 1,
+      "tests": 662,
+      "passed": 661,
+      "failed": 1,
+      "pending": 0,
+      "failures": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "name": "approved T1 and bounded T2 closure boundaries accepts one T2 row with normalized Markdown whitespace"
+        }
+      ]
+    }
+  ]
+}

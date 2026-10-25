@@ -1,0 +1,474 @@
+{
+  "baseline": "548865738e8b5fb9ac67f20f51e4edb05df0a2f7",
+  "environment": {
+    "node": "v22.15.0",
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "originalQaManifest": {
+    "entries": 162,
+    "unchanged": true,
+    "sha256": "3285afc3f0ed63866b31cdb22fb8b7571b450c28cfa0380a7abfc3e1780991c3"
+  },
+  "results": {
+    "budget-baseline.json": {
+      "success": true,
+      "suites": 1,
+      "suitesPassed": 1,
+      "suitesFailed": 0,
+      "tests": 139,
+      "passed": 1,
+      "failed": 0,
+      "pending": 138,
+      "seconds": 39.338,
+      "failures": [],
+      "sha256": "a07b3d57b8436f366dc69f5da238589388c9fb0fc9438da03dd0b71007f05164"
+    },
+    "budget-green.json": {
+      "success": true,
+      "suites": 1,
+      "suitesPassed": 1,
+      "suitesFailed": 0,
+      "tests": 142,
+      "passed": 4,
+      "failed": 0,
+      "pending": 138,
+      "seconds": 38.033,
+      "failures": [],
+      "sha256": "d7f371898505a65a1b6970256cda71f945fa28814b461a3d0c98d8f153ee4269"
+    },
+    "budget-red.json": {
+      "success": false,
+      "suites": 1,
+      "suitesPassed": 0,
+      "suitesFailed": 1,
+      "tests": 142,
+      "passed": 2,
+      "failed": 1,
+      "pending": 139,
+      "seconds": 5.976,
+      "failures": [
+        "D2B budget discovers each connected member once per paused closure without skipping audit"
+      ],
+      "sha256": "232ddb9bd705b63cd1efd40963392d9f1b4203f87b1aed67acd6e65054fad07c"
+    },
+    "common-only.json": {
+      "success": true,
+      "suites": 41,
+      "suitesPassed": 41,
+      "suitesFailed": 0,
+      "tests": 667,
+      "passed": 667,
+      "failed": 0,
+      "pending": 0,
+      "seconds": 30.522,
+      "failures": [],
+      "sha256": "f25d83d5cf622c589bfa938a4b01fbc7c72f4d9678e84fea2dacd7369a10f29c"
+    },
+    "docs-final.json": {
+      "success": true,
+      "suites": 1,
+      "suitesPassed": 1,
+      "suitesFailed": 0,
+      "tests": 64,
+      "passed": 64,
+      "failed": 0,
+      "pending": 0,
+      "seconds": 7.216,
+      "failures": [],
+      "sha256": "1b15210c1accd6055656ab0ccb7d8f606a45b53993a08afd24693c2a0d2e7275"
+    },
+    "fallback-red.json": {
+      "success": false,
+      "suites": 1,
+      "suitesPassed": 0,
+      "suitesFailed": 1,
+      "tests": 8,
+      "passed": 7,
+      "failed": 1,
+      "pending": 0,
+      "seconds": 3.436,
+      "failures": [
+        "returns to a surviving sibling action if confirmation removes its original trigger"
+      ],
+      "sha256": "d42ed118d53d0c3d9bda822b142a29e32861919157f394bcadb46e4c796a2403"
+    },
+    "frontend-final.json": {
+      "success": true,
+      "suites": 41,
+      "suitesPassed": 41,
+      "suitesFailed": 0,
+      "tests": 499,
+      "passed": 499,
+      "failed": 0,
+      "pending": 0,
+      "seconds": 22.359,
+      "failures": [],
+      "sha256": "69d56cca1969af7b433816885ae0e342be80aff2ec9fd91b598c35460f3a2e9b"
+    },
+    "frontend-full.json": {
+      "success": true,
+      "suites": 41,
+      "suitesPassed": 41,
+      "suitesFailed": 0,
+      "tests": 498,
+      "passed": 498,
+      "failed": 0,
+      "pending": 0,
+      "seconds": 20.568,
+      "failures": [],
+      "sha256": "bdd418fcee7b133cedbeb92c6cf1ab65a404163531af9685891fff1118534fe3"
+    },
+    "frontend-red.json": {
+      "success": false,
+      "suites": 2,
+      "suitesPassed": 0,
+      "suitesFailed": 2,
+      "tests": 10,
+      "passed": 4,
+      "failed": 6,
+      "pending": 0,
+      "seconds": 10.308,
+      "failures": [
+        "Task 12 invitation authentication return TC-T12-UI-003 preserves fragment through login and clears it after acceptance (delayed preview=true)",
+        "recovers focus when the active control is removed",
+        "recovers focus when the active control is disabled",
+        "recovers focus when the active control is hidden",
+        "keeps background inert, traps outside focus and both Tab directions, and restores the trigger",
+        "a dialog without controls remains focused and handles Tab and Escape from BODY"
+      ],
+      "sha256": "2072edc1fb14253453330b0356f51ebd009680141f69871a7bb68407ba222d6e"
+    },
+    "frontend-target-green.json": {
+      "success": true,
+      "suites": 5,
+      "suitesPassed": 5,
+      "suitesFailed": 0,
+      "tests": 51,
+      "passed": 51,
+      "failed": 0,
+      "pending": 0,
+      "seconds": 5.62,
+      "failures": [],
+      "sha256": "cd87fa0ad9dc0f6d219f9276889a669a2d41ed11cfbe0c5eb7de99b500bf4956"
+    },
+    "readiness-full.json": {
+      "success": true,
+      "suites": 1,
+      "suitesPassed": 1,
+      "suitesFailed": 0,
+      "tests": 142,
+      "passed": 142,
+      "failed": 0,
+      "pending": 0,
+      "seconds": 161.787,
+      "failures": [],
+      "sha256": "c86606144937c79af0bcbc04024fb7514651cd5b44029dd2b43aea11f8992cda"
+    },
+    "t2-http.json": {
+      "success": true,
+      "suites": 2,
+      "suitesPassed": 2,
+      "suitesFailed": 0,
+      "tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "pending": 0,
+      "seconds": 31.55,
+      "failures": [],
+      "sha256": "1d4d876a43c2af4604f23360eeace4f9bb4485c05f679159f92ea7c425b3b089"
+    }
+  },
+  "files": [
+    {
+      "file": "backend/services/resource-service/__tests__/userDeletionRecoveryReadiness.test.js",
+      "sha256": "0b779da6614656c8c0a503bddfa9951d8105ddb0a58dc11e404acd22e573bb42"
+    },
+    {
+      "file": "backend/services/resource-service/services/userDeletionRecoveryReadiness.js",
+      "sha256": "ba3eef9587d1a043d3a749fac9849b69ca2112c06f67e84a2f1023f7b4345ed0"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/Task12InvitationFlow.test.js",
+      "sha256": "c6a6213864c2fa05dab87660a526dddc4442ab6fc02e5dea171b7ccd2338eb5a"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TaskCompletionReview.test.js",
+      "sha256": "b6a03bf7788874f9be5fe5f00291e6f3ca1b5dd6c3773ff6c049d1bc829e3e28"
+    },
+    {
+      "file": "frontend/web/src/__tests__/shared/CompletionRecoveryList.test.js",
+      "sha256": "12abc637c4258515b185f03b2845710a60e3cd76bdf25b9bd43feea549937cd9"
+    },
+    {
+      "file": "frontend/web/src/components/family/CompletionRecoveryList.js",
+      "sha256": "8eb3bf1d19a145a58d952be4207c95fbd1af010a31b3bee592eac383f9094e20"
+    },
+    {
+      "file": "frontend/web/src/components/family/FamilyDialog.js",
+      "sha256": "5621d1bb0def731796829954b0a75e810460bc0753bad3817c3b8c164011c4b2"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TasksPage.js",
+      "sha256": "ecfa751328503e0c8e225ff1abac90f589a2e51bba396d3574da2fc05cb17a9b"
+    },
+    {
+      "file": "tests/e2e/t2/completion.spec.js",
+      "sha256": "1063437f6d6cd18fe6720a19bb9fe57c33fd5e19feb9ce39f94dfe4d9f9f0bc1"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/FamilyDialog.test.js",
+      "sha256": "8a2c8e5ac3d4582eca9d611ec5476cd9d36e4423e16aff901f11ae8c0ddafbf9"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "CPU.20261025.093050.24406.0.001.cpuprofile",
+      "sha256": "96c4e87847fa313ae68290b960aa7a0737776866e68cba02fdf1003a99e46105",
+      "bytes": 3449580
+    },
+    {
+      "file": "browser-red.log",
+      "sha256": "d7080dbb5010792c3ad215c3398e1ea470b8e877778d17877c04598dba7fd2c4",
+      "bytes": 4143
+    },
+    {
+      "file": "budget-baseline.json",
+      "sha256": "a07b3d57b8436f366dc69f5da238589388c9fb0fc9438da03dd0b71007f05164",
+      "bytes": 46291
+    },
+    {
+      "file": "budget-baseline.log",
+      "sha256": "fa141d6739478f58d8ee3e44131edc44690474a16d42aa410d1b541352c76050",
+      "bytes": 11755
+    },
+    {
+      "file": "budget-green.json",
+      "sha256": "d7f371898505a65a1b6970256cda71f945fa28814b461a3d0c98d8f153ee4269",
+      "bytes": 47295
+    },
+    {
+      "file": "budget-green.log",
+      "sha256": "67f0335eb483e88dd1d78c063ace2df6d1dfa1c0b6b8036f32e3d0b48e9be55d",
+      "bytes": 12014
+    },
+    {
+      "file": "budget-red.json",
+      "sha256": "232ddb9bd705b63cd1efd40963392d9f1b4203f87b1aed67acd6e65054fad07c",
+      "bytes": 49356
+    },
+    {
+      "file": "budget-red.log",
+      "sha256": "c393825cfa11ebed76a0ad2ef9c8a52c3a0998cbc29d77d3380c5e40195d6e48",
+      "bytes": 13038
+    },
+    {
+      "file": "build-final.log",
+      "sha256": "368f1f44221afd6f366dcaf6605c04d36fb62f727eeebc5521657a007dad8709",
+      "bytes": 1057
+    },
+    {
+      "file": "build.log",
+      "sha256": "54a9f12dc32b727b65e97bf8bd965b8ebda098660a450b5f5971360b46e1c0eb",
+      "bytes": 1033
+    },
+    {
+      "file": "chromium-final.log",
+      "sha256": "f181e462d10ad41d115fd3e00903132b9c5843771ae7bb88680992630522cd3c",
+      "bytes": 2636
+    },
+    {
+      "file": "chromium.log",
+      "sha256": "ab733af2e0213febf328e84b65e6dd6d56181610f9d4fe737ce9f1e7ff2eac85",
+      "bytes": 4283
+    },
+    {
+      "file": "common-only.json",
+      "sha256": "f25d83d5cf622c589bfa938a4b01fbc7c72f4d9678e84fea2dacd7369a10f29c",
+      "bytes": 248067
+    },
+    {
+      "file": "common-only.log",
+      "sha256": "0ca91cc8af47d10626fdfc9b45aba2f220fe0a038a0c787fe264006802095786",
+      "bytes": 26237
+    },
+    {
+      "file": "docs-check.log",
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1",
+      "bytes": 324
+    },
+    {
+      "file": "docs-clean-final.log",
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1",
+      "bytes": 324
+    },
+    {
+      "file": "docs-final.json",
+      "sha256": "1b15210c1accd6055656ab0ccb7d8f606a45b53993a08afd24693c2a0d2e7275",
+      "bytes": 26275
+    },
+    {
+      "file": "docs-final.log",
+      "sha256": "4ef6686e903dff6f60ed5d9de3c69ba31497f63424840cf98986d966fe43388d",
+      "bytes": 5233
+    },
+    {
+      "file": "fallback-red.json",
+      "sha256": "d42ed118d53d0c3d9bda822b142a29e32861919157f394bcadb46e4c796a2403",
+      "bytes": 6140
+    },
+    {
+      "file": "fallback-red.log",
+      "sha256": "fd8eab0a5cf05f93fa40255fbc56402fe316c0bf828a0c48e666c5ea06c47124",
+      "bytes": 2327
+    },
+    {
+      "file": "family-full.log",
+      "sha256": "6fabb5fb75ef6a5463919a0813a50edc1eac6f0ac0c6362bb051a9db665d1fae",
+      "bytes": 1543019
+    },
+    {
+      "file": "frontend-final.json",
+      "sha256": "69d56cca1969af7b433816885ae0e342be80aff2ec9fd91b598c35460f3a2e9b",
+      "bytes": 137479
+    },
+    {
+      "file": "frontend-final.log",
+      "sha256": "fe4566f95c98fa2bf133a13201bd9a85c3c3caf53d3ac7aa754ae7da1a8e5e2d",
+      "bytes": 2531
+    },
+    {
+      "file": "frontend-full.json",
+      "sha256": "bdd418fcee7b133cedbeb92c6cf1ab65a404163531af9685891fff1118534fe3",
+      "bytes": 137213
+    },
+    {
+      "file": "frontend-full.log",
+      "sha256": "f787fa08fb654a38f1e2284c1311132ca2b133d1fdbc420166b81044c10405d0",
+      "bytes": 2528
+    },
+    {
+      "file": "frontend-red.json",
+      "sha256": "2072edc1fb14253453330b0356f51ebd009680141f69871a7bb68407ba222d6e",
+      "bytes": 32652
+    },
+    {
+      "file": "frontend-red.log",
+      "sha256": "69b2695bfc63fb6b7e7238145b57f4aaa2288917073a3424742de6ca2f476174",
+      "bytes": 12879
+    },
+    {
+      "file": "frontend-target-green.json",
+      "sha256": "cd87fa0ad9dc0f6d219f9276889a669a2d41ed11cfbe0c5eb7de99b500bf4956",
+      "bytes": 14073
+    },
+    {
+      "file": "frontend-target-green.log",
+      "sha256": "e774edb4358acd15c300d123a8d2408a37ec43f23aab256ecab85a7bd9492793",
+      "bytes": 1245
+    },
+    {
+      "file": "gitleaks.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    {
+      "file": "gitleaks.log",
+      "sha256": "2884945de885f366200d7b8b6cf44c95fe804a9274500b86fb348cce0fe2a42b",
+      "bytes": 143
+    },
+    {
+      "file": "lint-clean-final.log",
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+      "bytes": 36
+    },
+    {
+      "file": "lint-clean.log",
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+      "bytes": 36
+    },
+    {
+      "file": "lint-target.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "readiness-full.json",
+      "sha256": "c86606144937c79af0bcbc04024fb7514651cd5b44029dd2b43aea11f8992cda",
+      "bytes": 47024
+    },
+    {
+      "file": "readiness-full.log",
+      "sha256": "48cc399da325b6a6ccb0a509f9258fc2e1b240be0109462ce87973f12cd17bae",
+      "bytes": 12150
+    },
+    {
+      "file": "t2-http.json",
+      "sha256": "1d4d876a43c2af4604f23360eeace4f9bb4485c05f679159f92ea7c425b3b089",
+      "bytes": 7523
+    },
+    {
+      "file": "t2-http.log",
+      "sha256": "0abde2508286a53b5f975771eedebc0f56d06194554d019e5f009c5d1003d646",
+      "bytes": 835
+    },
+    {
+      "file": "task12-browser.log",
+      "sha256": "838591e23a4b2dbac2e03a48e84123f29cbf2ca800e76239a68dbb6f8b29a7eb",
+      "bytes": 2037
+    },
+    {
+      "file": "upload-target.log",
+      "sha256": "48e3adc59f5eab9551ed5937c2c3e8d4765a11490ae16e3f3e468a554e683e6a",
+      "bytes": 442
+    },
+    {
+      "file": "webkit-final.log",
+      "sha256": "5d63617b0a6f8f5c1e6be990aed8aa9ee1bd59bb9c37581fb02ef89d42e8c4db",
+      "bytes": 2609
+    },
+    {
+      "file": "webkit.log",
+      "sha256": "560388b66139dc1dcc14edd396fc104cdaf0eb0d0a08d5c82c019f6ac68979b7",
+      "bytes": 4476
+    }
+  ],
+  "notes": [
+    "Raw evidence is local and not committed. Summaries contain counts, test names and hashes only.",
+    "budget-baseline used Node 26; not a controlled Node 22 comparison.",
+    "Focused pending counts are name-filtered tests, not skipped full regressions.",
+    "Ubuntu 2 CPU / 3 GiB validation remains pending; local success is not resource-constrained acceptance."
+  ],
+  "device": "DEVICE_PENDING",
+  "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED",
+  "review": {
+    "type": "independent read-only code review",
+    "agent": "01a170bd-20c1-7a71-a5ab-2b412c66fef1",
+    "actionableFindings": 0,
+    "ran": [
+      "git diff --check HEAD"
+    ],
+    "evidence": "Inspected existing final reports; did not rerun suites.",
+    "limitation": "Not independent Ubuntu QA acceptance."
+  },
+  "authorization": {
+    "pushCurrentBranch": true,
+    "updatePr27": true,
+    "merge": false,
+    "deploy": false
+  },
+  "familyFull": {
+    "exitCode": 1,
+    "suitesPassed": 142,
+    "suitesFailed": 1,
+    "testsPassed": 3965,
+    "testsFailed": 1,
+    "pending": 0,
+    "seconds": 728.959,
+    "readinessSuite": "PASS / 142 tests / 153.956 seconds",
+    "failure": "checkGitClean.test.js: PATH selected old x86 git, spawnSync error -86",
+    "json": "NOT_PRODUCED: Jest circular error serialization; see family-full.log",
+    "disposition": "Historical failure retained; corrected temporary PATH and reran common project separately. Not a full green local run."
+  },
+  "ci": "PENDING_NEW_COMMIT; see PR27 for SHA-specific results"
+}

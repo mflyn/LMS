@@ -8,7 +8,9 @@ const fs = require('fs/promises');
 const mongoose = require('mongoose');
 const os = require('os');
 const path = require('path');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close } = createHttpTestHarness();
+afterEach(close);
 const sharp = require('sharp');
 const { PDFDocument } = require('pdf-lib');
 const { MongoMemoryReplSet } = require('../../../../node_modules/mongodb-memory-server');
@@ -106,7 +108,7 @@ const signedHeaders = (identity, method, originalUrl) => createIdentityHeaders({
   secret: process.env.GATEWAY_IDENTITY_SECRET
 });
 
-const signedUpload = ({
+const signedUpload = async ({
   identity = parentA,
   purpose,
   childId,
@@ -116,7 +118,7 @@ const signedUpload = ({
   targetApp = app
 }) => {
   const requestPath = '/api/media';
-  let operation = request(targetApp)
+  let operation = (await request(targetApp))
     .post(requestPath)
     .set(signedHeaders(identity, 'POST', requestPath))
     .field('purpose', purpose);
@@ -127,11 +129,11 @@ const signedUpload = ({
   return operation;
 };
 
-const signedGet = (identity, requestPath, targetApp = app) => request(targetApp)
+const signedGet = async (identity, requestPath, targetApp = app) => (await request(targetApp))
   .get(requestPath)
   .set(signedHeaders(identity, 'GET', requestPath));
 
-const signedDelete = (identity, requestPath, targetApp = app) => request(targetApp)
+const signedDelete = async (identity, requestPath, targetApp = app) => (await request(targetApp))
   .delete(requestPath)
   .set(signedHeaders(identity, 'DELETE', requestPath));
 
@@ -798,7 +800,7 @@ describe('Task 6 private media access API', () => {
     resetIdentityNonceStore();
     const access = await signedGet(parentA, `/api/media/${asset._id}/access`);
 
-    const response = await request(app).get(access.body.data.access.url);
+    const response = await (await request(app)).get(access.body.data.access.url);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(expectedBytes);
@@ -853,7 +855,7 @@ describe('Task 6 private media access API', () => {
       upload: { singleImage: (_req, _res, next) => next(), removeTemporary: jest.fn() }
     }));
 
-    const response = await request(contentApp).get('/api/media/6656875da7f86a0012c2a301/content');
+    const response = await (await request(contentApp)).get('/api/media/6656875da7f86a0012c2a301/content');
 
     expect(response.status).toBe(200);
     expect(response.headers['content-disposition']).toBe("attachment; filename*=UTF-8''%E6%9C%9F%E4%B8%AD%E8%AF%95%E5%8D%B7%E7%AC%AC3%E9%A2%98.pdf");
@@ -891,7 +893,7 @@ describe('Task 6 private media access API', () => {
     cases.push(signature);
 
     for (const tampered of cases) {
-      const response = await request(app).get(`${tampered.pathname}${tampered.search}`);
+      const response = await (await request(app)).get(`${tampered.pathname}${tampered.search}`);
       expect({
         url: `${tampered.pathname}${tampered.search}`,
         status: response.status,
@@ -907,7 +909,7 @@ describe('Task 6 private media access API', () => {
     }
 
     nowMs = FIXED_NOW + 301_000;
-    const expired = await request(app).get(`${original.pathname}${original.search}`);
+    const expired = await (await request(app)).get(`${original.pathname}${original.search}`);
     expect(expired.status).toBe(400);
     expect(expired.body.error.code).toBe('VALIDATION_ERROR');
   });
@@ -919,8 +921,8 @@ describe('Task 6 private media access API', () => {
     for (const identity of [parentB, childA2]) {
       resetIdentityNonceStore();
       const response = await signedGet(identity, accessPath);
-      expect(response.status).toBe(403);
-      expect(response.body.error.code).toBe('CHILD_ACCESS_DENIED');
+      expect({ status: response.status, code: response.body.error?.code })
+        .toEqual({ status: 403, code: 'CHILD_ACCESS_DENIED' });
       expect(response.body.data).toBeUndefined();
     }
   });
@@ -1041,7 +1043,7 @@ describe('Task 6 private media delete API', () => {
     expect(deniedAccess.status).toBe(404);
     expect(deniedAccess.body.error.code).toBe('RESOURCE_NOT_FOUND');
 
-    const deniedContent = await request(app).get(contentUrl);
+    const deniedContent = await (await request(app)).get(contentUrl);
     expect(deniedContent.status).toBe(404);
     expect(deniedContent.body.error.code).toBe('RESOURCE_NOT_FOUND');
   });

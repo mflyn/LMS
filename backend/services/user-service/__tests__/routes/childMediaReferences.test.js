@@ -1,5 +1,7 @@
 const express = require('express');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const mongoose = require('mongoose');
 
 const User = require('../../../../common/models/User');
@@ -84,7 +86,7 @@ describe('Child avatar media HTTP contract', () => {
       ))
     };
     const path = `/api/children/${child._id}`;
-    const response = await request(appFor(service))
+    const response = await (await request(appFor(service)))
       .patch(path)
       .set(headers(parentIdentity(parent), 'PATCH', path))
       .send({ avatarMediaId: MEDIA_A, school: '新学校' });
@@ -105,14 +107,14 @@ describe('Child avatar media HTTP contract', () => {
     const { parent, child } = await fixture();
     const path = `/api/children/${child._id}`;
     const app = appFor(null);
-    const disabled = await request(app)
+    const disabled = await (await request(app))
       .patch(path)
       .set(headers(parentIdentity(parent), 'PATCH', path))
       .send({ avatarMediaId: MEDIA_A });
     expect(disabled.status).toBe(400);
     expect(disabled.body.error.code).toBe('MEDIA_NOT_ENABLED');
 
-    const unsafe = await request(app)
+    const unsafe = await (await request(app))
       .patch(path)
       .set(headers(parentIdentity(parent), 'PATCH', path))
       .send({ avatar: 'https://example.com/a.png' });
@@ -133,7 +135,7 @@ describe('Child avatar media HTTP contract', () => {
       publicAvatarMediaId: jest.fn(() => null)
     };
     const path = `/api/children/${child._id}`;
-    const response = await request(appFor(service))
+    const response = await (await request(appFor(service)))
       .patch(path)
       .set(headers(parentIdentity(parent), 'PATCH', path))
       .send({ avatarMediaId: MEDIA_A });
@@ -158,13 +160,13 @@ describe('Child avatar media HTTP contract', () => {
     };
     const app = appFor(service);
     const detailPath = `/api/children/${child._id}`;
-    await request(app)
+    await (await request(app))
       .get(detailPath)
       .set(headers(parentIdentity(parent), 'GET', detailPath))
       .expect(200);
     expect(service.resume).toHaveBeenCalledTimes(1);
 
-    await request(app)
+    await (await request(app))
       .get('/api/children')
       .set(headers(parentIdentity(parent), 'GET', '/api/children'))
       .expect(200);
@@ -175,7 +177,7 @@ describe('Child avatar media HTTP contract', () => {
     const { child } = await fixture();
     const service = { mutate: jest.fn(), resume: jest.fn(), publicAvatarMediaId: jest.fn(() => null) };
     const path = `/api/children/${child._id}`;
-    const response = await request(appFor(service))
+    const response = await (await request(appFor(service)))
       .patch(path)
       .set(headers(childIdentity(child), 'PATCH', path))
       .send({ avatarMediaId: MEDIA_A });
@@ -202,7 +204,7 @@ describe('Child avatar media HTTP contract', () => {
       publicAvatarMediaId: jest.fn(() => null)
     };
     const path = `/api/children/${child._id}`;
-    const response = await request(appFor(service, logger))
+    const response = await (await request(appFor(service, logger)))
       .patch(path)
       .set(headers(parentIdentity(parent), 'PATCH', path))
       .send({ avatarMediaId: MEDIA_A, school: 'private-profile-sentinel' });
@@ -232,7 +234,7 @@ describe('Child avatar media HTTP contract', () => {
     expect(connect).not.toHaveBeenCalled();
     connect.mockRestore();
 
-    const response = await request(appFor(null))
+    const response = await (await request(appFor(null)))
       .get('/api/children')
       .set(headers(parentIdentity(parent), 'GET', '/api/children'));
     expect(response.status).toBe(200);

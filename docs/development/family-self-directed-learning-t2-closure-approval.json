@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "task": "T2",
+  "date": "2026-10-24",
+  "status": "APPROVED",
+  "gateStatus": "CLOSED",
+  "scope": "ENGINEERING_SYNTHETIC_ONLY",
+  "source": "latest_direct_user_instruction",
+  "instruction": "批准 T2 限定合成范围的工程验收及总门禁关闭，同步更新门禁、评审记录、实施计划和状态校验。保留本轮 D2B-05 失败证据，不将全量写为全绿；真机保持 DEVICE_PENDING，高级恢复与新回收继续后置，不部署、不提交或推送 Git。",
+  "basis": "Explicit user approval closes only synthetic engineering acceptance. The latest full regression remains FAILED; D2B-05 is retained as deferred, not resolved or passed. See execution sections 16 and 17.",
+  "batchStatus": "CLOSED",
+  "batches": ["T2-2", "T2-3", "T2-4", "T2-5", "T2-6"],
+  "defects": {
+    "T2-P2-JWT": "CLOSED",
+    "T2-P2-SNAPSHOT": "CLOSED",
+    "T2-P2-BODY-SYNC": "CLOSED"
+  },
+  "documentationP3": "CLOSED",
+  "latestFullRegression": {
+    "status": "FAILED",
+    "exitCode": 1,
+    "suites": 143,
+    "passedSuites": 142,
+    "failedSuites": 1,
+    "tests": 3943,
+    "passedTests": 3942,
+    "failedTests": 1,
+    "pendingTests": 0,
+    "failureId": "D2B-05",
+    "disposition": "REMAINDER_DEFERRED",
+    "evidence": "release-gate-artifacts/t2-p2-approved-acceptance-2026-10-24/family.json"
+  },
+  "retained": {
+    "device": "DEVICE_PENDING",
+    "deployment": "T8_PENDING / NOT_AUTHORIZED",
+    "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED",
+    "T1": "CLOSED",
+    "T3-T9": "NOT_STARTED",
+    "SL-01": "PLANNED"
+  },
+  "notAuthorized": ["real_child_data", "real_NAS_operations", "deployment", "git_commit_or_push", "automatic_start_of_T3-T9"],
+  "executionRecord": "docs/development/family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24",
+  "previousDecision": {
+    "status": "PENDING_USER_APPROVAL",
+    "gateStatus": "OPEN",
+    "instruction": "复审通过，更新门禁和评审记录，关闭本次三项 P2。补跑修订后的家庭后端全量回归，保留旧失败证据，更新 T2 工程验收及总门禁关闭评审材料，待我批准后再关闭。",
+    "record": "docs/development/family-self-directed-learning-t2-execution.md#16-三项-p2-批准关闭与工程验收再申请2026-10-24",
+    "supersededBy": "explicit synthetic engineering closure approval in section 17; regression failure remains current",
+    "previousDecision": {
+      "status": "APPROVED",
+      "gateStatus": "CLOSED",
+      "instruction": "先一次性完成 T2 的缺陷／证据／文档与批准收口",
+      "record": "docs/development/family-self-directed-learning-t2-execution.md#15-t2-合成范围工程验收与关闭裁决2026-10-24",
+      "supersededBy": "pending-gate instruction in section 16; historical approval and evidence retained"
+    }
+  }
+}

@@ -151,5 +151,8 @@ const createMediaReferenceClient = ({
 
 module.exports = {
   createMediaReferenceClient,
+  // Keep the new protocol opt-in: existing production callers load only the legacy client.
+  createCompletionMediaReferenceClient: (options) => require('./completionMediaReferenceClient')
+    .createCompletionMediaReferenceClient(options),
   validateMediaReferenceClientConfig
 };

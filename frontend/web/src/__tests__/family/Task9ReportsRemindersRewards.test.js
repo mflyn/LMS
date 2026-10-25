@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import ReportsPage from '../../pages/family/ReportsPage';
@@ -103,8 +103,10 @@ describe('Task 9 reminders', () => {
     updateNotificationSettings.mockResolvedValue({ settings: { ...settings, quietHours: { start: '22:00', end: '07:30' } } });
     renderPage(<RemindersPage />);
 
-    expect(await screen.findByText('今天还有 1 个任务')).toBeInTheDocument();
-    expect(screen.getByRole('list', { name: '暂不可用的数据来源' })).toHaveTextContent('mistakes');
+    expect(await screen.findByRole('heading', { name: '今天还有 1 个任务', level: 2 })).toBeInTheDocument();
+    const unavailableSources = screen.getByRole('list', { name: '暂不可用的数据来源' });
+    expect(within(unavailableSources).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(unavailableSources).getByText('错题数据')).toBeInTheDocument();
     const start = await screen.findByLabelText('免打扰开始');
     const end = screen.getByLabelText('免打扰结束');
     await user.clear(start);

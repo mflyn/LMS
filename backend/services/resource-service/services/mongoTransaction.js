@@ -9,6 +9,10 @@ const createMongoTransactionRunner = (connection) => {
       let result;
       await session.withTransaction(async () => {
         result = await work(session);
+      }, {
+        readConcern: { level: 'snapshot' },
+        writeConcern: { w: 'majority' },
+        readPreference: 'primary'
       });
       return result;
     } finally {

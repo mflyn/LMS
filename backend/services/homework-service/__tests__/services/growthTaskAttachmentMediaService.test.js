@@ -755,7 +755,7 @@ describe('TC-T6-MEDIA-017E GrowthTask attachment recovery', () => {
     }],
     ['prepare response with wrong state', {
       prepare: [
-        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'bound' },
+        { mediaId: MEDIA_A.toLowerCase(), field: 'attachmentMediaIds', state: 'released' },
         { mediaId: MEDIA_B, field: 'attachmentMediaIds', state: 'prepared' }
       ]
     }],

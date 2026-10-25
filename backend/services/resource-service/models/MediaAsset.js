@@ -118,6 +118,12 @@ const mediaAssetSchema = new Schema({
     }
   },
   status: { type: String, enum: ['active', 'deleted'], default: 'active', required: true },
+  privacyDeletionRecorded: { type: Boolean, default: false },
+  retentionPolicyVersion: { type: Number, enum: [1], default: undefined },
+  orphanEligibleAt: { type: Date, default: undefined },
+  // Operational scheduling only; not retention eligibility or business audit.
+  orphanLastCheckedAt: { type: Date, default: undefined },
+  orphanRetirementId: { type: String, match: STORAGE_KEY_PATTERN, default: undefined },
   deletedAt: {
     type: Date,
     default: null,
@@ -132,6 +138,10 @@ const mediaAssetSchema = new Schema({
 mediaAssetSchema.index({ familyId: 1, childId: 1, status: 1, createdAt: -1 });
 mediaAssetSchema.index({ familyId: 1, storageKey: 1 }, { unique: true });
 mediaAssetSchema.index({ status: 1, deletedAt: 1 });
+mediaAssetSchema.index({ purpose: 1, status: 1, retentionPolicyVersion: 1, orphanEligibleAt: 1 },
+  { name: 'completion_orphan_candidates' });
+mediaAssetSchema.index({ purpose: 1, status: 1, retentionPolicyVersion: 1, orphanLastCheckedAt: 1, _id: 1, orphanEligibleAt: 1 },
+  { name: 'completion_orphan_schedule' });
 
 const MediaAsset = mongoose.models.MediaAsset || mongoose.model('MediaAsset', mediaAssetSchema);
 

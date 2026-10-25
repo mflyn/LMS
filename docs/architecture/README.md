@@ -1,6 +1,8 @@
 # Architecture Documents
 
-This directory contains the architecture baseline for the family-growth MVP.
+This directory covers the confirmed long-term goal of family self-directed learning, the implemented
+FGT-MVP-1.7 family-growth foundation, and the PLANNED SL-01 through SL-07 increment. These are distinct
+layers, not a claim that the increment or educational outcomes have been delivered.
 
 ## Source Of Truth
 
@@ -16,7 +18,7 @@ This directory contains the architecture baseline for the family-growth MVP.
 
 ## Current Architecture Scope
 
-The Task 1-7 baseline is a family-growth tracker, not a school LMS. Active family MVP services are:
+The implemented Task 1-12 foundation is a family-growth tracker, not a school LMS. Active services are:
 
 - `gateway`
 - `user-service`
@@ -26,12 +28,20 @@ The Task 1-7 baseline is a family-growth tracker, not a school LMS. Active famil
 - `resource-service`
 - `notification-service`
 - MongoDB replica set
-- `frontend/web` after Task 8 replaces the legacy school shell
+- `frontend/web` with the implemented parent and child family workflows
 
 `interaction-service`, teacher/admin/classroom management, video meetings, announcements and complex message flows are compatibility or future work. They are not required by the current family-growth gate.
 
-## Proposed Extensions
+## Current Increment And Proposed Extensions
 
+The [R3 application assembly proposal](./family-self-directed-learning-r3-assembly-proposal.md) covers activation,
+compatibility and rollback after R2 closure. It is awaiting approval; production routes remain disconnected and the T1 gate remains open.
+
+The self-directed-learning goal is confirmed. Implementation remains PLANNED: the main architecture §12
+and API §14 define the T0 contract; the system design supplies relationships, interactions and sequences,
+not a second request schema. AI/K12 and long-term projects remain outside this increment.
+
+- [Family self-directed learning system design](./family-self-directed-learning-system-design.md) — proposed implementation baseline for direction C: child-led planning, age-adaptive scaffolding, parent review, a math-first pilot, local deployment, phased AI/K12 adoption, and an explicitly deferred long-term learning-project reserve. Its upper-level theory and program are in [the research document](../research/family-self-directed-learning-theory-and-program.md). None of its draft routes or models are approved current behavior.
 - [Family AI learning platform design](./family-ai-learning-platform-design.md) — draft architecture for integrating the LMS with DeepTutor, K12-KGraph, and parent-reviewed handwriting workflows. The LMS remains the authority; none of the draft routes or models are part of the approved baseline yet.
 - [ThinkPad X230i deployment supplement](../ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md) — staged, low-resource validation and operations guidance for the proposed extension.
 

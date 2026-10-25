@@ -6,6 +6,10 @@
 **Implementation evidence commit:** `a5ebae9b`
 **Revalidated at:** 2026-07-16
 
+长期主目标已确认为家庭自主学习（2026-10-22）。上方版本、日期和 38/38 仅为已实现 FGT 基础证据；
+下方 SL 增量仍 PLANNED，不用历史覆盖率代表增量实现或家庭价值验收。R1–R8 的核实、修订和独立复评
+状态见[增量 Gate §13](./family-self-directed-learning-mvp-gate.md#13-r1r8-核实处置方案与开发自审2026-10-22)。
+
 Conformance values are `COVERED`, `DESIGN_APPROVED`, `PARTIAL`, and `GAP`. `plannedTask` and
 `gateAtTask` retain the historical delivery phase; conformance describes the current
 Task 1~12 scope. Every row below was reconciled against PRD 10.4, the current
@@ -95,3 +99,48 @@ design asset index, merged code, focused tests, and the unified release gate.
 | `NFR-PRIVACY-001` | 6 | 6 | 9.11/10.4 | 4.8, Task 6 design 4/9/10, PDF security design | all media APIs | resource/common/owner services, gateway and deployment profiles | Historical privacy suite plus PDF active-content, canonicalization, scan fail-closed, signed PDF, family isolation and private deployment tests pass | COVERED | trusted-local is explicitly weaker and private-only; secure-production requires successful real-scanner Gate |
 | `NFR-TIME-001` | 4 | 4 | 10.4 | 3.2, ADR-0003 | family/task/report dates | `Family.js`, `GrowthTask.js`, routes, `weeklyReportService.js`, `FamilyMistake.js` | IANA timezone, LocalDate boundary, mistake date validation, weekly cutoff, cancellation/completion cutoff, and historical snapshot tests pass | COVERED | closed `FGT-T3-001`, `FGT-T4-001`; Task 6 time scope closed by final gate |
 | `NFR-COMPAT-001` | 3 | 4 | 10.4 | 7 | legacy and family routes | legacy plus family route modules and isolated test projects | route-preservation contracts, family release gate, and explicit legacy-test isolation pass | COVERED | school models/routes retained; family rollback remains route-disable without data deletion |
+
+## Planned autonomous-learning increment
+
+自主学习增量不计入 38/38。下表使用独立 `SL-*` 编号和 `PLANNED` 状态，既不进入上方
+FGT-MVP-1.7 requirement set，也不改变其实现证据。只有对应 T 任务完成代码、测试和 Gate 后，
+才能逐项调整状态；T9 的家庭验证结论与 T0 至 T8 的工程结论继续分开。
+
+| Requirement | Planned tasks | Product | Architecture | API | Planned code owner | Planned verification | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `SL-01` | T1、T2、T7 | PRD 14 | Architecture 12.2/12.3 | API 14.2 | homework/resource、Parent/Child Web | 作品数量/purpose/scope、幂等重放、媒体恢复、版本确认、iPad 路径 | PLANNED |
+| `SL-02` | T3、T7 | PRD 14 | Architecture 12.1/12.2 | API 14.3 | homework、Parent/Child Web | pending 求助、家长处理、旧处理与新求助竞争、跨孩子拒绝 | PLANNED |
+| `SL-03` | T4、T7 | PRD 14 | Architecture 12.2/12.3 | API 14.2 | homework、Parent/Child Web | 0 至 5 项、版本冲突、代录 actor、分龄页面 | PLANNED |
+| `SL-04` | T5、T7 | PRD 14 | Architecture 12.4 | API 14.4 | homework/gateway、Child Web | 首次并发、CAS、LocalDate、同日多孩子、旧路由不回归 | PLANNED |
+| `SL-05` | T6、T7 | PRD 14 | Architecture 12.5 | API 14.5 | homework/analytics、Parent Web | 来源同 scope、跨家庭拒绝、purpose 拒绝、部分成功可重试 | PLANNED |
+| `SL-06` | T7、T9 | PRD 14 | Architecture 12.1 | API 14.6 | progress/analytics、Parent/Child Web | 孩子反思、家长反馈、历史周统计不改写、四周复盘 | PLANNED |
+| `SL-07` | T8、T9 | PRD 14 | Architecture 12.6 | API 14.6/14.7 | deployment and family validation | iPad Safari、Ubuntu 重启、NAS 隔离恢复、回滚、四周试点 | PLANNED |
+
+T0 只建立上述契约、迁移/兼容规则和增量 Gate，不提供任何 `SL-*` 功能实现证据。当前执行记录见
+[自主学习 MVP 增量 Gate](./family-self-directed-learning-mvp-gate.md)。
+
+T1 增量进展：R1/R2 及 R3 第 1–3 步（含材料快照/空更新 P2）已获用户复审关闭；R3 第 4 步实现提交复审，
+见 [Gate §18.37](./family-self-directed-learning-mvp-gate.md) 与[验收归并](./family-self-directed-learning-t1-acceptance-reconciliation.md)。
+新增 Gateway + homework/resource/progress 正式工厂的合成 HTTP 证据，覆盖升级拒绝、权限、只读、
+精确代次、两层丢响应恢复、首次确认/删除审计、发星幂等及启用前后防降级；默认关闭的 Compose 配置另有检查。
+这些证据不将 SL-01 标为 COVERED，不替代 R4-G1/G2、T2 前端、T8 真实介质或 T1 关闭批准。
+
+2026-10-24 当前增量状态：上段为历史检查点，T1 后端工程及 R4 已获用户关闭批准；
+T2 页面已实现，三项 P2 已获用户批准 CLOSED；限定合成工程汇总验收及总门禁 APPROVED / CLOSED，仍不将 SL-01 整体标为 COVERED（T7/真机等义务尚未全部完成）。
+最新批准依据为 [T2 执行记录 §17](./family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)。
+
+| T2 范围 | 实现位置 | 永久验证 | 当前结论 |
+| --- | --- | --- | --- |
+| 完成、修改、审核、反馈回看 | ChildTaskPage/Today、TasksPage、TaskCompletionEvidence/Review | child/family 组件；T2 正式 HTTP；14 项 T2 浏览器（含恢复、JWT 过期与清空快照反例） | CLOSED（限定合成工程） |
+| 原命令及退出恢复 | completionCommandStore、useTaskCompletion、CompletionRecoveryList、childApi/familyApi | 原命令冻结、跨日重登发现/显式恢复、丢响应、只读快照、真实过期 JWT 重登 | CLOSED（限定合成工程） |
+| 身份与孩子隔离 | familySession、三项 Context、TasksPage scope | 迟到401/图片、跨标签换孩子、同家长切孩子失败反例 | CLOSED（限定合成工程）；相关 P2 已关闭 |
+| 0–10 图及隐私删除 | TaskCompletionMedia、privateMediaRules、privateMediaStore | 490 项前端回归、14 项 HTTP；十图/普通移除/隐私删除及正文/目录 sync/await 反例 | CLOSED（限定合成工程），不替代 T2-G 回收验收 |
+| 原材料/错题 PDF、共管 | 原集合控件保留；Task11/12 browser runtime 改为正式 enabled | 既有 Task11 4 项、Task12 1 项浏览器通过 | COMPATIBILITY_VERIFIED（合成） |
+| iPad、真实部署与高级恢复 | 原矩阵保留 | 尚无真实设备/部署验收；后置 D2b 失败证据保留 | DEVICE_PENDING / T8_PENDING / REMAINDER_DEFERRED |
+
+2026-10-24 复审后：T2-PAGE-P2-403、T2-PAGE-P2-STORAGE 已获用户明确批准关闭。
+后续三项 P2（JWT 过期、可选完成字段快照、实际正文 sync）经独立复审通过及最新用户批准均 CLOSED，详见执行记录 §16；旧两项关闭历史不改写。
+永久反例验证403清除私有详情且保留原命令、损坏命令定向退出清理及重登显式恢复、其他身份命令及迟到响应隔离；
+原两项页面 P2 的复审曾重新运行40套件488项前端、2套件13项正式HTTP及两项关键浏览器并通过；这是历史轮次，不是最终三项 P2 的当前计数。
+[T2 当前工程验收裁决](family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)为 APPROVED / CLOSED（ENGINEERING_SYNTHETIC_ONLY）；最新全量仍 FAILED（3942/3943通过，D2B-05 REMAINDER_DEFERRED），与此前独立后端143/3926通过分别记录，不用旧绿灯覆盖新失败。前端40/490、HTTP2/14、浏览器14项证据及历史失败均保留。
+不将 SL-01 或本表后置/真机义务提前改为 COVERED；T8_PENDING / NOT_AUTHORIZED，T3–T9 NOT_STARTED。

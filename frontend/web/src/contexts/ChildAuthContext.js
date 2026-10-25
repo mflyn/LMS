@@ -1,10 +1,13 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { childPinLogin } from '../services/childApi';
 import {
   CHILD_SESSION_EXPIRED_EVENT,
   clearChildSession,
+  captureSession,
+  expireChildSession,
   loadChildSession,
-  saveChildSession
+  saveChildSession,
+  subscribeSessionChanges
 } from '../services/familySession';
 
 const ChildAuthContext = createContext(null);
@@ -24,21 +27,27 @@ const loginErrorMessage = (error) => {
 export const ChildAuthProvider = ({ children }) => {
   const [session, setSession] = useState(loadChildSession);
   const [error, setError] = useState(null);
+  const attempt = useRef(0);
+  const observedSession = useRef(captureSession('student'));
 
   const login = useCallback(async (credentials) => {
+    const version = ++attempt.current, initial = captureSession('student');
     try {
       const payload = await childPinLogin(credentials);
+      if (version !== attempt.current || captureSession('student') !== initial) return false;
       const nextSession = saveChildSession(payload);
       setSession(nextSession);
       setError(null);
       return true;
     } catch (requestError) {
+      if (version !== attempt.current || captureSession('student') !== initial) return false;
       setError(loginErrorMessage(requestError));
       return false;
     }
   }, []);
 
   const logout = useCallback(() => {
+    attempt.current += 1;
     clearChildSession();
     setSession(null);
     setError(null);
@@ -47,19 +56,30 @@ export const ChildAuthProvider = ({ children }) => {
   const clearError = useCallback(() => setError(null), []);
 
   useEffect(() => {
-    const handleExpiredSession = () => {
-      clearChildSession();
-      setSession(null);
-      setError('会话已过期，请重新登录。');
-    };
+    const unsubscribe = subscribeSessionChanges(event => {
+      if (event.role !== 'student') return;
+      const next = captureSession('student');
+      if (event.reason === 'external_change' && next === observedSession.current) return;
+      observedSession.current = next;
+      attempt.current += 1;
+      setSession(loadChildSession());
+      setError(event.reason === 'expired' ? '会话已过期，请重新登录。' : null);
+    });
+    const handleExpiredSession = event => { if (!event.detail?.handled) expireChildSession(); };
+    setSession(loadChildSession());
     window.addEventListener(CHILD_SESSION_EXPIRED_EVENT, handleExpiredSession);
-    return () => window.removeEventListener(CHILD_SESSION_EXPIRED_EVENT, handleExpiredSession);
+    return () => {
+      attempt.current += 1;
+      unsubscribe();
+      window.removeEventListener(CHILD_SESSION_EXPIRED_EVENT, handleExpiredSession);
+    };
   }, []);
 
   const value = useMemo(() => ({
     status: session ? 'authenticated' : 'anonymous',
     child: session?.child || null,
     token: session?.token || null,
+    sessionSnapshot: session ? captureSession('student') : null,
     error,
     login,
     logout,

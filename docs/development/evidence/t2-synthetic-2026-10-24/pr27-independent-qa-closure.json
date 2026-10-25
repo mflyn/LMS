@@ -1,0 +1,526 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-25",
+  "scope": "AUTOMATED_SYNTHETIC_ONLY",
+  "status": "VERIFIED_CLOSED_FOR_AUTOMATED_SCOPE",
+  "defects": [
+    {
+      "id": "QA-T2-FOCUS-001",
+      "round": "R1",
+      "reason": "Dynamic focus restoration verified after confirmation and nested dialog changes"
+    },
+    {
+      "id": "QA-T2-WEBKIT-FIXTURE-001",
+      "round": "R1",
+      "reason": "Real resource 201 response-loss fixture validated without multipart replay; not native Safari certification"
+    },
+    {
+      "id": "QA-T12-INVITATION-WAIT-001",
+      "round": "R1",
+      "reason": "Wait for actual asynchronous invitation preview; identity and fragment assertions retained"
+    },
+    {
+      "id": "QA-T2-D2B-BUDGET-001",
+      "round": "R2",
+      "reason": "Single complete validation/encoding preserves isolation and budgets; independent full regression passes"
+    }
+  ],
+  "candidate": {
+    "base": "4dff6871d2d3bec2d4c34729fe3ae20a35317e97",
+    "candidateDigest": "5ba84f8668e8f0adc679ee7e4d5cfd4a6c8cf2f429935a5cb70f4d8df3b66547",
+    "originalFiles": [
+      {
+        "file": "backend/services/resource-service/__tests__/userDeletionEvidenceEncodingBudget.test.js",
+        "sha256": "99ef1e675574deceeb06b14a99539760986de8d77b7f214cc8551d59521d8e04",
+        "tracked": false
+      },
+      {
+        "file": "backend/services/resource-service/jest.family.config.js",
+        "sha256": "5c6f720a8c37e629a260f57fc3780250ac195a8a4a350ba829f525b366424a15",
+        "tracked": true
+      },
+      {
+        "file": "backend/services/resource-service/services/userDeletionRecoveryEvidence.js",
+        "sha256": "afe4ebe83ec510d3d71c6f656908bac4d47032936db56898d2d7576f4af65f82",
+        "tracked": true
+      },
+      {
+        "file": "backend/services/resource-service/services/userDeletionRecoveryReader.js",
+        "sha256": "af7a70a0f969457581d05d8ae2a652e51b9f061e196f687fbf7f26cfd168d28c",
+        "tracked": true
+      },
+      {
+        "file": "backend/services/resource-service/services/userDeletionRestoreProof.js",
+        "sha256": "d61dcc317e67274ff5d2c1284eff36e18fc5faec1f698e77db0c98b3305b0298",
+        "tracked": true
+      },
+      {
+        "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "sha256": "e0b0a34297c55ba89b4d3117d3e4f77e7b6482334607111480eb313a93d45953",
+        "tracked": true
+      },
+      {
+        "file": "docs/development/family-self-directed-learning-t2-d2b-budget-followup.md",
+        "sha256": "e9dda4933db3e2666fe0f210b544d00894937d192cb56699a5531188f266b98a",
+        "tracked": false
+      },
+      {
+        "file": "docs/development/family-self-directed-learning-t2-execution.md",
+        "sha256": "7f8198c0115303067f55323b7363cd404ccd486281b07c1e4234facb0e09485d",
+        "tracked": true
+      },
+      {
+        "file": "docs/development/family-self-directed-learning-t2-server-test.md",
+        "sha256": "4ad9f207980119a24c4e69c3143c849478148de44e19418a5b999d044263ae2c",
+        "tracked": true
+      }
+    ],
+    "matchingCurrentCode": [
+      {
+        "file": "backend/services/resource-service/__tests__/userDeletionEvidenceEncodingBudget.test.js",
+        "sha256": "99ef1e675574deceeb06b14a99539760986de8d77b7f214cc8551d59521d8e04",
+        "currentMatches": true
+      },
+      {
+        "file": "backend/services/resource-service/jest.family.config.js",
+        "sha256": "5c6f720a8c37e629a260f57fc3780250ac195a8a4a350ba829f525b366424a15",
+        "currentMatches": true
+      },
+      {
+        "file": "backend/services/resource-service/services/userDeletionRecoveryEvidence.js",
+        "sha256": "afe4ebe83ec510d3d71c6f656908bac4d47032936db56898d2d7576f4af65f82",
+        "currentMatches": true
+      },
+      {
+        "file": "backend/services/resource-service/services/userDeletionRecoveryReader.js",
+        "sha256": "af7a70a0f969457581d05d8ae2a652e51b9f061e196f687fbf7f26cfd168d28c",
+        "currentMatches": true
+      },
+      {
+        "file": "backend/services/resource-service/services/userDeletionRestoreProof.js",
+        "sha256": "d61dcc317e67274ff5d2c1284eff36e18fc5faec1f698e77db0c98b3305b0298",
+        "currentMatches": true
+      }
+    ],
+    "currentHead": "a9e21fe60e362658d3af87401f2e45698b75db6a",
+    "qualification": "R2 nine-file snapshot is not the current whole tree. Product code, final tests and registration match. Subsequent changes are closure documentation and documentation-gate code/tests; later CI is separate evidence."
+  },
+  "rounds": {
+    "R1": {
+      "sourceArchive": "t0-t2-p2-independent-2026-10-25",
+      "manifestSha256": "f93289af03ecc55db297e6c3c89e7cdeaa82257e6bc9d8a9e5342d8864cc5456",
+      "verifiedArchiveFiles": 85,
+      "selectedEvidence": [
+        {
+          "file": "mac/local/chromium.log",
+          "sourceSha256": "007082f245a661b8dd647289ecaad0e70b75801bc6bb5ced5f2748fcd1328a93",
+          "archiveSha256": "007082f245a661b8dd647289ecaad0e70b75801bc6bb5ced5f2748fcd1328a93"
+        },
+        {
+          "file": "mac/local/task12-browser.log",
+          "sourceSha256": "d0d8da74f6ffebb913708d58ac6fbe7c0688f5cc2c45d3faa7f2eae0cf6d49a8",
+          "archiveSha256": "d0d8da74f6ffebb913708d58ac6fbe7c0688f5cc2c45d3faa7f2eae0cf6d49a8"
+        },
+        {
+          "file": "mac/local/webkit.log",
+          "sourceSha256": "f90b2c4d37ef2480b4f63d19f1c56ec6175975ae37b9563f55bc1ed07f6dcc54",
+          "archiveSha256": "f90b2c4d37ef2480b4f63d19f1c56ec6175975ae37b9563f55bc1ed07f6dcc54"
+        },
+        {
+          "file": "REPORT.md",
+          "sourceSha256": null,
+          "archiveSha256": "7ff50bf2fcebf4df629350adf262d7ecd358e976c756f8b566742d2001147b84"
+        },
+        {
+          "file": "results.json",
+          "sourceSha256": null,
+          "archiveSha256": "7c293b0131ca59042e284a58539bab0305c1e0addb9d794b6ef136fc8ee2516f"
+        },
+        {
+          "file": "ubuntu/remote/build.log",
+          "sourceSha256": "aa2260eadeb4037d3ced97a2afaab45270cfeb10943ff79694c8d6b17a272c53",
+          "archiveSha256": "aa2260eadeb4037d3ced97a2afaab45270cfeb10943ff79694c8d6b17a272c53"
+        },
+        {
+          "file": "ubuntu/remote/d2b-budget.json",
+          "sourceSha256": "4ac27a10bb78fd958fc2a6ae022857389e9deed97032faeef047122ad602d22d",
+          "archiveSha256": "e968289a83eb65af12fba645e819238a0bdcc24ae5d0baf14358b524e9c764d0"
+        },
+        {
+          "file": "ubuntu/remote/d2b-budget.log",
+          "sourceSha256": "0ac0d0fcdf7818017976d020cefc02342bd4575993aed0b9f59a4cc492b09b00",
+          "archiveSha256": "0ac0d0fcdf7818017976d020cefc02342bd4575993aed0b9f59a4cc492b09b00"
+        },
+        {
+          "file": "ubuntu/remote/docs.log",
+          "sourceSha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1",
+          "archiveSha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+        },
+        {
+          "file": "ubuntu/remote/family.json",
+          "sourceSha256": "71af7b8c678c629cf9f57d2dd2bb2f532b8c13e2634d6ee2ebd31d4b6a501466",
+          "archiveSha256": "7a2dd0a62d22e16efab9e96184570b422b5e53a634de8e076926054de7234564"
+        },
+        {
+          "file": "ubuntu/remote/family.log",
+          "sourceSha256": "f346a073f679834a3759f12354bc81cffa7c5997e9c323091ab8c0715b4f040b",
+          "archiveSha256": "f346a073f679834a3759f12354bc81cffa7c5997e9c323091ab8c0715b4f040b"
+        },
+        {
+          "file": "ubuntu/remote/frontend.json",
+          "sourceSha256": "32f716e64c3e839fa38230a961e80f165fd0d9ffdd72c6b1b929e1defc97473a",
+          "archiveSha256": "784ee7a32298e9add618ce53bfbaaa679995e726a44d930f2bb7ef3e55825654"
+        },
+        {
+          "file": "ubuntu/remote/frontend.log",
+          "sourceSha256": "b16224472cddad474372b5ba2ed8e95651f3fcf8ea7c84647def68889d343249",
+          "archiveSha256": "b16224472cddad474372b5ba2ed8e95651f3fcf8ea7c84647def68889d343249"
+        },
+        {
+          "file": "ubuntu/remote/lint.log",
+          "sourceSha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+          "archiveSha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+        },
+        {
+          "file": "ubuntu/remote/readiness.json",
+          "sourceSha256": "8faf9703d8df191e808c9e9d19260b677b9e204fde79fc67d12ab2d1d3a09731",
+          "archiveSha256": "e23ea132136d95eed370ce605c499ad277d9799db69aafd3f537a3871a5c33ff"
+        },
+        {
+          "file": "ubuntu/remote/readiness.log",
+          "sourceSha256": "f1df4412081ce6410afdddabcc67b982b8727bbc1d32b4a6efb9b836a5b56bab",
+          "archiveSha256": "f1df4412081ce6410afdddabcc67b982b8727bbc1d32b4a6efb9b836a5b56bab"
+        },
+        {
+          "file": "ubuntu/remote/run.json",
+          "sourceSha256": "edd29671c00297b06cc265b7cb212d61963eee64a181591ef21f09e1ca06b0b4",
+          "archiveSha256": "edd29671c00297b06cc265b7cb212d61963eee64a181591ef21f09e1ca06b0b4"
+        },
+        {
+          "file": "ubuntu/remote/source-clean.log",
+          "sourceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "file": "ubuntu/remote/t2-http.json",
+          "sourceSha256": "7109d32a411a81f3d6f7a782a247789932cbaaaef27c2937e2f5d79afc171ad1",
+          "archiveSha256": "8868a07131383f6b8a41b107498076dad0f6efa57c7d79be565cbdf6a0bf2e49"
+        },
+        {
+          "file": "ubuntu/remote/t2-http.log",
+          "sourceSha256": "209176a57b66497af4dfdcf7c26f6684774c36025b9b91ff3d9f383b9d6398aa",
+          "archiveSha256": "209176a57b66497af4dfdcf7c26f6684774c36025b9b91ff3d9f383b9d6398aa"
+        },
+        {
+          "file": "ubuntu/remote/task11.json",
+          "sourceSha256": "a7485698398dea53195d26e94322d547b5cb98f6f4c3248878b5a20300a6e26c",
+          "archiveSha256": "166b7dab452864f0f8df5e1b5498d70c70ef2e6ef5fd33213f67cdf438c26b0a"
+        },
+        {
+          "file": "ubuntu/remote/task11.log",
+          "sourceSha256": "f48f114edf7db04da429d5711d1e48702f57a73026803b9f82c9ad1068ce980f",
+          "archiveSha256": "f48f114edf7db04da429d5711d1e48702f57a73026803b9f82c9ad1068ce980f"
+        },
+        {
+          "file": "ubuntu/remote/task12.json",
+          "sourceSha256": "6d21b126e3b90bc0d7b4d253661a49ad6a6020018e52b601dc3eec04bd5fa8a3",
+          "archiveSha256": "42afed55fb548b7d9bb3679cb5be2d9d20574c8535cfd8e38f1e752b6a6ac55a"
+        },
+        {
+          "file": "ubuntu/remote/task12.log",
+          "sourceSha256": "ae99137c4189cd1671f3168ee7c2d4501b3507aebe5a9118315aed7e43f8f4e7",
+          "archiveSha256": "ae99137c4189cd1671f3168ee7c2d4501b3507aebe5a9118315aed7e43f8f4e7"
+        },
+        {
+          "file": "ubuntu/teardown-audit.json",
+          "sourceSha256": "1d66fe5f8aa7846e5aaf7bfe42a95138ceb2e28f64cf97371cb250e93a10aa64",
+          "archiveSha256": "1d66fe5f8aa7846e5aaf7bfe42a95138ceb2e28f64cf97371cb250e93a10aa64"
+        },
+        {
+          "file": "verification.json",
+          "sourceSha256": null,
+          "archiveSha256": "fabc19494655c088a5e53b2a2312908082943d5de1de77089f3c78a7aa176a1c"
+        }
+      ]
+    },
+    "R2": {
+      "sourceArchive": "t0-t2-d2b-followup-2026-10-25/r2",
+      "manifestSha256": "4ab9cbb2bf3d15593fd6f071044c9e4cb4aa86aca21698258d8b0ed7653ff915",
+      "verifiedArchiveFiles": 60,
+      "selectedEvidence": [
+        {
+          "file": "candidate.json",
+          "sourceSha256": null,
+          "archiveSha256": "80cc332ef099b376a8f4a06ff6cb08df5eca9623e41a9a0cd0cc8f403ee58415"
+        },
+        {
+          "file": "completion-audit.json",
+          "sourceSha256": null,
+          "archiveSha256": "3f3fb06fe71e341bb035b78849754e4f697f183b0994a68534f849d0914b2e6d"
+        },
+        {
+          "file": "independent-mutation.json",
+          "sourceSha256": null,
+          "archiveSha256": "d422ebe7b1863ce4bfb5378fb4c19319ebb2d1de20294cac04afe426df8a8c16"
+        },
+        {
+          "file": "manual-tests.md",
+          "sourceSha256": null,
+          "archiveSha256": "ac20501820e50ca1d1315983a6ea830c6ed003558d4daf067b9e4419c263ae20"
+        },
+        {
+          "file": "REPORT.md",
+          "sourceSha256": null,
+          "archiveSha256": "f9b607958bd66f9b563841b8ded812f3b6c1e508af7fca8424bf12cf4f974796"
+        },
+        {
+          "file": "results.json",
+          "sourceSha256": null,
+          "archiveSha256": "53de6a1f7fa06458b01666a79921da357e2f3e17bfd14cc3196d5d45a41e508c"
+        },
+        {
+          "file": "review.json",
+          "sourceSha256": null,
+          "archiveSha256": "8b003b97053f6caf9733dca923d3347fb049a6fb89a91a39925516c804784f94"
+        },
+        {
+          "file": "ubuntu/remote/docs.log",
+          "sourceSha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1",
+          "archiveSha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+        },
+        {
+          "file": "ubuntu/remote/encoding.json",
+          "sourceSha256": "7f654f8bb1c9e0a44b750227c2f16d2dc1086917fd72c1f947fc034363da89ea",
+          "archiveSha256": "a38f44a0639c2c75d02ad334913bdc0d5fd5aaa721d30f459e4cc98f0ddd3f3e"
+        },
+        {
+          "file": "ubuntu/remote/encoding.log",
+          "sourceSha256": "feb66153244834d3942552450cccfe678429c392fbc40107959016f789890b20",
+          "archiveSha256": "feb66153244834d3942552450cccfe678429c392fbc40107959016f789890b20"
+        },
+        {
+          "file": "ubuntu/remote/family.json",
+          "sourceSha256": "dcb823db4d290592eda6e7644f33fb781fad5413d9e48e6ed4298d943b0b7225",
+          "archiveSha256": "94b7f8304807285f90c6ed9be61779a0ac34e48236b87b34212e68985116b90b"
+        },
+        {
+          "file": "ubuntu/remote/family.log",
+          "sourceSha256": "0f85ef8b61452be513914a5a6c15412b4e2e2e950d82dd06d86ba799b0681fa5",
+          "archiveSha256": "0f85ef8b61452be513914a5a6c15412b4e2e2e950d82dd06d86ba799b0681fa5"
+        },
+        {
+          "file": "ubuntu/remote/lint.log",
+          "sourceSha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+          "archiveSha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+        },
+        {
+          "file": "ubuntu/remote/readiness.json",
+          "sourceSha256": "0e79052c0d77b5b63261c6c82424ba94c8ce093728832ded5ad1d43da791c24d",
+          "archiveSha256": "3354329f9741e4ba796d64057afdf3702b4bc8abaf020eb4763d8c2de0a6a7a1"
+        },
+        {
+          "file": "ubuntu/remote/readiness.log",
+          "sourceSha256": "73442db51422dafebe92d9fa7b531943e0fef978cd4005972b0b65a6d7c3c5be",
+          "archiveSha256": "73442db51422dafebe92d9fa7b531943e0fef978cd4005972b0b65a6d7c3c5be"
+        },
+        {
+          "file": "ubuntu/remote/run.json",
+          "sourceSha256": "1bfa28c8f704e9de66a5bbd0df17cfa832e22683cffe744cf3decc1eaf969c42",
+          "archiveSha256": "1bfa28c8f704e9de66a5bbd0df17cfa832e22683cffe744cf3decc1eaf969c42"
+        },
+        {
+          "file": "ubuntu/remote/t2-http.json",
+          "sourceSha256": "c0f354062ece489695bee0a86c8d7d000e43245b2f49776a8743f54da2cc9fab",
+          "archiveSha256": "c9ac3cf957f9a6f7706aed0d071ff4fa370f4b606a308bc450b4edfdefea0b0f"
+        },
+        {
+          "file": "ubuntu/remote/t2-http.log",
+          "sourceSha256": "c3cc6d35a9b3fee4730c8c667f63e8f95ee9f2be2553ea2ea3906c9765a2649a",
+          "archiveSha256": "c3cc6d35a9b3fee4730c8c667f63e8f95ee9f2be2553ea2ea3906c9765a2649a"
+        },
+        {
+          "file": "ubuntu/remote/target.json",
+          "sourceSha256": "c01971f5323a0a262d8f1031d3274326c5c69b8121ce4d901b67ab7e9454e375",
+          "archiveSha256": "a7a19c6f25e810b74fae586ffabeb40854e2d0ab1720154ce39002f2219cc5ce"
+        },
+        {
+          "file": "ubuntu/remote/target.log",
+          "sourceSha256": "a3e766c5a13f940ecccd1009041dac686145f7e53895a64acf7f91d3fe660d93",
+          "archiveSha256": "a3e766c5a13f940ecccd1009041dac686145f7e53895a64acf7f91d3fe660d93"
+        },
+        {
+          "file": "ubuntu/teardown-audit.json",
+          "sourceSha256": "004d2cddccd42bc854e406b8b432761c26d31ef0b2c8263f63752f512ce39ead",
+          "archiveSha256": "004d2cddccd42bc854e406b8b432761c26d31ef0b2c8263f63752f512ce39ead"
+        },
+        {
+          "file": "verification.json",
+          "sourceSha256": null,
+          "archiveSha256": "7ab0d2765fda6c577acb0e9df447932c31a6492ef8845d89d0a7de9c16adfdd3"
+        }
+      ]
+    }
+  },
+  "r2Execution": {
+    "startedAt": "2026-10-25T04:04:41.490Z",
+    "endedAt": "2026-10-25T04:43:38.266Z",
+    "environment": "Ubuntu host; Node 22.23.4 / Debian 12 container userspace; MongoDB 7.0.14 temporary replica set; non-root, 2 CPU, 3 GiB, swap 0, read-only rootfs, network none, no published ports",
+    "results": [
+      {
+        "stage": "target",
+        "command": [
+          "npx",
+          "jest",
+          "--config=backend/jest.config.js",
+          "--selectProjects",
+          "resource-family",
+          "--runInBand",
+          "--coverage=false",
+          "--runTestsByPath",
+          "backend/services/resource-service/__tests__/userDeletionRecoveryReadiness.test.js",
+          "--testNamePattern=D2B-05 real connected proof bytes exceed 16MiB",
+          "--json",
+          "--outputFile=/qa/reports/remote/target.json"
+        ],
+        "exitCode": 0,
+        "durationMs": 113785,
+        "suites": 1,
+        "passed": 1,
+        "failed": 0,
+        "unselectedOrPending": 141,
+        "success": true,
+        "d2bStatus": "passed",
+        "d2bJestDurationMs": 108240
+      },
+      {
+        "stage": "readiness",
+        "command": [
+          "npx",
+          "jest",
+          "--config=backend/jest.config.js",
+          "--selectProjects",
+          "resource-family",
+          "--runInBand",
+          "--coverage=false",
+          "--runTestsByPath",
+          "backend/services/resource-service/__tests__/userDeletionRecoveryReadiness.test.js",
+          "--json",
+          "--outputFile=/qa/reports/remote/readiness.json"
+        ],
+        "exitCode": 0,
+        "durationMs": 430340,
+        "suites": 1,
+        "passed": 142,
+        "failed": 0,
+        "unselectedOrPending": 0,
+        "success": true,
+        "d2bStatus": "passed",
+        "d2bJestDurationMs": 111855
+      },
+      {
+        "stage": "encoding",
+        "command": [
+          "npx",
+          "jest",
+          "--config=backend/jest.config.js",
+          "--selectProjects",
+          "resource-family",
+          "--runInBand",
+          "--coverage=false",
+          "--runTestsByPath",
+          "backend/services/resource-service/__tests__/userDeletionRecoveryEvidence.test.js",
+          "backend/services/resource-service/__tests__/userDeletionRecoveryReader.test.js",
+          "backend/services/resource-service/__tests__/userDeletionRestoreProof.test.js",
+          "backend/services/resource-service/__tests__/userDeletionEvidenceEncodingBudget.test.js",
+          "--json",
+          "--outputFile=/qa/reports/remote/encoding.json"
+        ],
+        "exitCode": 0,
+        "durationMs": 80625,
+        "suites": 4,
+        "passed": 331,
+        "failed": 0,
+        "unselectedOrPending": 0,
+        "success": true
+      },
+      {
+        "stage": "family",
+        "command": [
+          "npm",
+          "run",
+          "test:family-regression",
+          "--",
+          "--json",
+          "--outputFile=/qa/reports/remote/family.json"
+        ],
+        "exitCode": 0,
+        "durationMs": 1644890,
+        "suites": 144,
+        "passed": 3972,
+        "failed": 0,
+        "unselectedOrPending": 0,
+        "success": true,
+        "d2bStatus": "passed",
+        "d2bJestDurationMs": 113363
+      },
+      {
+        "stage": "t2-http",
+        "command": [
+          "npm",
+          "run",
+          "test:t2:integration",
+          "--",
+          "--json",
+          "--outputFile=/qa/reports/remote/t2-http.json"
+        ],
+        "exitCode": 0,
+        "durationMs": 48657,
+        "suites": 2,
+        "passed": 14,
+        "failed": 0,
+        "unselectedOrPending": 0,
+        "success": true
+      }
+    ],
+    "qualification": "Target-only run leaves 141 tests unselected; readiness/encoding are subsets of family regression. Jest case duration includes hooks, not exact budget headroom. All R2 runs use the final deep-isolation test, unlike the earlier development full run."
+  },
+  "mutation": [
+    {
+      "name": "actual final implementation",
+      "expected": "passed",
+      "observed": "passed",
+      "matches": true,
+      "matcher": null
+    },
+    {
+      "name": "original-input alias mutant",
+      "expected": "rejected",
+      "observed": "rejected",
+      "matches": true,
+      "matcher": "toBe"
+    },
+    {
+      "name": "shallow-copy alias mutant",
+      "expected": "rejected",
+      "observed": "rejected",
+      "matches": true,
+      "matcher": "toBe"
+    }
+  ],
+  "retained": {
+    "r1Failure": "readiness: 141 passed, 1 timeout; NOT_ALL_GREEN remains historical",
+    "originalApproval": "Unchanged; historical Mongo code50 failure and QUERY_ONLY closure remain distinct",
+    "device": "DEVICE_PENDING",
+    "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED",
+    "deployment": "T8_PENDING / NOT_AUTHORIZED",
+    "currentAuthorization": "COMMIT_PUSH_PR_SYNC_ALLOWED; after validation, commit and push current branch, synchronize PR 27 and check new CI; no Ready conversion, merge or deployment"
+  },
+  "documentationReview": {
+    "date": "2026-10-25",
+    "status": "REVIEW_PASSED_USER_APPROVED",
+    "record": "../../family-self-directed-learning-t2-qa-p2-review.md#62-四项文档收口复审通过及提交授权",
+    "scope": "Candidate identity, counts, hashes, separation of development and independent evidence, historical failures and current closure status; no new business or device acceptance",
+    "validation": "Local documentation gate and 80 documentation tests passed; read-only archive/raw evidence and candidate checks passed; no server/browser/business regression rerun"
+  },
+  "archivePolicy": "Selected evidence index only; original/raw hashes retained when provided by source manifest. null sourceSha256 means authored/derived in source archive, not missing validation. Raw logs/screenshots are not copied into Git. Frozen archives are never rewritten."
+}

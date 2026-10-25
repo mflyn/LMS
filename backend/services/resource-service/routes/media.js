@@ -13,6 +13,7 @@ const createMediaRouter = ({
   authenticate,
   fsPromises = defaultFs,
   mediaService,
+  rejectDeleteBody = false,
   upload
 } = {}) => {
   if (typeof authenticate !== 'function') throw new Error('Media authenticate middleware is required');
@@ -60,6 +61,11 @@ const createMediaRouter = ({
   }));
 
   router.delete('/:mediaId', asyncRoute(async (req, res) => {
+    if (rejectDeleteBody && req.body != null
+      && (typeof req.body !== 'object' || Array.isArray(req.body) || Object.keys(req.body).length)) {
+      const { AppError } = require('../../../common/middleware/errorTypes');
+      throw new AppError('DELETE does not accept a request body', 400, 'VALIDATION_ERROR', true, []);
+    }
     await mediaService.deleteMedia({ identity: req.user, mediaId: req.params.mediaId });
     res.status(204).send();
   }));

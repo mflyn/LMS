@@ -4,7 +4,9 @@ process.env.INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'test
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const app = require('../server');
 const Reward = require('../models/Reward');
 const StarLedgerEntry = require('../models/StarLedgerEntry');
@@ -67,7 +69,7 @@ describe('Task 5 rewards', () => {
       { childId: f.childA1._id, title: 'Invalid cost', requiredStars: 0 },
       { childId: f.childA1._id, title: 'Invalid cost', requiredStars: 1.5 }
     ]) {
-      const response = await request(app).post(path)
+      const response = await (await request(app)).post(path)
         .set(f.headers(f.parentA, 'POST', path))
         .send(payload);
       expect(response.status).toBe(400);
@@ -78,7 +80,7 @@ describe('Task 5 rewards', () => {
   test('TC-T5-REWARD-001 parent creates an active reward with server ownership', async () => {
     const f = await createTask5Fixtures();
     const path = '/api/rewards';
-    const response = await request(app).post(path)
+    const response = await (await request(app)).post(path)
       .set(f.headers(f.parentA, 'POST', path))
       .send({ childId: f.childA1._id, title: 'Choose a movie', requiredStars: 5 });
     expect(response.status).toBe(201);
@@ -90,21 +92,21 @@ describe('Task 5 rewards', () => {
   test('TC-T5-REWARD-003 denies child mutations and cross-family access', async () => {
     const f = await createTask5Fixtures();
     const createPath = '/api/rewards';
-    const childCreate = await request(app).post(createPath)
+    const childCreate = await (await request(app)).post(createPath)
       .set(f.headers(f.childA1, 'POST', createPath))
       .send({ childId: f.childA1._id, title: 'Forged', requiredStars: 1 });
     expect(childCreate.status).toBe(403);
 
     const reward = await createReward(f);
     const listPath = `/api/rewards?childId=${f.childA1._id}`;
-    const crossList = await request(app).get(listPath).set(f.headers(f.parentB, 'GET', listPath));
+    const crossList = await (await request(app)).get(listPath).set(f.headers(f.parentB, 'GET', listPath));
     expect(crossList.status).toBe(403);
 
-    const siblingList = await request(app).get(listPath).set(f.headers(f.childA2, 'GET', listPath));
+    const siblingList = await (await request(app)).get(listPath).set(f.headers(f.childA2, 'GET', listPath));
     expect(siblingList.status).toBe(403);
 
     const redeemPath = `/api/rewards/${reward._id}/redeem`;
-    const childRedeem = await request(app).patch(redeemPath)
+    const childRedeem = await (await request(app)).patch(redeemPath)
       .set(f.headers(f.childA1, 'PATCH', redeemPath))
       .set('Idempotency-Key', 'child-forged-key')
       .send();
@@ -116,7 +118,7 @@ describe('Task 5 rewards', () => {
     await Promise.all([createReward(f, 2, 'A'), createReward(f, 3, 'B'), createReward(f, 4, 'C')]);
     await seedStars(f, 3);
     const path = `/api/rewards?childId=${f.childA1._id}&rewardPage=2&rewardPageSize=1&ledgerPage=1&ledgerPageSize=2`;
-    const response = await request(app).get(path).set(f.headers(f.childA1, 'GET', path));
+    const response = await (await request(app)).get(path).set(f.headers(f.childA1, 'GET', path));
     expect(response.status).toBe(200);
     expect(response.body.data.starBalance).toBe(3);
     expect(response.body.data.rewards).toEqual(expect.objectContaining({ page: 2, pageSize: 1, total: 3 }));
@@ -130,7 +132,7 @@ describe('Task 5 rewards', () => {
     await seedStars(f, 5);
     const reward = await createReward(f, 3);
     const path = `/api/rewards/${reward._id}/redeem`;
-    const response = await request(app).patch(path)
+    const response = await (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path)).set('Idempotency-Key', 'redeem-success').send();
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual(expect.objectContaining({ status: 'redeemed', spentStars: 3, starBalance: 2 }));
@@ -143,7 +145,7 @@ describe('Task 5 rewards', () => {
     await seedStars(f, 2);
     const reward = await createReward(f, 3);
     const path = `/api/rewards/${reward._id}/redeem`;
-    const response = await request(app).patch(path)
+    const response = await (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path)).set('Idempotency-Key', 'insufficient-key').send();
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('INSUFFICIENT_STARS');
@@ -156,7 +158,7 @@ describe('Task 5 rewards', () => {
     await seedStars(f, 5);
     const reward = await createReward(f, 3);
     const path = `/api/rewards/${reward._id}/redeem`;
-    const execute = () => request(app).patch(path)
+    const execute = async () => (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path)).set('Idempotency-Key', 'same-success-key').send();
     const first = await execute();
     const replay = await execute();
@@ -171,7 +173,7 @@ describe('Task 5 rewards', () => {
     await seedStars(f, 5);
     const reward = await createReward(f, 3);
     const path = `/api/rewards/${reward._id}/redeem`;
-    const first = await request(app).patch(path)
+    const first = await (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path))
       .set('Idempotency-Key', 'same-success-after-missing-reward')
       .send();
@@ -179,7 +181,7 @@ describe('Task 5 rewards', () => {
 
     await Reward.deleteOne({ _id: reward._id });
 
-    const replay = await request(app).patch(path)
+    const replay = await (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path))
       .set('Idempotency-Key', 'same-success-after-missing-reward')
       .send();
@@ -200,9 +202,9 @@ describe('Task 5 rewards', () => {
     const secondReward = await createReward(f, 2, 'Second');
     const key = 'cross-operation-key';
     const firstPath = `/api/rewards/${firstReward._id}/redeem`;
-    await request(app).patch(firstPath).set(f.headers(f.parentA, 'PATCH', firstPath)).set('Idempotency-Key', key).send().expect(200);
+    await (await request(app)).patch(firstPath).set(f.headers(f.parentA, 'PATCH', firstPath)).set('Idempotency-Key', key).send().expect(200);
     const secondPath = `/api/rewards/${secondReward._id}/redeem`;
-    const response = await request(app).patch(secondPath)
+    const response = await (await request(app)).patch(secondPath)
       .set(f.headers(f.parentA, 'PATCH', secondPath)).set('Idempotency-Key', key).send();
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('IDEMPOTENCY_KEY_REUSED');
@@ -214,7 +216,7 @@ describe('Task 5 rewards', () => {
     const reward = await createReward(f, 1);
     const path = `/api/rewards/${reward._id}/redeem`;
     for (const key of [null, '   ', '\u00a0\u00a0', 'x'.repeat(129)]) {
-      let call = request(app).patch(path).set(f.headers(f.parentA, 'PATCH', path));
+      let call = (await request(app)).patch(path).set(f.headers(f.parentA, 'PATCH', path));
       if (key) call = call.set('Idempotency-Key', key);
       const response = await call.send();
       expect(response.status).toBe(400);
@@ -227,11 +229,11 @@ describe('Task 5 rewards', () => {
     await seedStars(f, 5);
     const reward = await createReward(f, 3);
     const path = `/api/rewards/${reward._id}/redeem`;
-    const first = await request(app).patch(path)
+    const first = await (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path))
       .set('Idempotency-Key', '\u00a0normalized-key\u00a0')
       .send();
-    const replay = await request(app).patch(path)
+    const replay = await (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path))
       .set('Idempotency-Key', 'normalized-key')
       .send();
@@ -264,9 +266,9 @@ describe('Task 5 rewards', () => {
     await seedStars(f, 5);
     const firstReward = await createReward(f, 4, 'First concurrent');
     const secondReward = await createReward(f, 4, 'Second concurrent');
-    const redeem = (reward, key) => {
+    const redeem = async (reward, key) => {
       const path = `/api/rewards/${reward._id}/redeem`;
-      return request(app).patch(path).set(f.headers(f.parentA, 'PATCH', path)).set('Idempotency-Key', key).send();
+      return (await request(app)).patch(path).set(f.headers(f.parentA, 'PATCH', path)).set('Idempotency-Key', key).send();
     };
     const responses = await Promise.all([
       redeem(firstReward, 'concurrent-first'),

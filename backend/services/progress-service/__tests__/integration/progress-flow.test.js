@@ -1,4 +1,6 @@
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const mongoose = require('mongoose');
 const app = require('../../server');
 const Progress = require('../../models/Progress');
@@ -34,7 +36,7 @@ describe('进度服务集成测试', () => {
     };
     
     // 创建学生进度
-    const createResponse = await request(app)
+    const createResponse = await (await request(app))
       .post('/api/progress/update')
       .set(headers)
       .send({
@@ -51,7 +53,7 @@ describe('进度服务集成测试', () => {
     expect(createResponse.body).toHaveProperty('message', '学习进度已更新');
     
     // 更新学生进度
-    const updateResponse = await request(app)
+    const updateResponse = await (await request(app))
       .post('/api/progress/update')
       .set(headers)
       .send({
@@ -78,7 +80,7 @@ describe('进度服务集成测试', () => {
     };
     
     // 查看进度
-    const response = await request(app)
+    const response = await (await request(app))
       .get(`/api/progress/${studentId}`)
       .set(headers);
     
@@ -101,7 +103,7 @@ describe('进度服务集成测试', () => {
     };
     
     // 尝试查看其他学生的进度
-    const response = await request(app)
+    const response = await (await request(app))
       .get(`/api/progress/${studentId}`)
       .set(headers);
     
@@ -120,7 +122,7 @@ describe('进度服务集成测试', () => {
     };
     
     // 查看学生进度
-    const response = await request(app)
+    const response = await (await request(app))
       .get(`/api/progress/${studentId}`)
       .set(headers);
     
@@ -143,7 +145,7 @@ describe('进度服务集成测试', () => {
     });
     
     // 批量更新进度
-    const batchUpdateResponse = await request(app)
+    const batchUpdateResponse = await (await request(app))
       .post('/api/progress/batch-update')
       .set(headers())
       .send({
@@ -162,7 +164,7 @@ describe('进度服务集成测试', () => {
     
     // 验证更新结果
     for (const id of studentIds) {
-      const checkResponse = await request(app)
+      const checkResponse = await (await request(app))
         .get(`/api/progress/${id}`)
         .set(headers());
       

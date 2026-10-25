@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 
 describe('user-service server lifecycle', () => {
   test('exports lifecycle factories without connecting or listening during import', () => {
@@ -30,7 +32,7 @@ describe('user-service server lifecycle', () => {
     routes.get('/lifecycle-probe', (req, res) => res.json({ success: true }));
     const { createApp } = require('../server');
 
-    const response = await request(createApp({ routes })).get('/api/lifecycle-probe');
+    const response = await (await request(createApp({ routes }))).get('/api/lifecycle-probe');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ success: true });

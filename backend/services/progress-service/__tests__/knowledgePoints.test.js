@@ -4,7 +4,9 @@ process.env.INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'test
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
 const mongoose = require('mongoose');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close } = createHttpTestHarness();
+afterEach(close);
 const app = require('../server');
 const KnowledgePoint = require('../models/KnowledgePoint');
 const { createTask5Fixtures } = require('./helpers/task5Fixtures');
@@ -55,8 +57,8 @@ describe('Task 5 knowledge and ability points', () => {
     const f = await createTask5Fixtures();
     const path = '/api/knowledge-points';
     const payload = { childId: f.childA1._id, dimension: 'academic', subject: '数学', name: '分数计算' };
-    await request(app).post(path).set(f.headers(f.parentA, 'POST', path)).send(payload).expect(201);
-    const duplicate = await request(app).post(path).set(f.headers(f.parentA, 'POST', path)).send(payload);
+    await (await request(app)).post(path).set(f.headers(f.parentA, 'POST', path)).send(payload).expect(201);
+    const duplicate = await (await request(app)).post(path).set(f.headers(f.parentA, 'POST', path)).send(payload);
     expect(duplicate.status).toBe(409);
     expect(duplicate.body.error.code).toBe('RESOURCE_CONFLICT');
   });
@@ -71,7 +73,7 @@ describe('Task 5 knowledge and ability points', () => {
         name: `${dimension} point`,
         ...(dimension === 'academic' ? { subject: '数学' } : { area: `${dimension} area` })
       };
-      const response = await request(app).post(path)
+      const response = await (await request(app)).post(path)
         .set(f.headers(f.parentA, 'POST', path)).send(payload);
       expect(response.status).toBe(201);
       expect(response.body.data.knowledgePoint.familyId).toBe(f.familyA._id.toString());
@@ -81,7 +83,7 @@ describe('Task 5 knowledge and ability points', () => {
   test('TC-T5-POINT-005 child cannot create or patch points', async () => {
     const f = await createTask5Fixtures();
     const createPath = '/api/knowledge-points';
-    const create = await request(app).post(createPath)
+    const create = await (await request(app)).post(createPath)
       .set(f.headers(f.childA1, 'POST', createPath))
       .send({ childId: f.childA1._id, dimension: 'academic', subject: '数学', name: '分数' });
     expect(create.status).toBe(403);
@@ -91,7 +93,7 @@ describe('Task 5 knowledge and ability points', () => {
       name: '分数', createdByParentId: f.parentA._id, updatedByParentId: f.parentA._id
     });
     const patchPath = `/api/knowledge-points/${point._id}`;
-    const patch = await request(app).patch(patchPath)
+    const patch = await (await request(app)).patch(patchPath)
       .set(f.headers(f.childA1, 'PATCH', patchPath)).send({ masteryLevel: 'skilled' });
     expect(patch.status).toBe(403);
     expect((await KnowledgePoint.findById(point._id)).masteryLevel).toBe('not_started');
@@ -100,7 +102,7 @@ describe('Task 5 knowledge and ability points', () => {
   test('TC-T5-POINT-006 denies cross-family and sibling access', async () => {
     const f = await createTask5Fixtures();
     const createPath = '/api/knowledge-points';
-    const create = await request(app).post(createPath)
+    const create = await (await request(app)).post(createPath)
       .set(f.headers(f.parentB, 'POST', createPath))
       .send({ childId: f.childA1._id, dimension: 'academic', subject: '数学', name: '越权' });
     expect(create.status).toBe(403);
@@ -111,11 +113,11 @@ describe('Task 5 knowledge and ability points', () => {
     });
     for (const user of [f.parentB, f.childA2]) {
       const listPath = `/api/knowledge-points?childId=${f.childA1._id}`;
-      const list = await request(app).get(listPath).set(f.headers(user, 'GET', listPath));
+      const list = await (await request(app)).get(listPath).set(f.headers(user, 'GET', listPath));
       expect(list.status).toBe(403);
     }
     const patchPath = `/api/knowledge-points/${point._id}`;
-    const patch = await request(app).patch(patchPath)
+    const patch = await (await request(app)).patch(patchPath)
       .set(f.headers(f.parentB, 'PATCH', patchPath)).send({ masteryLevel: 'skilled' });
     expect(patch.status).toBe(403);
   });
@@ -128,7 +130,7 @@ describe('Task 5 knowledge and ability points', () => {
       { familyId: f.familyA._id, childId: f.childA1._id, dimension: 'physical', area: '跳绳', name: '耐力', masteryLevel: 'basic', createdByParentId: f.parentA._id, updatedByParentId: f.parentA._id }
     ]);
     const path = `/api/knowledge-points?childId=${f.childA1._id}&dimension=academic&subject=${encodeURIComponent('数学')}&masteryLevel=learning&page=1&pageSize=1`;
-    const response = await request(app).get(path).set(f.headers(f.childA1, 'GET', path));
+    const response = await (await request(app)).get(path).set(f.headers(f.childA1, 'GET', path));
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual(expect.objectContaining({ page: 1, pageSize: 1, total: 2 }));
     expect(response.body.data.items).toHaveLength(1);
@@ -141,7 +143,7 @@ describe('Task 5 knowledge and ability points', () => {
       name: '整理房间', createdByParentId: f.parentA._id, updatedByParentId: f.parentA._id
     });
     const path = `/api/knowledge-points/${point._id}`;
-    const response = await request(app).patch(path)
+    const response = await (await request(app)).patch(path)
       .set(f.headers(f.parentA, 'PATCH', path))
       .send({ masteryLevel: 'skilled', practiceCount: 8, mistakeCount: 0, lastReviewedAt: '2026-06-19T12:00:00.000Z' });
     expect(response.status).toBe(200);

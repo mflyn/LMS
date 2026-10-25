@@ -7,7 +7,9 @@ const fs = require('fs/promises');
 const mongoose = require('mongoose');
 const os = require('os');
 const path = require('path');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const sharp = require('sharp');
 const { MongoMemoryReplSet } = require('../../../../node_modules/mongodb-memory-server');
 
@@ -159,7 +161,7 @@ afterAll(async () => {
 
 test('TC-T6-MEDIA-015 complete media flow logs approved identifiers only', async () => {
   const uploadPath = '/api/media';
-  const uploadResponse = await request(app)
+  const uploadResponse = await (await request(app))
     .post(uploadPath)
     .set(signedHeaders('POST', uploadPath))
     .field('purpose', 'mistake_question')
@@ -171,12 +173,12 @@ test('TC-T6-MEDIA-015 complete media flow logs approved identifiers only', async
 
   resetIdentityNonceStore();
   const accessPath = `/api/media/${mediaId}/access`;
-  const accessResponse = await request(app)
+  const accessResponse = await (await request(app))
     .get(accessPath)
     .set(signedHeaders('GET', accessPath));
   expect(accessResponse.status).toBe(200);
   const signedUrl = accessResponse.body.data.access.url;
-  expect((await request(app).get(signedUrl)).status).toBe(200);
+  expect((await (await request(app)).get(signedUrl)).status).toBe(200);
 
   const command = {
     familyId: FAMILY_ID.toString(),
@@ -196,7 +198,7 @@ test('TC-T6-MEDIA-015 complete media flow logs approved identifiers only', async
         }))
       }
       : command;
-    const response = await request(app)
+    const response = await (await request(app))
       .post(`/api/internal/media/references/${action}`)
       .set('x-service-token', SERVICE_TOKEN)
       .send(payload);
@@ -205,7 +207,7 @@ test('TC-T6-MEDIA-015 complete media flow logs approved identifiers only', async
 
   resetIdentityNonceStore();
   const deletePath = `/api/media/${mediaId}`;
-  expect((await request(app)
+  expect((await (await request(app))
     .delete(deletePath)
     .set(signedHeaders('DELETE', deletePath))).status).toBe(204);
 

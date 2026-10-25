@@ -3,15 +3,17 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET || 'te
 process.env.INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'test-internal-service-token-32-bytes';
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const app = require('../server');
 const KnowledgePoint = require('../models/KnowledgePoint');
 const KnowledgePointMasteryEvent = require('../models/KnowledgePointMasteryEvent');
 const { createTask5Fixtures } = require('./helpers/task5Fixtures');
 
-const createKnowledgePoint = (fixtures, overrides = {}) => {
+const createKnowledgePoint = async (fixtures, overrides = {}) => {
   const path = '/api/knowledge-points';
-  return request(app)
+  return (await request(app))
     .post(path)
     .set(fixtures.headers(fixtures.parentA, 'POST', path))
     .send({
@@ -24,9 +26,9 @@ const createKnowledgePoint = (fixtures, overrides = {}) => {
     });
 };
 
-const patchKnowledgePoint = (fixtures, pointId, body, idempotencyKey) => {
+const patchKnowledgePoint = async (fixtures, pointId, body, idempotencyKey) => {
   const path = `/api/knowledge-points/${pointId}`;
-  let call = request(app)
+  let call = (await request(app))
     .patch(path)
     .set(fixtures.headers(fixtures.parentA, 'PATCH', path));
   if (idempotencyKey) call = call.set('Idempotency-Key', idempotencyKey);
@@ -36,11 +38,12 @@ const patchKnowledgePoint = (fixtures, pointId, body, idempotencyKey) => {
 describe('Task 6 knowledge point mastery history', () => {
   test('TC-T6-REPO-007 writes source and mastery event atomically', async () => {
     const f = await createTask5Fixtures();
-    const createResponse = await createKnowledgePoint(f, { masteryLevel: 'learning' }).expect(201);
+    const createResponse = await createKnowledgePoint(f, { masteryLevel: 'learning' });
+    expect(createResponse.status).toBe(201);
     const pointId = createResponse.body.data.knowledgePoint.knowledgePointId;
 
-    await patchKnowledgePoint(f, pointId, { masteryLevel: 'needs_review' }, 'mastery-needs-review')
-      .expect(200);
+    expect((await patchKnowledgePoint(f, pointId, { masteryLevel: 'needs_review' }, 'mastery-needs-review')).status)
+      .toBe(200);
 
     const events = await KnowledgePointMasteryEvent.find({ knowledgePointId: pointId })
       .sort({ effectiveAt: 1, createdAt: 1 });
@@ -54,11 +57,12 @@ describe('Task 6 knowledge point mastery history', () => {
 
   test('TC-T6-REPO-007 does not append duplicate event for repeated idempotent mastery patch', async () => {
     const f = await createTask5Fixtures();
-    const createResponse = await createKnowledgePoint(f, { masteryLevel: 'learning' }).expect(201);
+    const createResponse = await createKnowledgePoint(f, { masteryLevel: 'learning' });
+    expect(createResponse.status).toBe(201);
     const pointId = createResponse.body.data.knowledgePoint.knowledgePointId;
 
-    await patchKnowledgePoint(f, pointId, { masteryLevel: 'skilled' }, 'same-mastery-key').expect(200);
-    await patchKnowledgePoint(f, pointId, { masteryLevel: 'skilled' }, 'same-mastery-key').expect(200);
+    expect((await patchKnowledgePoint(f, pointId, { masteryLevel: 'skilled' }, 'same-mastery-key')).status).toBe(200);
+    expect((await patchKnowledgePoint(f, pointId, { masteryLevel: 'skilled' }, 'same-mastery-key')).status).toBe(200);
 
     const events = await KnowledgePointMasteryEvent.find({ knowledgePointId: pointId, operationId: 'same-mastery-key' });
     expect(events).toHaveLength(1);
@@ -78,7 +82,8 @@ describe('Task 6 knowledge point mastery history', () => {
 
   test('TC-T6-REPO-007 rolls back source update when mastery event persistence fails', async () => {
     const f = await createTask5Fixtures();
-    const createResponse = await createKnowledgePoint(f, { masteryLevel: 'learning' }).expect(201);
+    const createResponse = await createKnowledgePoint(f, { masteryLevel: 'learning' });
+    expect(createResponse.status).toBe(201);
     const pointId = createResponse.body.data.knowledgePoint.knowledgePointId;
     jest.spyOn(KnowledgePointMasteryEvent, 'create').mockRejectedValueOnce(new Error('event store unavailable'));
 

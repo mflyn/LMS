@@ -10,7 +10,9 @@ jest.mock('../../../common/utils/familyAudit', () => ({
   logFamilyOperation: jest.fn()
 }));
 
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const express = require('express');
 const mongoose = require('mongoose');
 const { createGrowthTaskRouter } = require('../routes/growthTasks');
@@ -206,7 +208,7 @@ describe('TC-T6-MEDIA-017K GrowthTask route lifecycle media recovery', () => {
     };
     const endpoint = `/api/growth-tasks/${task._id}/complete`;
 
-    const response = await request(routeApp(attachmentMediaService))
+    const response = await (await request(routeApp(attachmentMediaService)))
       .patch(endpoint)
       .set(userHeaders(child, 'PATCH', endpoint))
       .send({ actualMinutes: 12, difficulty: 'normal' });
@@ -231,7 +233,7 @@ describe('TC-T6-MEDIA-017K GrowthTask route lifecycle media recovery', () => {
     };
     const endpoint = `/api/growth-tasks/${task._id}/complete`;
 
-    const response = await request(routeApp(attachmentMediaService))
+    const response = await (await request(routeApp(attachmentMediaService)))
       .patch(endpoint)
       .set(userHeaders(child, 'PATCH', endpoint))
       .send({ actualMinutes: 12, difficulty: 'normal' });
@@ -255,7 +257,7 @@ describe('TC-T6-MEDIA-017K GrowthTask route lifecycle media recovery', () => {
       const attachmentMediaService = { resume: jest.fn().mockRejectedValue(pendingMediaError()) };
       const endpoint = endpointFor(task);
       const actor = name === 'complete' ? child : parent;
-      let operation = request(routeApp(attachmentMediaService))[method.toLowerCase()](endpoint)
+      let operation = (await request(routeApp(attachmentMediaService)))[method.toLowerCase()](endpoint)
         .set(userHeaders(actor, method, endpoint));
       if (body) operation = operation.send(body);
 
@@ -289,7 +291,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
       }))
     };
 
-    const response = await request(routeApp(attachmentMediaService))
+    const response = await (await request(routeApp(attachmentMediaService)))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(stableTaskPayload(child, { attachmentMediaIds: [MEDIA_A, MEDIA_B, MEDIA_A] }));
@@ -316,21 +318,21 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     const second = await createFamilyFixture('授权B');
     const service = { create: jest.fn(), mutate: jest.fn() };
 
-    const crossFamilyCreate = await request(routeApp(service))
+    const crossFamilyCreate = await (await request(routeApp(service)))
       .post('/api/growth-tasks')
       .set(userHeaders(first.parent, 'POST', '/api/growth-tasks'))
       .send(stableTaskPayload(second.child, { attachmentMediaIds: [MEDIA_A] }));
     expect(crossFamilyCreate.status).toBe(403);
     expect(service.create).not.toHaveBeenCalled();
 
-    const disabledMedia = await request(routeApp(null))
+    const disabledMedia = await (await request(routeApp(null)))
       .post('/api/growth-tasks')
       .set(userHeaders(first.parent, 'POST', '/api/growth-tasks'))
       .send(stableTaskPayload(first.child, { attachmentMediaIds: [MEDIA_A] }));
     expect(disabledMedia.status).toBe(400);
     expect(disabledMedia.body.error.code).toBe('MEDIA_NOT_ENABLED');
 
-    const legacyAttachments = await request(routeApp(null))
+    const legacyAttachments = await (await request(routeApp(null)))
       .post('/api/growth-tasks')
       .set(userHeaders(first.parent, 'POST', '/api/growth-tasks'))
       .send(stableTaskPayload(first.child, {
@@ -344,7 +346,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     const { parent, child } = await createFamilyFixture('稳定拒绝');
     const attachmentMediaService = { create: jest.fn().mockRejectedValue(stableMediaError()) };
 
-    const response = await request(routeApp(attachmentMediaService))
+    const response = await (await request(routeApp(attachmentMediaService)))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(stableTaskPayload(child, {
@@ -380,7 +382,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
       resume: jest.fn((taskId) => bindPendingTask(taskId))
     };
 
-    const createResponse = await request(routeApp(attachmentMediaService))
+    const createResponse = await (await request(routeApp(attachmentMediaService)))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(stableTaskPayload(child, { attachmentMediaIds: [MEDIA_A] }));
@@ -391,7 +393,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     });
 
     const endpoint = `/api/growth-tasks/${pendingTask._id}`;
-    const detail = await request(routeApp(attachmentMediaService))
+    const detail = await (await request(routeApp(attachmentMediaService)))
       .get(endpoint)
       .set(userHeaders(parent, 'GET', endpoint));
     expect(detail.status).toBe(200);
@@ -428,7 +430,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     };
     const endpoint = `/api/growth-tasks/${task._id}`;
 
-    const reorder = await request(routeApp(attachmentMediaService))
+    const reorder = await (await request(routeApp(attachmentMediaService)))
       .patch(endpoint)
       .set(userHeaders(parent, 'PATCH', endpoint))
       .send({ title: '重排后', attachmentMediaIds: [MEDIA_C, MEDIA_A, MEDIA_C, MEDIA_B] });
@@ -441,7 +443,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     expect(reorder.body.data.task.attachmentMediaIds).toEqual([MEDIA_C, MEDIA_A, MEDIA_B]);
     expect(reorder.body.data.task.title).toBe('重排后');
 
-    const remove = await request(routeApp(attachmentMediaService))
+    const remove = await (await request(routeApp(attachmentMediaService)))
       .patch(endpoint)
       .set(userHeaders(parent, 'PATCH', endpoint))
       .send({ attachmentMediaIds: [] });
@@ -474,7 +476,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     };
     const endpoint = `/api/growth-tasks/${task._id}`;
 
-    const response = await request(routeApp(attachmentMediaService))
+    const response = await (await request(routeApp(attachmentMediaService)))
       .patch(endpoint)
       .set(userHeaders(parent, 'PATCH', endpoint))
       .send({ title: '原子标题', priority: 'high', attachmentMediaIds: [MEDIA_A] });
@@ -493,7 +495,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     const attachmentMediaService = { resume: jest.fn((taskId) => bindPendingTask(taskId)) };
 
     const listEndpoint = `/api/growth-tasks?childId=${child._id}`;
-    const list = await request(routeApp(attachmentMediaService))
+    const list = await (await request(routeApp(attachmentMediaService)))
       .get('/api/growth-tasks')
       .query({ childId: child._id.toString() })
       .set(userHeaders(parent, 'GET', listEndpoint));
@@ -502,7 +504,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     expect(attachmentMediaService.resume).not.toHaveBeenCalled();
 
     const detailEndpoint = `/api/growth-tasks/${task._id}`;
-    const detail = await request(routeApp(attachmentMediaService))
+    const detail = await (await request(routeApp(attachmentMediaService)))
       .get(detailEndpoint)
       .set(userHeaders(parent, 'GET', detailEndpoint));
     expect(detail.status).toBe(200);
@@ -515,7 +517,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
 
   test('TC-T6-MEDIA-017M preserves non-media behavior and omits legacy attachments', async () => {
     const { parent, child } = await createFamilyFixture('兼容');
-    const response = await request(routeApp(null))
+    const response = await (await request(routeApp(null)))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(stableTaskPayload(child));
@@ -530,7 +532,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     );
     const task = await GrowthTask.findById(response.body.data.task.taskId);
     const endpoint = `/api/growth-tasks/${task._id}`;
-    const detail = await request(routeApp(null))
+    const detail = await (await request(routeApp(null)))
       .get(endpoint)
       .set(userHeaders(parent, 'GET', endpoint));
     expect(detail.status).toBe(200);
@@ -549,7 +551,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
       { attachmentMediaIds: null }
     ];
     for (const body of createBadBodies) {
-      const response = await request(routeApp({ create: jest.fn() }))
+      const response = await (await request(routeApp({ create: jest.fn() })))
         .post('/api/growth-tasks')
         .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
         .send({ ...stableTaskPayload(child), ...body });
@@ -567,7 +569,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
     ];
     for (const body of patchBadBodies) {
       const endpoint = `/api/growth-tasks/${task._id}`;
-      const response = await request(routeApp({ mutate: jest.fn() }))
+      const response = await (await request(routeApp({ mutate: jest.fn() })))
         .patch(endpoint)
         .set(userHeaders(parent, 'PATCH', endpoint))
         .send(body);
@@ -586,7 +588,7 @@ describe('Task6 public GrowthTask attachment route contract', () => {
       }))
     };
 
-    const response = await request(routeApp(attachmentMediaService))
+    const response = await (await request(routeApp(attachmentMediaService)))
       .post('/api/growth-tasks')
       .set(userHeaders(parent, 'POST', '/api/growth-tasks'))
       .send(stableTaskPayload(child, {

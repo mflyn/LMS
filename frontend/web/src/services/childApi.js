@@ -1,30 +1,11 @@
 import axios from 'axios';
-import { expireChildSession, loadChildSession } from './familySession';
+import { requestWithSession, sessionRequestOptions } from './familySession';
 
 const unwrap = (response) => response?.data?.data ?? response?.data;
 
-const requireChildSession = () => {
-  const session = loadChildSession();
-  if (session) return session;
-
-  const error = new Error('Child session is required');
-  error.response = { status: 401, data: { error: { code: 'UNAUTHENTICATED' } } };
-  throw error;
-};
-
-const childRequest = async (request, signal) => {
-  try {
-    const session = requireChildSession();
-    const config = {
-      headers: { Authorization: `Bearer ${session.token}` }
-    };
-    if (signal) config.signal = signal;
-    return await request(config, session);
-  } catch (error) {
-    if (error?.response?.status === 401) expireChildSession();
-    throw error;
-  }
-};
+const childRequest = (request, signal, expectedSession) => requestWithSession(
+  'student', request, sessionRequestOptions(signal, expectedSession)
+);
 
 const queryString = (params, allowedFields) => {
   const query = new URLSearchParams();
@@ -43,24 +24,24 @@ const pick = (value, fields) => fields.reduce((payload, field) => {
   return payload;
 }, {});
 
-const childGet = async (path, params, allowedFields, signal) => {
+const childGet = async (path, params, allowedFields, signal, expectedSession) => {
   const response = await childRequest(
     (config) => axios.get(`${path}${queryString(params, allowedFields)}`, config),
-    signal
+    signal, expectedSession
   );
   return unwrap(response);
 };
 
-const childPatch = async (path, body, allowedFields, signal) => {
+const childPatch = async (path, body, allowedFields, signal, expectedSession) => {
   const response = await childRequest(
     (config) => axios.patch(path, pick(body, allowedFields), config),
-    signal
+    signal, expectedSession
   );
   return unwrap(response);
 };
 
-const childDelete = async (path, signal) => {
-  const response = await childRequest((config) => axios.delete(path, config), signal);
+const childDelete = async (path, signal, expectedSession) => {
+  const response = await childRequest((config) => axios.delete(path, config), signal, expectedSession);
   return unwrap(response);
 };
 
@@ -75,7 +56,7 @@ export const childPinLogin = async (credentials) => {
 
 export const getOwnProfile = async (signal) => {
   const response = await childRequest(
-    (config, session) => axios.get(`/api/children/${encodeURIComponent(session.child.childId)}`, config),
+    (config, session) => axios.get(`/api/children/${encodeURIComponent(session.actorId)}`, config),
     signal
   );
   return unwrap(response);
@@ -89,18 +70,31 @@ export const listOwnTasks = (params, signal) => childGet('/api/growth-tasks', pa
   'pageSize'
 ], signal);
 
-export const getOwnTask = (taskId, signal) => childGet(
+export const getOwnTask = (taskId, signal, expectedSession) => childGet(
   `/api/growth-tasks/${encodeURIComponent(taskId)}`,
   undefined,
   [],
-  signal
+  signal, expectedSession
 );
 
-export const completeOwnTask = (taskId, payload, signal) => childPatch(
+export const completeOwnTask = (taskId, payload, signal, expectedSession) => childPatch(
   `/api/growth-tasks/${encodeURIComponent(taskId)}/complete`,
   payload,
-  ['actualMinutes', 'actualAmount', 'difficulty', 'needsHelp', 'childNote'],
-  signal
+  ['operationId', 'expectedCompletionVersion', 'expectedChecklistVersion', 'checkedItemIds', 'completionMediaIds',
+    'actualMinutes', 'actualAmount', 'difficulty', 'needsHelp', 'childNote'],
+  signal, expectedSession
+);
+
+export const getOwnCompletionRecovery = (taskId, signal, expectedSession) => childGet(
+  `/api/growth-tasks/${encodeURIComponent(taskId)}/completion-recovery`, undefined, [], signal, expectedSession
+);
+export const listOwnCompletionRecoveries = (params, signal, expectedSession) => childGet(
+  '/api/growth-tasks/completion-recoveries', params, ['page', 'pageSize'], signal, expectedSession
+);
+export const recoverOwnTaskCompletion = async (taskId, operationId, signal, expectedSession) => unwrap(
+  await childRequest(config => axios.post(
+    `/api/growth-tasks/${encodeURIComponent(taskId)}/completion-operations/${encodeURIComponent(operationId)}/recover`, {}, config
+  ), signal, expectedSession)
 );
 
 const childPost = async (path, body, allowedFields) => {
@@ -138,24 +132,24 @@ export const reviewOwnMistake = (mistakeId, payload, signal) => childPatch(
   signal
 );
 
-export const uploadOwnPrivateMedia = async ({ file, purpose }, signal) => {
+export const uploadOwnPrivateMedia = async ({ file, purpose }, signal, expectedSession) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('purpose', purpose);
-  const response = await childRequest((config) => axios.post('/api/media', formData, config), signal);
+  const response = await childRequest((config) => axios.post('/api/media', formData, config), signal, expectedSession);
   return unwrap(response);
 };
 
-export const getOwnPrivateMediaAccess = (mediaId, signal) => childGet(
+export const getOwnPrivateMediaAccess = (mediaId, signal, expectedSession) => childGet(
   `/api/media/${encodeURIComponent(mediaId)}/access`,
   undefined,
   [],
-  signal
+  signal, expectedSession
 );
 
-export const deleteOwnPrivateMedia = (mediaId, signal) => childDelete(
+export const deleteOwnPrivateMedia = (mediaId, signal, expectedSession) => childDelete(
   `/api/media/${encodeURIComponent(mediaId)}`,
-  signal
+  signal, expectedSession
 );
 
 export const listOwnRewards = (params, signal) => childGet('/api/rewards', params, [
@@ -168,7 +162,7 @@ export const listOwnRewards = (params, signal) => childGet('/api/rewards', param
 
 export const listOwnReminders = async (params, signal) => {
   const response = await childRequest((config, session) => {
-    const query = new URLSearchParams({ childId: session.child.childId });
+    const query = new URLSearchParams({ childId: session.actorId });
     if (params?.date !== undefined && params.date !== null && params.date !== '') {
       query.append('date', String(params.date));
     }

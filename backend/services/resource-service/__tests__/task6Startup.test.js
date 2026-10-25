@@ -4,7 +4,13 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
 process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/test';
 
 const express = require('express');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
+
+const startupConnection = () => ({ readyState: 1,
+  db: { collection: () => ({ findOne: jest.fn().mockResolvedValue(null) }) }, close: jest.fn() });
+const listener = port => ({ once: jest.fn(), address: () => ({ port }), close: jest.fn() });
 
 const mockConnect = jest.fn().mockResolvedValue(undefined);
 const mockListen = jest.fn((port, callback) => {
@@ -49,7 +55,7 @@ describe('resource-service Task 6 startup contract', () => {
     mediaRouter.get('/probe', (req, res) => res.status(200).json({ mounted: true }));
 
     const actualApp = appModule.createApp({ logger: mockLogger, mediaRouter });
-    const response = await request(actualApp).get('/api/media/probe');
+    const response = await (await request(actualApp)).get('/api/media/probe');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ mounted: true });
@@ -63,7 +69,7 @@ describe('resource-service Task 6 startup contract', () => {
     internalMediaRouter.post('/probe', (req, res) => res.status(200).json({ internal: true }));
 
     const actualApp = appModule.createApp({ logger: mockLogger, internalMediaRouter });
-    const response = await request(actualApp).post('/api/internal/media/references/probe');
+    const response = await (await request(actualApp)).post('/api/internal/media/references/probe');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ internal: true });
@@ -79,7 +85,7 @@ describe('resource-service Task 6 startup contract', () => {
       mediaSecurity: { profile: 'trusted-local', scanner }
     });
 
-    const response = await request(actualApp).get('/health');
+    const response = await (await request(actualApp)).get('/health');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
@@ -102,8 +108,8 @@ describe('resource-service Task 6 startup contract', () => {
       mediaSecurity: { profile: 'secure-production', scanner }
     });
 
-    const healthy = await request(actualApp).get('/health');
-    const unhealthy = await request(actualApp).get('/health');
+    const healthy = await (await request(actualApp)).get('/health');
+    const unhealthy = await (await request(actualApp)).get('/health');
 
     expect(healthy.status).toBe(200);
     expect(healthy.body.mediaSecurity).toEqual({
@@ -139,12 +145,13 @@ describe('resource-service Task 6 startup contract', () => {
       listen: jest.fn((port, callback) => {
         order.push(`listen:${port}`);
         if (callback) callback();
-        return { close: jest.fn() };
+        return listener(port);
       })
     };
 
     await serverModule.startServer({
       app,
+      connection: startupConnection(), validateEnvironment: () => {},
       port: 3005,
       connect: async () => order.push('connect')
     });
@@ -165,12 +172,13 @@ describe('resource-service Task 6 startup contract', () => {
       listen: jest.fn((port, callback) => {
         order.push(`listen:${port}`);
         callback();
-        return { close: jest.fn() };
+        return listener(port);
       })
     };
 
     await serverModule.startServer({
       app,
+      connection: startupConnection(), validateEnvironment: () => {},
       port: 3005,
       connect: async () => order.push('connect')
     });
@@ -193,8 +201,10 @@ describe('resource-service Task 6 startup contract', () => {
 
     await expect(serverModule.startServer({
       app,
+      connection: startupConnection(), validateEnvironment: () => {},
       connect: jest.fn().mockResolvedValue(undefined)
-    })).rejects.toBe(scannerError);
+    })).rejects.toMatchObject({ code: 'COMPLETION_STARTUP_FAILED', message: 'COMPLETION_STARTUP_FAILED' });
+    expect(app.locals.mediaSecurity.scanner.ping).toHaveBeenCalledTimes(1);
     expect(app.listen).not.toHaveBeenCalled();
   });
 
@@ -221,12 +231,13 @@ describe('resource-service Task 6 startup contract', () => {
       listen: jest.fn((port, callback) => {
         order.push(`listen:${port}`);
         callback();
-        return { close: jest.fn() };
+        return listener(port);
       })
     };
 
     await serverModule.startServer({
       port: 3005,
+      connection: startupConnection(), validateEnvironment: () => {},
       connect: async () => order.push('connect'),
       createRuntimeApp: () => {
         order.push('media-app');

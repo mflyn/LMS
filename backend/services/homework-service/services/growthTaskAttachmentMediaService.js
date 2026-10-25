@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { isDeepStrictEqual } = require('node:util');
 const { entriesToMongoSet } = require('./growthTaskPatch');
 
 const HIDDEN_GROWTH_TASK_MEDIA_STATE = [
@@ -52,7 +53,8 @@ const createGrowthTaskAttachmentMediaService = ({
   GrowthTaskModel,
   mediaReferenceClient,
   randomUUID,
-  logger
+  logger,
+  completionIsolation = false
 } = {}) => {
   if (!GrowthTaskModel
     || typeof GrowthTaskModel.create !== 'function'
@@ -70,26 +72,69 @@ const createGrowthTaskAttachmentMediaService = ({
     throw new Error('logger is required');
   }
 
+  if (typeof completionIsolation !== 'boolean') throw new Error('completionIsolation must be boolean');
+  const hiddenState = HIDDEN_GROWTH_TASK_MEDIA_STATE
+    + (completionIsolation ? ' +activeCompletionOperation +completionPending +mediaCompletionFence' : '');
+  const versionKeys = ['completionVersion', 'checklistVersion'];
+  const storedFence = task => Object.fromEntries(versionKeys.map(key => [key, task[key] ?? 0]));
+  const assertCompletionIdle = (task) => {
+    if (!completionIsolation || !task) return;
+    if (task.activeCompletionOperation || task.completionPending
+      || ![undefined, 'stable'].includes(task.completionMediaReferenceState)
+      || versionKeys.some(key => task[key] !== undefined && (!Number.isSafeInteger(task[key]) || task[key] < 0))) throw pendingError(task._id);
+    if (task.mediaReferenceState === 'pending' && task.mediaCompletionFence !== undefined
+      && versionKeys.some(key => task.mediaCompletionFence?.[key] !== (task[key] ?? 0))) throw pendingError(task._id);
+    if (task.status !== 'pending') throw conflictError();
+  };
+  const exact = value => value === undefined ? { $exists: false } : value;
+  const completionFence = task => {
+    if (!completionIsolation) return {};
+    assertCompletionIdle(task);
+    return { status: 'pending', activeCompletionOperation: null, completionPending: null,
+      completionMediaReferenceState: exact(task.completionMediaReferenceState),
+      completionVersion: exact(task.completionVersion), checklistVersion: exact(task.checklistVersion),
+      mediaCompletionFence: task.mediaCompletionFence === undefined ? { $exists: false } : storedFence(task) };
+  };
+  const sameCompletionVersions = (left, right) => ['completionVersion', 'checklistVersion', 'completionMediaReferenceState']
+    .every(key => left[key] === right[key]);
+  // A lost local response may replay only this write, never a later owner's similar result.
+  const isNextSnapshot = (next, previous) => !completionIsolation || Boolean(next
+    && next.__v === (previous.__v ?? 0) + 1 && sameCompletionVersions(next, previous)
+    && idsEqual(next.familyId, previous.familyId) && idsEqual(next.childId, previous.childId));
   const selectHidden = async (queryOrPromise) => {
     if (queryOrPromise && typeof queryOrPromise.select === 'function') {
-      return queryOrPromise.select(HIDDEN_GROWTH_TASK_MEDIA_STATE);
+      return queryOrPromise.select(hiddenState);
     }
     return queryOrPromise;
   };
 
   const load = async (taskOrId) => {
     const taskId = taskOrId && taskOrId._id ? taskOrId._id : taskOrId;
-    return selectHidden(GrowthTaskModel.findById(taskId));
+    const task = await selectHidden(GrowthTaskModel.findById(taskId));
+    assertCompletionIdle(task);
+    return task;
+  };
+
+  const assertCurrentMaterialOwner = async task => {
+    if (!completionIsolation) return;
+    const current = await load(task._id);
+    if (!current || current.__v !== task.__v || !sameCompletionVersions(current, task)
+      || !idsEqual(current.familyId, task.familyId) || !idsEqual(current.childId, task.childId)
+      || current.mediaBindingOperationId !== task.mediaBindingOperationId
+      || current.mediaBindingPhase !== task.mediaBindingPhase
+      || current.mediaMutationKind !== task.mediaMutationKind
+      || current.mediaReferenceState !== 'pending') throw pendingError(task._id);
   };
 
   const update = async (filter, updateDocument) => {
+    if (completionIsolation && filter.__v === undefined) filter = { ...filter, __v: { $exists: false } };
     const result = GrowthTaskModel.findOneAndUpdate(
       filter,
       updateDocument,
       { new: true, runValidators: true }
     );
     if (result && typeof result.select === 'function') {
-      return result.select(HIDDEN_GROWTH_TASK_MEDIA_STATE);
+      return result.select(hiddenState);
     }
     const resolved = await result;
     if (resolved && resolved._id) {
@@ -130,6 +175,7 @@ const createGrowthTaskAttachmentMediaService = ({
   );
 
   const assertValidClientEnvelope = (value, command, expectedState) => {
+    const expectedStates = Array.isArray(expectedState) ? expectedState : [expectedState];
     if (!Array.isArray(value)) throw new Error('invalid media reference response');
     if (value.length !== command.references.length) throw new Error('invalid media reference response');
     const pending = new Map(command.references.map((reference) => [
@@ -143,7 +189,7 @@ const createGrowthTaskAttachmentMediaService = ({
         || !reference
         || !idsEqual(entry.mediaId, reference.mediaId)
         || entry.field !== reference.field
-        || entry.state !== expectedState) {
+        || !expectedStates.includes(entry.state)) {
         throw new Error('invalid media reference response');
       }
       pending.delete(key);
@@ -151,8 +197,8 @@ const createGrowthTaskAttachmentMediaService = ({
     if (pending.size !== 0) throw new Error('invalid media reference response');
   };
 
-  const convergedCreateBinding = (task, operationId, desiredIds) => {
-    if (!task) return false;
+  const convergedCreateBinding = (task, operationId, desiredIds, previous) => {
+    if (!task || !isNextSnapshot(task, previous)) return false;
     if (desiredIds.length === 0) {
       return task.mediaReferenceState === 'none' && (task.attachmentMediaIds || []).length === 0;
     }
@@ -190,6 +236,24 @@ const createGrowthTaskAttachmentMediaService = ({
     value: Object.prototype.hasOwnProperty.call(entry, 'value') ? entry.value : entry._doc.value
   }));
 
+  const recoverySnapshot = task => ({
+    taskId: String(task._id), familyId: String(task.familyId), childId: String(task.childId),
+    version: task.__v, status: task.status,
+    completionVersion: task.completionVersion, checklistVersion: task.checklistVersion,
+    completionMediaReferenceState: task.completionMediaReferenceState,
+    mediaReferenceState: task.mediaReferenceState,
+    operationId: task.mediaBindingOperationId, phase: task.mediaBindingPhase, kind: task.mediaMutationKind,
+    remoteOutcomeUncertain: task.mediaRemoteOutcomeUncertain,
+    fence: task.mediaCompletionFence === undefined ? undefined : {
+      completionVersion: task.mediaCompletionFence.completionVersion,
+      checklistVersion: task.mediaCompletionFence.checklistVersion
+    },
+    publicIds: stringIds(task.attachmentMediaIds), bindings: bindingDtos(task.attachmentMediaBindings),
+    pendingIds: stringIds(task.attachmentMediaPendingIds),
+    previousBindings: bindingDtos(task.attachmentMediaPreviousBindings),
+    patch: entriesToMongoSet(pendingPatchEntries(task))
+  });
+
   const finalUnset = () => ({
     mediaBindingOperationId: '',
     attachmentMediaPendingIds: '',
@@ -197,22 +261,31 @@ const createGrowthTaskAttachmentMediaService = ({
     mediaBindingPhase: '',
     mediaPendingTaskPatch: '',
     mediaMutationKind: '',
-    mediaRemoteOutcomeUncertain: ''
+    mediaRemoteOutcomeUncertain: '',
+    ...(completionIsolation ? { mediaCompletionFence: '' } : {})
   });
 
-  const convergedPatch = (task, desiredIds) => {
-    if (!task || task.mediaReferenceState !== mediaStateForIds(desiredIds)) return false;
+  const convergedPatch = (task, desiredIds, previous) => {
+    if (!task || !isNextSnapshot(task, previous) || task.mediaReferenceState !== mediaStateForIds(desiredIds)) return false;
+    if (completionIsolation && (task.mediaBindingOperationId || task.mediaBindingPhase
+      || JSON.stringify(bindingDtos(task.attachmentMediaBindings)) !== JSON.stringify(desiredBindingsFor(previous)))) return false;
     return sameOrder(stringIds(task.attachmentMediaIds || []), desiredIds);
   };
+
+  const canResumeUnbinding = (task, previous) => task && task.mediaBindingPhase === 'unbinding'
+    && (!completionIsolation || isNextSnapshot(task, previous)
+      && task.mediaBindingOperationId === previous.mediaBindingOperationId
+      && task.mediaMutationKind === 'patch' && task.mediaReferenceState === 'pending');
 
   const rollbackCreateOnStablePrepare = async (task, stableError) => {
     let deleted;
     try {
       deleted = await GrowthTaskModel.deleteOne({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
-        __v: task.__v,
+        __v: completionIsolation ? exact(task.__v) : task.__v,
         mediaReferenceState: 'pending',
         mediaBindingOperationId: task.mediaBindingOperationId,
         mediaMutationKind: 'create',
@@ -234,6 +307,7 @@ const createGrowthTaskAttachmentMediaService = ({
     let published;
     try {
       published = await update({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
@@ -255,19 +329,20 @@ const createGrowthTaskAttachmentMediaService = ({
           mediaBindingPhase: '',
           mediaPendingTaskPatch: '',
           mediaMutationKind: '',
-          mediaRemoteOutcomeUncertain: ''
+          mediaRemoteOutcomeUncertain: '',
+          ...(completionIsolation ? { mediaCompletionFence: '' } : {})
         },
         $inc: { __v: 1 }
       });
     } catch (error) {
       const reloaded = await load(task._id).catch(() => null);
-      if (convergedCreateBinding(reloaded, operationId, desiredIds)) return reloaded;
+      if (convergedCreateBinding(reloaded, operationId, desiredIds, task)) return reloaded;
       throw pendingError(task._id);
     }
 
     if (published) return published;
     const reloaded = await load(task._id).catch(() => null);
-    if (convergedCreateBinding(reloaded, operationId, desiredIds)) return reloaded;
+    if (convergedCreateBinding(reloaded, operationId, desiredIds, task)) return reloaded;
     throw pendingError(task._id);
   };
 
@@ -277,7 +352,9 @@ const createGrowthTaskAttachmentMediaService = ({
     const command = commandFor(task);
 
     try {
-      assertValidClientEnvelope(await mediaReferenceClient.prepare(command), command, 'prepared');
+      await assertCurrentMaterialOwner(task);
+      // A lost commit response leaves the same operation bound on prepare replay.
+      assertValidClientEnvelope(await mediaReferenceClient.prepare(command), command, ['prepared', 'bound']);
     } catch (error) {
       if (allowFirstRollback && STABLE_PREPARE_STATUSES.has(error && error.status)) {
         return rollbackCreateOnStablePrepare(task, error);
@@ -286,6 +363,7 @@ const createGrowthTaskAttachmentMediaService = ({
     }
 
     try {
+      await assertCurrentMaterialOwner(task);
       assertValidClientEnvelope(await mediaReferenceClient.commit(command), command, 'bound');
     } catch (error) {
       throw pendingError(task._id);
@@ -298,6 +376,7 @@ const createGrowthTaskAttachmentMediaService = ({
     let marked;
     try {
       marked = await update({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
@@ -322,6 +401,7 @@ const createGrowthTaskAttachmentMediaService = ({
     let marked;
     try {
       marked = await update({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
@@ -348,6 +428,7 @@ const createGrowthTaskAttachmentMediaService = ({
     let cleared;
     try {
       cleared = await update({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
@@ -398,6 +479,7 @@ const createGrowthTaskAttachmentMediaService = ({
     let finalized;
     try {
       finalized = await update({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
@@ -414,12 +496,12 @@ const createGrowthTaskAttachmentMediaService = ({
       });
     } catch (error) {
       const reloaded = await load(task._id).catch(() => null);
-      if (convergedPatch(reloaded, desiredIds)) return reloaded;
+      if (convergedPatch(reloaded, desiredIds, task)) return reloaded;
       throw pendingError(task._id);
     }
     if (finalized) return finalized;
     const reloaded = await load(task._id).catch(() => null);
-    if (convergedPatch(reloaded, desiredIds)) return reloaded;
+    if (convergedPatch(reloaded, desiredIds, task)) return reloaded;
     throw pendingError(task._id);
   };
 
@@ -428,6 +510,7 @@ const createGrowthTaskAttachmentMediaService = ({
     if (removals.length === 0) return finalizePatch(task);
     const command = commandForRemovalBindings(task, removals);
     try {
+      await assertCurrentMaterialOwner(task);
       assertValidClientEnvelope(await mediaReferenceClient.unbind(command), command, 'released');
     } catch (error) {
       throw pendingError(task._id);
@@ -458,6 +541,7 @@ const createGrowthTaskAttachmentMediaService = ({
     let published;
     try {
       published = await update({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
@@ -470,14 +554,14 @@ const createGrowthTaskAttachmentMediaService = ({
       }, updateDocument);
     } catch (error) {
       const reloaded = await load(task._id).catch(() => null);
-      if (reloaded && reloaded.mediaBindingPhase === 'unbinding') return resumePatchUnbinding(reloaded);
-      if (convergedPatch(reloaded, desiredIds)) return reloaded;
+      if (canResumeUnbinding(reloaded, task)) return resumePatchUnbinding(reloaded);
+      if (convergedPatch(reloaded, desiredIds, task)) return reloaded;
       throw pendingError(task._id);
     }
     if (!published) {
       const reloaded = await load(task._id).catch(() => null);
-      if (reloaded && reloaded.mediaBindingPhase === 'unbinding') return resumePatchUnbinding(reloaded);
-      if (convergedPatch(reloaded, desiredIds)) return reloaded;
+      if (canResumeUnbinding(reloaded, task)) return resumePatchUnbinding(reloaded);
+      if (convergedPatch(reloaded, desiredIds, task)) return reloaded;
       throw pendingError(task._id);
     }
     if (removals.length) return resumePatchUnbinding(published);
@@ -493,7 +577,8 @@ const createGrowthTaskAttachmentMediaService = ({
       }
       const command = commandForAdditionIds(current, additions);
       try {
-        assertValidClientEnvelope(await mediaReferenceClient.prepare(command), command, 'prepared');
+        await assertCurrentMaterialOwner(current);
+        assertValidClientEnvelope(await mediaReferenceClient.prepare(command), command, ['prepared', 'bound']);
       } catch (error) {
         if (allowFirstStableClear && STABLE_PREPARE_STATUSES.has(error && error.status)) {
           return clearPatchIntentOnStablePrepare(current, error);
@@ -501,6 +586,7 @@ const createGrowthTaskAttachmentMediaService = ({
         throw pendingError(current._id);
       }
       try {
+        await assertCurrentMaterialOwner(current);
         assertValidClientEnvelope(await mediaReferenceClient.commit(command), command, 'bound');
       } catch (error) {
         throw pendingError(current._id);
@@ -509,10 +595,26 @@ const createGrowthTaskAttachmentMediaService = ({
     return publishPatchBinding(current);
   };
 
-  const resume = async (taskOrId) => {
-    const task = await load(taskOrId);
+  const resume = async (taskOrId, { expectedSnapshot } = {}) => {
+    let task = await load(taskOrId);
     if (!task) throw conflictError();
+    // Do not adopt another writer's intent or stable result after the validated read.
+    if (expectedSnapshot && !isDeepStrictEqual(recoverySnapshot(task), expectedSnapshot)) throw pendingError(task._id);
     if (task.mediaReferenceState !== 'pending') return task;
+    if (completionIsolation && task.mediaCompletionFence === undefined) {
+      // Only pre-completion version-zero legacy intents have a provable adoption baseline.
+      if (versionKeys.some(key => (task[key] ?? 0) !== 0)) throw pendingError(task._id);
+      let adopted;
+      try {
+        adopted = await update({ ...completionFence(task), _id: task._id, familyId: task.familyId,
+          childId: task.childId, __v: task.__v, mediaReferenceState: 'pending',
+          mediaBindingOperationId: task.mediaBindingOperationId, mediaBindingPhase: task.mediaBindingPhase,
+          mediaMutationKind: task.mediaMutationKind },
+        { $set: { mediaCompletionFence: storedFence(task) }, $inc: { __v: 1 } });
+      } catch (_error) { throw pendingError(task._id); }
+      if (!adopted) throw pendingError(task._id);
+      task = adopted;
+    }
     if (task.mediaMutationKind === 'create' && task.mediaBindingPhase === 'binding') {
       const resumableTask = task.mediaRemoteOutcomeUncertain !== true
         ? await markRemoteOutcomeUncertain(task)
@@ -533,10 +635,18 @@ const createGrowthTaskAttachmentMediaService = ({
       ...entriesToMongoSet(taskPatch),
       ...(attachmentSet || {})
     };
-    if (Object.keys(setDocument).length === 0) return load(task._id);
+    if (Object.keys(setDocument).length === 0) {
+      const expectedSnapshot = completionIsolation ? recoverySnapshot(task) : undefined;
+      const current = await load(task._id);
+      if (completionIsolation && (!current || !isDeepStrictEqual(recoverySnapshot(current), expectedSnapshot))) {
+        throw pendingError(task._id);
+      }
+      return current;
+    }
     let patched;
     try {
       patched = await update({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
@@ -548,19 +658,26 @@ const createGrowthTaskAttachmentMediaService = ({
         $inc: { __v: 1 }
       });
     } catch (error) {
-      throw conflictError();
+      throw completionIsolation ? pendingError(task._id) : conflictError();
     }
-    if (!patched) throw conflictError();
+    if (!patched) throw completionIsolation ? pendingError(task._id) : conflictError();
     return patched;
   };
 
-  const resolvePendingAttachmentRequest = async (task, desiredIds) => {
+  const resolvePendingAttachmentRequest = async (task, desiredIds, taskPatch = []) => {
     const pendingTask = task && task.mediaReferenceState === 'pending'
       ? task
       : await load(task._id);
     if (!pendingTask || pendingTask.mediaReferenceState !== 'pending') throw conflictError();
     const pendingIds = stringIds(pendingTask.attachmentMediaPendingIds || []);
-    const converged = await resume(pendingTask);
+    // A matching media set alone cannot identify the original mixed-field intent.
+    if (completionIsolation && (!sameOrder(pendingIds, desiredIds)
+      || !isDeepStrictEqual(entriesToMongoSet(pendingPatchEntries(pendingTask)), entriesToMongoSet(taskPatch)))) {
+      throw conflictError();
+    }
+    const converged = await resume(pendingTask, {
+      expectedSnapshot: completionIsolation ? recoverySnapshot(pendingTask) : undefined
+    });
     if (sameOrder(pendingIds, desiredIds)) return converged;
     throw conflictError();
   };
@@ -571,6 +688,7 @@ const createGrowthTaskAttachmentMediaService = ({
     let claimed;
     try {
       claimed = await update({
+        ...completionFence(task),
         _id: task._id,
         familyId: task.familyId,
         childId: task.childId,
@@ -586,21 +704,25 @@ const createGrowthTaskAttachmentMediaService = ({
           mediaBindingPhase: 'binding',
           mediaPendingTaskPatch: taskPatch,
           mediaMutationKind: 'patch',
-          mediaRemoteOutcomeUncertain: false
+          mediaRemoteOutcomeUncertain: false,
+          ...(completionIsolation ? { mediaCompletionFence: storedFence(task) } : {})
         },
         $inc: { __v: 1 }
       });
     } catch (error) {
       const reloaded = await load(task._id).catch(() => null);
       if (reloaded
+        && isNextSnapshot(reloaded, task)
         && reloaded.mediaReferenceState === 'pending'
         && reloaded.mediaBindingOperationId === operationId
-        && reloaded.mediaMutationKind === 'patch') {
+        && reloaded.mediaMutationKind === 'patch'
+        && (!completionIsolation || reloaded.mediaBindingPhase === 'binding')) {
         return reloaded;
       }
       throw pendingError(task._id);
     }
-    if (!claimed) return resolvePendingAttachmentRequest(task, desiredIds);
+    if (!claimed && completionIsolation) throw pendingError(task._id);
+    if (!claimed) return resolvePendingAttachmentRequest(task, desiredIds, taskPatch);
     return claimed;
   };
 
@@ -609,10 +731,12 @@ const createGrowthTaskAttachmentMediaService = ({
     if (!initial) throw conflictError();
     if (initial.mediaReferenceState === 'pending' && attachmentMediaIds !== undefined) {
       const desiredIds = normalizeAttachmentMediaIds(attachmentMediaIds);
-      return resolvePendingAttachmentRequest(initial, desiredIds);
+      return resolvePendingAttachmentRequest(initial, desiredIds, taskPatch);
     }
 
-    const current = await resume(initial);
+    const current = await resume(initial, {
+      expectedSnapshot: completionIsolation ? recoverySnapshot(initial) : undefined
+    });
     const publicIds = stringIds(current.attachmentMediaIds || []);
     const bindings = bindingDtos(current.attachmentMediaBindings || []);
 
@@ -640,6 +764,7 @@ const createGrowthTaskAttachmentMediaService = ({
   };
 
   const create = async ({ taskInput, attachmentMediaIds = [] } = {}) => {
+    assertCompletionIdle({ ...taskInput, status: taskInput?.status || 'pending' });
     const desiredIds = normalizeAttachmentMediaIds(attachmentMediaIds);
     if (desiredIds.length === 0) {
       return GrowthTaskModel.create(taskInput);
@@ -658,7 +783,8 @@ const createGrowthTaskAttachmentMediaService = ({
       mediaBindingPhase: 'binding',
       mediaPendingTaskPatch: [],
       mediaMutationKind: 'create',
-      mediaRemoteOutcomeUncertain: false
+      mediaRemoteOutcomeUncertain: false,
+      ...(completionIsolation ? { mediaCompletionFence: storedFence(taskInput) } : {})
     });
     const marked = await markRemoteOutcomeUncertain(task);
     return resumeBinding(marked, { allowFirstRollback: true });

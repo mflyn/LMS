@@ -7,6 +7,7 @@ import PrivateMediaCollectionField from '../../components/family/PrivateMediaCol
 import PrivateMediaField from '../../components/family/PrivateMediaField';
 import TodayPage from '../../pages/family/TodayPage';
 import TasksPage from '../../pages/family/TasksPage';
+import { saveParentSession } from '../../services/familySession';
 import {
   cancelOrArchiveGrowthTask,
   completeGrowthTask,
@@ -14,6 +15,7 @@ import {
   createGrowthTask,
   deletePrivateMedia,
   getWeeklyReport,
+  getGrowthTask,
   listFamilyReminders,
   listGrowthTasks,
   listMistakes,
@@ -23,15 +25,22 @@ import {
 
 jest.mock('../../contexts/FamilyContext', () => ({
   useFamily: () => ({
-    selectedChildId: 'child-a1',
-    selectedChild: { childId: 'child-a1', name: '小明' },
+    family: { familyId: '000000000000000000000004' },
+    selectedChildId: '000000000000000000000002',
+    selectedChild: { childId: '000000000000000000000002', name: '小明' },
     childScopeVersion: 1
   })
+}));
+jest.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { id: '000000000000000000000001' }, token: 'synthetic-parent' })
 }));
 
 jest.mock('../../services/familyApi', () => ({
   listGrowthTasks: jest.fn(),
   getWeeklyReport: jest.fn(),
+  getGrowthTask: jest.fn(),
+  getCompletionRecovery: jest.fn(),
+  recoverTaskCompletion: jest.fn(),
   listMistakes: jest.fn(),
   listFamilyReminders: jest.fn(),
   createGrowthTask: jest.fn(),
@@ -234,8 +243,14 @@ describe('Task 9 shared family controls', () => {
 });
 
 const task = (overrides = {}) => ({
-  taskId: 'task-a1',
-  childId: 'child-a1',
+  taskId: '000000000000000000000003',
+  childId: '000000000000000000000002',
+  familyId: '000000000000000000000004',
+  completionVersion: 0,
+  checklistVersion: 0,
+  checklistSnapshot: [],
+  completionMediaIds: [],
+  completionMediaReferenceState: 'stable',
   title: '跳绳 500 个',
   dimension: 'physical',
   area: '跳绳',
@@ -251,6 +266,9 @@ const renderPage = (page) => render(<MemoryRouter future={routerFuture}>{page}</
 describe('Task 9 today and task workflows', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    sessionStorage.clear();
+    saveParentSession({ token: 'synthetic-parent', user: { id: '000000000000000000000001', name: '合成家长', role: 'parent' } });
+    getGrowthTask.mockResolvedValue({ task: task() });
     listGrowthTasks.mockResolvedValue({ items: [], page: 1, pageSize: 20, total: 0 });
     getWeeklyReport.mockResolvedValue({
       report: { reportId: 'report-a1', statistics: { taskCompletionRate: 75, totalDurationMinutes: 180 } }
@@ -333,7 +351,7 @@ describe('Task 9 today and task workflows', () => {
     await user.click(screen.getByRole('button', { name: '保存任务' }));
 
     await waitFor(() => expect(createGrowthTask).toHaveBeenCalledWith(expect.objectContaining({
-      childId: 'child-a1',
+      childId: '000000000000000000000002',
       dimension,
       title
     })));
@@ -349,7 +367,7 @@ describe('Task 9 today and task workflows', () => {
     await user.selectOptions(screen.getByLabelText('任务状态'), 'pending');
 
     await waitFor(() => expect(listGrowthTasks).toHaveBeenLastCalledWith(
-      expect.objectContaining({ childId: 'child-a1', dimension: 'physical', status: 'pending' }),
+      expect.objectContaining({ childId: '000000000000000000000002', dimension: 'physical', status: 'pending' }),
       expect.any(AbortSignal)
     ));
   });
@@ -449,10 +467,20 @@ describe('Task 9 today and task workflows', () => {
   test('completes, confirms, and archives a task using server-returned states', async () => {
     const user = userEvent.setup();
     listGrowthTasks.mockResolvedValueOnce({ items: [task()], total: 1 });
-    completeGrowthTask.mockResolvedValueOnce({ task: task({ status: 'completed', actualMinutes: 20 }) });
-    confirmGrowthTask.mockResolvedValueOnce({
-      task: task({ status: 'confirmed', starAwardState: 'awarded', parentFeedback: '做得好' }),
-      starAward: { amount: 1, starBalance: 8 }
+    const completed = task({ status: 'completed', actualMinutes: 20, completionVersion: 1,
+      parentConfirmed: false, completedAt: '2026-10-24T01:00:00.000Z' });
+    const completionResponse = { taskId: completed.taskId, status: 'completed', completionVersion: 1,
+      checklistVersion: 0, completionMediaIds: [], completionMediaReferenceState: 'stable',
+      parentConfirmed: false, completedAt: completed.completedAt };
+    completeGrowthTask.mockImplementationOnce(async () => {
+      getGrowthTask.mockResolvedValue({ task: completed }); return { task: completionResponse };
+    });
+    const confirmed = { ...completed, status: 'confirmed', parentConfirmed: true, starAwardState: 'awarded',
+      parentFeedback: '做得好', confirmedByParentId: '000000000000000000000001', confirmedAt: '2026-10-24T02:00:00.000Z' };
+    confirmGrowthTask.mockImplementationOnce(async () => {
+      getGrowthTask.mockResolvedValue({ task: confirmed }); return { task: { ...completionResponse,
+        status: 'confirmed', parentConfirmed: true, starAwardState: 'awarded', parentFeedback: confirmed.parentFeedback,
+        confirmedByParentId: confirmed.confirmedByParentId, confirmedAt: confirmed.confirmedAt } };
     });
     cancelOrArchiveGrowthTask.mockResolvedValueOnce({
       task: task({ status: 'archived' }),
@@ -462,21 +490,28 @@ describe('Task 9 today and task workflows', () => {
 
     expect(await screen.findByText('跳绳 500 个')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '完成 跳绳 500 个' }));
-    await user.type(screen.getByLabelText('实际用时（分钟）'), '20');
-    await user.click(screen.getByRole('button', { name: '提交完成记录' }));
+    await user.type(await screen.findByLabelText('实际用时（分钟）'), '20');
+    await user.click(screen.getByRole('button', { name: /提交完成/ }));
+    await screen.findByText(/提交结果已确认/);
+    expect(completeGrowthTask.mock.calls[0][1]).toMatchObject({ expectedCompletionVersion: 0,
+      expectedChecklistVersion: 0, completionMediaIds: [], actualMinutes: 20 });
+    await user.click(screen.getByRole('button', { name: '关闭' }));
     expect(
       within(screen.getByRole('heading', { name: '跳绳 500 个' }).closest('article')).getByText('待家长确认')
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '确认 跳绳 500 个' }));
-    await user.type(screen.getByLabelText('家长反馈'), '做得好');
+    await user.type(await screen.findByRole('textbox', { name: '家长反馈' }), '做得好');
     await user.click(screen.getByRole('button', { name: '确认并发放星星' }));
+    await screen.findByText(/审核结果已确认/);
+    expect(confirmGrowthTask.mock.calls[0][1]).toEqual({ expectedCompletionVersion: 1, parentFeedback: '做得好' });
+    expect(screen.getByText('做得好')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '关闭' }));
     await waitFor(() => {
       expect(
         within(screen.getByRole('heading', { name: '跳绳 500 个' }).closest('article')).getByText('已确认')
       ).toBeInTheDocument();
     });
-    expect(screen.getByText('已发放 1 颗星')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '归档 跳绳 500 个' }));
     await user.click(screen.getByRole('button', { name: '确认归档' }));

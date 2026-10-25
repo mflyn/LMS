@@ -6,7 +6,9 @@ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
 
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 const { authenticateGateway } = require('../../common/middleware/auth');
 const { resetIdentityNonceStore } = require('../../common/middleware/gatewayIdentity');
 const { createApp } = require('../server');
@@ -21,6 +23,7 @@ describe('gateway proxy identity envelope', () => {
     app.use('/api/families', authenticateGateway, (req, res) => {
       res.json({ success: true, data: { user: req.user, originalUrl: req.originalUrl } });
     });
+    app.use(['/api/auth', '/api/media'], (req, res) => res.json({ serviceToken: req.headers['x-service-token'] || null }));
     upstream = await new Promise((resolve) => {
       const server = app.listen(0, '127.0.0.1', () => resolve(server));
     });
@@ -47,7 +50,7 @@ describe('gateway proxy identity envelope', () => {
       username: 'task11-parent'
     }, process.env.JWT_SECRET);
 
-    const response = await request(gateway)
+    const response = await (await request(gateway))
       .post('/api/families')
       .set('Authorization', `Bearer ${token}`)
       .send({ familyName: 'Task 11 Family' });
@@ -59,4 +62,14 @@ describe('gateway proxy identity envelope', () => {
     }));
     expect(response.body.data.originalUrl).toBe('/api/families');
   });
+
+  test.each(['/api/auth/login', '/api/media', '/api/media/asset/content?signature=synthetic'])('never forwards client service credentials on %s', async url => {
+      const gateway = createApp({ serviceHosts: { user: upstreamUrl, resource: upstreamUrl },
+        jwtSecret: process.env.JWT_SECRET, identitySecret: process.env.GATEWAY_IDENTITY_SECRET });
+      const token = jwt.sign({ id: '6656875da7f86a0012c2a201', role: 'parent' }, process.env.JWT_SECRET);
+      const response = await (await request(gateway)).get(url).set('Authorization', `Bearer ${token}`)
+        .set('x-service-token', 'synthetic-client-injected-secret');
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ serviceToken: null });
+    });
 });
