@@ -2,7 +2,7 @@
 
 **日期：** 2026-10-25。**范围：** 四项 QA P2 的本地修订、验证和 PR #27 交接。
 **基线：** `548865738e8b5fb9ac67f20f51e4edb05df0a2f7`。
-原限定合成批准及 QUERY_ONLY 关闭不变；本轮不自行关闭 Ubuntu 预算缺陷或高级恢复验收。
+原限定合成批准及 QUERY_ONLY 关闭不变；§1–3 保留当时交接状态，最新预算问题批准关闭见 §4，不关闭高级恢复验收。
 
 ## 1. 核实、方案与自查
 
@@ -42,3 +42,16 @@
 [服务器步骤](family-self-directed-learning-t2-server-test.md)要求固定新SHA、相同限额串行执行大图、142项预检及143套件全量，并保留每轮退出码和失败。
 DEVICE_PENDING、高级恢复/新回收及D01/T2-G、D2b剩余/D3/D4/E、C-CACHE-P3的REMAINDER_DEFERRED继续保留。
 本次用户仅授权整理、验证、提交推送当前分支、同步PR并检查CI；PR保持Draft，不合并、不部署、不变更真实数据、密钥或默认开关。
+
+## 4. D2B 预算及隔离 P3 批准关闭（2026-10-25）
+
+**D2B budget:** APPROVED / CLOSED / SYNTHETIC_ONLY
+**D2B isolation P3:** APPROVED / CLOSED
+**D2B retained:** HISTORICAL_FAILURES_PRESERVED / DEVICE_PENDING / REMAINDER_DEFERRED / T8_PENDING / NOT_AUTHORIZED
+
+用户批准本次复审，关闭 QA-T2-D2B-BUDGET-001 和组合结果双向隔离 P3；其他三项 QA 的验收状态不由本条代改。
+完整依据见[预算续项 §6](family-self-directed-learning-t2-d2b-budget-followup.md#6-复审通过及批准关闭2026-10-25)：
+Ubuntu 2CPU/3GiB 原预算下 readiness142项、家庭144套件3972项、正式HTTP14项通过；
+最终隔离断言单独补验6项，复审四套件331项及两类别名变异通过，不把补验拼接成最终源码全量重跑。
+保留原批准失败及固定4dff6871超时，候选原始归档不改写。C-CACHE-P3、高级恢复和新回收继续后置。
+本次授权仅更新关闭记录及校验，覆盖此前交接中的Git授权描述：暂不提交、推送、合并或部署。

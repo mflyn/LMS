@@ -3,7 +3,7 @@ const { constants } = require('fs');
 const path = require('path');
 const { TextDecoder } = require('util');
 const { canonicalize } = require('json-canonicalize');
-const { validateEvidence, serializeEvidence, LIMITS } = require('./userDeletionRecoveryEvidence');
+const { validateAndSerializeEvidence, serializeEvidence, LIMITS } = require('./userDeletionRecoveryEvidence');
 
 const INVALID = 'USER_DELETION_EVIDENCE_INVALID';
 const PENDING = 'USER_DELETION_DEPENDENCY_PENDING';
@@ -48,8 +48,8 @@ const decode = (content, mediaId, version, proof) => {
   try {
     const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(content));
     if (version === 2) {
-      const validated = validateEvidence(value);
-      assert(validated.tombstone.mediaId === mediaId && content.equals(Buffer.from(serializeEvidence(validated))));
+      const { proof: validated, encoded } = validateAndSerializeEvidence(value);
+      assert(validated.tombstone.mediaId === mediaId && content.equals(Buffer.from(encoded)));
       return validated;
     }
     assert(content.equals(Buffer.from(JSON.stringify(value) + '\n')));

@@ -1,5 +1,5 @@
 const { createHash } = require('crypto');
-const { validateEvidence, serializeEvidence, LIMITS } = require('./userDeletionRecoveryEvidence');
+const { validateEvidence, serializeEvidence, validateAndSerializeEvidence, LIMITS } = require('./userDeletionRecoveryEvidence');
 
 const ID = /^[0-9a-f]{24}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -140,9 +140,9 @@ const createUserDeletionProofCache = ({ journal } = {}) => {
         throw cause;
       }).then(value => {
         if (value === null) pending();
-        const proof = validateEvidence(value);
+        const { proof, encoded } = validateAndSerializeEvidence(value);
         assert(proof.tombstone.mediaId === mediaId);
-        const encoded = serializeEvidence(proof), size = Buffer.byteLength(encoded, 'utf8');
+        const size = Buffer.byteLength(encoded, 'utf8');
         assert(totalBytes + size <= LIMITS.MAX_DEPENDENCY_BYTES);
         // No await between checking and charging the shared byte budget.
         totalBytes += size; completed.set(mediaId, encoded);

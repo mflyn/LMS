@@ -1317,3 +1317,22 @@ DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、高级恢复与新回收及 D01/T
 三项UI/测试问题为IMPLEMENTED / READY_FOR_QA；QA-T2-D2B-BUDGET-001为IMPLEMENTED / SERVER_VALIDATION_PENDING，仍需原Ubuntu2CPU/3GiB预算复验。
 §17原批准失败和§18查询缺陷关闭保持原样，不把测试级预算超时混同Mongo code50，不提前关闭新增QA问题或后置能力。
 本轮用户授权验证后提交推送当前分支并同步PR #27，暂不合并、不部署；DEVICE_PENDING及REMAINDER_DEFERRED不变。
+
+### 19.1 固定候选 Ubuntu 预算复验续项
+
+固定4dff6871的独立Ubuntu复验出现readiness 141通过/1超时；随后家庭全量通过不覆盖该失败。
+基于同限额实测，仅合并两个调用点的重复证据校验与序列化，保留查询、完整校验、预算及所有原断言。
+[实测、实现前自查和后续结果](family-self-directed-learning-t2-d2b-budget-followup.md)单独记录；当时预算缺陷保持OPEN，待独立QA，最新批准见 §19.2。
+本续项不提交、推送、合并或部署；原批准正本、历史失败、DEVICE_PENDING和REMAINDER_DEFERRED不变。
+
+### 19.2 D2B 预算及隔离 P3 批准关闭（2026-10-25）
+
+**D2B budget:** APPROVED / CLOSED / SYNTHETIC_ONLY
+**D2B isolation P3:** APPROVED / CLOSED
+**D2B retained:** HISTORICAL_FAILURES_PRESERVED / DEVICE_PENDING / REMAINDER_DEFERRED / T8_PENDING / NOT_AUTHORIZED
+
+按用户本次批准关闭 QA-T2-D2B-BUDGET-001 及组合结果双向隔离 P3，依据见[复审及证据边界](family-self-directed-learning-t2-d2b-budget-followup.md#6-复审通过及批准关闭2026-10-25)。
+同限额 Ubuntu readiness142项、家庭144套件3972项、正式HTTP14项通过；最终P3断言另行6项补验，复审331项及两类变异通过。
+原批准失败和固定4dff6871超时保留，不改历史归档、不冒称最终断言重新执行过全量；仅更新当前关闭状态。
+本次P3不包含后置C-CACHE-P3。D01/T2-G、D2b剩余/D3/D4/E、高级恢复、新回收继续后置，真机及真实部署未验收。
+本轮只做文档与状态校验，不提交、推送、合并或部署，不扩大已批准的合成范围。

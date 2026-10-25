@@ -3393,6 +3393,23 @@ function validate() {
   assert(t2ExecutionStatus.length === 1 &&
     t2ExecutionStatus[0] === '**Status:** T2 CLOSED / ENGINEERING_SYNTHETIC_ONLY / T2-G REMAINDER_DEFERRED',
   'T2 execution status must retain the bounded closed gate', errors);
+  for (const file of [
+    'family-self-directed-learning-mvp-gate.md',
+    'family-self-directed-learning-t2-execution.md',
+    'family-self-directed-learning-t2-qa-p2-review.md',
+    'family-self-directed-learning-t2-d2b-budget-followup.md'
+  ]) {
+    const document = read(`docs/development/${file}`);
+    for (const [key, value] of [
+      ['D2B budget', 'APPROVED / CLOSED / SYNTHETIC_ONLY'],
+      ['D2B isolation P3', 'APPROVED / CLOSED'],
+      ['D2B retained', 'HISTORICAL_FAILURES_PRESERVED / DEVICE_PENDING / REMAINDER_DEFERRED / T8_PENDING / NOT_AUTHORIZED']
+    ]) {
+      const lines = document.split('\n').filter(line => line.startsWith(`**${key}:**`));
+      assert(lines.length === 1 && lines[0] === `**${key}:** ${value}`,
+        `${file}: ${key} must remain uniquely ${value}`, errors);
+    }
+  }
   try {
     const approval = JSON.parse(read('docs/development/family-self-directed-learning-t2-closure-approval.json'));
     assert(approval.schemaVersion === 1 && approval.task === 'T2' && approval.status === 'APPROVED' &&

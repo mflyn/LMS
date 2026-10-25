@@ -3913,3 +3913,24 @@ QA-T2-D2B-BUDGET-001的闭包去重及键查找优化已实现，IMPLEMENTED / S
 [修订及独立代码评审](family-self-directed-learning-t2-qa-p2-review.md)和[隔离测试步骤](family-self-directed-learning-t2-server-test.md)作为本轮交接入口。
 原批准快照、历史失败及QUERY_ONLY关闭不变，DEVICE_PENDING、高级恢复/新回收REMAINDER_DEFERRED保持。
 用户授权提交推送当前专用分支、同步PR #27并检查CI；不合并、不部署、不自动开启后置功能。新CI按新提交单独记录，不覆盖旧失败。
+
+2026-10-25续项：固定4dff6871的Ubuntu完整readiness出现明确120000ms超时（141通过/1失败），
+QA-T2-D2B-BUDGET-001保持OPEN；不得用其后的家庭全量或单例通过覆盖。
+[同限额测量及聚焦修订](family-self-directed-learning-t2-d2b-budget-followup.md)在新目录单独留证，
+开发自测不代替独立QA关闭。本续项没有新的Git写入、合并或部署授权，其他保留边界不变。
+
+### 22.9 D2B 预算及隔离 P3 批准关闭（2026-10-25）
+
+**D2B budget:** APPROVED / CLOSED / SYNTHETIC_ONLY
+**D2B isolation P3:** APPROVED / CLOSED
+**D2B retained:** HISTORICAL_FAILURES_PRESERVED / DEVICE_PENDING / REMAINDER_DEFERRED / T8_PENDING / NOT_AUTHORIZED
+
+§22.8 为当时待验收快照；用户本次批准复审通过，关闭 QA-T2-D2B-BUDGET-001 及组合结果双向隔离 P3 测试保护缺口。
+证据及复审见[预算续项 §6](family-self-directed-learning-t2-d2b-budget-followup.md#6-复审通过及批准关闭2026-10-25)和[评审记录 §4](family-self-directed-learning-t2-qa-p2-review.md#4-d2b-预算及隔离-p3-批准关闭2026-10-25)。
+Ubuntu同限额完整readiness142项、家庭144套件3972项、正式HTTP14项通过；最终P3断言补验6项，复审331项及别名/浅拷贝变异有效。
+原批准快照和固定4dff6871预算失败不改写；最终断言补验不冒充全量重跑，源码和证据范围以归档轮次为准。
+仅关闭上述缺陷，不关闭 D01/T2-G、D2b剩余/D3/D4/E、C-CACHE-P3 或高级恢复/新回收验收。
+保留 DEVICE_PENDING、默认关闭和旧客户端升级拒绝，真实启用仍需 T8；本次不提交、推送、合并或部署。
+
+关闭校验：文档门禁、80项状态测试（原64项加16项反例）、受影响校验器/测试lint及diff检查通过；54份归档与原批准快照不变。
+命令及范围见[本轮验证](family-self-directed-learning-t2-d2b-budget-followup.md#61-本次关闭记录验证)，不据此声称业务全量重新执行。

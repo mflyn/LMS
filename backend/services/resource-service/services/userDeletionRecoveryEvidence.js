@@ -216,5 +216,6 @@ const processEvidence = (value, sealed) => {
 const validateEvidence = value => processEvidence(value, true).proof;
 const sealEvidence = value => processEvidence(value, false).proof;
 const serializeEvidence = value => processEvidence(value, true).encoded;
+const validateAndSerializeEvidence = value => processEvidence(value, true);
 
-module.exports = { validateEvidence, sealEvidence, serializeEvidence, LIMITS };
+module.exports = { validateEvidence, sealEvidence, serializeEvidence, validateAndSerializeEvidence, LIMITS };

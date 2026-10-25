@@ -6,6 +6,7 @@ module.exports = {
     '^uuid$': '<rootDir>/../../../node_modules/uuid/dist/cjs/index.js'
   },
   testMatch: [
+    '<rootDir>/__tests__/userDeletionEvidenceEncodingBudget.test.js',
     '<rootDir>/__tests__/userDeletionRecoveryReadiness.test.js',
     '<rootDir>/__tests__/userDeletionRecoveryDependencies.test.js',
     '<rootDir>/__tests__/userDeletionRecoveryReader.test.js',

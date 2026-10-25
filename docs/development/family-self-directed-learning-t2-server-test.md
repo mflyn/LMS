@@ -1,6 +1,6 @@
 # T2 候选版本服务器隔离测试
 
-**状态：** PREPARED / NOT_EXECUTED（2026-10-25）。本清单不是部署授权或服务器通过证据。
+**状态：** 固定4dff6871已执行隔离复验（2026-10-25），存在预算失败；结果及聚焦续项见[同限额记录](family-self-directed-learning-t2-d2b-budget-followup.md)。本清单不是部署授权或服务器通过证据。
 候选来自 PR #27 的 `codex/t2-synthetic-acceptance`；必须固定完整提交 SHA，不能直接使用移动中的分支或 main。
 DEVICE_PENDING、高级恢复和新回收 REMAINDER_DEFERRED 不变。
 
@@ -118,4 +118,4 @@ run_step task12-browser npm run test:task12:e2e -- --output="$EVIDENCE/task12-br
 
 使用测试进程自身SIGINT/正常退出收尾，核查临时服务/端口和临时Mongo已停止；只处理本轮创建的资源，不运行全局 prune、删卷或真实 cleanup/restore。保留候选SHA、失败/通过报告、脱敏证据及SHA-256清单。
 若失败，冻结本轮报告并将缺陷返回开发，不提高超时或减少图规模。低配预算通过前 `QA-T2-D2B-BUDGET-001` 保持待验收。
-复核原有服务身份/健康、源码和配置未变。服务器测试、合并main和真实家庭部署是三个不同授权；本轮只准备步骤，不执行服务器操作，不合并、不部署。
+复核原有服务身份/健康、源码和配置未变。服务器测试、合并main和真实家庭部署是三个不同授权；本清单最初仅准备，后续授权仅执行隔离合成测试，不合并、不部署。

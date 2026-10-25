@@ -134,6 +134,16 @@ describe('approved T1 and bounded T2 closure boundaries', () => {
   });
 
   test.each([
+    ...[
+      gate, execution,
+      'docs/development/family-self-directed-learning-t2-qa-p2-review.md',
+      'docs/development/family-self-directed-learning-t2-d2b-budget-followup.md'
+    ].flatMap(file => [
+      [`budget scope widens in ${file}`, file, '**D2B budget:** APPROVED / CLOSED / SYNTHETIC_ONLY', '**D2B budget:** APPROVED / CLOSED / PRODUCTION', 'D2B budget must remain uniquely'],
+      [`isolation P3 closure missing in ${file}`, file, '**D2B isolation P3:** APPROVED / CLOSED', '', 'D2B isolation P3 must remain uniquely'],
+      [`budget conflict in ${file}`, file, '**D2B budget:** APPROVED / CLOSED / SYNTHETIC_ONLY', '**D2B budget:** OPEN\n**D2B budget:** APPROVED / CLOSED / SYNTHETIC_ONLY', 'D2B budget must remain uniquely'],
+      [`retained boundaries lost in ${file}`, file, '**D2B retained:** HISTORICAL_FAILURES_PRESERVED / DEVICE_PENDING / REMAINDER_DEFERRED / T8_PENDING / NOT_AUTHORIZED', '**D2B retained:** ALL_PASSED', 'D2B retained must remain uniquely']
+    ]),
     ['current T1 regresses', gate, '| T1 | CLOSED |', '| T1 | IN_PROGRESS |', 'exactly one CLOSED T1 row'],
     ['duplicate CLOSED row', gate, '| T1 | CLOSED |', '| T1 | CLOSED | duplicate |\n| T1 | CLOSED |', 'exactly one CLOSED T1 row'],
     ['conflicting current row', gate, '| T1 | CLOSED |', '| T1 | OPEN | stale |\n| T1 | CLOSED |', 'exactly one CLOSED T1 row'],
