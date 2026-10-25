@@ -33,7 +33,7 @@
 旧 Task Gate 只证明对应历史范围。FGT-MVP-1.7 发布判定使用已纳入 Task 12 的统一
 发布 Gate；目标环境启用前还必须完成 Task 12 Gate 规定的数据修复检查。
 
-## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）
+## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4-T9 待执行）
 
 [自主学习 MVP 开发计划](../superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md)
 将最新[系统设计](../architecture/family-self-directed-learning-system-design.md)中的六个工作包

@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useTaskCompletion } from '../../hooks/useTaskCompletion';
-import { saveChildSession, captureSession } from '../../services/familySession';
+import { saveChildSession, saveParentSession, captureSession } from '../../services/familySession';
 
 const id = value => String(value).padStart(24, '0');
 const scope = { role: 'student', actorId: id(2), childId: id(2), familyId: id(1), taskId: id(3) };
@@ -23,6 +23,31 @@ beforeEach(() => {
     recover: jest.fn(), confirm: jest.fn() };
 });
 const mount = () => renderHook(props => useTaskCompletion(props), { initialProps: { scope, session, api } });
+
+test.each([['student', 401], ['student', 403], ['parent', 401], ['parent', 403]])(
+  'detail denial keeps the original %s command and storage after %s while clearing private state', async (role, status) => {
+    const selectedScope = { ...scope, role, actorId: role === 'parent' ? id(8) : scope.actorId };
+    if (role === 'parent') {
+      saveParentSession({ token: 'synthetic-parent', user: { id: id(8), role: 'parent' } });
+      session = captureSession('parent');
+      api.getTask.mockResolvedValue({ task: task({ status: 'completed', completionVersion: 1 }) });
+    }
+    api.complete.mockRejectedValue(pending()); api.confirm.mockRejectedValue(pending());
+    const h = renderHook(() => useTaskCompletion({ scope: selectedScope, session, api }));
+    await waitFor(() => expect(h.result.current.state).toBe('ready'));
+    await act(async () => role === 'parent' ? h.result.current.confirm('原审核反馈')
+      : h.result.current.submit({ completionMediaIds: [], checkedItemIds: [] }));
+    const original = h.result.current.command;
+    const storage = Object.fromEntries(Object.keys(sessionStorage).map(key => [key, sessionStorage.getItem(key)]));
+    api.getTask.mockRejectedValueOnce({ response: { status } });
+    await act(async () => h.result.current.refresh());
+    expect(h.result.current.state).toBe('awaiting_auth');
+    expect(h.result.current.task).toBeNull(); expect(h.result.current.recovery).toBeNull();
+    expect(h.result.current.command).toBe(original);
+    expect(Object.fromEntries(Object.keys(sessionStorage).map(key => [key, sessionStorage.getItem(key)]))).toEqual(storage);
+    expect(role === 'parent' ? api.confirm : api.complete).toHaveBeenCalledTimes(1);
+  }
+);
 
 test('freezes one persisted command before HTTP and retries its exact body after lost response', async () => {
   api.complete.mockImplementationOnce(async (_id, body) => {

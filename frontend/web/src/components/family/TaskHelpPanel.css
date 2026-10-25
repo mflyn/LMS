@@ -1,0 +1,11 @@
+.task-help-panel { min-width: 0; margin: 24px 0; padding-top: 20px; border-top: 1px solid #dce4df; color: #202b28; }
+.task-help-panel h2 { font-size: 22px; }
+.task-help-panel h3 { font-size: 17px; }
+.task-help-panel p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.task-help-form { display: grid; gap: 16px; margin: 16px 0; }
+.task-help-form label { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.task-help-form select, .task-help-form textarea { box-sizing: border-box; width: 100%; min-height: 44px;
+  padding: 10px 12px; border: 1px solid #a5b5ad; border-radius: 6px; color: #202b28; background: #fff; font: inherit; letter-spacing: 0; }
+.task-help-form textarea { min-height: 90px; resize: vertical; }
+.task-help-panel button { min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.task-help-panel :focus-visible { outline: 3px solid #2e78b7; outline-offset: 3px; }

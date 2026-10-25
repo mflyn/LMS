@@ -56,6 +56,12 @@ export const useTaskCompletion = ({ scope, session, api }) => {
         : task.completionMediaReferenceState === 'pending_recovery' ? 'recovery' : 'ready' });
     } catch (error) {
       if (!current(run)) return;
+      if ([401, 403].includes(error?.response?.status)) {
+        // A denied read invalidates private views, not the durable command's outcome.
+        apply({ state: 'awaiting_auth', task: null, command, recovery: null, message: '',
+          error: '当前身份无法访问此任务，请重新登录后恢复原请求。' });
+        return;
+      }
       apply({ state: command ? 'uncertain' : 'error', task: null, command, message,
         error: '详情加载失败，请重试。', recovery: null });
     }

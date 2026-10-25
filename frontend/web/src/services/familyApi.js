@@ -114,6 +114,11 @@ export const setChildPin = (childId, pin) => parentPost(
 );
 
 export const listGrowthTasks = (params, signal) => parentGet('/api/growth-tasks', params, signal);
+export const updateTaskHelp = (taskId, payload, signal, expectedSession) => parentPatch(
+  `/api/growth-tasks/${encodeURIComponent(taskId)}/help`,
+  pick(payload, ['action', 'expectedHelpVersion', 'helpType', 'note', 'parentResponse']),
+  sessionRequestOptions(signal, expectedSession)
+);
 // Preserve the existing (id, signal, session) GET form and the common four-position form.
 const getOptions = (signal, expectedSession, fourth) => fourth !== undefined
   || (signal == null && expectedSession && (typeof expectedSession.addEventListener === 'function'

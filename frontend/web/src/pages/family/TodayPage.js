@@ -89,6 +89,7 @@ const TodayPage = () => {
           <Link className="family-button primary" to="/app/tasks">新建任务</Link>
           <Link className="family-button secondary" to="/app/logs">记录成长</Link>
           <Link className="family-button secondary" to="/app/mistakes">记录错题</Link>
+          <Link className="family-button secondary" to="/app/tasks?helpStatus=pending">待处理求助</Link>
         </div>
       </div>
 

@@ -12,6 +12,8 @@ const { createGrowthTaskCompletionRouter } = require('./growthTaskCompletion');
 const { createGrowthTaskCompletionReadRouter } = require('./growthTaskCompletionRead');
 const { createGrowthTaskCompletionMutationRouter } = require('./growthTaskCompletionMutation');
 const { createGrowthTaskCompletionRecoveryRouter } = require('./growthTaskCompletionRecovery');
+const { createGrowthTaskHelpRouter } = require('./growthTaskHelp');
+const { createGrowthTaskHelpService } = require('../services/growthTaskHelpService');
 
 const createGrowthTaskCompletionProductionRouter = ({ completionService, confirmationService, readService,
   mutationService, attachmentMediaService, transactionRunner } = {}) => {
@@ -62,6 +64,7 @@ const createGrowthTaskCompletionProductionRouter = ({ completionService, confirm
   }, 201));
 
   router.use(createGrowthTaskCompletionRecoveryRouter({ completionService }));
+  router.use(createGrowthTaskHelpRouter({ helpService: createGrowthTaskHelpService({ transactionRunner }) }));
   router.use(createGrowthTaskCompletionReadRouter({ readService }));
   router.use(createGrowthTaskCompletionRouter({ completionService, confirmationService }));
   // Dispatch by a supported field, never by a handler failure or a partial update.

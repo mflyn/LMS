@@ -164,7 +164,9 @@ test('a sibling login in a second tab clears private work and rejects a late med
     expect(rows(state, 'Operation', 'taskId', task.taskId)).toHaveLength(1);
     await other.goto(runtime.webUrl + taskPath(task));
     await expect(other.getByRole('heading', { name: task.title })).toHaveCount(0);
-    await expect(other.getByRole('alert')).toBeVisible();
+    await expect(other.getByRole('alert').filter({ hasText: '当前身份无法访问此任务' })).toBeVisible();
+    await expect(other.getByRole('region', { name: '任务求助' })).toHaveCount(0);
+    await expect(other.getByRole('button', { name: '刷新详情', exact: true })).toBeDisabled();
   } finally { release(); await other.close(); }
 });
 

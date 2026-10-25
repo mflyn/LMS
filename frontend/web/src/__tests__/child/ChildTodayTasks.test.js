@@ -8,7 +8,8 @@ import {
   getOwnTask,
   listOwnReminders,
   listOwnTasks,
-  recoverOwnTaskCompletion
+  recoverOwnTaskCompletion,
+  updateOwnTaskHelp
 } from '../../services/childApi';
 import { captureSession, saveChildSession } from '../../services/familySession';
 
@@ -22,7 +23,8 @@ jest.mock('../../services/childApi', () => ({
   getOwnPrivateMediaAccess: jest.fn(),
   getOwnTask: jest.fn(),
   listOwnReminders: jest.fn(),
-  listOwnTasks: jest.fn()
+  listOwnTasks: jest.fn(),
+  updateOwnTaskHelp: jest.fn()
 }));
 
 const id = value => String(value).padStart(24, '0');
@@ -166,7 +168,9 @@ describe('child task completion', () => {
   });
 
   test('shows measurable details and sends the approved completion payload including zero', async () => {
-    getOwnTask.mockResolvedValueOnce({ task: task() }).mockResolvedValueOnce({ task: task({
+    getOwnTask.mockResolvedValue({ task: task() });
+    completeOwnTask.mockImplementationOnce(async (_taskId, body) => {
+      getOwnTask.mockResolvedValue({ task: task({
       status: 'completed',
       completionVersion: 1,
       actualMinutes: 0,
@@ -174,8 +178,9 @@ describe('child task completion', () => {
       difficulty: 'hard',
       needsHelp: true,
       childNote: '今天状态一般'
-    }) });
-    completeOwnTask.mockImplementationOnce(async (_taskId, body) => completedResponse(body));
+      }) });
+      return completedResponse(body);
+    });
 
     openRoute(`/child/tasks/${id(3)}`);
 
@@ -203,11 +208,12 @@ describe('child task completion', () => {
     expect(await screen.findByText('提交结果已确认。')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '提交完成情况' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '修改本次完成' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '我需要帮助', exact: true })).not.toBeInTheDocument();
   });
 
   test('disables duplicate completion while the request is in flight', async () => {
     let resolveCompletion;
-    getOwnTask.mockResolvedValueOnce({ task: task() }).mockResolvedValueOnce({ task: task({ status: 'completed', completionVersion: 1 }) });
+    getOwnTask.mockResolvedValue({ task: task() });
     completeOwnTask.mockImplementationOnce(() => new Promise((resolve) => { resolveCompletion = resolve; }));
     openRoute(`/child/tasks/${id(3)}`);
 
@@ -217,29 +223,30 @@ describe('child task completion', () => {
     fireEvent.click(submit);
     expect(completeOwnTask).toHaveBeenCalledTimes(1);
 
+    getOwnTask.mockResolvedValue({ task: task({ status: 'completed', completionVersion: 1 }) });
     await act(async () => resolveCompletion(completedResponse(completeOwnTask.mock.calls[0][1])));
     await screen.findByText('提交结果已确认。');
   });
 
   test('reloads the task and explains a state conflict', async () => {
-    getOwnTask
-      .mockResolvedValueOnce({ task: task() })
-      .mockResolvedValueOnce({ task: task({ status: 'confirmed', starAwardState: 'awarded' }) });
-    completeOwnTask.mockRejectedValueOnce({
-      response: { status: 409, data: { success: false, error: { code: 'TASK_STATE_CONFLICT', message: 'Task changed', details: [] } } }
+    getOwnTask.mockResolvedValue({ task: task() });
+    completeOwnTask.mockImplementationOnce(async () => {
+      getOwnTask.mockResolvedValue({ task: task({ status: 'confirmed', starAwardState: 'awarded' }) });
+      throw Object.assign(new Error('Task changed'), { response: { status: 409,
+        data: { success: false, error: { code: 'TASK_STATE_CONFLICT', message: 'Task changed', details: [] } } } });
     });
     openRoute(`/child/tasks/${id(3)}`);
 
     fireEvent.click(await screen.findByRole('button', { name: '提交完成情况' }));
 
     expect(await screen.findByText('请求未完成，任务可能已变化。请重新查看后再操作。')).toBeInTheDocument();
-    await waitFor(() => expect(getOwnTask).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(getOwnTask).toHaveBeenCalledTimes(3));
     expect(await screen.findByText('星星已到账')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '提交完成情况' })).not.toBeInTheDocument();
   });
 
   test.each(['completed', 'confirmed', 'cancelled', 'archived'])('opens %s tasks in review mode, not an unsolicited completion form', async (status) => {
-    getOwnTask.mockResolvedValueOnce({ task: task({ status }) });
+    getOwnTask.mockResolvedValue({ task: task({ status }) });
     const view = openRoute(`/child/tasks/${id(3)}`);
 
     expect(await screen.findByRole('heading', { name: '跳绳 500 个' })).toBeInTheDocument();
@@ -250,7 +257,7 @@ describe('child task completion', () => {
   });
 
   test('TC-MPA-WEB-006 shows task PDF attachments through child-authorized access without upload controls', async () => {
-    getOwnTask.mockResolvedValueOnce({ task: task({ attachmentMediaIds: ['task-pdf'] }) });
+    getOwnTask.mockResolvedValue({ task: task({ attachmentMediaIds: ['task-pdf'] }) });
     getOwnPrivateMediaAccess.mockResolvedValueOnce({
       access: { url: 'https://signed.example/task-pdf' },
       media: {
@@ -277,8 +284,10 @@ describe('child task completion', () => {
       checklistSnapshot: [{ itemId: 'stretch', label: '完成拉伸', required: true }], completionMediaIds: [id(4)],
       completionEvidence: { actualMinutes: 8, actualAmount: 0, difficulty: 'easy', needsHelp: false,
         childNote: '合成旧备注', checkedItemIds: ['stretch'] }, parentFeedback: '合成历史反馈' });
-    getOwnTask.mockResolvedValueOnce({ task: existing }).mockResolvedValueOnce({ task: { ...existing, completionVersion: 3 } });
-    completeOwnTask.mockImplementationOnce(async (_taskId, body) => completedResponse(body));
+    getOwnTask.mockResolvedValue({ task: existing });
+    completeOwnTask.mockImplementationOnce(async (_taskId, body) => {
+      getOwnTask.mockResolvedValue({ task: { ...existing, completionVersion: 3 } }); return completedResponse(body);
+    });
     openRoute(`/child/tasks/${id(3)}`);
     fireEvent.click(await screen.findByRole('button', { name: '修改本次完成' }));
     expect(screen.getByText('合成历史反馈')).toBeInTheDocument();
@@ -306,7 +315,7 @@ describe('child task completion', () => {
     const first = completeOwnTask.mock.calls[0][1];
     expect(screen.queryByLabelText('我的一句话')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '刷新详情' }));
-    await waitFor(() => expect(getOwnTask).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(getOwnTask).toHaveBeenCalledTimes(3));
     expect(completeOwnTask).toHaveBeenCalledTimes(1);
     fireEvent.click(await screen.findByRole('button', { name: '重试本次提交' }));
     await screen.findByText('提交结果已确认。');
@@ -335,8 +344,8 @@ describe('child task completion', () => {
 
   test('identity change removes old feedback and ignores the late old completion result', async () => {
     let resolveOld;
-    getOwnTask.mockResolvedValueOnce({ task: task({ parentFeedback: '旧孩子私有反馈' }) })
-      .mockResolvedValueOnce({ task: task({ childId: id(9), title: '新孩子任务' }) });
+    getOwnTask.mockImplementation(async (_taskId, _signal, expectedSession) => ({ task: expectedSession.actorId === id(2)
+      ? task({ parentFeedback: '旧孩子私有反馈' }) : task({ childId: id(9), title: '新孩子任务' }) }));
     completeOwnTask.mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }));
     openRoute(`/child/tasks/${id(3)}`);
     fireEvent.click(await screen.findByRole('button', { name: '提交完成情况' }));
@@ -347,5 +356,119 @@ describe('child task completion', () => {
     await act(async () => resolveOld(completedResponse(body)));
     expect(screen.getByRole('heading', { name: '新孩子任务' })).toBeInTheDocument();
     expect(screen.queryByText('提交结果已确认。')).not.toBeInTheDocument();
+  });
+
+  test('refreshing task details also displays the latest parent help response', async () => {
+    let current = task({ helpVersion: 1, helpRequest: { status: 'pending', helpType: 'other', note: '原卡点' } });
+    getOwnTask.mockImplementation(async () => ({ task: current }));
+    openRoute(`/child/tasks/${id(3)}`);
+    await screen.findByText('等待家长帮助');
+    current = { ...current, status: 'completed', helpVersion: 2,
+      helpRequest: { ...current.helpRequest, status: 'resolved', parentResponse: '先画图再一起看' } };
+    fireEvent.click(screen.getByRole('button', { name: '刷新详情' }));
+    expect(await screen.findByText('先画图再一起看')).toBeInTheDocument();
+    expect(screen.queryByText('等待家长帮助')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '更新求助', exact: true })).not.toBeInTheDocument();
+    expect(updateOwnTaskHelp).not.toHaveBeenCalled();
+    expect(completeOwnTask).not.toHaveBeenCalled();
+  });
+
+  test('detail refresh 403 removes the visible private question and parent response', async () => {
+    getOwnTask.mockResolvedValue({ task: task({ helpVersion: 2, helpRequest: { status: 'resolved',
+      helpType: 'other', note: '私有旧求助', parentResponse: '私有家长回应' } }) });
+    openRoute(`/child/tasks/${id(3)}`);
+    await screen.findByText('私有家长回应');
+    getOwnTask.mockRejectedValueOnce({ response: { status: 403 } });
+    fireEvent.click(screen.getByRole('button', { name: '刷新详情' }));
+    await waitFor(() => expect(screen.queryByRole('region', { name: '任务求助' })).not.toBeInTheDocument());
+    expect(screen.queryByText('私有旧求助')).not.toBeInTheDocument();
+    expect(screen.queryByText('私有家长回应')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '再次求助' })).not.toBeInTheDocument();
+  });
+
+  test.each(['read', 'write'])('detail refresh 403 clears private help and ignores a late %s success', async kind => {
+    const current = task({ helpVersion: 1, helpRequest: { status: 'pending', helpType: 'other', note: '私有旧求助' } });
+    getOwnTask.mockResolvedValue({ task: current });
+    openRoute(`/child/tasks/${id(3)}`);
+    await screen.findByText('私有旧求助');
+    let release;
+    const held = new Promise(resolve => { release = resolve; });
+    updateOwnTaskHelp.mockImplementationOnce(() => kind === 'write' ? held : Promise.reject(Error('Synthetic lost response')));
+    fireEvent.click(screen.getByRole('button', { name: '更新求助', exact: true }));
+    fireEvent.change(screen.getByLabelText('补充说明（可不填）'), { target: { value: '私有新求助' } });
+    fireEvent.click(screen.getByRole('button', { name: '发送求助' }));
+    let signal = updateOwnTaskHelp.mock.calls[0][2];
+    if (kind === 'read') {
+      await waitFor(() => expect(screen.getByRole('button', { name: '读取最新求助' })).toBeEnabled());
+      getOwnTask.mockImplementationOnce(() => held);
+      fireEvent.click(screen.getByRole('button', { name: '读取最新求助' }));
+      signal = getOwnTask.mock.calls.at(-1)[1];
+    }
+    getOwnTask.mockRejectedValueOnce({ response: { status: 403, data: { error: { code: 'CHILD_ACCESS_DENIED' } } } });
+    fireEvent.click(screen.getByRole('button', { name: '刷新详情' }));
+    await waitFor(() => expect(screen.queryByRole('region', { name: '任务求助' })).not.toBeInTheDocument());
+    expect(screen.queryByText('私有旧求助')).not.toBeInTheDocument();
+    expect(signal.aborted).toBe(true);
+    await act(async () => release({ task: { ...current, helpVersion: 2,
+      helpRequest: { ...current.helpRequest, note: '私有新求助' } } }));
+    expect(screen.queryByText('私有新求助')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '更新求助', exact: true })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '重试原求助操作' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '刷新详情' })).toBeDisabled();
+    expect(updateOwnTaskHelp).toHaveBeenCalledTimes(1);
+  });
+
+  test.each(['success', 'network', '503'])('ordinary detail refresh %s preserves the exact uncertain help command', async outcome => {
+    const current = task({ helpVersion: 1, helpRequest: { status: 'pending', helpType: 'other', note: '原卡点' } });
+    getOwnTask.mockResolvedValue({ task: current });
+    updateOwnTaskHelp.mockRejectedValueOnce(Error('Synthetic lost help response'))
+      .mockResolvedValueOnce({ task: { ...current, helpVersion: 2 } });
+    openRoute(`/child/tasks/${id(3)}`);
+    fireEvent.click(await screen.findByRole('button', { name: '更新求助', exact: true }));
+    fireEvent.change(screen.getByLabelText('补充说明（可不填）'), { target: { value: '保留原正文' } });
+    fireEvent.click(screen.getByRole('button', { name: '发送求助' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: '重试原求助操作' })).toBeEnabled());
+    const original = updateOwnTaskHelp.mock.calls[0][1];
+    let release;
+    getOwnTask.mockImplementationOnce(() => new Promise((resolve, reject) => {
+      release = () => outcome === 'success' ? resolve({ task: current })
+        : reject(outcome === '503' ? { response: { status: 503 } } : Error('Synthetic offline'));
+    }));
+    fireEvent.click(screen.getByRole('button', { name: '刷新详情' }));
+    expect(screen.getByRole('button', { name: '重试原求助操作' })).toBeEnabled();
+    await act(async () => release());
+    expect(screen.getByRole('button', { name: '重试原求助操作' })).toBeEnabled();
+    expect(updateOwnTaskHelp).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: '重试原求助操作' }));
+    await screen.findByText('求助已发送。');
+    expect(updateOwnTaskHelp).toHaveBeenCalledTimes(2);
+    expect(updateOwnTaskHelp.mock.calls[1][1]).toBe(original);
+    expect(original).toMatchObject({ action: 'request', expectedHelpVersion: 1, note: '保留原正文' });
+  });
+
+  test('completion refresh preserves an uncertain help command without creating a new request', async () => {
+    let current = task();
+    getOwnTask.mockImplementation(async () => ({ task: current }));
+    updateOwnTaskHelp.mockImplementationOnce(async (_id, body) => {
+      current = { ...current, helpVersion: 1, helpRequest: { status: 'pending', helpType: body.helpType, note: body.note } };
+      throw new Error('Synthetic lost help response');
+    }).mockImplementationOnce(async () => ({ task: current }));
+    completeOwnTask.mockImplementationOnce(async (_id, body) => {
+      current = { ...current, status: 'completed', completionVersion: 1 }; return completedResponse(body);
+    });
+    openRoute(`/child/tasks/${id(3)}`);
+    fireEvent.click(await screen.findByRole('button', { name: '我需要帮助', exact: true }));
+    fireEvent.change(screen.getByLabelText('补充说明（可不填）'), { target: { value: '原卡点' } });
+    fireEvent.click(screen.getByRole('button', { name: '发送求助' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: '重试原求助操作' })).toBeEnabled());
+    const original = updateOwnTaskHelp.mock.calls[0][1];
+    fireEvent.click(screen.getByRole('button', { name: '提交完成情况' }));
+    await screen.findByText('提交结果已确认。');
+    fireEvent.click(screen.getByRole('button', { name: '重试原求助操作' }));
+    await screen.findByText('等待家长帮助');
+    expect(updateOwnTaskHelp).toHaveBeenCalledTimes(2);
+    expect(updateOwnTaskHelp.mock.calls[1][1]).toEqual(original);
+    expect(screen.queryByRole('button', { name: '更新求助', exact: true })).not.toBeInTheDocument();
+    expect(completeOwnTask).toHaveBeenCalledTimes(1);
   });
 });

@@ -169,9 +169,9 @@ test('child page memoizes scope/session/API, captures media requests and clears 
   </Routes></MemoryRouter>);
   const last = useTaskCompletion.mock.calls.at(-1)[0];
   expect(last.scope).toBe(first.scope); expect(last.session).toBe(first.session); expect(last.api).toBe(first.api);
-  const change = subscribeSessionChanges.mock.calls[0][0];
   captureSession.mockReturnValue(null); isSessionCurrent.mockReturnValue(false);
-  act(() => change());
+  // The session store broadcasts to both task completion and independent help subscribers.
+  act(() => subscribeSessionChanges.mock.calls.forEach(([change]) => change()));
   expect(screen.queryByRole('heading', { name: '合成跳绳任务' })).not.toBeInTheDocument();
   expect(getOwnPrivateMediaAccess).not.toHaveBeenCalled();
 });

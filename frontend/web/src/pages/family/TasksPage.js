@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
 import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
 import TaskCompletionReview from '../../components/family/TaskCompletionReview';
+import TaskHelpPanel, { HELP_LABELS } from '../../components/family/TaskHelpPanel';
 import CompletionRecoveryList from '../../components/family/CompletionRecoveryList';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
@@ -51,12 +54,23 @@ const errorMessage = (error) => error?.response?.data?.error?.message || error?.
 
 const ScopedTasksPage = () => {
   const { family, selectedChild, selectedChildId, childScopeVersion } = useFamily();
-  const [filters, setFilters] = useState({ scope: '', dimension: '', status: '' });
+  const location = useLocation();
+  const [filters, setFilters] = useState(() => {
+    const helpStatus = new URLSearchParams(location.search).get('helpStatus');
+    return { scope: '', dimension: '', status: '', helpStatus: ['pending', 'resolved'].includes(helpStatus) ? helpStatus : '' };
+  });
+  const [page, setPage] = useState(1);
+  const changeFilter = (field, value) => {
+    setPage(1);
+    setFilters(current => ({ ...current, [field]: value,
+      ...(field === 'helpStatus' && value ? { scope: '', status: '' } : {}) }));
+  };
   const load = useCallback(
-    ({ childId, signal }) => listGrowthTasks({ childId, ...filters, pageSize: 100 }, signal),
-    [filters]
+    ({ childId, signal }) => listGrowthTasks({ childId, ...filters, page, pageSize: 20 }, signal),
+    [filters, page]
   );
   const resource = useChildResource({ load });
+  const helpAccessDenied = [401, 403].includes(resource.error?.response?.status);
   const mutationGuard = useChildMutationGuard();
   const mediaDrafts = useDraftMedia();
   const [items, setItems] = useState([]);
@@ -64,14 +78,25 @@ const ScopedTasksPage = () => {
   const [form, setForm] = useState(emptyForm());
   const [action, setAction] = useState(null);
   const [review, setReview] = useState(null);
+  const [helpTask, setHelpTask] = useState(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (helpAccessDenied) setHelpTask(null);
+  }, [helpAccessDenied]);
+
+  useEffect(() => {
     if (resource.data?.items) setItems(resource.data.items);
     if (resource.state === 'empty') setItems([]);
   }, [resource.data, resource.state]);
+
+  useEffect(() => {
+    if (!['ready', 'empty'].includes(resource.state) || !Number.isInteger(resource.data?.total)) return;
+    const lastPage = Math.max(1, Math.ceil(resource.data.total / 20));
+    if (page > lastPage) setPage(lastPage);
+  }, [resource.state, resource.data, page]);
 
   useEffect(() => {
     mediaDrafts.cancel();
@@ -164,6 +189,7 @@ const ScopedTasksPage = () => {
       const result = await cancelOrArchiveGrowthTask(action.task.taskId);
       if (!mutationGuard.isCurrentScope(mutationScope)) return;
       replaceTask(result.task);
+      if (filters.helpStatus) resource.reload();
       setAction(null);
       if (result.starAward?.amount) setMessage(`已发放 ${result.starAward.amount} 颗星`);
       else setMessage('任务状态已更新。');
@@ -201,9 +227,10 @@ const ScopedTasksPage = () => {
       </div>
 
       <div className="family-filter-bar" aria-label="任务筛选">
-        <label>时间范围<select value={filters.scope} onChange={(event) => setFilters((value) => ({ ...value, scope: event.target.value }))}><option value="">全部</option><option value="today">今天</option><option value="week">本周</option></select></label>
-        <label>筛选维度<select value={filters.dimension} onChange={(event) => setFilters((value) => ({ ...value, dimension: event.target.value }))}><option value="">全部</option>{DIMENSIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label>任务状态<select value={filters.status} onChange={(event) => setFilters((value) => ({ ...value, status: event.target.value }))}><option value="">全部</option>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label>时间范围<select value={filters.scope} onChange={(event) => changeFilter('scope', event.target.value)}><option value="">全部</option><option value="today">今天</option><option value="week">本周</option></select></label>
+        <label>筛选维度<select value={filters.dimension} onChange={(event) => changeFilter('dimension', event.target.value)}><option value="">全部</option>{DIMENSIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label>任务状态<select value={filters.status} onChange={(event) => changeFilter('status', event.target.value)}><option value="">全部</option>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label>求助状态<select value={filters.helpStatus} onChange={(event) => changeFilter('helpStatus', event.target.value)}><option value="">全部</option><option value="pending">待处理求助</option><option value="resolved">已处理求助</option></select></label>
       </div>
 
       {message && <p className="family-success-message" role="status">{message}</p>}
@@ -214,15 +241,17 @@ const ScopedTasksPage = () => {
       {!['loading', 'retryable_error', 'error'].includes(resource.state) && items.length === 0 && <p className="family-empty-copy">暂无成长任务</p>}
 
       <div className="family-record-list">
-        {items.map((item) => (
+        {!['loading', 'retryable_error', 'error'].includes(resource.state) && items.map((item) => (
           <article className="family-record" key={item.taskId}>
             <div className="family-record-main">
               <div className="family-inline-actions"><span className={`family-dimension is-${item.dimension}`}>{DIMENSIONS.find(([value]) => value === item.dimension)?.[1]}</span><span>{STATUS_LABELS[item.status] || item.status}</span></div>
               <h2>{item.title}</h2>
               <p>{item.area} · 截止 {item.dueDate}</p>
+              {item.helpRequest && <p>{item.helpRequest.status === 'pending' ? '待处理求助' : '求助已处理'} · {HELP_LABELS[item.helpRequest.helpType]}</p>}
             </div>
             <div className="family-inline-actions">
               <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`查看 ${item.title}`} onClick={event => openAction('review', item, event.currentTarget)}>查看作品</button>
+              <button type="button" className="family-button secondary" aria-label={`求助 ${item.title}`} onClick={event => { event.currentTarget.focus(); setHelpTask(item.taskId); }}>求助</button>
               {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.title}`} onClick={() => openEdit(item)}>编辑</button>}
               {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`完成 ${item.title}`} onClick={event => openAction('complete', item, event.currentTarget)}>完成</button>}
               {item.status === 'completed' && <button type="button" className="family-button primary" disabled={resource.state === 'loading'} aria-label={`确认 ${item.title}`} onClick={event => openAction('confirm', item, event.currentTarget)}>确认</button>}
@@ -231,6 +260,20 @@ const ScopedTasksPage = () => {
           </article>
         ))}
       </div>
+
+      <nav className="family-inline-actions" aria-label="任务分页">
+        <button type="button" className="family-button secondary" aria-label="上一页任务" title="上一页任务"
+          disabled={page <= 1 || resource.state === 'loading'} onClick={() => setPage(value => value - 1)}><LeftOutlined /></button>
+        <span>第 {page} 页 · 共 {resource.data?.total ?? 0} 项</span>
+        <button type="button" className="family-button secondary" aria-label="下一页任务" title="下一页任务"
+          disabled={page * 20 >= (resource.data?.total ?? 0) || resource.state === 'loading'} onClick={() => setPage(value => value + 1)}><RightOutlined /></button>
+      </nav>
+
+      {helpTask && !helpAccessDenied && <FamilyDialog labelledBy="task-help-title" onClose={() => setHelpTask(null)}>
+        <div className="family-page-heading"><h2 id="task-help-title">{selectedChild.name}的求助</h2>
+          <button type="button" className="family-button secondary" onClick={() => setHelpTask(null)}>关闭</button></div>
+        <TaskHelpPanel role="parent" taskId={helpTask} familyId={family?.familyId} childId={selectedChildId} onUpdated={resource.reload} />
+      </FamilyDialog>}
 
       <CompletionRecoveryList role="parent" childId={selectedChildId}
         onOpen={row => setReview({ taskId: row.taskId, childId: row.childId, mode: 'review' })} />
