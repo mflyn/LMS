@@ -88,6 +88,10 @@ export const completeOwnTask = (taskId, payload, signal, expectedSession) => chi
 export const getOwnCompletionRecovery = (taskId, signal, expectedSession) => childGet(
   `/api/growth-tasks/${encodeURIComponent(taskId)}/completion-recovery`, undefined, [], signal, expectedSession
 );
+export const updateOwnTaskHelp = (taskId, payload, signal, expectedSession) => childPatch(
+  `/api/growth-tasks/${encodeURIComponent(taskId)}/help`, payload,
+  ['action', 'expectedHelpVersion', 'helpType', 'note'], signal, expectedSession
+);
 export const listOwnCompletionRecoveries = (params, signal, expectedSession) => childGet(
   '/api/growth-tasks/completion-recoveries', params, ['page', 'pageSize'], signal, expectedSession
 );

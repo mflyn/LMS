@@ -3359,10 +3359,10 @@ function validate() {
       `reconciliation ${task} must be CLOSED`, errors);
   }
   for (const [document, marker, message] of [
-    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）', 'approved T1 plan status and bounded T2 closure'],
+    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 执行中，T4-T9 待执行）', 'approved T1 plan status and bounded T2 closure'],
     [selfDirectedPlan, '- [x] R4 入口验收及 T1 关闭：CLOSED', 'approved R4 plan checkbox'],
     [reconciliation, '| R4 正式入口验收及 T1 关闭 | CLOSED |', 'approved R4 reconciliation row'],
-    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2 closure'],
+    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 执行中，T4-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2 closure'],
     [read('docs/deployment/completion-operations.md'), '**Status:** CLOSED（R1–R4 及 T1 后端工程总门禁', 'operations must reflect T1 backend closure']
   ]) {
     assert(document.includes(marker), message, errors);
@@ -3442,7 +3442,15 @@ function validate() {
   } catch (error) {
     errors.push('T2 approval record must be present and valid JSON');
   }
-  for (const task of Array.from({ length: 7 }, (_, index) => `T${index + 3}`)) {
+  const t3Rows = taskStatusRows.filter(cells => cells[1] === 'T3');
+  assert(t3Rows.length === 1 && t3Rows[0][2] === 'IN_PROGRESS',
+    'self-directed Gate must have exactly one IN_PROGRESS T3 row', errors);
+  for (const [key, value] of [['T3 gate', 'OPEN'], ['T3 approval', 'PENDING_USER_APPROVAL'],
+    ['T3 scope', 'ENGINEERING_SYNTHETIC_ONLY']]) {
+    const lines = gateHeader.split('\n').filter(line => line.startsWith(`**${key}:**`));
+    assert(lines.length === 1 && lines[0] === `**${key}:** ${value}`, `${key} must remain ${value}`, errors);
+  }
+  for (const task of Array.from({ length: 6 }, (_, index) => `T${index + 4}`)) {
     assert(
       taskStatusTable.includes(`| ${task} | NOT_STARTED |`),
       `self-directed Gate must keep ${task} as NOT_STARTED`,
@@ -3453,7 +3461,7 @@ function validate() {
   for (const [name, markdown, marker] of [
     ['research', selfDirectedResearch, '状态：拟议方案'],
     ['design', selfDirectedDesign, '状态：拟议设计'],
-    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）'],
+    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 执行中，T4-T9 待执行）'],
     ['Gate', selfDirectedGate, '**Status:** T0 CONTRACT BASELINE']
   ]) {
     assert(markdown.includes(marker), `self-directed ${name} must remain explicitly planned`, errors);
@@ -3587,7 +3595,7 @@ function validate() {
   assert(
     implementationStatus.includes('T0 已完成契约基线') &&
       implementationStatus.includes('T1 后端工程已关闭，仅限既定合成验收') &&
-      implementationStatus.includes('T2 合成工程已关闭，T3–T9 待执行'),
+      implementationStatus.includes('T2 合成工程已关闭，T3 执行中，T4–T9 待执行'),
     'system design must record T0 complete, T1 closed and T2 closed in section 15',
     errors
   );

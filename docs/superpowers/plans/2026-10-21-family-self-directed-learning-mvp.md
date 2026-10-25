@@ -1,6 +1,6 @@
 # 家庭自主学习 MVP 开发计划
 
-> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3-T9 待执行）；T1/T2 仅限既定合成验收，DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留，不代表完整功能交付或真实部署获批。
+> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 执行中，T4-T9 待执行）；T1/T2 仅限既定合成验收，DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留，不代表完整功能交付或真实部署获批。
 > 日期：2026-10-21
 > 执行约定：按仓库 AGENTS.md 逐包实施、验证和交付；不要求自动创建工作树、启动子智能体、提交或推送。
 > T0 契约基线及后续评审已获用户确认；R3-LEARNING 与门禁 P2 已关闭，T1 按用户指令开始分阶段实施，证据见增量 Gate §17–§18。
@@ -523,25 +523,36 @@ JWT 过期、完成快照兼容投影和上传正文同步三项 P2 均 CLOSED�
 
 依赖：T2。模式：严格。对应工作包 2。
 
+2026-10-25 用户单独授权 T3 本地实现与合成验证；不是 T2 批准的自动扩展。
+当前 IN_PROGRESS / OPEN，尚未获得用户关闭批准。执行、评审与证据见[Gate §23](../../development/family-self-directed-learning-mvp-gate.md#23-t3-独立求助实施与工程验收2026-10-25)。
+按后端契约、页面闭环、综合验收三个阶段执行，不新增通知/聊天服务、恢复平台或真实迁移。
+DEVICE_PENDING、高级恢复及新回收 REMAINDER_DEFERRED 保留，不提交、推送或部署。
+
 修改：任务模型/路由、`TasksPage.js`/`TodayPage.js`、`ChildTaskPage.js`、两个 API 模块；
 新增 `growthTaskHelpService.js` 及 `__tests__/services/growthTaskHelpService.test.js`。
 求助列表优先使用任务查询筛选和分页，不新增 notification worker。
 
-拟议接口（在 T0/本包正式契约中固定）：
+已实现接口（API §14.3）：
 `PATCH /api/growth-tasks/:taskId/help`，请求 `action=request|resolve`、expectedHelpVersion；
 request 带 helpType/note，resolve 仅家长允许并可带短答复。嵌入一条当前 helpRequest，
 包括版本、pending/resolved、实际 actor、服务端时间；不覆盖既有 needsHelp 的完成时回顾含义。
 
-- [ ] 写测试：pending 时 request 不改变任务状态；孩子不能 resolve；其他孩子/跨家庭拒绝；
+- [x] 写测试：pending 时 request 不改变任务状态；孩子不能 resolve；其他孩子/跨家庭拒绝；
   两个家长处理同一版本、旧 resolve 与新 request 竞争不能关闭新求助；孩子和家长提交相同正文
   不能互相冒充重放。
-- [ ] 实现当前求助原子更新，说明最多 200 字。request 的安全重放必须同时满足：当前记录仍为
+- [x] 实现当前求助原子更新，说明最多 200 字。request 的安全重放必须同时满足：当前记录仍为
   pending、`currentHelpVersion === expectedHelpVersion + 1`、规范化后的 `helpType + note` 完全相同，
   且认证 actor 与 `requestedByActor` 相同。其他旧 request 返回 `409 VERSION_CONFLICT`；
   旧版本 resolve 返回 `409 VERSION_CONFLICT`，客户端刷新后不自动重复用户动作。
-- [ ] 家长任务查询增加 helpStatus 过滤和现有分页；取消/归档排除，completed 的未处理求助保留。
-- [ ] 在孩子页面独立提供“我需要帮助”，家长页面提供处理入口；完成写入不能清空求助。
-- [ ] 增加表单与 API 组件测试、真实 Gateway 拒绝测试。
+- [x] 家长任务查询增加 helpStatus 过滤和现有分页；取消/归档排除，completed 的未处理求助保留。
+- [x] 在孩子页面独立提供“我需要帮助”，家长页面提供处理入口；完成写入不能清空求助。
+- [x] 增加表单与 API 组件测试、真实 Gateway 拒绝测试。
+
+上述为工程实现清单，不替代用户验收；T3 总门禁 OPEN、真机 DEVICE_PENDING 保持。
+
+2026-10-25 独立全面复评发现 T3-HELP-P2-PARENT-DENIAL 和 T3-HELP-P2-LOADING；
+本地修复及红绿证据见 Gate §23.7，修复自查不得替代独立复评关闭。
+聚焦家长拒绝信号传播和慢读接管，不改后端协议或扩大高级恢复/回收范围。
 
 验收：孩子没做完也能求助；没有确认、发星、改掌握等副作用；家长可找到并处理。
 

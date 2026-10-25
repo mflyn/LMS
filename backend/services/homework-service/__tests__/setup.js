@@ -13,7 +13,7 @@ const createMongoServer = async () => {
   let lastError;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      return expect.getState().testPath.includes('/services/growthTaskCompletion')
+      return /\/services\/growthTask(?:Completion|Help)/.test(expect.getState().testPath)
         ? await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } })
         : await MongoMemoryServer.create();
     } catch (error) {

@@ -236,6 +236,7 @@ const growthTaskSchema = new Schema({
 
 growthTaskSchema.index({ familyId: 1, childId: 1, dueDate: 1 });
 growthTaskSchema.add(require('./growthTaskCompletionFields'));
+growthTaskSchema.add(require('./growthTaskHelpFields').fields);
 growthTaskSchema.index({ familyId: 1, childId: 1, dimension: 1, status: 1 });
 
 growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next) {

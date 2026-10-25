@@ -1,0 +1,51 @@
+{
+  "scope": "T3_ENGINEERING_SYNTHETIC_ONLY",
+  "baseCommit": "301edf7ec067a66719784d2766731e8acdbd1bad",
+  "candidateDigest": "87227b2b368acb5a27a730cb7e7d2654ab774230ba5b9ebfe14b0ec5f776692e",
+  "candidateFiles": 33,
+  "candidateDescription": "Local implementation candidate before adding this portable evidence summary; original source hashes remain in the frozen local archive.",
+  "statusAtSubmission": "IMPLEMENTED_SELF_CHECKED / PENDING_REVIEW",
+  "gateAtSubmission": "OPEN",
+  "issuesAwaitingIndependentReview": [
+    "T3-HELP-P2-PARENT-DENIAL",
+    "T3-HELP-P2-LOADING"
+  ],
+  "developerValidation": {
+    "componentRed": { "exitCode": 1, "failed": 6, "passed": 26 },
+    "componentGreen": { "exitCode": 0, "passed": 32 },
+    "browserRed": { "exitCode": 1, "failed": 4 },
+    "frontendFinal": { "exitCode": 0, "suites": 44, "passed": 547, "failed": 0, "skipped": 0 },
+    "formalHttp": { "exitCode": 0, "suites": 3, "passed": 18 },
+    "build": { "exitCode": 0, "warning": "Browserslist data is old" },
+    "chromium": { "exitCode": 0, "passed": 23, "retries": 0, "skipped": 0 },
+    "webkit": { "exitCode": 0, "passed": 23, "retries": 0, "skipped": 0 },
+    "documentationGate": { "exitCode": 0, "passed": 84 },
+    "lint": { "exitCode": 0, "checkedFiles": 994, "existingIgnoredFiles": 75, "errors": 0, "warnings": 0 },
+    "familyBackendFullRerun": false,
+    "familyBackendReason": "Latest two fixes change frontend implementations only; historical independent full backend evidence is not a new developer run."
+  },
+  "historicalIndependentBaseline": {
+    "candidateDigest": "f807b0ea940e95f183c3a032fd23d9e5b4322786d0aa308f3f7212aa59ef3ceb",
+    "decision": "NEEDS_FIXES",
+    "openP2": 2,
+    "familyBackend": { "suites": 145, "passed": 4035, "existingKubectlConditionalSkip": 1 },
+    "note": "Passing ordinary regressions do not override the two independently reproduced P2 failures."
+  },
+  "evidence": {
+    "localArchive": "release-gate-artifacts/t3-help-followup-2026-10-25",
+    "manifestEntries": 112,
+    "manifestSha256": "6fdea1a2224be3653b5d3d420af06ec8ac29bd56b366ac53c2ee1fad013ef2b0",
+    "candidateSha256": "da9078f1929aa5085c7b9c9d348f6e9b0d362c5172c9f49de1c3fe744a0db8e7",
+    "commandRecord": "commands.json",
+    "sourceRecord": "candidate.json",
+    "rawEvidenceLocation": "Local ignored archive, not bundled in this Git commit; CI artifacts are generated separately for each submitted revision.",
+    "historicalFailures": "PRESERVED, including D2B failure snapshots and earlier T3 counterexamples"
+  },
+  "retained": {
+    "device": "DEVICE_PENDING",
+    "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED",
+    "realDeployment": "NOT_AUTHORIZED",
+    "t4ThroughT9": "NOT_STARTED"
+  },
+  "closeoutAuthorization": "User authorized dedicated branch and Draft PR, independent re-review, conditional synthetic engineering acceptance, then merge commit only after latest CI passes. This submission summary does not itself close the gate."
+}

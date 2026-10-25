@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
 import TaskCompletionEvidence from '../../components/family/TaskCompletionEvidence';
+import TaskHelpPanel from '../../components/family/TaskHelpPanel';
 import { useTaskCompletion } from '../../hooks/useTaskCompletion';
 import { captureSession, isSessionCurrent, loadChildSession, subscribeSessionChanges } from '../../services/familySession';
 import { completeOwnTask, getOwnTask, getOwnCompletionRecovery, recoverOwnTaskCompletion,
@@ -18,6 +19,7 @@ const ChildTaskDetail = ({ scope, session, scopeKey }) => {
     deletePrivateMedia: (mediaId, signal) => deleteOwnPrivateMedia(mediaId, { signal, session })
   }), [session]);
   const task = !['awaiting_auth', 'blocked'].includes(controller.state) && isSessionCurrent(session) ? controller.task : null;
+  const helpSnapshot = useMemo(() => task ? { task } : null, [task]);
   return <section className="child-page child-task-page" aria-label="任务详情">
     <Link className="child-back-link" to="/child/today">返回今天</Link>
     {task && <>
@@ -41,6 +43,9 @@ const ChildTaskDetail = ({ scope, session, scopeKey }) => {
         />}
       </section>
     </>}
+    {!['awaiting_auth', 'blocked'].includes(controller.state) && <TaskHelpPanel
+      role="student" taskId={scope.taskId} familyId={scope.familyId} childId={scope.childId} taskStatus={task?.status}
+      taskSnapshot={helpSnapshot} />}
     <TaskCompletionEvidence controller={controller} scopeKey={scopeKey} childId={scope.childId} mediaApi={mediaApi} />
   </section>;
 };

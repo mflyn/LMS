@@ -183,8 +183,13 @@ describe('approved T1 and bounded T2 closure boundaries', () => {
     ['T2 approval record scope widens', approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY'],
     ['T2 defect reopened', approval, '"T2-P2-JWT": "CLOSED"', '"T2-P2-JWT": "OPEN"', 'T2 approval record must close exactly the three reviewed P2 defects'],
     ['T2 approval record device passed', approval, '"device": "DEVICE_PENDING"', '"device": "PASSED"', 'T2 approval record must preserve pending and deferred boundaries'],
-    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
-    ...Array.from({ length: 7 }, (_, index) => `T${index + 3}`).map(task => [
+    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 执行中，T4–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
+    ['T3 prematurely closed', gate, '| T3 | IN_PROGRESS |', '| T3 | CLOSED |', 'exactly one IN_PROGRESS T3 row'],
+    ['T3 missing', gate, '| T3 | IN_PROGRESS |', '| removed | IN_PROGRESS |', 'exactly one IN_PROGRESS T3 row'],
+    ['T3 contradictory duplicate', gate, '| T3 | IN_PROGRESS |', '| T3 | IN_PROGRESS | current |\n|  T3  | CLOSED |', 'exactly one IN_PROGRESS T3 row'],
+    ['T3 fake approval', gate, '**T3 approval:** PENDING_USER_APPROVAL', '**T3 approval:** APPROVED', 'T3 approval must remain PENDING_USER_APPROVAL'],
+    ['T3 gate closed', gate, '**T3 gate:** OPEN', '**T3 gate:** CLOSED', 'T3 gate must remain OPEN'],
+    ...Array.from({ length: 6 }, (_, index) => `T${index + 4}`).map(task => [
       `${task} starts without approval`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | IN_PROGRESS |`, `keep ${task} as NOT_STARTED`
     ]),
     ['plan status regresses', plan, 'T1 后端工程已关闭', 'T1 执行中', 'approved T1 plan status'],

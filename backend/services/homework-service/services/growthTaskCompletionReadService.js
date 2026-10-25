@@ -28,6 +28,12 @@ const taskView = task => {
     parentConfirmed: task.status === 'confirmed', checklistVersion: task.checklistVersion ?? 0,
     checklistSnapshot: (task.checklistSnapshot || []).map(row => pick(row, ['itemId', 'label', 'required'])),
     completionVersion: task.completionVersion ?? 0, completionMediaIds: ids(evidence?.completionMediaIds),
+    helpVersion: task.helpVersion ?? 0,
+    helpRequest: task.helpRequest ? {
+      ...pick(task.helpRequest, ['status', 'helpType', 'note', 'requestedAt', 'parentResponse', 'resolvedAt']),
+      ...Object.fromEntries(['requestedByActor', 'resolvedByActor'].filter(k => task.helpRequest[k])
+        .map(k => [k, { id: String(task.helpRequest[k].id), role: task.helpRequest[k].role }]))
+    } : null,
     completionMediaReferenceState: task.completionMediaReferenceState || 'stable',
     completionEvidence: evidence ? {
       ...pick(evidence, EVIDENCE_FIELDS), checkedItemIds: [...(evidence.checkedItemIds || [])],
@@ -84,7 +90,7 @@ const createGrowthTaskCompletionReadService = ({ transactionRunner, now = Date.n
     if (childId === undefined) throw invalid();
     if (!objectId(childId)) throw invalid();
     const access = await authorize(identity, childId, session);
-    const allowed = ['childId', 'status', 'dimension', 'scope', 'page', 'pageSize'];
+    const allowed = ['childId', 'status', 'dimension', 'scope', 'page', 'pageSize', 'helpStatus'];
     if (Object.keys(query).some(k => !allowed.includes(k) || typeof query[k] !== 'string' || query[k] === '')) throw invalid();
     const filter = { familyId: access.familyId, childId: childId.toLowerCase() };
     for (const [key, values] of [ ['status', ['pending', 'completed', 'confirmed', 'cancelled', 'archived']],
@@ -99,6 +105,11 @@ const createGrowthTaskCompletionReadService = ({ transactionRunner, now = Date.n
       const today = formatLocalDate(new Date(Number(now())), access.family.timezone);
       const range = query.scope === 'week' ? getWeekRange(today) : { start: today, end: today };
       filter.dueDate = { $gte: range.start, $lte: range.end };
+    }
+    if (query.helpStatus !== undefined) {
+      if (!['pending', 'resolved'].includes(query.helpStatus)) throw invalid();
+      filter['helpRequest.status'] = query.helpStatus;
+      filter.$and = [{ status: { $nin: ['cancelled', 'archived'] } }];
     }
     let pagination;
     try { pagination = parsePagination(query); } catch (_cause) { throw invalid(); }

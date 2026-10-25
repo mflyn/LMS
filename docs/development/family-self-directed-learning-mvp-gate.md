@@ -28,6 +28,10 @@
 **T2 deployment:** T8_PENDING / NOT_AUTHORIZED
 **T2 deferred:** REMAINDER_DEFERRED
 
+**T3 gate:** OPEN
+**T3 approval:** PENDING_USER_APPROVAL
+**T3 scope:** ENGINEERING_SYNTHETIC_ONLY
+
 本 Gate 记录自主学习增量的契约、执行状态和证据。T0 完成只表示后续开发不再自行发明接口、
 版本、迁移或错误语义；不表示作品、求助、清单、日计划、订正连接、家庭部署或四周试点已经完成。
 
@@ -77,7 +81,7 @@
 | T0 | CONTRACT_BASELINE | PRD、架构、API、追踪、Gate 和文档校验固定；不含功能实现 |
 | T1 | CLOSED | 用户批准后端工程总门禁，仅限合成验收；R4 汇总关闭见 §18.40，不代表前端或真实部署完成 |
 | T2 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；T2-1/T2-R 及三项 P2 CLOSED，T2-2 至 T2-6 汇总批准关闭（§22.6 / 执行记录 §17）；D2B-05 查询缺陷单独 CLOSED（§22.7），原失败快照保留；DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，T2-G REMAINDER_DEFERRED |
-| T3 | NOT_STARTED | 未完成任务可求助，家长处理且无任务/奖励副作用 |
+| T3 | IN_PROGRESS | 用户另行授权本地实现；独立求助及家长处理，工程验证与评审见 §23；总门禁 OPEN，待用户验收，不部署 |
 | T4 | NOT_STARTED | 清单版本、代录审计和一年级/四年级交互通过 |
 | T5 | NOT_STARTED | 日计划首次并发、CAS、LocalDate 和 Gateway 路由通过 |
 | T6 | NOT_STARTED | 一条真实错题走完来源、订正和延迟复习连接 |
@@ -3956,3 +3960,249 @@ R2家庭144套件3972项从始至终使用最终深隔离断言；后续CI3988�
 §22.10的条件合并授权已由用户“仅本地修改，暂不合并”取代。2026-10-25四项文档收口复审通过后，用户另授权验证后提交推送当前分支、同步PR #27并检查CI；不转Ready、不合并、不部署，不设置自动合并。a9e21fe6此前已推送，不回滚或改写。
 复审核对R1/R2身份、计数与哈希、开发/独立证据区分及历史失败无新增问题，详见[复审通过记录 §6.2](family-self-directed-learning-t2-qa-p2-review.md#62-四项文档收口复审通过及提交授权)。新提交CI独立留证，不用既有CI成功代替。
 原批准失败、R1超时、开发红灯与旧QUERY_ONLY关闭保持；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED和全部REMAINDER_DEFERRED不变。
+
+## 23. T3 独立求助实施与工程验收（2026-10-25）
+
+本节为用户独立授权的 T3 本地实施记录，不改写 T2 批准时快照或历史失败。
+实施基线 `301edf7e`（PR #27 merge）；代码、文档均为未提交本地增量。
+当前 IN_PROGRESS / OPEN / PENDING_USER_APPROVAL，仅 ENGINEERING_SYNTHETIC_ONLY。
+初次工程交付曾为 READY_FOR_USER_ACCEPTANCE；后续复审发现详情拒绝清理缺口，修订状态及最新证据见 §23.6。
+§23.6 的开发修订保留其时点状态；后续独立全面复评发现家长列表拒绝、慢读接管两项 P2，最新核实/修订见 §23.7。
+T3 仍 IN_PROGRESS / OPEN / PENDING_USER_APPROVAL，
+不是已经获得关闭批准，不改变 T2 的限定范围。§23.3/§23.4 保留初次交付时的候选和结果。
+
+### 23.1 范围与实施
+
+1. 后端：GrowthTask 加法字段 helpRequest/helpVersion；growthTaskHelpService 通过真实身份、家庭/孩子
+   权限与事务内最终状态/版本 CAS 更新当前求助。enabled 正式工厂挂载 PATCH help，详情和列表只读投影，
+   helpStatus 沿用任务分页。未新增跨服务账本、集合、队列或索引，未执行真实迁移。
+2. 前端：TaskHelpPanel 复用现有会话快照、任务详情及 API；孩子请求/更新卡点、家长代录和回应、孩子回看。
+   新请求和回应分别携带实际所见 helpVersion；未知结果保留原命令，409 重读且不自动升级版本重发。
+   家长 Today 提供跨日期待处理入口，TasksPage 提供筛选、分页及任务求助详情。
+3. 验收：权限/并发反例、组件/API、正式 Gateway HTTP、真实浏览器、T2 回归、构建与聚焦独立评审。
+   暂不批准总门禁关闭；最终运行结果追加于本节，不以计划或局部通过冒称全量通过。
+
+### 23.2 设计与回滚边界
+
+采用 API §14.3 的一条当前记录，NFC+trim 后最多 200 Unicode 码点，旧缺失版本只读为 0。
+仅 pending 可新求助；pending/completed/confirmed 上已有求助可处理；取消/归档只读。
+完成时 needsHelp 与独立求助不互相覆盖。实际 actor 和时间由服务端填写，正文白名单拒绝伪造。
+求助只更新自身字段及任务写入元数据，不触发完成、确认、媒体操作、发星或掌握度变化。
+回滚时移除求助入口/路由并保留已有字段，不删记录、不回退 T1/T2 启动保护或媒体协议。
+DEV/QA 仅用临时副本集、回环 HTTP、合成账号及临时存储；保留 enabled 所需凭据/预检和 cleanup=false。
+
+### 23.3 自查、独立评审与失败记录
+
+- 后端实现前定向 RED 为 39 项失败；实现并新增精确竞争及回滚/未知提交后为 44 项通过。
+  竞争测试在求助读快照与最终写入之间暂停，先提交完成、取消、归档或新问题，再恢复旧写入。
+- 组件新增前先记录缺失组件/入口的 RED；首次全量为 43/44 套件、516/521 用例通过。
+  失败位于 ChildTodayTasks 的顺序型 GET mock，被新增独立求助读取提前消耗；改为随业务动作推进的
+  服务端状态夹具及实际多读取计数，保留完成字段、零值、冲突、恢复、身份隔离断言，不删测试。
+  ChildTaskCompletion 的会话事件夹具改为广播所有订阅者，原私有界面清理断言保留。
+- 首次 CI=true 构建因新增混合逻辑表达式缺少括号失败；补括号后通过，未放宽 lint。
+- 首次新增 HTTP 验证 3/4 通过，匿名用例误用了不存在的 runtime.api.patch；改为真实无凭据 fetch。
+  随后 T2/T3 正式 HTTP 3 套件/18 项通过，无成功响应替身。
+- 浏览器初次 3 项均因 macOS Mach 端口沙箱拒绝未启动；授权提升执行环境后 2/3 通过。
+  失败为丢响应测试在按钮仍 busy 时过早截取快照，补等待 enabled、实际丢弃200响应及已持久版本断言，
+  保留整库/文件快照等价断言，修订后重新验证，不把该旧失败标为通过。
+- 独立评审发现 T3-HELP-P2-UPDATE：待处理求助缺少更新卡点入口；补 pending 更新入口及所见版本反例。
+- 独立评审发现 T3-HELP-P2-LIST：取消/归档后求助筛选未刷新；补重新查询、总数和空末页回退及两类反例。
+  修订前上述三个新反例全部失败；修订后组件/API 全量通过，独立复核确认这两项修复有效。
+- 独立复核进一步发现 T3-HELP-P2-REFRESH：完成区刷新后，独立求助区仍可能显示旧状态/回应。
+  ChildTaskPage 向仍挂载的面板提供通过身份/归属校验的详情快照，按 helpVersion 防止旧读取覆盖，
+  写入期间延后同步；不清空未知原命令、不替换其版本或正文。新 request 同时受当前任务状态限制。
+  “同页刷新显示家长新回应”反例先为 1 failed / 18 passed，修订后与面板测试合计 37 项通过；
+  “未知求助跨完成刷新仍原文重试”继续通过。真实浏览器同时验证点击刷新详情和整页 reload。
+  另补首次 GET 失败后成功重读清除旧错误的先红后绿反例。
+- 独立复核者 Poincare（`01a172c8-0abc-74f3-9d47-72d55a6aecb8`）最终只读复核确认三项 P2
+  均已闭环，未发现可确认的新回归；另在内存中验证新快照后旧 GET 迟到，以及 busy 期间快照延后、
+  未知原命令原样重试。此独立局部复现与开发全量结果分开记录，不冒称复核者重跑全部套件。
+  非阻断建议：将这两类额外时序补成永久组件用例，登记为 T3-P3-SNAPSHOT，后续加固时处理，
+  不作为当前工程验收前置条件，不冒称已经补测。工程问题关闭不等于用户批准 T3 总门禁。
+- 一轮 Chromium 为 16/17 通过：既有跨标签隔离用例假定页面仅一个 alert，新增求助拒绝提示使定位器
+  出现两个匹配。改为分别断言完成区和求助区的具体拒绝提示，原私有图片/迟到响应断言全部保留。
+- 原始 `npm run lint` 为 4 项解析错误，均在 git-ignored 的历史 T2-1 证据副本 JSX；未删除副本、
+  未修改 ESLint 规则或 ignore 配置。使用 Git 的非忽略源码清单执行同一 ESLint，1069 文件通过。
+  该源码检查不把原始命令的失败改写为成功。
+
+### 23.4 验证命令与证据
+
+下列命令使用 Node 22（本机 PATH 前置 `/tmp/lms-qa-node22-bin`），全部为本地合成数据。
+报告归档在 `release-gate-artifacts/t3-engineering-2026-10-25/`，源码候选及证据 SHA-256 见 manifest.json。
+归档为本地 ignored 证据，不代表已提交或远程 CI；原 T2 批准失败及 D2B 历史证据均未改写。
+
+| 验证 | 实际命令 | 结果 |
+| --- | --- | --- |
+| 求助权限/事务/竞争/重放 | `npx jest --config=backend/services/homework-service/jest.config.js --runInBand --coverage=false --runTestsByPath backend/services/homework-service/__tests__/services/growthTaskHelpService.test.js` | 1 套件 / 44 项通过 |
+| 正式 T2/T3 HTTP | `npx jest --config=backend/tests/t2/jest.config.js --runInBand` | 3 套件 / 18 项通过 |
+| 家庭后端完整回归 | `npm run test:family-regression -- --json --outputFile=/tmp/t3-family-full.json` | 145 套件通过，4035 项通过 / 1 项既有环境条件跳过 / 0 失败；退出码 0 |
+| 前端完整相关回归 | `CI=true npm run test:ci --prefix frontend/web -- --runInBand` | 44 套件 / 527 项通过 |
+| 前端生产构建 | `CI=true BUILD_PATH=/tmp/lms-t3-web-final npm run build --prefix frontend/web` | 通过；Browserslist 数据陈旧提示保留 |
+| Chromium 正式页面 | `T2_WEB_BUILD=/tmp/lms-t3-web-final T2_BROWSER_OUTPUT=/tmp/lms-t3-browser-final npx playwright test --config=playwright.t2.config.js` | 17 项通过，包含既有 T2 14 项、新 T3 3 项 |
+| WebKit 求助页面 | `T2_WEB_BUILD=/tmp/lms-t3-web-final T2_BROWSER_OUTPUT=/tmp/lms-t3-webkit-final npx playwright test --config=playwright.t2.config.js --browser=webkit help.spec.js` | 3 项通过；不等同真实 iPad |
+| 源码 lint | 对 `git ls-files -co --exclude-standard -z` 的 JS/JSX/CJS/MJS 文件逐批执行 `eslint --no-warn-ignored` | 1069 文件通过；根目录 lint 历史副本失败单独保留 |
+| 文档门禁反例 | `npx jest --config=backend/jest.family-common.config.js --runInBand --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js` | 1 套件 / 84 项通过 |
+| 文档状态与空白 | `npm run docs:family:check`、`git diff --check` | 通过 |
+
+家庭全量中的跳过为未修改的 `TC-T5-DEPLOY-002 Secret dry-run`：既有测试以
+`kubectl version --client` 可用性决定是否执行，本机探测失败。已与 HEAD 核对，非本轮新增跳过；
+不把它算作通过，不宣称 Kubernetes 发布验收或所有历史工程检查全绿。
+浏览器对 768×1024、1024×768、390×844、1280×800 检查内容可见与无横向溢出，
+并人工检查最终孩子纵向与家长窄屏截图。截图仅合成身份和内容。
+
+HTTP/浏览器使用正式 enabled Gateway、user/homework/resource/progress/analytics/notification 应用工厂、
+真实 loopback HTTP、临时 MongoDB 副本集与私有媒体目录。请求丢响应由测试代理在实际提交后丢弃；
+不使用 mock 成功响应、legacy 模式或真实服务。组件/API 单测使用 mock，不能冒充正式链路证据。
+新孤儿回收关闭；专用凭据、UploadGuard、日志目录、索引和启动预检保留。
+媒体采用既定 trusted-local 安全 profile，未启动或声称验证 ClamAV；各服务使用同一隔离数据库，
+跨服务命令仍走 HTTP，未声称不同物理主机/数据库的部署验证。
+
+### 23.5 未关闭事项
+
+DEVICE_PENDING：真实 iPad 验证触控选择卡点、可选短说明、刷新/切换账号、家长回应与横竖屏。
+本轮浏览器视口验证不等于真机。T8_PENDING / NOT_AUTHORIZED；不访问真实家庭、Ubuntu 或 NAS，不部署。
+高级恢复、新孤儿回收、D01/T2-G、D2b 剩余/D3/D4/E、C-CACHE-P3 保持 REMAINDER_DEFERRED。
+T4–T9 不自动启动。T3 工程材料完成后提交用户验收，未批准前总门禁仍 OPEN。
+
+### 23.6 T3-HELP-P2-DENIAL：详情拒绝后的私有求助清理（2026-10-25）
+
+**修订状态：** IMPLEMENTED_SELF_CHECKED / PENDING_REVIEW。用户授权修复及自查，不等同批准问题或总门禁关闭。
+
+复审确认原 UPDATE/LIST/REFRESH 三项修复有效，但另发现：孩子页刷新详情收到真实
+`403 CHILD_ACCESS_DENIED` 后，完成区按普通 error 处理；仍挂载的求助面板忽略空快照，
+继续显示旧说明和更新入口。临时家庭撤销归属后的真实 Gateway/Chromium 复现及截图保留，
+不把此前 527 项前端通过、17 项浏览器通过写成已覆盖这一拒绝路径。
+
+修订仅在 `useTaskCompletion.read` 分类当前身份的 401/403：进入既有 awaiting_auth 状态，
+清空 task/recovery/message，但保留原完成/确认 command 和持久存储，不判定原写入是否成功。
+ChildTaskPage 的既有分支卸载求助面板，面板既有清理中止请求、递增 generation、标记 live=false，
+旧 GET/PATCH 即使迟到成功也不能重新填充。未修改后端协议、家庭权限、会话层或 T2 恢复协议。
+普通 loading、断网和 5xx 不走拒绝分支，不卸载求助面板，不改写未知求助的原正文或版本。
+
+永久测试与先红后绿证据：
+
+- ChildTodayTasks 新增 6 项：明确拒绝清除说明及家长回应；迟到读取/写入两类成功；
+  普通刷新成功、断网、503 三类仍显式重试同一个原命令对象且不自动重发。
+- useTaskCompletion 新增 4 项：孩子完成/家长审核分别遇到详情 401/403，私有状态清空、
+  原命令对象及 sessionStorage 不变，不增加完成/确认调用。
+- 上述两套首次完整 RED 为 7 failed / 37 passed，修订后 44/44 通过；
+  3 个普通刷新用例修订前即通过，属于防回归，不冒称先前失败。
+- 正式浏览器新增真实授权失效后，分别放行旧 GET/PATCH 成功响应的两条永久反例。
+  修复前构建为 2 failed，失败均为求助 region 未清除；修复后不再显示旧内容和操作入口，
+  等待拦截响应释放结束及浏览器渲染帧后再断言，核对数据库/文件快照无额外业务副作用。
+- T2 既有跨标签兄弟姐妹用例改为断言明确拒绝、求助区消失及刷新按钮禁用，
+  替代旧普通加载错误/求助错误文案；原身份隔离、私有图片、迟到响应及 operation 数量断言全部保留。
+
+本次自查：确认只处理经 current(run) 校验的当前身份拒绝；未清除持久命令，未生成新 operationId，
+未把普通空快照当作撤权；共享 hook 的家长及孩子调用方均纳入完整前端和 T2 浏览器回归。
+在本次范围内未确认其他新问题；这是开发自查结论，不冒称用户或独立复审已批准。
+
+| 本次验证（Node 22） | 实际命令 | 结果 |
+| --- | --- | --- |
+| 定向反例 RED/GREEN | `CI=true npm run test:ci --prefix frontend/web -- --runInBand --runTestsByPath src/__tests__/child/ChildTodayTasks.test.js src/__tests__/shared/useTaskCompletion.test.js` | 修订前 7 failed / 37 passed；修订后 2 套件 / 44 项通过 |
+| 完整前端 | `CI=true npm run test:ci --prefix frontend/web -- --runInBand` | 44 套件 / 537 项通过，未新增跳过 |
+| 正式 HTTP | `npx jest --config=backend/tests/t2/jest.config.js --runInBand` | 3 套件 / 18 项通过 |
+| 构建 | `CI=true BUILD_PATH=/tmp/lms-t3-denial-fixed npm run build --prefix frontend/web` | 通过，保留 Browserslist 陈旧数据提示 |
+| Chromium | `T2_WEB_BUILD=/tmp/lms-t3-denial-fixed T2_BROWSER_OUTPUT=/tmp/t3-denial-browser-final npx playwright test --config=playwright.t2.config.js` | 19 项通过（T2 14 + T3 5）；旧构建新增两项反例均失败 |
+| WebKit | `T2_WEB_BUILD=/tmp/lms-t3-denial-fixed T2_BROWSER_OUTPUT=/tmp/t3-denial-webkit-final npx playwright test --config=playwright.t2.config.js --browser=webkit help.spec.js` | 5 项通过，不代表 iPad 真机 |
+| 文档门禁反例 | `npx jest --config=backend/jest.family-common.config.js --runInBand --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js` | 84 项通过 |
+| 源码 lint | 沿用 §23.4 非忽略源码清单，对每个文件执行既有 ESLint | 1069 文件通过，未改规则；根 lint 历史证据副本错误不改写为全绿 |
+| 状态和空白 | `npm run docs:family:check`、`git diff --check` | 通过 |
+
+本次没有改后端实现，未重复家庭后端全量；§23.4 的 145 套件、4035 通过/1 条件跳过仍是前一候选的
+历史结果，不当作本次新跑全量。没有删除/跳过测试或增加超时；错误文案断言调整与原因已在上方单列。
+
+当前证据独立归档于 `release-gate-artifacts/t3-help-denial-2026-10-25/`；不覆盖初次 T3 manifest、
+复审复现、D2B 及其他历史失败。当前源码与证据哈希见该目录 manifest.json。
+真实服务/替身边界沿用 §23.4：enabled 正式应用、loopback HTTP、临时副本集及媒体目录；
+仅组件/API 单测使用 mock。浏览器撤权只改临时合成家庭，后端仍真实返回 403。
+DEVICE_PENDING、REMAINDER_DEFERRED、T8_PENDING / NOT_AUTHORIZED 和 T3 OPEN 不变；不提交、推送或部署。
+
+### 23.7 T3 独立复评两项 P2：家长列表拒绝与慢读接管（2026-10-25）
+
+**修订状态：** IMPLEMENTED_SELF_CHECKED / PENDING_REVIEW。T3 总门禁 OPEN；独立评审 NEEDS_FIXES 的两项问题尚未独立关闭。
+
+核实基线为 `301edf7ec067a66719784d2766731e8acdbd1bad` 加 33 文件本地增量，
+独立候选 digest `f807b0ea940e95f183c3a032fd23d9e5b4322786d0aa308f3f7212aa59ef3ceb`。
+实施前逐文件 SHA、git status 和 binary diff SHA 与独立 candidate.json 一致；没有覆盖后续修改。
+独立 REPORT/findings/verification/candidate 及冻结证据保持只读：
+`/Users/linmingfeng/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t3-independent-review-2026-10-25/`。
+该次独立回归通过不覆盖这两条新失败，也不是本轮修复后的新结果。
+
+核实结果：
+
+- **T3-HELP-P2-PARENT-DENIAL**：后端撤销成员后正确拒绝列表 GET；TasksPage 未将该拒绝传播给
+  helpTask 弹窗，已成功的迟到 PATCH 触发列表重载后仍可留下私有求助。属于客户端视图清理，不是后端越权。
+- **T3-HELP-P2-LOADING**：独立详情快照先到、求助 GET 仍慢时允许提交；submit 接管 generation 并中止旧 GET，
+  旧 finally 不再有权清 loading，而新写者未接管该状态。真实成功或丢响应后都可残留 loading。
+- 新永久组件反例修复前为 6 failed / 26 passed：家长 401/403、迟到读/写共四例失败；慢读后成功/丢响应两例失败。
+  正常慢读和普通列表成功/断网/503 对照通过，不能将对照冒称原失败。
+
+#### 方案与实施前自审
+
+仅修改 TasksPage、TaskHelpPanel 及相关测试/记录，不改变 API、权限策略、模型、密钥或服务装配。
+
+1. TasksPage 使用 useChildResource 已校验当前请求/孩子 scope 的明确 401/403：同次渲染就不挂载求助弹窗，
+   effect 清空 helpTask，防止后续 loading/成功清掉 error 后复活旧弹窗。不把普通 loading、网络错误、5xx 当作撤权。
+2. TaskHelpPanel 的 submit 接管旧 GET 时将 loading 置 false；writing/busy 在写操作全过程仍负责互斥。
+   保留按钮 disabled 条件、generation/live/session 校验、精确原命令和 expectedHelpVersion，不放开重复提交。
+3. 仅销毁已拒绝范围的求助 UI，不清 sessionStorage、不调用完成/确认命令清理或媒体删除。
+   旧 GET/PATCH 即使忽略取消也须被生命周期/代次拒绝，不影响 T2 未知命令。
+4. 回滚仅反向撤销本轮两个组件的局部修复及对应记录，不重置整个工作区、不回退既有 T3/T2 工作；
+   无数据/schema 变更。回滚会重新暴露这两项 P2，需恢复 NEEDS_FIXES、保持 T3 OPEN，不能当作可发布版本。
+
+**方案自审：PASS（开发自审，非独立批准）**。依据：useChildResource 已有 active-request/childScope 校验，
+TasksPage 按 family/child/actor/session revision 重建；渲染条件即时卸载＋effect 清状态覆盖拒绝后再重载；
+loading 的新所有者与既有 writing/busy 同步，不借用 stale GET 的 finally；T2 命令存储无写入路径。
+先组件/浏览器红灯，再最小修复及完整前端、正式 HTTP、当前构建、Chromium/WebKit T2/T3、文档/源码 lint。
+本轮不改后端逻辑，不机械重跑家庭后端全量；独立 145 套件/4035 通过/1 条件跳过只作历史基线。
+
+本轮新证据使用独立目录 `release-gate-artifacts/t3-help-followup-2026-10-25/`；保留之前全部红灯与失败证据。
+DEVICE_PENDING、高级恢复和新回收 REMAINDER_DEFERRED、T8_PENDING / NOT_AUTHORIZED 不变。
+不提交、推送、合并、部署或启动 T4–T9；修复最多记 IMPLEMENTED_SELF_CHECKED / PENDING_REVIEW，等待独立复评。
+
+#### 实施、自测与交接
+
+两处生产修复已落实：TasksPage 派生当前列表的 helpAccessDenied，同次 render 隐藏求助弹窗并在 effect
+清空 helpTask；TaskHelpPanel 写操作获取 generation/AbortController 后清 loading，busy/writing 继续互斥。
+仅两处前端实现变化，没有后端/API/数据权限、共享会话或命令存储实现变化。
+
+永久反例新增 10 项组件测试及 4 项正式浏览器测试：
+
+- 家长回复成功后列表 401/403 清除私有说明和回应；独立列表拒绝时分别放行迟到 GET/PATCH，确认中止信号、
+  不复活弹窗、再次列表成功也不重开旧弹窗，T2 已校验的 uncertain 完成和确认命令及存储不变。
+- 普通列表 loading、成功、断网和 503 不清原求助命令，显式重试使用同一个正文对象和 expectedHelpVersion。
+- 快照先到、面板初始 GET 慢：成功/未知写结果均接管 loading，双击不增加写；旧 GET 即使返回较高版本也无权回填，
+  写仍在途时恢复按钮保持禁用；写结束才允许精确重试，新编辑从真正发布版本开始。无快照慢读保留正常 loading。
+- 正式浏览器通过 owner 成员删除 API 撤权，等待真实列表 403；验证回复成功后拒绝，以及另有迟到 GET/PATCH 的拒绝。
+  慢读反例先拿真实 PATCH 200、验证 helpVersion=1 已落库，再 abort 浏览器交付；重试请求正文相同，首次审计与全库/文件快照不变。
+
+本轮开发验证（Node 22，退出码见新归档 commands.json）：
+
+| 范围 | 命令摘要 | 结果 |
+| --- | --- | --- |
+| 定向组件先红后绿 | `npm run test:ci --prefix frontend/web -- --runInBand --runTestsByPath ...TaskHelpPanel.test.js ...TaskHelpPages.test.js` | RED exit 1：6 failed/26 passed；GREEN exit 0：32 passed |
+| 旧构建正式反例 | `playwright test --config=playwright.t2.config.js help.spec.js --grep 'parent list denial\|write superseding'` | exit 1：4 failed，分别失败于弹窗未清和原重试按钮 disabled；不以错误注入未生效充当证明 |
+| 完整前端最终 | `CI=true npm run test:ci --prefix frontend/web -- --runInBand` | exit 0：44 套件/547 passed；含最后增强的真实命令存储断言 |
+| 正式 T2/T3 HTTP | `npx jest --config=backend/tests/t2/jest.config.js --runInBand` | exit 0：3 套件/18 passed |
+| 当前源码构建 | `CI=true BUILD_PATH=/tmp/t3-help-followup-green-web npm run build --prefix frontend/web` | exit 0；Browserslist 陈旧提示保留 |
+| Chromium 完整 T2/T3 | `T2_WEB_BUILD=/tmp/t3-help-followup-green-web npx playwright test --config=playwright.t2.config.js` | exit 0：23 passed（T2 14、T3 9），0 重试/跳过 |
+| WebKit 完整 T2/T3 | 上行加 `--browser=webkit` | exit 0：23 passed（T2 14、T3 9），非 iPad 真机 |
+| 源码 ESLint | 归档 `lint.cjs` 使用现有 ESLint 配置校验 Git 源码清单 | exit 0：994 实际非 ESLint-ignore 文件，0 error/warning；另 75 个 mobile/legacy 文件沿用既有 ignore，无规则修改 |
+| 文档状态、门禁与空白 | `npm run docs:family:check`；`familyDocumentationGate.test.js`；`git diff --check` | 最终结果见本轮 commands.json、docs.log、docs-gate.json、diff-check.log，不沿用旧运行作为本轮结果 |
+
+计数口径补充：历史 1069 为源文件发现总数；本轮明确区分 994 个实际 ESLint 检查与 75 个既有忽略项，
+不将忽略项算作 lint 通过，也不修改历史原始报告。初次组件 GREEN 后，开发自查将普通 storage 哨兵
+加强为真正的完成/确认 command store 数据，随后完整前端再跑 547 项通过；早期日志保留，不覆盖。
+
+**开发自查：PASS（待独立复评）**。检查了即时拒绝渲染与后续清状态、作用域重建、旧请求失效、
+原命令保留、busy 互斥、版本与审计，以及所有新增测试的真实失败点。无新增确认问题；没有以开发自测替代独立关闭。
+本轮在独立候选上只改变 8 个文件（2 实现、3 测试、3 记录），没有改后端；未重复家庭后端全量。
+原独立 145 套件/4035 通过/1 kubectl 条件跳过仍为历史基线。真实验证仍为 enabled 正式应用、
+loopback HTTP、临时副本集和媒体目录；扫描 profile 为 trusted-local，不宣称 ClamAV/Ubuntu/真机验收。
+
+归档 `candidate.json` 固定全部 33 个未提交候选文件 SHA、相对独立候选的 8 文件清单和候选摘要；
+`candidate-source/` 与 `candidate.patch` 保存当前源码，`manifest.json` 记录全部证据 SHA；
+`commands.json` 区分历史红灯、本轮红绿、初次与最终测试、退出码及未运行范围。
+原独立冻结目录和之前开发 manifest 的哈希链单列，不复制改写独立结论。
+这只是开发交接：两项 P2 仍待独立复评，T3 OPEN、DEVICE_PENDING、REMAINDER_DEFERRED 不变。

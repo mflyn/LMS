@@ -1944,6 +1944,24 @@ completionVersion、星星、错题或掌握度；完成路由也不能清空当
 家长任务列表增加 `helpStatus=pending|resolved` 过滤并沿用现有分页。取消/归档任务不作为可行动
 求助返回；completed 任务上的未处理求助继续可见，直到家长显式处理。
 
+T3 实施核对（2026-10-25）：新 request 仅在任务 pending 时允许；resolve 可处理
+pending/completed/confirmed 上的待处理求助，confirmed 不因此解冻完成作品。
+cancelled/archived 均拒绝求助写入和重放，返回 `409 TASK_STATE_CONFLICT`。
+非取消/归档任务上的 request 安全重放仍按上述四条件判断，属于只读返回，不创建新求助。
+resolve 没有待处理记录时返回 `409 TASK_STATE_CONFLICT`；版本不匹配优先返回
+`409 VERSION_CONFLICT`。未知提交结果返回 `503 HELP_UPDATE_PENDING`，客户端保留原请求，
+重新读取后显式重试；resolve 的旧版本重试仍冲突，不自动升级版本再次处理。
+
+`expectedHelpVersion` 必须为非负安全整数；成功写入不能溢出安全整数。说明/回应省略时规范化为
+空字符串；提供时必须是字符串，按 NFC 规范化并 trim，最多 200 个 Unicode 码点；不接受 null。
+两端使用相同规则，不按 UTF-16 单元截断文字。
+200 成功响应为 `{success:true,data:{task:...}}`，使用任务详情的公开投影。
+详情/列表增加 `helpVersion`（旧缺失为 0）及 `helpRequest`（旧缺失为 null）：
+`status`、`helpType`、`note`、`requestedByActor:{id,role}`、`requestedAt`，已处理时另含
+`parentResponse`、`resolvedByActor:{id,role}`、`resolvedAt`。新 request 替换当前记录，清除旧处理字段。
+GET 不补写；历史 needsHelp 不转换为独立求助。求助只更新上述字段及任务写入元数据，
+不被活动完成/材料命令阻塞，也不修改或恢复这些命令。最终状态与 helpVersion CAS 保护并发。
+
 ### 14.4 `SL-04`：每日学习计划
 
 `GET /api/children/:childId/daily-learning-plans/:localDate`

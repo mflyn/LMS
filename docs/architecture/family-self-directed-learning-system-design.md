@@ -425,6 +425,16 @@ request 的安全重放必须同时满足：当前记录仍为 pending、
 读取当前求助后由用户决定是否再次处理。
 具体字段和路由已进入正式 API 契约，拒绝其他孩子和跨家庭访问。
 
+2026-10-25 T3 实施补充：只新增当前求助子文档和独立 helpVersion，不新增跨服务账本。
+仅 pending 可新 request；已有求助可在 pending/completed/confirmed 上 resolve，后两者不会因此
+解冻作品。cancelled/archived 保留记录但拒绝写入与重放。NFC+trim 后按 Unicode 码点校验
+200 字；缺省文本为空字符串，null 拒绝。未知提交结果保留原请求，旧 resolve 冲突后重新读取，
+不升级版本自动处理。普通完成事务、材料修改与求助各自只更新所属字段，通过事务冲突重试及
+最终任务状态/helpVersion 条件避免丢写。读取不初始化历史任务，也不转换 needsHelp。
+正式 enabled 工厂装配求助接口，保留原启动预检、默认关闭和旧客户端拒绝边界。
+前端复用会话隔离及任务页；求助筛选清除原日期/任务状态限制，沿用任务分页。
+无真实数据迁移或新增索引；若后续测量发现瓶颈，按 Gate §5 用查询计划决定。
+
 ### 5.4 任务模板（P2，非首期）
 
 `GrowthTaskTemplate` 只负责生成单次 `GrowthTask`：
@@ -1205,7 +1215,7 @@ PASS/PARTIAL/FAIL、停止和缺失规则统一引用[增量 Gate §14](../devel
 
 执行拆分见[自主学习 MVP 开发计划](../superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md)。
 该计划按本节范围列出 T0–T9、文件落点、测试和发布/家庭验证步骤；T0 已完成契约基线，
-T1 后端工程已关闭，仅限既定合成验收；T2 合成工程已关闭，T3–T9 待执行。
+T1 后端工程已关闭，仅限既定合成验收；T2 合成工程已关闭，T3 执行中，T4–T9 待执行。
 T0/T1 证据见增量 Gate §17–§18；T2-2 至 T2-6 及三项 P2 已获用户批准关闭；当前工程裁决见 Gate §22.6 和[执行记录 §17](../development/family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)。最新全量 D2B-05 失败不改写，不代表高级恢复通过。
 T2 关闭范围为 ENGINEERING_SYNTHETIC_ONLY；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED 及高级恢复/新回收 REMAINDER_DEFERRED 保留，不外推为 SL-01 整体通过。
 发现与原本地命令在同一服务内按快照读取，公开仅返回 operationId/目标版本，不暴露远程映射或待发布正文；完整契约见 API §14.2。
