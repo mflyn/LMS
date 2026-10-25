@@ -145,7 +145,7 @@ T2 页面已实现，三项 P2 已获用户批准 CLOSED；限定合成工程汇
 [T2 当前工程验收裁决](family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)为 APPROVED / CLOSED（ENGINEERING_SYNTHETIC_ONLY）；最新全量仍 FAILED（3942/3943通过，D2B-05 REMAINDER_DEFERRED），与此前独立后端143/3926通过分别记录，不用旧绿灯覆盖新失败。前端40/490、HTTP2/14、浏览器14项证据及历史失败均保留。
 不将 SL-01 或本表后置/真机义务提前改为 COVERED；T8_PENDING / NOT_AUTHORIZED，T3–T9 NOT_STARTED。
 
-2026-10-25 T3 单独授权增量：上段为 T2 时点快照。当前 T3 IN_PROGRESS，T4–T9 NOT_STARTED。
+2026-10-25 T3 单独授权增量：上段为 T2 时点快照。当前 T3 APPROVED / CLOSED / ENGINEERING_SYNTHETIC_ONLY，T4–T9 NOT_STARTED；批准及独立复评见 Gate §23.8。
 SL-02 的 T3 工程实现映射如下；总体仍 PLANNED，不替代 T7 集成、用户验收或真机结果。
 
 | T3 条件 | 实现 | 永久验证 |
@@ -154,6 +154,6 @@ SL-02 的 T3 工程实现映射如下；总体仍 PLANNED，不替代 T7 集成�
 | 实时权限、真实 actor、独立版本与原请求重放 | help 服务事务、Gateway、childApi/familyApi | 跨家庭/兄弟姐妹/离家家长/失效身份、双家长及新旧求助竞争、丢响应重放 |
 | 完成并发、教学/奖励零副作用、旧记录只读 | 原子字段更新与只读投影 | 完成/取消/归档快照竞争、回滚/提交未知、真实确认后单账本不变 |
 | 账号隔离、可发现性与分页 | 复用 familySession、原请求保留、跨日期筛选 | 迟到401/跨标签、未知结果、旧 resolve 不自动重发、取消归档及末页回退 |
-| 家长列表拒绝清私有求助、慢读被写入接管 | TasksPage 的当前 scope 401/403 卸载；TaskHelpPanel 读写 loading 所有权 | TaskHelpPages 的拒绝/迟到读写/非鉴权错误对照、TaskHelpPanel 慢读反例、help.spec.js 正式撤权和已提交丢响应重试；两项 P2 待独立复评，不等于关闭 |
+| 家长列表拒绝清私有求助、慢读被写入接管 | TasksPage 的当前 scope 401/403 卸载；TaskHelpPanel 读写 loading 所有权 | TaskHelpPages 的拒绝/迟到读写/非鉴权错误对照、TaskHelpPanel 慢读反例、help.spec.js 正式撤权和已提交丢响应重试；两项 P2 已独立复评关闭，旧失败保留；导航测试 P3 及证据来源见 Gate §23.8 |
 
 执行结果、独立评审和失败事实见[Gate §23](family-self-directed-learning-mvp-gate.md#23-t3-独立求助实施与工程验收2026-10-25)。

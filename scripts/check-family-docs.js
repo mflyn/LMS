@@ -3359,10 +3359,10 @@ function validate() {
       `reconciliation ${task} must be CLOSED`, errors);
   }
   for (const [document, marker, message] of [
-    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 执行中，T4-T9 待执行）', 'approved T1 plan status and bounded T2 closure'],
+    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4-T9 待执行）', 'approved T1 plan status and bounded T2/T3 closure'],
     [selfDirectedPlan, '- [x] R4 入口验收及 T1 关闭：CLOSED', 'approved R4 plan checkbox'],
     [reconciliation, '| R4 正式入口验收及 T1 关闭 | CLOSED |', 'approved R4 reconciliation row'],
-    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 执行中，T4-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2 closure'],
+    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2/T3 closure'],
     [read('docs/deployment/completion-operations.md'), '**Status:** CLOSED（R1–R4 及 T1 后端工程总门禁', 'operations must reflect T1 backend closure']
   ]) {
     assert(document.includes(marker), message, errors);
@@ -3443,12 +3443,45 @@ function validate() {
     errors.push('T2 approval record must be present and valid JSON');
   }
   const t3Rows = taskStatusRows.filter(cells => cells[1] === 'T3');
-  assert(t3Rows.length === 1 && t3Rows[0][2] === 'IN_PROGRESS',
-    'self-directed Gate must have exactly one IN_PROGRESS T3 row', errors);
-  for (const [key, value] of [['T3 gate', 'OPEN'], ['T3 approval', 'PENDING_USER_APPROVAL'],
-    ['T3 scope', 'ENGINEERING_SYNTHETIC_ONLY']]) {
+  assert(t3Rows.length === 1 && t3Rows[0][2] === 'CLOSED',
+    'self-directed Gate must have exactly one CLOSED T3 row', errors);
+  for (const [key, value] of [['T3 gate', 'CLOSED'], ['T3 approval', 'APPROVED'],
+    ['T3 scope', 'ENGINEERING_SYNTHETIC_ONLY'], ['T3 device', 'DEVICE_PENDING'],
+    ['T3 deferred', 'REMAINDER_DEFERRED']]) {
     const lines = gateHeader.split('\n').filter(line => line.startsWith(`**${key}:**`));
     assert(lines.length === 1 && lines[0] === `**${key}:** ${value}`, `${key} must remain ${value}`, errors);
+  }
+  try {
+    const evidenceRoot = 'docs/development/evidence/t3-synthetic-2026-10-25';
+    const approval = JSON.parse(read(`${evidenceRoot}/approval.json`));
+    const reviewText = read(`${evidenceRoot}/independent-review.json`);
+    const review = JSON.parse(reviewText);
+    assert(approval.schemaVersion === 1 && approval.task === 'T3' &&
+      approval.status === 'APPROVED' && approval.gateStatus === 'CLOSED' &&
+      approval.scope === 'ENGINEERING_SYNTHETIC_ONLY' &&
+      approval.source === 'direct_user_conditional_closeout_authorization' &&
+      approval.instruction === '同意,按你的建议逐步执行以上四步收尾顺序,直到这四步全部完成',
+    'T3 approval must retain the conditional user authorization', errors);
+    const candidate = '0b7c40fca678cd5b7fc1e6bd821d03f653d7f909';
+    assert(approval.reviewedCommit === candidate && review.candidateCommit === candidate &&
+      review.decision === 'PASS' && review.openFindings === 0 &&
+      approval.reviewSha256 === createHash('sha256').update(reviewText).digest('hex'),
+    'T3 independent review must bind the reviewed candidate and unchanged passing evidence', errors);
+    const defects = { 'T3-HELP-P2-PARENT-DENIAL': 'CLOSED', 'T3-HELP-P2-LOADING': 'CLOSED' };
+    assert(isDeepStrictEqual(approval.defects, defects) &&
+      isDeepStrictEqual(review.defects, defects),
+    'T3 must close exactly the independently reviewed P2 defects', errors);
+    assert(isDeepStrictEqual(approval.retained, {
+      historicalFailures: 'PRESERVED', device: 'DEVICE_PENDING',
+      advancedRecoveryAndNewCleanup: 'REMAINDER_DEFERRED',
+      deployment: 'T8_PENDING / NOT_AUTHORIZED', 'T4-T9': 'NOT_STARTED', 'SL-02': 'PLANNED'
+    }), 'T3 approval must retain pending and deferred boundaries', errors);
+    const submission = JSON.parse(read(`${evidenceRoot}/delivery.json`));
+    assert(submission.historicalIndependentBaseline.decision === 'NEEDS_FIXES' &&
+      submission.historicalIndependentBaseline.openP2 === 2 && submission.gateAtSubmission === 'OPEN',
+    'T3 must preserve its original failed independent review and open submission snapshot', errors);
+  } catch (error) {
+    errors.push('T3 approval and independent review must be present and valid JSON');
   }
   for (const task of Array.from({ length: 6 }, (_, index) => `T${index + 4}`)) {
     assert(
@@ -3461,7 +3494,7 @@ function validate() {
   for (const [name, markdown, marker] of [
     ['research', selfDirectedResearch, '状态：拟议方案'],
     ['design', selfDirectedDesign, '状态：拟议设计'],
-    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 执行中，T4-T9 待执行）'],
+    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4-T9 待执行）'],
     ['Gate', selfDirectedGate, '**Status:** T0 CONTRACT BASELINE']
   ]) {
     assert(markdown.includes(marker), `self-directed ${name} must remain explicitly planned`, errors);
@@ -3595,7 +3628,7 @@ function validate() {
   assert(
     implementationStatus.includes('T0 已完成契约基线') &&
       implementationStatus.includes('T1 后端工程已关闭，仅限既定合成验收') &&
-      implementationStatus.includes('T2 合成工程已关闭，T3 执行中，T4–T9 待执行'),
+      implementationStatus.includes('T2 合成工程已关闭，T3 合成工程已关闭，T4–T9 待执行'),
     'system design must record T0 complete, T1 closed and T2 closed in section 15',
     errors
   );

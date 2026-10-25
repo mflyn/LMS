@@ -1215,7 +1215,8 @@ PASS/PARTIAL/FAIL、停止和缺失规则统一引用[增量 Gate §14](../devel
 
 执行拆分见[自主学习 MVP 开发计划](../superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md)。
 该计划按本节范围列出 T0–T9、文件落点、测试和发布/家庭验证步骤；T0 已完成契约基线，
-T1 后端工程已关闭，仅限既定合成验收；T2 合成工程已关闭，T3 执行中，T4–T9 待执行。
+T1 后端工程已关闭，仅限既定合成验收；T2 合成工程已关闭，T3 合成工程已关闭，T4–T9 待执行。
+T3 限定合成验收及两项 P2 独立复评关闭见增量 Gate §23.8；真机 DEVICE_PENDING、SL-02 PLANNED、T7 集成及真实部署边界不变。
 T0/T1 证据见增量 Gate §17–§18；T2-2 至 T2-6 及三项 P2 已获用户批准关闭；当前工程裁决见 Gate §22.6 和[执行记录 §17](../development/family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)。最新全量 D2B-05 失败不改写，不代表高级恢复通过。
 T2 关闭范围为 ENGINEERING_SYNTHETIC_ONLY；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED 及高级恢复/新回收 REMAINDER_DEFERRED 保留，不外推为 SL-01 整体通过。
 发现与原本地命令在同一服务内按快照读取，公开仅返回 operationId/目标版本，不暴露远程映射或待发布正文；完整契约见 API §14.2。

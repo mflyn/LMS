@@ -74,7 +74,7 @@ describe('family baseline documentation gate', () => {
   });
 });
 
-describe('approved T1 and bounded T2 closure boundaries', () => {
+describe('approved T1 and bounded T2/T3 closure boundaries', () => {
   const gate = 'docs/development/family-self-directed-learning-mvp-gate.md';
   const plan = 'docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md';
   const reconciliation = 'docs/development/family-self-directed-learning-t1-acceptance-reconciliation.md';
@@ -83,6 +83,9 @@ describe('approved T1 and bounded T2 closure boundaries', () => {
   const execution = 'docs/development/family-self-directed-learning-t2-execution.md';
   const design = 'docs/architecture/family-self-directed-learning-system-design.md';
   const approval = 'docs/development/family-self-directed-learning-t2-closure-approval.json';
+  const t3Approval = 'docs/development/evidence/t3-synthetic-2026-10-25/approval.json';
+  const t3Review = 'docs/development/evidence/t3-synthetic-2026-10-25/independent-review.json';
+  const t3Submission = 'docs/development/evidence/t3-synthetic-2026-10-25/delivery.json';
 
   test('accepts the approved closure while keeping historical OPEN records', () => {
     expect(read(gate)).toContain('| T1 | CLOSED |');
@@ -131,6 +134,31 @@ describe('approved T1 and bounded T2 closure boundaries', () => {
     expect(header).toContain('**T2 deferred:** REMAINDER_DEFERRED');
     expect(header).toContain('**T2 device:** DEVICE_PENDING');
     expect(() => validate()).not.toThrow();
+  });
+
+  test('T3 closure requires independent passing evidence without rewriting the submission snapshot', () => {
+    expect(JSON.parse(read(t3Review))).toMatchObject({ decision: 'PASS', openFindings: 0 });
+    expect(JSON.parse(read(t3Submission))).toMatchObject({
+      gateAtSubmission: 'OPEN', historicalIndependentBaseline: { decision: 'NEEDS_FIXES', openP2: 2 }
+    });
+    expect(JSON.parse(read(t3Approval))).toMatchObject({
+      status: 'APPROVED', gateStatus: 'CLOSED', scope: 'ENGINEERING_SYNTHETIC_ONLY',
+      retained: { device: 'DEVICE_PENDING', advancedRecoveryAndNewCleanup: 'REMAINDER_DEFERRED', 'SL-02': 'PLANNED' }
+    });
+    expect(() => validate()).not.toThrow();
+  });
+
+  test.each([t3Approval, t3Review])('rejects missing T3 closure evidence %s', file => {
+    const original = fs.readFileSync;
+    const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((requested, ...args) => {
+      if (requested === path.join(repositoryRoot, file)) throw new Error('Missing evidence');
+      return original(requested, ...args);
+    });
+    try {
+      expect(() => validate()).toThrow('T3 approval and independent review must be present');
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   test.each([
@@ -183,12 +211,29 @@ describe('approved T1 and bounded T2 closure boundaries', () => {
     ['T2 approval record scope widens', approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY'],
     ['T2 defect reopened', approval, '"T2-P2-JWT": "CLOSED"', '"T2-P2-JWT": "OPEN"', 'T2 approval record must close exactly the three reviewed P2 defects'],
     ['T2 approval record device passed', approval, '"device": "DEVICE_PENDING"', '"device": "PASSED"', 'T2 approval record must preserve pending and deferred boundaries'],
-    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 执行中，T4–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
-    ['T3 prematurely closed', gate, '| T3 | IN_PROGRESS |', '| T3 | CLOSED |', 'exactly one IN_PROGRESS T3 row'],
-    ['T3 missing', gate, '| T3 | IN_PROGRESS |', '| removed | IN_PROGRESS |', 'exactly one IN_PROGRESS T3 row'],
-    ['T3 contradictory duplicate', gate, '| T3 | IN_PROGRESS |', '| T3 | IN_PROGRESS | current |\n|  T3  | CLOSED |', 'exactly one IN_PROGRESS T3 row'],
-    ['T3 fake approval', gate, '**T3 approval:** PENDING_USER_APPROVAL', '**T3 approval:** APPROVED', 'T3 approval must remain PENDING_USER_APPROVAL'],
-    ['T3 gate closed', gate, '**T3 gate:** OPEN', '**T3 gate:** CLOSED', 'T3 gate must remain OPEN'],
+    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
+    ['T3 closure regresses', gate, '| T3 | CLOSED |', '| T3 | IN_PROGRESS |', 'exactly one CLOSED T3 row'],
+    ['T3 missing', gate, '| T3 | CLOSED |', '| removed | CLOSED |', 'exactly one CLOSED T3 row'],
+    ['T3 contradictory duplicate', gate, '| T3 | CLOSED |', '| T3 | CLOSED | current |\n|  T3  | OPEN |', 'exactly one CLOSED T3 row'],
+    ['T3 approval missing', gate, '**T3 approval:** APPROVED', '', 'T3 approval must remain APPROVED'],
+    ['T3 gate regresses', gate, '**T3 gate:** CLOSED', '**T3 gate:** OPEN', 'T3 gate must remain CLOSED'],
+    ['T3 scope widens', gate, '**T3 scope:** ENGINEERING_SYNTHETIC_ONLY', '**T3 scope:** PRODUCTION', 'T3 scope must remain ENGINEERING_SYNTHETIC_ONLY'],
+    ['T3 duplicate scope', gate, '**T3 scope:** ENGINEERING_SYNTHETIC_ONLY', '**T3 scope:** ENGINEERING_SYNTHETIC_ONLY\n**T3 scope:** PRODUCTION', 'T3 scope must remain ENGINEERING_SYNTHETIC_ONLY'],
+    ['T3 device falsely passed', gate, '**T3 device:** DEVICE_PENDING', '**T3 device:** PASSED', 'T3 device must remain DEVICE_PENDING'],
+    ['T3 deferred falsely closed', gate, '**T3 deferred:** REMAINDER_DEFERRED', '**T3 deferred:** CLOSED', 'T3 deferred must remain REMAINDER_DEFERRED'],
+    ['T3 approval record regresses', t3Approval, '"status": "APPROVED"', '"status": "PENDING_REVIEW"', 'T3 approval must retain the conditional user authorization'],
+    ['T3 approval scope widens', t3Approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T3 approval must retain the conditional user authorization'],
+    ['T3 review candidate replaced', t3Approval, '0b7c40fca678cd5b7fc1e6bd821d03f653d7f909', '301edf7ec067a66719784d2766731e8acdbd1bad', 'T3 independent review must bind the reviewed candidate'],
+    ['T3 parent denial reopened', t3Approval, '"T3-HELP-P2-PARENT-DENIAL": "CLOSED"', '"T3-HELP-P2-PARENT-DENIAL": "OPEN"', 'T3 must close exactly the independently reviewed P2 defects'],
+    ['T3 loading reopened', t3Approval, '"T3-HELP-P2-LOADING": "CLOSED"', '"T3-HELP-P2-LOADING": "OPEN"', 'T3 must close exactly the independently reviewed P2 defects'],
+    ['T3 prior failures erased', t3Approval, '"historicalFailures": "PRESERVED"', '"historicalFailures": "ALL_GREEN"', 'T3 approval must retain pending and deferred boundaries'],
+    ['T3 approval device passed', t3Approval, '"device": "DEVICE_PENDING"', '"device": "PASSED"', 'T3 approval must retain pending and deferred boundaries'],
+    ['T3 approval deferred passed', t3Approval, '"advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED"', '"advancedRecoveryAndNewCleanup": "CLOSED"', 'T3 approval must retain pending and deferred boundaries'],
+    ['T3 review fails', t3Review, '"decision": "PASS"', '"decision": "NEEDS_FIXES"', 'T3 independent review must bind the reviewed candidate'],
+    ['T3 review findings remain', t3Review, '"openFindings": 0', '"openFindings": 1', 'T3 independent review must bind the reviewed candidate'],
+    ['T3 evidence bytes changed', t3Review, '"decision": "PASS"', '"decision":  "PASS"', 'T3 independent review must bind the reviewed candidate'],
+    ['T3 original independent failure erased', t3Submission, '"decision": "NEEDS_FIXES"', '"decision": "PASS"', 'T3 must preserve its original failed independent review'],
+    ['T3 original open snapshot erased', t3Submission, '"gateAtSubmission": "OPEN"', '"gateAtSubmission": "CLOSED"', 'T3 must preserve its original failed independent review'],
     ...Array.from({ length: 6 }, (_, index) => `T${index + 4}`).map(task => [
       `${task} starts without approval`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | IN_PROGRESS |`, `keep ${task} as NOT_STARTED`
     ]),

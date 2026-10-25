@@ -206,7 +206,18 @@ for (const kind of ['read', 'write']) test(`detail refresh denied after authoriz
 test('real child request, parent discovery/response and child reread/re-request; responsive layouts', async ({ page, browser }, info) => {
   const task = await newTask(), before = await runtime.inspect(), errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await login(page); await page.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
+  // Finish Today initialization before the harness unloads its document.
+  const todayReady = Promise.all([
+    '/api/growth-tasks?scope=today&pageSize=100',
+    `/api/notifications/family?childId=${fixture.actors.child.childId}`
+  ].map(endpoint => page.waitForResponse(response =>
+    response.url() === runtime.webUrl + endpoint && response.request().method() === 'GET'
+  ).then(async response => {
+    expect(response.status()).toBe(200);
+    expect(await response.finished()).toBeNull();
+  })));
+  await Promise.all([login(page), todayReady]);
+  await page.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
   await page.getByRole('button', { name: '我需要帮助', exact: true }).click();
   await page.getByLabel('哪里需要帮助').selectOption('cannot_start');
   await page.getByLabel('补充说明（可不填）').fill('不知道先做什么');

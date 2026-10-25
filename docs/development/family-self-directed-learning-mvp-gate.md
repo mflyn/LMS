@@ -5,7 +5,7 @@
 > §21 及后续旧进度为历史快照，不表示继续扩展这些模块。T2 限定合成工程总门禁已关闭（§22.6），T1 CLOSED 不变；D2B-05 查询超时单独批准关闭（§22.7），原失败保留。
 > T2-2 至 T2-6 合成范围汇总验收 CLOSED；保留权限、幂等、版本、隐私删除和现有启动预检，不自动启动 T3–T9。
 > 当前页面退出条件及真实试点限制以[执行记录 §11](family-self-directed-learning-t2-execution.md#11-2026-10-24-mvp-范围调整与页面运行依赖)为准。
-> 不把后置等同测试通过；最新四项独立QA及仅本地收口边界见§22.11，暂停此前条件合并，不授权部署。
+> 不把后置等同测试通过；§22.11 的仅本地/暂停合并为当时快照。最新 T3 条件授权及独立复评见 §23.8：限定合成工程关闭，最新 CI 通过后可 merge commit，不授权部署。
 
 **Status:** T0 CONTRACT BASELINE
 **Increment:** SELF-DIRECTED-LEARNING-MVP-1
@@ -28,9 +28,11 @@
 **T2 deployment:** T8_PENDING / NOT_AUTHORIZED
 **T2 deferred:** REMAINDER_DEFERRED
 
-**T3 gate:** OPEN
-**T3 approval:** PENDING_USER_APPROVAL
+**T3 gate:** CLOSED
+**T3 approval:** APPROVED
 **T3 scope:** ENGINEERING_SYNTHETIC_ONLY
+**T3 device:** DEVICE_PENDING
+**T3 deferred:** REMAINDER_DEFERRED
 
 本 Gate 记录自主学习增量的契约、执行状态和证据。T0 完成只表示后续开发不再自行发明接口、
 版本、迁移或错误语义；不表示作品、求助、清单、日计划、订正连接、家庭部署或四周试点已经完成。
@@ -81,7 +83,7 @@
 | T0 | CONTRACT_BASELINE | PRD、架构、API、追踪、Gate 和文档校验固定；不含功能实现 |
 | T1 | CLOSED | 用户批准后端工程总门禁，仅限合成验收；R4 汇总关闭见 §18.40，不代表前端或真实部署完成 |
 | T2 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；T2-1/T2-R 及三项 P2 CLOSED，T2-2 至 T2-6 汇总批准关闭（§22.6 / 执行记录 §17）；D2B-05 查询缺陷单独 CLOSED（§22.7），原失败快照保留；DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，T2-G REMAINDER_DEFERRED |
-| T3 | IN_PROGRESS | 用户另行授权本地实现；独立求助及家长处理，工程验证与评审见 §23；总门禁 OPEN，待用户验收，不部署 |
+| T3 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；两项 P2 独立复评及导航测试 P3 关闭见 §23.8；最新 CI 通过后可合并，DEVICE_PENDING、REMAINDER_DEFERRED 和不部署边界保留 |
 | T4 | NOT_STARTED | 清单版本、代录审计和一年级/四年级交互通过 |
 | T5 | NOT_STARTED | 日计划首次并发、CAS、LocalDate 和 Gateway 路由通过 |
 | T6 | NOT_STARTED | 一条真实错题走完来源、订正和延迟复习连接 |
@@ -4206,3 +4208,49 @@ loopback HTTP、临时副本集和媒体目录；扫描 profile 为 trusted-loca
 `commands.json` 区分历史红灯、本轮红绿、初次与最终测试、退出码及未运行范围。
 原独立冻结目录和之前开发 manifest 的哈希链单列，不复制改写独立结论。
 这只是开发交接：两项 P2 仍待独立复评，T3 OPEN、DEVICE_PENDING、REMAINDER_DEFERRED 不变。
+
+### 23.8 T3 独立复评与限定工程关闭（2026-10-25）
+
+**当前裁决：APPROVED / CLOSED / ENGINEERING_SYNTHETIC_ONLY。** 用户明确同意四步收尾：
+专用分支及 Draft PR、最后两项 P2 独立复评、通过后批准限定合成工程验收、最新 CI 通过后 merge commit，
+再核对 main CI 并同步本地。此处记录已满足的复评/工程条件，不冒称后续合并已执行。
+Git 和合并授权取代此前“仅本地”快照；禁止部署、真实数据/NAS 操作的限制不变。
+
+- 固定生产候选 `0b7c40fca678cd5b7fc1e6bd821d03f653d7f909`，基线 `301edf7e`，
+  PR [#28](https://github.com/mflyn/LMS/pull/28)，独立评审员 Averroes。
+- `T3-HELP-P2-PARENT-DENIAL`、`T3-HELP-P2-LOADING` 均独立 PASS / CLOSED；
+  前一轮孩子详情 403 保护也通过回归。独立验证含 32 组件、44 孩子/控制器、6 额外时序探针、
+  18 正式 HTTP、独立构建和 9 Chromium 求助用例；不把开发者 547 项回归冒称独立重跑。
+- 独立首次 WebKit **8 passed / 1 failed，exit 1**，整体当时 HELD；错误来自测试仅等登录 URL 后
+  立即硬导航，Today 初始 XHR 在旧文档卸载时触发原生 pageerror。诊断请求未到 Gateway，
+  没有相应服务端 401/403；不据此放宽权限或忽略所有 CORS 错误。
+- `T3-QA-WEBKIT-NAVIGATION`（P3）仅改生命周期测试的导航同步：登录前注册两个精确 GET，
+  检查 200、等待 response.finished()，再导航。保留 pageerror、版本、账本/媒体和全部业务断言，
+  不加固定睡眠、重试或超时。修订测试 SHA-256 为 `9bc1136cc39843c3681f69322d9706f4e8819d1bbb8c5d753443f86143643004`。
+- 修订后开发线程完整 Chromium **23/23**、WebKit **23/23**，均 exit 0、无重试/跳过/flaky；
+  追加独立复评核验这些结果，另独立执行该生命周期用例预设 3 次 **3/3**，结论 PASS，P3 CLOSED。
+  完整 23 项是开发线程运行，不混称独立运行；原 WebKit 失败和工具启动/选择失败均保留。
+
+证据分层及批准记录：
+
+- [提交时快照](evidence/t3-synthetic-2026-10-25/delivery.json)保持原 OPEN/NEEDS_FIXES，
+  不因当前关闭而改写；开发归档 112 项、独立初次 89 项、追加复评 45 项均有哈希。
+- [独立复评汇总](evidence/t3-synthetic-2026-10-25/independent-review.json)明确固定生产提交、
+  测试修订 SHA、开发与独立执行来源、原失败、原始报告和 manifest 哈希。
+  原始归档在本地，汇总入 Git，不声称 Git 包含全部原始日志或截图。
+- [条件授权及限定关闭](evidence/t3-synthetic-2026-10-25/approval.json)绑定上述汇总哈希，
+  文档门禁检查唯一 CLOSED 状态、独立 PASS、精确两项 P2、历史失败和保留边界。
+- 首个提交 CI [40201539415](https://github.com/mflyn/LMS/actions/runs/40201539415)通过：
+  测试 PR 合并引用 `52380228`（head `0b7c40fc`），家庭后端 **145 suites / 4036 passed**，
+  前端 **44 suites / 547 passed**，Task11/12 集成、浏览器及 Compose smoke 通过；部署 job 未执行。
+  该结果不是随后关闭记录提交的 CI；合并必须另外确认最新 SHA，合并后还须确认 main CI。
+
+状态同步覆盖本 Gate、计划、架构实施状态、导航、需求追踪及 `check-family-docs.js`。
+关闭记录验证：`npm run docs:family:check` 通过；`familyDocumentationGate.test.js` **104/104**，
+包括缺失/矛盾状态、伪造批准、证据哈希改动、历史失败抹除及扩大真机/后置范围的负向检查；
+相关 JS ESLint、`git diff --check` 通过。前置红灯 **16 failed / 80 passed** 是尚未添加批准记录和
+关闭状态时的测试准备结果，不冒称为业务缺陷或全部变异证明。红绿及独立证据复制归档到
+`release-gate-artifacts/t3-closeout-2026-10-25/`，复制前逐项验证初次 89 项、追加 45 项哈希。
+只关闭 T3 的独立求助、家长处理、孩子回看和相应工程边界；SL-02 仍 PLANNED，T7 集成未完成。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED、D01 未关闭和全部历史失败保留；
+T4–T9 NOT_STARTED。没有部署、访问真实孩子数据、操作 NAS 或扩大高级恢复/新回收。

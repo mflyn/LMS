@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "task": "T3",
+  "status": "APPROVED",
+  "gateStatus": "CLOSED",
+  "scope": "ENGINEERING_SYNTHETIC_ONLY",
+  "source": "direct_user_conditional_closeout_authorization",
+  "instruction": "同意,按你的建议逐步执行以上四步收尾顺序,直到这四步全部完成",
+  "authorizationContext": "Dedicated branch and Draft PR; independently review the last two P2 fixes; approve bounded synthetic engineering acceptance after review; merge commit only after latest CI passes, then check main CI and synchronize local main.",
+  "conditionSatisfied": "Two P2 fixes independently passed; navigation-only P3 independently re-reviewed; revised full Chromium/WebKit suites passed. Latest CI remains a separate mandatory merge prerequisite.",
+  "reviewedCommit": "0b7c40fca678cd5b7fc1e6bd821d03f653d7f909",
+  "reviewSha256": "df09bf3c4dde269cc464b4f51831d8b0a5e690ce1f62c29d5449271871952e79",
+  "defects": {
+    "T3-HELP-P2-PARENT-DENIAL": "CLOSED",
+    "T3-HELP-P2-LOADING": "CLOSED"
+  },
+  "additionalFinding": { "id": "T3-QA-WEBKIT-NAVIGATION", "status": "CLOSED", "scope": "TEST_NAVIGATION_ONLY" },
+  "retained": {
+    "historicalFailures": "PRESERVED",
+    "device": "DEVICE_PENDING",
+    "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED",
+    "deployment": "T8_PENDING / NOT_AUTHORIZED",
+    "T4-T9": "NOT_STARTED",
+    "SL-02": "PLANNED"
+  }
+}

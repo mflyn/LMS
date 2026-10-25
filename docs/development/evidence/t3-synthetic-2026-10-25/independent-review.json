@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "candidateCommit": "0b7c40fca678cd5b7fc1e6bd821d03f653d7f909",
+  "candidateScope": "Reviewed production commit plus navigation-only test revision; subsequent closure documentation is separately validated.",
+  "navigationTestSha256": "9bc1136cc39843c3681f69322d9706f4e8819d1bbb8c5d753443f86143643004",
+  "reviewer": "independent subagent Averroes / 01a1736f-6004-78c1-bb19-c1e23f46f404",
+  "decision": "PASS",
+  "openFindings": 0,
+  "defects": {
+    "T3-HELP-P2-PARENT-DENIAL": "CLOSED",
+    "T3-HELP-P2-LOADING": "CLOSED"
+  },
+  "navigationFinding": { "id": "T3-QA-WEBKIT-NAVIGATION", "priority": "P3", "status": "CLOSED" },
+  "independentExecution": {
+    "focusedComponents": { "passed": 32, "exitCode": 0 },
+    "childDetailAndController": { "passed": 44, "exitCode": 0 },
+    "additionalTimingProbes": { "passed": 6, "exitCode": 0 },
+    "formalHttp": { "passed": 18, "exitCode": 0 },
+    "build": { "exitCode": 0, "warning": "Stale Browserslist data" },
+    "chromiumHelp": { "passed": 9, "exitCode": 0 },
+    "revisedWebkitLifecycle": { "passed": 3, "exitCode": 0, "retries": 0, "method": "Three preconfigured repetitions, not retry-until-green" }
+  },
+  "parentExecutionVerifiedByReviewer": {
+    "webkit": { "passed": 23, "failed": 0, "skipped": 0, "flaky": 0, "retries": 0, "resultSha256": "3501606c79ae0c656888ea336004888a8c7ba500fb81477d6f18939a7e2bc7f0" },
+    "chromium": { "passed": 23, "failed": 0, "skipped": 0, "flaky": 0, "retries": 0, "resultSha256": "1b13e009513fe129070314c2add2c33dc242545940ff83730420404e6006afe2" },
+    "note": "Parent observed both shell exit codes as zero; reviewer checked JSON and logs, not those shell exit codes. These are not independent executions."
+  },
+  "preservedInitialReview": {
+    "overallVerdict": "HELD_NOT_OVERALL_PASS",
+    "webkit": { "passed": 8, "failed": 1, "exitCode": 1 },
+    "reason": "Hard navigation after URL-only login raced Today XHR startup. Exact response status and body-completion waits fix the harness; all pageerror and business assertions remain.",
+    "directory": "/tmp/t3-closeout-independent",
+    "reportSha256": "e0efe61d7d87078707058625325cad8960e1db666811cabf94bdeb7d353e912a",
+    "verificationSha256": "47084b5b8c1699921735cc87671551f238e3d0d588607bca531ac647778f4d4b",
+    "manifestSha256": "004f096a1945193213fb7029f017d36c1d9bc84613821a3e0c8fc8389224cba8",
+    "manifestEntries": 89,
+    "toolingFailures": ["Chromium sandbox launch denied before separately authorized execution"]
+  },
+  "navigationRereview": {
+    "directory": "/tmp/t3-closeout-independent-navigation",
+    "decision": "PASS",
+    "reportSha256": "5a8a67e3414eb6698780f5ca99e011a6a987796b7fcfd2f0396638661b2dea54",
+    "verificationSha256": "13884d40bee32823d52ae4ba05382fda7799dc920fe77a4caba99b053d3983a8",
+    "manifestSha256": "c66924ec6a8bf990ce05f95329b427bab2e8277901c29661ea81c87e1ecbdb13",
+    "manifestEntries": 45,
+    "toolingFailures": ["First selection expression matched no tests; corrected command is separately recorded"]
+  },
+  "initialCi": {
+    "runId": "40201539415",
+    "headCommit": "0b7c40fca678cd5b7fc1e6bd821d03f653d7f909",
+    "testedPullRequestMergeRef": "52380228f307b92af104570c07d07fc381cb286d",
+    "conclusion": "success",
+    "familyBackend": { "suites": 145, "passed": 4036 },
+    "frontend": { "suites": 44, "passed": 547 },
+    "note": "Historical first-commit CI only. Latest closure commit and post-merge CI must be checked separately before delivery."
+  },
+  "limitations": [
+    "Raw evidence remains local; this portable summary does not pretend raw artifacts are in Git.",
+    "Browser simulation is not native iPad validation: DEVICE_PENDING.",
+    "Advanced recovery and new orphan cleanup remain REMAINDER_DEFERRED.",
+    "No real deployment, data migration, NAS operation, T7 product integration or T8 deployment approval."
+  ]
+}
