@@ -85,7 +85,7 @@
 | T1 | CLOSED | 用户批准后端工程总门禁，仅限合成验收；R4 汇总关闭见 §18.40，不代表前端或真实部署完成 |
 | T2 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；T2-1/T2-R 及三项 P2 CLOSED，T2-2 至 T2-6 汇总批准关闭（§22.6 / 执行记录 §17）；D2B-05 查询缺陷单独 CLOSED（§22.7），原失败快照保留；DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，T2-G REMAINDER_DEFERRED |
 | T3 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；两项 P2 独立复评及导航测试 P3 关闭见 §23.8；最新 CI 通过后可合并，DEVICE_PENDING、REMAINDER_DEFERRED 和不部署边界保留 |
-| T4 | IN_PROGRESS | §24；最新 §24.8 求助投影 P2 已独立复评通过、待关闭记录，历史工程候选不代替关闭批准；总门禁 OPEN，关闭需用户批准 |
+| T4 | IN_PROGRESS | §24.9 求助投影 P2 已批准关闭；§24.10 固定候选服务器独立合成自动化通过，真机/人工待验收；总门禁 OPEN，关闭需用户批准 |
 | T5 | NOT_STARTED | 日计划首次并发、CAS、LocalDate 和 Gateway 路由通过 |
 | T6 | NOT_STARTED | 一条真实错题走完来源、订正和延迟复习连接 |
 | T7 | NOT_STARTED | SL-01 至 SL-06 纳入集成/E2E 和完整发布 Gate |
@@ -4654,3 +4654,72 @@ P2 关闭依据及历史证据清单。共享设计、计划与导航仅选取 T
 DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED 和 D01 未关闭保持不变。
 默认关闭配置、旧客户端升级拒绝及高级恢复/新回收后置不变；回退本候选只需不合并该专用分支，
 不涉及真实数据迁移或删除。
+
+### 24.10 固定候选服务器独立 QA 核实与人工交接（2026-10-26）
+
+独立测试线程 `019ed96b-6785-7492-bf22-9f7fd60fbfb5` 已完成获授权的服务器隔离测试。
+本节补充 §24.9 之后的执行事实，不改写原提交时“尚未执行”或旧批准/失败记录。
+固定候选为 `c52bed5a439aae6bbffdee6185fdaa7726382e26`，tree
+`bb195343802112f7a4d15fb43b7f7179175a6be2`，Draft PR #30。
+
+开发线程在接收报告后只读核对：候选 1726 个 Git blob 的字节/哈希匹配；冻结 QA manifest
+227 项、归档输入 210 项双 SHA、远程原始清单 176 项、历史冻结证据 367 项全部匹配。
+从阶段原 JSON 重算通过/失败/跳过及用例名称、状态、耗时，6562 条执行记录与明细一致；
+这些记录有重复上下文，不能相加成唯一用例数。57 项自动化矩阵均关联实际证据。
+这次是对独立证据的核实，不是开发线程重新执行整轮服务器测试。
+
+| 独立有效验证 | 结果 |
+| --- | --- |
+| T4 定向后端 / 正式 HTTP | 5 suites / 415 tests；3 suites / 18 tests，均 exit 0，无失败/跳过 |
+| 完整家庭后端 / 前端 | 146 suites / 4152 tests；46 suites / 592 tests，均 exit 0，无失败/跳过；前端采用独立完成的 R2 结果 |
+| Chromium / WebKit | 各 29/29（T4 6、T2 14、T3 9），零重试/跳过；前后健康共 4 次通过，零 console warning/error 与 pageerror 原断言不变；桥接各 5 项通过 |
+| 文档 / lint / 新构建 | 文档通过；源码 lint 1000 文件零错误/警告，75 个既有 ignored 明列；Linux 新生产构建成功 |
+| D2B-05 真实大图预算 | 完整 family 上下文 PASS，Jest duration 109475ms；120000ms 用例预算与 5000ms 查询上限不变，duration 含 hooks，不推算精确余量 |
+
+求助投影 P2 的 pending/resolved HTTP、组件及双引擎不刷新闭环通过，维持 §24.9 已关闭结论；
+无新增业务缺陷。不用本次结果覆盖历史全量 1 项条件跳过、原 P2 红灯或 D2B 失败。
+
+环境边界：Ubuntu 宿主机上的官方 Debian Node 22.23.4 固定容器，非 root、2 CPU/3 GiB/swap0，
+临时 Mongo 7.0.14/存储及 Linux 新构建；Mac Node 22.15.0 + Playwright 1.61.1 提供浏览器客户端，
+经 SSH 同端口回环访问。不是裸机 Ubuntu、Linux WebKit、iPad Safari 或整机性能认证。
+
+QA 基础设施三项均已核实为 RESOLVED_AND_VERIFIED，不是产品修复：
+- `QA-T4-HARNESS-LOGDIR-001`：只读源码下日志目录 EROFS，R1 298 断言通过但 1 套件未加载；仅加 QA 可写日志挂载。
+- `QA-T4-HARNESS-TMPMODE-001`：R2 临时目录 775 被正式预检正确拒绝，定向 414/1、HTTP 1/17；新目录显式 0700，775 负对照/700 正例及 enabled 启停通过，再重跑受阻范围。
+- `QA-T4-CLIENT-SANDBOX-001`：初次 Chromium 在业务测试前受本机 MachPort 权限阻断，并导致桥接配置缺失；经正常授权启动后原全套通过。不是 T4/Safari 业务故障。
+
+R1/R2 的 RUNNING/未完成快照及人工停止 exit 137 保留，不改成成功或臆断 OOM。
+`OBS-T4-BROWSERSLIST-001` 为非阻断维护观察：构建数据陈旧但编译成功；不在此升级依赖。
+bootstrap 三命令 exit 0 及 PASS 已记录，但未单独保存该容器 docker-wait；不得补造退出值。
+R3 和全部浏览器容器实际 wait exit 0 有据；原 10 服务和配置未变、HTTP 200、候选未变，
+客户端/容器/转发/私有配置/SSH 已收尾。本线程核对的是冻结收尾证据，没有重新访问远端或确认当前实时状态。
+
+[独立证据索引](evidence/t4-synthetic-2026-10-26/ubuntu-independent.json)与
+[归档哈希](evidence/t4-synthetic-2026-10-26/ubuntu-artifacts.sha256.json)为可移植摘要；
+冻结原报告/日志/截图仍在独立测试线程归档，不修改、不复制其中服务器地址、凭据或部署配置到仓库。
+[人工交接](evidence/t4-synthetic-2026-10-26/manual-handoff.md)列出 M01–M08 准备、依赖和负责人待确认项。
+
+当前为 **AUTOMATED_ENGINEERING_PASS / T4 总门禁 OPEN**，M01–M08 保持
+MANUAL_PENDING / DEVICE_PENDING。T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED、D01、
+T7/T9/AI 状态不变；T5 仍 NOT_STARTED，不能凭自动化报告自动开始下一业务任务。
+本轮仅授权本地证据/文档收口，不新增 Git/PR 写入、合并或部署，不重启旧测试入口。
+后续由用户确认人工测试安排及验收/下一阶段授权；自动化通过不代表产品价值或四周学习效果批准。
+
+本轮文档自查：仅六份文件/限定段落，业务源码未改；原五份 AI/K12 修改保留。文档检查、
+106 项状态测试、相关相对链接/锚点和 diff 检查通过；独立 QA 原归档未变。
+文档独立复评由 Dirac（`01a1786d-6c38-7b52-9604-04fa1d44a818`）执行，实际重核原始 JSON、
+1726 候选文件及 227/210/176/367 项证据，未发现新增 P1/P2/P3 问题。该复评仅针对本轮
+交接文档，不是原 QA 线程对新文档的批准，也不代替用户验收。未提交、推送、PR 写入或部署。
+
+### 24.11 已完成工程合并授权（2026-10-26）
+
+用户明确要求“人工测试后续再做，先把已完成的内容合并提交掉”。本次授权提交并推送
+已复评的 T4 服务器 QA 交接文档，更新 PR #30；核对最新 SHA 和 CI 后转 Ready，
+以 merge commit 合并至 main，并检查合并后 CI。此授权取代 §24.9–24.10 当时的
+Git/合并限制，不改写原批准、独立 QA 候选或历史失败，不授权部署。
+
+本次新增提交仅为文档，受测产品代码仍是 `c52bed5a`；服务器自动化证据不冒称对新代码的证明。
+AI/K12 五份无关未提交修改继续留在本地，不能随本次 PR 混入或被清除。
+人工验收 M01–M08 后续另行安排，保持 MANUAL_PENDING / DEVICE_PENDING；合并工程不等于
+真机、产品价值或学习效果验收。T4 总门禁仍 OPEN，T5 NOT_STARTED，T8_PENDING / NOT_AUTHORIZED、
+REMAINDER_DEFERRED、D01 及高级恢复/新回收关闭边界均不变；不自动开启后续任务。

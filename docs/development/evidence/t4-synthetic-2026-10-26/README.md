@@ -1,7 +1,8 @@
 # T4 合成工程候选与 P2 关闭交接
 
 本目录是可随 Git 检出的脱敏证据摘要，不是一次新的测试运行，也不是原始日志完整备份。
-当前功能开发完成；求助投影 P2 已批准关闭，T4 总门禁仍 OPEN。权威状态见[Gate §24.9](../../family-self-directed-learning-mvp-gate.md#249-求助投影-p2-批准关闭与完整候选提交2026-10-26)。
+当前功能开发完成；求助投影 P2 已批准关闭，服务器独立合成自动化已通过；T4 总门禁仍 OPEN。
+最新状态见[Gate §24.10](../../family-self-directed-learning-mvp-gate.md#2410-固定候选服务器独立-qa-核实与人工交接2026-10-26)。
 
 ## 完整候选
 
@@ -28,10 +29,28 @@
 
 本地原始证据位于 `release-gate-artifacts/t4-2-2026-10-26/` 和
 `release-gate-artifacts/t4-help-projection-2026-10-26/`，不随 Git 上传。
-未来 CI 产物按实际提交另行归档，不替换历史结果。固定服务器候选以 PR 最新通过 CI 的完整 SHA 为准。
+上述为提交时的历史证据。随后 CI 与服务器独立测试分别归档，不替换历史结果。
+本轮服务器实际受测提交固定为 `c52bed5a439aae6bbffdee6185fdaa7726382e26`，不随 PR head 浮动。
+
+## 服务器独立 QA 补充
+
+[结果与核实摘要](ubuntu-independent.json)绑定独立线程、固定 SHA/tree、阶段计数及失败分类；
+[哈希索引](ubuntu-artifacts.sha256.json)包含最终 manifest 的原始哈希和 227 项逐文件哈希，
+并为 210 项归档输入附原始 SHA。开发核实 176 项远程清单、6562 条重复上下文执行记录及
+367 项历史证据未变，没有重新运行整批测试、联系服务器或修改冻结 QA 目录。
+该可移植索引不含原始正文，不是完整证据备份。
+
+受测为 Ubuntu 宿主机的 Node 22.23.4 Debian 容器（2CPU/3GiB/swap0、非 root）及临时数据库，
+Mac 提供 Chromium/WebKit 客户端。不是 iPad、Linux WebKit、裸机或真实家庭验收。
+有效后端 415、HTTP 18、family 4152、前端 592、两个引擎各 29 均通过；数据互相重叠，不能求和。
+R1/R2 夹具失败与人工停止 137、首次客户端启动阻断均保留；三项基础设施问题已解决，
+Browserslist 陈旧提示单列非阻断维护，不升级依赖。bootstrap 容器 wait 未单独记录的限制保留。
+新增摘要是独立 QA 证据的核实，不把开发自审称为原测试线程对本次文档修订的复评。
 
 ## 保留边界
 
 DEVICE_PENDING；真实部署、备份及恢复验收为 T8_PENDING / NOT_AUTHORIZED；高级恢复、新回收、
-D01/T2-G 及既有后置内容保持 REMAINDER_DEFERRED。只授权专用分支和 Draft PR，不合并、不部署。
-服务器隔离测试尚未执行，需单独授权；不能以本地合成证据冒充 Ubuntu 或真实 iPad 验收。
+D01/T2-G 及既有后置内容保持 REMAINDER_DEFERRED。上述 QA 交接阶段仅本地修改；用户随后批准
+先提交并合并已完成工程，人工测试后续另行安排，见 [Gate §24.11](../../family-self-directed-learning-mvp-gate.md#2411-已完成工程合并授权2026-10-26)。
+允许提交/推送及 CI 通过后的 PR 合并，不授权部署或关闭 T4 总门禁。原测试资源已经关闭，不能复用旧连接或默认开放测试入口。
+M01–M08 及负责人均待安排，见[人工交接清单](manual-handoff.md)；服务器自动化通过不能替代真机验收。
