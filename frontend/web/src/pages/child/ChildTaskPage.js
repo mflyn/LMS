@@ -11,7 +11,7 @@ import { completeOwnTask, getOwnTask, getOwnCompletionRecovery, recoverOwnTaskCo
 const DIMENSION_LABELS = { moral: '德育', academic: '智育', physical: '体育', artistic: '美育', labor: '劳育' };
 const completionApi = { getTask: getOwnTask, complete: completeOwnTask, discover: getOwnCompletionRecovery, recover: recoverOwnTaskCompletion };
 
-const ChildTaskDetail = ({ scope, session, scopeKey }) => {
+const ChildTaskDetail = ({ scope, session, scopeKey, grade }) => {
   const controller = useTaskCompletion({ scope, session, api: completionApi });
   const mediaApi = useMemo(() => ({
     uploadPrivateMedia: (input, signal) => uploadOwnPrivateMedia(input, { signal, session }),
@@ -43,10 +43,11 @@ const ChildTaskDetail = ({ scope, session, scopeKey }) => {
         />}
       </section>
     </>}
-    {!['awaiting_auth', 'blocked'].includes(controller.state) && <TaskHelpPanel
+    {!['awaiting_auth', 'blocked'].includes(controller.state) && <div id="task-independent-help"><TaskHelpPanel
       role="student" taskId={scope.taskId} familyId={scope.familyId} childId={scope.childId} taskStatus={task?.status}
-      taskSnapshot={helpSnapshot} />}
-    <TaskCompletionEvidence controller={controller} scopeKey={scopeKey} childId={scope.childId} mediaApi={mediaApi} />
+      taskSnapshot={helpSnapshot} /></div>}
+    <TaskCompletionEvidence controller={controller} scopeKey={scopeKey} childId={scope.childId} mediaApi={mediaApi}
+      grade={grade} helpTargetId="task-independent-help" />
   </section>;
 };
 
@@ -62,7 +63,7 @@ const ChildTaskPage = () => {
   if (!scope || scope.actorId !== scope.childId || !isSessionCurrent(session)) return <section className="child-page">
     <Link to="/child/today">返回今天</Link><p role="alert">请重新登录后查看任务。</p>
   </section>;
-  return <ChildTaskDetail key={scopeKey} scope={scope} session={session} scopeKey={scopeKey} />;
+  return <ChildTaskDetail key={scopeKey} scope={scope} session={session} scopeKey={scopeKey} grade={child.grade} />;
 };
 
 export default ChildTaskPage;

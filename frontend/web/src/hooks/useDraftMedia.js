@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { deletePrivateMedia } from '../services/familyApi';
 
-export const useDraftMedia = ({ deleteMedia = deletePrivateMedia } = {}) => {
+const allowDelete = () => true;
+export const useDraftMedia = ({ deleteMedia = deletePrivateMedia, canDelete = allowDelete } = {}) => {
   const draftsRef = useRef(new Set());
   const removedPersistedRef = useRef(new Set());
 
   const softDelete = useCallback((mediaId) => {
-    if (mediaId) deleteMedia(mediaId).catch(() => {});
-  }, [deleteMedia]);
+    if (mediaId && canDelete()) deleteMedia(mediaId).catch(() => {});
+  }, [deleteMedia, canDelete]);
 
   const remove = useCallback((mediaId) => {
     if (!mediaId) return;
@@ -26,6 +27,9 @@ export const useDraftMedia = ({ deleteMedia = deletePrivateMedia } = {}) => {
     removedPersistedRef.current.clear();
   }, [softDelete]);
 
+  // Once a request may have bound these uploads, closing the view cannot delete them as drafts.
+  const retainSubmitted = useCallback(() => { draftsRef.current.clear(); }, []);
+
   const cancel = useCallback(() => {
     draftsRef.current.forEach(softDelete);
     draftsRef.current.clear();
@@ -34,5 +38,5 @@ export const useDraftMedia = ({ deleteMedia = deletePrivateMedia } = {}) => {
 
   useEffect(() => cancel, [cancel]);
 
-  return useMemo(() => ({ cancel, commit, remove, replace }), [cancel, commit, remove, replace]);
+  return useMemo(() => ({ cancel, commit, remove, replace, retainSubmitted }), [cancel, commit, remove, replace, retainSubmitted]);
 };

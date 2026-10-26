@@ -1,0 +1,67 @@
+{
+  "scope": "T4 publication preflight",
+  "status": "PASSED",
+  "candidateDigest": "4e3f64fa3a1a2ad5d567f4f151ed23ef8dc6a92aa19a9f22c76c7674947b3616",
+  "sourceFiles": 27,
+  "documentFiles": 5,
+  "checks": [
+    {
+      "command": "npm run docs:family:check",
+      "environment": "exact staged candidate exported to temporary directory; unrelated AI/K12 hunks excluded",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run lint",
+      "environment": "exact staged candidate, existing Node 22 dependencies",
+      "exitCode": 0,
+      "logSha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "command": "node node_modules/jest/bin/jest.js --config=backend/jest.config.js --coverage=false --selectProjects family-common --runInBand --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "exitCode": 0,
+      "suites": 1,
+      "passed": 106,
+      "logSha256": "de6f5174bea50f1836b55c6e35d99e4e7f36b880368a0988f57955c1d61cf498"
+    },
+    {
+      "command": "git diff --cached --check",
+      "exitCode": 0
+    }
+  ],
+  "sensitiveInformationCheck": {
+    "scope": "staged added lines plus all added evidence JSON",
+    "rules": [
+      "privateKey",
+      "githubToken",
+      "awsKey",
+      "jwt",
+      "credentialUrl",
+      "assignment",
+      "privateHost"
+    ],
+    "highConfidenceMatches": 0,
+    "reviewedTestPlaceholderMatches": 7,
+    "classification": "Seven literal mock/session tokens in test files only; no live credential detected. Raw logs, screenshots, environment files and media are not staged.",
+    "limitation": "Pattern scan plus manual diff review, not a guarantee against all secrets."
+  },
+  "archiveChecks": {
+    "originalManifestEntries": [
+      44,
+      20
+    ],
+    "originalManifestEntriesMatched": 64,
+    "additionalFilesSeparatelyIndexed": 2,
+    "reviewedSourceHashesMatched": 27,
+    "rawEvidenceUploaded": false
+  },
+  "boundaries": {
+    "t4Gate": "OPEN",
+    "device": "DEVICE_PENDING",
+    "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED",
+    "serverTest": "NOT_EXECUTED",
+    "merge": "NOT_AUTHORIZED",
+    "deployment": "NOT_AUTHORIZED"
+  },
+  "ci": "NOT_RUN_AT_LOCAL_PREFLIGHT",
+  "note": "Fresh checks are documentation and lint only. Prior business test results remain explicitly historical in closure.json; CI will generate results for the submitted SHA."
+}

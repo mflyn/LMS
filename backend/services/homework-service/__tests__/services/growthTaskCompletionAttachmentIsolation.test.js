@@ -47,6 +47,140 @@ beforeEach(async () => {
 });
 afterEach(() => jest.restoreAllMocks());
 
+describe('T4 mixed checklist/material intent', () => {
+  const snapshot = [{ itemId: 'read', label: 'Read again', required: true }];
+  const patch = () => [{ path: 'title', value: 'Mixed update' },
+    { path: 'checklistSnapshot', value: snapshot }, { path: 'checklistVersion', value: 1 }];
+  const mixed = () => mutate({ taskPatch: patch() });
+  test.each(['prepare', 'commit', 'unbind'])('original version resumes after %s loss and service rebuild', async action => {
+    client[action].mockRejectedValueOnce(Error('Synthetic lost response'));
+    await expect(mixed()).rejects.toMatchObject(pending);
+    const held = await row();
+    expect(held.mediaCompletionFence).toEqual({ completionVersion: 0, checklistVersion: 0 });
+    expect(held.checklistVersion).toBe(action === 'unbind' ? 1 : undefined);
+    expect(held.title).toBe(action === 'unbind' ? 'Mixed update' : 'Old material');
+    service = make();
+    const result = await mixed();
+    expect(result.checklistVersion).toBe(1); expect(result.checklistSnapshot.toObject()).toEqual(snapshot);
+    expect(result.title).toBe('Mixed update'); expect(result.mediaReferenceState).toBe('bound');
+    expect(result.mediaBindingOperationId).toBeUndefined();
+    expect(result.attachmentMediaBindings[0].bindingOperationId).toBe(held.mediaBindingOperationId);
+    expect(client.unbind.mock.calls.at(-1)[0].references).toEqual([
+      { mediaId: mediaA, field: 'attachmentMediaIds', bindingOperationId: oldBinding }
+    ]);
+    const stable = await row();
+    await expect(mixed()).rejects.toMatchObject({ code: 'VERSION_CONFLICT' });
+    expect(await row()).toEqual(stable);
+  });
+  test.each([false, true])('lost local publication recovers exact target (has removals=%s)', async removals => {
+    const original = Task.findOneAndUpdate.bind(Task); let injected = false;
+    jest.spyOn(Task, 'findOneAndUpdate').mockImplementation(async (filter, update, options) => {
+      const result = await original(filter, update, options).select(hidden);
+      if (update.$set.checklistVersion === 1 && !injected) { injected = true; throw Error('Synthetic lost publication'); }
+      return result;
+    });
+    const ids = removals ? [mediaB] : [mediaA, mediaB];
+    const result = await mutate({ taskPatch: patch(), attachmentMediaIds: ids });
+    expect(injected).toBe(true); expect(result.checklistVersion).toBe(1);
+    expect(result.checklistSnapshot.toObject()).toEqual(snapshot);
+    expect(result.title).toBe('Mixed update'); expect(result.attachmentMediaIds.map(String)).toEqual(ids);
+    expect(result.mediaReferenceState).toBe('bound'); expect(result.mediaBindingOperationId).toBeUndefined();
+    if (!removals) expect(result.attachmentMediaBindings[0].bindingOperationId).toBe(oldBinding);
+  });
+  test('stable preparation rejection keeps the full old public snapshot', async () => {
+    const before = await row();
+    client.prepare.mockRejectedValueOnce(Object.assign(Error('Synthetic reject'), { status: 404 }));
+    await expect(mixed()).rejects.toMatchObject({ status: 404 });
+    const after = await row();
+    for (const key of ['title', 'checklistSnapshot', 'checklistVersion', 'attachmentMediaIds', 'attachmentMediaBindings']) {
+      expect(after[key]).toEqual(before[key]);
+    }
+    expect(after.mediaReferenceState).toBe('bound'); expect(after.mediaBindingOperationId).toBeUndefined();
+  });
+  test.each(['mediaCompletionFence.checklistVersion', 'checklistVersion', 'mediaPendingTaskPatch.2.value',
+    'checklistSnapshot.0.label', 'mediaPendingTaskPatch.1.value.0.label'])(
+    'rebuild rejects tampered published %s without clearing intent or remote calls', async field => {
+      client.unbind.mockRejectedValueOnce(Error('Synthetic lost response'));
+      await expect(mixed()).rejects.toMatchObject(pending);
+      await Task.collection.updateOne({ _id: task._id }, { $set: { [field]: field.includes('label') ? 'Other' : 2 } });
+      const before = await row(); const count = client.unbind.mock.calls.length;
+      await expect(make().resume(task._id)).rejects.toMatchObject(pending);
+      expect(await row()).toEqual(before); expect(client.unbind).toHaveBeenCalledTimes(count);
+    });
+  test('pending mixed edit does not adopt a different checklist with the same media and target version', async () => {
+    client.commit.mockRejectedValueOnce(Error('Synthetic lost response'));
+    await expect(mixed()).rejects.toMatchObject(pending); const before = await row();
+    const other = patch(); other[1] = { path: 'checklistSnapshot', value: [] };
+    await expect(mutate({ taskPatch: other })).rejects.toMatchObject({ code: 'RESOURCE_CONFLICT' });
+    expect(await row()).toEqual(before);
+    await expect(complete()).rejects.toMatchObject({ code: 'MEDIA_REFERENCE_PENDING' });
+    expect(await row()).toEqual(before);
+  });
+  test.each(['mediaCompletionFence.checklistVersion', 'mediaPendingTaskPatch.2.value', 'mediaBindingOperationId',
+    'checklistSnapshot.0.label', 'attachmentMediaIds.0', 'attachmentMediaBindings.0.bindingOperationId'])(
+    'final cleanup CAS does not clear a concurrently changed %s', async field => {
+      let changed;
+      client.unbind.mockImplementationOnce(async command => {
+        const value = field.includes('OperationId') ? randomUUID() : field.includes('label') ? 'Other'
+          : field === 'attachmentMediaIds.0' ? id() : 2;
+        await Task.collection.updateOne({ _id: task._id }, { $set: { [field]: value } });
+        changed = await row();
+        return command.references.map(ref => ({ ...ref, state: 'released' }));
+      });
+      await expect(mixed()).rejects.toMatchObject(pending);
+      expect(await row()).toEqual(changed); expect(changed.mediaReferenceState).toBe('pending');
+      expect(changed.checklistVersion).toBe(1);
+      if (!field.includes('checklistSnapshot')) expect(changed.checklistSnapshot).toEqual(snapshot);
+    });
+  test('lost publish response cannot accept a same-version result with a different checklist body', async () => {
+    const original = Task.findOneAndUpdate.bind(Task); let changed;
+    jest.spyOn(Task, 'findOneAndUpdate').mockImplementation(async (filter, update, options) => {
+      const result = await original(filter, update, options).select(hidden);
+      if (update.$set.checklistVersion === 1) {
+        await Task.collection.updateOne({ _id: task._id }, { $set: { 'checklistSnapshot.0.label': 'Other writer' } });
+        changed = await row(); throw Error('Synthetic lost publication');
+      }
+      return result;
+    });
+    await expect(mutate({ taskPatch: patch(), attachmentMediaIds: [mediaA, mediaB] })).rejects.toMatchObject(pending);
+    expect(await row()).toEqual(changed); expect(client.unbind).not.toHaveBeenCalled();
+  });
+  test.each(['attachmentMediaIds.0', 'attachmentMediaBindings.0.bindingOperationId'])(
+    'rebuild refuses inconsistent published reference %s before calling unbind', async field => {
+      client.unbind.mockRejectedValueOnce(Error('Synthetic lost response'));
+      await expect(mixed()).rejects.toMatchObject(pending);
+      await Task.collection.updateOne({ _id: task._id }, { $set: {
+        [field]: field === 'attachmentMediaIds.0' ? id() : randomUUID()
+      } });
+      const before = await row(), calls = client.unbind.mock.calls.length;
+      await expect(make().resume(task._id)).rejects.toMatchObject(pending);
+      expect(await row()).toEqual(before); expect(client.unbind).toHaveBeenCalledTimes(calls);
+    });
+  test.each(['description', 'estimatedMinutes'])('explicit null %s is checked after direct publication response loss', async field => {
+    const original = Task.findOneAndUpdate.bind(Task); let changed;
+    jest.spyOn(Task, 'findOneAndUpdate').mockImplementation(async (filter, update, options) => {
+      const result = await original(filter, update, options).select(hidden);
+      if (update.$set.checklistVersion === 1) {
+        await Task.collection.updateOne({ _id: task._id }, { $set: { [field]: field === 'description' ? 'Other' : 42 } });
+        changed = await row(); throw Error('Synthetic lost publication');
+      }
+      return result;
+    });
+    await expect(mutate({ taskPatch: [...patch(), { path: field, value: null }], attachmentMediaIds: [mediaA, mediaB] }))
+      .rejects.toMatchObject(pending);
+    expect(await row()).toEqual(changed);
+  });
+  test.each(['description', 'estimatedMinutes'])('explicit null %s is checked during rebuilt unbinding', async field => {
+    client.unbind.mockRejectedValueOnce(Error('Synthetic lost response'));
+    await expect(mutate({ taskPatch: [...patch(), { path: field, value: null }] })).rejects.toMatchObject(pending);
+    expect((await row())[field]).toBeNull();
+    await Task.collection.updateOne({ _id: task._id }, { $set: { [field]: field === 'description' ? 'Other' : 42 } });
+    const before = await row(), calls = client.unbind.mock.calls.length;
+    await expect(make().resume(task._id)).rejects.toMatchObject(pending);
+    expect(await row()).toEqual(before); expect(client.unbind).toHaveBeenCalledTimes(calls);
+  });
+});
+
 test.each(['mutate', 'resume'].flatMap(method => [
   ['activeCompletionOperation', { actorId: id() }], ['completionPending', { phase: 'PREPUBLISH' }],
   ['completionMediaReferenceState', 'pending_recovery']

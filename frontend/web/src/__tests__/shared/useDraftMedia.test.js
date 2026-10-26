@@ -28,4 +28,19 @@ describe('Task 6 draft media lifecycle', () => {
     unmount();
     expect(deleteMedia).toHaveBeenCalledTimes(1);
   });
+
+  test('submitted drafts are never deleted by close/unmount after an unknown result', () => {
+    const deleteMedia = jest.fn().mockResolvedValue({});
+    const { result, unmount } = renderHook(() => useDraftMedia({ deleteMedia }));
+    act(() => { result.current.replace('in-flight'); result.current.retainSubmitted(); });
+    unmount(); expect(deleteMedia).not.toHaveBeenCalled();
+  });
+
+  test('cleanup cannot use the next account credentials', () => {
+    const deleteMedia = jest.fn().mockResolvedValue({});
+    let current = true;
+    const { result, unmount } = renderHook(() => useDraftMedia({ deleteMedia, canDelete: () => current }));
+    act(() => result.current.replace('old-private-draft'));
+    current = false; unmount(); expect(deleteMedia).not.toHaveBeenCalled();
+  });
 });

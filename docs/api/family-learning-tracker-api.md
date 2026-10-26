@@ -1440,6 +1440,26 @@ POST 只恢复指定原 scope 的命令：SUCCEEDED 返回固定历史成功快�
 `checklistVersion=1`。老任务缺失字段时读取为 `checklistSnapshot=[]`、`checklistVersion=0`；
 首次 PATCH 设置清单时携带期望版本 0，成功后版本为 1。只有家长可以修改 pending 任务清单。
 
+T4 实施补充（工程验收仍 OPEN，见 Gate §24）：enabled 正式装配接受上述字段；legacy 解析
+不放行新的清单写入。`itemId` 为非空、最多 100 字的字符串，大小写敏感且不自动改写；
+`label` trim 后校验长度。每项仅允许 `itemId/label/required`，`required` 缺省为 false，提供时
+必须是布尔值；拒绝重复 ID、null、错误类型和未知项字段（`CHECKLIST_ITEM_INVALID`）。
+`required` 是重点提醒，不要求勾全，不改变独立求助或发星规则。
+
+PATCH 中清单和 `expectedChecklistVersion` 必须成对出现；期望版本是非负安全整数且下一版
+可安全表示，不接受客户端 `checklistVersion`。每次有效清单更新递增一次，即使正文相同；
+未修改清单时应省略这两个字段。版本冲突返回 `409 VERSION_CONFLICT`，非 pending 返回
+`409 TASK_STATE_CONFLICT`；活动完成/引用意图仍阻止写入，不隐式恢复他人的完成命令。
+
+清单与 `attachmentMediaIds` 混合更新沿既有材料意图持久化原版本、目标版本和完整正文，
+公开字段一起发布。发布后解绑尚未完成时，原 PATCH 按持久原意图接续，不能因公开清单已为
+目标版本而重算基线或再递增。原意图正文不一致返回冲突。稳定完成后的 PATCH 不提供新的
+恰好一次承诺：丢响应应先读取，不盲目将期望版本改为新版本重试。恢复和最终清锁核对公开
+目标正文（包括显式 null）、完整有序材料集合及精确绑定代次；不一致时保留待恢复状态。
+家长编辑未改变材料集合时也省略 `attachmentMediaIds`，避免旧页面快照覆盖共管家长的新材料。
+实际携带材料字段且 taskId 已知的未知请求须保留原正文供显式接续；普通 GET 不暴露材料意图，
+不能因读取到旧公开快照就断定原写入未发生、重定版本或解冻新编辑。
+
 #### 完成任务
 
 `PATCH /api/growth-tasks/:taskId/complete`

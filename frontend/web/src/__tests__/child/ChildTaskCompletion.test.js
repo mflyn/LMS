@@ -105,6 +105,56 @@ test('unchecked required checklist items are submitted honestly rather than bloc
   expect(c.submit).toHaveBeenCalledWith(expect.objectContaining({ checkedItemIds: [], completionMediaIds: [] }));
 });
 
+test('grade one collapses optional inputs without losing them or requiring a checklist tick', () => {
+  const c = controller(); const { container } = mount(c, { grade: 1, helpTargetId: 'task-independent-help' });
+  const details = container.querySelector('details');
+  expect(details).not.toHaveAttribute('open');
+  expect(screen.getByText(/还有重点项未勾选/)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '需要帮助' })).toHaveAttribute('href', '#task-independent-help');
+  expect(c.submit).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText('补充记录（选填）'));
+  fireEvent.change(screen.getByLabelText('实际用时（分钟）'), { target: { value: '0' } });
+  fireEvent.change(screen.getByLabelText('我的一句话'), { target: { value: 'Still kept' } });
+  fireEvent.click(screen.getByText('补充记录（选填）'));
+  fireEvent.click(screen.getByRole('button', { name: '提交完成情况' }));
+  expect(c.submit).toHaveBeenCalledWith(expect.objectContaining({ checkedItemIds: [], actualMinutes: 0, childNote: 'Still kept' }));
+});
+
+test.each([4, undefined])('grade %s keeps the shared fields with only appropriate selfcheck guidance', grade => {
+  const { container } = mount(controller(), { grade });
+  expect(container.querySelector('details')).toBeNull();
+  expect(screen.getByLabelText('实际用时（分钟）')).toBeVisible();
+  if (grade === 4) expect(screen.getByText('提交前，再看看题目、答案和作品是否一致。')).toBeInTheDocument();
+  else expect(screen.queryByText('提交前，再看看题目、答案和作品是否一致。')).not.toBeInTheDocument();
+});
+
+test.each([['parent', '家长代录'], ['student', '孩子本人提交']])('readonly evidence displays server actor %s, never the viewer', (role, text) => {
+  mount(controller({ task: task({ status: 'confirmed', completionEvidence: {
+    checkedItemIds: [], submittedByActor: { id: id(9), role }
+  } }), editable: false }), { grade: 1 });
+  expect(screen.getByText(text)).toBeInTheDocument();
+  expect(screen.getByText('完成热身：未勾选')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '提交完成情况' })).not.toBeInTheDocument();
+});
+
+test('child page uses the currently authenticated grade and drops it on a session switch', async () => {
+  useTaskCompletion.mockReturnValue(controller());
+  loadChildSession.mockReturnValue({ child: { childId: id(2), familyId: id(1), grade: 1 } });
+  const tree = () => <MemoryRouter initialEntries={['/child/tasks/' + id(3)]}
+    future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <Routes><Route path="/child/tasks/:taskId" element={<ChildTaskPage />} /></Routes></MemoryRouter>;
+  let view;
+  await act(async () => { view = render(tree()); });
+  const { container, rerender } = view;
+  expect(container.querySelector('details')).toBeInTheDocument();
+  captureSession.mockReturnValue({ role: 'student', actorId: id(8), revision: 'r2', token: 'other' });
+  loadChildSession.mockReturnValue({ child: { childId: id(8), familyId: id(1) } });
+  useTaskCompletion.mockReturnValue(controller({ task: task({ childId: id(8) }) }));
+  await act(async () => { rerender(tree()); });
+  expect(container.querySelector('details')).toBeNull();
+  expect(screen.getByLabelText('实际用时（分钟）')).toBeVisible();
+});
+
 test('confirm uncertainty with pending media offers recovery instead of confirm retry', () => {
   const c = controller({ state: 'uncertain', editable: false, command: { action: 'confirm' },
     task: task({ completionMediaReferenceState: 'pending_recovery' }), recovery: { state: 'recoverable' } });

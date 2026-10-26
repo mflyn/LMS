@@ -1,3 +1,4 @@
+const { createChecklist, checklistPatch, assertChecklistPatch } = require('./growthTaskChecklist');
 const CREATE_FIELD_NAMES = [
   'childId', 'dimension', 'area', 'subject', 'title', 'taskType',
   'description', 'dueDate', 'estimatedMinutes', 'targetAmount',
@@ -5,10 +6,11 @@ const CREATE_FIELD_NAMES = [
 ];
 const PATCH_FIELD_NAMES = CREATE_FIELD_NAMES.filter((field) => field !== 'childId');
 const EDITABLE_PATH_NAMES = PATCH_FIELD_NAMES.filter((field) => field !== 'attachmentMediaIds');
+const INTERNAL_PATH_NAMES = [...EDITABLE_PATH_NAMES, 'checklistSnapshot', 'checklistVersion'];
 
 const CREATE_FIELDS = new Set(CREATE_FIELD_NAMES);
 const PATCH_FIELDS = new Set(PATCH_FIELD_NAMES);
-const EDITABLE_PATHS = new Set(EDITABLE_PATH_NAMES);
+const EDITABLE_PATHS = new Set(INTERNAL_PATH_NAMES);
 const REQUIRED_CREATE_FIELDS = ['childId', 'dimension', 'title', 'taskType', 'dueDate'];
 const DIMENSIONS = new Set(['moral', 'academic', 'physical', 'artistic', 'labor']);
 const TRIMMED_STRING_FIELDS = new Set(['area', 'subject', 'title', 'taskType', 'description', 'unit']);
@@ -16,7 +18,7 @@ const MEDIA_ID_PATTERN = /^[0-9a-f]{24}$/i;
 const MAX_ATTACHMENT_MEDIA = 100;
 
 const CANONICAL_PATHS = Object.freeze(Object.fromEntries(
-  EDITABLE_PATH_NAMES.map((path) => [path, path])
+  INTERNAL_PATH_NAMES.map((path) => [path, path])
 ));
 
 const validationError = (message) => {
@@ -77,8 +79,8 @@ const attachmentResult = (body) => {
   };
 };
 
-const parseGrowthTaskCreate = (body) => {
-  assertAllowedBody(body, CREATE_FIELDS);
+const parseGrowthTaskCreate = (body, { checklistEnabled = false } = {}) => {
+  assertAllowedBody(body, checklistEnabled ? new Set([...CREATE_FIELDS, 'checklistSnapshot']) : CREATE_FIELDS);
 
   const taskInput = {};
   for (const field of CREATE_FIELD_NAMES) {
@@ -92,6 +94,7 @@ const parseGrowthTaskCreate = (body) => {
   if (!DIMENSIONS.has(taskInput.dimension)) {
     throw validationError('Invalid growth task dimension');
   }
+  if (checklistEnabled) Object.assign(taskInput, createChecklist(body));
 
   return {
     taskInput,
@@ -99,8 +102,9 @@ const parseGrowthTaskCreate = (body) => {
   };
 };
 
-const parseGrowthTaskPatch = (body) => {
-  assertAllowedBody(body, PATCH_FIELDS);
+const parseGrowthTaskPatch = (body, { checklistEnabled = false } = {}) => {
+  assertAllowedBody(body, checklistEnabled
+    ? new Set([...PATCH_FIELDS, 'checklistSnapshot', 'expectedChecklistVersion']) : PATCH_FIELDS);
 
   const entries = [];
   for (const path of EDITABLE_PATH_NAMES) {
@@ -108,6 +112,7 @@ const parseGrowthTaskPatch = (body) => {
       entries.push({ path: CANONICAL_PATHS[path], value: canonicalValue(path, body[path]) });
     }
   }
+  if (checklistEnabled) entries.push(...checklistPatch(body));
 
   return {
     entries,
@@ -134,11 +139,12 @@ const entriesToMongoSet = (entries) => {
   }
 
   const mongoSet = {};
-  for (const path of EDITABLE_PATH_NAMES) {
+  for (const path of INTERNAL_PATH_NAMES) {
     if (valuesByPath.has(path)) {
       mongoSet[CANONICAL_PATHS[path]] = valuesByPath.get(path);
     }
   }
+  assertChecklistPatch(mongoSet);
   return mongoSet;
 };
 

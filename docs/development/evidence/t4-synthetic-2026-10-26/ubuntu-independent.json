@@ -1,0 +1,575 @@
+{
+  "status": "AUTOMATED_ENGINEERING_PASS",
+  "overallT4Gate": "OPEN",
+  "candidate": {
+    "sha": "c52bed5a439aae6bbffdee6185fdaa7726382e26",
+    "tree": "bb195343802112f7a4d15fb43b7f7179175a6be2",
+    "sourceFiles": 1726,
+    "branch": "codex/t4-checklist-synthetic",
+    "pr": 30
+  },
+  "source": {
+    "thread": "019ed96b-6785-7492-bf22-9f7fd60fbfb5",
+    "archiveDirectory": "t4-ubuntu-test-2026-10-26",
+    "manifestSha256": "086ac32c3232a5d0337bc9c3aafe49dc91bf576233eb6b0d381eaf2d679c89c3",
+    "reportSha256": "fe15ff4132bd592792bc068403086c3af90f5fafda8b997a4562a3596cdb5fa9",
+    "resultsSha256": "cca892d7dc18a2a62f07ab6fcdd2f9ca8499530b38a9cc4a60ef5b38e6eff5a6",
+    "findingsSha256": "f407746cab94a9b53fa68de794418021048167d1c28d55671a0729d54d5d0e0a"
+  },
+  "environment": {
+    "application": "Ubuntu host; official Debian Bookworm container, Node 22.23.4, Mongo 7.0.14, non-root, temporary data",
+    "image": "sha256:63538dfe497cc29dfafdda25ada09b46db68a3f4cc205abf1f5d6bf0913f3384",
+    "cpu": 2,
+    "memoryGiB": 3,
+    "swapBytes": 0,
+    "client": "Mac Node 22.15.0 / Playwright 1.61.1 Chromium and WebKit over SSH loopback",
+    "notValidated": [
+      "bare-metal Ubuntu certification",
+      "Linux WebKit",
+      "real iPad Safari",
+      "whole-device capacity",
+      "real-family deployment"
+    ]
+  },
+  "validResults": [
+    {
+      "phase": "offline-r2",
+      "name": "frontend",
+      "suites": 46,
+      "passedSuites": 46,
+      "failedSuites": 0,
+      "total": 592,
+      "passed": 592,
+      "failed": 0,
+      "pending": 0,
+      "source": "server/offline-r2/frontend.json"
+    },
+    {
+      "phase": "offline-r3",
+      "name": "t4-targeted",
+      "suites": 5,
+      "passedSuites": 5,
+      "failedSuites": 0,
+      "total": 415,
+      "passed": 415,
+      "failed": 0,
+      "pending": 0,
+      "source": "server/offline-r3/t4-targeted.json"
+    },
+    {
+      "phase": "offline-r3",
+      "name": "formal-http",
+      "suites": 3,
+      "passedSuites": 3,
+      "failedSuites": 0,
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "pending": 0,
+      "source": "server/offline-r3/formal-http.json"
+    },
+    {
+      "phase": "offline-r3",
+      "name": "family",
+      "suites": 146,
+      "passedSuites": 146,
+      "failedSuites": 0,
+      "total": 4152,
+      "passed": 4152,
+      "failed": 0,
+      "pending": 0,
+      "source": "server/offline-r3/family.json"
+    },
+    {
+      "phase": "browser-chromium-health-pre",
+      "name": "playwright",
+      "stats": {
+        "startTime": "2026-10-26T11:21:28.152Z",
+        "duration": 18484.982,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "server/browser-chromium-health-pre/results.json"
+    },
+    {
+      "phase": "browser-chromium-full",
+      "name": "playwright",
+      "stats": {
+        "startTime": "2026-10-26T11:21:48.826Z",
+        "duration": 289753.486,
+        "expected": 29,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "server/browser-chromium-full/results.json"
+    },
+    {
+      "phase": "browser-chromium-health-post",
+      "name": "playwright",
+      "stats": {
+        "startTime": "2026-10-26T11:26:40.859Z",
+        "duration": 17819.69,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "server/browser-chromium-health-post/results.json"
+    },
+    {
+      "phase": "browser-webkit-health-pre",
+      "name": "playwright",
+      "stats": {
+        "startTime": "2026-10-26T11:27:27.580Z",
+        "duration": 18348.528,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "server/browser-webkit-health-pre/results.json"
+    },
+    {
+      "phase": "browser-webkit-full",
+      "name": "playwright",
+      "stats": {
+        "startTime": "2026-10-26T11:27:48.063Z",
+        "duration": 292445.195,
+        "expected": 29,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "server/browser-webkit-full/results.json"
+    },
+    {
+      "phase": "browser-webkit-health-post",
+      "name": "playwright",
+      "stats": {
+        "startTime": "2026-10-26T11:32:42.741Z",
+        "duration": 17839.850000000002,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "source": "server/browser-webkit-health-post/results.json"
+    }
+  ],
+  "historicalResults": [
+    {
+      "phase": "offline",
+      "name": "t4-targeted",
+      "suites": 5,
+      "passedSuites": 4,
+      "failedSuites": 1,
+      "total": 298,
+      "passed": 298,
+      "failed": 0,
+      "pending": 0,
+      "source": "server/offline/t4-targeted.json"
+    },
+    {
+      "phase": "offline",
+      "name": "frontend",
+      "suites": 46,
+      "passedSuites": 46,
+      "failedSuites": 0,
+      "total": 592,
+      "passed": 592,
+      "failed": 0,
+      "pending": 0,
+      "source": "server/offline/frontend.json"
+    },
+    {
+      "phase": "offline-r2",
+      "name": "t4-targeted",
+      "suites": 5,
+      "passedSuites": 4,
+      "failedSuites": 1,
+      "total": 415,
+      "passed": 414,
+      "failed": 1,
+      "pending": 0,
+      "source": "server/offline-r2/t4-targeted.json"
+    },
+    {
+      "phase": "offline-r2",
+      "name": "formal-http",
+      "suites": 3,
+      "passedSuites": 0,
+      "failedSuites": 3,
+      "total": 18,
+      "passed": 1,
+      "failed": 17,
+      "pending": 0,
+      "source": "server/offline-r2/formal-http.json"
+    }
+  ],
+  "stageExits": [
+    {
+      "phase": "bootstrap",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "root-ci",
+          "exitCode": 0,
+          "durationMs": 10281
+        },
+        {
+          "name": "frontend-ci",
+          "exitCode": 0,
+          "durationMs": 22834
+        },
+        {
+          "name": "mongo-probe",
+          "exitCode": 0,
+          "durationMs": 2798
+        }
+      ]
+    },
+    {
+      "phase": "offline",
+      "result": "RUNNING",
+      "complete": false,
+      "stages": [
+        {
+          "name": "docs",
+          "exitCode": 0,
+          "durationMs": 1137
+        },
+        {
+          "name": "lint",
+          "exitCode": 0,
+          "durationMs": 16701
+        },
+        {
+          "name": "t4-targeted",
+          "exitCode": 1,
+          "durationMs": 34082
+        },
+        {
+          "name": "frontend",
+          "exitCode": 0,
+          "durationMs": 91697
+        }
+      ]
+    },
+    {
+      "phase": "offline-r2",
+      "result": "RUNNING",
+      "complete": false,
+      "stages": [
+        {
+          "name": "docs",
+          "exitCode": 0,
+          "durationMs": 1292
+        },
+        {
+          "name": "lint",
+          "exitCode": 0,
+          "durationMs": 15972
+        },
+        {
+          "name": "t4-targeted",
+          "exitCode": 1,
+          "durationMs": 93772
+        },
+        {
+          "name": "frontend",
+          "exitCode": 0,
+          "durationMs": 91372
+        },
+        {
+          "name": "formal-http",
+          "exitCode": 1,
+          "durationMs": 39756
+        }
+      ]
+    },
+    {
+      "phase": "offline-r3",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "storage-runtime-preflight",
+          "exitCode": 0,
+          "durationMs": 5909
+        },
+        {
+          "name": "t4-targeted",
+          "exitCode": 0,
+          "durationMs": 95101
+        },
+        {
+          "name": "formal-http",
+          "exitCode": 0,
+          "durationMs": 58304
+        },
+        {
+          "name": "family",
+          "exitCode": 0,
+          "durationMs": 1701984
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "durationMs": 93288
+        }
+      ]
+    },
+    {
+      "phase": "browser-chromium-contract",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "bridge-contract",
+          "exitCode": 0,
+          "durationMs": 204
+        }
+      ]
+    },
+    {
+      "phase": "browser-chromium-health-pre",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "health",
+          "exitCode": 0,
+          "durationMs": 19778
+        }
+      ]
+    },
+    {
+      "phase": "browser-chromium-full",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "full",
+          "exitCode": 0,
+          "durationMs": 290988
+        }
+      ]
+    },
+    {
+      "phase": "browser-chromium-health-post",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "health",
+          "exitCode": 0,
+          "durationMs": 19108
+        }
+      ]
+    },
+    {
+      "phase": "browser-webkit-contract",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "bridge-contract",
+          "exitCode": 0,
+          "durationMs": 176
+        }
+      ]
+    },
+    {
+      "phase": "browser-webkit-health-pre",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "health",
+          "exitCode": 0,
+          "durationMs": 19603
+        }
+      ]
+    },
+    {
+      "phase": "browser-webkit-full",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "full",
+          "exitCode": 0,
+          "durationMs": 293626
+        }
+      ]
+    },
+    {
+      "phase": "browser-webkit-health-post",
+      "result": "PASS",
+      "complete": true,
+      "stages": [
+        {
+          "name": "health",
+          "exitCode": 0,
+          "durationMs": 18977
+        }
+      ]
+    }
+  ],
+  "countsOverlap": true,
+  "uniqueTestTotal": null,
+  "lint": {
+    "checked": 1000,
+    "existingIgnored": 75,
+    "errors": 0,
+    "warnings": 0
+  },
+  "d2b": {
+    "source": "server/offline-r3/family.json",
+    "name": "D2B-05 real connected proof bytes exceed 16MiB before the 100-file ceiling",
+    "status": "passed",
+    "jestDurationMs": 109475,
+    "testBudgetMs": 120000,
+    "queryMaxTimeMs": 5000,
+    "note": "Duration includes hooks; no precise body budget margin inferred. Advanced recovery remains deferred."
+  },
+  "infrastructure": [
+    {
+      "id": "QA-T4-HARNESS-LOGDIR-001",
+      "type": "TEST_INFRASTRUCTURE",
+      "status": "RESOLVED_AND_VERIFIED",
+      "symptom": "R1 targeted: 298 passing assertions; production assembly suite could not load (EROFS mkdir /qa/src/backend/logs).",
+      "cause": "Product logger writes to its source-relative backend/logs; read-only QA source had no independently writable log output mount.",
+      "resolution": "Only a new QA log directory was bind-mounted writable at backend/logs. Product, specs and budgets unchanged.",
+      "verification": [
+        "server/offline/t4-targeted.json",
+        "server/harness-r1-diagnosis.json",
+        "server/offline-r3/t4-targeted.json",
+        "server/offline-r3/family.json"
+      ],
+      "originalFailurePreserved": true
+    },
+    {
+      "id": "QA-T4-HARNESS-TMPMODE-001",
+      "type": "TEST_INFRASTRUCTURE",
+      "status": "RESOLVED_AND_VERIFIED",
+      "symptom": "R2 targeted 414 pass/1 fail; formal HTTP 1 pass/17 fail. Startup reported COMPLETION_STORAGE_NOT_READY; incomplete family run intentionally stopped.",
+      "cause": "New own tmp-r2 inherited mode775 from host umask. Product storage precheck correctly refuses group-writable nonsticky ancestors.",
+      "resolution": "New tmp-r3 explicitly0700. Negative775/positive700 production storage controls plus real enabled runtime startup/stop gated the rerun. No permission bypass or assertion change.",
+      "verification": [
+        "server/harness-r2-diagnosis.json",
+        "server/offline-r2/t4-targeted.json",
+        "server/offline-r2/formal-http.json",
+        "server/offline-r3/storage-runtime-preflight.log",
+        "server/offline-r3/t4-targeted.json",
+        "server/offline-r3/formal-http.json",
+        "server/offline-r3/family.json"
+      ],
+      "originalFailurePreserved": true
+    },
+    {
+      "id": "QA-T4-CLIENT-SANDBOX-001",
+      "type": "TEST_INFRASTRUCTURE",
+      "status": "RESOLVED_AND_VERIFIED",
+      "symptom": "Initial local Chromium could not launch: macOS MachPortRendezvous permission denied1100. Missing private broker configuration then blocked bridge preparation before any business test.",
+      "cause": "Local execution sandbox restriction, not application login transport or T4 business behavior.",
+      "resolution": "Normal approved unsandboxed loopback browser launch. No product, browser spec, timeout, retry or console filtering change.",
+      "verification": [
+        "harness/client-launch-diagnosis.json",
+        "server/browser-chromium-launch-blocked-batch.json",
+        "server/browser-chromium-full/results.json",
+        "server/browser-chromium-health-pre/results.json",
+        "server/browser-chromium-health-post/results.json",
+        "client/chromium/cleanup.json"
+      ],
+      "originalFailurePreserved": true
+    }
+  ],
+  "observations": [
+    {
+      "id": "OBS-T4-BROWSERSLIST-001",
+      "type": "NON_BLOCKING_MAINTENANCE",
+      "status": "RECORDED_NOT_CHANGED",
+      "symptom": "Production build reports caniuse-lite browser data is20 months old; build exits0 and Compiled successfully.",
+      "scope": "Toolchain maintenance reminder, not browser runtime console warning and not evidence of a T4 business regression. Consider a separately scoped dependency-data update with regression tests; no dependency update was performed here.",
+      "evidence": "server/offline-r3/build.log"
+    }
+  ],
+  "cleanup": {
+    "evidence": [
+      "server/final-environment.json",
+      "connection-cleanup.json",
+      "client/chromium/cleanup.json",
+      "client/webkit/cleanup.json"
+    ],
+    "originalServices": 10,
+    "recordedUnchanged": true,
+    "recordedHttpStatus": 200,
+    "ownRunningContainers": 0,
+    "successfulContainerWaits": 9,
+    "historicalManualStopExitCodes": [
+      137,
+      137
+    ],
+    "bootstrapContainerWait": "NOT_SEPARATELY_CAPTURED; three command exits0 and finalized PASS are recorded",
+    "note": "Verified archived cleanup evidence, not a fresh live server check. No old connection or test URL may be assumed available."
+  },
+  "developerVerification": {
+    "scope": "Local audit of immutable independent QA artifacts; no test rerun or live server contact",
+    "manifestEntries": 227,
+    "archiveInputDoubleHashes": 210,
+    "remoteManifestMatches": 176,
+    "historicalFiles": 367,
+    "candidateGitBlobs": 1726,
+    "caseRecordsReconciled": 6562,
+    "matrixPoints": 57,
+    "sourceEvidenceModified": false,
+    "businessTestsRerun": false,
+    "liveServerContact": false
+  },
+  "manual": {
+    "status": "MANUAL_PENDING / DEVICE_PENDING",
+    "ids": [
+      "M01",
+      "M02",
+      "M03",
+      "M04",
+      "M05",
+      "M06",
+      "M07",
+      "M08"
+    ],
+    "responsiblePeople": "TO_BE_CONFIRMED",
+    "preparation": "manual-handoff.md"
+  },
+  "retained": [
+    "HISTORICAL_FAILURES_PRESERVED",
+    "DEVICE_PENDING",
+    "T8_PENDING / NOT_AUTHORIZED",
+    "REMAINDER_DEFERRED",
+    "D01_OPEN",
+    "T5_NOT_STARTED",
+    "NO_NEW_COMMIT_PUSH_PR_WRITE_MERGE_OR_DEPLOYMENT"
+  ],
+  "documentationReview": {
+    "reviewer": "01a1786d-6c38-7b52-9604-04fa1d44a818",
+    "decision": "PASS",
+    "newFindings": [],
+    "scope": "Six local handoff documents or bounded sections, not business implementation or real-device acceptance",
+    "independentChecks": "Recomputed candidate 1726 blobs, manifest 227, double hashes 210, remote mapping 176, historical 367 and original result counts/contexts",
+    "notPerformed": ["business test rerun", "live server or GitHub access", "documentation Jest tests; executed by main development thread"],
+    "authority": "Separate review of new handoff documents, not original QA thread approval and not user acceptance"
+  },
+  "integrationAuthorization": {
+    "date": "2026-10-26",
+    "scope": "User authorized committing and merging completed T4 engineering while deferring manual tests. Latest SHA and CI must be checked before merge commit to main; check post-merge CI.",
+    "supersedes": "Earlier local-only Git/PR restrictions in retained describe the evidence handoff stage, not this later integration authorization.",
+    "unchanged": ["T4_GATE_OPEN", "MANUAL_PENDING / DEVICE_PENDING", "T5_NOT_STARTED", "T8_PENDING / NOT_AUTHORIZED", "REMAINDER_DEFERRED", "D01_OPEN", "NO_DEPLOYMENT"],
+    "productSourceCandidate": "c52bed5a439aae6bbffdee6185fdaa7726382e26"
+  },
+  "note": "Independent test evidence is separate from the development documentation audit. The documentation-only integration follow-up does not change the tested product code or rewrite the historical evidence."
+}

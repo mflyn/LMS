@@ -1,24 +1,12 @@
 const Task = require('../models/GrowthTask');
 const { authorizeParentTask } = require('./growthTaskCompletionParentAccess');
 const { parseGrowthTaskPatch, entriesToMongoSet, validateGrowthTaskValues } = require('./growthTaskPatch');
+const { assertChecklistVersion } = require('./growthTaskChecklist');
 const { error, invalid, pending, unlockedFilter } = require('./growthTaskCompletionCommand');
+const { taskView } = require('./growthTaskCompletionReadService');
 
 const HIDDEN = '+activeCompletionOperation +completionPending';
 const exact = value => value === undefined ? { $exists: false } : value;
-const PUBLIC_FIELDS = ['dimension', 'area', 'subject', 'title', 'taskType', 'description', 'dueDate',
-  'estimatedMinutes', 'actualMinutes', 'targetAmount', 'actualAmount', 'unit', 'priority', 'status',
-  'difficulty', 'needsHelp', 'childNote', 'parentFeedback', 'completedAt', 'confirmedAt', 'cancelledAt', 'starAwardState'];
-const view = task => ({
-  taskId: String(task._id), familyId: String(task.familyId), childId: String(task.childId),
-  createdByParentId: String(task.createdByParentId),
-  ...Object.fromEntries(PUBLIC_FIELDS.map(field => [field, task[field]])),
-  attachmentMediaIds: (task.attachmentMediaIds || []).map(String),
-  completionMediaIds: (task.completionEvidence?.completionMediaIds || []).map(String),
-  completionVersion: task.completionVersion ?? 0, checklistVersion: task.checklistVersion ?? 0,
-  completionMediaReferenceState: task.completionMediaReferenceState || 'stable',
-  confirmedByParentId: task.confirmedByParentId ? String(task.confirmedByParentId) : undefined,
-  parentConfirmed: task.status === 'confirmed'
-});
 
 const createGrowthTaskCompletionMutationService = ({ transactionRunner, now = Date.now } = {}) => {
   if (typeof transactionRunner !== 'function' || typeof now !== 'function') {
@@ -56,16 +44,20 @@ const createGrowthTaskCompletionMutationService = ({ transactionRunner, now = Da
     await transact('read', session => authorize(identity, taskId, session));
     if (body && Object.prototype.hasOwnProperty.call(body, 'repeatRule')) throw error(400, 'REPEAT_RULE_NOT_SUPPORTED');
     let parsed;
-    try { parsed = parseGrowthTaskPatch(body); } catch (_cause) { throw invalid(); }
+    try { parsed = parseGrowthTaskPatch(body, { checklistEnabled: true }); } catch (cause) {
+      if (cause?.code === 'CHECKLIST_ITEM_INVALID') throw cause;
+      throw invalid();
+    }
     if (parsed.hasAttachmentMutation) throw error(400, 'MEDIA_NOT_ENABLED');
     const set = entriesToMongoSet(parsed.entries);
     try { await validateGrowthTaskValues(Task, set); } catch (_cause) { throw invalid(); }
     const task = await transact('edit', async session => {
       const current = await authorize(identity, taskId, session); assertUnlocked(current);
       if (current.status !== 'pending') throw error(409, 'TASK_STATE_CONFLICT');
+      assertChecklistVersion(current, set);
       return Object.keys(set).length ? update(current, set, session) : current;
     });
-    return { success: true, data: { task: view(task) } };
+    return { success: true, data: { task: taskView(task) } };
   };
   const remove = async ({ identity, taskId } = {}) => {
     const task = await transact('remove', async session => {
@@ -81,7 +73,7 @@ const createGrowthTaskCompletionMutationService = ({ transactionRunner, now = Da
       }
       return update(current, set, session);
     });
-    return { success: true, data: { deleted: false, task: view(task) } };
+    return { success: true, data: { deleted: false, task: taskView(task) } };
   };
   return { edit, remove };
 };

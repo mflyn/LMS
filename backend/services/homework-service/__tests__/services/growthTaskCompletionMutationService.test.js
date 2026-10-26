@@ -51,6 +51,77 @@ test('pending edit uses the existing whitelist and does not initialize completio
   expect(after.__v).toBe(before.__v + 1); expect(after.completionVersion).toBeUndefined();
   expect(after.completionEvidence).toBeUndefined(); expect(await Operation.countDocuments()).toBe(0);
 });
+
+describe('T4 checklist atomic edits', () => {
+  const snapshot = [{ itemId: 'read', label: 'Read again', required: true }];
+  const body = (version = 0) => ({ checklistSnapshot: snapshot, expectedChecklistVersion: version });
+  test('legacy version zero, co-parent edit, reorder and clear preserve stable IDs', async () => {
+    expect((await row()).checklistVersion).toBeUndefined();
+    expect((await edit(body(), second)).data.task).toMatchObject({ checklistVersion: 1, checklistSnapshot: snapshot });
+    const two = [...snapshot, { itemId: 'Read', label: 'Check answer', required: false }];
+    await edit({ checklistSnapshot: two, expectedChecklistVersion: 1 });
+    expect((await edit({ checklistSnapshot: two.slice().reverse(), expectedChecklistVersion: 2 })).data.task)
+      .toMatchObject({ checklistVersion: 3, checklistSnapshot: two.slice().reverse() });
+    await edit({ checklistSnapshot: [], expectedChecklistVersion: 3 });
+    expect(await row()).toMatchObject({ checklistSnapshot: [], checklistVersion: 4 });
+    expect(await Operation.countDocuments()).toBe(0);
+  });
+  test('two parents using one version cannot overwrite each other', async () => {
+    const results = await Promise.allSettled([edit(body()), edit({ ...body(), title: 'Other' }, second)]);
+    expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+    expect(results.find(result => result.status === 'rejected').reason).toMatchObject({ code: 'VERSION_CONFLICT' });
+    expect(await row()).toMatchObject({ checklistSnapshot: snapshot, checklistVersion: 1, __v: 1 });
+  });
+  test('parent edit rejects old completion but incomplete checklist can complete and replay', async () => {
+    const old = command(); await edit(body()); const before = await row();
+    await expect(complete(old)).rejects.toMatchObject({ code: 'VERSION_CONFLICT' });
+    expect(await row()).toEqual(before);
+    const original = { ...command(), expectedChecklistVersion: 1 };
+    const result = await complete(original); const completed = await row();
+    expect(completed.completionEvidence.checkedItemIds).toEqual([]);
+    await expect(edit(body(1))).rejects.toMatchObject({ code: 'TASK_STATE_CONFLICT' });
+    expect(await complete(original)).toEqual(result);
+    expect(await row()).toEqual(completed);
+    expect(await Operation.countDocuments()).toBe(1);
+  });
+  test('unknown checked ID and invalid snapshot fail without business changes', async () => {
+    await edit(body()); const before = await row();
+    await expect(complete({ ...command(), expectedChecklistVersion: 1, checkedItemIds: ['missing'] }))
+      .rejects.toMatchObject({ code: 'CHECKLIST_ITEM_INVALID' });
+    await expect(edit({ ...body(1), checklistSnapshot: [{ ...snapshot[0], required: 'true' }] }))
+      .rejects.toMatchObject({ code: 'CHECKLIST_ITEM_INVALID' });
+    expect(await row()).toEqual(before);
+  });
+  test('checklist and ordinary fields roll back in the same transaction', async () => {
+    const before = await row();
+    service = make({ transactionRunner: (work, label) => runner(async session => {
+      const result = await work(session); if (label === 'edit') throw Error('Synthetic rollback'); return result;
+    }) });
+    await expect(edit({ ...body(), title: 'Must roll back' })).rejects.toMatchObject({ code: 'MEDIA_REFERENCE_PENDING' });
+    expect(await row()).toEqual(before);
+  });
+  test.each(['activeCompletionOperation', 'completionPending', 'mediaReferenceState'])(
+    'checklist cannot bypass %s', async field => {
+      await Task.collection.updateOne({ _id: task._id }, { $set: {
+        [field]: field === 'mediaReferenceState' ? 'pending' : { actorId: id(), phase: 'PREPUBLISH' }
+      } });
+      const before = await row();
+      await expect(edit(body())).rejects.toMatchObject({ code: 'MEDIA_REFERENCE_PENDING' });
+      expect(await row()).toEqual(before);
+    });
+  test.each(['completed', 'confirmed', 'cancelled', 'archived'])('checklist remains readonly in %s', async status => {
+    await Task.collection.updateOne({ _id: task._id }, { $set: { status } }); const before = await row();
+    await expect(edit(body())).rejects.toMatchObject({ code: 'TASK_STATE_CONFLICT' });
+    expect(await row()).toEqual(before);
+  });
+  test('child and departed parent cannot edit even with correct version', async () => {
+    const before = await row();
+    await expect(edit(body(), child)).rejects.toMatchObject({ code: 'CHILD_ACCESS_DENIED' });
+    await Family.updateOne({ _id: family._id }, { $set: { ownerParentId: second.id, memberParentIds: [second.id] } });
+    await expect(edit(body())).rejects.toMatchObject({ code: 'CHILD_ACCESS_DENIED' });
+    expect(await row()).toEqual(before);
+  });
+});
 test('remove cancels a pending task without physical deletion and preserves the first timestamp on replay', async () => {
   const result = await remove(); const before = await row(); time += 1000;
   expect(result).toMatchObject({ success: true, data: { deleted: false, task: { status: 'cancelled' } } });

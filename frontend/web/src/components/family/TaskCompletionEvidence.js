@@ -13,7 +13,7 @@ const formFor = task => {
     checkedItemIds: [...(evidence.checkedItemIds || [])], completionMediaIds: [...task.completionMediaIds] };
 };
 
-const EvidenceBody = ({ controller, scopeKey, childId, mediaApi, allowEdit, onMediaBusyChange }) => {
+const EvidenceBody = ({ controller, scopeKey, childId, mediaApi, allowEdit, onMediaBusyChange, grade, helpTargetId }) => {
   const { task } = controller;
   const headingId = useId();
   const [form, setForm] = useState(() => formFor(task));
@@ -25,6 +25,8 @@ const EvidenceBody = ({ controller, scopeKey, childId, mediaApi, allowEdit, onMe
   }, [mediaBusy, onMediaBusyChange]);
   const [inputError, setInputError] = useState('');
   const evidence = evidenceFor(task);
+  const junior = grade === 1;
+  const missingPriority = task.checklistSnapshot.some(item => item.required && !form.checkedItemIds.includes(item.itemId));
   const eligible = ['pending', 'completed'].includes(task.status);
   const showForm = allowEdit && eligible && editing && ['ready', 'sending'].includes(controller.state);
   const editable = allowEdit && eligible && controller.editable;
@@ -55,17 +57,28 @@ const EvidenceBody = ({ controller, scopeKey, childId, mediaApi, allowEdit, onMe
     deletePrivateMedia={mediaApi.deletePrivateMedia} onBusyChange={setMediaBusy}
   />;
 
-  return <section className="task-completion-evidence" aria-labelledby={headingId}>
+  const optionalFields = <>
+    <div className="task-completion-fields">
+      <label>实际用时（分钟）<input type="number" min="0" step="any" value={form.actualMinutes} onChange={update('actualMinutes')} /></label>
+      <label>实际完成数量<input type="number" min="0" step="any" value={form.actualAmount} onChange={update('actualAmount')} /></label>
+    </div>
+    <label>我的一句话<textarea maxLength={200} value={form.childNote} onChange={update('childNote')} /></label>
+  </>;
+
+  return <section className={`task-completion-evidence${junior ? ' task-completion-junior' : ''}`} aria-labelledby={headingId}>
     <div className="task-completion-heading"><h2 id={headingId}>完成情况</h2>
       <span className="task-completion-version">作品版本 {task.completionVersion}</span></div>
     <dl className="task-completion-facts">
       <div><dt>任务状态</dt><dd>{STATUS[task.status] || task.status}</dd></div>
+      {['parent', 'student'].includes(evidence.submittedByActor?.role) && <div><dt>提交者</dt>
+        <dd>{evidence.submittedByActor.role === 'parent' ? '家长代录' : '孩子本人提交'}</dd></div>}
       <div><dt>星星状态</dt><dd>{task.starAwardState === 'awarded' ? '星星已到账'
         : task.starAwardState === 'pending' ? '星星待到账' : task.starAwardState === 'not_applicable' ? '尚未发星' : '暂无发星记录'}</dd></div>
     </dl>
     {showForm ? <form className="task-completion-form" onSubmit={submit}>
       <fieldset disabled={disabled}>
         <legend>{task.status === 'completed' ? '修改本次完成' : '记录完成情况'}</legend>
+        {grade === 4 && <p className="task-completion-copy">提交前，再看看题目、答案和作品是否一致。</p>}
         {task.checklistSnapshot.length > 0 && <div className="task-completion-checklist" role="group" aria-label="完成清单">
           {task.checklistSnapshot.map(row => <label key={row.itemId} className="task-completion-checkbox">
             <input type="checkbox" checked={form.checkedItemIds.includes(row.itemId)} onChange={event => {
@@ -75,15 +88,15 @@ const EvidenceBody = ({ controller, scopeKey, childId, mediaApi, allowEdit, onMe
             }} />{row.label}{row.required ? '（重点项）' : ''}
           </label>)}
         </div>}
+        {missingPriority && <p className="task-completion-reminder" role="status">还有重点项未勾选，可以如实提交。
+          {helpTargetId && <> <a href={`#${helpTargetId}`}>需要帮助</a></>}</p>}
         <div className="task-completion-fields">
-          <label>实际用时（分钟）<input type="number" min="0" step="any" value={form.actualMinutes} onChange={update('actualMinutes')} /></label>
-          <label>实际完成数量<input type="number" min="0" step="any" value={form.actualAmount} onChange={update('actualAmount')} /></label>
           <label>完成难度<select value={form.difficulty} onChange={update('difficulty')}>
             {Object.entries(DIFFICULTY).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select></label>
         </div>
         <label className="task-completion-checkbox"><input type="checkbox" checked={form.needsHelp} onChange={update('needsHelp')} />完成时需要帮助</label>
-        <label>我的一句话<textarea maxLength={200} value={form.childNote} onChange={update('childNote')} /></label>
+        {junior ? <details className="task-completion-optional"><summary>补充记录（选填）</summary>{optionalFields}</details> : optionalFields}
       </fieldset>
       <h3>完成作品</h3>{media(form.completionMediaIds, false)}
       {inputError && <p className="task-completion-error" role="alert">{inputError}</p>}
@@ -115,7 +128,7 @@ const EvidenceBody = ({ controller, scopeKey, childId, mediaApi, allowEdit, onMe
   </section>;
 };
 
-const TaskCompletionEvidence = ({ controller, scopeKey, childId, mediaApi, allowEdit = true, onMediaBusyChange }) => {
+const TaskCompletionEvidence = ({ controller, scopeKey, childId, mediaApi, allowEdit = true, onMediaBusyChange, grade, helpTargetId }) => {
   const { state, task, command, recovery, busy, error, message } = controller;
   const privateVisible = state !== 'awaiting_auth' && state !== 'blocked';
   const confirmBlocked = command?.action === 'confirm' && task?.completionMediaReferenceState === 'pending_recovery';
@@ -141,7 +154,7 @@ const TaskCompletionEvidence = ({ controller, scopeKey, childId, mediaApi, allow
     {task && privateVisible && <EvidenceBody
       key={JSON.stringify([scopeKey, task.taskId, task.completionVersion, task.checklistVersion, task.status])}
       controller={controller} scopeKey={scopeKey} childId={childId} mediaApi={mediaApi} allowEdit={allowEdit}
-      onMediaBusyChange={onMediaBusyChange}
+      onMediaBusyChange={onMediaBusyChange} grade={grade} helpTargetId={helpTargetId}
     />}
   </div>;
 };

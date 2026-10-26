@@ -1,6 +1,6 @@
 # 家庭自主学习 MVP 开发计划
 
-> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4-T9 待执行）；T1/T2/T3 仅限既定合成验收，DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留，不代表完整功能交付或真实部署获批。
+> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5-T9 待执行）；T1/T2/T3 仅限既定合成验收，DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留，不代表完整功能交付或真实部署获批。
 > 日期：2026-10-21
 > 执行约定：按仓库 AGENTS.md 逐包实施、验证和交付；不要求自动创建工作树、启动子智能体、提交或推送。
 > T0 契约基线及后续评审已获用户确认；R3-LEARNING 与门禁 P2 已关闭，T1 按用户指令开始分阶段实施，证据见增量 Gate §17–§18。
@@ -563,17 +563,33 @@ request 带 helpType/note，resolve 仅家长允许并可带短答复。嵌入�
 修改：`GrowthTask.js`、`growthTasks.js`、completion 服务、家长/孩子任务页面与测试。
 沿用现有 child profile 年级，不新增儿童画像或学习风格分类。
 
-- [ ] 写测试：清单 0–5 项、itemId 唯一、label 1–100 字、未知 checkedItemId 拒绝、
+- [x] 写测试：清单 0–5 项、itemId 唯一、label 1–100 字、未知 checkedItemId 拒绝、
   pending 才能改清单、旧任务无清单；创建时未提供或显式提供空清单为 `checklistVersion=0`，
   提供非空有效清单为 `checklistVersion=1`；覆盖家长修改与孩子完成并发。
-- [ ] 实现 checklistSnapshot/checklistVersion，完成请求带 expectedChecklistVersion；
+- [x] 实现 checklistSnapshot/checklistVersion，完成请求带 expectedChecklistVersion；
   同一原子完成条件同时校验 task status、completionVersion 和 checklistVersion。
-- [ ] 未勾选项允许如实保留；独立求助始终可用，不能强迫孩子勾全才能求助。
-- [ ] 一年级默认少字段、大按钮，家长代录标明实际 actor；四年级显示估时和自检提示；
+- [x] 未勾选项允许如实保留；独立求助始终可用，不能强迫孩子勾全才能求助。
+- [x] 一年级默认少字段、大按钮，家长代录标明实际 actor；四年级显示估时和自检提示；
   年级未知时采用简洁通用界面，可由家长调整现有年级资料。
-- [ ] 验证一次清单变化不会使旧幂等命令被重新执行；成功重放与新请求的版本检查有明确区别。
+- [x] 验证一次清单变化不会使旧幂等命令被重新执行；成功重放与新请求的版本检查有明确区别。
 
 验收：同一组业务字段适用三个孩子；不实现语音、自动朗读、S0–S4 采集或两套客户端。
+
+2026-10-26 工程候选已完成上述实现、自查、独立代码/测试复评及合成验证，详见增量 Gate
+§24.3–24.7。清单勾选代表工程验证，不代表用户已批准关闭 T4 总门禁；任务状态继续
+IN_PROGRESS / OPEN，待用户验收。DEVICE_PENDING、SL-03 的 T7 集成责任、T8 真实启用及
+高级恢复/新回收后置保持独立。保留历史失败和全量后端原 1 项条件跳过及其单独补验证据。
+
+后续独立完整评审发现 `QA-T4-HELP-PROJECTION-001`：清单-only 修改响应遗漏已有求助。
+最新修订及永久反例见 Gate §24.8；用户已批准关闭该 P2，关闭与完整候选交接见 §24.9。
+T4 总门禁仍 OPEN，不以此前勾选或全绿结果替代用户验收批准；专用分支提交/PR 不授权合并或部署。
+
+固定提交 `c52bed5a` 的服务器独立合成 QA 已完成并经开发线程核实，见 Gate §24.10：
+后端 415/HTTP 18/家庭全量 4152/前端 592、双引擎各 29 及健康检查通过；各上下文不可相加。
+这不改变本节 IN_PROGRESS / OPEN。M01–M08 人工/真机及负责人待确认，交接见
+[人工准备清单](../../development/evidence/t4-synthetic-2026-10-26/manual-handoff.md)。
+上述核实阶段仅做本地文档收口；随后用户批准先提交并合并已完成工程，人工测试后续再做，
+见 Gate §24.11。T4 总门禁仍 OPEN，T5 的依赖与单独执行授权尚未满足，不自动开工或部署。
 
 ### T5：今日计划、任务顺序与孩子估时
 
