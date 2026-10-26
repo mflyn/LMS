@@ -1,1 +1,8 @@
- 
+{
+  "name": "\u5c0f\u5b66\u751f\u5b66\u4e60\u8ffd\u8e2a\u7cfb\u7edf",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "theme_color": "#000000"
+}

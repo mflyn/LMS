@@ -33,6 +33,7 @@
 **T3 scope:** ENGINEERING_SYNTHETIC_ONLY
 **T3 device:** DEVICE_PENDING
 **T3 deferred:** REMAINDER_DEFERRED
+**T3 manifest P3:** APPROVED / CLOSED / SYNTHETIC_ONLY（§23.10）；专用分支提交及 PR 授权见 §23.11，不授权合并或部署
 
 本 Gate 记录自主学习增量的契约、执行状态和证据。T0 完成只表示后续开发不再自行发明接口、
 版本、迁移或错误语义；不表示作品、求助、清单、日计划、订正连接、家庭部署或四周试点已经完成。
@@ -4254,3 +4255,92 @@ Git 和合并授权取代此前“仅本地”快照；禁止部署、真实数�
 只关闭 T3 的独立求助、家长处理、孩子回看和相应工程边界；SL-02 仍 PLANNED，T7 集成未完成。
 DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED、D01 未关闭和全部历史失败保留；
 T4–T9 NOT_STARTED。没有部署、访问真实孩子数据、操作 NAS 或扩大高级恢复/新回收。
+
+### 23.9 WebKit 静态 manifest P3 修订交接（2026-10-26）
+
+`QA-T3-WEBKIT-MANIFEST-001` **交接时历史状态：IMPLEMENTED_SELF_CHECKED / PENDING_INDEPENDENT_REVIEW / OPEN**；当前批准关闭见 §23.10。
+基线 `4c1da2265ec8b38a5c92fa40c4174f3cf410ce90`，本轮为未提交补丁，不改变 §23.8 的历史批准。
+独立 SSH 回归的前后健康检查均失败、完整套件 23/23 通过仍分别保留，整体 FAIL 不改绿；
+`QA-T3-WEBKIT-TRANSPORT-003` 已独立关闭，不因本静态文件问题重开。
+
+**核实及方案自审：PASS（开发自审）**。index.html 引用 manifest；源码仅一个空格，CRA 原样复制。
+旧源码新构建及本机正式合成 runtime 的真实 HTTP GET 均确认 200/application-json、1 字节、
+SHA256 `36a9e7f1c95b82ffb99743e0c5c4ce95d83c9a430aac59f84ef3cbfab6145068`，JSON 解析失败，
+与冻结 Ubuntu HTTP 证据一致。保留链接，仅补有效 JSON：name/lang/theme_color 对齐既有页面元数据，
+start_url/scope 为同源 `./`，display 为 browser；不引用不存在的图标，不加入私有标识、service worker、
+离线缓存或新的 PWA 功能，不顺带调整旧页面品牌文案或图标链接。回滚仅撤销该静态文件修订，但会重新暴露原缺陷。
+
+**开发验证与自查：** 新增 PublicManifest.test.js，旧版本 4 项因 JSON 解析失败；修复后 4/4 通过。
+前端完整 `CI=true npm run test:ci --prefix frontend/web -- --runInBand` 45 套件/551 项通过。
+初次 lint 报测试中的 require/__dirname 未声明，改为显式 ES 模块导入并复验，不修改规则；原失败日志保留。
+Node 22 下新旧 `CI=true BUILD_PATH=... npm run build --prefix frontend/web` 均成功，保留 Browserslist 陈旧提示；
+8 个构建文件逐项比较仅 manifest 变化。新真实 HTTP 返回 180 字节合法 JSON，
+SHA256 `ff7923e959200fe2ca0e6450a39002ae26e9d62e0ef69c40186ebe172835fa76`，
+校验构建内容、页面元数据、同源入口及作用域；临时 runtime 正常关闭。未将本机 HTTP 探针当作 WebKit 或 Ubuntu 独立验收。
+
+开发红绿、构建、HTTP、最终 lint/回归、补丁和文件 SHA256 归档于
+`release-gate-artifacts/t3-manifest-fix-2026-10-26/`；commands.json 记录实际命令及退出码，candidate.json 标明未提交补丁。
+归档交接见同目录 HANDOFF.md；candidate.patch 包含两个已跟踪文件和新增测试，candidate.json 固定基线及三个文件的 SHA256。
+manifest.json 覆盖归档内全部文件（不包含自身）；归档为本地忽略目录，不声称已进入 GitHub。
+commands.json 区分此前执行记录与本轮归档复验；旧定向红绿测试先于测试导入语法修订，最终完整回归使用修订后的测试。
+独立复验须绑定该未提交补丁和文件哈希，不能将基线提交当作已经包含修复的候选。
+只读核验独立 SSH 回归 79 项、原 Ubuntu 失败 130 项、传输诊断 6 项，全部哈希不变。
+交由评审/测试线程使用原健康 spec/config 和零警告断言独立重建、复评后决定关闭；本轮不修改它们、不操作服务器，
+不提交/推送/合并/部署。DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED 均保持。
+
+### 23.10 Manifest P3 独立复评与批准关闭（2026-10-26）
+
+**当前状态：QA-T3-WEBKIT-MANIFEST-001 / APPROVED / CLOSED / SYNTHETIC_ONLY。**
+用户确认复审通过并明确批准关闭。依据见[批准关闭记录](evidence/t3-manifest-p3-2026-10-26/closure.json)；
+[独立复评快照](evidence/t3-manifest-p3-2026-10-26/review.snapshot.json)和[受测补丁（无损 gzip）](evidence/t3-manifest-p3-2026-10-26/candidate.patch.gz)保存原始证据，解压后补丁逐字节不变，不改写受测时 OPEN 状态。
+
+受测身份是基线 `4c1da2265ec8b38a5c92fa40c4174f3cf410ce90` 加未提交补丁，非新的提交。
+补丁 SHA256 为 `6e518b8c091fc869357b26a69a260f4b2a6dfdb2a7a42e7846578d4e9656f8b4`，
+6978 字节，绑定 manifest、静态回归测试及当时的门禁文件。关闭记录新增后，当前整体 diff 和门禁文件
+不再等于原受测补丁；产品 manifest 与测试文件保持受测 SHA256，不重制历史补丁来伪称重新受测。
+
+独立只读审查者 Godel 核验代码和归档无新增 P0–P3 问题；本轮另行执行复验，来源分别记录。
+Ubuntu R2 使用 Node 22.23.4、临时 Mongo 7.0.14、2 CPU / 3 GiB / 无 swap、非 root，
+正式应用工厂通过认证 SSH 同源回环连接 Mac WebKit。新构建通过，8 个产物仅 manifest 改变；
+原桥接契约 5/5、原前置健康 1/1、原完整 T2/T3 WebKit 23/23、原后置健康 1/1 全部通过，
+各阶段 exit 0，浏览器 0 failed/skipped/flaky。原 spec/config、零 console warning/error、Linux 平台、
+业务断言、超时及 retries=0 均保留；不以本机运行或 mock 替代 Ubuntu 结果。
+实际 HTTP manifest 为 200/JSON MIME、180 字节，SHA256 与源码一致。
+本机独立构建、4 项定向测试、23 项 WebKit 回归及文档/lint 校验也通过；开发历史 45/551 仅核验，非本轮重跑。
+
+独立复验原始归档位置和哈希见 closure.json：173 项证据，清单 SHA256
+`072c51757f597f0fec3b7ba5942bbb618f198f1e5824e588238f9821124eeaab`。
+原始日志、截图及完整清单仍在本地归档，仓库只保存批准记录、复评快照及受测补丁，不声称全部原始证据已进入 GitHub。
+
+历史失败保留：原 Ubuntu manifest 健康失败/整体 FAIL；本机沙箱 WebKit 启动失败及中断后未执行项；
+本机原健康测试的 Linux 平台拒绝；Ubuntu R1 的 ESLint 缓存 EROFS 构建失败；首次动态转发取消及收尾审计失败。
+R2 仅增加独立可写构建缓存；最终按原 port-0 请求取消转发。以上失败不因本次关闭改绿。
+原冻结 79 + 130 + 6 项证据哈希不变。26 个页面租约全部关闭，临时容器、浏览器、桥接及专用 SSH 均退出；
+原有 10 个服务的身份、启动时间、挂载和配置哈希未变，原前端仍 HTTP 200。
+
+本次仅关闭该静态资源 P3，不重开或扩大 T3 原限定工程关闭，不代表全量历史全绿。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、高级恢复及新回收 REMAINDER_DEFERRED、D01 未关闭保持。
+无提交、推送、合并、部署或真实数据/NAS 操作授权。
+
+关闭记录校验：`npm run docs:family:check`、现有 `familyDocumentationGate.test.js`（1 suite / 104 tests）
+及 `git diff --check` 均通过。另行核验当前关闭状态、冻结复评快照、受测补丁、产品文件哈希，
+以及独立复验 173 项、开发归档 58 项证据，均一致。该专项状态核验是本次本地关闭审计，
+不是新增的永久 CI 门禁；结果位于 `release-gate-artifacts/t3-manifest-closeout-2026-10-26/`。
+中止前未完成的测试未计为通过；续跑直接使用仓库本地 Jest，原断言和配置不变。
+
+### 23.11 Manifest P3 专用分支提交授权（2026-10-26）
+
+用户明确授权核对范围、敏感信息和证据后，提交推送专用分支、创建 PR 并检查 CI。
+此次授权仅取代 §23.9、§23.10 及冻结快照中的本地 Git 操作限制，不修改当时的审批事实，
+不授权合并或部署。`review.snapshot.json` 和受测补丁的原字节与哈希保持不变；
+`closure.json` 仅补充补丁无损包装元数据，原审批、候选身份和独立证据绑定不变。
+
+范围限定为 `frontend/web/public/manifest.json`、`PublicManifest.test.js`、本门禁记录及
+`evidence/t3-manifest-p3-2026-10-26/` 下的三份候选/复评/批准文件，共六个文件。
+原始证据仍为本地归档，未纳入此次提交；PR/CI 的新结果不覆盖历史失败或旧受测补丁身份。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED 和 D01 未关闭保持不变。
+
+提交前暂存区检查发现原 `candidate.patch` 的删除行含旧 manifest 的空格，触发
+`git diff --cached --check`（exit 2）。不改写原补丁、不放宽空白规则：仓库改存
+`candidate.patch.gz`，解压后仍为 6978 字节及 §23.10 的原 SHA256；压缩文件的长度与 SHA256
+另记于 `closure.json`。原补丁及失败记录留在本地，冻结复评快照仍引用其原始文件名。

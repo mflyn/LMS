@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "issue": "QA-T3-WEBKIT-MANIFEST-001",
+  "approvedDate": "2026-10-26",
+  "status": "APPROVED",
+  "issueStatus": "CLOSED",
+  "scope": "SYNTHETIC_ONLY",
+  "source": "direct_user_approval",
+  "instruction": "复审通过，更新门禁和评审记录，关闭 manifest P3，绑定本次候选补丁和独立复验证据，完成文档与状态校验。保留历史失败、DEVICE_PENDING 和后置范围，暂不提交、推送、合并或部署。",
+  "candidate": {
+    "kind": "UNCOMMITTED_PATCH",
+    "baseCommit": "4c1da2265ec8b38a5c92fa40c4174f3cf410ce90",
+    "patchFile": "candidate.patch.gz",
+    "patchEncoding": "gzip",
+    "storedBytes": 3682,
+    "storedSha256": "f0840a872bf2d5305b22424555085da33949e7ca3c815c765d9385923b50c624",
+    "originalFile": "candidate.patch",
+    "patchBytes": 6978,
+    "patchSha256": "6e518b8c091fc869357b26a69a260f4b2a6dfdb2a7a42e7846578d4e9656f8b4",
+    "closeoutDelta": "Documentation-only approval appended after review. The current full diff and gate file are not the historical tested patch. Product manifest and regression test must retain reviewed hashes."
+  },
+  "review": {
+    "decision": "PASS",
+    "snapshotFile": "review.snapshot.json",
+    "snapshotSha256": "d4073a7ab0c92711b8b8750495eca71a91efe966fd36c1f69eb35da605420b40",
+    "snapshotAdministrativeStatus": "OPEN; closure record not modified in this review",
+    "codeAndArchiveReviewer": "Godel / 01a1758b-1079-7100-abc7-f4e24c2502b7",
+    "executionSource": "Separate fresh build and browser executions recorded by the reviewing thread; not attributed to the read-only code reviewer",
+    "newProductFindings": 0
+  },
+  "evidence": {
+    "location": "LOCAL_ONLY",
+    "root": "/Users/linmingfeng/.codex/visualizations/2026/06/17/019ed5ee-e8a7-77d1-a482-f09f88decc2b/t3-manifest-independent-2026-10-26",
+    "entries": 173,
+    "manifestSha256": "072c51757f597f0fec3b7ba5942bbb618f198f1e5824e588238f9821124eeaab",
+    "reportSha256": "f6e1ab1b2589a6d6ec36560ac9d370ac42747cb5f1bc1964a6f0965fe9b83f3d",
+    "ubuntuRunSha256": "bb25cfd8a0a15fac9819284dac105ab9163301c93bb144e1bc9abe34d42d7662",
+    "closeAuditSha256": "4dc89acbaa0aec9dba9592287190b5f3a63a2c3e0fbec45da3aef4b4c05317df",
+    "rawEvidenceCommitted": false
+  },
+  "retained": {
+    "historicalFailures": "PRESERVED",
+    "device": "DEVICE_PENDING",
+    "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED",
+    "deployment": "T8_PENDING / NOT_AUTHORIZED",
+    "D01": "NOT_CLOSED",
+    "git": "NO_COMMIT_PUSH_MERGE"
+  }
+}
