@@ -85,7 +85,7 @@
 | T1 | CLOSED | 用户批准后端工程总门禁，仅限合成验收；R4 汇总关闭见 §18.40，不代表前端或真实部署完成 |
 | T2 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；T2-1/T2-R 及三项 P2 CLOSED，T2-2 至 T2-6 汇总批准关闭（§22.6 / 执行记录 §17）；D2B-05 查询缺陷单独 CLOSED（§22.7），原失败快照保留；DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，T2-G REMAINDER_DEFERRED |
 | T3 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；两项 P2 独立复评及导航测试 P3 关闭见 §23.8；最新 CI 通过后可合并，DEVICE_PENDING、REMAINDER_DEFERRED 和不部署边界保留 |
-| T4 | NOT_STARTED | 清单版本、代录审计和一年级/四年级交互通过 |
+| T4 | IN_PROGRESS | §24；最新 §24.8 求助投影 P2 已独立复评通过、待关闭记录，历史工程候选不代替关闭批准；总门禁 OPEN，关闭需用户批准 |
 | T5 | NOT_STARTED | 日计划首次并发、CAS、LocalDate 和 Gateway 路由通过 |
 | T6 | NOT_STARTED | 一条真实错题走完来源、订正和延迟复习连接 |
 | T7 | NOT_STARTED | SL-01 至 SL-06 纳入集成/E2E 和完整发布 Gate |
@@ -4344,3 +4344,313 @@ DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED 和 D01 未关
 `git diff --cached --check`（exit 2）。不改写原补丁、不放宽空白规则：仓库改存
 `candidate.patch.gz`，解压后仍为 6978 字节及 §23.10 的原 SHA256；压缩文件的长度与 SHA256
 另记于 `closure.json`。原补丁及失败记录留在本地，冻结复评快照仍引用其原始文件名。
+
+## 24. T4 短清单与基本分龄实施
+
+### 24.1 设计对齐与验证边界
+
+状态：DESIGN_SELF_CHECKED / INDEPENDENT_DESIGN_REVIEW_PASSED；T4 总门禁 OPEN。
+基线为 main `0ba4ef2b3dbb974b6f9437e3fc6b25949db87e69`。用户授权连续实施 T4，
+不授权 Git 写入、部署、真实数据/NAS 操作或关闭总门禁。历史失败、DEVICE_PENDING、
+T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED、D01 未关闭保持。
+
+1. 复用任务 POST/PATCH 和 completion 协议。清单输入严格验证数组、0--5 项、对象白名单、
+   非空 itemId（沿完成命令最多 100 字、大小写敏感）、trim 后 1--100 字 label、可选布尔 required；
+   拒绝 null、稀疏项、重复 ID 和隐式类型转换。不重写 itemId；缺省 required 规范为 false。
+   创建缺省/空清单版本 0，非空版本 1；历史读取仅投影，不迁移/回填。
+2. 清单 PATCH 必须同时给出 expectedChecklistVersion（非负安全整数，且下一版可安全表示），
+   不接受客户端 checklistVersion。每次有效清单写入递增一次，即使正文相同；冲突重新查看，
+   不提供新的 PATCH 恰好一次承诺。前端无清单变化不发送该字段及期望版本。
+3. 普通修改在既有事务中先验证当前家长/家庭/孩子，再校验正文，最后以 pending、__v、
+   completion/checklist 版本及完整 owner/引用锁 CAS 写入。期望版本不符为 VERSION_CONFLICT，
+   非 pending 为 TASK_STATE_CONFLICT，活动引用/完成意图仍为 MEDIA_REFERENCE_PENDING。
+4. 混合材料修改保留原 material owner/phase/快照比较。服务器把 checklistSnapshot 与由期望
+   版本计算的 checklistVersion 写入 mediaPendingTaskPatch，claim 时不改公开清单；发布时与
+   材料集合原子写入。binding 阶段使用原版本 fence；unbinding 阶段允许且只允许该持久 patch
+   的目标版本，completionVersion 不变。发布未知、重建、精确代次解绑和终态重读均核对原
+   owner/阶段、__v、目标正文与版本，不能接受另一份相似结果。准备拒绝保留旧公开字段；
+   发布后清理失败则保留整份新快照及 pending 锁，不虚构已经回滚远程发布。
+5. 保留 complete 的历史命令优先查找、原 UUID/actor/hash、版本比较和最终 CAS；新清单写入口
+   不能解锁活动完成意图。重点项未勾只提醒，仍可明确提交或独立求助，不增加星星。
+6. 家长 TasksPage 增加短清单编辑，稳定 itemId；未知结果冻结本次编辑，显式重新读取后再编辑，
+   材料 pending 按原请求接续，不覆盖原意图。孩子复用 TaskCompletionEvidence，展示真实
+   submittedByActor 角色（自己提交/家长代录，不新增姓名查询）。保持原作品版本审核。
+7. 年级仅作 UI 提示，不作权限依据。使用既有登录响应 grade，允许有效 1--6 整数，旧会话缺省
+   为未知；家长修改后孩子下一次登录获取新年级，当前会话不后台轮询。会话切换同步清理。
+   一年级默认收起可选数字/备注，四年级提供自检提示和既有预计用时，其余/未知使用简洁通用
+   页面；同一组件、同一业务字段。清单长度建议不生成强制项，不实现 T5 估时存储或日计划。
+
+设计自查：不增加端点、微服务、调度器或通用恢复框架；无索引迁移和真实写入。回滚只撤回本批
+代码及页面，合成数据可丢弃；已有非零清单/新 pending 记录不得交给不识别其版本的旧写服务，
+回滚合成环境应先停止写入并完成/隔离本批 pending，保留原数据库快照，不改真实默认模式。
+
+### 24.2 批次及永久验证矩阵
+
+| 批次 | 交付与自查/独立评审 | 永久验证 |
+| --- | --- | --- |
+| T4-1 | 严格输入、创建/更新、材料混合意图和正式路由 | 0/1/5/6、空/重复/大小写/类型/null、旧任务0、两家长竞争、complete双向竞争、取消归档、owner CAS、混合拒绝/未知/重建/解绑 |
+| T4-2 | 家长编辑、稳定ID、刷新和冲突 | 清空/重排、不变项ID、共管冲突、丢响应重读、403清私有状态、迟到响应 |
+| T4-3 | 年级传递、少字段、自检和代录 | 一/四/未知年级、重登更新、切账号/跨标签、未勾全提交/求助、原UUID恢复、提交者与审核版本 |
+| T4-4 | 正式HTTP/浏览器及回归收口 | enabled真实服务合成闭环、权限拒绝、图片/PDF不回退、原T2/T3反例、前端构建、家庭回归、真机待验证清单 |
+
+使用既有 Jest、Playwright、release gate 和本地忽略的证据归档；每批修复补永久反例并复评。
+不以模型单测代替正式路由，不把测试替身当真实 HTTP，不删除旧测试或放宽超时/断言。
+独立评审和实施结果在本节增量记录；当前尚无 T4 开发/测试通过声明，SL-03 的 T7 责任不关闭。
+
+设计独立评审：Carver（01a17687-0900-7c82-b004-eeec5ec0e63d）只读核对 §24.1--24.2、
+计划、API 和当前实现，未发现阻断实施问题。该结论不是实现或测试通过。实施重点包括原请求
+在目标版本发布后接续、有/无移除两种终点、最终 CAS 的原 fence/目标版本组合、终态正文与
+精确代次核对，以及两个正式 PATCH 分流的权限拒绝。T4-1 开始实现，整体尚未验收。
+
+### 24.3 T4-1 后端实现与独立复评（2026-10-26）
+
+状态：BACKEND_BATCH_REVIEW_PASSED；T4-1 后端批次已验证，T4 总门禁 OPEN。
+实现严格清单解析、enabled 创建与两条 PATCH 分流、普通事务版本 CAS、材料混合原/目标版本
+持久化及恢复；legacy 解析继续拒绝新清单字段。未改变默认启动模式，未执行 Git 写入或部署。
+
+开发验证：既有 Jest homework 配置，`--runInBand --runTestsByPath` 运行 checklist、attachment
+service、completion attachment isolation、mutation、production assembly 五套件；初始 402 项
+通过。独立评审 Carver 另外复现三项 P2（直接修改临时数据库、不增加 __v 的故障注入，不代表
+正常公开 API 已能绕过锁）：
+
+| 发现 | 修订与永久反例 | 独立复评 |
+| --- | --- | --- |
+| T4-P2-PUBLISHED-CAS | 最终清锁 CAS 纳入公开目标正文、材料集合和绑定代次；解绑途中改正文/IDs/代次必须保留 pending | CLOSED |
+| T4-P2-REFERENCE-SET | 重建及发布丢响应接纳前验证完整有序目标集合和精确代次；不一致不得调用解绑 | CLOSED |
+| T4-P2-EXPLICIT-NULL | 以原 patch 完整键集保留 null，最终 CAS 额外要求字段存在；description/estimatedMinutes 的直接终态及重建反例 | CLOSED |
+
+修订后开发五套件 **411/411、5/5 suites、exit 0**，原测试保留。独立评审者重新运行同五套件，
+**411/411、零跳过、exit 0（41.153 秒）**，并用临时 MongoDB/真实 Mongoose/合成材料客户端
+复验 **10/10** 个独立探针，包括显式 null 被 unset 的拒绝及合法 null 的原请求恢复；三项可关闭，
+未发现本次后端复核范围内的新阻断。独立来源为 Carver `01a17687-0900-7c82-b004-eeec5ec0e63d`，
+与开发自测区分；不据此关闭 T4 总门禁或宣称页面完成。
+
+正式 HTTP 使用真实 homework/resource/progress 应用工厂、回环 HTTP 和临时副本集，故障注入
+中间层仅销毁真实提交后的响应。新用例覆盖清单初始版本、两路权限/错误、部分勾选完成图片、
+按所见版本确认和孩子回看、单账本、混合材料原请求重建恢复；未把此证据写作浏览器验收。
+
+本地证据：`release-gate-artifacts/t4-1-2026-10-26/` 下 `backend-tests.json`（402）和
+`backend-tests-p2-fixed.json`（411）及对应日志；独立结论来自本线程独立评审消息，不冒充为开发
+生成的独立日志。文档门禁 `npm run docs:family:check`、原有文档状态测试 **106/106** 通过。
+状态校验只允许 T4 IN_PROGRESS/OPEN，T5--T9 仍 NOT_STARTED，原批准快照不改写。
+
+扩大验证：`node node_modules/jest/bin/jest.js --config=backend/services/homework-service/jest.config.js
+--runInBand --json --outputFile=release-gate-artifacts/t4-1-2026-10-26/homework-full.json`，
+按当前配置运行 homework 全套 **29 suites / 1250 tests / 零跳过 / exit 0**。这不等于家庭所有
+服务完整回归。受测代码以同目录 `source-hashes.json` 绑定 main 基线及变更源码哈希，
+`tracked-source.patch` 和 `new-source.tgz` 保存已跟踪差异及两个新增文件，`SHA256SUMS`
+绑定源码与开发测试 JSON；不把本地证据归档当作 Git 提交。
+
+### 24.4 T4-3 分龄呈现子集进度（未作为整批验收）
+
+孩子会话仅保留有效 1--6 整数 grade，缺省/非法走通用界面；下一次登录读取更新年级。复用完成
+组件：一年级默认折叠可选数字及备注（不丢值），四年级自检提示，重点项未勾提醒但允许提交，
+已有独立求助入口保持；提交者仅由后端 submittedByActor 角色显示。没有新增权限依据或命令字段。
+
+前端完整 `CI=true npm test --prefix frontend/web -- --runInBand` 修订后 **45 suites / 566 tests / exit 0**，
+`CI=true npm run build --prefix frontend/web` 通过。首轮新增页面测试未等待求助组件异步更新，
+触发原零 console.error 门禁；修复为 async act 等待，未抑制警告。失败 `frontend-tests.log` 保留，
+成功证据为 `frontend-tests-fixed.json/.log`，构建为 `frontend-build.log`。
+
+分龄子集独立复核：同一独立评审者只读检查六个前端变更文件，运行会话/完成组件/Context/
+完成 Hook/恢复/求助 **7 suites / 109 tests / 零跳过 / exit 0（7.374 秒）**，未发现阻断项。
+独立内存探针验证 grade 更新重登不改写原命令字节、跨标签更新，以及切孩子清理原身份命令；
+未执行浏览器或重新运行开发全量，不将其作为真机、布局或家长编辑页面的验收。
+
+根目录 `npm run lint` exit 1：本地历史证据目录中的 13 份 JSX 源码快照触发解析错误，记录于
+`lint.log`；本次全部变更 JS 文件按现有 ESLint 规则校验 exit 0（`changed-lint.log`）。未删除历史
+证据或放宽规则，不将根目录 lint 声称全绿。家长清单编辑与未知结果界面、T4 浏览器闭环、
+家庭后端完整回归及最终交付仍待完成。DEVICE_PENDING、REMAINDER_DEFERRED、D01 未关闭保持。
+
+### 24.5 T4-2 家长编辑及浏览器闭环推进（2026-10-26，尚未整体验收）
+
+家长沿现有任务编辑框管理 0--5 项清单，改名/重排保留 itemId，未改清单省略版本字段；
+冲突冻结编辑并显式重读，已知材料 pending 使用原正文接续，不重定基线。写入可能已经绑定的
+上传不再按未提交草稿删除；切账号停止旧身份草稿清理。列表或恢复读取 401/403 清空私有
+编辑及作品/求助视图，编辑代次拦截迟到成功响应。旧任务缺省/null 可选值映射为受控空表单。
+
+开发自查修订及永久反例：图标不参与“添加检查项”的无障碍名称；重读的 undefined/null 不把
+受控输入变为非受控；用预建 ID Set 消除循环闭包 lint。保留原失败日志，不抑制 React 警告。
+五套件家长/求助/作用域/草稿测试 **52/52、exit 0**；前端完整 **46 suites / 583 tests / exit 0**；
+`CI=true npm run build --prefix frontend/web` 修订后 exit 0；相关变更文件 ESLint exit 0。
+根目录历史证据源码导致的 lint 失败仍见 §24.4，不将其改写为全绿。
+
+沿用 `playwright.t2.config.js` 和正式合成运行器新增 checklist.spec.js，无新测试框架。
+真实页面一年级/四年级两条部分勾选、独立求助、图片提交、家长审核及刷新回看，以及共管
+清单冲突/丢响应重读三条用例通过 **3/3、exit 0**。新求助反例逐字段对比除求助/更新元数据
+外的数据库任务，并核验 API 完成版本 0；不要求数据库缺省版本被回填。首次错误地断言
+数据库显式版本 0 的失败保留，修订提高为完整业务字段不变与 API 投影的双重检查。
+
+证据目录 `release-gate-artifacts/t4-2-2026-10-26/`：`parent-targeted.log`、
+`frontend-build.log` 保留失败；`parent-targeted-expanded.log`、`frontend-full.log`、
+`frontend-build-fixed.log` 为上述成功证据。`checklist-browser-built.log` 为 Chromium 沙箱
+MachPort 启动失败；获准沙箱外回环执行的 `checklist-browser-permitted.log` 保留版本断言失败；
+`checklist-browser-projection.log` 为三条成功。截图暂存 `/tmp/lms-t4-browser-projection/`，
+覆盖 390/768/1280 宽度，开发已目视核对一年级表单和窄屏家长审核，不代表真实 iPad。
+无 Browser 专用 skill，复用既有 Playwright；没有真实部署或外部数据访问。
+
+本节仅为开发进度：独立家长代码复核、扩大浏览器/正式 HTTP/家庭后端回归及最终证据绑定
+仍在进行，不关闭 T4。DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED、
+D01 未关闭及历史失败保持。
+
+### 24.6 T4-2 独立评审及修订中记录
+
+独立评审 Carver（`01a17687-0900-7c82-b004-eeec5ec0e63d`）只读复核家长页面、清单控件、
+草稿 Hook 与相关测试，独立选集 **5 suites / 46 tests / exit 0**，另用合成探针发现：
+
+| ID | 问题与影响 | 修订/永久反例 | 当前状态 |
+| --- | --- | --- | --- |
+| T4-P2-UNKNOWN-MATERIAL | 网络/无语义 5xx 丢失材料 pending 错误码，GET 旧公开快照不能证明原意图已结束；原实现会丢弃正文解冻编辑 | 有 taskId 且实际请求携带材料字段的未知写入保留原正文供显式接续，GET 不重定基线；无 response 和 502 两反例核对完整原正文 | CLOSED_AFTER_INDEPENDENT_REVIEW |
+| T4-P2-EDITOR-UPLOAD | 沿用的材料回调缺少编辑器代次，A 关闭后的迟到上传会进入 B 表单 | 回调绑定当前编辑代次/会话；真实媒体控件迟到上传反例；上传中禁止保存，旧 finally 不能解锁新上传 | CLOSED_AFTER_INDEPENDENT_REVIEW |
+| T4-P2-STALE-MATERIAL | 共管家长仅更新材料后，旧编辑器无条件提交旧材料列表，会造成非预期覆盖，且本地未改变判断漏掉未知材料意图 | 未变材料字段省略；实际请求携带材料字段时未知结果保留原请求；新增组件红绿及真实 HTTP 旧快照反例 | CLOSED_AFTER_INDEPENDENT_REVIEW |
+
+三个复现用例修复前 **3 failed / 15 passed / exit 1**（`parent-review-p2-red.log`）；修后五套件
+**55/55 / exit 0**（`parent-review-p2-green.log`），另新增旧上传 finally 不能解锁新上传反例，
+后续完整验证单列。迟到媒体不自动隐私删除、不加入新编辑的草稿；新孤儿回收继续后置。
+现有普通任务说明/数量/单位清空后 PATCH 省略而非清除的限制属既有行为，不将本次受控空值
+重读修正声称为支持清空服务端值，不据此扩大清单契约。
+
+修订前候选 `browser-full.log` **26/26**、`http-full.log` **3 suites / 18 tests** 均 exit 0。
+这些是开发证据，不是独立评审，也不代替两项 P2 修订后的当前候选验证。新增真实混合材料
+“远程 commit 丢响应 + 公开 503 再丢响应”用例检查 GET 无写、原正文接续、目标版本及引用集合。
+该轮历史快照：当时等待修订后验证与独立复评，T4 总门禁 OPEN；不改历史失败、真机和后置范围。
+
+独立复评已运行 checklist 浏览器 **4/4（32.6 秒）**、代录增强 **1/1（11.5 秒）** 和 unknown
+create 组件 **2/2**，确认既有双丢响应证据有效，但指出本地材料未改与服务端材料未改不能
+等同，STALE-MATERIAL 在该轮快照中保持未关闭。开发补永久用例修复前 **1 failed / 21 passed / exit 1**
+（`parent-stale-material-red.log`）；修订不增加 API，只将未改材料从 PATCH 省略。
+代录测试同时补确认后原 submittedByActor 精确 ID 比较，不止验证“家长代录”文案。
+
+最终父页独立复评：同一独立来源确认三项 P2 可关闭，运行 TaskChecklistPages、
+Task9TodayTasks、TaskHelpPages、TaskCompletionScope、useDraftMedia、
+PrivateMediaCollectionField **6 suites / 63 tests / exit 0**，另 **8/8** 个内存探针覆盖四类材料
+基线、显式清空后的未知恢复、无材料字段但明确 pending 的原请求，以及重读共管新材料后不
+回传材料的行为。没有修改源文件；未发现本次复核范围内新阻断。独立浏览器旧候选 4+1 条
+通过与新版两处源码评审分开记录，不把当时开发正在运行的 28 条结果冒称独立通过。
+
+### 24.7 T4 限定合成范围工程验收申请（2026-10-26）
+
+状态：ENGINEERING_READY_FOR_REVIEW；T4 总门禁 **OPEN**，须用户批准后关闭。以下为当前
+候选开发验证与已记录的独立复评汇总，不代表真实家庭、iPad 或 T7/T8/T9 验收。
+
+| 范围 | 当前证据及结论 |
+| --- | --- |
+| T4-1 清单契约及并发 | §24.3 后端 411 项定向、1250 项 homework 全套及独立复评；当前家庭后端回归再次覆盖。0--5 项、稳定 ID、版本初值、旧数据只读投影、pending 写入、最终 CAS、完成竞争、材料混合恢复及精确代次均有永久用例 |
+| T4-2 家长清单编辑 | 创建/删除/清空/重排、无变化省略字段、共管版本冲突、未知请求冻结/原正文接续、403 清私有视图、上传生命周期隔离；三项 P2 独立复评关闭见 §24.6 |
+| T4-3 分龄及真实代录 | 一/四年级和未知年级、重登获取年级、同一组件、重点项未勾仍可提交/独立求助、实际 actor、审核版本及孩子回看；前端完整与正式浏览器覆盖，分龄独立子集见 §24.4 |
+| T4-4 闭环与兼容 | 当前构建真实 Gateway/user/homework/resource/progress 工厂、临时副本集/存储；原 T2/T3 与 T4 全部浏览器 **28/28** 通过，保留作品权限、过期 JWT/原命令恢复、丢响应、十图、隐私删除、旧审核版本拒绝及求助零副作用；组件回归继续覆盖任务材料和错题图片/PDF |
+
+最终开发命令（Node 22；测试期间使用合成身份，前端构建 source map 与六个 T4 页面/会话/Hook
+源码逐字核对一致；无测试替身伪造最终成功）：
+
+| 命令 | 结果 | 证据文件（§24.5 目录） |
+| --- | --- | --- |
+| `CI=true npm test --prefix frontend/web -- --runInBand` | 46 suites / 590 tests / exit 0 | `frontend-full-stale-fixed.log` |
+| `CI=true npm run build --prefix frontend/web` | exit 0 | `build-stale-fixed.log` |
+| `npm run test:family-regression` | 146 suites / 4147 passed / 1 skipped / exit 0，830.805 秒 | `family-backend-full.log` |
+| `node node_modules/jest/bin/jest.js --config=backend/jest.config.js --selectProjects family-common --runInBand --runTestsByPath backend/common/deployment/__tests__/task5Deployment.test.js` | 18/18 / 零跳过 / exit 0 | `deployment-dry-run-supplement.log` |
+| `npm run test:t2:integration` | 3 suites / 18 tests / exit 0 | `http-full.log` |
+| `T2_WEB_BUILD=<当前前端绝对构建路径> npm run test:t2:e2e` | 28/28 / 无重试 / exit 0，2.7 分钟 | `browser-full-stale-fixed.log` |
+
+后端全量原 PATH 未包含 `/usr/local/bin`，现有 kubectl 可用性检测触发了 Secret dry-run 条件
+跳过；补验 PATH 包含该目录后，原测试不变且实际执行通过。原全量仍记录 1 skipped，不能
+把两次不同运行合成“原全量零跳过”。未部署、未连接集群、未创建 Secret。
+根目录历史归档源码 lint 失败仍保留；变更源文件的 ESLint、文档状态与 diff 校验另存最终日志。
+
+失败与修订链保留：最初组件/构建失败、Chromium 沙箱启动失败、数据库版本投影误断言、
+材料 bound 与完成 stable 的测试状态混淆、三项 P2 的红绿证据均不删除或改写。
+`browser-full-p2.log` 的 1 failed / 26 passed 保留；修正材料状态并增加远程/本地精确代次断言后
+定向 4/4，通过共管反例扩充后的当前完整浏览器才记录 28/28。不靠提高超时或跳过用例通过。
+
+最终证据以 `final-code-hashes.json`、`final-code.patch`、`final-new-code.tgz` 和
+`SHA256SUMS` 绑定本地候选；`final-doc-hashes.json` 绑定文档快照。源码基线仍为
+`0ba4ef2b3dbb974b6f9437e3fc6b25949db87e69`，无 Git 写入。同期 AI/K12 路线文档修改属于其他
+工作，保留但不计入 T4 交付。浏览器截图按合成场景归档，不将开发日志冒充独立评审日志。
+
+最终材料独立复核：Carver（`01a17687-0900-7c82-b004-eeec5ec0e63d`）只读对照需求、
+实现与日志，未发现新的 P1/P2 阻断或必须工程项遗漏，可提交用户验收。复核逐项确认
+27 份代码/测试和 5 份文档哈希、归档 SHA256SUMS、六个前端模块与构建源码一致；
+该轮读取完整回归日志，不冒称独立重跑全量。唯一 P3 文案建议已将历史等待/未关闭措辞
+明确标为当轮快照，保留原结论；仅此文档澄清及复核记录追加后重新生成文档哈希并校验。
+工程申请仍为 ENGINEERING_READY_FOR_REVIEW，总门禁 OPEN，用户关闭审批尚未获得。
+
+剩余边界与回滚：
+- DEVICE_PENDING：真实 iPad Safari 验证选择/拍摄图片、触控/旋转/滚动、后台切换与重登恢复、
+  一年级无需长文本、共用设备切孩子不残留私有图像；浏览器尺寸模拟不能替代真机。
+- T4 总门禁用户审批、SL-03 的 T7 产品集成、T8 真实部署/备份恢复和 T9 价值验证均未关闭。
+- 高级恢复、新孤儿回收、D01 继续原后置/未关闭状态；迟到上传不进入另一编辑器、不自动删除。
+  既有普通任务可选字段清空后省略而非清除的限制未在 T4 顺手扩展；本批只保证空值正确显示。
+- 合成回滚先停止写入，完成或隔离 pending 意图，保留合成数据库快照，再撤回本批代码；
+  不让旧写服务处理非零清单版本或新 pending。真实环境从未启用，不执行真实迁移或回滚。
+
+### 24.8 QA-T4-HELP-PROJECTION-001 修订与复评交接（2026-10-26）
+
+本节复评时裁决：P2 INDEPENDENT_REVIEW_PASSED / PENDING_CLOSE_RECORD，T4 总门禁 OPEN。
+最新关闭记录见 §24.9；本节候选、失败与复评证据保留为历史快照。
+§24.7 是此前候选及检查范围的历史结论，不覆盖本次独立组合反例的 NEEDS_FIXES。
+独立评审线程 `019ed96b-6785-7492-bf22-9f7fd60fbfb5` 的冻结证据位于该线程
+`t4-full-review-2026-10-26/r1`，候选 digest
+`af848a65c6b7fbf53d231588fc92ad9076aae18e67496dda18d418f79bdd794c`；不修改其失败日志或 manifest。
+
+核实：清单-only PATCH 正确省略未变材料后进入 mutationService，本地重复 DTO 漏掉
+helpVersion/helpRequest。数据库仍保留求助，但前端整体替换列表项后提醒消失。
+聚焦方案及实施前自查：复用既有 taskView 的显式嵌套白名单；无循环依赖，不改权限、CAS、
+写入或前端状态合并。取消/归档共用该响应，纳入安全投影与业务字段不变测试。
+继续省略未变化材料，不用旧 help 盲合并、额外 GET 或恢复旧材料字段绕过缺陷。
+
+永久反例：真实 HTTP 覆盖 pending/resolved 求助、清单-only 与 GET/材料分流投影一致、
+取消/归档响应、嵌套私有哨兵不暴露及求助/作品/星星不变；组件用明确公开 DTO 验证权威
+pending/resolved 提醒而非合并旧对象；浏览器孩子求助→家长仅改清单→无需刷新仍有提醒→
+处理求助→孩子回看，同时保留共管 stale-material 用例。
+
+开发红灯：有效请求下四项 HTTP 反例在 helpVersion 缺失处失败，exit 1；浏览器在 PATCH 200
+后的原提醒可见性断言失败，exit 1。两轮 HTTP 准备错误（枚举、额外 operationId）分别保留，
+不算产品缺陷证据；独立线程首次缺少 subject/area 的准备失败亦不与其有效页面红灯混淆。
+修订后定向：HTTP/修改服务 2 suites / 191 tests、前端 4 suites / 57 tests、浏览器 2/2
+均 exit 0。homework 全套 **29 suites / 1254 tests / 零跳过 / exit 0**（153.85 秒）；
+文档状态 **106/106 / exit 0**，四个变更 JS 文件 lint 与 diff 检查通过。前端生产源码未改，
+浏览器复用已核验的同一构建；不把本次定向结果写成重跑了前端全量或家庭后端全量。
+修订后自查：新代码仅替换公开投影，存储与鉴权未改；新增用例检查权威返回值而非旧对象
+盲合并，且保存后不触发额外 GET。独立复评结果另补，不据此独立关闭 P2。
+
+相对独立 r1 的修订候选（4 份代码/测试文件）digest：
+`d46c962d81cf2d79ba7efd653602739e3cbe69016c0e55ae165f76f3d12eac43`，
+文件哈希见新目录 candidate.json；fix-vs-independent-r1.patch 只含本次增量，不混同 main 的
+全部 T4 差异。此前 27 份代码/测试中其余 23 份未变；同行文档 AI/K12 修改不在本次修复范围。
+
+本次证据使用独立目录 `release-gate-artifacts/t4-help-projection-2026-10-26/`，不刷新或覆盖
+此前 44 项归档及旧候选哈希。DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、
+REMAINDER_DEFERRED、D01 未关闭保持；无 Git 写入、部署、真实数据/NAS 或高级恢复/新回收启用。
+
+独立修订复评：Carver（`01a17687-0900-7c82-b004-eeec5ec0e63d`）开始/结束均核验上述
+四文件候选 hash/digest。ProductionAssembly、MutationService、ReadHttp **3 suites / 229**，
+前端相关 **4 suites / 57**，Chromium 新求助闭环及 stale-material **2/2**，补充内存 HTTP
+探针 **5/5**，均 exit 0；无新阻断，确认本 P2 修复成立、具备关闭依据。原红灯由开发执行、
+独立核读，不冒称本轮独立重跑旧实现；探针名称筛选排除 117 条，已由其前序完整装配套件覆盖。
+源码未因复评再改，当前仅提交关闭记录确认，不自动关闭 T4 总门禁。
+
+非阻断覆盖建议：resolvedByActor 私有哨兵、confirmed-awarded 归档及重复 remove 与完整 DTO
+组合已由独立临时探针验证，但未全部固化为新增永久测试；保留为后续相关模块测试维护项，
+不冒称永久覆盖、不扩大本次后端范围。独立 229/57/2 的结果保留在评审对话及命令工具输出，
+未另存控制台日志；仅补充探针有独立日志文件。归档明确区分该限制，不用开发 green 日志
+替代独立输出，浏览器输出目录也不冒充运行日志。
+
+### 24.9 求助投影 P2 批准关闭与完整候选提交（2026-10-26）
+
+用户批准补齐最新 P2 关闭记录、冻结完整 T4 测试候选，并提交推送专用分支、创建 PR 和检查 CI。
+`QA-T4-HELP-PROJECTION-001` 现为 **APPROVED / CLOSED**，仅关闭已独立复评通过的求助投影缺陷。
+依据为 §24.8 的四文件修订候选及独立 229/57/2 和 5 项补充探针；原始失败及证据限制不变。
+本次不重新解释历史失败、不将开发日志标为独立证据、不声明新的业务全量已通过。
+
+T4 功能开发及本地合成工程验证已完成，**T4 总门禁仍 OPEN**，等待后续验收批准。
+本次授权不包括合并、部署或执行服务器测试。服务器测试须使用完整候选的固定提交 SHA，
+不能只使用四文件修复补丁，也不能使用尚不包含 T4 的 origin/main。
+
+[可携带交接索引](evidence/t4-synthetic-2026-10-26/README.md)记录完整 T4 代码/文档哈希、
+P2 关闭依据及历史证据清单。共享设计、计划与导航仅选取 T4 差异；AI/K12 规划修改留在本地，
+不覆盖、不提交。原始日志/截图继续留在本地忽略归档，入库摘要不是完整证据备份。
+新 PR 的 CI 是独立运行，不能覆盖历史家庭后端全量的 1 项条件跳过或历史失败。
+
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED 和 D01 未关闭保持不变。
+默认关闭配置、旧客户端升级拒绝及高级恢复/新回收后置不变；回退本候选只需不合并该专用分支，
+不涉及真实数据迁移或删除。

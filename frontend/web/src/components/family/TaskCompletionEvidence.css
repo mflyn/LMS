@@ -30,3 +30,8 @@
 .task-completion-error { color: #a32838; overflow-wrap: anywhere; }
 .task-completion-copy { white-space: pre-wrap; overflow-wrap: anywhere; }
 .task-completion-feedback { margin-top: 24px; padding-top: 4px; border-top: 1px solid #dce4df; }
+.task-completion-reminder { padding: 10px 12px; border-left: 3px solid #b87920; background: #fff8e6; overflow-wrap: anywhere; }
+.task-completion-reminder a { display: inline-block; min-height: 44px; line-height: 44px; color: #225d80; }
+.task-completion-optional summary { min-height: 48px; padding: 12px 0; box-sizing: border-box; cursor: pointer; }
+.task-completion-junior .task-completion-checkbox { min-height: 48px; gap: 12px; }
+.task-completion-junior button { min-height: 48px; }

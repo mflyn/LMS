@@ -169,6 +169,153 @@ const expectError = (response, status, code, details = []) => {
   expect(response.body).toMatchObject({ success: false, error: { code, details } });
   expectPublic(response.body);
 };
+
+describe('T4 formal checklist HTTP', () => {
+  const checklist = [{ itemId: 'read', label: 'Read the question', required: true },
+    { itemId: 'Read', label: 'Check answer', required: false }];
+  test.each(['pending', 'resolved'])('checklist-only response preserves %s help and matches safe GET/material projections', async status => {
+    const application = app(), task = await seed();
+    const requested = await call(application, 'PATCH', url(task) + '/help', {
+      action: 'request', expectedHelpVersion: 0,
+      helpType: 'instruction_unclear', note: 'Synthetic help survives checklist edit'
+    }, child);
+    expect(requested.status).toBe(200);
+    if (status === 'resolved') {
+      const resolved = await call(application, 'PATCH', url(task) + '/help', {
+        action: 'resolve', expectedHelpVersion: 1, parentResponse: 'Synthetic response'
+      }, coparent);
+      expect(resolved.status).toBe(200);
+    }
+    await Task.collection.updateOne({ _id: task._id }, { $set: {
+      'helpRequest.privateSentinel': 'hidden', 'helpRequest.requestedByActor.privateSentinel': 'hidden'
+    } });
+    const before = await row(task), ledgers = await Ledger.find().lean(), operations = await Operation.find().lean();
+    const changed = await call(application, 'PATCH', url(task), { checklistSnapshot: checklist, expectedChecklistVersion: 0 });
+    expect(changed.status).toBe(200);
+    expect(changed.body.data.task.helpVersion).toBe(status === 'pending' ? 1 : 2);
+    expect(changed.body.data.task.helpRequest).toMatchObject({ status, note: 'Synthetic help survives checklist edit',
+      requestedByActor: { id: child.id, role: 'student' } });
+    const get = await call(application, 'GET', url(task));
+    const material = await call(application, 'PATCH', url(task), { attachmentMediaIds: [] });
+    expect(get.status).toBe(200); expect(material.status).toBe(200);
+    expect(changed.body.data.task).toEqual(get.body.data.task);
+    expect(material.body.data.task).toEqual(get.body.data.task);
+    expectPublic(changed.body); expectPublic(material.body); expectPublic(get.body);
+    const after = await row(task);
+    for (const field of ['helpVersion', 'helpRequest', 'completionVersion', 'completionEvidence', 'starAwardState']) {
+      expect(after[field]).toEqual(before[field]);
+    }
+    expect(await Ledger.find().lean()).toEqual(ledgers); expect(await Operation.find().lean()).toEqual(operations);
+    expect(starCalls).toEqual([]); expect(mediaCalls).toEqual([]);
+  });
+  test.each(['pending', 'completed'])('remove response for %s preserves public help/evidence but excludes hidden fields', async status => {
+    const task = await seed({ status });
+    await Task.collection.updateOne({ _id: task._id }, { $set: {
+      helpVersion: 2, helpRequest: { status: 'resolved', helpType: 'instruction_unclear', note: 'Synthetic note',
+        parentResponse: 'Synthetic response', privateSentinel: 'hidden',
+        requestedByActor: { id: child.id, role: 'student', privateSentinel: 'hidden' } },
+      ...(status === 'completed' ? { completionVersion: 1, completionEvidence: {
+        checkedItemIds: [], completionMediaIds: [], subjectChildId: child.id, privateSentinel: 'hidden',
+        submittedByActor: { id: parent.id, role: 'parent', privateSentinel: 'hidden' }
+      } } : {})
+    } });
+    const before = await row(task), application = app();
+    const removed = await call(application, 'DELETE', url(task));
+    expect(removed.status).toBe(200);
+    expect(removed.body.data.task.helpVersion).toBe(2);
+    expect(removed.body.data.task.helpRequest.status).toBe('resolved');
+    const get = await call(application, 'GET', url(task));
+    expect(get.status).toBe(200); expect(removed.body.data.task).toEqual(get.body.data.task);
+    expectPublic(removed.body);
+    const after = await row(task);
+    for (const field of ['helpVersion', 'helpRequest', 'completionVersion', 'completionEvidence', 'starAwardState']) {
+      expect(after[field]).toEqual(before[field]);
+    }
+    expect(after.status).toBe(status === 'pending' ? 'cancelled' : 'archived');
+    expect(starCalls).toEqual([]); expect(mediaCalls).toEqual([]);
+  });
+  test.each([undefined, [], checklist])('create initializes checklist %p with its contracted version', async value => {
+    const response = await call(app(), 'POST', PREFIX, input(value === undefined ? {} : { checklistSnapshot: value }), coparent);
+    expect(response.status).toBe(201);
+    expect(response.body.data.task).toMatchObject({ checklistSnapshot: value || [], checklistVersion: value?.length ? 1 : 0 });
+    const stored = await Task.findById(response.body.data.task.taskId).lean();
+    expect(stored.checklistVersion).toBe(value?.length ? 1 : 0);
+    expect(stored.checklistSnapshot).toEqual(value || []); expectPublic(response.body);
+  });
+  test.each([false, true])('ordinary/material PATCH preserves checklist error contract (material=%s)', async withMedia => {
+    const task = await seed(); const before = await row(task); const application = app();
+    const base = { expectedChecklistVersion: 0, ...(withMedia ? { attachmentMediaIds: [] } : {}) };
+    expectError(await call(application, 'PATCH', url(task), { ...base, checklistSnapshot: [{ ...checklist[0], required: 'true' }] }),
+      400, 'CHECKLIST_ITEM_INVALID');
+    expectError(await call(application, 'PATCH', url(task), { ...base, checklistSnapshot: [], checklistVersion: 1 }),
+      400, 'VALIDATION_ERROR');
+    for (const actor of [child, sibling, outsider]) {
+      expectError(await call(application, 'PATCH', url(task), { ...base, checklistSnapshot: checklist }, actor), 403, 'CHILD_ACCESS_DENIED');
+    }
+    await Family.updateOne({ _id: family._id }, { $set: { ownerParentId: coparent.id, memberParentIds: [coparent.id] } });
+    expectError(await call(application, 'PATCH', url(task), { ...base, checklistSnapshot: checklist }), 403, 'CHILD_ACCESS_DENIED');
+    expect(await row(task)).toEqual(before); expect(mediaCalls).toEqual([]); expect(starCalls).toEqual([]);
+  });
+  test('checklist update, partial submission, versioned review and child readback use the real services', async () => {
+    const application = app(), task = await seed();
+    const patch = { checklistSnapshot: checklist, expectedChecklistVersion: 0 };
+    const changed = await call(application, 'PATCH', url(task), patch, coparent);
+    expect(changed.status).toBe(200); expect(changed.body.data.task.checklistVersion).toBe(1);
+    expectError(await call(application, 'PATCH', url(task), patch), 409, 'VERSION_CONFLICT');
+    expectError(await call(application, 'PATCH', url(task) + '/complete', command(), child), 409, 'VERSION_CONFLICT');
+    const work = await media('task_completion');
+    const original = command({ expectedChecklistVersion: 1, checkedItemIds: ['Read'], completionMediaIds: [work] });
+    const completed = await call(application, 'PATCH', url(task) + '/complete', original, child);
+    expect(completed.status).toBe(200);
+    const first = await row(task);
+    expect(first.completionEvidence.checkedItemIds).toEqual(['Read']);
+    expect(String(first.completionEvidence.submittedByActor.id)).toBe(child.id);
+    expect(first.completionEvidence.submittedByActor.role).toBe('student');
+    expectError(await call(application, 'PATCH', url(task), { checklistSnapshot: [], expectedChecklistVersion: 1 }), 409, 'TASK_STATE_CONFLICT');
+    const reread = await call(app(), 'GET', url(task), undefined, coparent);
+    expect(reread.body.data.task).toMatchObject({ checklistSnapshot: checklist, completionVersion: 1 });
+    expectError(await call(application, 'PATCH', url(task) + '/confirm', { expectedCompletionVersion: 0 }), 409, 'VERSION_CONFLICT');
+    const confirmed = await call(application, 'PATCH', url(task) + '/confirm',
+      { expectedCompletionVersion: reread.body.data.task.completionVersion, parentFeedback: 'Reviewed partial checklist' }, coparent);
+    expect(confirmed.status).toBe(200);
+    const replay = await call(app(), 'PATCH', url(task) + '/complete', original, child);
+    expect(replay.status).toBe(200); expect(replay.body).toEqual(completed.body);
+    const view = await call(app(), 'GET', url(task), undefined, child);
+    expect(view.body.data.task).toMatchObject({ status: 'confirmed', checklistVersion: 1, checklistSnapshot: checklist,
+      parentFeedback: 'Reviewed partial checklist', completionEvidence: {
+        checkedItemIds: ['Read'], submittedByActor: { id: child.id, role: 'student' }
+      } });
+    expect(await Ledger.countDocuments(ledgerQuery(task))).toBe(1);
+    expectPublic(view.body);
+  });
+  test('mixed checklist/material real remote commit loss resumes the original target after rebuilding app', async () => {
+    const old = await media(), next = await media();
+    const created = await call(app(), 'POST', PREFIX, input({ attachmentMediaIds: [old] }));
+    expect(created.status).toBe(201);
+    const task = await Task.findById(created.body.data.task.taskId);
+    const before = await row(task);
+    const body = { title: 'Atomic mixed target', checklistSnapshot: checklist, expectedChecklistVersion: 0, attachmentMediaIds: [next] };
+    dropMediaField = 'attachmentMediaIds';
+    expectError(await call(app(), 'PATCH', url(task), body), 503, 'MEDIA_REFERENCE_PENDING', { resourceId: String(task._id) });
+    const held = await row(task);
+    for (const key of ['title', 'checklistSnapshot', 'checklistVersion', 'attachmentMediaIds', 'attachmentMediaBindings']) {
+      expect(held[key]).toEqual(before[key]);
+    }
+    expect(held.mediaCompletionFence).toEqual({ completionVersion: 0, checklistVersion: 0 });
+    expectError(await call(app(), 'PATCH', url(task), { ...body, checklistSnapshot: [] }), 409, 'RESOURCE_CONFLICT');
+    const recovered = await call(app(), 'PATCH', url(task), body, coparent);
+    expect(recovered.status).toBe(200);
+    expect(recovered.body.data.task).toMatchObject({ title: body.title, checklistVersion: 1, checklistSnapshot: checklist, attachmentMediaIds: [next] });
+    const after = await row(task);
+    expect(after.attachmentMediaBindings).toHaveLength(1);
+    expect(after.attachmentMediaBindings[0].bindingOperationId).toBe(held.mediaBindingOperationId);
+    const release = mediaCalls.find(entry => entry.action === 'unbind' && entry.body.references.some(ref => ref.mediaId === old));
+    expect(release.body.references[0].bindingOperationId).toBe(before.attachmentMediaBindings[0].bindingOperationId);
+    expect(dropped).toHaveLength(1); expectPublic(recovered.body);
+    expectError(await call(app(), 'PATCH', url(task), body), 409, 'VERSION_CONFLICT');
+    expect(await row(task)).toEqual(after);
+  });
+});
 const snapshot = async () => {
   const result = [];
   for (const model of models) result.push(await model.collection.find().sort({ _id: 1 }).toArray());

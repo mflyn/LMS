@@ -1,0 +1,41 @@
+{
+  "scope": "T4_ENGINEERING_SYNTHETIC_CANDIDATE",
+  "finding": "QA-T4-HELP-PROJECTION-001",
+  "status": "APPROVED_CLOSED",
+  "gate": "OPEN",
+  "approvalDate": "2026-10-26",
+  "authorization": "User approved P2 closure records, full T4 candidate freeze, dedicated branch commit/push, PR creation and CI checks. No merge, deployment or server test execution authorized.",
+  "reviewedFixDigest": "d46c962d81cf2d79ba7efd653602739e3cbe69016c0e55ae165f76f3d12eac43",
+  "originalIndependentCandidateDigest": "af848a65c6b7fbf53d231588fc92ad9076aae18e67496dda18d418f79bdd794c",
+  "fixScope": "Shared explicit taskView whitelist in edit/remove responses; no authorization, CAS, database write or frontend production behavior changes in the final P2 fix.",
+  "independentReview": {
+    "reviewer": "01a17687-0900-7c82-b004-eeec5ec0e63d",
+    "decision": "PASS",
+    "backend": { "suites": 3, "passed": 229, "exitCode": 0 },
+    "frontend": { "suites": 4, "passed": 57, "exitCode": 0 },
+    "chromium": { "passed": 2, "exitCode": 0 },
+    "temporaryProbes": { "passed": 5, "excludedByNameFilter": 117, "exitCode": 0 },
+    "evidenceLimit": "229/57/2 outputs exist in the independent review conversation, not separate archived stdout files. Only the five temporary probes have a saved independent log; developer logs are not substitutes.",
+    "oldRedReexecuted": false,
+    "nonBlockingFollowup": "Some private-sentinel, confirmed-awarded archive and repeated-remove combinations are temporary probes, not all permanent tests."
+  },
+  "developerAfterFix": {
+    "backendTargeted": { "suites": 2, "passed": 191, "exitCode": 0 },
+    "frontendTargeted": { "suites": 4, "passed": 57, "exitCode": 0 },
+    "chromiumTargeted": { "passed": 2, "retries": 0, "exitCode": 0 },
+    "homeworkFull": { "suites": 29, "passed": 1254, "skipped": 0, "exitCode": 0 },
+    "documentation": { "passed": 106, "exitCode": 0 },
+    "notRerun": ["full family backend", "full frontend", "full browser suite", "frontend build; production frontend sources unchanged and build match verified"]
+  },
+  "historicalPreFixValidation": {
+    "frontend": { "suites": 46, "passed": 590, "exitCode": 0 },
+    "build": { "exitCode": 0 },
+    "chromium": { "passed": 28, "exitCode": 0 },
+    "formalHttp": { "suites": 3, "passed": 18, "exitCode": 0 },
+    "familyBackend": { "suites": 146, "passed": 4147, "skipped": 1, "exitCode": 0 },
+    "deploymentSupplement": { "passed": 18, "skipped": 0, "exitCode": 0 },
+    "note": "The separate supplement does not erase the original full-run skip or replace later P2 negative evidence."
+  },
+  "retained": ["HISTORICAL_FAILURES_PRESERVED", "DEVICE_PENDING", "REMAINDER_DEFERRED", "D01_OPEN", "T8_PENDING / NOT_AUTHORIZED", "NO_MERGE_OR_DEPLOYMENT", "SERVER_TEST_NOT_EXECUTED"],
+  "rawEvidence": "Ignored local archives; Git contains sanitized summaries and hashes only, not a complete raw evidence backup."
+}

@@ -31,8 +31,14 @@ const pending = new Schema({
 
 // No defaults are written to legacy tasks; the dormant service supplies read projections.
 module.exports = {
-  checklistSnapshot: array(new Schema({ itemId: { type: String, required: true },
-    label: { type: String, required: true, maxlength: 100 }, required: Boolean }, options), 5),
+  checklistSnapshot: {
+    ...array(new Schema({ itemId: { type: String, required: true, maxlength: 100 },
+      label: { type: String, required: true, maxlength: 100 }, required: Boolean }, options), 5),
+    validate: values => values === undefined || Array.isArray(values) && values.length <= 5
+      && Array.from(values).every(value => value && typeof value.itemId === 'string' && value.itemId.trim()
+        && typeof value.label === 'string' && value.label.trim())
+      && new Set(values.map(value => value.itemId)).size === values.length
+  },
   checklistVersion: integer,
   completionVersion: integer,
   completionEvidence: { type: new Schema({ ...patchFields,

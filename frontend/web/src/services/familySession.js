@@ -34,7 +34,9 @@ const toChildSession = (value) => {
     child: {
       childId: value.child.childId,
       familyId: value.child.familyId,
-      name: value.child.name
+      name: value.child.name,
+      ...(Number.isInteger(value.child.grade) && value.child.grade >= 1 && value.child.grade <= 6
+        ? { grade: value.child.grade } : {})
     }
   };
 };

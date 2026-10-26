@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { isDeepStrictEqual } = require('node:util');
 const { entriesToMongoSet } = require('./growthTaskPatch');
+const { assertChecklistVersion } = require('./growthTaskChecklist');
 
 const HIDDEN_GROWTH_TASK_MEDIA_STATE = [
   '+attachmentMediaBindings',
@@ -77,29 +78,74 @@ const createGrowthTaskAttachmentMediaService = ({
     + (completionIsolation ? ' +activeCompletionOperation +completionPending +mediaCompletionFence' : '');
   const versionKeys = ['completionVersion', 'checklistVersion'];
   const storedFence = task => Object.fromEntries(versionKeys.map(key => [key, task[key] ?? 0]));
+  const plainValue = value => value && typeof value.toObject === 'function' ? value.toObject() : value;
+  const publishedPatchSet = previous => {
+    const set = entriesToMongoSet(pendingPatchEntries(previous));
+    const cast = typeof GrowthTaskModel.castObject === 'function' ? GrowthTaskModel.castObject(set) : set;
+    // Mongoose castObject omits nulls; an explicit clear is still part of the persisted intent.
+    return Object.fromEntries(Object.keys(set).map(key => [key, set[key] === null ? null : cast[key]]));
+  };
+  const publishedPatchMatches = (task, previous) => {
+    const expected = publishedPatchSet(previous);
+    return Object.keys(expected).every(key => JSON.stringify(plainValue(task[key])) === JSON.stringify(expected[key]));
+  };
   const assertCompletionIdle = (task) => {
     if (!completionIsolation || !task) return;
     if (task.activeCompletionOperation || task.completionPending
       || ![undefined, 'stable'].includes(task.completionMediaReferenceState)
       || versionKeys.some(key => task[key] !== undefined && (!Number.isSafeInteger(task[key]) || task[key] < 0))) throw pendingError(task._id);
-    if (task.mediaReferenceState === 'pending' && task.mediaCompletionFence !== undefined
-      && versionKeys.some(key => task.mediaCompletionFence?.[key] !== (task[key] ?? 0))) throw pendingError(task._id);
+    if (task.mediaReferenceState === 'pending' && task.mediaCompletionFence !== undefined) {
+      const fence = task.mediaCompletionFence;
+      if (versionKeys.some(key => !Number.isSafeInteger(fence?.[key]) || fence[key] < 0)
+        || fence.completionVersion !== (task.completionVersion ?? 0)) throw pendingError(task._id);
+      let expectedChecklistVersion = fence.checklistVersion;
+      if (task.mediaMutationKind === 'patch') {
+        let set;
+        try {
+          set = entriesToMongoSet(pendingPatchEntries(task));
+          assertChecklistVersion(fence, set);
+        } catch (_cause) { throw pendingError(task._id); }
+        if (task.mediaBindingPhase === 'unbinding') {
+          expectedChecklistVersion = set.checklistVersion ?? fence.checklistVersion;
+          try {
+            if (!publishedPatchMatches(task, task)
+              || !sameOrder(stringIds(task.attachmentMediaIds), stringIds(task.attachmentMediaPendingIds))
+              || !isDeepStrictEqual(bindingDtos(task.attachmentMediaBindings), desiredBindingsFor(task))) throw pendingError(task._id);
+          } catch (_cause) { throw pendingError(task._id); }
+        }
+      }
+      if (expectedChecklistVersion !== (task.checklistVersion ?? 0)) throw pendingError(task._id);
+    }
     if (task.status !== 'pending') throw conflictError();
   };
   const exact = value => value === undefined ? { $exists: false } : value;
   const completionFence = task => {
     if (!completionIsolation) return {};
     assertCompletionIdle(task);
+    const published = task.mediaMutationKind === 'patch' && task.mediaBindingPhase === 'unbinding'
+      ? publishedPatchSet(task) : null;
     return { status: 'pending', activeCompletionOperation: null, completionPending: null,
       completionMediaReferenceState: exact(task.completionMediaReferenceState),
       completionVersion: exact(task.completionVersion), checklistVersion: exact(task.checklistVersion),
-      mediaCompletionFence: task.mediaCompletionFence === undefined ? { $exists: false } : storedFence(task) };
+      mediaCompletionFence: task.mediaCompletionFence === undefined ? { $exists: false } : plainValue(task.mediaCompletionFence),
+      ...(task.mediaReferenceState === 'pending' && task.mediaMutationKind === 'patch'
+        ? { mediaPendingTaskPatch: pendingPatchEntries(task),
+          attachmentMediaPendingIds: exact(plainValue(task.attachmentMediaPendingIds)),
+          attachmentMediaPreviousBindings: exact(plainValue(task.attachmentMediaPreviousBindings)) } : {}),
+      ...(published ? {
+        ...Object.fromEntries(Object.entries(published).map(([key, value]) => [key,
+          value === null ? { $eq: null, $exists: true } : exact(value)])),
+        attachmentMediaIds: plainValue(task.attachmentMediaIds),
+        attachmentMediaBindings: plainValue(task.attachmentMediaBindings)
+      } : {}) };
   };
   const sameCompletionVersions = (left, right) => ['completionVersion', 'checklistVersion', 'completionMediaReferenceState']
     .every(key => left[key] === right[key]);
   // A lost local response may replay only this write, never a later owner's similar result.
-  const isNextSnapshot = (next, previous) => !completionIsolation || Boolean(next
-    && next.__v === (previous.__v ?? 0) + 1 && sameCompletionVersions(next, previous)
+  const isNextSnapshot = (next, previous, published = false) => !completionIsolation || Boolean(next
+    && next.__v === (previous.__v ?? 0) + 1 && sameCompletionVersions(next, published
+      ? { ...plainValue(previous), checklistVersion: entriesToMongoSet(pendingPatchEntries(previous)).checklistVersion
+        ?? previous.checklistVersion } : previous)
     && idsEqual(next.familyId, previous.familyId) && idsEqual(next.childId, previous.childId));
   const selectHidden = async (queryOrPromise) => {
     if (queryOrPromise && typeof queryOrPromise.select === 'function') {
@@ -123,7 +169,8 @@ const createGrowthTaskAttachmentMediaService = ({
       || current.mediaBindingOperationId !== task.mediaBindingOperationId
       || current.mediaBindingPhase !== task.mediaBindingPhase
       || current.mediaMutationKind !== task.mediaMutationKind
-      || current.mediaReferenceState !== 'pending') throw pendingError(task._id);
+      || current.mediaReferenceState !== 'pending'
+      || !isDeepStrictEqual(recoverySnapshot(current), recoverySnapshot(task))) throw pendingError(task._id);
   };
 
   const update = async (filter, updateDocument) => {
@@ -266,16 +313,25 @@ const createGrowthTaskAttachmentMediaService = ({
   });
 
   const convergedPatch = (task, desiredIds, previous) => {
-    if (!task || !isNextSnapshot(task, previous) || task.mediaReferenceState !== mediaStateForIds(desiredIds)) return false;
+    if (!task || !isNextSnapshot(task, previous, previous.mediaBindingPhase === 'binding')
+      || task.mediaReferenceState !== mediaStateForIds(desiredIds)) return false;
     if (completionIsolation && (task.mediaBindingOperationId || task.mediaBindingPhase
+      || !publishedPatchMatches(task, previous)
       || JSON.stringify(bindingDtos(task.attachmentMediaBindings)) !== JSON.stringify(desiredBindingsFor(previous)))) return false;
     return sameOrder(stringIds(task.attachmentMediaIds || []), desiredIds);
   };
 
   const canResumeUnbinding = (task, previous) => task && task.mediaBindingPhase === 'unbinding'
-    && (!completionIsolation || isNextSnapshot(task, previous)
+    && (!completionIsolation || isNextSnapshot(task, previous, true)
       && task.mediaBindingOperationId === previous.mediaBindingOperationId
-      && task.mediaMutationKind === 'patch' && task.mediaReferenceState === 'pending');
+      && task.mediaMutationKind === 'patch' && task.mediaReferenceState === 'pending'
+      && publishedPatchMatches(task, previous)
+      && isDeepStrictEqual(entriesToMongoSet(pendingPatchEntries(task)), entriesToMongoSet(pendingPatchEntries(previous)))
+      && isDeepStrictEqual(plainValue(task.mediaCompletionFence), plainValue(previous.mediaCompletionFence))
+      && sameOrder(stringIds(task.attachmentMediaPendingIds), stringIds(previous.attachmentMediaPendingIds))
+      && sameOrder(stringIds(task.attachmentMediaIds), stringIds(previous.attachmentMediaPendingIds))
+      && isDeepStrictEqual(bindingDtos(task.attachmentMediaPreviousBindings), bindingDtos(previous.attachmentMediaPreviousBindings))
+      && isDeepStrictEqual(bindingDtos(task.attachmentMediaBindings), desiredBindingsFor(previous)));
 
   const rollbackCreateOnStablePrepare = async (task, stableError) => {
     let deleted;
@@ -716,7 +772,10 @@ const createGrowthTaskAttachmentMediaService = ({
         && reloaded.mediaReferenceState === 'pending'
         && reloaded.mediaBindingOperationId === operationId
         && reloaded.mediaMutationKind === 'patch'
-        && (!completionIsolation || reloaded.mediaBindingPhase === 'binding')) {
+        && (!completionIsolation || reloaded.mediaBindingPhase === 'binding'
+          && sameOrder(stringIds(reloaded.attachmentMediaPendingIds), desiredIds)
+          && isDeepStrictEqual(entriesToMongoSet(pendingPatchEntries(reloaded)), entriesToMongoSet(taskPatch))
+          && isDeepStrictEqual(plainValue(reloaded.mediaCompletionFence), storedFence(task)))) {
         return reloaded;
       }
       throw pendingError(task._id);
@@ -727,12 +786,18 @@ const createGrowthTaskAttachmentMediaService = ({
   };
 
   const mutate = async ({ task, taskPatch = [], attachmentMediaIds } = {}) => {
+    const patchSet = entriesToMongoSet(taskPatch);
+    if (!completionIsolation && Object.prototype.hasOwnProperty.call(patchSet, 'checklistVersion')) {
+      throw conflictError();
+    }
     const initial = await load(task);
     if (!initial) throw conflictError();
     if (initial.mediaReferenceState === 'pending' && attachmentMediaIds !== undefined) {
       const desiredIds = normalizeAttachmentMediaIds(attachmentMediaIds);
       return resolvePendingAttachmentRequest(initial, desiredIds, taskPatch);
     }
+    if (initial.mediaReferenceState === 'pending' && patchSet.checklistVersion !== undefined) throw pendingError(initial._id);
+    assertChecklistVersion(initial, patchSet);
 
     const current = await resume(initial, {
       expectedSnapshot: completionIsolation ? recoverySnapshot(initial) : undefined

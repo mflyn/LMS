@@ -422,8 +422,10 @@ test('partial upload preserves successful images, then submits ten images and re
   expect(second.database.Tombstone).toEqual([]);
 });
 
-test('parent records work, coparent retries a lost confirmation response without replacing the first audit', async ({ page }) => {
+test('parent records work, coparent retries a lost confirmation response without replacing the first audit', async ({ page, browser }) => {
   const task = await newTask('Synthetic shared parent review');
+  expectData(await fixtureParent.patch(`/api/growth-tasks/${task.taskId}`, { expectedChecklistVersion: 0,
+    checklistSnapshot: [{ itemId: 'read', label: 'Synthetic selfcheck', required: true }] }));
   await parentLogin(page); await openReview(page, task);
   await page.getByRole('button', { name: '代录完成情况' }).click();
   await upload(page);
@@ -432,6 +434,9 @@ test('parent records work, coparent retries a lost confirmation response without
   await expect(page.getByText('作品版本 1')).toBeVisible();
   const recorded = rows(await runtime.inspect(), 'Task', '_id', task.taskId)[0];
   expect(recorded.completionEvidence.submittedByActor).toEqual({ id: fixture.actors.parent.userId, role: 'parent' });
+  expect(recorded.completionEvidence.checkedItemIds).toEqual([]);
+  await expect(page.getByText('家长代录', { exact: true })).toBeVisible();
+  await expect(page.getByText('Synthetic selfcheck：未勾选', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '关闭', exact: true }).click();
   await page.getByRole('button', { name: '退出登录' }).click();
   await parentLogin(page, 'coparent'); await openReview(page, task);
@@ -450,5 +455,16 @@ test('parent records work, coparent retries a lost confirmation response without
   expect(rows(confirmed, 'Task', '_id', task.taskId)[0]).toMatchObject({
     confirmedByParentId: fixture.actors.coparent.userId, parentFeedback: 'Synthetic coparent first feedback'
   });
+  expect(rows(confirmed, 'Task', '_id', task.taskId)[0].completionEvidence.submittedByActor)
+    .toEqual(recorded.completionEvidence.submittedByActor);
   expect(rows(confirmed, 'Ledger', 'sourceId', task.taskId)).toHaveLength(1);
+  const childContext = await browser.newContext();
+  try {
+    const childPage = await childContext.newPage(); await childLogin(childPage);
+    await childPage.goto(runtime.webUrl + taskPath(task));
+    await expect(childPage.getByText('家长代录', { exact: true })).toBeVisible();
+    await expect(childPage.getByText('Synthetic selfcheck：未勾选', { exact: true })).toBeVisible();
+    await expect(childPage.getByText('Synthetic coparent first feedback', { exact: true })).toBeVisible();
+    await expect(childPage.getByRole('button', { name: '修改本次完成' })).toHaveCount(0);
+  } finally { await childContext.close(); }
 });

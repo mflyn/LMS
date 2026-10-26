@@ -33,7 +33,10 @@ const createGrowthTaskCompletionProductionRouter = ({ completionService, confirm
   };
   const parse = (parser, body) => {
     if (body && Object.prototype.hasOwnProperty.call(body, 'repeatRule')) throw error(400, 'REPEAT_RULE_NOT_SUPPORTED');
-    try { return parser(body); } catch (_cause) { throw invalid(); }
+    try { return parser(body, { checklistEnabled: true }); } catch (cause) {
+      if (cause?.code === 'CHECKLIST_ITEM_INVALID') throw cause;
+      throw invalid();
+    }
   };
   const validate = async values => {
     try { await validateGrowthTaskValues(Task, values); } catch (_cause) { throw invalid(); }

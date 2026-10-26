@@ -211,7 +211,7 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
     ['T2 approval record scope widens', approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY'],
     ['T2 defect reopened', approval, '"T2-P2-JWT": "CLOSED"', '"T2-P2-JWT": "OPEN"', 'T2 approval record must close exactly the three reviewed P2 defects'],
     ['T2 approval record device passed', approval, '"device": "DEVICE_PENDING"', '"device": "PASSED"', 'T2 approval record must preserve pending and deferred boundaries'],
-    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
+    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
     ['T3 closure regresses', gate, '| T3 | CLOSED |', '| T3 | IN_PROGRESS |', 'exactly one CLOSED T3 row'],
     ['T3 missing', gate, '| T3 | CLOSED |', '| removed | CLOSED |', 'exactly one CLOSED T3 row'],
     ['T3 contradictory duplicate', gate, '| T3 | CLOSED |', '| T3 | CLOSED | current |\n|  T3  | OPEN |', 'exactly one CLOSED T3 row'],
@@ -234,7 +234,10 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
     ['T3 evidence bytes changed', t3Review, '"decision": "PASS"', '"decision":  "PASS"', 'T3 independent review must bind the reviewed candidate'],
     ['T3 original independent failure erased', t3Submission, '"decision": "NEEDS_FIXES"', '"decision": "PASS"', 'T3 must preserve its original failed independent review'],
     ['T3 original open snapshot erased', t3Submission, '"gateAtSubmission": "OPEN"', '"gateAtSubmission": "CLOSED"', 'T3 must preserve its original failed independent review'],
-    ...Array.from({ length: 6 }, (_, index) => `T${index + 4}`).map(task => [
+    ['T4 closes without approval', gate, '| T4 | IN_PROGRESS |', '| T4 | CLOSED |', 'T4 must be IN_PROGRESS'],
+    ['T4 implementation disappears', gate, '| T4 | IN_PROGRESS |', '| T4 | NOT_STARTED |', 'T4 must be IN_PROGRESS'],
+    ['T4 closure approval removed', gate, '关闭需用户批准 |', '自动关闭 |', 'T4 must be IN_PROGRESS'],
+    ...Array.from({ length: 5 }, (_, index) => `T${index + 5}`).map(task => [
       `${task} starts without approval`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | IN_PROGRESS |`, `keep ${task} as NOT_STARTED`
     ]),
     ['plan status regresses', plan, 'T1 后端工程已关闭', 'T1 执行中', 'approved T1 plan status'],

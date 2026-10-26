@@ -16,7 +16,8 @@ const pendingTaskPatchSchema = new Schema({
     required: true,
     enum: [
       'dimension', 'area', 'subject', 'title', 'taskType', 'description',
-      'dueDate', 'estimatedMinutes', 'targetAmount', 'unit', 'priority'
+      'dueDate', 'estimatedMinutes', 'targetAmount', 'unit', 'priority',
+      'checklistSnapshot', 'checklistVersion'
     ]
   },
   value: { type: Schema.Types.Mixed }

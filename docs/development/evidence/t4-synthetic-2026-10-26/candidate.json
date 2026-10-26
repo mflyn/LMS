@@ -1,0 +1,171 @@
+{
+  "baseCommit": "0ba4ef2b3dbb974b6f9437e3fc6b25949db87e69",
+  "scope": "Full T4 code/tests and T4-only document hunks; evidence metadata excluded to avoid self-reference",
+  "fileCount": 32,
+  "codeAndTests": 27,
+  "documents": 5,
+  "digestAlgorithm": "SHA-256 of JSON.stringify(files), sorted by path",
+  "candidateDigest": "4e3f64fa3a1a2ad5d567f4f151ed23ef8dc6a92aa19a9f22c76c7674947b3616",
+  "files": [
+    {
+      "path": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 22206,
+      "sha256": "e9bda718a31bbb77d02061936e7eb26281eff32ddd364a26853134d130b76f24"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/growthTaskChecklist.test.js",
+      "bytes": 5331,
+      "sha256": "57d41ea95dde73019356f767ac3ecdc0f514408a66b9d330c2e66536848ca18b"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/growthTaskCompletionAttachmentIsolation.test.js",
+      "bytes": 28290,
+      "sha256": "c58da1dc9fc7ea353dd51e6e537469d2d3904c4e399e21f5e8da4ec77c93b6b5"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/growthTaskCompletionMutationService.test.js",
+      "bytes": 25995,
+      "sha256": "fe1a561f228f249932336381a7f4db60ad87c9dbe48db686b552945fa9e9d6a1"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/growthTaskCompletionProductionAssembly.test.js",
+      "bytes": 94641,
+      "sha256": "068522f7b9aab4f3c60f4a99a8fe8b04832c8242af947f811674cb2513d78df6"
+    },
+    {
+      "path": "backend/services/homework-service/models/GrowthTask.js",
+      "bytes": 11487,
+      "sha256": "a7d10d7ec4f8131f75c1e0907010ab9c45846bec96a3885a89ac12bcb82bce85"
+    },
+    {
+      "path": "backend/services/homework-service/models/growthTaskCompletionFields.js",
+      "bytes": 3427,
+      "sha256": "ad977bc55f94e1408380d7a10660cf238ee0f595a234c57c646b8af0277b76f1"
+    },
+    {
+      "path": "backend/services/homework-service/routes/growthTaskCompletionProduction.js",
+      "bytes": 5823,
+      "sha256": "c7ffa97871d1bade47bc3f64744a204c153dfad763b5cb6a2a0ead7c36f60023"
+    },
+    {
+      "path": "backend/services/homework-service/services/growthTaskAttachmentMediaService.js",
+      "bytes": 36184,
+      "sha256": "c76229c0ee4c1f94afed61536d993b257fd16cc08a7d85a335d48ae470cd335c"
+    },
+    {
+      "path": "backend/services/homework-service/services/growthTaskChecklist.js",
+      "bytes": 2779,
+      "sha256": "42a39a33a9c3f949dc495ac1177de387daad3431ad5f52b4b86c1cdf6ccb8f9d"
+    },
+    {
+      "path": "backend/services/homework-service/services/growthTaskCompletionMutationService.js",
+      "bytes": 4521,
+      "sha256": "d29e455dbc3e05c6b3885bf778b98cf12c416f9c580278730c3632fbfb753699"
+    },
+    {
+      "path": "backend/services/homework-service/services/growthTaskPatch.js",
+      "bytes": 5635,
+      "sha256": "13a4986963beba42e41c9734a8f7786cb66e2ba6e4357ecea44c4d5edd9821b8"
+    },
+    {
+      "path": "docs/api/family-learning-tracker-api.md",
+      "bytes": 126904,
+      "sha256": "fe7e4a9747013bbb9b9c7b55dff5e23395f8e1315452a131c9ba32a5873e27b0"
+    },
+    {
+      "path": "docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 108867,
+      "sha256": "2003b87407bb4dd0469ea71ce006881b4fd653f64e02962104273b5560495f73"
+    },
+    {
+      "path": "docs/development/README.md",
+      "bytes": 10077,
+      "sha256": "152df0e5a79031aab61b45a6be5c6464dd63316d80e4c594e5d9b5522977bd89"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 450519,
+      "sha256": "b8a2b901897b4a30f92b832067a7f7180a1b07422a85bda8d6882618fa3e095d"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 72830,
+      "sha256": "defb18a42cc57d3be8c5d35453b1699e6a9446f32ec179a0efc9a5638bb3dca5"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/ChildTaskCompletion.test.js",
+      "bytes": 15063,
+      "sha256": "6fed47ebb4a4b103ec7b87a5ed06a6b789e33cc1302116579da9515bdcc91caa"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/childSession.test.js",
+      "bytes": 4071,
+      "sha256": "16ab7aa57969a9331cc8d1b0aa051affd7d00fe21699510482fc20671272d12b"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/TaskChecklistPages.test.js",
+      "bytes": 23829,
+      "sha256": "fa4e9e0f83dcb311aa9c3d9daeaab2eb8abbd2cdb55c99fd7d4fb64769ac61b6"
+    },
+    {
+      "path": "frontend/web/src/__tests__/shared/useDraftMedia.test.js",
+      "bytes": 1965,
+      "sha256": "f8dedc1f5a064a95a6fd580df49965bedcf5d52a5c7a58d178955da67e0fb361"
+    },
+    {
+      "path": "frontend/web/src/components/family/TaskChecklistEditor.js",
+      "bytes": 2521,
+      "sha256": "d6d1a60723de9e18b597fb55b117b05cf987d48d1dcbc40540727dacc53843fc"
+    },
+    {
+      "path": "frontend/web/src/components/family/TaskCompletionEvidence.css",
+      "bytes": 3293,
+      "sha256": "a3fc89924f0f254734d76364540a9e1ac1c7a92e91864994410b7fe14e72d070"
+    },
+    {
+      "path": "frontend/web/src/components/family/TaskCompletionEvidence.js",
+      "bytes": 11563,
+      "sha256": "c95b0ba2737313f896ab7916f8e07c09ebd36b6ee48e124c9a3a65709f125c56"
+    },
+    {
+      "path": "frontend/web/src/family-shell.css",
+      "bytes": 14382,
+      "sha256": "f62624f44016d8f2cfd09149166f2e129d94f3bd483f292502de32deb2b71d19"
+    },
+    {
+      "path": "frontend/web/src/hooks/useDraftMedia.js",
+      "bytes": 1624,
+      "sha256": "142fb08a5b8a5c985f36bd75ad479dfe9b19df6a7f6182634ff4049a19e39665"
+    },
+    {
+      "path": "frontend/web/src/pages/child/ChildTaskPage.js",
+      "bytes": 4494,
+      "sha256": "b4bcc1cabd611065b6f27b525e77e1fccbe0c7f3aa505c1f5bab892fb995c749"
+    },
+    {
+      "path": "frontend/web/src/pages/family/TasksPage.js",
+      "bytes": 26595,
+      "sha256": "6dae8d132e28a08754bd0af223b54f397e9436ba672715f706e9466242a5bc34"
+    },
+    {
+      "path": "frontend/web/src/services/familySession.js",
+      "bytes": 11922,
+      "sha256": "cc9b809c5f72e74b1ac2eb176c7db57862b3f4cd7be12e18d1b8a5b14fa1cf35"
+    },
+    {
+      "path": "scripts/check-family-docs.js",
+      "bytes": 165631,
+      "sha256": "be91d21d0b6d71d96432a5a823685f886a4879ec102aa3539c3304c045ec7dab"
+    },
+    {
+      "path": "tests/e2e/t2/checklist.spec.js",
+      "bytes": 19126,
+      "sha256": "aec5e1ebf7a7797754edba66812492dfc99a210d5c3c03a726c1aaa4fd9a3aba"
+    },
+    {
+      "path": "tests/e2e/t2/completion.spec.js",
+      "bytes": 31606,
+      "sha256": "d6440176713834ea5552ba9cb63f53b7e80812685f4764276aba8a78ff1046b5"
+    }
+  ]
+}

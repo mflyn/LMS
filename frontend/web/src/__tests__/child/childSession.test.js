@@ -28,15 +28,29 @@ describe('child session storage isolation', () => {
       child: { ...childIdentity, grade: 3, secret: 'discard-me' }
     })).toEqual({
       token: 'child-token',
-      child: childIdentity
+      child: { ...childIdentity, grade: 3 }
     });
 
     expect(loadChildSession()).toEqual({
       token: 'child-token',
-      child: childIdentity
+      child: { ...childIdentity, grade: 3 }
     });
     expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parentSnapshot);
     expect(localStorage.getItem(CHILD_SESSION_KEY)).not.toContain('discard-me');
+  });
+
+  test.each([undefined, null, 0, 7, 1.5, '1', true, {}])('invalid grade %p uses the generic identity without rejecting login', grade => {
+    saveChildSession({ token: 'synthetic-child', child: { ...childIdentity, grade } });
+    expect(loadChildSession().child).toEqual(childIdentity);
+  });
+
+  test('new login refreshes grade and switching to an unknown-grade child never retains it', () => {
+    saveChildSession({ token: 'first', child: { ...childIdentity, grade: 1 } });
+    expect(loadChildSession().child.grade).toBe(1);
+    saveChildSession({ token: 'renewed', child: { ...childIdentity, grade: 4 } });
+    expect(loadChildSession().child.grade).toBe(4);
+    saveChildSession({ token: 'other', child: { ...childIdentity, childId: 'child-b' } });
+    expect(loadChildSession().child).toEqual({ ...childIdentity, childId: 'child-b' });
   });
 
   test.each([
