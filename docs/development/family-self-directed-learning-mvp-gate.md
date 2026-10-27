@@ -5183,3 +5183,16 @@ SL-05 仍 PLANNED；不关闭 T4，不自动启动 T7，不沿用或新增 Git�
 T6 CLOSED / ENGINEERING_SYNTHETIC_ONLY 不变；历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
 T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED 和 T7/T8/T9 责任全部保留。
 交接与服务器边界见 [T6 GitHub 与隔离测试交接](family-self-directed-learning-t6-github-handoff.md)。
+
+### 26.8 T6 独立服务器合成回归记录（不扩大门禁）
+
+独立测试固定 `a3aa01cf2f2fee99df654592b07f37b901ad2c46`，判定 PASS_T6_SERVER_SYNTHETIC_REGRESSION。
+本线程只读核验封存 367 项及源码 1791 文件，实际 JSON 计数与摘要一致；完整结果和失败分类见
+[独立服务器验收记录](evidence/t6-server-synthetic-2026-10-27/README.md)。
+家庭后端 152/4455、前端 52/678、正式 HTTP 5/27；Mac Chromium/WebKit 经回环访问 Ubuntu 合成服务，
+各 48 项、健康 4 项、真实 403 探针 2 项通过；专项及独立组件探针分列，不重复累加。
+容器 2 CPU/3 GiB/cgroup swap0，不称宿主无 swap；13 阶段快照不等于全时段 Docker 审计。
+三项 QA 工具/归档观察失败原样保留，不归为产品缺陷或覆盖历史失败。
+既有 CLOSED / ENGINEERING_SYNTHETIC_ONLY 及当前 Git 标记不扩大；本次只做本地文档记录，不新增提交、
+推送、PR 写入、合并或部署。M01–M08 MANUAL_PENDING/DEVICE_PENDING、D01–D04、T4 状态、
+Docker INCOMPLETE_FAILED、两项 OPEN_NONBLOCKING、REMAINDER_DEFERRED 及 T7/T8/T9 责任保持。

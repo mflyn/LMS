@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 1,
+  "recordType": "INDEPENDENT_SERVER_EVIDENCE_INGESTION",
+  "sourceRoot": "/Users/linmingfeng/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t6-ubuntu-test-2026-10-27/r1",
+  "sourceAccess": "READ_ONLY",
+  "checks": {
+    "result": "PASS_LOCAL_READ_ONLY_EVIDENCE_RECHECK",
+    "candidate": "a3aa01cf2f2fee99df654592b07f37b901ad2c46",
+    "sourceDigest": "ad6df574fee80ca6a239cc1bc26cdd4b45b798eb77cf8ce96d32519404e07518",
+    "sourceFilesVerified": 1791,
+    "manifestEntriesVerified": 367,
+    "archiveEntriesVerified": 319,
+    "rawServerInputsVerified": 288,
+    "exportedPayloadFilesVerified": 287,
+    "exportManifestExcludedFromPayloadCount": true,
+    "counts": {
+      "source-unit": {
+        "suites": 4,
+        "passed": 194,
+        "failed": 0,
+        "pending": 0
+      },
+      "family": {
+        "suites": 152,
+        "passed": 4455,
+        "failed": 0,
+        "pending": 0
+      },
+      "frontend": {
+        "suites": 52,
+        "passed": 678,
+        "failed": 0,
+        "pending": 0
+      },
+      "http": {
+        "suites": 5,
+        "passed": 27,
+        "failed": 0,
+        "pending": 0
+      },
+      "independent-probes": {
+        "suites": 2,
+        "passed": 8,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    "browsers": {
+      "chromium-full": {
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      },
+      "chromium-health-pre": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      },
+      "chromium-health-post": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      },
+      "chromium-probes": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      },
+      "webkit-full": {
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      },
+      "webkit-health-pre": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      },
+      "webkit-health-post": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      },
+      "webkit-probes": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      }
+    },
+    "sourceManifestHash": "2aeb36699869f1e0ec4ef3147c5ace3293e65e1b3e730dbd0c109153a111527d",
+    "serverTestsRerun": false,
+    "remoteAccess": false,
+    "productChanges": false,
+    "findings": [],
+    "scope": "Evidence ingestion and documentation only; no new acceptance approval"
+  },
+  "sources": [
+    {
+      "file": "REPORT.md",
+      "bytes": 7072,
+      "sha256": "c5f3d0db6d3d88b28cdf9f896368b4d4d3c57e962968efc8e979455e75d85bca"
+    },
+    {
+      "file": "TEST-RESULTS.md",
+      "bytes": 15015,
+      "sha256": "925a227d46ea1989d4fce3a5272b445995df76ba2f3b2ca0707ed2d5953a0f39"
+    },
+    {
+      "file": "results.json",
+      "bytes": 430414,
+      "sha256": "938f3a6c2f9f55044c84ca26e2a1d4da66b1de7c5f4085e28482a5f51958b30a"
+    },
+    {
+      "file": "findings.json",
+      "bytes": 1376,
+      "sha256": "50bf3180d63e99b5c975e8a7b0a54a08306a98ed796fed970c8919469fac3c1c"
+    },
+    {
+      "file": "verification.json",
+      "bytes": 797,
+      "sha256": "57960d8788c1a9d9d5d27f585d59577a58dcee5217de4e77586f5ee36d89c530"
+    },
+    {
+      "file": "manifest.json",
+      "bytes": 76653,
+      "sha256": "2aeb36699869f1e0ec4ef3147c5ace3293e65e1b3e730dbd0c109153a111527d"
+    },
+    {
+      "file": "candidate.json",
+      "bytes": 352015,
+      "sha256": "8d36c3430a8f00e45d1c02962bb40183bb94f61b401f58d711c155d00703120a"
+    },
+    {
+      "file": "archive-quality.json",
+      "bytes": 107406,
+      "sha256": "7ce04ece2f5201a6e5f6e8bf571104c12986cbee1f8ddc7d2eddf0107f3ddb53"
+    },
+    {
+      "file": "connection-close.json",
+      "bytes": 396,
+      "sha256": "c3bf6a55eabcb55b348eff4f23d6c0e3a4ff1dc29cb65d126bece107e1aa6d62"
+    },
+    {
+      "file": "connection-close-initial.json",
+      "bytes": 326,
+      "sha256": "e3f8dc3ff968616c8903ea4dc8d78355c57a4e16a56e72aa005911e1c83512e4"
+    },
+    {
+      "file": "export-normalization-check.json",
+      "bytes": 341,
+      "sha256": "9e0c5162980bc2902e31a9d837235ba8e02990fe475a83b53a8832343040f546"
+    },
+    {
+      "file": "export-initial-command.json",
+      "bytes": 1599,
+      "sha256": "1aae956807a73a2981314e458886999f63693d6a2138f13d9d2091f044cdc39c"
+    },
+    {
+      "file": "harness/export.cjs",
+      "bytes": 3969,
+      "sha256": "173b34ee2fcf440780d8765ef80c8d3274fc13d420d8d2f3c23c41b5afab59b1"
+    },
+    {
+      "file": "server/reports/export-manifest.json",
+      "bytes": 61673,
+      "sha256": "961612e70ac27e424197b3cad7fdbd077226f6183383046c68e3039652f4a864"
+    },
+    {
+      "file": "server/reports/offline/run.json",
+      "bytes": 2354,
+      "sha256": "c8edad7fc3fdfa1e57dcc69182185e5ab6b2e14f05530833c9f1030003358ab9"
+    },
+    {
+      "file": "server/reports/regression-container.json",
+      "bytes": 1124,
+      "sha256": "c1cbe5a6cec526fdf2c928d1e3eebb165a06cd0c105eff080d0c75d0caef6189"
+    },
+    {
+      "file": "server/reports/environment-after.json",
+      "bytes": 7374,
+      "sha256": "deb80273914463e53b7255afb1f0529afd03134a36958d15ae15edf783c4d9ec"
+    },
+    {
+      "file": "server/reports/compose.json",
+      "bytes": 2020,
+      "sha256": "225a638b36f3acc29f6b67f7fe7e80de29de2507448d8585728c2939dff34218"
+    },
+    {
+      "file": "server/reports/compose-diagnosis.json",
+      "bytes": 2568,
+      "sha256": "d94c5eff670f3616ec76e9c8866b51f6f12e6f638bb797f410138d560d21b744"
+    },
+    {
+      "file": "transfer.json",
+      "bytes": 4373,
+      "sha256": "4b9ac55a114f8c34d0f992d084a8c0c1b2d77b292e0245a8baa3ed12a8b637e2"
+    },
+    {
+      "file": "server/reports/regression/source-unit.json",
+      "bytes": 70597,
+      "sha256": "5d2baac30f05834336d329e93f1c720dc9114e9d1f29dce88e3bcb2eeaf6283d"
+    },
+    {
+      "file": "server/reports/regression/family.json",
+      "bytes": 1620539,
+      "sha256": "2ba41346410bf36cf2eba5ce62548d1b95792dfbf563bebe8a92f42150f80c1a"
+    },
+    {
+      "file": "server/reports/regression/frontend.json",
+      "bytes": 186138,
+      "sha256": "3e4bc7a039e9e91c63e59b198490dc843cf29f957201d1f3c1017f222c35bca2"
+    },
+    {
+      "file": "server/reports/regression/http.json",
+      "bytes": 13242,
+      "sha256": "2af26a157e9164f2a92b899a0bd4d5bb99a430c92e5bac9d57e02b7bcaf8f4b0"
+    },
+    {
+      "file": "server/reports/regression/independent-probes.json",
+      "bytes": 3311,
+      "sha256": "070a20449fec671be9ddc1387d648b4b9fe88b42c1e1166aee7bdd2a49dc93e8"
+    },
+    {
+      "file": "server/reports/browser-chromium-full/results.json",
+      "bytes": 193339,
+      "sha256": "e2b90722a11408601c93d52cdcdfd6a45389ca75634c01199ed4ae37a0298e17"
+    },
+    {
+      "file": "server/reports/browser-chromium-health-pre/results.json",
+      "bytes": 6588,
+      "sha256": "c751b1933d3838efffaafb240dfb51c1608c939edb975dd31cb36877f9ec6f28"
+    },
+    {
+      "file": "server/reports/browser-chromium-health-post/results.json",
+      "bytes": 6589,
+      "sha256": "bfc1d6791e7c6d0f98673a7ed57db94a6c05765886f681ad6db7790bba8a312b"
+    },
+    {
+      "file": "server/reports/browser-chromium-probes/results.json",
+      "bytes": 4568,
+      "sha256": "212128af4c5ad0a66704fa0ea0dde95f135708c958aff927040c6e032c703a00"
+    },
+    {
+      "file": "server/reports/browser-webkit-full/results.json",
+      "bytes": 193085,
+      "sha256": "06d795d2ca32b5f2febeb631130a885bbb84692290198287463774c49a689e58"
+    },
+    {
+      "file": "server/reports/browser-webkit-health-pre/results.json",
+      "bytes": 6576,
+      "sha256": "5e15b94610aaae7de961f46cc01cb39d2d14de0fcabe9fe391a32274d297ae1c"
+    },
+    {
+      "file": "server/reports/browser-webkit-health-post/results.json",
+      "bytes": 6576,
+      "sha256": "a35a587bf41d438b5f05118af98359d3a2818cc42feda52df319ea9e9966684f"
+    },
+    {
+      "file": "server/reports/browser-webkit-probes/results.json",
+      "bytes": 4567,
+      "sha256": "6aee25db3507646358e73d0956e332a91a05dd52b3d040af6c407cb3c1cf2f2b"
+    }
+  ],
+  "localDocumentationValidation": {
+    "statusCheck": "PASS",
+    "documentationGate": {
+      "passed": 250,
+      "failed": 0
+    },
+    "productTestsRerun": false
+  },
+  "countClarification": {
+    "originalLocalCheck": "FAIL: compared 288 files including manifest against 287 payload files",
+    "sourceContract": "export-manifest.json excludesSelf=true; entries=287",
+    "correctedCheck": "PASS: 287 payload hashes plus export manifest; 288 raw server hashes verified",
+    "sourceEvidenceModified": false
+  },
+  "preserved": {
+    "engineeringGate": "CLOSED_ENGINEERING_SYNTHETIC_ONLY",
+    "device": "DEVICE_PENDING",
+    "manualCases": "M01-M08 pending",
+    "deferredCases": "D01-D04 DEFERRED_UNCHANGED",
+    "advancedRecoveryAndNewCleanup": "REMAINDER_DEFERRED; disabled",
+    "dockerHistoricalAudit": "INCOMPLETE_FAILED",
+    "t5Nonblocking": "T5-NB-001/002 OPEN_NONBLOCKING",
+    "historicalFailures": "PRESERVED"
+  },
+  "operations": {
+    "commit": false,
+    "push": false,
+    "prWrite": false,
+    "merge": false,
+    "deploy": false,
+    "serverAccess": false
+  },
+  "reviewScope": "Local documentation self-check against sealed independent evidence, not a new independent product review or user approval"
+}

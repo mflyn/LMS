@@ -1,5 +1,14 @@
 # T6 GitHub 与服务器隔离测试交接
 
+## 最新独立服务器结果
+
+2026-10-27 独立测试已对固定 `a3aa01cf2f2fee99df654592b07f37b901ad2c46` 完成合成回归，
+结论 PASS_T6_SERVER_SYNTHETIC_REGRESSION；详见 [独立记录及证据](evidence/t6-server-synthetic-2026-10-27/README.md)。
+下文“本次只准备/未执行服务器”和 CI 待验均为 Git 交付当时快照，保留历史，不作为当前服务器结论。
+本轮实际为 Ubuntu 宿主的 Debian 容器 2 CPU/3 GiB/cgroup swap0（宿主有 swap），Mac 双引擎回环访问；
+不能冒称真机或 Linux 浏览器。环境已收尾，不按本清单自动重启。最新记录不授权本轮新增 Git/PR 写入、合并或部署。
+M01–M08、D01–D04、DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项非阻断补测及后置范围不变。
+
 **工程状态：** CLOSED / ENGINEERING_SYNTHETIC_ONLY。
 **Git 授权：** BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY。
 **保留项：** 历史失败 PRESERVED；DEVICE_PENDING；Docker INCOMPLETE_FAILED；
