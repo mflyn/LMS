@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { randomUUID } = require('crypto');
 const { createT2WebRuntime } = require('./webRuntime');
+const { openParentTasks } = require('./parentNavigation');
 const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
 
 let runtime, fixture, fixtureParent;
@@ -40,13 +41,13 @@ async function newTask(title) {
     dueDate: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(new Date()) }), 201).task;
 }
 async function openReview(page, task) {
-  await page.goto(runtime.webUrl + '/app/tasks');
+  await openParentTasks(page, runtime.webUrl);
   await page.getByRole('button', { name: `查看 ${task.title}`, exact: true }).click();
   await expect(page.getByRole('dialog', { name: '作品查看与审核' })).toBeVisible();
 }
 function monitor(page) {
   const failures = [];
-  page.on('pageerror', () => failures.push('uncaught page error'));
+  page.on('pageerror', error => failures.push(error.message));
   page.on('console', message => { if (message.type() === 'error') failures.push(message.text().replace(/https?:\/\/\S+/g, '[url]')); });
   return failures;
 }
@@ -64,7 +65,15 @@ test('real pages: upload, refresh, parent review, child feedback; four viewports
   try {
     const task = await newTask('Synthetic browser work');
     await childLogin(page);
-    await page.getByRole('link', { name: new RegExp(task.title) }).click();
+    const taskLink = page.getByRole('region', { name: '今天的任务', exact: true })
+      .getByRole('link', { name: new RegExp(task.title) });
+    const planLink = page.getByRole('region', { name: '今日计划', exact: true })
+      .getByRole('link', { name: task.title, exact: true });
+    await expect(taskLink).toHaveCount(1);
+    await expect(planLink).toHaveCount(1);
+    await expect(taskLink).toHaveAttribute('href', taskPath(task));
+    await expect(planLink).toHaveAttribute('href', taskPath(task));
+    await taskLink.click();
     await upload(page);
     await page.getByLabel('我的一句话').fill('Synthetic reflection');
     await page.getByRole('button', { name: '提交完成情况' }).click();
