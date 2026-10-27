@@ -62,6 +62,10 @@ T2-1 基线修复与门禁 P2、T2-R 公开恢复后端及 owner/pending P2 已�
 
 ## 后续 AI 学习扩展边界
 
+2026-10-26 已补充[DeepTutor/K12 最小路线](../superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md#9-deeptutor-与-k12-最小对接路线2026-10-26-补充)：
+AI-0 可提前做单章节能力验证；AI-1～AI-3 和 K12-1 按基础闭环、家庭需求及独立授权启动。
+T1～T9 不因此增加 AI 验收；本次只有路线文档，没有已执行的验证或接入。正式使用仍满足 T8，默认 T9 后启动。
+
 [家庭 AI 学习平台设计](../architecture/family-ai-learning-platform-design.md)是后续
 DeepTutor、K12-KGraph 和家长人工审核教学闭环的设计草案。
 它不属于 Task 1～12 或当前 38 项需求；其中路由、模型和 feature flag 只有在新增

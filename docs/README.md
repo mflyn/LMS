@@ -22,7 +22,7 @@ SL-01 至 SL-07 是当前 PLANNED 增量，历史 38/38 不代表增量完成。
 | 使用 | [用户指南](./user-guide/README.md) | 家长和孩子的操作流程 |
 | 自主学习理论与系统设计 | [理论与总体方案](./research/family-self-directed-learning-theory-and-program.md) / [系统设计](./architecture/family-self-directed-learning-system-design.md) | 已确认长期方向的理论依据；本轮数学增量 PLANNED，分龄交互和实施边界；长期项目仍为 MVP 后储备 |
 | 自主学习增量计划 | [MVP 开发计划](./superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md) / [增量 Gate](./development/family-self-directed-learning-mvp-gate.md) | T0 契约基线及待执行的 T1–T9：六个功能包、权限与恢复验证、家庭部署和四周数学试点 |
-| 拟议 AI 学习扩展 | [家庭 AI 学习平台设计](./architecture/family-ai-learning-platform-design.md) / [X230i 部署手册](./ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md) | LMS、DeepTutor、K12-KGraph 和家长人工审核的未来方案；不属于当前实现 |
+| 拟议 AI 学习扩展 | [家庭 AI 学习平台设计](./architecture/family-ai-learning-platform-design.md) / [最小对接路线 §9](./superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md#9-deeptutor-与-k12-最小对接路线2026-10-26-补充) / [X230i 部署手册](./ThinkPad_DeepTutor_K12_部署手册/00_总目录与实施路线.md) | AI-0 单章节验证可提前；正式对接独立于 T1～T9，尚未执行，不阻塞基础 MVP |
 | 拟议 AI 机器契约 | [AI 契约目录](./contracts/) | `CurriculumRef`、错因、教学制品、状态机和最终收敛命令的唯一字段真相；仍属草案 |
 
 ## 文档结构
