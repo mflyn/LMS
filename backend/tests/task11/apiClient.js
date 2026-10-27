@@ -22,6 +22,9 @@ const withToken = (token, options = {}) => ({
 
 const createScopedClient = (httpClient, token) => ({
   get: (path, options) => safeCall('GET', path, () => httpClient.get(path, withToken(token, options))),
+  put: (path, data, options) => safeCall(
+    'PUT', path, () => httpClient.put(path, data, withToken(token, options))
+  ),
   post: (path, data, options) => safeCall(
     'POST', path, () => httpClient.post(path, data, withToken(token, options))
   ),

@@ -3359,10 +3359,10 @@ function validate() {
       `reconciliation ${task} must be CLOSED`, errors);
   }
   for (const [document, marker, message] of [
-    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5-T9 待执行）', 'approved T1 plan status and bounded T2/T3 closure'],
+    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6-T9 待执行）', 'approved T1 plan status and bounded T2/T3/T5 closure'],
     [selfDirectedPlan, '- [x] R4 入口验收及 T1 关闭：CLOSED', 'approved R4 plan checkbox'],
     [reconciliation, '| R4 正式入口验收及 T1 关闭 | CLOSED |', 'approved R4 reconciliation row'],
-    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2/T3 closure'],
+    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2/T3/T5 closure'],
     [read('docs/deployment/completion-operations.md'), '**Status:** CLOSED（R1–R4 及 T1 后端工程总门禁', 'operations must reflect T1 backend closure']
   ]) {
     assert(document.includes(marker), message, errors);
@@ -3487,9 +3487,37 @@ function validate() {
   assert(t4Rows.length === 1 && t4Rows[0][2] === 'IN_PROGRESS'
     && t4Rows[0][3].includes('总门禁 OPEN') && t4Rows[0][3].includes('关闭需用户批准'),
   'T4 must be IN_PROGRESS with OPEN gate and user approval required for closure', errors);
-  for (const task of Array.from({ length: 5 }, (_, index) => `T${index + 5}`)) {
+  const t5Rows = taskStatusRows.filter(cells => cells[1] === 'T5');
+  assert(t5Rows.length === 1 && t5Rows[0][2] === 'CLOSED'
+    && t5Rows[0][3].includes('用户已批准限定合成工程；总门禁 CLOSED，仅 ENGINEERING_SYNTHETIC_ONLY'),
+  'T5 must be CLOSED with user approval and ENGINEERING_SYNTHETIC_ONLY boundary', errors);
+  // Scope current T5 declarations separately from preserved T4-era snapshots.
+  const t5Gate = boundedSection(`${selfDirectedGate}\n## 26.`, '## 25. T5 ', '\n## 26.');
+  const t5Plan = boundedSection(selfDirectedPlan, '### T5：', '### T6：');
+  for (const [name, section] of [['Gate', t5Gate], ['plan', t5Plan]]) {
+    for (const [label, key, value] of [
+      ['state', 'T5', 'CLOSED'],
+      ['gate', 'T5 gate', 'CLOSED'],
+      ['approval', 'T5 approval', 'APPROVED'],
+      ['scope', 'T5 scope', 'LOCAL_SYNTHETIC_ONLY'],
+      ['closure', 'T5 closure', 'APPROVED / CLOSED / ENGINEERING_SYNTHETIC_ONLY'],
+      ['historical failures', 'T5 historical failures', 'PRESERVED'],
+      ['nonblocking', 'T5 nonblocking', 'T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING'],
+      ['device', 'T5 device', 'DEVICE_PENDING'],
+      ['deployment', 'T5 deployment', 'T8_PENDING / NOT_AUTHORIZED'],
+      ['deferred', 'T5 deferred', 'REMAINDER_DEFERRED'],
+      ['Git', 'T5 Git', 'BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY']
+    ]) {
+      const lines = section.split('\n').map(line => line.trim())
+        .filter(line => line.startsWith(`**${key}:**`));
+      assert(lines.length === 1 && lines[0] === `**${key}:** ${value}`,
+        `${name}: T5 current ${label} must remain ${value}`, errors);
+    }
+  }
+  for (const task of Array.from({ length: 4 }, (_, index) => `T${index + 6}`)) {
+    const rows = taskStatusRows.filter(cells => cells[1] === task);
     assert(
-      taskStatusTable.includes(`| ${task} | NOT_STARTED |`),
+      rows.length === 1 && rows[0][2] === 'NOT_STARTED',
       `self-directed Gate must keep ${task} as NOT_STARTED`,
       errors
     );
@@ -3498,7 +3526,7 @@ function validate() {
   for (const [name, markdown, marker] of [
     ['research', selfDirectedResearch, '状态：拟议方案'],
     ['design', selfDirectedDesign, '状态：拟议设计'],
-    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5-T9 待执行）'],
+    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6-T9 待执行）'],
     ['Gate', selfDirectedGate, '**Status:** T0 CONTRACT BASELINE']
   ]) {
     assert(markdown.includes(marker), `self-directed ${name} must remain explicitly planned`, errors);
@@ -3632,7 +3660,7 @@ function validate() {
   assert(
     implementationStatus.includes('T0 已完成契约基线') &&
       implementationStatus.includes('T1 后端工程已关闭，仅限既定合成验收') &&
-      implementationStatus.includes('T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5–T9 待执行'),
+      implementationStatus.includes('T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6–T9 待执行'),
     'system design must record T0 complete, T1 closed and T2 closed in section 15',
     errors
   );

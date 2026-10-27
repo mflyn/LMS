@@ -169,7 +169,14 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await childPage.getByLabel('PIN').fill('2468');
   await childPage.getByRole('button', { name: '进入我的成长空间' }).click();
   await expect(childPage).toHaveURL(/\/child\/today$/);
-  await childPage.getByRole('link', { name: /跳绳 500 个/ }).click();
+  const taskLink = childPage.getByRole('region', { name: '今天的任务', exact: true })
+    .getByRole('link', { name: /跳绳 500 个/ });
+  const planLink = childPage.getByRole('region', { name: '今日计划', exact: true })
+    .getByRole('link', { name: '跳绳 500 个', exact: true });
+  await expect(taskLink).toHaveCount(1);
+  await expect(planLink).toHaveCount(1);
+  await expect(planLink).toHaveAttribute('href', await taskLink.getAttribute('href'));
+  await taskLink.click();
   await childPage.getByRole('button', { name: '查看任务附件 1' }).click();
   await expect(childPage.getByRole('link', { name: '保存训练计划.pdf' })).toBeVisible();
   await childPage.getByLabel('实际用时（分钟）').fill('18');

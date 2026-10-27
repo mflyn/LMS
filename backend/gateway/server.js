@@ -6,8 +6,11 @@ const { createLogger } = require('../common/config/logger');
 const { errorHandler } = require('../common/middleware/errorHandler');
 const { createAuthenticateToken, stripClientIdentity } = require('./identityMiddleware');
 const { resolveGatewayPort } = require('./port');
+const { normalizeDailyLearningPlanInput } = require('../common/utils/dailyLearningPlanInput');
 
 const logger = createLogger('api-gateway');
+const DAILY_PLAN_PATH = /^\/api\/children\/[^/]+\/daily-learning-plans\/[^/]+\/?$/;
+const DAILY_PLAN_INPUT_ERROR = Symbol('dailyPlanInputError');
 
 const requireServiceHost = (serviceHosts, name) => {
   const value = serviceHosts && serviceHosts[name];
@@ -40,20 +43,35 @@ const createApp = ({
   const dataServiceUrl = enableLegacyDataProxy
     ? requireServiceHost(serviceHosts, 'data')
     : null;
+  const authenticateToken = createAuthenticateToken({ jwtSecret, identitySecret });
   const app = createBaseApp({
     serviceName: 'api-gateway',
     enableSessions: false,
-    rateLimitOptions
+    rateLimitOptions,
+    beforeSanitize: serviceHosts.homework ? (req, res, next) => {
+      if (req.method === 'PUT' && DAILY_PLAN_PATH.test(req.path)) {
+        try { normalizeDailyLearningPlanInput(req.body); } catch (cause) {
+          // Preserve the original failure without bypassing the ordinary limiter or authentication.
+          req[DAILY_PLAN_INPUT_ERROR] = cause;
+        }
+      }
+      return next();
+    } : undefined
   });
   app.locals = app.locals || {};
   app.locals.logger = appLogger;
-  const authenticateToken = createAuthenticateToken({ jwtSecret, identitySecret });
   app.locals.authenticateToken = authenticateToken;
 
   app.use(stripClientIdentity);
   app.use('/api/auth', proxy(userServiceUrl, {
     proxyReqPathResolver: (req) => resolveProxyPath('/api/auth', req.url)
   }));
+
+  if (serviceHosts.homework) {
+    app.use(DAILY_PLAN_PATH, authenticateToken,
+      (req, res, next) => next(req[DAILY_PLAN_INPUT_ERROR]),
+      proxy(serviceHosts.homework, { proxyReqPathResolver: req => req.originalUrl }));
+  }
 
   [
     '/api/users',

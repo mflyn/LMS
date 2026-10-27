@@ -1,0 +1,701 @@
+{
+  "schemaVersion": 1,
+  "at": "2026-10-27T02:01:42.275Z",
+  "base": "bb9d78170ba50d64939a520c9785e5735135d761",
+  "branch": "codex/t5-daily-plan-delivery",
+  "scope": "BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY",
+  "device": "DEVICE_PENDING",
+  "deferred": "REMAINDER_DEFERRED",
+  "nonblocking": [
+    "T5-NB-001 OPEN_NONBLOCKING",
+    "T5-NB-002 OPEN_NONBLOCKING"
+  ],
+  "historicalFailures": "PRESERVED",
+  "candidateFiles": [
+    {
+      "file": "backend/common/createBaseApp.js",
+      "sha256": "e88d954c47af6b19ea581d10ebdb2de4eb560539795bee3874139c88b4abbc69"
+    },
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "sha256": "cd8cc2015488453a1a8330bd54bb23751a8af60da031f9c30ee761d07baa86e1"
+    },
+    {
+      "file": "backend/common/utils/dailyLearningPlanInput.js",
+      "sha256": "f5183b8a00eb4138a31b21a6afaca5c85362769e6f6b549ec8a17bd54fdb5b6b"
+    },
+    {
+      "file": "backend/gateway/__tests__/dailyLearningPlanRoutes.test.js",
+      "sha256": "86bd1d69e6d6726b03a6f00a68073ec4ea074b896e253a72733faa5683bbb4d3"
+    },
+    {
+      "file": "backend/gateway/server.js",
+      "sha256": "1149da007585ba541cbb77de3e52d18b566e03e31b0216e2303d454ecafc88d0"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/models/DailyLearningPlan.test.js",
+      "sha256": "cde6f5a950eb9cad6527469b78799f0a3f02438f4c19b17f208f366d8c7410f8"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js",
+      "sha256": "8a3a395e7f6515b389320a71ee88c2f135c67d49c36e8872ef50623ce3d2c900"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/setup.js",
+      "sha256": "024eee18388341345e7da506ee2aed482db9d0007e092a3e040589b812184420"
+    },
+    {
+      "file": "backend/services/homework-service/models/DailyLearningPlan.js",
+      "sha256": "902265a5d02d8f1e478847c035b27c1dbe929841c6de2d77493bcd9a1f057a78"
+    },
+    {
+      "file": "backend/services/homework-service/routes/dailyLearningPlans.js",
+      "sha256": "fd6f4ab7c999761575b3fcfe3d9ce0362440ff0b81c844e61670bea773cbbaca"
+    },
+    {
+      "file": "backend/services/homework-service/server.js",
+      "sha256": "6b5f3c2e7b552b01356b3a19404d28363481ed30cea1d219d64337f5b0b5baca"
+    },
+    {
+      "file": "backend/services/homework-service/services/dailyLearningPlanService.js",
+      "sha256": "0cf94fc54dd911e2261410d73e3a40994792cdfdf94fc03e7361e8a311132a1d"
+    },
+    {
+      "file": "backend/services/user-service/__tests__/routes/children.test.js",
+      "sha256": "b5d9e7facb428f94f0a9c2cdd6000baa2605e1fe2df3ed4377f6d5ca8fdebfc8"
+    },
+    {
+      "file": "backend/services/user-service/controllers/familyController.js",
+      "sha256": "5569c409582118092236aeb4272cafa881a547dd749938d7af4f0edb7077761b"
+    },
+    {
+      "file": "backend/tests/t2/dailyLearningPlan.integration.test.js",
+      "sha256": "5e84867076eb8d5571757595ec0d03a271f6365c9e9f6c31cbd99f7a833e7e1c"
+    },
+    {
+      "file": "backend/tests/t2/serviceRuntime.js",
+      "sha256": "3ae4a4dbedd223c7fd9412f73d5bb31e656c152651f8ebf5ad9ffd5e8d37f914"
+    },
+    {
+      "file": "backend/tests/task11/apiClient.integration.test.js",
+      "sha256": "6fd6b337f02045cbacb653a9bf1af58dfe4e65b8338f02eab3a53db99871b130"
+    },
+    {
+      "file": "backend/tests/task11/apiClient.js",
+      "sha256": "72426878b6b9fd7726a58b8eb14228e8d20cd084049f24e037a2ec889f92e000"
+    },
+    {
+      "file": "docs/api/family-learning-tracker-api.md",
+      "sha256": "9374a93631ffa1b15b9f011b101a270ddb579262c12e77376ad2d35982b7e0fc"
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "sha256": "c07f8c67f907e5e79a4d52a840fd760db77cf4c17c3de68b98cd6941f7a50406"
+    },
+    {
+      "file": "docs/development/README.md",
+      "sha256": "a84a86d1f7402e44a9cfcf7189623f9c7e99a8ce91e517d7ef76f63dffbd94db"
+    },
+    {
+      "file": "docs/development/evidence/t5-delivery-2026-10-27/README.md",
+      "sha256": "dec6970f215d7d2d81bd89f07bf8dbdb8f8e97b56eac7c59fe12ebdb960968b7"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/README.md",
+      "sha256": "90ef049557ab2b868267816f9e8bb34ad36362c0eeaf660ffadb906017923077"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/approved-closure-verification.json",
+      "sha256": "63770457f32f5901b2495f9157c8d4b0e40a883d682dd5d7c9e7c35c6f195d03"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/approved-closure.md",
+      "sha256": "c10c3567901787d05c436206783b659e60a4dd1e8acc19bcebdded13e8b63ac9"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/artifacts.sha256.json",
+      "sha256": "0bed2e0a322f98b964fec54a134775ccd2acd16ac121e72895d82bed58ac37ba"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/candidate-manifest.json",
+      "sha256": "9257b422075c3026409ff4aa6a5901e4917870d00e00730eaba0e5f4debd149f"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/closure-review.md",
+      "sha256": "3dcd3fea642934b8be1bc4b9151c5297f5291a719b6779947a674b74abde2b3d"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/closure-verification.json",
+      "sha256": "b16cffcfc0d3185bba9a472eec875978e408e57c3c37210e1a48bade6ab5e781"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/freeze-verification.json",
+      "sha256": "24a220bddf7d2003aa18e365711aa2feda2873050ea37a9785a7fb32c26580eb"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/revision.patch",
+      "sha256": "acdbdccae9267335dbcd46800f7d120af83318597e78716aedb144fd3425f119"
+    },
+    {
+      "file": "docs/development/evidence/t5-synthetic-2026-10-26/README.md",
+      "sha256": "0e22b8a11b55a12fb58e6e751b5c5b6017bd994810b80932d761d832e7240840"
+    },
+    {
+      "file": "docs/development/evidence/t5-synthetic-2026-10-26/artifacts.sha256.json",
+      "sha256": "072fd4497e8ca67907cec6b3ed81b5402204fb2023309993cc84a01a312ff4a0"
+    },
+    {
+      "file": "docs/development/evidence/t5-synthetic-2026-10-26/candidate-manifest.json",
+      "sha256": "678b650ebdd85a8c2dc8b05ab6845ab53449380f4fef6493658d3894cfd5c64d"
+    },
+    {
+      "file": "docs/development/family-growth-requirement-traceability.md",
+      "sha256": "0d1e25d85a322801c48144c99ad377249d820a9a7356b5589ec755d81c01f37b"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "3db853ce9e45127b4a97f03809a4a9157e5fc7baccf1cf3f5004d40bd0721c88"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "19d106c2dfc0afac2d63dbe0346139a22309a628dafe7ee0c26c2369a0889d38"
+    },
+    {
+      "file": "eslint.config.js",
+      "sha256": "e07f77b892f797151efe704c839715933e7b0482f2ade2e367e34e13d5d69143"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/DailyPlanTaskNavigation.test.js",
+      "sha256": "5fbcd0c091f44980e3bf90525d5c8e44f43ad76769795e863448a8089169030c"
+    },
+    {
+      "file": "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+      "sha256": "2f683ec8ebef91f604d979ff02b89c5cd236250acd35fd09d0da009b5dd9e1b6"
+    },
+    {
+      "file": "frontend/web/src/__tests__/shared/dailyLearningPlanApi.test.js",
+      "sha256": "509bef414275534f20adc7b22413242c0709a499b30c0252c2ba65779da6a1ff"
+    },
+    {
+      "file": "frontend/web/src/components/family/DailyLearningPlanPanel.css",
+      "sha256": "3ce564afc8d3f300f631c9a8d965384061b6057cbc73118e30dd032d3af4272f"
+    },
+    {
+      "file": "frontend/web/src/components/family/DailyLearningPlanPanel.js",
+      "sha256": "fffd7364258be1ce11d510688811abdbf5c5afb2907554013b2c4920085d993b"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildTodayPage.js",
+      "sha256": "2e417aa2390a67fa4a95a0e5b1fddeb4f52b7f8aee9a15a1f0d5340f75cdbd97"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TasksPage.js",
+      "sha256": "8a7f7db97891b1fda04bda3208f775c811512391c40d1b14bfc1efc8647dcbdd"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TodayPage.js",
+      "sha256": "7799da741f442955dd1d41584e09f484ccef16b7883107117f9007493b0560f2"
+    },
+    {
+      "file": "frontend/web/src/services/childApi.js",
+      "sha256": "e0e81568f59e10aec039613e0ac1e4e540a3b855679c262ac32202553f02129a"
+    },
+    {
+      "file": "frontend/web/src/services/dailyLearningPlan.js",
+      "sha256": "df2264f86805af95a1077e7f1861796bac0f7c746ad93c815732b281ba443801"
+    },
+    {
+      "file": "frontend/web/src/services/familyApi.js",
+      "sha256": "1f611169b16ecf8f421c047171280f46bc2865ce836cdede2c0dd23ca18bfbb8"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "sha256": "713818383cd4aa640fcae5afa9753806cab796ed0fb765fe2af4ba01bed32ab6"
+    },
+    {
+      "file": "tests/e2e/t2/dailyLearningPlan.spec.js",
+      "sha256": "4c5bec785ba12ee05b56722be6e9518996a1651c8a17637dde4547e11a4081ae"
+    }
+  ],
+  "candidateNote": "Excludes this generated index; complete candidate is the Git commit diff against base. Original frozen candidate is not re-signed.",
+  "excluded": [
+    {
+      "file": "docs/README.md",
+      "all": true
+    },
+    {
+      "file": "docs/architecture/family-ai-learning-platform-design.md",
+      "all": true
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "hunk": "@@ -1456,20 +1470,36 @@ T1 第二十六批反向组合恢复顺序：清理事务回滚/提交未知后"
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "hunk": "@@ -1750,7 +1780,8 @@ DeepTutor 不得代替孩子选题、生成可直接提交的完整作品、编"
+    },
+    {
+      "file": "docs/development/README.md",
+      "hunk": "@@ -62,6 +62,10 @@ T2-1 基线修复与门禁 P2、T2-R 公开恢复后端及 owner/pending P2 已"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "hunk": "@@ -750,16 +783,83 @@ sourceMistakeId。均为可选，不要求回填历史对象。"
+    }
+  ],
+  "originalWorkspace": {
+    "checked": 52,
+    "changed": []
+  },
+  "archiveIntegrity": [
+    {
+      "manifest": "docs/development/evidence/t5-synthetic-2026-10-26/artifacts.sha256.json",
+      "root": "release-gate-artifacts/t5-synthetic-2026-10-26",
+      "count": 364,
+      "mismatches": []
+    },
+    {
+      "manifest": "docs/development/evidence/t5-numeric-fix-2026-10-27/artifacts.sha256.json",
+      "root": "release-gate-artifacts/t5-numeric-fix-2026-10-27/dev-r1",
+      "count": 182,
+      "mismatches": []
+    },
+    {
+      "manifest": "release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1/manifest.json",
+      "root": "release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1",
+      "count": 84,
+      "mismatches": []
+    },
+    {
+      "root": "approved-closure bindings",
+      "count": 14,
+      "mismatches": []
+    },
+    {
+      "root": "original independent r1",
+      "count": 108,
+      "mismatches": []
+    }
+  ],
+  "historicalDocuments": {
+    "count": 12,
+    "mismatches": []
+  },
+  "sensitiveInformationReview": {
+    "scope": "All changed and added regular files; no raw logs or screenshots committed",
+    "findings": [
+      {
+        "file": "backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js",
+        "line": 16,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js",
+        "line": 17,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 12,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 33,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 206,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 214,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 269,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 276,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 285,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 299,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 308,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 322,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 328,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/services/user-service/__tests__/routes/children.test.js",
+        "line": 335,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/tests/task11/apiClient.integration.test.js",
+        "line": 15,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/tests/task11/apiClient.integration.test.js",
+        "line": 16,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/tests/task11/apiClient.integration.test.js",
+        "line": 24,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "backend/tests/task11/apiClient.integration.test.js",
+        "line": 26,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/revision.patch",
+        "line": 212,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/DailyPlanTaskNavigation.test.js",
+        "line": 15,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+        "line": 25,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+        "line": 26,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+        "line": 76,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+        "line": 217,
+        "rule": "password-assignment"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+        "line": 255,
+        "rule": "password-assignment"
+      }
+    ],
+    "disposition": "25 assignment matches manually verified synthetic test fixtures; no actual credentials found. Heuristic scan, not exhaustive security audit."
+  },
+  "links": {
+    "checked": 245,
+    "missing": []
+  },
+  "runs": [
+    {
+      "label": "lint",
+      "executable": "npm",
+      "args": [
+        "run",
+        "lint"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:43:53.132Z",
+      "finishedAt": "2026-10-27T01:43:57.538Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/lint.log",
+      "logSha256": "905c1e87521629009d55a7b5ee757b43cbca4cb899a3a65f178435ff55e61bfc"
+    },
+    {
+      "label": "docs",
+      "executable": "npm",
+      "args": [
+        "run",
+        "docs:family:check"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:44:04.860Z",
+      "finishedAt": "2026-10-27T01:44:05.449Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/docs.log",
+      "logSha256": "c5c1bf064dbd2d0bb0440e0f2958d0b8edecc3b73092e3d41501cb966bb08108"
+    },
+    {
+      "label": "family-regression",
+      "executable": "npm",
+      "args": [
+        "run",
+        "test:family-regression"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:44:14.314Z",
+      "finishedAt": "2026-10-27T01:57:07.208Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/family-regression.log",
+      "logSha256": "7e2dcad17df37c3bd9fc18c4d2ef732b1cbeba74e0e888b87a18c897cb5f74ae"
+    },
+    {
+      "label": "frontend",
+      "executable": "npm",
+      "args": [
+        "--prefix",
+        "frontend/web",
+        "run",
+        "test:ci",
+        "--",
+        "--runInBand"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:46:40.246Z",
+      "finishedAt": "2026-10-27T01:47:19.065Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/frontend.log",
+      "logSha256": "4267b3637e7bd1eea01e88a49d6a4227fbd817bbdaff80dd87d4771a0ff2a029"
+    },
+    {
+      "label": "build",
+      "executable": "npm",
+      "args": [
+        "--prefix",
+        "frontend/web",
+        "run",
+        "build"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:47:28.731Z",
+      "finishedAt": "2026-10-27T01:47:31.032Z",
+      "exitCode": 1,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/build.log",
+      "logSha256": "d841404fd161f224693bcf960fded629fc37773f66f6a7e86fe792788efc3e7f"
+    },
+    {
+      "label": "build-authorized",
+      "executable": "npm",
+      "args": [
+        "--prefix",
+        "frontend/web",
+        "run",
+        "build"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:47:59.978Z",
+      "finishedAt": "2026-10-27T01:48:23.099Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/build-authorized.log",
+      "logSha256": "f7fbf9c0bce88f58b99e3a54e403c9c4120872b1b2ef892840eeb9256cd3f8e3"
+    },
+    {
+      "label": "browser",
+      "executable": "npm",
+      "args": [
+        "run",
+        "test:t2:e2e",
+        "--",
+        "dailyLearningPlan.spec.js"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "CI": "true",
+        "T2_WEB_BUILD": "/Users/linmingfeng/.codex/worktrees/t5-delivery/LMS/frontend/web/build",
+        "T2_BROWSER_OUTPUT": "/tmp/lms-t5-delivery-J9ZoIt/browser-output"
+      },
+      "startedAt": "2026-10-27T01:48:36.045Z",
+      "finishedAt": "2026-10-27T01:49:46.113Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/browser.log",
+      "logSha256": "e3181559cce212fcf2159f070b3c66579b64b1793b31b074dc4bbbd33448aae5"
+    },
+    {
+      "label": "http",
+      "executable": "npm",
+      "args": [
+        "run",
+        "test:t2:integration"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:49:04.207Z",
+      "finishedAt": "2026-10-27T01:49:58.807Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/http.log",
+      "logSha256": "491a10f150628508ad879903e43c04871ff25ef39126ea9e0b0082f0b4b24862"
+    },
+    {
+      "label": "deployment-tooling",
+      "executable": "npm",
+      "args": [
+        "run",
+        "test:family-regression",
+        "--",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5Deployment.test.js"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:58:07.612Z",
+      "finishedAt": "2026-10-27T01:58:09.524Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/deployment-tooling.log",
+      "logSha256": "db6426f4cd2049acefb7b4818ec2b6d16c21716d4da90b72c62e74b4416a545a"
+    },
+    {
+      "label": "state-final",
+      "executable": "npm",
+      "args": [
+        "run",
+        "test:family-regression",
+        "--",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/familyDocumentationGate.test.js"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T01:59:04.496Z",
+      "finishedAt": "2026-10-27T01:59:24.287Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/state-final.log",
+      "logSha256": "798f0af1385e4303cbf036be6f0f6ba8a32ef7b06d37745423231230f6b1d80d"
+    },
+    {
+      "label": "docs-final",
+      "executable": "npm",
+      "args": [
+        "run",
+        "docs:family:check"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T02:00:09.061Z",
+      "finishedAt": "2026-10-27T02:00:09.663Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/docs-final.log",
+      "logSha256": "1ebaf02954661546c3e1ac6849c142ef12c830ffe8090f874dd81dbf4e789df9"
+    },
+    {
+      "label": "diff-final",
+      "executable": "git",
+      "args": [
+        "diff",
+        "--check"
+      ],
+      "node": "v22.15.0",
+      "env": {
+        "PATH": "/tmp/lms-qa-node22-bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "CI": "true"
+      },
+      "startedAt": "2026-10-27T02:00:09.895Z",
+      "finishedAt": "2026-10-27T02:00:10.227Z",
+      "exitCode": 0,
+      "changed": [],
+      "log": "release-gate-artifacts/t5-delivery-2026-10-27/diff-final.log",
+      "logSha256": "cbcb1131db966b30cec894031318e23eb522622cb1f1759683a3376ba658e8b3"
+    }
+  ],
+  "formatting": {
+    "full": {
+      "args": [
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "exitCode": 2,
+      "output": "docs/development/evidence/t5-numeric-fix-2026-10-27/revision.patch:26: trailing whitespace.\n+ \ndocs/development/evidence/t5-numeric-fix-2026-10-27/revision.patch:168: trailing whitespace.\n+ \n"
+    },
+    "source": {
+      "args": [
+        "diff",
+        "--cached",
+        "--check",
+        "--",
+        ".",
+        ":(exclude)docs/development/evidence/t5-numeric-fix-2026-10-27/revision.patch"
+      ],
+      "exitCode": 0,
+      "output": ""
+    },
+    "patch": {
+      "args": [
+        "apply",
+        "--stat",
+        "docs/development/evidence/t5-numeric-fix-2026-10-27/revision.patch"
+      ],
+      "exitCode": 0,
+      "output": " .../family-self-directed-learning-system-design.md |   17 +++\n .../evidence/t5-numeric-fix-2026-10-27/README.md   |  101 ++++++++++++++++++++\n .../family-self-directed-learning-mvp-gate.md      |   19 ++++\n ...2026-10-21-family-self-directed-learning-mvp.md |    4 +\n .../shared/DailyLearningPlanPanel.test.js          |   50 ++++++++++\n .../components/family/DailyLearningPlanPanel.js    |   12 ++\n tests/e2e/t2/dailyLearningPlan.spec.js             |   85 +++++++++++++++++\n 7 files changed, 283 insertions(+), 5 deletions(-)\n"
+    }
+  },
+  "result": "Local candidate validations passed, except preserved initial sandbox build failure and one original PATH-dependent full-suite skip covered by separate 18/18 run. CI not yet asserted."
+}

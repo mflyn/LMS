@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
@@ -62,6 +62,7 @@ const errorMessage = (error) => error?.response?.data?.error?.message || error?.
 const ScopedTasksPage = () => {
   const { family, selectedChild, selectedChildId, childScopeVersion } = useFamily();
   const location = useLocation();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState(() => {
     const helpStatus = new URLSearchParams(location.search).get('helpStatus');
     return { scope: '', dimension: '', status: '', helpStatus: ['pending', 'resolved'].includes(helpStatus) ? helpStatus : '' };
@@ -130,6 +131,16 @@ const ScopedTasksPage = () => {
     setError('');
     setBusy(false);
   }, [mediaDrafts, selectedChildId]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const taskId = params.get('taskId'), childId = params.get('childId');
+    if (!taskId || childId !== selectedChildId || !/^[a-f\d]{24}$/i.test(taskId)
+      || !isSessionCurrent(ownerSession.current) || privateBlocked || helpAccessDenied) return;
+    setReview({ taskId, childId, mode: 'review' });
+    params.delete('taskId'); params.delete('childId');
+    navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+  }, [location.pathname, location.search, navigate, selectedChildId, privateBlocked, helpAccessDenied]);
 
   const closeEditor = () => {
     editorGeneration.current += 1;

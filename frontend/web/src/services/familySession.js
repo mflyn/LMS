@@ -171,6 +171,9 @@ const clear = (role, reason, expected) => {
 };
 export const loadParentSession = () => read('parent').session;
 export const loadChildSession = () => read('student').session;
+// A reload can follow an already handled 401; retain only its non-private explanation.
+export const wasChildSessionExpired = () => !captureSession('student')
+  && parse(stored(changeKey('student')))?.reason === 'expired';
 export const saveParentSession = value => save('parent', value);
 export const saveChildSession = value => save('student', value);
 export const clearParentSession = () => clear('parent', 'explicit_logout');

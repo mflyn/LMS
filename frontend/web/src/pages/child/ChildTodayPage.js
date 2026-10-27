@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import CompletionRecoveryList from '../../components/family/CompletionRecoveryList';
+import DailyLearningPlanPanel from '../../components/family/DailyLearningPlanPanel';
 import { useChildDataResource } from '../../hooks/useChildDataResource';
 import { listOwnReminders, listOwnTasks } from '../../services/childApi';
 import { captureSession, isSessionCurrent, loadChildSession, subscribeSessionChanges } from '../../services/familySession';
@@ -36,7 +37,7 @@ const ResourceError = ({ label, resource }) => {
   );
 };
 
-const ChildTodayContent = ({ session }) => {
+const ChildTodayContent = ({ session, child }) => {
   const loadTasks = useCallback(
     ({ signal }) => listOwnTasks({ scope: 'today', pageSize: 100 }, { signal, session }),
     [session]
@@ -63,6 +64,7 @@ const ChildTodayContent = ({ session }) => {
         </div>
       </div>
 
+      <DailyLearningPlanPanel role="student" childId={child.childId} familyId={child.familyId} grade={child.grade} />
       {tasks.state === 'loading' && reminders.state === 'loading' && <FamilyDataState state="loading" />}
       {reminders.state === 'partial' && (
         <FamilyDataState state="partial" unavailableSources={reminders.unavailableSources} />
@@ -117,7 +119,7 @@ const ChildTodayPage = () => {
     return <p role="alert">请重新登录后查看今天的任务。</p>;
   }
   return <ChildTodayContent key={JSON.stringify([identity.session.actorId, identity.child.familyId,
-    identity.child.childId, identity.session.revision])} session={identity.session} />;
+    identity.child.childId, identity.session.revision])} session={identity.session} child={identity.child} />;
 };
 
 export default ChildTodayPage;

@@ -1,0 +1,1828 @@
+{
+  "schemaVersion": 1,
+  "archiveRoot": "release-gate-artifacts/t5-synthetic-2026-10-26",
+  "generatedAt": "2026-10-26T16:33:27.151Z",
+  "note": "Final delivery QA independently checked the previous 361 artifacts. This index adds its report, integrity snapshot and path/terminal metadata only; previously reviewed bytes unchanged.",
+  "files": [
+    {
+      "file": "browser/t5-browser-final-backend/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-partial-form.png",
+      "bytes": 109961,
+      "sha256": "8fa56311111ac45f956b963639558aa5b5612343c1e5dbfc7b511c863b84872b"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-1280.png",
+      "bytes": 96487,
+      "sha256": "cf71e1c47ee2890bc1f1a85e98e5279d9ade97fad9863b220078628dfbd720e7"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-390.png",
+      "bytes": 90328,
+      "sha256": "4879cbd600d4ed21f05084e48d78877d492416b0bbd4155824fef8fd71a187ed"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-768.png",
+      "bytes": 96129,
+      "sha256": "881de3e38717ee49a4913d5e8731a08a6f6605d631566b6d17e738a73d06913c"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-1280.png",
+      "bytes": 118988,
+      "sha256": "74cdf6f04131ae39fd2c8b2860161b77611b0be029d1509e83d5673fd0c19746"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-390.png",
+      "bytes": 79347,
+      "sha256": "6bbc096a417b9a12658cc34f689df7668ef4324a95fb2b9bfc74ff29c4cff301"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-768.png",
+      "bytes": 86810,
+      "sha256": "0de22405dec8515de1f460b45556e3b80b600a38ba7af5a1c19b67627690dca2"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-partial-form.png",
+      "bytes": 121629,
+      "sha256": "96804ee1c52ab499fdc8606b2a02039c711373b794fd99f46fb1c8d25fcc1bb5"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-1280.png",
+      "bytes": 96862,
+      "sha256": "acd11b6729ec42deacf7fbe33f56e9ff494cdab49ad48075602793a1d3615e6c"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-390.png",
+      "bytes": 90830,
+      "sha256": "0b57d9d0c56829efb324dde873a81addc4dc3d321f0d80d45af36570563ddac8"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-768.png",
+      "bytes": 96502,
+      "sha256": "5ed861a13cf5eee56b702e78d4840b2a42baa11021bfe83b52c02b3c126a344e"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-1280.png",
+      "bytes": 119228,
+      "sha256": "3bd36e74c3777132b3aef1d83520558efa5d4d4aee6b3aa7cec58a2607256466"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-390.png",
+      "bytes": 79570,
+      "sha256": "8edf962463af57659aed973ac2e6d90bb3da1df02c90cc5e1a57bd2fee810d0c"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-768.png",
+      "bytes": 87028,
+      "sha256": "4167b28b84605b072dc38e68bc6e71ab35e5427bb19b43aab73ba7e45f4a88e9"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 90689,
+      "sha256": "4c10799b15af3a34806e9fc0a79da2492abe9668ce0341ddf917bad103612344"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 91867,
+      "sha256": "31f45541af2544b5b3f651b6fa0ccb4ef8180119e0f966bbed4e3f281cd4e65d"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 86954,
+      "sha256": "5c64c534688204cd5882d822245b69ea7b4e59f5be792e4f6d3e3eb25e74fd8e"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 91777,
+      "sha256": "647ff636f0ed8d898117bfa977d29466a5b8b10a0fc2173b436be559613790a6"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 63093,
+      "sha256": "3e9d053b6a8b14e8bc81caac9014a81d78f3a7ac834821201d816db3cd425cea"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 80520,
+      "sha256": "edf1e0705761964cec0fa047ecb3f5d6aa7c5beee9a97935c34999cffc4b2e23"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 52598,
+      "sha256": "3b6f955d9a772da98a86574f73fc4124e765ab09640da49444d299bf1103a206"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61806,
+      "sha256": "0333918a9936df134c9857fda8e222511c1b869b3f8eafac58c7e72b2e7adabf"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 107574,
+      "sha256": "c68f071368060746d3352a628b0a2823558a7b60084493fa737fb19de7856dab"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 95324,
+      "sha256": "b68f5bc70de95496e7cebf789c4f41e7bd062432847b58af29a3e8fac2ef6896"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 103571,
+      "sha256": "5a36edd4a0d13a7978e539853d4d4e850b23f3cc7ec1a352eac4040c27556fcd"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 139056,
+      "sha256": "373828578d15298098afd48564d53092879be1cc9f696ee97e8bf78b07f353e9"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 117309,
+      "sha256": "8b4e69a0eb0ac19f9b0217b24d78f6126d221758f2ea4b6cabc355c82e272308"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 140179,
+      "sha256": "6b1ce53ed827606eb4380730096dd8bd9f7db4f8e8686a775832aa8e93f7c596"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 99024,
+      "sha256": "2de179227a6725759b67e63b10a7e0f4efd1b07f675e7b177e16364d85f192f4"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 85793,
+      "sha256": "93dd6eaa448c9202110c0f45cfe9cddceb54d30f69e6a9ee4213b0f35437635d"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 94833,
+      "sha256": "13964e93e79694905dad66ebcb9e835997dcbaa8d2cff09935a17cd7516ee048"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 130636,
+      "sha256": "6b242a8f5575e5f0af1aa87c70209c0c89a7d5399e65bbb3117caaa9c753b9e0"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107854,
+      "sha256": "6c13a1b96bdca96cb85d3ba0a28cacede4d2232a8cfbd08a425dd3a899469c7c"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 130295,
+      "sha256": "e5eb893c68c2dad1768de853109fb078ba99937beab0059b3c215d21a4163456"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-a-write-superseding-t-8d7e5-itted-lost-response-exactly/slow-read-original-retry.png",
+      "bytes": 103380,
+      "sha256": "27fc6e78b8863283445e018ea227b45558dabd08ccff4ec0c9d5a5da7b4fdb0c"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-detail-refresh-denied-10c62-a-held-successful-help-read/help-denied-late-read.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-detail-refresh-denied-4bed8--held-successful-help-write/help-denied-late-write.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-parent-list-denial-af-a9188-clears-the-open-help-dialog/parent-list-denied.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-parent-list-denial-is-792f6--held-successful-help-write/parent-denied-late-write.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-parent-list-denial-isolates-a-held-successful-help-read/parent-denied-late-read.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1024x768.png",
+      "bytes": 103166,
+      "sha256": "fe34e75c63fa1f5ef04e9045f334d56cd579224e7c8664ac4acf7de730707bc3"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1280x800.png",
+      "bytes": 104734,
+      "sha256": "807b9ef2750bf8c62587d76e86add4752526b724bd57a0a7c176fff0e431a635"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-390x844.png",
+      "bytes": 93383,
+      "sha256": "8f36f30af2000b850f155c2daccf593cf2c250634995363f0f146a20cbaa1e69"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-768x1024.png",
+      "bytes": 99987,
+      "sha256": "401b7d2ff7a61a56251fe91264f98afd15eedf6a4d2e7b4b47ed8898070615a1"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1024x768.png",
+      "bytes": 77044,
+      "sha256": "34d0f5e877fa4795347b0bc86e626a7682d784967e1f0198a708b414c3c0eff7"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1280x800.png",
+      "bytes": 87409,
+      "sha256": "cb8c79c74c1281b32a1af00a583739d6e7d93e51a7420f47b299a1d870a572fa"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-390x844.png",
+      "bytes": 56600,
+      "sha256": "e4a0b46164f2bc40a16210efc14d748ac381fe928f2cc8f57e82fec5ccd9ea27"
+    },
+    {
+      "file": "browser/t5-browser-final-backend/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-768x1024.png",
+      "bytes": 73266,
+      "sha256": "1e0b198981ee363329a9ccbb4fd453d060cc8c73aacd5ed3d1d79116e2ab56a5"
+    },
+    {
+      "file": "browser/t5-browser-final-five/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 110919,
+      "sha256": "f2beae0ea9a2fe91c8c3416cd412df0eebf33e84b912c1a1a1a5d3bb9d96b9a0"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 98422,
+      "sha256": "25960dd1afde61fb52a44b88f215b74fa50990e2a58f4b309a0a7f10597bc321"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 106802,
+      "sha256": "f3529d2fb213e2983da799c52b72e171a171991ef47580fa31089342272038ce"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 138013,
+      "sha256": "d4c55b08212178f84ac7e8fdf01de5a1a09835eae89b207dbb474121511a4551"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 117258,
+      "sha256": "9130a11b197ebe9f091457351d8ab707332e35c10db501a7677c8d847cfe0cea"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 138415,
+      "sha256": "200cafd14525cbe1970f781e97b0af9d4680c9d4b0e18e00d84a3b5573ea371b"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 102377,
+      "sha256": "3a7af014639c1df6ae3e9069295535dc304acc494528c6cf6b27a83e03579b58"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 88935,
+      "sha256": "afef6e1be25b5f049e522bc9437e7bc74479cd3bac8f58e908b58a42978379c1"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 98051,
+      "sha256": "496163e3aebe61f7d5cb9854b7e7a789ea7fa7e18bc1201f565f5fbbc1d69178"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129593,
+      "sha256": "9bda6042266741129afba44f3b92cca1632956068d54a47a7482813c5a83bb0b"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107816,
+      "sha256": "8b127fcb6eb0388e95d20457c34a6e282ed3b8534ad87a5995c33e730319108b"
+    },
+    {
+      "file": "browser/t5-browser-final-five/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128538,
+      "sha256": "5be883f2be3a1f52bb3635eebab0f676aaa20541b07b8eb3fcff892eeefce490"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/.last-run.json",
+      "bytes": 96,
+      "sha256": "ea56f73258315ef7b405fac9b60b1993e1808437bfcc1200e440a2c05e9a264a"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 110919,
+      "sha256": "f2beae0ea9a2fe91c8c3416cd412df0eebf33e84b912c1a1a1a5d3bb9d96b9a0"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 98422,
+      "sha256": "25960dd1afde61fb52a44b88f215b74fa50990e2a58f4b309a0a7f10597bc321"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 106802,
+      "sha256": "f3529d2fb213e2983da799c52b72e171a171991ef47580fa31089342272038ce"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 138013,
+      "sha256": "d4c55b08212178f84ac7e8fdf01de5a1a09835eae89b207dbb474121511a4551"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 117258,
+      "sha256": "9130a11b197ebe9f091457351d8ab707332e35c10db501a7677c8d847cfe0cea"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 138415,
+      "sha256": "200cafd14525cbe1970f781e97b0af9d4680c9d4b0e18e00d84a3b5573ea371b"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 102377,
+      "sha256": "3a7af014639c1df6ae3e9069295535dc304acc494528c6cf6b27a83e03579b58"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 88935,
+      "sha256": "afef6e1be25b5f049e522bc9437e7bc74479cd3bac8f58e908b58a42978379c1"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 98051,
+      "sha256": "496163e3aebe61f7d5cb9854b7e7a789ea7fa7e18bc1201f565f5fbbc1d69178"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129593,
+      "sha256": "9bda6042266741129afba44f3b92cca1632956068d54a47a7482813c5a83bb0b"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107816,
+      "sha256": "8b127fcb6eb0388e95d20457c34a6e282ed3b8534ad87a5995c33e730319108b"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128538,
+      "sha256": "5be883f2be3a1f52bb3635eebab0f676aaa20541b07b8eb3fcff892eeefce490"
+    },
+    {
+      "file": "browser/t5-browser-final-focused/dailyLearningPlan-plan-lin-3068a-dback-without-extra-rewards/error-context.md",
+      "bytes": 18036,
+      "sha256": "e1cb27524a09acfa712710ddb5b0e9b48902b2d2b0d097ab07ef99c0042277ea"
+    },
+    {
+      "file": "browser/t5-browser-first/.last-run.json",
+      "bytes": 194,
+      "sha256": "9100d43e0f8f2eca514fa12bd72294503dd0fa19876ff07ad509c37667d833fa"
+    },
+    {
+      "file": "browser/t5-browser-first/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/error-context.md",
+      "bytes": 5607,
+      "sha256": "ba7dd64966d1bbcfce868ad93e68f8c1d2cf39b397debbc6c097c2266671fb1d"
+    },
+    {
+      "file": "browser/t5-browser-first/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/error-context.md",
+      "bytes": 5607,
+      "sha256": "978ea03569e83f477b2427bed9c249603f055686177cac81fa8d6eefe74175c8"
+    },
+    {
+      "file": "browser/t5-browser-first/dailyLearningPlan-lost-com-1f59e-elogin-reads-persisted-plan/error-context.md",
+      "bytes": 5638,
+      "sha256": "31db40a3e76c04a9733eb7b5f16428b27f67577cedce0589f369eeef75c08613"
+    },
+    {
+      "file": "browser/t5-browser-regression/.last-run.json",
+      "bytes": 96,
+      "sha256": "49fb9ab360f122419b4b4abce065c3d277678c4c774c66fc19e16d22552d5fc2"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-partial-form.png",
+      "bytes": 109961,
+      "sha256": "8fa56311111ac45f956b963639558aa5b5612343c1e5dbfc7b511c863b84872b"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-1280.png",
+      "bytes": 96487,
+      "sha256": "cf71e1c47ee2890bc1f1a85e98e5279d9ade97fad9863b220078628dfbd720e7"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-390.png",
+      "bytes": 90328,
+      "sha256": "4879cbd600d4ed21f05084e48d78877d492416b0bbd4155824fef8fd71a187ed"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-768.png",
+      "bytes": 96129,
+      "sha256": "881de3e38717ee49a4913d5e8731a08a6f6605d631566b6d17e738a73d06913c"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-1280.png",
+      "bytes": 118988,
+      "sha256": "74cdf6f04131ae39fd2c8b2860161b77611b0be029d1509e83d5673fd0c19746"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-390.png",
+      "bytes": 79347,
+      "sha256": "6bbc096a417b9a12658cc34f689df7668ef4324a95fb2b9bfc74ff29c4cff301"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-768.png",
+      "bytes": 86810,
+      "sha256": "0de22405dec8515de1f460b45556e3b80b600a38ba7af5a1c19b67627690dca2"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-partial-form.png",
+      "bytes": 121629,
+      "sha256": "96804ee1c52ab499fdc8606b2a02039c711373b794fd99f46fb1c8d25fcc1bb5"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-1280.png",
+      "bytes": 96862,
+      "sha256": "acd11b6729ec42deacf7fbe33f56e9ff494cdab49ad48075602793a1d3615e6c"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-390.png",
+      "bytes": 90830,
+      "sha256": "0b57d9d0c56829efb324dde873a81addc4dc3d321f0d80d45af36570563ddac8"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-768.png",
+      "bytes": 96502,
+      "sha256": "5ed861a13cf5eee56b702e78d4840b2a42baa11021bfe83b52c02b3c126a344e"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-1280.png",
+      "bytes": 119228,
+      "sha256": "3bd36e74c3777132b3aef1d83520558efa5d4d4aee6b3aa7cec58a2607256466"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-390.png",
+      "bytes": 79570,
+      "sha256": "8edf962463af57659aed973ac2e6d90bb3da1df02c90cc5e1a57bd2fee810d0c"
+    },
+    {
+      "file": "browser/t5-browser-regression/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-768.png",
+      "bytes": 87028,
+      "sha256": "4167b28b84605b072dc38e68bc6e71ab35e5427bb19b43aab73ba7e45f4a88e9"
+    },
+    {
+      "file": "browser/t5-browser-regression/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 90557,
+      "sha256": "17d5dbe95d5a7b37eb6bed3180580b2858a8a7752319318772eb4a13500654b4"
+    },
+    {
+      "file": "browser/t5-browser-regression/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 91737,
+      "sha256": "0674ae5cf9a1b76b6d094e0eeba9575ba6a0dd6a496c08c0239da4b56cce85e2"
+    },
+    {
+      "file": "browser/t5-browser-regression/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 86818,
+      "sha256": "54fe5950bf9cd30f39951c4db3b185a71b4dac14271702bd40afd0f3f96fccdb"
+    },
+    {
+      "file": "browser/t5-browser-regression/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 91639,
+      "sha256": "caff48df89993d3dc3ec15b6e54c694fbecbd6b9b996e59c3a0abd3c0adc8d50"
+    },
+    {
+      "file": "browser/t5-browser-regression/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 63093,
+      "sha256": "3e9d053b6a8b14e8bc81caac9014a81d78f3a7ac834821201d816db3cd425cea"
+    },
+    {
+      "file": "browser/t5-browser-regression/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 80520,
+      "sha256": "edf1e0705761964cec0fa047ecb3f5d6aa7c5beee9a97935c34999cffc4b2e23"
+    },
+    {
+      "file": "browser/t5-browser-regression/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 52744,
+      "sha256": "28a9b291697684072174bc64855b32f1294697b2d1e11c9222c24a0ae0237055"
+    },
+    {
+      "file": "browser/t5-browser-regression/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61806,
+      "sha256": "0333918a9936df134c9857fda8e222511c1b869b3f8eafac58c7e72b2e7adabf"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 110384,
+      "sha256": "63432daa7201d7968659a69fe00d0347ec5c380c76043508be5a64c55bf02c24"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 98357,
+      "sha256": "6aa6517be39acca792be3c304b205e7ab8777839666cb99901cc4bac2e2596eb"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 106311,
+      "sha256": "49887e294df0d9bf944b92229842424caa05bccf0bd91238948131ca619e837c"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 137500,
+      "sha256": "c3e72783a4e3c43e574a574455e16304c4bebc30dbca000914ce0d6284f1a756"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 116804,
+      "sha256": "c2efc953f9912e7c5b9bbe368dfe8418e7dc4c29a986c44e4411ac9b86857cf2"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 137938,
+      "sha256": "2baa6e3e5b96d1350b22759015da2122cd3cd5416e6dd0ca15d501bf13dfd5d6"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 101842,
+      "sha256": "0fd845246cf579345836983703b545bdfa6478cdae87b3062bb6de1ac422552b"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 88458,
+      "sha256": "983238d9330f0ae15abb74ae6900061b73ecca4635f68a5dac71e6b97a6da799"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 97557,
+      "sha256": "2440ae8db1f8b4f715487553b5acdeabfef25c3182d1553c0f2c1b57c7575004"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129081,
+      "sha256": "1fb53da9be0c38b1cf7eb95462090990bffae3f89e53cb73d0b33f6112574ffd"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107360,
+      "sha256": "e1052f7cffd338fdc2869a5ad831faa1723ea6aab3a94fe86eb44b67b1dc485f"
+    },
+    {
+      "file": "browser/t5-browser-regression/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128053,
+      "sha256": "a06fc3f20410986815d0abd84b3d02014c9ee096e7900086c73aa3b229a444f5"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-a-write-superseding-t-8d7e5-itted-lost-response-exactly/slow-read-original-retry.png",
+      "bytes": 103380,
+      "sha256": "27fc6e78b8863283445e018ea227b45558dabd08ccff4ec0c9d5a5da7b4fdb0c"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-detail-refresh-denied-10c62-a-held-successful-help-read/help-denied-late-read.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-detail-refresh-denied-4bed8--held-successful-help-write/help-denied-late-write.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-lost-request-response-b192c-elp-without-auto-processing/error-context.md",
+      "bytes": 9632,
+      "sha256": "15c88e0bf518181ad65c36f0fced6d2b1cb1670c26abab7b48c2959d42a51c79"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-parent-list-denial-af-a9188-clears-the-open-help-dialog/parent-list-denied.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-parent-list-denial-is-792f6--held-successful-help-write/parent-denied-late-write.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-parent-list-denial-isolates-a-held-successful-help-read/parent-denied-late-read.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1024x768.png",
+      "bytes": 103166,
+      "sha256": "fe34e75c63fa1f5ef04e9045f334d56cd579224e7c8664ac4acf7de730707bc3"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1280x800.png",
+      "bytes": 104734,
+      "sha256": "807b9ef2750bf8c62587d76e86add4752526b724bd57a0a7c176fff0e431a635"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-390x844.png",
+      "bytes": 93383,
+      "sha256": "8f36f30af2000b850f155c2daccf593cf2c250634995363f0f146a20cbaa1e69"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-768x1024.png",
+      "bytes": 99987,
+      "sha256": "401b7d2ff7a61a56251fe91264f98afd15eedf6a4d2e7b4b47ed8898070615a1"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1024x768.png",
+      "bytes": 77044,
+      "sha256": "34d0f5e877fa4795347b0bc86e626a7682d784967e1f0198a708b414c3c0eff7"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1280x800.png",
+      "bytes": 87409,
+      "sha256": "cb8c79c74c1281b32a1af00a583739d6e7d93e51a7420f47b299a1d870a572fa"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-390x844.png",
+      "bytes": 56600,
+      "sha256": "e4a0b46164f2bc40a16210efc14d748ac381fe928f2cc8f57e82fec5ccd9ea27"
+    },
+    {
+      "file": "browser/t5-browser-regression/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-768x1024.png",
+      "bytes": 73266,
+      "sha256": "1e0b198981ee363329a9ccbb4fd453d060cc8c73aacd5ed3d1d79116e2ab56a5"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-partial-form.png",
+      "bytes": 109961,
+      "sha256": "8fa56311111ac45f956b963639558aa5b5612343c1e5dbfc7b511c863b84872b"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-1280.png",
+      "bytes": 96487,
+      "sha256": "cf71e1c47ee2890bc1f1a85e98e5279d9ade97fad9863b220078628dfbd720e7"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-390.png",
+      "bytes": 90328,
+      "sha256": "4879cbd600d4ed21f05084e48d78877d492416b0bbd4155824fef8fd71a187ed"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-768.png",
+      "bytes": 96129,
+      "sha256": "881de3e38717ee49a4913d5e8731a08a6f6605d631566b6d17e738a73d06913c"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-1280.png",
+      "bytes": 118988,
+      "sha256": "74cdf6f04131ae39fd2c8b2860161b77611b0be029d1509e83d5673fd0c19746"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-390.png",
+      "bytes": 79347,
+      "sha256": "6bbc096a417b9a12658cc34f689df7668ef4324a95fb2b9bfc74ff29c4cff301"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-768.png",
+      "bytes": 86810,
+      "sha256": "0de22405dec8515de1f460b45556e3b80b600a38ba7af5a1c19b67627690dca2"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-partial-form.png",
+      "bytes": 121629,
+      "sha256": "96804ee1c52ab499fdc8606b2a02039c711373b794fd99f46fb1c8d25fcc1bb5"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-1280.png",
+      "bytes": 96862,
+      "sha256": "acd11b6729ec42deacf7fbe33f56e9ff494cdab49ad48075602793a1d3615e6c"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-390.png",
+      "bytes": 90830,
+      "sha256": "0b57d9d0c56829efb324dde873a81addc4dc3d321f0d80d45af36570563ddac8"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-768.png",
+      "bytes": 96502,
+      "sha256": "5ed861a13cf5eee56b702e78d4840b2a42baa11021bfe83b52c02b3c126a344e"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-1280.png",
+      "bytes": 119228,
+      "sha256": "3bd36e74c3777132b3aef1d83520558efa5d4d4aee6b3aa7cec58a2607256466"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-390.png",
+      "bytes": 79570,
+      "sha256": "8edf962463af57659aed973ac2e6d90bb3da1df02c90cc5e1a57bd2fee810d0c"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-768.png",
+      "bytes": 87028,
+      "sha256": "4167b28b84605b072dc38e68bc6e71ab35e5427bb19b43aab73ba7e45f4a88e9"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 90557,
+      "sha256": "17d5dbe95d5a7b37eb6bed3180580b2858a8a7752319318772eb4a13500654b4"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 91737,
+      "sha256": "0674ae5cf9a1b76b6d094e0eeba9575ba6a0dd6a496c08c0239da4b56cce85e2"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 86818,
+      "sha256": "54fe5950bf9cd30f39951c4db3b185a71b4dac14271702bd40afd0f3f96fccdb"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 91639,
+      "sha256": "caff48df89993d3dc3ec15b6e54c694fbecbd6b9b996e59c3a0abd3c0adc8d50"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 63093,
+      "sha256": "3e9d053b6a8b14e8bc81caac9014a81d78f3a7ac834821201d816db3cd425cea"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 80520,
+      "sha256": "edf1e0705761964cec0fa047ecb3f5d6aa7c5beee9a97935c34999cffc4b2e23"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 52744,
+      "sha256": "28a9b291697684072174bc64855b32f1294697b2d1e11c9222c24a0ae0237055"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61806,
+      "sha256": "0333918a9936df134c9857fda8e222511c1b869b3f8eafac58c7e72b2e7adabf"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 110919,
+      "sha256": "f2beae0ea9a2fe91c8c3416cd412df0eebf33e84b912c1a1a1a5d3bb9d96b9a0"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 98422,
+      "sha256": "25960dd1afde61fb52a44b88f215b74fa50990e2a58f4b309a0a7f10597bc321"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 106802,
+      "sha256": "f3529d2fb213e2983da799c52b72e171a171991ef47580fa31089342272038ce"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 138013,
+      "sha256": "d4c55b08212178f84ac7e8fdf01de5a1a09835eae89b207dbb474121511a4551"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 117258,
+      "sha256": "9130a11b197ebe9f091457351d8ab707332e35c10db501a7677c8d847cfe0cea"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 138415,
+      "sha256": "200cafd14525cbe1970f781e97b0af9d4680c9d4b0e18e00d84a3b5573ea371b"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 102377,
+      "sha256": "3a7af014639c1df6ae3e9069295535dc304acc494528c6cf6b27a83e03579b58"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 88935,
+      "sha256": "afef6e1be25b5f049e522bc9437e7bc74479cd3bac8f58e908b58a42978379c1"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 98051,
+      "sha256": "496163e3aebe61f7d5cb9854b7e7a789ea7fa7e18bc1201f565f5fbbc1d69178"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129593,
+      "sha256": "9bda6042266741129afba44f3b92cca1632956068d54a47a7482813c5a83bb0b"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107816,
+      "sha256": "8b127fcb6eb0388e95d20457c34a6e282ed3b8534ad87a5995c33e730319108b"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128538,
+      "sha256": "5be883f2be3a1f52bb3635eebab0f676aaa20541b07b8eb3fcff892eeefce490"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-a-write-superseding-t-8d7e5-itted-lost-response-exactly/slow-read-original-retry.png",
+      "bytes": 103380,
+      "sha256": "27fc6e78b8863283445e018ea227b45558dabd08ccff4ec0c9d5a5da7b4fdb0c"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-detail-refresh-denied-10c62-a-held-successful-help-read/help-denied-late-read.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-detail-refresh-denied-4bed8--held-successful-help-write/help-denied-late-write.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-parent-list-denial-af-a9188-clears-the-open-help-dialog/parent-list-denied.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-parent-list-denial-is-792f6--held-successful-help-write/parent-denied-late-write.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-parent-list-denial-isolates-a-held-successful-help-read/parent-denied-late-read.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1024x768.png",
+      "bytes": 103166,
+      "sha256": "fe34e75c63fa1f5ef04e9045f334d56cd579224e7c8664ac4acf7de730707bc3"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1280x800.png",
+      "bytes": 104734,
+      "sha256": "807b9ef2750bf8c62587d76e86add4752526b724bd57a0a7c176fff0e431a635"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-390x844.png",
+      "bytes": 93383,
+      "sha256": "8f36f30af2000b850f155c2daccf593cf2c250634995363f0f146a20cbaa1e69"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-768x1024.png",
+      "bytes": 99987,
+      "sha256": "401b7d2ff7a61a56251fe91264f98afd15eedf6a4d2e7b4b47ed8898070615a1"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1024x768.png",
+      "bytes": 77044,
+      "sha256": "34d0f5e877fa4795347b0bc86e626a7682d784967e1f0198a708b414c3c0eff7"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1280x800.png",
+      "bytes": 87409,
+      "sha256": "cb8c79c74c1281b32a1af00a583739d6e7d93e51a7420f47b299a1d870a572fa"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-390x844.png",
+      "bytes": 56600,
+      "sha256": "e4a0b46164f2bc40a16210efc14d748ac381fe928f2cc8f57e82fec5ccd9ea27"
+    },
+    {
+      "file": "browser/t5-browser-reviewed/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-768x1024.png",
+      "bytes": 73266,
+      "sha256": "1e0b198981ee363329a9ccbb4fd453d060cc8c73aacd5ed3d1d79116e2ab56a5"
+    },
+    {
+      "file": "browser/t5-browser-second/.last-run.json",
+      "bytes": 96,
+      "sha256": "f5cda2f33efdf60e12ae9c1ed373e79d60d6a0ae51b0336275cc92c33fcd20d5"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 110384,
+      "sha256": "63432daa7201d7968659a69fe00d0347ec5c380c76043508be5a64c55bf02c24"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 98357,
+      "sha256": "6aa6517be39acca792be3c304b205e7ab8777839666cb99901cc4bac2e2596eb"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 106311,
+      "sha256": "49887e294df0d9bf944b92229842424caa05bccf0bd91238948131ca619e837c"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 137500,
+      "sha256": "c3e72783a4e3c43e574a574455e16304c4bebc30dbca000914ce0d6284f1a756"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 116804,
+      "sha256": "c2efc953f9912e7c5b9bbe368dfe8418e7dc4c29a986c44e4411ac9b86857cf2"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 137938,
+      "sha256": "2baa6e3e5b96d1350b22759015da2122cd3cd5416e6dd0ca15d501bf13dfd5d6"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 101842,
+      "sha256": "0fd845246cf579345836983703b545bdfa6478cdae87b3062bb6de1ac422552b"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 88458,
+      "sha256": "983238d9330f0ae15abb74ae6900061b73ecca4635f68a5dac71e6b97a6da799"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 97557,
+      "sha256": "2440ae8db1f8b4f715487553b5acdeabfef25c3182d1553c0f2c1b57c7575004"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129081,
+      "sha256": "1fb53da9be0c38b1cf7eb95462090990bffae3f89e53cb73d0b33f6112574ffd"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107360,
+      "sha256": "e1052f7cffd338fdc2869a5ad831faa1723ea6aab3a94fe86eb44b67b1dc485f"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128053,
+      "sha256": "a06fc3f20410986815d0abd84b3d02014c9ee096e7900086c73aa3b229a444f5"
+    },
+    {
+      "file": "browser/t5-browser-second/dailyLearningPlan-lost-com-1f59e-elogin-reads-persisted-plan/error-context.md",
+      "bytes": 13111,
+      "sha256": "86eb915bc0cab65ae5ed2775adc385a19d9ef46e43728948848f2b7d8ab902d0"
+    },
+    {
+      "file": "build-source-verification.json",
+      "bytes": 1496,
+      "sha256": "e3f2a05d50b989800c725d3a39d4bf7c04fb2b79e784412e167b2ea6be3d7769"
+    },
+    {
+      "file": "candidate-manifest.json",
+      "bytes": 9426,
+      "sha256": "678b650ebdd85a8c2dc8b05ab6845ab53449380f4fef6493658d3894cfd5c64d"
+    },
+    {
+      "file": "delivery-metadata.json",
+      "bytes": 2783,
+      "sha256": "6928ef147ad0a6155888227e75ca420b527883eb14dabf55be98f862d9c44d28"
+    },
+    {
+      "file": "fixed-web-build/asset-manifest.json",
+      "bytes": 369,
+      "sha256": "f52399255d4e9251e5db40a8f325e2804c56725393615c1909b7342272875bf7"
+    },
+    {
+      "file": "fixed-web-build/index.html",
+      "bytes": 725,
+      "sha256": "5fcc5519c8e73e490e2e5373cfea57dcdede508a70f727188f561d4299867847"
+    },
+    {
+      "file": "fixed-web-build/manifest.json",
+      "bytes": 180,
+      "sha256": "ff7923e959200fe2ca0e6450a39002ae26e9d62e0ef69c40186ebe172835fa76"
+    },
+    {
+      "file": "fixed-web-build/static/css/main.da77081e.css",
+      "bytes": 29859,
+      "sha256": "62c71a1507fd7134697f924fd682af90a37e03d78024eb9605cd8b16afe9fcc2"
+    },
+    {
+      "file": "fixed-web-build/static/css/main.da77081e.css.map",
+      "bytes": 47905,
+      "sha256": "316a40763d24253f58dcfb9b523d098b5b1efee52ccc5fdd69db62726ab40a3f"
+    },
+    {
+      "file": "fixed-web-build/static/js/main.1160c4ce.js",
+      "bytes": 531003,
+      "sha256": "99c4e283c8984e06a67efd3d9b1679836623c999343d0e09523aef80478bd264"
+    },
+    {
+      "file": "fixed-web-build/static/js/main.1160c4ce.js.LICENSE.txt",
+      "bytes": 13194,
+      "sha256": "776626e2a539bae6c6ffdae382b2fc62045dcd76b3f6b6e40c37726056e87f22"
+    },
+    {
+      "file": "fixed-web-build/static/js/main.1160c4ce.js.map",
+      "bytes": 1996709,
+      "sha256": "a69368cd9caffe948f49b3e260c60c9ac0d5a3df5d4ece5d9af7513dac37147f"
+    },
+    {
+      "file": "independent/backend/artifacts.sha256.json",
+      "bytes": 2922,
+      "sha256": "517bb361bbba8637d7d8c4e47bdd4cca3ad419f820a7bbda9a70bff6907a8c87"
+    },
+    {
+      "file": "independent/backend/candidate-after.json",
+      "bytes": 60157,
+      "sha256": "f8ef0217a5fd42787620d235f0eaa73f21e9b6a0f241c974c8b5b4f5a7523cb4"
+    },
+    {
+      "file": "independent/backend/candidate-before.json",
+      "bytes": 60157,
+      "sha256": "be9478c1f523cbd45ff1baeab9653704479ab21bf971a56628c0dada5ac671a1"
+    },
+    {
+      "file": "independent/backend/candidate-stability.json",
+      "bytes": 197,
+      "sha256": "c8616c065ebb6ccfe3645862248036bf30693a0284b395617ffcd8d52b67ae9f"
+    },
+    {
+      "file": "independent/backend/formal-http.json",
+      "bytes": 2353,
+      "sha256": "ca518ff0c41376ba8c2b2d7b95a423f657edf5acda1cb2a693198f170facfcdf"
+    },
+    {
+      "file": "independent/backend/formal-http.log",
+      "bytes": 1438,
+      "sha256": "6a77a260583e25c48b6c1c4b7d3d07647783692ef8bc9faa8c209d3854c39e65"
+    },
+    {
+      "file": "independent/backend/gateway-probe.cjs",
+      "bytes": 3500,
+      "sha256": "956f7212ce8e813c6fc471dfec33f25c5981edf2a729e21cdf17131d6c7f7f28"
+    },
+    {
+      "file": "independent/backend/gateway-probe.log",
+      "bytes": 929,
+      "sha256": "6386eccc40eeb1e57f8774001024d593f96e884543f1b94235a2ed3009ceaf25"
+    },
+    {
+      "file": "independent/backend/index-probe.log",
+      "bytes": 509,
+      "sha256": "471e46397419e193b133162e1333d34dfb1b649860810b38ccbe94fd0888bc45"
+    },
+    {
+      "file": "independent/backend/original-index-race-probe.cjs",
+      "bytes": 4786,
+      "sha256": "fe1303b4dceeebff49fd58c0d33765178863f937d7b083638e0a940202b0a8ef"
+    },
+    {
+      "file": "independent/backend/permanent.json",
+      "bytes": 28478,
+      "sha256": "702e6e5e05838fccc2f8741da323f1ab00dd959e0783445089fccb10ecd6f6ea"
+    },
+    {
+      "file": "independent/backend/permanent.log",
+      "bytes": 2920,
+      "sha256": "9547fee9b4c4a013c585def1217bc78395640ad5d3d347f0631fcb8baa26a772"
+    },
+    {
+      "file": "independent/backend/report.md",
+      "bytes": 11040,
+      "sha256": "c3eb49a3d8ef33653de33d2e6092bd5dc16e65ed631d1396063345bab21e7151"
+    },
+    {
+      "file": "independent/backend/results.json",
+      "bytes": 4266,
+      "sha256": "32447903b565a0fb064531b0314af948d4c4cecf7431b7e6e11d1f6cc8991cbf"
+    },
+    {
+      "file": "independent/backend/run-review.cjs",
+      "bytes": 4826,
+      "sha256": "9e42b20c41a3d821b1b32416d157ab87b84859b935fdab898b35558710dd773d"
+    },
+    {
+      "file": "independent/backend/shared-limiter.json",
+      "bytes": 1151,
+      "sha256": "874e4e6f1f9c21c0b596998c18961f26f227ef530af5ba4c6cc709b2fd556009"
+    },
+    {
+      "file": "independent/backend/shared-limiter.log",
+      "bytes": 996,
+      "sha256": "0016e3baa27227fddc111b1296109c7b3bef8cde1b51ce7ba1fda7fa8a5e62dd"
+    },
+    {
+      "file": "independent/backend/summary.json",
+      "bytes": 5749,
+      "sha256": "2c8b0ba5bb487d4995c471c35c3702dd5841a5a8019bd48b75f1f76cc581c8f1"
+    },
+    {
+      "file": "independent/backend/timezone.json",
+      "bytes": 4403,
+      "sha256": "01b92296ffe1e1549d822232833e2682861764dad7fed1931b69ffd85ed1d3e0"
+    },
+    {
+      "file": "independent/backend/timezone.log",
+      "bytes": 1949,
+      "sha256": "3ddcd83e5bdbfc7bbb28b55de6ff2183cdc65f4702d1c2f229a8215fa8468965"
+    },
+    {
+      "file": "independent/delivery-review-report.md",
+      "bytes": 6855,
+      "sha256": "bfeec6b5a102b358089db701e7e843e64bc9e58013836249359003e3d47baca5"
+    },
+    {
+      "file": "independent/frontend/boundaries.test.js",
+      "bytes": 10164,
+      "sha256": "7c0a68d8890734652a3f5e725f9d1b5b6de5504fcca2b56e131a52dc9b67bf07"
+    },
+    {
+      "file": "independent/frontend/jest.config.cjs",
+      "bytes": 664,
+      "sha256": "67a0ec8b93c0a42f928231d30829a2ae6b28680721c5b4d7fb077b4b6a67c578"
+    },
+    {
+      "file": "independent/frontend/run-final.cjs",
+      "bytes": 2940,
+      "sha256": "0de3e29e70903d2d063da6551de25af7ef63c5182e5bfe59c5c1087974c57aca"
+    },
+    {
+      "file": "independent/index-race-probe.cjs",
+      "bytes": 4786,
+      "sha256": "fe1303b4dceeebff49fd58c0d33765178863f937d7b083638e0a940202b0a8ef"
+    },
+    {
+      "file": "independent/t5-independent-frontend-hashes.json",
+      "bytes": 7151,
+      "sha256": "df127e16c49c30b585fd30d79872b8d0e8f8c0881ae8843fd65d791e6ec6767a"
+    },
+    {
+      "file": "independent/t5-independent-frontend-report.md",
+      "bytes": 6497,
+      "sha256": "ba41643791f51b341479adcdc430973d0ef489995e9849229ca89e35fa3241fc"
+    },
+    {
+      "file": "integrity-before-delivery-review.json",
+      "bytes": 255,
+      "sha256": "3539ec73046b8bda11824de911698b517a1501f032542f552c38b3bab06e2c67"
+    },
+    {
+      "file": "logs/t5-api-final.log",
+      "bytes": 1422,
+      "sha256": "7f2bb7fca9944e8f4b52b03330bcf287f6b57679c5ef7e9dfe8168dfdda242f9"
+    },
+    {
+      "file": "logs/t5-api-red.log",
+      "bytes": 5693,
+      "sha256": "856f4bca7cf338aa008e304dcf5f24486da32896bce27eb727f1b9829fdb3248"
+    },
+    {
+      "file": "logs/t5-api.log",
+      "bytes": 854,
+      "sha256": "9a5daff069fe27131230a0da648c1730cdd8bdcc750414fa5a0881d6f022829c"
+    },
+    {
+      "file": "logs/t5-backend-boundary-red.log",
+      "bytes": 114459,
+      "sha256": "60edf00e3a618a976680f66d368d9d568bf523ab060c5c51c84d3097cb35892e"
+    },
+    {
+      "file": "logs/t5-backend-boundary.log",
+      "bytes": 158121,
+      "sha256": "a740ba3a58ddb04927b42513ca4b0b571ce990ccaebf007867dff7fc47c4c54b"
+    },
+    {
+      "file": "logs/t5-backend-first.log",
+      "bytes": 86115,
+      "sha256": "7659b2cc7970d8e9dc0a0eaa3ec1fcd9eb906a2563f488db026d2e2906c89742"
+    },
+    {
+      "file": "logs/t5-backend-red.log",
+      "bytes": 50045,
+      "sha256": "e0d8bbf6a9dbc294925121dc5e1320620e90518a5c2eb11191b672291bc05757"
+    },
+    {
+      "file": "logs/t5-backend-review-cross-day.log",
+      "bytes": 5942,
+      "sha256": "14bec1b55cff604e5e7255dc9e5eb03051ded523179a880fee2706091633dd8e"
+    },
+    {
+      "file": "logs/t5-backend-review-diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-backend-review-family-final.log",
+      "bytes": 44555,
+      "sha256": "0b84ed4bf8cc387bc3409ed4db00c165196c62fe1d5d193a612265645543af74"
+    },
+    {
+      "file": "logs/t5-backend-review-family-regression.log",
+      "bytes": 246832,
+      "sha256": "de51d64c5283744edeb71d0c910d692e351e873159be4ce5676688f489a895b6"
+    },
+    {
+      "file": "logs/t5-backend-review-family-stable.log",
+      "bytes": 44595,
+      "sha256": "fe5beeb7ede6772ac559d74b4e8f4e4a7337b17d220f55c737d45466f1bac3d6"
+    },
+    {
+      "file": "logs/t5-backend-review-final-diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-backend-review-final-green.log",
+      "bytes": 1473,
+      "sha256": "29fe77bf18645b3921c9b56a992e3b20851a5824b216d84daa4d011aa174fda6"
+    },
+    {
+      "file": "logs/t5-backend-review-final-source-sha256.log",
+      "bytes": 1577,
+      "sha256": "1a33092beda238be22489389c49433db925976f460f2a4e83cc68c96c015d7b1"
+    },
+    {
+      "file": "logs/t5-backend-review-gateway-regression.log",
+      "bytes": 4030,
+      "sha256": "2221277ae3be6825d55c75e1245d744772d19158d27ee88c09c21eee0067d505"
+    },
+    {
+      "file": "logs/t5-backend-review-green.log",
+      "bytes": 2090,
+      "sha256": "5bbaa0253f1d38e7a655bb44522fb63499f914588f50f17d1d93cb3401e892a4"
+    },
+    {
+      "file": "logs/t5-backend-review-latest-green.log",
+      "bytes": 2171,
+      "sha256": "d969517071cdcf311d35e992dcc2b63367d6aef9e3dee7d71f205f64095cc61b"
+    },
+    {
+      "file": "logs/t5-backend-review-latest-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-backend-review-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-backend-review-p2-green.log",
+      "bytes": 2168,
+      "sha256": "b65f138384aa5a11e915a2641a6792c03d3bc539068b7977bf0ea05d6fcf3400"
+    },
+    {
+      "file": "logs/t5-backend-review-p2-index-probe-green.log",
+      "bytes": 307,
+      "sha256": "5306b398e9bb0cc45aba27834f79d01d5ef40130a2e5be175fd09dfbf6eaf25d"
+    },
+    {
+      "file": "logs/t5-backend-review-p2-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-backend-review-p2-red.log",
+      "bytes": 5348,
+      "sha256": "198bf250ae2099e7fc6ab35d40a5f04d37ef46fb31cd328415378eed6ed1e505"
+    },
+    {
+      "file": "logs/t5-backend-review-race-repeat.log",
+      "bytes": 5833,
+      "sha256": "577be1a44766220defd97501c9a83fc170458dacb72cbb78b2130ef03b32a152"
+    },
+    {
+      "file": "logs/t5-backend-review-red.log",
+      "bytes": 11383,
+      "sha256": "058186676abaad8d5278d65883d997aeaec0e04914b97dd71848e81d2189e467"
+    },
+    {
+      "file": "logs/t5-backend-review-repository-lint.log",
+      "bytes": 2756,
+      "sha256": "ed190534103e6bc3f724a934a65b1e303748955befbd968e67661fc81e232a4f"
+    },
+    {
+      "file": "logs/t5-backend-review-source-sha256.log",
+      "bytes": 980,
+      "sha256": "9491e6b6bce64222f0f92133afbc117ca81b938dd8274e6603015e85de72c88b"
+    },
+    {
+      "file": "logs/t5-backend-review-stable-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-backend-review-stable-source-sha256.log",
+      "bytes": 1577,
+      "sha256": "bb38edf2accae8dd35db27b32f7bdfb990765452cc93be7dffcef745d2e7974e"
+    },
+    {
+      "file": "logs/t5-browser-final-backend.log",
+      "bytes": 5417,
+      "sha256": "13ba9cc75c102d434cae050c0a1bb0bc3d5dc86d45da59c1cd80ba9d5f96db43"
+    },
+    {
+      "file": "logs/t5-browser-final-five.log",
+      "bytes": 1162,
+      "sha256": "d47dc548f8da0f13fa91f19369b75e9725b43b2e2e8ce87a2405a8ce09cabe93"
+    },
+    {
+      "file": "logs/t5-browser-final-focused.log",
+      "bytes": 2860,
+      "sha256": "4d0616db2f908989e69302ce6411ac46ee10e9917dbf76a348cb215047a9dae7"
+    },
+    {
+      "file": "logs/t5-browser-first.log",
+      "bytes": 18476,
+      "sha256": "baffe2e95f91d46dd5f700f167d813a9399ddc97fb9d8562fc7602dd1ffba2a6"
+    },
+    {
+      "file": "logs/t5-browser-regression.log",
+      "bytes": 6611,
+      "sha256": "ab66360f8af9ce4d580b5f21ffc3e0fe55cbfe303ca90991dff88dea6d23135a"
+    },
+    {
+      "file": "logs/t5-browser-reviewed.log",
+      "bytes": 5252,
+      "sha256": "c64cb4f55b9a6766fc6c1f41005a4ae769e4b0bd97a992b70beb4646bcf2ae1b"
+    },
+    {
+      "file": "logs/t5-browser-second.log",
+      "bytes": 2208,
+      "sha256": "cb8490af824380457c42ec4fa139de27286169a08053fe5037b202ddd078eb67"
+    },
+    {
+      "file": "logs/t5-browser-third.log",
+      "bytes": 857,
+      "sha256": "05b67cb5f31540e599937a61e0dba01ddb83c2827a308c24f3d0044b0c538d79"
+    },
+    {
+      "file": "logs/t5-build-first.log",
+      "bytes": 1187,
+      "sha256": "ca4cc8abdbb3ce439ed99bafff82c45ebef01c235c575a3c27b415f9ffbfe4a4"
+    },
+    {
+      "file": "logs/t5-build-review.log",
+      "bytes": 963,
+      "sha256": "9cead7875389a65750aa6b9884f8687d07616db75d7c619fd12770dde665324e"
+    },
+    {
+      "file": "logs/t5-build-second.log",
+      "bytes": 945,
+      "sha256": "374cef959581aa49fb11bc5151ec49a9b80418156839aacf2fff33eb1fe3d3dd"
+    },
+    {
+      "file": "logs/t5-clean-candidate-lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "file": "logs/t5-docs-checkpoint.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "logs/t5-docs-current.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "logs/t5-docs-delivery-check.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "logs/t5-docs-delivery-final.log",
+      "bytes": 16698,
+      "sha256": "a83a70a7325655497a8521bb74448811e870d5284b1c63840a0feb4a0b7f39d3"
+    },
+    {
+      "file": "logs/t5-docs-evidence-matrix.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "logs/t5-docs-final-candidate.log",
+      "bytes": 16705,
+      "sha256": "04b03464f57628f925c1dfd72cbe41c397f03a73039d491df8623127655d99a2"
+    },
+    {
+      "file": "logs/t5-docs-initial.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "logs/t5-docs-state-check.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "logs/t5-docs-state-green.log",
+      "bytes": 16581,
+      "sha256": "f75207726b15ab0fa3b38b360fb5098620b904f03729d6c176480ce3463a3cf4"
+    },
+    {
+      "file": "logs/t5-docs-state-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-docs-state-red-confirmed.log",
+      "bytes": 106741,
+      "sha256": "8dae4d00f1a704b138ee62e3371cf66d84527766295db1ee2d66dbeadc907dea"
+    },
+    {
+      "file": "logs/t5-docs-state-red.log",
+      "bytes": 117015,
+      "sha256": "a59a1e40ccc02cf503981b4c6562b3f8d0172bd1f4fce7c33cc6265ca541a036"
+    },
+    {
+      "file": "logs/t5-docs-state-stable.log",
+      "bytes": 18808,
+      "sha256": "b9dc5f348dd79e927f3b1b1e0fd99dc9a6dccdddb52da874e16015374768860b"
+    },
+    {
+      "file": "logs/t5-final-clean-candidate-lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "file": "logs/t5-final-focused-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-formal-http-final-candidate.log",
+      "bytes": 1188,
+      "sha256": "a0cafa6dbcb1bd7884525454d3c56e7baaff3519b870ae58b7129f77939bb0ad"
+    },
+    {
+      "file": "logs/t5-formal-http-full.log",
+      "bytes": 1188,
+      "sha256": "c2d4ef17299cefbbc7fc24fcdd39091cfb94b9168b7a177423623e5e37b5e7f0"
+    },
+    {
+      "file": "logs/t5-frontend-final.log",
+      "bytes": 2815,
+      "sha256": "745b79bc96ee281a7ac4165708db8ac584f62b162224a76c5cefe73c364e606c"
+    },
+    {
+      "file": "logs/t5-frontend-full.log",
+      "bytes": 2825,
+      "sha256": "50b2dff3754e569d671b067ec5650a3c8dacede84b612d87f48308e5cf45725e"
+    },
+    {
+      "file": "logs/t5-frontend-initial.log",
+      "bytes": 2741,
+      "sha256": "9e6e69799c5c7dd8d5bc59171c8a4adc2d4a7a61e102c11e407b44a533104b4b"
+    },
+    {
+      "file": "logs/t5-frontend-reviewed.log",
+      "bytes": 2813,
+      "sha256": "f79f0724af3cdfda7ea323b122b6f6772d9fd8db25a37b5f48d1045b82099939"
+    },
+    {
+      "file": "logs/t5-http-client.log",
+      "bytes": 461,
+      "sha256": "c1dab73f7763b2c4ee206ec1bb931e39b7e216c1f9bcc1caad499fb38c8ee2aa"
+    },
+    {
+      "file": "logs/t5-http-first.log",
+      "bytes": 4822,
+      "sha256": "9a5a7cb62d07faf78a79d8742e241cdcddf98182dad8571b162938097a00c26b"
+    },
+    {
+      "file": "logs/t5-http-second.log",
+      "bytes": 1076,
+      "sha256": "2e8538bdc5dcd885a7033fff2679c002e8685dcde45ab3946d293c0a17c6aa45"
+    },
+    {
+      "file": "logs/t5-independent-backend-revision.log",
+      "bytes": 221941,
+      "sha256": "4b47ab37dffbc64ea533437e716677b8075e0dc03a72439f0198a600bf83e275"
+    },
+    {
+      "file": "logs/t5-independent-crossday-revision.log",
+      "bytes": 5888,
+      "sha256": "57f004159505c77328e8329115b5aeb72bfcd5de61b13fe5cbfa6e9c4f5d8cf5"
+    },
+    {
+      "file": "logs/t5-independent-formal-http-revision.log",
+      "bytes": 889,
+      "sha256": "a9acfe0a88bebab66ce8a6a04e55c42743b3d2a767e46c0ae5e11bf73e50b767"
+    },
+    {
+      "file": "logs/t5-independent-frontend-final.log",
+      "bytes": 8227,
+      "sha256": "54d4c004f579e16019db09532c3c9a42949a0249f5bca8182770883e850cf2b0"
+    },
+    {
+      "file": "logs/t5-independent-gateway-boundary-probe.log",
+      "bytes": 498,
+      "sha256": "7cb3f6a5a109824ea550dba63074d4eaa3a8e107dcd633b1b9fe6cd48b1a9a29"
+    },
+    {
+      "file": "logs/t5-independent-index-build-probe.log",
+      "bytes": 851,
+      "sha256": "eb8e8d9a2b1cefb1f0171927ad43683aebfb49495b9340cba36c8a3de6e85874"
+    },
+    {
+      "file": "logs/t5-independent-index-race-probe.log",
+      "bytes": 220,
+      "sha256": "c67d0b0ad14e58bbdbf446389338ed932f70c1c7fd88fa86d27c8368a2d9450d"
+    },
+    {
+      "file": "logs/t5-independent-timezone-revision.log",
+      "bytes": 2116,
+      "sha256": "f447122a8c8a2e0eb0e2e4856fecedd32331493bce21f728d17b436962f4d780"
+    },
+    {
+      "file": "logs/t5-last-files-lint-fixed.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-last-files-lint.log",
+      "bytes": 235,
+      "sha256": "3b4b80ad81ad852fbd4298c50fcd476c0ed5b6e38e175f1475c91099374ddd1f"
+    },
+    {
+      "file": "logs/t5-lint-initial.log",
+      "bytes": 3478,
+      "sha256": "19aeb7a822624044bf71a2e28ba8a5ca06d8db3643ff5eed753fdafe6d478e37"
+    },
+    {
+      "file": "logs/t5-model.log",
+      "bytes": 1497,
+      "sha256": "f5919c0975661c16cd4fe524ce94674a349211ecbf29db058183ea945eb32815"
+    },
+    {
+      "file": "logs/t5-panel-first.log",
+      "bytes": 141959,
+      "sha256": "0410cbe7461e055e3aca220e415f7cd16a9968cfededf21b84998df02ed23441"
+    },
+    {
+      "file": "logs/t5-panel-red.log",
+      "bytes": 1554,
+      "sha256": "8216f8e8efafc078f839dbedd0f2f8051a75e30b9a798d215a3f99f949b87b88"
+    },
+    {
+      "file": "logs/t5-panel-second.log",
+      "bytes": 1354,
+      "sha256": "956ee03c37514c562808e94abf2fd00cc0026f7479c17b755ffb61e9ac953a71"
+    },
+    {
+      "file": "logs/t5-target-lint-fixed.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/t5-target-lint.log",
+      "bytes": 222,
+      "sha256": "4209a96f138fa2d5e16674193252e0145787f8fb204418070f06d85a67b0efa2"
+    },
+    {
+      "file": "logs/t5-timezone-red.log",
+      "bytes": 3008,
+      "sha256": "601431045050c40da99ddc050a3a3071eaddef3486dabc70480842df2a38682d"
+    },
+    {
+      "file": "logs/t5-timezone.log",
+      "bytes": 9580,
+      "sha256": "f495a5f994cb67890ef190c1876a73c9dfc9bad8156cd3ebbb532954a4613127"
+    },
+    {
+      "file": "logs/t5-ui-boundary-complete.log",
+      "bytes": 630,
+      "sha256": "22e0e9041c14f9e891a9349236cca72bcc29b63d6855c6cf5592df64e91d9566"
+    },
+    {
+      "file": "logs/t5-ui-boundary-green.log",
+      "bytes": 645,
+      "sha256": "7cde940b7f72f6ec49d8ce073bc7b34a17f49b7dfbe11771974f5860d89bb2a8"
+    },
+    {
+      "file": "logs/t5-ui-boundary-red.log",
+      "bytes": 14558,
+      "sha256": "7513a8f36e47bf8178277322c18282bad1f2470e5903d06fe5d09baf36e93dd4"
+    },
+    {
+      "file": "logs/t5-ui-review-green.log",
+      "bytes": 803,
+      "sha256": "d46d1b256ea56cca99ec7aec4ae0d71ce2436b7aee0606fa7f46170945aee5fb"
+    },
+    {
+      "file": "logs/t5-ui-review-red.log",
+      "bytes": 37714,
+      "sha256": "154165a62b0b02c91ac86e0b0ca8e9626008d75e5fb1aa31ac7bf44ab9890a42"
+    },
+    {
+      "file": "source-snapshot/backend/common/createBaseApp.js",
+      "bytes": 7252,
+      "sha256": "e88d954c47af6b19ea581d10ebdb2de4eb560539795bee3874139c88b4abbc69"
+    },
+    {
+      "file": "source-snapshot/backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 24430,
+      "sha256": "cf4e9d21215d1b456f88d15460996bdc65fcdd9b70a81dc694905eb5f7efce73"
+    },
+    {
+      "file": "source-snapshot/backend/common/utils/dailyLearningPlanInput.js",
+      "bytes": 1543,
+      "sha256": "f5183b8a00eb4138a31b21a6afaca5c85362769e6f6b549ec8a17bd54fdb5b6b"
+    },
+    {
+      "file": "source-snapshot/backend/gateway/__tests__/dailyLearningPlanRoutes.test.js",
+      "bytes": 5354,
+      "sha256": "86bd1d69e6d6726b03a6f00a68073ec4ea074b896e253a72733faa5683bbb4d3"
+    },
+    {
+      "file": "source-snapshot/backend/gateway/server.js",
+      "bytes": 5808,
+      "sha256": "1149da007585ba541cbb77de3e52d18b566e03e31b0216e2303d454ecafc88d0"
+    },
+    {
+      "file": "source-snapshot/backend/services/homework-service/__tests__/models/DailyLearningPlan.test.js",
+      "bytes": 1726,
+      "sha256": "cde6f5a950eb9cad6527469b78799f0a3f02438f4c19b17f208f366d8c7410f8"
+    },
+    {
+      "file": "source-snapshot/backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js",
+      "bytes": 30062,
+      "sha256": "8a3a395e7f6515b389320a71ee88c2f135c67d49c36e8872ef50623ce3d2c900"
+    },
+    {
+      "file": "source-snapshot/backend/services/homework-service/__tests__/setup.js",
+      "bytes": 2212,
+      "sha256": "024eee18388341345e7da506ee2aed482db9d0007e092a3e040589b812184420"
+    },
+    {
+      "file": "source-snapshot/backend/services/homework-service/models/DailyLearningPlan.js",
+      "bytes": 1603,
+      "sha256": "902265a5d02d8f1e478847c035b27c1dbe929841c6de2d77493bcd9a1f057a78"
+    },
+    {
+      "file": "source-snapshot/backend/services/homework-service/routes/dailyLearningPlans.js",
+      "bytes": 914,
+      "sha256": "fd6f4ab7c999761575b3fcfe3d9ce0362440ff0b81c844e61670bea773cbbaca"
+    },
+    {
+      "file": "source-snapshot/backend/services/homework-service/server.js",
+      "bytes": 10923,
+      "sha256": "6b5f3c2e7b552b01356b3a19404d28363481ed30cea1d219d64337f5b0b5baca"
+    },
+    {
+      "file": "source-snapshot/backend/services/homework-service/services/dailyLearningPlanService.js",
+      "bytes": 7515,
+      "sha256": "0cf94fc54dd911e2261410d73e3a40994792cdfdf94fc03e7361e8a311132a1d"
+    },
+    {
+      "file": "source-snapshot/backend/services/user-service/__tests__/routes/children.test.js",
+      "bytes": 12671,
+      "sha256": "b5d9e7facb428f94f0a9c2cdd6000baa2605e1fe2df3ed4377f6d5ca8fdebfc8"
+    },
+    {
+      "file": "source-snapshot/backend/services/user-service/controllers/familyController.js",
+      "bytes": 19686,
+      "sha256": "5569c409582118092236aeb4272cafa881a547dd749938d7af4f0edb7077761b"
+    },
+    {
+      "file": "source-snapshot/backend/tests/t2/dailyLearningPlan.integration.test.js",
+      "bytes": 5869,
+      "sha256": "5e84867076eb8d5571757595ec0d03a271f6365c9e9f6c31cbd99f7a833e7e1c"
+    },
+    {
+      "file": "source-snapshot/backend/tests/t2/serviceRuntime.js",
+      "bytes": 13631,
+      "sha256": "3ae4a4dbedd223c7fd9412f73d5bb31e656c152651f8ebf5ad9ffd5e8d37f914"
+    },
+    {
+      "file": "source-snapshot/backend/tests/task11/apiClient.integration.test.js",
+      "bytes": 2780,
+      "sha256": "6fd6b337f02045cbacb653a9bf1af58dfe4e65b8338f02eab3a53db99871b130"
+    },
+    {
+      "file": "source-snapshot/backend/tests/task11/apiClient.js",
+      "bytes": 1894,
+      "sha256": "72426878b6b9fd7726a58b8eb14228e8d20cd084049f24e037a2ec889f92e000"
+    },
+    {
+      "file": "source-snapshot/docs/api/family-learning-tracker-api.md",
+      "bytes": 128080,
+      "sha256": "9374a93631ffa1b15b9f011b101a270ddb579262c12e77376ad2d35982b7e0fc"
+    },
+    {
+      "file": "source-snapshot/docs/architecture/family-ai-learning-platform-design.md",
+      "bytes": 121292,
+      "sha256": "8950a4229c016818205b68ad48784c51f3a0090ca3897d1f5179cfd634121f49"
+    },
+    {
+      "file": "source-snapshot/docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 110853,
+      "sha256": "1f00246fcbfe198afccde2747e5936d594f36050659fdd1c42ce39b41b3334d8"
+    },
+    {
+      "file": "source-snapshot/docs/development/evidence/t5-synthetic-2026-10-26/README.md",
+      "bytes": 10826,
+      "sha256": "0e22b8a11b55a12fb58e6e751b5c5b6017bd994810b80932d761d832e7240840"
+    },
+    {
+      "file": "source-snapshot/docs/development/family-growth-requirement-traceability.md",
+      "bytes": 25820,
+      "sha256": "1d1849d41a902437b23fa5b29fcbf4ac29e036de7d6397c1c37b29fe215e7f7b"
+    },
+    {
+      "file": "source-snapshot/docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 466623,
+      "sha256": "949b467233b99fdcdbf5f6c6bb7da2b811f121e0b0e0c70b149a1feeb9139f29"
+    },
+    {
+      "file": "source-snapshot/docs/development/README.md",
+      "bytes": 10526,
+      "sha256": "59175372599f41f8e7e730bf0acb3fcfa2f32538b9b88f6dea8415dc596adb43"
+    },
+    {
+      "file": "source-snapshot/docs/README.md",
+      "bytes": 6031,
+      "sha256": "be7d6e9c721b3f410fb7ba2fa3c3c4408870a2c38daeed603173ca0571cc1b0d"
+    },
+    {
+      "file": "source-snapshot/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 82038,
+      "sha256": "9c897797d2dc00af900a247ab38d5cdedabc20e3665dc2e35ec16f4cb79b7a96"
+    },
+    {
+      "file": "source-snapshot/eslint.config.js",
+      "bytes": 3116,
+      "sha256": "e07f77b892f797151efe704c839715933e7b0482f2ade2e367e34e13d5d69143"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/__tests__/family/DailyPlanTaskNavigation.test.js",
+      "bytes": 2062,
+      "sha256": "5fbcd0c091f44980e3bf90525d5c8e44f43ad76769795e863448a8089169030c"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/__tests__/shared/dailyLearningPlanApi.test.js",
+      "bytes": 3345,
+      "sha256": "509bef414275534f20adc7b22413242c0709a499b30c0252c2ba65779da6a1ff"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+      "bytes": 20266,
+      "sha256": "11e316ff0986137d3e25019a3c0ae095a8c16e9518a163238d0925c75b8c2b33"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/components/family/DailyLearningPlanPanel.css",
+      "bytes": 2008,
+      "sha256": "3ce564afc8d3f300f631c9a8d965384061b6057cbc73118e30dd032d3af4272f"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/components/family/DailyLearningPlanPanel.js",
+      "bytes": 17487,
+      "sha256": "c76fb113470927c2c9e41e215d686e59e5922ffa4badc97a31ba973b8e29918b"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/pages/child/ChildTodayPage.js",
+      "bytes": 5381,
+      "sha256": "2e417aa2390a67fa4a95a0e5b1fddeb4f52b7f8aee9a15a1f0d5340f75cdbd97"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/pages/family/TasksPage.js",
+      "bytes": 27276,
+      "sha256": "8a7f7db97891b1fda04bda3208f775c811512391c40d1b14bfc1efc8647dcbdd"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/pages/family/TodayPage.js",
+      "bytes": 6590,
+      "sha256": "7799da741f442955dd1d41584e09f484ccef16b7883107117f9007493b0560f2"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/services/childApi.js",
+      "bytes": 6598,
+      "sha256": "e0e81568f59e10aec039613e0ac1e4e540a3b855679c262ac32202553f02129a"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/services/dailyLearningPlan.js",
+      "bytes": 594,
+      "sha256": "df2264f86805af95a1077e7f1861796bac0f7c746ad93c815732b281ba443801"
+    },
+    {
+      "file": "source-snapshot/frontend/web/src/services/familyApi.js",
+      "bytes": 9803,
+      "sha256": "1f611169b16ecf8f421c047171280f46bc2865ce836cdede2c0dd23ca18bfbb8"
+    },
+    {
+      "file": "source-snapshot/scripts/check-family-docs.js",
+      "bytes": 167033,
+      "sha256": "f1901f1c0a72eaaaedab786636b3066d3de2d7d17df49ee9cd280c6830c31291"
+    },
+    {
+      "file": "source-snapshot/tests/e2e/t2/dailyLearningPlan.spec.js",
+      "bytes": 12862,
+      "sha256": "c5b7e7b228cbb00890f07e99a059706f8df56b72e11e6622e60557b5321d1c64"
+    },
+    {
+      "file": "t5-tracked-code.patch",
+      "bytes": 33082,
+      "sha256": "8d5dd65b6a67f9f00c7ff5dd0e75dbdebebe9d71ae5f55722d7249c29af7fdef"
+    }
+  ]
+}

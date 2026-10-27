@@ -98,6 +98,22 @@ test('resetting a PIN expires the existing child browser session', async ({ page
   await expect(childPage.getByRole('alert')).toContainText('会话已过期，请重新登录');
   const storedSession = await childPage.evaluate(() => localStorage.getItem('family-growth.child-session.v1'));
   expect(storedSession).toBeNull();
+  // The 401 is now handled before this reload, regardless of the first reload's timing.
+  expect(await childPage.evaluate(() => JSON.parse(localStorage.getItem('family-growth.session-change.v1:student')).reason))
+    .toBe('expired');
+  await childPage.reload();
+  await expect(childPage).toHaveURL(/\/child\/login$/);
+  await expect(childPage.getByRole('alert')).toContainText('会话已过期，请重新登录');
+  expect(await childPage.evaluate(() => localStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+  await expect(childPage.getByRole('navigation', { name: '孩子导航' })).toHaveCount(0);
+  await childPage.getByLabel('家庭 ID').fill(family.familyId);
+  await childPage.getByLabel('孩子 ID').fill(childA.childId);
+  await childPage.getByLabel('PIN').fill('2468');
+  await childPage.getByRole('button', { name: '进入我的成长空间' }).click();
+  await expect(childPage.getByRole('alert')).toContainText('家庭、孩子或 PIN 不正确');
+  await loginChild(childPage, family.familyId, childA.childId, '8642');
+  await expect(childPage.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '孩子', exact: true })).toBeVisible();
   await childContext.close();
 });
 

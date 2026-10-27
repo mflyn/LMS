@@ -1,0 +1,214 @@
+{
+  "at": "2026-10-27T01:37:01.270Z",
+  "userApproval": "Explicit user authorization to close only T5 synthetic engineering gate",
+  "status": "APPROVED",
+  "gate": "CLOSED",
+  "scope": "ENGINEERING_SYNTHETIC_ONLY",
+  "device": "DEVICE_PENDING",
+  "nonblocking": {
+    "T5-NB-001": "OPEN_NONBLOCKING",
+    "T5-NB-002": "OPEN_NONBLOCKING"
+  },
+  "deferred": "REMAINDER_DEFERRED",
+  "git": "NOT_AUTHORIZED",
+  "deployment": "T8_PENDING / NOT_AUTHORIZED",
+  "historicalFailures": "PRESERVED",
+  "reviewedCandidateEntriesSha256": "44f7011d0118108e9660e4b8ab6698e2968c65318d9bacb0ff0f882c34997b8e",
+  "reviewedPatch": {
+    "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/revision.patch",
+    "sha256": "acdbdccae9267335dbcd46800f7d120af83318597e78716aedb144fd3425f119"
+  },
+  "reviewReport": {
+    "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1/REVIEW.md",
+    "sha256": "fa21a1f11bca3704735ac5750db5378dff59168d988f431cbfe1beec0e45bb2b"
+  },
+  "reviewManifest": {
+    "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1/manifest.json",
+    "sha256": "c3620baac3152481b2cddb13a0b19ee66119625331f551912ba9280824334c31"
+  },
+  "changesFromFrozenCandidate": [
+    "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+    "docs/architecture/family-self-directed-learning-system-design.md",
+    "docs/development/README.md",
+    "docs/development/family-growth-requirement-traceability.md",
+    "docs/development/family-self-directed-learning-mvp-gate.md",
+    "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+    "scripts/check-family-docs.js"
+  ],
+  "unchangedCandidateFiles": 35,
+  "productionLogicChanges": [],
+  "currentRecordAndCheckerFiles": [
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "sha256": "a7ef24cf28cc41c2359deec641bb782689aeae4020c6cb73e2ea33dacd433cad"
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "sha256": "be91413c173ffacb9881f03147dc66e83c7b7662be82835b48f907cf2ed72439"
+    },
+    {
+      "file": "docs/development/README.md",
+      "sha256": "86e0ac2e603e93b6fab5d09f056c17ba108b397bf749485ab8ddf2cbbfcbc5e4"
+    },
+    {
+      "file": "docs/development/family-growth-requirement-traceability.md",
+      "sha256": "0d1e25d85a322801c48144c99ad377249d820a9a7356b5589ec755d81c01f37b"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "31c78811d3412afca17b6d6063d32dc048db1fe626a28ad0d885a9efb87c8a4a"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "34b6a06013124fe8095affe243c01e49aff7dfc36b2f22ee2cb58057156e25d1"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "sha256": "37c189b7341d3bd2e3cca687d4f83bb6afb1fd1fba8783842273a3e7f2e9141f"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/approved-closure.md",
+      "sha256": "c10c3567901787d05c436206783b659e60a4dd1e8acc19bcebdded13e8b63ac9"
+    }
+  ],
+  "integrity": [
+    {
+      "root": "release-gate-artifacts/t5-numeric-fix-2026-10-27/dev-r1",
+      "count": 182,
+      "mismatches": []
+    },
+    {
+      "root": "release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1",
+      "count": 84,
+      "mismatches": []
+    },
+    {
+      "root": "release-gate-artifacts/t5-synthetic-2026-10-26",
+      "count": 364,
+      "mismatches": []
+    },
+    {
+      "root": "/Users/linmingfeng/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t5-full-review-2026-10-27/r1",
+      "count": 108,
+      "mismatches": []
+    }
+  ],
+  "runs": [
+    {
+      "label": "state-red",
+      "argv": [
+        "npm",
+        "run",
+        "test:family-regression",
+        "--",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+        "--testNamePattern=T5 (closure falsely|historical failures falsely|nonblocking falsely)"
+      ],
+      "exitCode": 1,
+      "startedAt": "2026-10-27T01:34:35.830Z",
+      "finishedAt": "2026-10-27T01:34:38.238Z",
+      "sourceChangesDuringRun": []
+    },
+    {
+      "label": "state-green",
+      "argv": [
+        "npm",
+        "run",
+        "test:family-regression",
+        "--",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/familyDocumentationGate.test.js"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T01:36:09.171Z",
+      "finishedAt": "2026-10-27T01:36:30.377Z",
+      "sourceChangesDuringRun": []
+    },
+    {
+      "label": "docs",
+      "argv": [
+        "npm",
+        "run",
+        "docs:family:check"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T01:36:10.260Z",
+      "finishedAt": "2026-10-27T01:36:10.898Z",
+      "sourceChangesDuringRun": []
+    },
+    {
+      "label": "lint",
+      "argv": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "scripts/check-family-docs.js",
+        "backend/common/deployment/__tests__/familyDocumentationGate.test.js"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T01:36:11.069Z",
+      "finishedAt": "2026-10-27T01:36:12.750Z",
+      "sourceChangesDuringRun": []
+    },
+    {
+      "label": "diff",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T01:36:32.538Z",
+      "finishedAt": "2026-10-27T01:36:32.619Z",
+      "sourceChangesDuringRun": []
+    }
+  ],
+  "validationArchive": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation",
+  "validationArtifacts": [
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/diff.json",
+      "sha256": "0516daf687470ce660d1691571d8b5d41081a7450e452c6cb8e57a664f0cc31c"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/diff.log",
+      "sha256": "0259ee4cc38748df740ef1649ee5c609ea348d1e7cec19c22241df01f29bd83d"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/docs.json",
+      "sha256": "d15c7e9c5cc075e9a586e6ad963274dce43fae291aa3f40ba094e3942ea20147"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/docs.log",
+      "sha256": "a9300c38cf50838ae051e4dfb93b2541bb48a0d90dc34b04ef6766a2a73730b1"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/lint.json",
+      "sha256": "23f0bd82e364e9eff8d6a0b50adff14930ee5cd8182f218c0400371365a941ac"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/lint.log",
+      "sha256": "95ec8b41f614aafdc172e2a6f65151aa55d90dcd3be6534603156b40406c6487"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/run.cjs",
+      "sha256": "0b6edc58a5bae1e14e4993192e49f5ea2a9fc78774f526a83116ac05c6f44e47"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/state-green.json",
+      "sha256": "2d063f6fd1dd4f590812d0774b4bfcff4da17fb7aea4b22232b7eeb8cc294b49"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/state-green.log",
+      "sha256": "f21566e0e2a556c098ce638c3969c10d6736ddf84d80645d0ecc10f7385790fe"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/state-red.json",
+      "sha256": "79c96bf66eea12ce002f70d74f04a3389c7127a88c363be174f526b297715340"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/approved-closure-validation/state-red.log",
+      "sha256": "c85d17e10f1dab63ab8ea92478657db832b945c43f80c17cc9bd15ba421c5ee0"
+    }
+  ],
+  "note": "Original candidate, issue closure and submission evidence remain historical and are not re-signed. Current status/checker delta is bound separately. No full business regression claimed for this record-only closure."
+}

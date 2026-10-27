@@ -385,6 +385,9 @@ PIN 必须为 4 至 6 位数字。服务端只保存带独立盐的密码哈希�
 
 `GET /api/children?page=1&pageSize=20` 仅家长可用，返回标准分页结构；孩子调用返回 `403 CHILD_ACCESS_DENIED`。`GET /api/children/:childId` 对家长返回本人家庭孩子，对孩子只允许本人。
 
+孩子详情的 `data.timezone` 返回经实时家庭归属验证的家庭 IANA 时区，供今日计划按家庭日期显示；
+不从客户端时区或登录快照推断。该字段是只读元数据，不授权访问其他家庭或孩子。
+
 `PATCH /api/children/:childId` 只允许家长修改 `name`、`avatarMediaId`、`grade`、`school`、`textbookVersion`、`interests`、`weakSubjects`、`sportsPreferences`、`artInterests`、`laborHabits`、`moralGoals`。`avatarMediaId` 必须是本家庭、同一 childId、`purpose=avatar` 的 active 媒体；不能修改 familyId、role、PIN 哈希或 tokenVersion，也不接受 `curriculumVersion`、`sportPreferences` 等别名。服务端在返回可用 avatarMediaId 前完成引用绑定；提交已保存但绑定暂未完成时返回 `503 MEDIA_REFERENCE_PENDING` 和 `details.resourceId`，相同 PATCH 可安全恢复。成功返回完整 child profile。
 
 ### 2.9 创建和查询第二家长邀请
@@ -1986,7 +1989,8 @@ GET 不补写；历史 needsHelp 不转换为独立求助。求助只更新上�
 
 `GET /api/children/:childId/daily-learning-plans/:localDate`
 
-不存在时返回 200，不写数据库：
+授权后的今天或历史计划不存在时返回 200，不写数据库；未来日期 GET 返回
+`400 VALIDATION_ERROR`，本轮不提供未来计划：
 
 ```json
 {
@@ -2017,17 +2021,24 @@ GET 不补写；历史 needsHelp 不转换为独立求助。求助只更新上�
 - 家长可操作本人家庭孩子；孩子只能操作本人。
 - `localDate` 按家庭时区解释，只允许写家庭当地今天；历史只读，未来计划本轮不支持。
 - items 最多 20 项、taskId 唯一，估时为空或 1 至 240 的整数。
+- PUT 是 items 全量替换，items 必填且允许 `[]`；item 省略 childEstimatedMinutes 或传 null
+  均表示清空估时。仅排序时客户端必须保留各项当前分钟，不可只提交 taskId。缺少 expectedVersion
+  返回 `400 CLIENT_UPGRADE_REQUIRED`，非法字段值返回 `400 VALIDATION_ERROR`。
 - 短/中/长为 5/15/30 分钟快捷值，可留空或改分钟，不增加 estimateBand。childEstimatedMinutes
   是兼容名称，响应 item.estimateRecordedBy 为 `{actorId, role: parent|student}`，表示实际输入者。
   新增/改变分钟才由服务器记录当前 actor；同值/仅排序保留原归属，清空分钟同时清空归属。
   旧记录无归属返回 null，不能推断为孩子。家长代录 UI 明示“家长输入”，不解释为孩子独立判断。
-- 响应 plan.updatedByActor 记录最近一次写入的认证 actor；空计划/旧记录缺失为 null。
+- 响应 plan.updatedByActor 为 `{actorId, role: parent|student}`，记录最近一次成功写入的认证 actor；
+  不存在记录的虚拟空计划(version 0)/旧记录缺失为 null。成功保存空 items 仍递增版本并记录 actor。
   客户端提交 estimateRecordedBy/updatedByActor 或 scope 字段返回 400 VALIDATION_ERROR；
   PUT 的 item 白名单仍仅 taskId/childEstimatedMinutes。CAS 冲突不写审计，重排不会篡改估时归属。
-- 新加入项必须属于相同家庭和孩子且为 pending；已有 completed 项可保留显示。
+- 新加入项必须属于相同家庭和孩子且为 pending；已有同 scope 项可保留或移出，包含
+  completed/confirmed/cancelled/archived；不可因保存计划重新打开终态任务。
 - 日计划唯一索引为 `{familyId, childId, localDate}`；首次 PUT 要求 expectedVersion 0，成功为 1；
   后续 CAS 严格递增。唯一索引竞争和版本过期都返回 `409 VERSION_CONFLICT`。
 - 日计划不修改任务 `dueDate`、status 或家长 `estimatedMinutes`；读取时按当前任务投影可行动状态。
+- 响应 item 附 `task:{taskId,title,dimension,status,dueDate}` 的当前最小投影；同 scope 中已无法读取
+  时返回 `task:null`，不做跨 scope 补查。该投影不存入计划，不恢复任务媒体；详情操作权限沿用原接口。
 - Gateway 仅代理该精确路径，不得改变其他 `/api/children*` 路由归属。
 
 ### 14.5 `SL-05`：任务、错题与订正来源

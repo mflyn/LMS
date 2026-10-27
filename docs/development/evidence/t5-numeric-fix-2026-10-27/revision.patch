@@ -1,0 +1,362 @@
+--- a/docs/architecture/family-self-directed-learning-system-design.md
++++ b/docs/architecture/family-self-directed-learning-system-design.md
+@@ -815,8 +815,21 @@
+   alt 版本一致
+     HW-->>UI: 保存后的计划 + 新 version
+   else 有其他设备更新
+-    HW-->>UI: 409 + 最新计划摘要
+-    UI-->>C: 刷新后重新确认
++    HW-->>UI: 409 VERSION_CONFLICT（标准错误，不含最新计划）
++    UI->>GW: 独立 GET 日计划
++    GW->>HW: 已验证身份 + 原计划日期
++    alt 读取成功
++      HW-->>UI: 最新计划及 version
++      UI-->>C: 比较完整顺序与估时，保留草稿和原命令供核对
++      C->>UI: 显式采用最新计划
++      UI->>UI: 替换草稿和版本，清除原命令，不自动保存
++    else 普通读取失败
++      HW-->>UI: 读取错误（或网络失败）
++      UI-->>C: 保留草稿和原命令，允许重读，不自动覆盖
++    else 身份或权限拒绝
++      HW-->>UI: 401 / 403
++      UI->>UI: 清除私有计划、草稿和原命令
++    end
+   end
+ ```
+ 
+--- /dev/null
++++ b/docs/development/evidence/t5-numeric-fix-2026-10-27/README.md
+@@ -0,0 +1,101 @@
++# T5 数字输入 P2 / 冲突图 P3 聚焦修订
++
++范围：QA-T5-NUMERIC-INPUT-001、QA-T5-DESIGN-CONFLICT-002。仅本地合成开发验证。
++T5 总门禁 OPEN；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、T7/T9、D01、
++高级恢复/新回收 REMAINDER_DEFERRED 不变。不提交、推送、合并、部署或运行真实 cleanup/restore。
++
++## 核实与实施前方案
++
++2026-10-27 08:21 Asia/Shanghai，生产代码尚未修改。
++已读取独立 r1 的 REPORT/findings/candidate/verification/manifest，核验冻结 108 文件和原候选
++41 文件哈希一致。r1 为不可改写的失败证据，路径为评审线程的 `t5-full-review-2026-10-27/r1`。
++基线仍是 `20da7e855413394454ba0a41c659cfd67abfa975` 加原 41 份未提交文件，不是新 Git 提交。
++
++核实：number 控件的 value 空串既可能表示主动清空，也可能表示未完成的 `1e`；
++当前 onChange 只保存 value，save 将空串转 null，故原生 badInput 丢失会误清估时和输入者。
++API §14.4 的 null 合法清空不能删除。§9.1 时序图的“409 + 最新计划摘要”与标准错误及另发 GET 不符。
++
++聚焦方案：
++
++1. 每个草稿项同时保留 value 与原生 badInput，跟随 taskId 移动；onInput 捕获规范 value 仍为
++   空串的连续原生编辑，onChange 保留受控输入既有行为。无效时就地提示、禁用保存，并在构造
++   payload 前防御性拒绝。快捷值、纠正、真正清空恢复有效状态；标记绝不进入 API 正文。
++2. 无效状态随草稿项移除、显式采用、成功读取或 scope 卸载清除；普通刷新和结果未知重试
++   沿用原行为，不重新基于坏草稿生成原命令。不同任务的无效状态不能互相覆盖。
++3. 只改现有时序图：标准 409、独立 GET、比较/提示、显式采用；普通读失败保留原草稿/命令，
++   401/403 仍清私有视图。不新增响应字段或后端行为。
++4. 先补真实 Chromium 永久反例并观察 RED，再修复；覆盖孩子/家长的未完成输入、纠正、显式
++   清空、1/240、0/241/小数、排序和其他项；补组件 scope/重试保护。移植原独立探针仅改候选
++   根路径与输出路径，保留其断言和原失败。使用新固定构建和新证据目录，不修改 r1。
++
++## 实施前自查
++
++2026-10-27 08:21 Asia/Shanghai，结论：SELF_REVIEW_PASS，允许按本方案实施。
++这是开发自查，不是用户验收或评审线程复评。
++
++- 不将“所有空串拒绝”当修复，保留真正清空；不把未完成数字自动改写成旧值或合法分钟。
++- 状态和任务标识绑定，不按行号；onInput 处理相同空 value 下 badInput 变化，避免仅 onChange 漏报。
++- 不新增持久化、权限或重试协议；payload 仍仅 expectedVersion 与 taskId/childEstimatedMinutes。
++- 范围限组件、其组件/现有浏览器套件、架构 §9.1 和必要交付记录；共享 AI/K12 的其他段落不动。
++- 本地故障回退可恢复本次组件/图的增量，不涉及数据迁移；回退会重新暴露原 P2，不能作为通过状态。
++- Browser plugin not available，复用仓库 Playwright Chromium；JSDOM 不代替原生输入验证。
++
++## 执行与交付
++
++2026-10-27 接续授权后完成聚焦修订，状态 **FIXED_PENDING_INDEPENDENT_REVIEW**。
++本记录是开发自查和开发复验，不是独立 QA 通过，不关闭两个问题或 T5 总门禁。
++实施前方案原文 SHA256 为 `841dc620e952acd353818d8339333c2a60884588a6efc0f5727fa05e8ddc80c9`。
++
++### 修订与自查
++
++- 数字输入同时记录原生 badInput 和 value，按 taskId 绑定，排序不丢失；无效项就地提示并阻止
++  保存，构造正文前再次检查。onInput 捕获空 value 未变化的主动清空，onChange 保持原有输入通道。
++- 真实清空仍提交 null；纠正和快捷值清除无效标记。标记只在草稿内，完整替换正文不包含它。
++  移除项、采用最新、成功保存和身份切换沿现有生命周期处理；普通刷新不偷偷清空草稿。
++- 原命令重试仍使用原 expectedVersion/items；未改后端、共享会话、作用域验证或奖励逻辑。
++- 系统设计 §9.1 改为标准 409 后独立 GET、比较完整顺序/估时、显式采用，不自动保存；普通
++  读取失败保留命令，401/403 清私有视图，与现有组件/API 一致。没有新增响应字段。
++- 自查逐项核对 payload 白名单、同空串输入、排序/移除、多项状态、跨孩子卸载和原请求重试，
++  未发现新增阻断；该结论不能替代下一轮独立复评。
++
++### 开发验证
++
++运行目录为仓库根；Node 22.15.0。原始命令、环境白名单、执行时间、退出码和运行前后文件 SHA
++保存在新归档各同名 `.json`/`.log`，执行者均为开发线程。源码运行期间无变更。
++
++| 证据标签 / 命令 | 结果 |
++| --- | --- |
++| component-red；修复前组件文件 | 3 failed / 21 passed，保留原失败 |
++| browser-red；修复前新增真实浏览器用例 | 两个角色负向 2 failed，合法边界对照 2 passed |
++| original-child-red / original-controls-red；原探针旧构建 | 孩子 1 failed；家长 1 failed、清空/合法值 2 passed |
++| component-green；`npm run test:ci --prefix frontend/web -- --runInBand --runTestsByPath src/__tests__/shared/DailyLearningPlanPanel.test.js` | 24 passed |
++| frontend-full；`npm run test:ci --prefix frontend/web -- --runInBand` | 49 suites / 628 passed |
++| fixed-build；`CI=true npm run build --prefix frontend/web` | exit 0，固定构建另存 fixed-web |
++| browser-green；`npm run test:t2:e2e -- dailyLearningPlan.spec.js` | 9 passed，原 5 项完整保留，新增 4 项 |
++| original-child-green / original-controls-green；原独立探针仅替换根路径 | 1 passed / 3 passed，断言未改；这是开发复跑 |
++| formal-http；`npm run test:t2:integration` | 4 suites / 22 passed，正式 HTTP 回归 |
++| lint-focused；ESLint 检查组件、组件测试和浏览器测试三个增量 JS 文件 | exit 0，不声明全仓 lint |
++| docs-gate / docs-check 及 final 版本 | 文档状态 162 passed；`npm run docs:family:check` exit 0 |
++
++永久反例覆盖原生 `1e`/`-`/`1e+`、零 PUT 和完整数据库不变、纠正为 30、真正清空、
++1/240 合法值及 0/241/小数拒绝、两项估时和移动、移除、身份切换和原命令精确重试。
++组件新增 4 项，浏览器新增 4 项；原探针与永久反例重叠，不相加为独立覆盖数。
++真实页面运行于临时回环端口，Gateway、user/homework/resource/progress/analytics/notification
++使用既有正式工厂和真实 HTTP；临时 Mongo/存储，trusted-local 扫描不是 ClamAV 验证。
++Browser plugin not available，使用仓库 Playwright Chromium；截图核对孩子 390 和家长 768 宽的
++无效提示及保存状态，原回归另覆盖 390/768/1280。无空白页/框架覆盖层/浏览器控制台警告错误，
++控制台 Node 色彩环境提示单独保留。未运行真机、服务器或新的后端全量，历史 4290 不冒称本次重跑。
++
++### 冻结与独立复评入口
++
++- 新归档：`release-gate-artifacts/t5-numeric-fix-2026-10-27/dev-r1/`，包含红/绿原始日志、
++  两份固定构建、原探针路径适配证明、截图、运行元数据和原 41 文件基线副本。
++- 本目录 `candidate-manifest.json` 绑定原基线 SHA、当前完整 T5 候选逐文件哈希及增量清单；
++  `revision.patch` 只包含本轮七文件增量，不将既有 AI/K12 文档修改重新归为本次修订。
++- `freeze-verification.json` 记录补丁在基线副本应用后与候选一致、历史独立 108 文件及开发
++  364 文件哈希核验、原探针仅路径替换；`artifacts.sha256.json` 绑定新归档全部文件。
++- 独立复评应使用冻结候选及 fixed-web，重跑两份原探针和新增永久测试，核对原值、归属、
++  零写、显式清空和图文契约。独立通过前两项不关闭；冻结材料不等于 Git 提交。
++
++历史失败和原独立 r1 均未覆盖；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、T7/T9、D01、
++高级恢复/新回收 REMAINDER_DEFERRED 不变。本轮无 Git 写入、真实部署或 cleanup/restore。
+--- a/docs/development/family-self-directed-learning-mvp-gate.md
++++ b/docs/development/family-self-directed-learning-mvp-gate.md
+@@ -4827,3 +4827,22 @@
+ 候选哈希、逐项需求证据、独立报告和原始日志位置见
+ [T5 工程材料](evidence/t5-synthetic-2026-10-26/README.md)。本次材料只提交用户验收，
+ 不代用户批准；人工 iPad、服务器隔离与真实启用均需后续安排和授权。
++
++### 25.3 数字输入 P2 与冲突图 P3 修订待独立复评（2026-10-27）
++
++§25.2 为当时的工程提交验收快照；后续独立 QA 发现 QA-T5-NUMERIC-INPUT-001 和
++QA-T5-DESIGN-CONFLICT-002，本节记录其开发修订，不能沿用旧结论关闭新发现。
++两项当前 **FIXED_PENDING_INDEPENDENT_REVIEW**，T5 IN_PROGRESS / 总门禁 OPEN / approval REQUIRED。
++
++数字输入增加按任务保存的原生 badInput、就地提示、按钮及正文构造前校验；未完成数字不再
++误清空持久估时/输入者。真正清空仍合法，排序、纠正、身份隔离和原命令保持原契约。
++系统设计 §9.1 对齐标准 409 后独立 GET、完整内容核对、显式采用及拒绝清理，不改变 API。
++
++开发红灯：组件 3 failed/21 passed，新增浏览器 2 failed/2 passed；原孩子探针 1 failed，
++原家长探针 1 failed、两个合法对照 passed。全部保留，不用修订后通过覆盖。
++开发修订后：组件 24 passed，前端 49/628，固定构建通过，T5 正式浏览器 9 passed，
++原探针 1+3 passed（仅改路径，属于开发复跑，不是独立复评）；文档状态 162 passed。
++正式 HTTP、最终文档命令与候选哈希以[修订交接材料](evidence/t5-numeric-fix-2026-10-27/README.md)为准。
++独立 r1 和旧开发归档保持原样；只将本次增量和证据另行冻结供独立复评。
++DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、T7/T9、D01/T2-G、高级恢复与新回收
++REMAINDER_DEFERRED 及默认关闭不变；仅本地合成，无 Git 提交/推送/合并或部署。
+--- a/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md
++++ b/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md
+@@ -611,6 +611,10 @@
+ 原 46/605、首次全量失败及后续独立发现保留在历史记录；修订后家庭后端 149 suites/4290 passed，
+ 前端 49/624、正式 HTTP 4/22、完整浏览器 34 passed。索引构建/限流及前端两项 P2 已独立复评。
+ 下面勾选仅表示工程实现和证据具备，不关闭总门禁，不替代用户、真机或 T7 综合验收。
++后续独立 QA 的数字输入 P2 / 冲突图 P3 已完成开发修订与自查，仍待独立复评，不能沿用上述
++提交验收快照视为关闭。最新状态及冻结材料见 Gate §25.3 和
++[修订交接](../../development/evidence/t5-numeric-fix-2026-10-27/README.md)，两项为
++FIXED_PENDING_INDEPENDENT_REVIEW；总门禁仍 OPEN。
+ 仅本地合成家庭、临时数据库/存储，无提交、推送、合并、PR 写入或部署；T6–T9 不启动，
+ D01/T2-G、高级恢复/新回收仍后置且保持默认关闭，真机与服务器测试另行安排和授权。
+ 
+--- a/frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js
++++ b/frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js
+@@ -36,6 +36,56 @@
+ });
+ afterEach(() => jest.restoreAllMocks());
+ const add = async (user, id) => user.click(await screen.findByRole('button', { name: `加入今日计划 任务${id}` }));
++const nativeEdit = (input, value, badInput) => {
++  // JSDOM cannot produce incomplete number editing; real Chromium tests cover that boundary.
++  Object.defineProperty(input, 'validity', { configurable: true, value: { badInput } });
++  fireEvent.input(input, { target: { value } });
++};
++test.each(['student', 'parent'])('%s keeps native invalidity per task across reorder and accepts correction without extra payload fields', async role => {
++  const api = role === 'student' ? childApi.saveOwnDailyLearningPlan : parentApi.saveDailyLearningPlan;
++  const user = userEvent.setup(); render(tree({ role, timezone: 'Pacific/Honolulu' }));
++  await add(user, 'a'); await add(user, 'b');
++  nativeEdit(screen.getByLabelText('任务a 估计分钟'), '', true);
++  fireEvent.change(screen.getByLabelText('任务b 估计分钟'), { target: { value: '20' } });
++  await user.click(screen.getByRole('button', { name: '下移 任务a' }));
++  expect(screen.getByRole('button', { name: '保存今日计划' })).toBeDisabled();
++  expect(screen.getByLabelText('任务a 估计分钟')).toHaveAttribute('aria-invalid', 'true');
++  expect(screen.getByText('估时输入未完成，请填写整数或清空。')).toBeInTheDocument();
++  expect(api).not.toHaveBeenCalled();
++  nativeEdit(screen.getByLabelText('任务a 估计分钟'), '30', false);
++  await user.click(screen.getByRole('button', { name: '保存今日计划' })); await screen.findByText('今日计划已保存。');
++  expect(api.mock.calls[0][role === 'student' ? 1 : 2]).toEqual({ expectedVersion: 0, items: [
++    { taskId: 'b', childEstimatedMinutes: 20 }, { taskId: 'a', childEstimatedMinutes: 30 }
++  ] });
++});
++test('same sanitized empty value can become a deliberate clear, while removing another invalid item clears only that item', async () => {
++  const user = userEvent.setup(); childApi.getOwnDailyLearningPlan.mockResolvedValue(plan(1, [item('a', 15, 'student'), item('b', 20, 'student')]));
++  render(tree()); await screen.findByLabelText('任务a 估计分钟');
++  nativeEdit(screen.getByLabelText('任务a 估计分钟'), '', true);
++  nativeEdit(screen.getByLabelText('任务b 估计分钟'), '', true);
++  nativeEdit(screen.getByLabelText('任务a 估计分钟'), '', false);
++  expect(screen.getByLabelText('任务a 估计分钟')).toHaveAttribute('aria-invalid', 'false');
++  expect(screen.getByRole('button', { name: '保存今日计划' })).toBeDisabled();
++  await user.click(screen.getByRole('button', { name: '移出今日计划 任务b' }));
++  await user.click(screen.getByRole('button', { name: '保存今日计划' })); await screen.findByText('今日计划已保存。');
++  expect(childApi.saveOwnDailyLearningPlan.mock.calls[0][1]).toEqual({ expectedVersion: 1, items: [{ taskId: 'a', childEstimatedMinutes: null }] });
++});
++test('invalidity does not cross child scope and corrected unknown-result retry retains the original command', async () => {
++  const user = userEvent.setup(), view = render(tree()); await add(user, 'a');
++  nativeEdit(screen.getByLabelText('任务a 估计分钟'), '', true);
++  act(() => saveChildSession({ token: 'synthetic-sibling', child: { childId: 'd', familyId: 'f', name: '合成同胞' } }));
++  expect(screen.queryByText('估时输入未完成，请填写整数或清空。')).not.toBeInTheDocument();
++  childApi.getOwnProfile.mockResolvedValue({ child: { childId: 'd', familyId: 'f' }, timezone: 'Pacific/Honolulu' });
++  childApi.getOwnDailyLearningPlan.mockResolvedValue(plan(0, [], 'd'));
++  view.rerender(tree({ childId: 'd' })); await add(user, 'a');
++  fireEvent.change(screen.getByLabelText('任务a 估计分钟'), { target: { value: '30' } });
++  childApi.saveOwnDailyLearningPlan.mockRejectedValueOnce(Error('synthetic response loss')).mockResolvedValueOnce(plan(1, [item('a', 30, 'student')], 'd'));
++  await user.click(screen.getByRole('button', { name: '保存今日计划' })); await screen.findByRole('button', { name: '重试原保存' });
++  expect(screen.getByLabelText('任务a 估计分钟')).toBeDisabled();
++  await user.click(screen.getByRole('button', { name: '重试原保存' })); await screen.findByText('今日计划已保存。');
++  expect(childApi.saveOwnDailyLearningPlan.mock.calls[0][1]).toEqual({ expectedVersion: 0, items: [{ taskId: 'a', childEstimatedMinutes: 30 }] });
++  expect(childApi.saveOwnDailyLearningPlan.mock.calls[1][1]).toEqual(childApi.saveOwnDailyLearningPlan.mock.calls[0][1]);
++});
+ test('child adds, estimates and reorders; save uses the viewed version and reload retains order', async () => {
+   const user = userEvent.setup(), view = render(tree()); await add(user, 'a'); await add(user, 'b');
+   await user.click(within(screen.getByRole('group', { name: '计划项 任务a' })).getByRole('button', { name: '短 5分钟' }));
+--- a/frontend/web/src/components/family/DailyLearningPlanPanel.js
++++ b/frontend/web/src/components/family/DailyLearningPlanPanel.js
+@@ -144,13 +144,15 @@
+     } finally { if (current()) { writing.current = false; setBusy(false); } }
+   };
+   const save = () => {
++    if (draft.some(i => i.estimateBadInput)) { setError('估时输入未完成，请填写整数或清空。'); return; }
+     const items = draft.map(i => ({ taskId: i.taskId, childEstimatedMinutes: i.childEstimatedMinutes === '' ? null
+       : i.childEstimatedMinutes == null ? null : Number(i.childEstimatedMinutes) }));
+     if (items.some(i => i.childEstimatedMinutes !== null && (!Number.isInteger(i.childEstimatedMinutes)
+       || i.childEstimatedMinutes < 1 || i.childEstimatedMinutes > 240))) { setError('估时请留空或填写 1 至 240 的整数。'); return; }
+     submit({ expectedVersion: plan.version, items });
+   };
+-  const changeMinutes = (id, value) => setDraft(items => items.map(i => i.taskId === id ? { ...i, childEstimatedMinutes: value } : i));
++  const changeMinutes = (id, value, badInput = false) => setDraft(items => items.map(i => i.taskId === id
++    ? { ...i, childEstimatedMinutes: value, estimateBadInput: badInput } : i));
+   const move = (index, delta) => setDraft(items => {
+     const next = items.slice(); [next[index], next[index + delta]] = [next[index + delta], next[index]]; return next;
+   });
+@@ -182,7 +184,11 @@
+             <span>{entry.task ? STATUS[entry.task.status] : '无法访问'}</span></div>
+           <fieldset disabled={disabled} className="daily-plan-controls"><legend className="sr-only">{entry.task?.title || '任务'}的计划设置</legend>
+             <label>{entry.task?.title || '任务不可用'} 估计分钟<input type="number" min="1" max="240" step="1" inputMode="numeric"
+-              value={entry.childEstimatedMinutes ?? ''} onChange={e => changeMinutes(entry.taskId, e.target.value)} /></label>
++              value={entry.childEstimatedMinutes ?? ''} aria-invalid={Boolean(entry.estimateBadInput)}
++              // Native input also catches badInput changes when the sanitized value remains empty.
++              onInput={e => changeMinutes(entry.taskId, e.target.value, e.target.validity.badInput)}
++              onChange={e => changeMinutes(entry.taskId, e.target.value, e.target.validity.badInput)} /></label>
++            {entry.estimateBadInput && <span role="alert">估时输入未完成，请填写整数或清空。</span>}
+             {grade <= 2 && <div className="daily-plan-estimates">{[['短', 5], ['中', 15], ['长', 30]].map(([label, value]) =>
+               <button type="button" key={value} onClick={() => changeMinutes(entry.taskId, value)}>{label} {value}分钟</button>)}</div>}
+             <div className="daily-plan-tools">
+@@ -195,7 +201,7 @@
+         </div>)}
+       </div>
+       <div className="daily-plan-actions">
+-        <button type="button" aria-label="保存今日计划" disabled={disabled || (plan.version > 0 && sameItems(draft, plan.items))} onClick={save}><SaveOutlined aria-hidden="true" /> 保存今日计划</button>
++        <button type="button" aria-label="保存今日计划" disabled={disabled || draft.some(i => i.estimateBadInput) || (plan.version > 0 && sameItems(draft, plan.items))} onClick={save}><SaveOutlined aria-hidden="true" /> 保存今日计划</button>
+         {command && !conflict && !expired && <button type="button" disabled={busy || loading} onClick={() => submit(command)}>重试原保存</button>}
+         <button type="button" aria-label="读取最新计划" disabled={busy || loading} onClick={refresh}><ReloadOutlined aria-hidden="true" /> 读取最新计划</button>
+         {latest && <button type="button" disabled={busy || loading} onClick={() => {
+--- a/tests/e2e/t2/dailyLearningPlan.spec.js
++++ b/tests/e2e/t2/dailyLearningPlan.spec.js
+@@ -26,6 +26,91 @@
+   expect(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth)).toBe(true);
+   await page.screenshot({ path: info.outputPath(name), fullPage: true });
+ }
++for (const role of ['child', 'parent']) test(`${role}: native incomplete estimates cannot clear saved values, correction and deliberate clearing remain possible`, async ({ page }, info) => {
++  const second = expectData(await parent.post('/api/growth-tasks', { childId: fixture.actors.child.childId,
++    title: 'Synthetic separate estimate', dueDate: '2026-01-01', dimension: 'physical', taskType: 'exercise' }), 201).task;
++  const child = await runtime.login('child'), first = fixture.tasks.child;
++  expectData(await child.put(planPath(), { expectedVersion: 0, items: [
++    { taskId: first.taskId, childEstimatedMinutes: 15 }, { taskId: second.taskId, childEstimatedMinutes: 20 }
++  ] }));
++  await page.setViewportSize({ width: role === 'child' ? 390 : 768, height: 1024 });
++  const errors = [], sent = [];
++  page.on('pageerror', error => errors.push(error.message));
++  page.on('console', message => { if (['warning', 'error'].includes(message.type())) errors.push(message.text()); });
++  await login(page, role);
++  const current = panel(page), input = current.getByLabel(`${first.title} 估计分钟`), save = current.getByRole('button', { name: '保存今日计划', exact: true });
++  await expect(input).toHaveValue('15'); const before = await runtime.inspect();
++  page.on('request', request => { if (request.method() === 'PUT' && new URL(request.url()).pathname === planPath()) sent.push(request.postDataJSON()); });
++  for (const text of ['1e', '-', '1e+']) {
++    await input.focus(); await input.press('ControlOrMeta+A'); await input.pressSequentially(text);
++    const native = await input.evaluate(node => ({ value: node.value, badInput: node.validity.badInput }));
++    expect(native).toEqual({ value: '', badInput: true });
++    if (await save.isEnabled()) {
++      const response = page.waitForResponse(r => r.request().method() === 'PUT' && new URL(r.url()).pathname === planPath());
++      await save.click(); await response;
++    }
++    const after = await runtime.inspect();
++    await info.attach(`${role}-${text.replace(/[^a-z0-9]/gi, '_')}-observation.json`, {
++      body: Buffer.from(JSON.stringify({ native, sent, before, after }, null, 2)), contentType: 'application/json'
++    });
++    expect(sent).toEqual([]); expect(after).toEqual(before);
++    await expect(save).toBeDisabled(); await expect(input).toHaveAttribute('aria-invalid', 'true');
++    await expect(current.getByText('估时输入未完成，请填写整数或清空。')).toBeVisible();
++  }
++  await current.getByLabel(`${second.title} 估计分钟`).fill('45');
++  await current.getByRole('button', { name: `下移 ${first.title}`, exact: true }).click();
++  await expect(save).toBeDisabled(); expect(sent).toEqual([]); expect(await runtime.inspect()).toEqual(before);
++  await capture(page, info, `${role}-invalid-estimate.png`);
++  await input.fill('30'); await expect(input).toHaveAttribute('aria-invalid', 'false');
++  let response = page.waitForResponse(r => r.request().method() === 'PUT' && new URL(r.url()).pathname === planPath());
++  await save.click(); expect((await response).status()).toBe(200);
++  await expect(current.getByText('今日计划已保存。')).toBeVisible();
++  const recorded = expectData(await parent.get(planPath())).plan;
++  expect(recorded.version).toBe(2); expect(recorded.items.map(item => item.taskId)).toEqual([second.taskId, first.taskId]);
++  expect(recorded.items.map(item => item.childEstimatedMinutes)).toEqual([45, 30]);
++  expect(recorded.items[1].estimateRecordedBy).toEqual({ actorId: fixture.actors[role].userId, role: role === 'child' ? 'student' : 'parent' });
++  await input.focus(); await input.press('ControlOrMeta+A'); await input.pressSequentially('1e');
++  await expect(save).toBeDisabled();
++  await input.fill(''); expect(await input.evaluate(node => node.validity.badInput)).toBe(false);
++  await expect(input).toHaveAttribute('aria-invalid', 'false'); await expect(save).toBeEnabled();
++  response = page.waitForResponse(r => r.request().method() === 'PUT' && new URL(r.url()).pathname === planPath());
++  await save.click(); expect((await response).status()).toBe(200);
++  await expect(current.getByText('今日计划已保存。')).toBeVisible();
++  const cleared = expectData(await parent.get(planPath())).plan;
++  expect(cleared.version).toBe(3); expect(cleared.items[1]).toMatchObject({ childEstimatedMinutes: null, estimateRecordedBy: null });
++  expect(cleared.items[0]).toEqual(recorded.items[0]); expect(sent).toHaveLength(2);
++  expect(sent[1]).toEqual({ expectedVersion: 2, items: [
++    { taskId: second.taskId, childEstimatedMinutes: 45 }, { taskId: first.taskId, childEstimatedMinutes: null }
++  ] });
++  const after = await runtime.inspect();
++  for (const key of Object.keys(before.database).filter(key => key !== 'DailyPlan')) expect(after.database[key]).toEqual(before.database[key]);
++  expect(after.files).toEqual(before.files); expect(errors).toEqual([]);
++  await capture(page, info, `${role}-intentional-clear.png`);
++});
++for (const role of ['child', 'parent']) test(`${role}: estimate integer boundaries reject without PUT and legal values persist`, async ({ page }) => {
++  const child = await runtime.login('child'), task = fixture.tasks.child;
++  expectData(await child.put(planPath(), { expectedVersion: 0, items: [{ taskId: task.taskId, childEstimatedMinutes: 15 }] }));
++  await login(page, role);
++  const current = panel(page), input = current.getByLabel(`${task.title} 估计分钟`), save = current.getByRole('button', { name: '保存今日计划', exact: true });
++  await expect(input).toHaveValue('15'); const before = await runtime.inspect(), sent = [];
++  page.on('request', request => { if (request.method() === 'PUT' && new URL(request.url()).pathname === planPath()) sent.push(request.postDataJSON()); });
++  for (const value of ['0', '241', '1.5']) {
++    await input.fill(value); await save.click();
++    await expect(current.getByText('估时请留空或填写 1 至 240 的整数。')).toBeVisible();
++    expect(sent).toEqual([]); expect(await runtime.inspect()).toEqual(before);
++  }
++  let version = 1;
++  for (const value of ['1', '240', '30']) {
++    await input.fill(value);
++    const response = page.waitForResponse(r => r.request().method() === 'PUT' && new URL(r.url()).pathname === planPath());
++    await save.click(); expect((await response).status()).toBe(200);
++    const plan = expectData(await parent.get(planPath())).plan;
++    expect(plan.version).toBe(++version);
++    expect(plan.items[0]).toMatchObject({ childEstimatedMinutes: Number(value),
++      estimateRecordedBy: { actorId: fixture.actors[role].userId, role: role === 'child' ? 'student' : 'parent' } });
++  }
++  expect(sent).toHaveLength(3);
++});
+ for (const grade of [1, 4]) test(`grade ${grade}: child plans, parent reorders and estimates, child rereads with real actor audit`, async ({ page, browser }, info) => {
+   expectData(await parent.patch(`/api/children/${fixture.actors.child.childId}`, { grade }));
+   const second = expectData(await parent.post('/api/growth-tasks', { childId: fixture.actors.child.childId,

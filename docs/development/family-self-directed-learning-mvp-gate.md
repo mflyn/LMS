@@ -86,7 +86,7 @@
 | T2 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；T2-1/T2-R 及三项 P2 CLOSED，T2-2 至 T2-6 汇总批准关闭（§22.6 / 执行记录 §17）；D2B-05 查询缺陷单独 CLOSED（§22.7），原失败快照保留；DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，T2-G REMAINDER_DEFERRED |
 | T3 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；两项 P2 独立复评及导航测试 P3 关闭见 §23.8；最新 CI 通过后可合并，DEVICE_PENDING、REMAINDER_DEFERRED 和不部署边界保留 |
 | T4 | IN_PROGRESS | §24.9 求助投影 P2 已批准关闭；§24.10 固定候选服务器独立合成自动化通过，真机/人工待验收；总门禁 OPEN，关闭需用户批准 |
-| T5 | NOT_STARTED | 日计划首次并发、CAS、LocalDate 和 Gateway 路由通过 |
+| T5 | CLOSED | §25.5 用户已批准限定合成工程；总门禁 CLOSED，仅 ENGINEERING_SYNTHETIC_ONLY；DEVICE_PENDING、非阻断补测与后置边界保留 |
 | T6 | NOT_STARTED | 一条真实错题走完来源、订正和延迟复习连接 |
 | T7 | NOT_STARTED | SL-01 至 SL-06 纳入集成/E2E 和完整发布 Gate |
 | T8 | NOT_STARTED | 家庭 Ubuntu、iPad、NAS 恢复和回滚有实测证据 |
@@ -4723,3 +4723,199 @@ AI/K12 五份无关未提交修改继续留在本地，不能随本次 PR 混入
 人工验收 M01–M08 后续另行安排，保持 MANUAL_PENDING / DEVICE_PENDING；合并工程不等于
 真机、产品价值或学习效果验收。T4 总门禁仍 OPEN，T5 NOT_STARTED，T8_PENDING / NOT_AUTHORIZED、
 REMAINDER_DEFERRED、D01 及高级恢复/新回收关闭边界均不变；不自动开启后续任务。
+
+## 25. T5 今日计划开发授权与阶段记录（2026-10-26）
+
+**T5:** CLOSED
+**T5 gate:** CLOSED
+**T5 approval:** APPROVED
+**T5 scope:** LOCAL_SYNTHETIC_ONLY
+**T5 closure:** APPROVED / CLOSED / ENGINEERING_SYNTHETIC_ONLY
+**T5 historical failures:** PRESERVED
+**T5 nonblocking:** T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING
+**T5 device:** DEVICE_PENDING
+**T5 deployment:** T8_PENDING / NOT_AUTHORIZED
+**T5 deferred:** REMAINDER_DEFERRED
+**T5 Git:** BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY
+
+用户新目标已授权完整开发 T5 今日计划、排序与可选估时，接续 T4 已完成工程基线；
+该开发授权不关闭 T4 或 T5 总门禁，关闭仍需用户批准。§24.10–24.11 及计划 T4 段的
+T5 NOT_STARTED / 依赖与单独授权尚未满足是当时的历史记录，保留而不阻塞本次已授权开发。
+实现与错误语义以 [API §14.4](../api/family-learning-tracker-api.md#144-sl-04每日学习计划) 为准，
+复用现有模型、服务、页面及 Gate，不新增审批层级、测试框架或另一套契约。
+
+| 批次 | 当前状态 | 范围与尚待证据 |
+| --- | --- | --- |
+| A 基线/设计核对 | 基线与契约核对，评审问题跟进 | 家庭日期、完整替换、CAS、任务状态竞争、实际输入者与未知结果重试沿既定契约；独立发现的问题修复后须复评，不以开发自查代替独立批准 |
+| B 后端闭环 | IN_PROGRESS | 模型/服务/路由/精确代理及权限边界实施中；主线程提供后端 46 passed 阶段结果，Gateway 清洗 P2 独立评审发现由另一 agent 修复，尚未闭环 |
+| C 前端闭环 | IN_PROGRESS | 孩子安排、家长代录、分页、分龄、冲突与身份隔离实施中；主线程提供前端 605 passed 阶段结果，不能替代正式端到端验收 |
+| D 集成与交付 | PENDING_ACCEPTANCE | 正式 HTTP、浏览器、最终独立复评及工程验收材料尚未完成；不勾选全部完成，不宣称 T5 合成工程已验收 |
+
+46/605 是本次交接时主线程提供的阶段快照，不是本节作者重跑结果，也不证明后续修订已验证；
+后续记录须绑定实际候选、命令与日志，保留原失败及 Gateway P2，不把修复中记为已关闭。
+本轮只使用本地合成家庭、临时数据库/存储；无提交、推送、合并、PR 写入或部署授权，
+服务器隔离测试和真实家庭启用另行授权。真机仍 DEVICE_PENDING，T4 总门禁仍 OPEN。
+T6–T9 仍 NOT_STARTED；T7 综合验收、T9 四周价值和 AI/K12 不由本次启动。
+T8_PENDING / NOT_AUTHORIZED、高级恢复/新回收默认关闭、D01/T2-G 的 REMAINDER_DEFERRED 均保留。
+
+### 25.1 实施、自查与独立复评检查点（2026-10-27）
+
+本节为 §25 初始快照后的进展，不改写旧失败；T5 IN_PROGRESS / 总门禁 OPEN，仍待完整工程验收。
+当前已实现孩子/家长今日计划、精确日计划 API、版本与家庭日期校验、实时 scope、估时输入者、
+其他待办分页、原请求重试与显式采用最新版本，复用既有任务详情/审核组件。
+日计划仅保存顺序与可选估时，不更改任务 dueDate、家长 estimatedMinutes、教学状态或奖励。
+页面内读取保留草稿/未知请求；整页刷新和重登读取服务端已保存计划，不跨身份恢复私有草稿。
+
+| 发现 | 修订和永久保护 | 当前复评状态 |
+| --- | --- | --- |
+| Gateway 清洗将非法数值/非法键改成合法 PUT | 精确日计划路径保存原始校验结果；真实 Gateway→正式 homework 原始 JSON 反例，计划/任务不变 | 独立复评确认原输入拒绝有效；后续限流问题另列，不声称整个后端已通过 |
+| 未保存的家长估时仍标孩子输入 | 草稿分钟变化显示待保存实际角色，恢复原分钟保留原审计 | 开发自查和永久组件反例通过 |
+| 跨午夜打开新计划失败误启用旧日期保存 | 成功新日期才清过期状态；submit 前重新采样家庭日期；成功/失败切日及轮询前提交反例 | Meitner 独立复评通过，工程问题已修复；不代替 T5 用户验收 |
+| 未知结果未比较原请求内容 | 比较有序 taskId/分钟，明确内容相同需核对采用、不归因原请求；显式采用后无编辑不再次保存 | Meitner 独立复评通过；刷新和 409 重读永久反例、真实丢响应浏览器验证 |
+| 构建中 unique 索引误判 ready | Dirac 真实暂停索引构建复现同 scope 两空计划均 version 1，随后索引构建 11000 | OPEN / 修复中；不能用普通唯一索引测试覆盖 |
+| 清洗前拒绝绕过默认限流 | Dirac 用 max=1 真实 Gateway 复现多次非法 JSON 正文均 400 而不计限流 | OPEN / 修复中；保持 JWT 错误优先和原输入拒绝，不全局停用中间件 |
+
+前端独立评审人 Meitner（`01a178df-d762-71b3-9fc2-881903217b6c`）实际执行修订复评
+10 suites/115 tests（包含 14 项独立 probe），后又独立执行实际请求包装的 API 文件 10/10。
+独立 probe 与永久测试有交集，不相加为独立覆盖数。前端两项 P2 已复评通过；
+其审阅开发浏览器日志的行为不冒称独立启动浏览器。后端评审人 Dirac
+（`01a1786d-6c38-7b52-9604-04fa1d44a818`）给出 NEEDS_FIXES，两项新 P2 尚未关闭。
+
+开发侧当前证据：前端全量 49 suites/624 tests；严格 CI 构建通过；正式 HTTP 4 suites/22 tests；
+固定构建完整浏览器 33 passed，再补计划入口到真实审核版本竞争/confirmed 回看的定向 5 passed。
+33 与 5 部分重叠，不相加；浏览器不是 iPad。永久包装层新增 parent/student PUT 迟到成功/401/403
+六种反例、跨标签 storage 换孩子、scope 绑定详情导航均已覆盖。所有运行使用合成环境。
+
+已定位并保留测试失败：首次 HTTP 测试误用不存在的日期 helper；首次构建的 ESLint 括号；
+浏览器启动 sandbox 拒绝；丢响应用例过早检查提交；旧求助用例读取被构建移除的 index.html；
+新增审核回看用例的 label 同时命中 section/textarea。分别修正调用、代码、运行权限、等待条件、
+固定构建副本和精确 textbox 定位；没有放宽业务断言、增加超时或跳过用例。
+第一次家庭后端全量为 1 failed/147 passed suites、64 failed/4210 passed tests，
+失败来自文档状态与检查器 RED 中间版本；此失败快照保留，不能用后续定向通过替换。
+统一状态后的全量仍在运行，且后端新 P2 需修复后重新验证，不写为全量全绿。
+
+候选及人工边界见 [T5 合成材料](evidence/t5-synthetic-2026-10-26/README.md)，
+SL-04 映射已追加到需求追踪，整体仍 PLANNED，T7 综合验收义务保留。
+
+### 25.2 T5 本地合成工程提交验收（2026-10-27）
+
+**工程结论：READY_FOR_ACCEPTANCE；T5 仍 IN_PROGRESS / 总门禁 OPEN / approval REQUIRED。**
+本节是 §25–25.1 阶段快照的后续，不覆盖原失败或原评审结果；不关闭 T4、T7、T8 或 T9。
+仅本地合成，不提交/推送/合并、不访问服务器、不部署；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、
+D01/T2-G 及高级恢复/新回收的 REMAINDER_DEFERRED 与默认关闭边界保留。
+
+A 设计/契约核对、B 后端、C 前端、D 正式集成及关键实现独立复评已完成工程范围工作。
+孩子选择、排序、可选估时并保存，家长查看/代录，刷新/重登回看；分页可达、任务详情与原审核
+版本保护、实际输入者、家庭日期、CAS、原请求重试与身份隔离均有永久反例及正式链路证据。
+没有新增周计划、AI、通用恢复或后置回收能力；SL-04 的 T7 综合验收仍未完成。
+
+| 评审问题 | 最终修订及独立证据 | 工程状态 |
+| --- | --- | --- |
+| Gateway 原始输入被清洗改写 | 原始校验结果保留到普通限流与 JWT 之后；独立真实 Gateway 原始 JSON 反例、旧路由回归通过 | FIX_VERIFIED |
+| 未完成唯一索引放行首次并发 | raw listIndexes 保留 buildUUID，拒绝构建中/prepareUnique 等非完整索引，游标 finally 关闭；原真实暂停构建探针两次 503、零写，释放后成功 | FIX_VERIFIED |
+| 提前输入错误绕过限流 | 私有 Symbol 暂存错误而非提前 next(error)；原探针及合法/非法 JWT 对照、永久 authenticated/missing/invalid 三组限流反例通过 | FIX_VERIFIED |
+| 午夜切日失败启用旧保存 | 成功读取才更新过期状态，提交前即时复核；失败切日和轮询前保存永久反例及独立 probe 通过 | FIX_VERIFIED |
+| 未知结果缺少完整内容核对 | 比较有序 taskId/分钟，不推断原请求成功；保留显式采用、未编辑不重复保存；不同内容对照及原请求重试通过 | FIX_VERIFIED |
+
+后端独立复评 Dirac：原索引和限流探针、6 suites/87 passed，时区 suite 另有 9 项按名称过滤；
+315 文件前后候选摘要一致 `8711d479567f50fa4c1630d65f2aa01b47b34227528c67495a225c1801632f0e`。
+前端独立复评 Meitner：最终候选 10 suites/121 passed（32 永久 T5、14 独立 probe、75 既有回归），
+19 文件前后哈希一致。两者均未发现新的阻断项；前端独立评审未独立跑浏览器，不冒称独立端到端。
+
+开发最终验证：家庭后端 149 suites/4290 passed；前端 49 suites/624 passed；CI 构建成功；
+正式 HTTP 4 suites/22 passed；完整固定构建浏览器 34 passed；完整文件清单隔离副本 lint 通过；
+文档状态 162 passed。证据包含命令、执行者、候选范围、失败和当前结果，重叠运行不累加。
+第一次后端全量 64 failed/4210 passed、其他历史失败全部保留，不把历史过程写为全绿。
+
+候选哈希、逐项需求证据、独立报告和原始日志位置见
+[T5 工程材料](evidence/t5-synthetic-2026-10-26/README.md)。本次材料只提交用户验收，
+不代用户批准；人工 iPad、服务器隔离与真实启用均需后续安排和授权。
+
+### 25.3 数字输入 P2 与冲突图 P3 修订待独立复评（2026-10-27）
+
+§25.2 为当时的工程提交验收快照；后续独立 QA 发现 QA-T5-NUMERIC-INPUT-001 和
+QA-T5-DESIGN-CONFLICT-002，本节记录其开发修订，不能沿用旧结论关闭新发现。
+两项当前 **FIXED_PENDING_INDEPENDENT_REVIEW**，T5 IN_PROGRESS / 总门禁 OPEN / approval REQUIRED。
+
+数字输入增加按任务保存的原生 badInput、就地提示、按钮及正文构造前校验；未完成数字不再
+误清空持久估时/输入者。真正清空仍合法，排序、纠正、身份隔离和原命令保持原契约。
+系统设计 §9.1 对齐标准 409 后独立 GET、完整内容核对、显式采用及拒绝清理，不改变 API。
+
+开发红灯：组件 3 failed/21 passed，新增浏览器 2 failed/2 passed；原孩子探针 1 failed，
+原家长探针 1 failed、两个合法对照 passed。全部保留，不用修订后通过覆盖。
+开发修订后：组件 24 passed，前端 49/628，固定构建通过，T5 正式浏览器 9 passed，
+原探针 1+3 passed（仅改路径，属于开发复跑，不是独立复评）；文档状态 162 passed。
+正式 HTTP、最终文档命令与候选哈希以[修订交接材料](evidence/t5-numeric-fix-2026-10-27/README.md)为准。
+独立 r1 和旧开发归档保持原样；只将本次增量和证据另行冻结供独立复评。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、T7/T9、D01/T2-G、高级恢复与新回收
+REMAINDER_DEFERRED 及默认关闭不变；仅本地合成，无 Git 提交/推送/合并或部署。
+
+### 25.4 两项修订批准关闭与总门禁待批准（2026-10-27）
+
+用户已明确批准本次复审通过，并授权关闭 QA-T5-NUMERIC-INPUT-001（P2）和
+QA-T5-DESIGN-CONFLICT-002（P3）。两项状态 **CLOSED**，取代 §25.3 当时的待复评状态；
+§25.3、原红灯和失败快照保留。此批准仅关闭两项问题，不是 T5 工程总门禁批准。
+T5 保持 IN_PROGRESS / 总门禁 OPEN / approval REQUIRED；工程关闭材料 READY_FOR_APPROVAL。
+
+绑定冻结候选 entries SHA256 `44f7011d0118108e9660e4b8ab6698e2968c65318d9bacb0ff0f882c34997b8e`，
+增量补丁 SHA256 `acdbdccae9267335dbcd46800f7d120af83318597e78716aedb144fd3425f119`。
+复评执行：组件/API 2 suites/34 passed，冻结构建正式浏览器 9 passed，原探针 1+3 passed，
+文档及 diff 校验通过；Gauss 提供独立静态审阅，运行由复评主线程执行，二者不混称。
+复评未重跑完整前后端或重建；42 候选、182 新归档、108 原独立及 364 旧开发证据核验一致。
+复评证据已从临时目录原样归档到 `release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1/`。
+
+两项非阻断补测建议仍 OPEN_NONBLOCKING：T5-NB-001 无效输入后点击 5/15/30 快捷值，
+T5-NB-002 保存函数内部第二道校验的独立反例。当前实现无已知对应缺陷；不伪造已覆盖，
+不扩大本次修复或自动启动补测。后续修改相关输入/保存逻辑时优先补齐。
+
+完整关闭申请、证据分层、剩余验收及限制见
+[T5 关闭评审材料](evidence/t5-numeric-fix-2026-10-27/closure-review.md)。
+本次只有记录变化，冻结源候选不重签、不覆盖；现行文档变化由 closure-verification.json 单独列出。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、SL-04 的 T7 综合验收、T9 价值验证和
+D01/T2-G、高级恢复/新回收 REMAINDER_DEFERRED 均保留；没有 Git 或部署授权。
+
+### 25.5 T5 限定合成工程总门禁批准关闭（2026-10-27）
+
+用户明确批准关闭 T5 限定合成范围工程总门禁，当前 APPROVED / CLOSED /
+ENGINEERING_SYNTHETIC_ONLY。本节取代 §25–25.4 的开发、待复评及待总门禁批准快照；
+旧记录和历史失败原样保留，不将先前过程改写为全部通过。
+关闭绑定的冻结候选、补丁与复验证据沿 §25.4，不因状态修改重新声称测试了另一份业务代码。
+本轮只修改文档和状态校验，批准及验证索引见
+[T5 总门禁批准记录](evidence/t5-numeric-fix-2026-10-27/approved-closure.md)。
+
+数字输入 P2 和冲突图 P3 保持 CLOSED；T5-NB-001/002 保持 OPEN_NONBLOCKING，未补测。
+DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、T7/T9 义务、SL-04 总体 PLANNED、
+D01/T2-G 及高级恢复/新回收 REMAINDER_DEFERRED 不变。T4 状态不因本次批准改变，
+T6–T9 不自动启动；没有 Git 提交、推送、合并、服务器操作或部署授权。
+
+### 25.6 T5 专用分支与 PR 交付授权（2026-10-27）
+
+用户在 §25.5 关闭批准后另行授权：核对完整 T5 范围、敏感信息及归档，验证后提交推送
+专用分支并创建 PR、检查 CI。仅更新 Git 交付权限，不授权合并或部署；§25.5 及此前
+禁止 Git 的文字保留为当时快照。DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING、
+历史失败和 REMAINDER_DEFERRED 不变，不自动关闭 T4 或启动 T6–T9。
+
+交付从已合并 T4 的 origin/main 建立隔离工作树，保留全部 T5 代码、测试和关闭记录，
+排除原工作区 AI/K12 文档改动。原冻结候选与增量补丁不改写，不冒充本次完整提交候选；
+范围分离与新验证见 [T5 PR 交付记录](evidence/t5-delivery-2026-10-27/README.md)。
+
+### 25.7 PR #31 两项 CI 修订（2026-10-27）
+
+用户已授权修复并提交推送当前分支，不合并、不部署。首轮 CI `40436134961` 在
+Task 11 浏览器阶段 2 failed / 2 passed；后端 149/4308、前端 49/628 与构建通过，
+后续门禁未执行，原失败日志及截图保留，不把整轮写为通过。
+
+任务链接现在限定在“今天的任务”区域，并断言“今日计划”同名链接独立唯一且 href 一致。
+PIN 提示缺失根因是旧页面已处理 401 后再刷新，React 内存错误丢失；现从既有非秘密
+expired 变更原因恢复匿名提示，不恢复身份或令牌，不更改权限、存储格式、退出清理或迟到响应 CAS。
+
+永久组件反例先红后绿；浏览器保留原四个用例及全部原断言，在已退出后增加第二次刷新、
+私有导航缺失、旧 PIN 拒绝及新 PIN 登录检查。临时撤回初始化修复再次触发原过期提示断言失败；
+恢复后四个用例通过。初版新增请求拦截测试的取消请求/共享限流失败也保留；最终复用原家庭夹具，
+不拦截响应、不增加超时、不修改限流或跳过条件。
+
+本地前端 50 suites / 634 passed，Task 11 浏览器 4 passed，T5 正式构建浏览器 9 passed，
+lint、构建通过；Nash 独立静态复核无新发现，不冒充独立运行测试。代码自查及交付证据见
+[CI 修订记录](evidence/t5-ci-fix-2026-10-27/README.md)。本节是本地修订快照，PR 完整 CI
+以新提交 Actions 结果为准，不提前声明可合并。T5 限定工程批准、DEVICE_PENDING、两项
+OPEN_NONBLOCKING、历史失败、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED 均保持。
