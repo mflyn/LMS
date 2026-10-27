@@ -6,6 +6,7 @@ import {
   captureSession,
   expireChildSession,
   loadChildSession,
+  wasChildSessionExpired,
   saveChildSession,
   subscribeSessionChanges
 } from '../services/familySession';
@@ -26,7 +27,7 @@ const loginErrorMessage = (error) => {
 
 export const ChildAuthProvider = ({ children }) => {
   const [session, setSession] = useState(loadChildSession);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(() => wasChildSessionExpired() ? '会话已过期，请重新登录。' : null);
   const attempt = useRef(0);
   const observedSession = useRef(captureSession('student'));
 

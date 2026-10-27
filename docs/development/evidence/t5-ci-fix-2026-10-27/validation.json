@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 1,
+  "at": "2026-10-27T02:36:22.862Z",
+  "base": "ed1dc894154f83f01f57b704e3cbbbc2898753f3",
+  "priorFailedCi": "https://github.com/mflyn/LMS/actions/runs/40436134961",
+  "scope": "BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY",
+  "device": "DEVICE_PENDING",
+  "deferred": "REMAINDER_DEFERRED",
+  "nonblocking": [
+    "T5-NB-001 OPEN_NONBLOCKING",
+    "T5-NB-002 OPEN_NONBLOCKING"
+  ],
+  "historicalFailures": "PRESERVED",
+  "files": [
+    {
+      "file": "docs/development/evidence/t5-ci-fix-2026-10-27/README.md",
+      "sha256": "d620527c0ca6424fc1cdbd2dad44c38530bace347cbf329abce77f2bc4445c95"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "bf71ff5a940bfd42771fdfc66166fcacb2f54495bfd4a16da7f4e31d79f240e1"
+    },
+    {
+      "file": "frontend/web/src/__tests__/child/ChildAuthContext.test.js",
+      "sha256": "9e3b73f16f34c6779ab11b7e0565d72469f27b454504665c9dd7372856e62854"
+    },
+    {
+      "file": "frontend/web/src/contexts/ChildAuthContext.js",
+      "sha256": "0bbe351bf2fb982725d14c414639edd97e8837d414e327062995c8d14ac72d6a"
+    },
+    {
+      "file": "frontend/web/src/services/familySession.js",
+      "sha256": "ae714228c682be2c41b5255577253494e4a8dc682b88e69ee24e15965ee06ee0"
+    },
+    {
+      "file": "tests/e2e/task11/family-growth-flow.spec.js",
+      "sha256": "2a77bfc14c8691a31ff943bbe56c8f1b140375f66d98d626e04d7460e4ac58ac"
+    },
+    {
+      "file": "tests/e2e/task11/family-growth-security.spec.js",
+      "sha256": "7dde7df90a001af26ee099bcfddf21a1ef22efcfd124ce3c617664271712463b"
+    }
+  ],
+  "indexExcludedFromOwnHash": true,
+  "sensitivePatterns": {
+    "findings": [],
+    "note": "Heuristic scan plus manual review; new credentials are synthetic fixtures, no real data. Not a full security audit."
+  },
+  "review": {
+    "type": "independent static review; no runtime verification claimed",
+    "reviewer": "Nash",
+    "file": "release-gate-artifacts/t5-ci-fix-2026-10-27/review.md",
+    "sha256": "00637806e80aead7b34b7b148dbdaa029c7a4700f7511e4d69d3e573375d508e"
+  },
+  "runs": [
+    {
+      "label": "baseline-e2e",
+      "command": [
+        "npm",
+        "run",
+        "test:family-flow:e2e"
+      ],
+      "exitCode": 1,
+      "startedAt": "2026-10-27T02:24:37.745Z",
+      "finishedAt": "2026-10-27T02:25:02.856Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/baseline-e2e.log",
+      "sha256": "4555722972525ed2484d87aa8aa52027d2e213ea57a5dfb618827b235a8bf8f8"
+    },
+    {
+      "label": "context-red",
+      "command": [
+        "npm",
+        "--prefix",
+        "frontend/web",
+        "run",
+        "test:ci",
+        "--",
+        "--runInBand",
+        "--runTestsByPath",
+        "src/__tests__/child/ChildAuthContext.test.js"
+      ],
+      "exitCode": 1,
+      "startedAt": "2026-10-27T02:26:15.016Z",
+      "finishedAt": "2026-10-27T02:26:18.629Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/context-red.log",
+      "sha256": "c6dca0d718b8a568720ffb8190745e5411051397ff55969fd46ba652bae3ef37"
+    },
+    {
+      "label": "expiry-red",
+      "command": [
+        "npm",
+        "run",
+        "test:family-flow:e2e",
+        "--",
+        "--grep",
+        "PIN reset 401 before reload"
+      ],
+      "exitCode": 1,
+      "startedAt": "2026-10-27T02:26:19.286Z",
+      "finishedAt": "2026-10-27T02:26:41.646Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/expiry-red.log",
+      "sha256": "560078acff9bfa30e0b9df690d6a58892f66cae5e53b23e07bb2ad74aa56d1c2"
+    },
+    {
+      "label": "e2e-green",
+      "command": [
+        "npm",
+        "run",
+        "test:family-flow:e2e"
+      ],
+      "exitCode": 1,
+      "startedAt": "2026-10-27T02:27:27.698Z",
+      "finishedAt": "2026-10-27T02:27:59.719Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/e2e-green.log",
+      "sha256": "8798793770418564fb9a300919403797850275c28113157aa10283aa9b9116fc"
+    },
+    {
+      "label": "frontend",
+      "command": [
+        "npm",
+        "--prefix",
+        "frontend/web",
+        "run",
+        "test:ci",
+        "--",
+        "--runInBand"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:27:24.437Z",
+      "finishedAt": "2026-10-27T02:28:02.176Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/frontend.log",
+      "sha256": "4154cbf1e38aa6c52282a70247cbd9bdb94155dce520e00a4f0eb22ff5c45183"
+    },
+    {
+      "label": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:28:14.874Z",
+      "finishedAt": "2026-10-27T02:28:21.073Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/lint.log",
+      "sha256": "a1b9b69179b20e518086200ff0c8ac809be80dcf2c808de9f4c91fe1dd85a642"
+    },
+    {
+      "label": "build",
+      "command": [
+        "npm",
+        "--prefix",
+        "frontend/web",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:29:47.097Z",
+      "finishedAt": "2026-10-27T02:29:58.265Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/build.log",
+      "sha256": "b2323e2e196a3031f5b9aa187ebefecbf008ec324729e3efa8bff9be8873ea3d"
+    },
+    {
+      "label": "e2e-final",
+      "command": [
+        "npm",
+        "run",
+        "test:family-flow:e2e"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:29:25.532Z",
+      "finishedAt": "2026-10-27T02:29:44.638Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/e2e-final.log",
+      "sha256": "d1bd3f6d2f943cd882efd95748b47d0f625d6f7215f561655ec5a121285ab2de"
+    },
+    {
+      "label": "permanent-mutation",
+      "command": [
+        "npm",
+        "run",
+        "test:family-flow:e2e",
+        "--",
+        "--grep",
+        "resetting a PIN"
+      ],
+      "exitCode": 1,
+      "startedAt": "2026-10-27T02:31:10.726Z",
+      "finishedAt": "2026-10-27T02:31:33.503Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/permanent-mutation.log",
+      "sha256": "bf507fa7a182d07d632e70ce1f60df9e5b0ffeafdf4e1242b31942ae28b49834"
+    },
+    {
+      "label": "restored-e2e",
+      "command": [
+        "npm",
+        "run",
+        "test:family-flow:e2e"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:31:52.515Z",
+      "finishedAt": "2026-10-27T02:32:10.714Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/restored-e2e.log",
+      "sha256": "b6eeefb8a5414169693f32da0ee99e1bb12408ffc4c13d71815620c613a71774"
+    },
+    {
+      "label": "t5-browser",
+      "command": [
+        "npm",
+        "run",
+        "test:t2:e2e",
+        "--",
+        "dailyLearningPlan.spec.js"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:32:34.633Z",
+      "finishedAt": "2026-10-27T02:33:26.373Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/t5-browser.log",
+      "sha256": "2122c658765d209e7be4bba2f5b459b8dadaa873c9f235f7a92e46923b006de8"
+    },
+    {
+      "label": "lint-final",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:34:53.517Z",
+      "finishedAt": "2026-10-27T02:34:58.201Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/lint-final.log",
+      "sha256": "4104bbc33b7a96fd3d52ec6deed18d549d90051086010ede616891a5eddf446e"
+    },
+    {
+      "label": "docs",
+      "command": [
+        "npm",
+        "run",
+        "docs:family:check"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:34:54.494Z",
+      "finishedAt": "2026-10-27T02:34:55.076Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/docs.log",
+      "sha256": "e76f8763dc529829ab96eef8dab1c2b430adab7123f511ec77b6f080859e5593"
+    },
+    {
+      "label": "state",
+      "command": [
+        "npm",
+        "run",
+        "test:family-regression",
+        "--",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/familyDocumentationGate.test.js"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-27T02:35:05.286Z",
+      "finishedAt": "2026-10-27T02:35:25.186Z",
+      "sourceChanges": [],
+      "log": "release-gate-artifacts/t5-ci-fix-2026-10-27/state.log",
+      "sha256": "29d047d7d4cf6906e27aeffd40cd22a296111a651880fa2728072530a42c77c2"
+    }
+  ],
+  "note": "Initial browser fixture failure retained; final PIN scenario extends the original case with no mock or added fixture. No rules, original assertions or timeouts relaxed. CI for this new commit remains to be checked."
+}
