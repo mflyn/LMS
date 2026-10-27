@@ -87,7 +87,7 @@
 | T3 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；两项 P2 独立复评及导航测试 P3 关闭见 §23.8；最新 CI 通过后可合并，DEVICE_PENDING、REMAINDER_DEFERRED 和不部署边界保留 |
 | T4 | IN_PROGRESS | §24.9 求助投影 P2 已批准关闭；§24.10 固定候选服务器独立合成自动化通过，真机/人工待验收；总门禁 OPEN，关闭需用户批准 |
 | T5 | CLOSED | §25.5 用户已批准限定合成工程；总门禁 CLOSED，仅 ENGINEERING_SYNTHETIC_ONLY；合并后双入口、WebKit 测试导航及异常收尾已批准关闭见 §25.9；DEVICE_PENDING、非阻断补测与后置边界保留 |
-| T6 | NOT_STARTED | 一条真实错题走完来源、订正和延迟复习连接 |
+| T6 | CLOSED | §26.6 用户批准限定合成工程关闭；§26.7 仅授权专用分支/PR；DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测和后置责任保留；不合并、不部署 |
 | T7 | NOT_STARTED | SL-01 至 SL-06 纳入集成/E2E 和完整发布 Gate |
 | T8 | NOT_STARTED | 家庭 Ubuntu、iPad、NAS 恢复和回滚有实测证据 |
 | T9 | NOT_STARTED | §14 每孩子及总体价值判定；总体 PASS 才关闭，PARTIAL/FAIL 不冒充完成 |
@@ -5011,3 +5011,175 @@ NOT_AUTHORIZED、T7/T9 义务、D01/T2-G 及高级恢复/新回收 REMAINDER_DEF
 本授权不修改冻结测试证据，不扩大 ENGINEERING_SYNTHETIC_ONLY 范围；历史失败、Docker
 INCOMPLETE_FAILED、DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING 及 REMAINDER_DEFERRED
 全部保留。不删除分支、不部署、不启动 T6。
+
+## 26. T6 人工错题、订正与复习连接（2026-10-27）
+
+**T6 status:** CLOSED
+**T6 gate:** CLOSED
+**T6 scope:** ENGINEERING_SYNTHETIC_ONLY
+**T6 Git:** BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY
+**T6 approval:** APPROVED
+**T6 historical failures:** PRESERVED
+**T6 device:** DEVICE_PENDING
+**T6 Docker audit:** INCOMPLETE_FAILED
+**T6 nonblocking:** T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING
+**T6 deferred:** REMAINDER_DEFERRED
+**T6 deployment:** T8_PENDING / NOT_AUTHORIZED
+
+当前状态以本节头部和 §26.6–26.7 为准；§26.1–26.5 保留批准前执行、复审和待审批检查点，
+其中 OPEN / READY_FOR_REVIEW / READY_FOR_APPROVAL 为历史状态，不回写冻结证据。
+
+用户随后以完整 T6 目标授权自主实施，取代此前“不启动 T6”的历史限制；不沿用 T5 Git 授权。
+起点 `62cedfa35dc581c494179f7edda82aba0754b94e`，工作区无未提交修改。
+设计见 [T6 设计](../superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md)。
+T6-1 设计自查与 Hilbert 独立设计评审已完成，已补充来源 subject 缺省、媒体未知结果保留、
+跨身份页面隔离及故障分类约束；不新增业务能力或审批层级。T6-2 来源协议测试已先编写，首次执行因
+尚无 learningSource 模块失败（0 个用例运行），仅记为缺实现红灯，不冒称行为反例或实现通过。
+T6-2 开发自测：analytics attachments 3 suites/60 tests、family 2 suites/13 tests 通过；
+homework 来源定向 1 suite/3 tests 通过。初轮夹具用户名/签名错误、standalone 不支持事务及
+每请求 requestId 不同导致的断言失败均不冒称业务反例；来源未实现时 3 个行为反例失败已经复现。
+共同来源 reader 独立复评发现输入通用字符串转换和依赖 AppError 脱敏两项 P2；Hilbert 修复、
+补反例后由 Nash 独立只读复评及 36/36 运行验证无新发现，工程缺陷状态 VERIFIED_FIXED。
+仅明确的空查询/合法 404 降级为不可用；依赖伪 AppError 统一脱敏 503；真实 ObjectId 与严格输入兼容。
+正式 HTTP 首轮订正与到期提醒、隔离零写两项通过；PDF 夹具使用不受支持的对象流被原校验拒绝，
+已按现有合法 PDF 夹具方式修正并复验，不放宽媒体校验。
+T6-3 页面、T6-4 复习、T6-5 合成工程验证已完成，最终结果见 §26.2；提交工程验收，不关闭 SL-05/T7 产品集成责任。
+T4 状态、历史失败、Docker INCOMPLETE_FAILED、DEVICE_PENDING、两项非阻断补测、
+高级恢复/新回收 REMAINDER_DEFERRED 保持；不操作真实数据/家庭服务器/NAS，不提前关闭本门禁。
+
+### 26.1 开发中的验证与复评（非关闭记录）
+
+SL-05 的 T6 工程实施见本节，原产品级 PLANNED 追踪仍保留 T7 综合验收责任，不凭开发进度改绿。
+
+- homework 受影响回归 7 suites / 378 tests 通过；Nash 独立静态评审未发现新增实现缺陷，
+  提出远程来源详情故障、来源与材料 pending 恢复两项 P2 组合测试缺口。补测后两个文件
+  125/125 通过，并以内存 transformer 分别移除 reader 注入和来源投影，确认新断言失败。
+  后续复评完成前不将本记录作为总门禁关闭。
+- 真实 Gateway/user/homework/resource/progress/analytics/notification 合成 HTTP 四项通过：
+  三种来源关系、订正完成丢响应重放与单次发星、到期人工复习、跨 scope 零写拒绝、
+  图片/PDF 及错误 purpose 拒绝、材料创建成功丢响应后的原对象读取。共享临时数据库，
+  跨服务来源和媒体操作走真实 HTTP；未运行回收或恢复部署。
+- 本轮家庭全量首轮为 3 failed / 149 passed suites、5 failed / 4380 passed tests，失败保留：
+  文档状态反例仍要求 T6 NOT_STARTED；执行 PATH 误选不兼容 Git 二进制；legacy 工厂白名单未纳入
+  只读 sourceReader。已更新启动状态、精确工厂名单及 reader 函数断言，原完成协议冷加载排除不减项。
+  正常 PATH 下门禁定向 184/184、隔离定向 2/2 通过，修订全量运行中，不以定向冒充全量。
+- 发布脚本复用既有 `test:t2:integration` 与 `test:t2:e2e` 入口；当前发现列表包含
+  新来源 HTTP 文件和三条浏览器候选测试（浏览器总计 47 项）。发现成功不等于已执行通过。
+- 正式 HTTP 全部五套件 26/26 通过；浏览器 T6 三项已通过，覆盖任务作品、带图错题、订正审核、
+  孩子回看、提醒到人工复习及非默认孩子丢响应后媒体保留。完整页面回归运行中。
+  首两次浏览器失败分别为测试缺少必填截止日期、反馈 region/textbox 同名定位，补正确操作后通过；未放宽断言。
+- 前端作者首个稳定候选 52 suites / 663 tests、构建、16 文件 lint 通过；Hilbert 独立运行
+  29 项通过后用额外内存探针发现 P2：孩子详情 GET 重建全部行，清除其他草稿并提前解除未知结果保护。
+  已安排永久反例及修复，修复后复评通过前不关闭该问题，也不以此前全绿代替修订验证。
+  随后补四条永久用例，原代码 3 failed / 20 passed（403 原本即通过）；修复后前端 52 suites /
+  667 tests 通过。Hilbert 非作者复评首尾哈希一致，独立运行 43/43 并核实原红灯有效，P2 为
+  VERIFIED_FIXED；不等于用户已批准关闭 T6。来源隐藏改为独立集合，未重建其他行、未放宽身份检查。
+  最新构建成功，Task11 真实页面 4/4 通过；最终构建的完整 T2–T6 浏览器回归仍在运行。
+- Nash 后端最终静态评审无新增生产逻辑缺陷；Gateway 内部路径测试改为 tasks/mistakes 均精确 404。
+  Kubernetes 清单尚缺来源服务配置，登记 T8 发布前准备项，不宣称该部署目标已就绪；本轮只验证本地正式工厂
+  和四套 Compose 的静态解析，不运行 Kubernetes 或真实部署。
+
+### 26.2 限定合成工程交付（待用户批准关闭）
+
+**T6 engineering:** READY_FOR_REVIEW
+
+§26.1 保留开发中检查点，最终本地候选以
+[验证索引](./evidence/t6-engineering-2026-10-27/README.md)、
+[评审记录](./evidence/t6-engineering-2026-10-27/review.md)、
+[候选及证据哈希](./evidence/t6-engineering-2026-10-27/validation.json) 为准。
+
+- 修订后家庭后端 152 suites / 4388 tests、正式 T2–T6 HTTP 5 suites / 26 tests、
+  内部来源精确 404 补强后 HTTP 4/4、原 Task11 HTTP 4 suites / 6 tests 通过。
+- 最终前端 52 suites / 667 tests、构建、受影响 lint 通过；原 legacy 前端排除保持既有策略，未新增排除。
+- 最终 P2 构建 Chromium 47/47，既有 Task11 页面 Chromium 4/4；早期构建 47/47 单独保留，
+  不冒称覆盖后续 P2。本轮无 WebKit、真实 iPad 或服务器限额验证。
+- 状态门禁 184/184，文档校验、四套 Compose 静态解析和源码 diff 检查通过。
+- 已跑通作品 -> 人工带图错题 -> 订正任务 -> 孩子完成 -> 家长版本审核 -> 孩子来源回看 ->
+  提醒定位 -> 家长人工复习。任务确认不自动改错题状态，不重开原任务或重复发星。
+- 创建结果未知时保留已提交附件，核对列表或按原 resourceId 读取恢复，不自动再次 POST；
+  没有新增全局创建幂等承诺。孩子详情来源隐藏与草稿/未知写入锁分离的 P2 已独立 VERIFIED_FIXED。
+
+发布脚本已接入现有 T2 HTTP/浏览器入口；本轮没有执行完整含 Docker 的发布脚本，也没有远程 CI 或部署结果。
+T6 status 仍 IN_PROGRESS、总门禁 OPEN；仅工程实现和本地合成验证完成，不擅自作用户关闭批准。
+DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、T5 两项 OPEN_NONBLOCKING、T4 现状、
+高级恢复/新回收 REMAINDER_DEFERRED、T7/T8/T9 责任不变。Kubernetes 来源配置仍属部署前未完成项。
+
+### 26.3 孩子无 ID 未知创建 P2 修订（待复评）
+
+用户授权修复本次独立复审发现的 P2：关闭表单会丢失未知创建保护，且提示核对列表但没有实际重读。
+原 §26.2 冻结候选和失败证据保留；本节修订及其新增证据单独记录，不能把原 667/47 结果称为本次源码验证。
+
+- 显式 GET 列表等待真实返回；失败保留未知状态和重试，不调用 POST。成功读取不自动解锁，用户需明确核对。
+- 创建前保留按家庭/孩子隔离的 sessionStorage 单一未知位；不存题目、附件或 token；关闭/刷新/退出切回保护仍在。
+  当前 403 清理私有界面；旧会话响应不能更新新身份或删除原未知标记；既有 retainSubmitted 保留已提交附件。
+- 自查补强：列表只发现新行，保留其他错题草稿和未知 PATCH 锁；反例首次 1 failed / 30 passed，修复后纳入全量。
+- 非作者静态复核另发现同身份迟到列表重新加入刚掌握旧行的竞态；永久反例 1 failed / 31 passed，
+  已同时排除读取开始时已有 ID 与当前 ID，不恢复读取期间已移除的旧行。
+- 本次修复、测试和候选证据见 [P2 修订与评审记录](./evidence/t6-unknown-create-p2-2026-10-27/README.md)。
+  实现状态 READY_FOR_REVIEW，尚未取得用户关闭批准；T6 status IN_PROGRESS、gate OPEN 不变。
+- 最终前端 52 suites / 676 tests、构建、正式 HTTP 5 suites / 27 tests、T6 Chromium 4/4、
+  文档状态与定向门禁 183/183、受影响 lint 通过。Parfit 最终非作者静态复核无新增具体发现，
+  未冒称独立重复运行。两次自查/复核红灯及浏览器 GET 故障夹具错误失败均保留。
+
+保留历史失败、Docker INCOMPLETE_FAILED、DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING、
+高级恢复/新回收 REMAINDER_DEFERRED；仅本地合成验证，不提交、推送、合并或部署。
+
+### 26.4 普通重新加载拒绝优先 P2（用户批准关闭）
+
+**T6 reload-denied P2:** CLOSED_APPROVED
+
+2026-10-27 用户在复审通过后明确批准关闭本项。冻结候选为
+`42d785fd363232f1888122199bcac8ff99e89f499420d9e1b4cf03e7bd47ecb9`；
+复审全前端 52 suites / 678 tests、候选构建、正式服务 Chromium 4/4（27.6 秒）通过。
+仅临时副本撤回修复后 2 failed / 32 passed，恢复候选后 34/34 通过；仓库实现未被复审修改。
+首尾 55 个候选文件与 156 份历史/开发证据一致。新增复验证据绑定见
+[P2 关闭记录与 T6 总门禁评审材料](./evidence/t6-reload-denied-p2-2026-10-27/closure-review.md)。
+下文保留修订时检查点，READY_FOR_REVIEW 是历史状态；本段 CLOSED_APPROVED 为该 P2 当前状态。
+此批准不等于 T6 总门禁、真机或部署批准。
+
+§26.3 的后续独立复审发现：manualList 提前返回会吞掉普通重新加载的当前 403，保留私有错题和核对按钮。
+独立临时探针 1 failed / 32 passed，原冻结候选、原红灯和已通过证据均保留，不覆盖为关闭状态。
+本次依据用户授权，只将资源 effect 改为先确认当前身份并处理拒绝，再对普通成功数据应用 manualList。
+不放开旧行覆盖，不改变原未知标记、媒体保留或后端协议。
+
+- 两条永久反例覆盖普通重新加载 403 清理、拒绝后显式重读迟到成功隔离，以及重新挂载后未知标记仍在。
+  旧实现为 2 failed / 32 passed；修订验证、候选和证据见 [本次 P2 记录](./evidence/t6-reload-denied-p2-2026-10-27/README.md)。
+- 本次实现状态 READY_FOR_REVIEW，不替代用户关闭批准；T6 IN_PROGRESS / OPEN 不变。
+  修订后前端 52 suites / 678 tests、构建、T6 Chromium 4/4（29.5 秒）、状态门禁 183/183、
+  文档检查、受影响 lint 和 diff 检查通过；开发自查无新增发现，待后续独立复评。
+  历史失败、Docker INCOMPLETE_FAILED、DEVICE_PENDING、两项非阻断补测和 REMAINDER_DEFERRED 保留。
+  仅本地合成验证，不提交、推送、合并或部署。
+
+### 26.5 T6 总门禁关闭评审准备
+
+**T6 closure review:** READY_FOR_APPROVAL
+
+已核对计划 T6 的来源契约、权限隔离、任务到错题/订正导航、媒体 purpose、来源回看、
+人工到期复习和异常/部分成功七项工程条件。未发现仍需编码修复的限定合成工程阻断；
+完整验收矩阵、证据版本边界和未完成责任见上述关闭评审材料。
+
+本次只关闭 §26.4 P2；T6 status IN_PROGRESS、gate OPEN、NO_COMMIT / NO_PUSH / NO_MERGE / NO_DEPLOY 保持。
+用户批准 T6 限定合成工程总门禁后，才同步修改总状态、计划/导航和既有状态校验；本次不提前放开状态反例。
+SL-05 产品追踪仍 PLANNED，保留 T7 综合验收；DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5 两项 OPEN_NONBLOCKING、T4 既有状态、T8/T9 和高级恢复/新回收 REMAINDER_DEFERRED 不变。
+
+### 26.6 用户批准 T6 限定合成工程总门禁关闭
+
+2026-10-27 用户明确批准关闭 T6 限定合成范围的工程总门禁，授权同步门禁、评审记录、实施计划和状态校验。
+本次关闭 T6-1–T6-5 的既定工程范围，接受已复审的来源、错题、订正、人工复习和失败恢复证据链。
+普通重新加载拒绝优先 P2 已在 §26.4 批准关闭；此前中间候选与红灯按原版本归档，不改写为全绿。
+
+最新评审及批准记录见 [T6 工程总门禁关闭记录](./evidence/t6-reload-denied-p2-2026-10-27/engineering-closure.md)。
+复审前端 52 suites / 678 tests、构建、Chromium 4/4，撤回修复 2 failed / 32 passed、恢复后 34/34，
+与此前正式 HTTP 27 项、后端 4388 项按候选版本分别绑定，不冒称本次重跑所有业务或发布测试。
+本次仅更新文档和状态校验并运行其反例；真实 iPad、Docker 审计和 T7/T8/T9 等责任保持未完成。
+SL-05 仍 PLANNED；不关闭 T4，不自动启动 T7，不沿用或新增 Git、真实数据、服务器或部署授权。
+
+### 26.7 用户批准 T6 专用分支和 PR 交付
+
+2026-10-27 用户授权核对完整 T6 提交范围、敏感信息和证据归档后，提交推送专用分支、创建 PR 并检查 CI。
+仅在 CI 通过后提供固定 SHA 和服务器隔离测试步骤；本次不执行服务器操作，不合并、不部署。
+本授权取代当前 Git 禁止状态，不回写 §26.6 及 engineering-closure.md 中批准当时的冻结快照。
+T6 CLOSED / ENGINEERING_SYNTHETIC_ONLY 不变；历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED 和 T7/T8/T9 责任全部保留。
+交接与服务器边界见 [T6 GitHub 与隔离测试交接](family-self-directed-learning-t6-github-handoff.md)。

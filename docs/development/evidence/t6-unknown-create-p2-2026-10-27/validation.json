@@ -1,0 +1,421 @@
+{
+  "base": "62cedfa35dc581c494179f7edda82aba0754b94e",
+  "predecessor": {
+    "file": "docs/development/evidence/t6-engineering-2026-10-27/candidate.patch",
+    "bytes": 260725,
+    "sha256": "b7a0ab2e674f82c8e8a2ea41ea54a5c0354453dfda213bd8e3335caa616f50c0"
+  },
+  "status": "READY_FOR_REVIEW",
+  "gate": "OPEN",
+  "device": "DEVICE_PENDING",
+  "deferred": "REMAINDER_DEFERRED",
+  "dockerAudit": "INCOMPLETE_FAILED",
+  "scope": "LOCAL_SYNTHETIC_ONLY / NO_COMMIT / NO_PUSH / NO_MERGE / NO_DEPLOY",
+  "candidateFiles": [
+    {
+      "before": {
+        "file": "backend/tests/t2/learningSources.integration.test.js",
+        "bytes": 9656,
+        "sha256": "83a720d1f4ad73c114a7574622e8c4b1df2a6dfe9830292cffefd61ac240f2b4"
+      },
+      "after": {
+        "file": "backend/tests/t2/learningSources.integration.test.js",
+        "bytes": 10899,
+        "sha256": "fe4f0619263ddfd0052898ff2070f8c70b17c283a52dbadaa27590dfb8273460"
+      }
+    },
+    {
+      "before": {
+        "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "bytes": 488995,
+        "sha256": "6650d9aec09c068bb5670af667fa665bb841739d10fea4bed25f3e69e19b18fa"
+      },
+      "after": {
+        "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "bytes": 490944,
+        "sha256": "2affdaa5c269f820ab89fa0e80028790209f28568f2dbe1cd4c69361ad2f1add"
+      }
+    },
+    {
+      "before": {
+        "file": "docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md",
+        "bytes": 7568,
+        "sha256": "c4c8b5e3cbca63ba3d5d7c46c93669ca16570767f6a9e1426a69e0b05d8b6843"
+      },
+      "after": {
+        "file": "docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md",
+        "bytes": 8549,
+        "sha256": "bff12ea1a5b4f9a7b3ea2916db9dc6ad9a668da5b052e7f6e279aeb277a1ce3c"
+      }
+    },
+    {
+      "before": {
+        "file": "frontend/web/src/__tests__/family/T6LearningSources.test.js",
+        "bytes": 22130,
+        "sha256": "c14bf97a36bb56a02e5be94108055be2219ff70d40f76cb157e45179cfaaeae6"
+      },
+      "after": {
+        "file": "frontend/web/src/__tests__/family/T6LearningSources.test.js",
+        "bytes": 30980,
+        "sha256": "8578c414fa00d57939247bdbe6f34efe47b067004f9126828f29adbb082e4661"
+      }
+    },
+    {
+      "before": {
+        "file": "frontend/web/src/pages/child/ChildMistakesPage.js",
+        "bytes": 20904,
+        "sha256": "c48e51906b95ebf099de1876c46695368d2c7696c193c4b5868a11487ab15108"
+      },
+      "after": {
+        "file": "frontend/web/src/pages/child/ChildMistakesPage.js",
+        "bytes": 24646,
+        "sha256": "4f925f2f61eb55b84ad5a04c71dd21b48fe3a239172f21044aa7f896de8a6230"
+      }
+    },
+    {
+      "before": {
+        "file": "tests/e2e/t2/learningSources.spec.js",
+        "bytes": 12646,
+        "sha256": "c5287a2654e7913c016a13b1365c99cea6887ebd08f88ee0870a9c109a300b28"
+      },
+      "after": {
+        "file": "tests/e2e/t2/learningSources.spec.js",
+        "bytes": 16640,
+        "sha256": "9bc0c506d259970a51959de1561b31d7102d3ab39d7dc33e01f98361779d75b2"
+      }
+    },
+    {
+      "before": null,
+      "after": {
+        "file": "docs/development/evidence/t6-unknown-create-p2-2026-10-27/README.md",
+        "bytes": 5530,
+        "sha256": "61671945b3188942c0692010abb7f786e88328c3e8413d695847d7c41c4328ae"
+      }
+    }
+  ],
+  "predecessorUnchangedFiles": 47,
+  "predecessorArtifactsVerified": 87,
+  "patch": {
+    "file": "docs/development/evidence/t6-unknown-create-p2-2026-10-27/candidate.patch",
+    "bytes": 37372,
+    "sha256": "8581711eb4bf106a6a284f6387f123ed07574e368201cec9a48c1b75faabaa4d"
+  },
+  "results": [
+    {
+      "name": "red",
+      "success": false,
+      "suites": 1,
+      "passed": 23,
+      "failed": 4,
+      "pending": 0
+    },
+    {
+      "name": "selfcheck-red",
+      "success": false,
+      "suites": 1,
+      "passed": 30,
+      "failed": 1,
+      "pending": 0
+    },
+    {
+      "name": "late-list-red",
+      "success": false,
+      "suites": 1,
+      "passed": 31,
+      "failed": 1,
+      "pending": 0
+    },
+    {
+      "name": "frontend-complete",
+      "success": true,
+      "suites": 52,
+      "passed": 676,
+      "failed": 0,
+      "pending": 0
+    },
+    {
+      "name": "http-all",
+      "success": true,
+      "suites": 5,
+      "passed": 27,
+      "failed": 0,
+      "pending": 0
+    },
+    {
+      "name": "gate",
+      "success": true,
+      "suites": 1,
+      "passed": 183,
+      "failed": 0,
+      "pending": 0
+    }
+  ],
+  "browser": {
+    "engine": "Chromium",
+    "passed": 4,
+    "failed": 0,
+    "finalBuild": true
+  },
+  "artifacts": [
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser/.last-run.json",
+      "bytes": 96,
+      "sha256": "857a8e1646b5ba299b518fcc713129337fdd6180a39d16fb599c59181324f1f0"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser/learningSources-child-lost-df9f0-count-return-without-repost/error-context.md",
+      "bytes": 3696,
+      "sha256": "2096130bd2ac3d88598091e603dd2037b7af3ec12900c730649ceaf549c3ab0d"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "bytes": 80048,
+      "sha256": "71af726ef6c355e02a6f764d39fc6916e3229af368248cd1aa45f97cd93711b3"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-complete/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-complete/learningSources-child-lost-df9f0-count-return-without-repost/child-unknown-create-list.png",
+      "bytes": 99283,
+      "sha256": "0258d27ed231f65b309b54ac1b16f2bf5afa188f9e90c7408c22f7d8df0dedfa"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-complete/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "bytes": 80048,
+      "sha256": "71af726ef6c355e02a6f764d39fc6916e3229af368248cd1aa45f97cd93711b3"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-complete/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-complete.log",
+      "bytes": 906,
+      "sha256": "721a3abb4e2169dbce6bf8732b265c4fd4650330da2f4fbc91ad377acc2d2487"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-final/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-final/learningSources-child-lost-df9f0-count-return-without-repost/child-unknown-create-list.png",
+      "bytes": 99283,
+      "sha256": "0258d27ed231f65b309b54ac1b16f2bf5afa188f9e90c7408c22f7d8df0dedfa"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-final/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "bytes": 80048,
+      "sha256": "71af726ef6c355e02a6f764d39fc6916e3229af368248cd1aa45f97cd93711b3"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-final/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-final.log",
+      "bytes": 906,
+      "sha256": "3cc30b15e53ffbbfeb459384621843713ebea93e8116e9fbfcf15d0cdc37b089"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-revised/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-revised/learningSources-child-lost-df9f0-count-return-without-repost/child-unknown-create-list.png",
+      "bytes": 99283,
+      "sha256": "0258d27ed231f65b309b54ac1b16f2bf5afa188f9e90c7408c22f7d8df0dedfa"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-revised/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "bytes": 80043,
+      "sha256": "83b94e04b692005ef1db959b3e6b340ffe3957a765a54ba613c165f3ac28829a"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-revised/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser-revised.log",
+      "bytes": 906,
+      "sha256": "89849595918007516c22c8dff96cf6e39b4758a19feafc1891d163392f96267e"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/browser.log",
+      "bytes": 2382,
+      "sha256": "04488ee1b3a72a1e55f3188c5c27a5accfd73f2680e18ca449e4859880d17907"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/build-complete.log",
+      "bytes": 895,
+      "sha256": "7f284b223bef6c0af7d8351b35b377d4bba954a921c2fc14a3bbc5b4dff93ed3"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/build-final.log",
+      "bytes": 895,
+      "sha256": "8749f248b23544f0f8a68bfd51701820e1cd3552ac0039c1e8b1cde0adb8d124"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/build.log",
+      "bytes": 897,
+      "sha256": "fbf67b5a7de0a724bf3a17f26dc0ef22e637ccaac702caf44fc9984394da9bbf"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/docs-complete.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/docs.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/frontend-complete.json",
+      "bytes": 187848,
+      "sha256": "75d550c999fc92f8cc98392c9d38752d03d56c74152d039413df94716c65569d"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/frontend-complete.log",
+      "bytes": 2917,
+      "sha256": "f8956ada10a9f19ae0ce92958fac5b9e22204b6f53dc7a982ca002f956938d37"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/frontend-final.json",
+      "bytes": 187570,
+      "sha256": "b2ac1b04f9b917081ce3f8262e7fd6fdc1e1ac9037bec80806ac2d5489512a00"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/frontend-final.log",
+      "bytes": 2920,
+      "sha256": "1b30e435f3fec3a9d342edb71f176705b21d9cb354f34074b1a1f5e153b3951c"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/frontend.json",
+      "bytes": 187296,
+      "sha256": "0d7d54711c3d34859cfb1836d18d739d18b23899ed11c0f6964d345cf7086e75"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/frontend.log",
+      "bytes": 2908,
+      "sha256": "9f442c11b1a65c01cbdf1a19335cf0e30c17a6eeabd30812b2eff869e1edafab"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/gate.json",
+      "bytes": 85689,
+      "sha256": "5841bc0dfc2a8fd556239d94129a8eb8591931882a9a3ea53726d234e6e7d81e"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/gate.log",
+      "bytes": 19553,
+      "sha256": "681953bddee94dea6450b552f9641fc5c28d5b1c945d76623f6cb8a58955c56b"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/http-all.json",
+      "bytes": 13452,
+      "sha256": "e7b8bd8b4eef4625f4e359e40be8a3a45cbaba2b30f9c202e2b71974d1edc02b"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/http-all.log",
+      "bytes": 1412,
+      "sha256": "70a83f68647efadbb9c2ffc9a357e25847840d1f553c7e138461c4a48aadeabc"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/http.json",
+      "bytes": 2758,
+      "sha256": "84adadd0a306d5ffcfdc915c2f3e12f07cc3f6fce721ac26c00355a07ca5f4cc"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/http.log",
+      "bytes": 1094,
+      "sha256": "f258aa5fda2e3ebe659e8aa35a7347af2d693c9b4a76e700afa0d6e71c7b19f0"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/late-list-red.json",
+      "bytes": 10476,
+      "sha256": "6cb7e2c1d0e59644bd3b542d42459b568d1671ef585cbe81375357e55f46dbf3"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/late-list-red.log",
+      "bytes": 4364,
+      "sha256": "6dad9e87b56a2501b887a6e08a5e9c5172e46d19a3eae46005f3755df6c5692a"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/lint-complete.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/lint-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/original-browser-before-refresh.png",
+      "bytes": 36867,
+      "sha256": "417374875c5e3f5b7dc228c9be025f3847c1c986b01e6a1f7b170dedad84c9fe"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/original-browser-repro.json",
+      "bytes": 185,
+      "sha256": "6f91f5115bf6697cc1b348c07219a012bc2c005be8b84bad8e2c481028a86659"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/original-browser-repro.log",
+      "bytes": 562,
+      "sha256": "d4d01f014e30e1ddcc1ececb1cf830944d2284add2148db682c56d643942a1b7"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/red.json",
+      "bytes": 76000,
+      "sha256": "239d2b16d18d836363cd249c0bde9377ed4f923c3fccd6b1a5867982ec7b74ff"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/red.log",
+      "bytes": 31079,
+      "sha256": "7cf495bfd86099b1f89da960249457cf4b1f2981a4183aaf25e2031425bbeab8"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/selfcheck-red.json",
+      "bytes": 10125,
+      "sha256": "206751f21c702606bd488d603de1b8921e17f633e6eb47f037fe9f9429adc418"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/selfcheck-red.log",
+      "bytes": 4209,
+      "sha256": "24302ef8a4eaec9bede85d00ca1fe7fd16f767b33aa47c9ca07d871f28360e93"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/targeted.json",
+      "bytes": 14002,
+      "sha256": "7680c5442fad8bb38f8b062e1f7b9059f97d74f7905d4ddc041e80acb2dd0736"
+    },
+    {
+      "file": "release-gate-artifacts/t6-unknown-create-p2-2026-10-27/targeted.log",
+      "bytes": 536,
+      "sha256": "e1b9329746b9971cb67c8090d9f8eea5162f0084a89b3f5358377f2a8609dd30"
+    }
+  ]
+}

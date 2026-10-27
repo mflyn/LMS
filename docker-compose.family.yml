@@ -109,6 +109,7 @@ services:
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-dev-internal-service-token-32chars}
       - PROGRESS_SERVICE_URL=http://progress-service:3002
       - STAR_AWARD_TIMEOUT_MS=${STAR_AWARD_TIMEOUT_MS:-3000}
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3006
       - RESOURCE_SERVICE_URL=http://resource-service:3005
       - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:-dev-media-reference-token-32chars}
       - ENABLE_RABBITMQ=false
@@ -175,6 +176,8 @@ services:
       - RESOURCE_SERVICE_URL=http://resource-service:3005
       - MEDIA_REFERENCE_SERVICE_TOKEN=${MEDIA_REFERENCE_SERVICE_TOKEN:-dev-media-reference-token-32chars}
       - REPORT_HISTORY_AVAILABLE_FROM=2026-06-01
+      - HOMEWORK_SERVICE_URL=http://homework-service:3003
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-dev-internal-service-token-32chars}
     depends_on:
       mongo-init:
         condition: service_completed_successfully

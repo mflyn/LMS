@@ -24,6 +24,8 @@ const dependencies = () => {
       Role: require('../../common/models/Role'), Family: require('../../common/models/Family'),
       User: require('../../common/models/User'), Task: require('../../services/homework-service/models/GrowthTask'),
       DailyPlan: require('../../services/homework-service/models/DailyLearningPlan'),
+      Mistake: require('../../services/analytics-service/models/FamilyMistake'),
+      MistakeStateEvent: require('../../services/analytics-service/models/FamilyMistakeStateEvent'),
       Operation: require('../../services/homework-service/models/GrowthTaskCompletionOperation'),
       Guard: require('../../services/homework-service/models/CompletionMediaGuard'),
       Asset: require('../../services/resource-service/models/MediaAsset'),
@@ -114,10 +116,11 @@ const createT2Runtime = async ({ beforeStart } = {}) => {
     for (const directory of [mediaRoot, journalRoot]) await fs.mkdir(directory, { mode: 0o700 });
     state.mongo = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } });
     const mongoURI = state.mongo.getUri('t2_synthetic');
-    const resourceAddress = await reserve(), homeworkAddress = await reserve();
+    const resourceAddress = await reserve(), homeworkAddress = await reserve(), analyticsAddress = await reserve();
     restoreEnvironment = configureEnvironment({ MONGO_URI: mongoURI, USER_SERVICE_MONGO_URI: mongoURI,
       PRIVATE_MEDIA_ROOT: mediaRoot, COMPLETION_DELETION_JOURNAL_ROOT: journalRoot,
-      RESOURCE_SERVICE_URL: resourceAddress.url, HOMEWORK_SERVICE_URL: homeworkAddress.url });
+      RESOURCE_SERVICE_URL: resourceAddress.url, HOMEWORK_SERVICE_URL: homeworkAddress.url,
+      ANALYTICS_SERVICE_URL: analyticsAddress.url });
     const deps = dependencies(), { models } = deps;
     const instances = [...new Set(Object.values(models).map(model => model.db.base))];
     if (instances.some(instance => instance.connection.readyState !== 0)) throw safeError({ code: 'T2_CONNECTION_ALREADY_OPEN' });
@@ -150,13 +153,14 @@ const createT2Runtime = async ({ beforeStart } = {}) => {
     state.prechecks.push('homework');
     const { createMediaReferenceClient } = require('../../common/services/mediaReferenceClient');
     const { createFamilyMistakeMediaService } = require('../../services/analytics-service/services/familyMistakeMediaService');
-    const analytics = deps.analytics.createApp({ logger: quietLogger, familyMistakeMediaService: createFamilyMistakeMediaService({
+    const analytics = deps.analytics.createApp({ env, logger: quietLogger, familyMistakeMediaService: createFamilyMistakeMediaService({
       FamilyMistakeModel: require('../../services/analytics-service/models/FamilyMistake'),
       FamilyMistakeStateEventModel: require('../../services/analytics-service/models/FamilyMistakeStateEvent'),
       mediaReferenceClient: createMediaReferenceClient({ resourceServiceUrl: env.RESOURCE_SERVICE_URL,
         serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN, timeout: 2000 }), randomUUID, logger: quietLogger
     }) });
-    await add('analytics-service', analytics.listen(0, '127.0.0.1'));
+    await close(analyticsAddress.server);
+    await add('analytics-service', analytics.listen(analyticsAddress.port, '127.0.0.1'));
     await add('notification-service', deps.notification.createApp({ logger: quietLogger }).listen(0, '127.0.0.1'));
     const urls = Object.fromEntries(state.servers.map(row => [row.name, row.url]));
     const gatewayApp = deps.gateway.createApp({ appLogger: quietLogger, enableLegacyDataProxy: false,

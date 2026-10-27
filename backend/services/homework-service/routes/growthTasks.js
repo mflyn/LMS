@@ -77,7 +77,9 @@ const logAttachmentMediaError = (req, context, error) => {
   });
 };
 
+const { sourceProjection, createLearningSourceReader } = require('../../../common/services/learningSource');
 const taskView = (task) => ({
+  ...sourceProjection(task),
   taskId: task._id.toString(),
   childId: task.childId.toString(),
   familyId: task.familyId.toString(),
@@ -177,7 +179,9 @@ const getDateRangeForScope = (scope, timezone, now = new Date(Date.now())) => {
 
 const createGrowthTaskRouter = ({
   awardTaskStar = defaultStarAwardClient.awardTaskStar,
-  attachmentMediaService = null
+  attachmentMediaService = null,
+  sourceReader = createLearningSourceReader({ TaskModel: GrowthTask,
+    mistakeUrl: process.env.ANALYTICS_SERVICE_URL, serviceToken: process.env.INTERNAL_SERVICE_TOKEN })
 } = {}) => {
   const router = express.Router();
   const resumePendingAttachmentMedia = async (task) => {
@@ -211,6 +215,7 @@ router.post('/', authenticateGateway, async (req, res) => {
       familyId: ownership.family._id,
       createdByParentId: req.user.id
     };
+    await sourceReader.require(taskInput);
     if (parsed.hasAttachmentMutation) {
       attachmentAuditContext = {
         operation: 'task.attachments.create',
@@ -338,7 +343,7 @@ router.get('/:taskId', authenticateGateway, async (req, res) => {
     const activeTask = await resumePendingAttachmentMedia(task);
     return res.json({
       success: true,
-      data: { task: taskView(activeTask) }
+      data: { task: { ...taskView(activeTask), ...await sourceReader.describe(activeTask) } }
     });
   } catch (error) {
     if (sendMediaRecoveryError(res, error)) return undefined;

@@ -11,12 +11,20 @@ const integrationRouter = require('./routes/integration');
 const performanceRouter = require('./routes/performance');
 const { createFamilyMistakesRouter } = require('./routes/familyMistakes');
 const { createWeeklyReportsRouter } = require('./routes/weeklyReports');
+const FamilyMistake = require('./models/FamilyMistake');
+const { createLearningSourceReader, createLearningSourceRouter } = require('../../common/services/learningSource');
 
 const createApp = ({
+  env = process.env,
   logger = createLogger('analytics-service'),
   io = null,
   familyMistakeMediaService = null,
-  familyMistakesRouter = createFamilyMistakesRouter({ familyMistakeMediaService }),
+  learningSourceReader = createLearningSourceReader({
+    MistakeModel: FamilyMistake,
+    taskUrl: env.HOMEWORK_SERVICE_URL,
+    serviceToken: env.INTERNAL_SERVICE_TOKEN
+  }),
+  familyMistakesRouter = createFamilyMistakesRouter({ familyMistakeMediaService, learningSourceReader }),
   weeklyReportsRouter = createWeeklyReportsRouter()
 } = {}) => {
   const app = express();
@@ -26,6 +34,9 @@ const createApp = ({
 
   app.use(cors());
   app.use(express.json());
+  app.use('/api/internal/learning-sources', createLearningSourceRouter({
+    kind: 'mistakes', Model: FamilyMistake, serviceToken: env.INTERNAL_SERVICE_TOKEN
+  }));
   app.use(requestTracker);
   app.use(requestTimeout());
   if (familyMistakesRouter) app.use('/api/mistakes', familyMistakesRouter);

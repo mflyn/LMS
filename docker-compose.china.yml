@@ -80,6 +80,7 @@ services:
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN}
       - PROGRESS_SERVICE_URL=http://progress-service:3002
       - STAR_AWARD_TIMEOUT_MS=${STAR_AWARD_TIMEOUT_MS:-3000}
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3006
     depends_on:
       mongo:
         condition: service_healthy
@@ -125,6 +126,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3006
+      - HOMEWORK_SERVICE_URL=http://homework-service:3003
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN}
       - MONGO_URI=mongodb://mongo:27017/learning-tracker?replicaSet=rs0
     depends_on:
       - mongo

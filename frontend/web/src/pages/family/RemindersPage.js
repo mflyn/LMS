@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildResource } from '../../hooks/useChildResource';
+import { isLearningId, mistakeUrl } from '../../services/learningSources';
 import {
   getNotificationSettings,
   listFamilyReminders,
@@ -69,7 +71,10 @@ const RemindersPage = () => {
       {reminders.state === 'error' && <FamilyDataState state="error" error={reminders.error} />}
       {reminders.state === 'partial' && <FamilyDataState state="partial" unavailableSources={reminders.unavailableSources} />}
       {reminders.data && items.length === 0 && <p className="family-empty-copy">今天暂无提醒</p>}
-      <div className="family-record-list">{items.map((item, index) => <article className="family-record" key={item.sourceId || `${item.type}-${index}`}><div className="family-record-main"><h2>{item.title}</h2><p>{item.dueDate || item.title}</p></div></article>)}</div>
+      <div className="family-record-list">{items.map((item, index) => <article className="family-record" key={item.sourceId || `${item.type}-${index}`}><div className="family-record-main"><h2>{item.title}</h2><p>{item.dueDate || item.title}</p>
+        {item.type === 'mistake_review' && item.childId === selectedChild.childId && isLearningId(item.sourceId)
+          && <Link className="family-button secondary" to={mistakeUrl('parent', item.sourceId)}>复习此错题</Link>}
+      </div></article>)}</div>
       {settingsResource.state === 'loading' && <FamilyDataState state="loading" />}
       {settingsResource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={settingsResource.reload} />}
       {settingsResource.state === 'error' && <FamilyDataState state="error" error={settingsResource.error} />}

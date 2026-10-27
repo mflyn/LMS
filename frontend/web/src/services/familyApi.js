@@ -174,6 +174,9 @@ export const updateKnowledgePoint = (knowledgePointId, payload) => parentPatch(
 );
 
 export const listMistakes = (params, signal) => parentGet('/api/mistakes', params, signal);
+export const getMistake = (mistakeId, signal, expectedSession) => parentGet(
+  `/api/mistakes/${encodeURIComponent(mistakeId)}`, undefined, signal, expectedSession
+);
 export const createMistake = (payload) => parentPost('/api/mistakes', payload);
 export const updateMistake = (mistakeId, payload) => parentPatch(`/api/mistakes/${mistakeId}`, payload);
 

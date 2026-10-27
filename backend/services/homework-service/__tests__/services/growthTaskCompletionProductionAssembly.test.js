@@ -554,6 +554,71 @@ test('POST lost commit response exposes only resourceId and resumes that pending
   expectPublic(recovered.body);
 });
 
+test('source-linked material commit loss keeps GET read-only and recovers the original task after source deletion', async () => {
+  const source = await seed({ title: 'Synthetic source task' }), sourceTaskId = String(source._id);
+  const application = app(), material = await media();
+  dropMediaField = 'attachmentMediaIds';
+  const result = await call(application, 'POST', PREFIX, input({ sourceTaskId, attachmentMediaIds: [material] }));
+  expectError(result, 503, 'MEDIA_REFERENCE_PENDING', { resourceId: expect.stringMatching(/^[0-9a-f]{24}$/i) });
+  const task = await Task.findById(result.body.error.details.resourceId);
+  expect(task).not.toBeNull();
+  const pending = await row(task);
+  expect(String(pending.sourceTaskId)).toBe(sourceTaskId);
+  expect(pending.mediaReferenceState).toBe('pending');
+  expect(dropped).toEqual([{ action: 'commit', field: 'attachmentMediaIds', operationId: pending.mediaBindingOperationId }]);
+  expect(await Task.countDocuments()).toBe(2);
+  expect(await Reference.countDocuments({ mediaId: material, state: 'bound' })).toBe(1);
+
+  const beforeRead = await snapshot(), calls = mediaCalls.length;
+  const found = await call(application, 'GET', url(task));
+  expect(found.status).toBe(200);
+  expect(found.body.data.task).toMatchObject({ sourceTaskId, sourceAvailable: true,
+    source: { id: sourceTaskId, familyId: String(family._id), childId: child.id, title: 'Synthetic source task' } });
+  expect(await snapshot()).toEqual(beforeRead);
+  expect(mediaCalls).toHaveLength(calls);
+
+  await Task.deleteOne({ _id: source._id });
+  const beforeMissingRead = await snapshot();
+  const missing = await call(app(), 'GET', url(task));
+  expect(missing.status).toBe(200);
+  expect(missing.body.data.task).toMatchObject({ sourceTaskId, sourceAvailable: false, source: null });
+  expect(await snapshot()).toEqual(beforeMissingRead);
+  expect(mediaCalls).toHaveLength(calls);
+  expectPublic(found.body); expectPublic(missing.body);
+
+  // Recovery addresses the saved ID and must not revalidate a now-missing source.
+  const recovered = await call(app(), 'PATCH', url(task), { attachmentMediaIds: [material] });
+  expect(recovered.status).toBe(200);
+  expect(recovered.body.data.task).toMatchObject({ taskId: String(task._id), sourceTaskId,
+    title: 'Original title', attachmentMediaIds: [material] });
+  expect(recovered.body.data.task).not.toHaveProperty('sourceAvailable');
+  const settled = await row(task);
+  expect(String(settled.sourceTaskId)).toBe(sourceTaskId);
+  expect(settled.mediaReferenceState).toBe('bound');
+  expect(settled.attachmentMediaBindings).toHaveLength(1);
+  expect(settled.attachmentMediaBindings[0].bindingOperationId).toBe(pending.mediaBindingOperationId);
+  expect(await Task.countDocuments()).toBe(1);
+  expect(await Reference.countDocuments({ mediaId: material, state: 'bound' })).toBe(1);
+  expect(new Set(mediaCalls.filter(entry => ['prepare', 'commit'].includes(entry.action))
+    .map(entry => entry.body.operationId))).toEqual(new Set([pending.mediaBindingOperationId]));
+  expect(await Operation.countDocuments()).toBe(0);
+  expect(await Ledger.countDocuments()).toBe(0);
+  expect(starCalls).toEqual([]);
+  expectPublic(recovered.body);
+});
+
+test.each(['unauthorized child', 'sibling source', 'missing source'])('%s rejects source-linked material creation before media writes', async mode => {
+  const source = await seed(), material = await media(), before = await snapshot();
+  const sourceTaskId = mode === 'missing source' ? id() : String(source._id);
+  const childId = mode === 'unauthorized child' ? id() : mode === 'sibling source' ? sibling.id : child.id;
+  const response = await call(app(), 'POST', PREFIX, input({ childId, sourceTaskId, attachmentMediaIds: [material] }));
+  expectError(response, mode === 'unauthorized child' ? 403 : 404,
+    mode === 'unauthorized child' ? 'CHILD_ACCESS_DENIED' : 'RESOURCE_NOT_FOUND');
+  expect(await snapshot()).toEqual(before);
+  expect(mediaCalls).toEqual([]);
+  expect(starCalls).toEqual([]);
+});
+
 test('remote completion commit response loss preserves one operation and resumes only the original complete command', async () => {
   const application = app(), task = await seed(), completionId = await media('task_completion');
   const body = command({ completionMediaIds: [completionId] });

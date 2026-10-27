@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTaskCompletion } from '../../hooks/useTaskCompletion';
 import { assertSessionCurrent, captureSession } from '../../services/familySession';
 import * as familyApi from '../../services/familyApi';
 import FamilyDialog from './FamilyDialog';
 import TaskCompletionEvidence from './TaskCompletionEvidence';
+import LearningSourceLink from './LearningSourceLink';
 
 const completionApi = {
   getTask: (...args) => familyApi.getGrowthTask(...args),
@@ -48,6 +50,11 @@ const TaskCompletionReview = ({ taskId, familyId, childId, onClose, onTask, init
         <button type="button" className="family-button secondary" onClick={onClose}>关闭</button>
       </div>
       {task && <h3>{task.title}</h3>}
+      {task && controller.state === 'ready' && !editing && !controller.command && <div className="family-inline-actions">
+        <LearningSourceLink item={task} />
+        <Link className="family-button secondary" to={`/app/mistakes?sourceTaskId=${encodeURIComponent(task.taskId)}`}>记录错题</Link>
+        <Link className="family-button secondary" to={`/app/tasks?sourceTaskId=${encodeURIComponent(task.taskId)}`}>创建订正任务</Link>
+      </div>}
       <TaskCompletionEvidence controller={controller} scopeKey={scopeKey} childId={childId}
         mediaApi={mediaApi} allowEdit={editing} onMediaBusyChange={setMediaBusy} />
       {editing && <button type="button" className="family-button secondary"

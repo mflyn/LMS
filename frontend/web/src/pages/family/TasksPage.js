@@ -16,9 +16,11 @@ import {
   cancelOrArchiveGrowthTask,
   createGrowthTask,
   getGrowthTask,
+  getMistake,
   listGrowthTasks,
   updateGrowthTask
 } from '../../services/familyApi';
+import { assertLearningScope, isLearningId, isLearningDenied, learningReadMessage } from '../../services/learningSources';
 
 const DIMENSIONS = [
   ['moral', '德育'],
@@ -69,6 +71,7 @@ const ScopedTasksPage = () => {
   });
   const [page, setPage] = useState(1);
   const changeFilter = (field, value) => {
+    denied.current = false;
     setPage(1);
     setFilters(current => ({ ...current, [field]: value,
       ...(field === 'helpStatus' && value ? { scope: '', status: '' } : {}) }));
@@ -81,7 +84,8 @@ const ScopedTasksPage = () => {
   const helpAccessDenied = [401, 403].includes(resource.error?.response?.status);
   const mutationGuard = useChildMutationGuard();
   const ownerSession = useRef(captureSession('parent'));
-  const canDeleteDraft = useCallback(() => isSessionCurrent(ownerSession.current), []);
+  const denied = useRef(false);
+  const canDeleteDraft = useCallback(() => isSessionCurrent(ownerSession.current) && !denied.current, []);
   const mediaDrafts = useDraftMedia({ canDelete: canDeleteDraft });
   const [items, setItems] = useState([]);
   const [editor, setEditor] = useState(null);
@@ -94,6 +98,8 @@ const ScopedTasksPage = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [privateBlocked, setPrivateBlocked] = useState(false);
+  const [sourceTarget, setSourceTarget] = useState(null);
+  const [savedTaskId, setSavedTaskId] = useState(null);
   const editorGeneration = useRef(0);
   const writing = useRef(false);
   useEffect(() => () => { editorGeneration.current += 1; }, []);
@@ -101,8 +107,10 @@ const ScopedTasksPage = () => {
   const clearPrivateEditor = useCallback(() => {
     editorGeneration.current += 1;
     writing.current = false;
+    denied.current = true;
     mediaDrafts.cancel();
     setItems([]); setEditor(null); setForm(emptyForm()); setAction(null); setReview(null); setHelpTask(null);
+    setSourceTarget(null); setSavedTaskId(null); setMessage('');
     setBusy(false); setMediaBusy(false); setPrivateBlocked(true);
   }, [mediaDrafts]);
 
@@ -111,6 +119,7 @@ const ScopedTasksPage = () => {
   }, [helpAccessDenied, clearPrivateEditor]);
 
   useEffect(() => {
+    if (denied.current) return;
     if (resource.data?.items) setItems(resource.data.items);
     if (resource.state === 'empty') setItems([]);
     if (['ready', 'empty'].includes(resource.state)) setPrivateBlocked(false);
@@ -135,12 +144,49 @@ const ScopedTasksPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const taskId = params.get('taskId'), childId = params.get('childId');
-    if (!taskId || childId !== selectedChildId || !/^[a-f\d]{24}$/i.test(taskId)
+    if (!taskId || (childId && childId !== selectedChildId) || !isLearningId(taskId)
       || !isSessionCurrent(ownerSession.current) || privateBlocked || helpAccessDenied) return;
-    setReview({ taskId, childId, mode: 'review' });
+    setReview({ taskId, childId: selectedChildId, mode: 'review' });
     params.delete('taskId'); params.delete('childId');
     navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
   }, [location.pathname, location.search, navigate, selectedChildId, privateBlocked, helpAccessDenied]);
+
+  const readSource = async target => {
+    if (writing.current || privateBlocked || !isSessionCurrent(ownerSession.current)) return;
+    const scope = mutationGuard.captureScope(), generation = ++editorGeneration.current;
+    const current = () => generation === editorGeneration.current && isSessionCurrent(ownerSession.current)
+      && mutationGuard.isCurrentScope(scope);
+    setSourceTarget(target); setEditor(null); setReview(null); setAction(null); setHelpTask(null);
+    setForm(emptyForm()); setError(''); setBusy(true); writing.current = true;
+    try {
+      const isTask = target.field === 'sourceTaskId';
+      const result = isTask ? await getGrowthTask(target.id) : await getMistake(target.id);
+      if (!current()) return;
+      const source = assertLearningScope(isTask ? result.task : result.mistake,
+        isTask ? 'taskId' : 'mistakeId', target.id, family?.familyId, selectedChildId);
+      const title = isTask ? source.title : source.knowledgePointName || source.subject;
+      setForm({ ...emptyForm(), subject: source.subject || '', title: `${title || '错题'}订正`,
+        area: '错题订正', taskType: '错题订正' });
+      setEditor({ mode: 'create', source: { [target.field]: target.id }, sourceTitle: title });
+      setSourceTarget(null);
+    } catch (cause) {
+      if (!current()) return;
+      if (isLearningDenied(cause)) clearPrivateEditor();
+      setError(learningReadMessage(cause));
+    } finally { if (current()) { writing.current = false; setBusy(false); } }
+  };
+  const readSourceRef = useRef(readSource); readSourceRef.current = readSource;
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const fields = ['sourceTaskId', 'sourceMistakeId'].filter(field => params.has(field));
+    if (!fields.length) return;
+    navigate({ pathname: location.pathname, search: '' }, { replace: true });
+    if (fields.length !== 1 || !isLearningId(params.get(fields[0])) || params.has('taskId')
+      || (params.has('childId') && params.get('childId') !== selectedChildId)) {
+      clearPrivateEditor(); setError('当前身份无法读取此记录。'); return;
+    }
+    readSourceRef.current({ field: fields[0], id: params.get(fields[0]).toLowerCase() });
+  }, [location.pathname, location.search, navigate, selectedChildId, clearPrivateEditor]);
 
   const closeEditor = () => {
     editorGeneration.current += 1;
@@ -149,6 +195,7 @@ const ScopedTasksPage = () => {
     setMediaBusy(false);
     mediaDrafts.cancel();
     setEditor(null);
+    setSourceTarget(null);
     setForm(emptyForm());
   };
 
@@ -162,6 +209,7 @@ const ScopedTasksPage = () => {
   }, []);
 
   const openCreate = () => {
+    if (writing.current || sourceTarget) return;
     editorGeneration.current += 1;
     setForm(emptyForm());
     setEditor({ mode: 'create' });
@@ -204,6 +252,7 @@ const ScopedTasksPage = () => {
       unit: form.unit || undefined,
       priority: form.priority
     };
+    if (editor.mode === 'create' && editor.source) Object.assign(payload, editor.source);
     if (editor.mode === 'create'
       || JSON.stringify(form.attachmentMediaIds) !== JSON.stringify(editor.task.attachmentMediaIds || [])) {
       payload.attachmentMediaIds = form.attachmentMediaIds;
@@ -221,6 +270,7 @@ const ScopedTasksPage = () => {
       if (!current()) return;
       mediaDrafts.commit();
       replaceTask(result.task);
+      setSavedTaskId(result.task.taskId);
       setEditor(null);
       setMessage(editor.mode === 'create' ? '任务已创建。' : '任务已更新。');
     } catch (taskError) {
@@ -235,6 +285,9 @@ const ScopedTasksPage = () => {
       } else if (errorCode(taskError) === 'VERSION_CONFLICT' || errorCode(taskError) === 'RESOURCE_CONFLICT') {
         setEditor(previous => ({ ...previous, recovery: { kind: 'conflict', taskId: editor.task?.taskId } }));
         setError('任务已被修改，请重新读取后再编辑。');
+      } else if (errorCode(taskError) === 'SOURCE_SERVICE_UNAVAILABLE') {
+        if (editor.mode === 'create') form.attachmentMediaIds.forEach(id => mediaDrafts.replace(id));
+        setError('来源服务暂不可用，本次尚未保存，可手动重试。');
       } else if (!taskError?.response || taskError.response.status >= 500) {
         const taskId = editor.task?.taskId || taskError?.response?.data?.error?.details?.resourceId;
         const requestedMaterials = Object.prototype.hasOwnProperty.call(payload, 'attachmentMediaIds');
@@ -350,8 +403,10 @@ const ScopedTasksPage = () => {
 
       {message && !editor && <p className="family-success-message" role="status">{message}</p>}
       {error && !editor && <p className="family-form-error" role="alert">{error}</p>}
+      {sourceTarget && !accessBlocked && <button type="button" className="family-button secondary" disabled={busy} onClick={() => readSource(sourceTarget)}>重试读取来源</button>}
+      {savedTaskId && !editor && !accessBlocked && <button type="button" className="family-button secondary" onClick={() => setReview({ taskId: savedTaskId, childId: selectedChildId, mode: 'review' })}>查看已保存任务</button>}
       {accessBlocked && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'}
-        onClick={resource.reload}>重新读取任务</button>}
+        onClick={() => { denied.current = false; resource.reload(); }}>重新读取任务</button>}
       {resource.state === 'loading' && <FamilyDataState state="loading" />}
       {resource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={resource.reload} />}
       {resource.state === 'error' && <FamilyDataState state="error" error={resource.error} />}
@@ -406,6 +461,7 @@ const ScopedTasksPage = () => {
             <div className="family-page-heading"><h2 id="task-editor-title">{editor.mode === 'create' ? '新建任务' : '编辑任务'}</h2><button type="button" className="family-button secondary" onClick={closeEditor}>关闭</button></div>
             {error && <p className="family-form-error" role="alert">{error}</p>}
             {message && <p role="status">{message}</p>}
+            {editor.sourceTitle && <p>订正来源：{editor.sourceTitle}</p>}
             {editor.recovery && <div className="family-inline-actions">
               <button type="button" className="family-button secondary" disabled={busy} onClick={() => readEditor()}>重新读取任务</button>
               {editor.recovery.canResume && <button type="button" className="family-button primary" disabled={busy}
@@ -418,7 +474,7 @@ const ScopedTasksPage = () => {
               <label>任务标题<input required value={form.title} onChange={(event) => setForm((value) => ({ ...value, title: event.target.value }))} /></label>
               <label>活动领域<input required value={form.area} onChange={(event) => setForm((value) => ({ ...value, area: event.target.value }))} /></label>
               <label>截止日期<input required type="date" value={form.dueDate} onChange={(event) => setForm((value) => ({ ...value, dueDate: event.target.value }))} /></label>
-              <label>任务类型<select value={form.taskType} onChange={(event) => setForm((value) => ({ ...value, taskType: event.target.value }))}><option value="practice">练习</option><option value="exercise">锻炼</option><option value="habit">习惯</option><option value="reading">阅读</option><option value="chore">劳动</option></select></label>
+              <label>任务类型<select value={form.taskType} onChange={(event) => setForm((value) => ({ ...value, taskType: event.target.value }))}><option value="practice">练习</option><option value="错题订正">错题订正</option><option value="exercise">锻炼</option><option value="habit">习惯</option><option value="reading">阅读</option><option value="chore">劳动</option></select></label>
               <label>预计用时（分钟）<input type="number" min="0" value={form.estimatedMinutes} onChange={(event) => setForm((value) => ({ ...value, estimatedMinutes: event.target.value }))} /></label>
               <label>目标数量<input type="number" min="0" value={form.targetAmount} onChange={(event) => setForm((value) => ({ ...value, targetAmount: event.target.value }))} /></label>
               <label>单位<input value={form.unit} onChange={(event) => setForm((value) => ({ ...value, unit: event.target.value }))} /></label>

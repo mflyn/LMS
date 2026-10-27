@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import TaskCompletionReview from '../../components/family/TaskCompletionReview';
 import * as api from '../../services/familyApi';
 import { saveParentSession } from '../../services/familySession';
@@ -23,7 +24,9 @@ beforeEach(() => {
   saveParentSession({ token: 'synthetic-parent', user: { id: id(1), name: '合成家长', role: 'parent' } });
   api.getGrowthTask.mockResolvedValue({ task: detail() });
 });
-const show = props => render(<TaskCompletionReview taskId={id(3)} familyId={id(4)} childId={id(2)} onClose={jest.fn()} {...props} />);
+const show = props => render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+  <TaskCompletionReview taskId={id(3)} familyId={id(4)} childId={id(2)} onClose={jest.fn()} {...props} />
+</MemoryRouter>);
 
 test('loads detail and confirms the displayed version, never a list version', async () => {
   const user = userEvent.setup(); show();

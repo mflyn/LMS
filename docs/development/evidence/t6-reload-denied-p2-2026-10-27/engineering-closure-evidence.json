@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-27",
+  "approvalSource": "Direct user approval in current conversation",
+  "t6Status": "CLOSED",
+  "t6Gate": "CLOSED",
+  "approval": "APPROVED",
+  "scope": "ENGINEERING_SYNTHETIC_ONLY",
+  "historicalFailures": "PRESERVED",
+  "device": "DEVICE_PENDING",
+  "dockerAudit": "INCOMPLETE_FAILED",
+  "nonblocking": [
+    "T5-NB-001 OPEN_NONBLOCKING",
+    "T5-NB-002 OPEN_NONBLOCKING"
+  ],
+  "deferred": "REMAINDER_DEFERRED",
+  "restrictions": [
+    "NO_COMMIT",
+    "NO_PUSH",
+    "NO_MERGE",
+    "NO_DEPLOY"
+  ],
+  "deployment": "T8_PENDING / NOT_AUTHORIZED",
+  "historicalArtifactsVerified": 156,
+  "priorClosureArtifactsVerified": 15,
+  "unchangedCandidateFilesVerified": 47,
+  "frozenEvidence": [
+    {
+      "file": "docs/development/evidence/t6-engineering-2026-10-27/validation.json",
+      "bytes": 70770,
+      "sha256": "ca3fa1ba396b5a55b18f56faa4bacf49ee8c876347146d9f51665e85dc49558f"
+    },
+    {
+      "file": "docs/development/evidence/t6-engineering-2026-10-27/candidate.patch",
+      "bytes": 260725,
+      "sha256": "b7a0ab2e674f82c8e8a2ea41ea54a5c0354453dfda213bd8e3335caa616f50c0"
+    },
+    {
+      "file": "docs/development/evidence/t6-unknown-create-p2-2026-10-27/validation.json",
+      "bytes": 16475,
+      "sha256": "4b0a8e22636270e276bf7a32aed7323ae3fa7e2023a2fc04831a0e0928b8863b"
+    },
+    {
+      "file": "docs/development/evidence/t6-unknown-create-p2-2026-10-27/candidate.patch",
+      "bytes": 37372,
+      "sha256": "8581711eb4bf106a6a284f6387f123ed07574e368201cec9a48c1b75faabaa4d"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/validation.json",
+      "bytes": 6582,
+      "sha256": "fd8fd21884edaa544d2dce73931f25b293380f6e4e0fb53c3dcbc87e717465e4"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/candidate.patch",
+      "bytes": 11411,
+      "sha256": "42d785fd363232f1888122199bcac8ff99e89f499420d9e1b4cf03e7bd47ecb9"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/closure-evidence.json",
+      "bytes": 7554,
+      "sha256": "b359b1df2c66ef9b93c89766dae6a1cc5bf054a99e841f2bf4be71739234aa59"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/closure-review.md",
+      "bytes": 6365,
+      "sha256": "5607949627894b8b7c77a35b90fe2f11d6d1f96d25175a20296be036638312ba"
+    }
+  ],
+  "currentFiles": [
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 495593,
+      "sha256": "37c5be589c8c9be57a3f3e56914520a2e880bd4b43c690bda4d4c76637031ef8"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 84986,
+      "sha256": "9335fcbedc8adab8ea8a2088181948abe09f7c0aecc6e3c0c2568100e20a94fe"
+    },
+    {
+      "file": "docs/development/README.md",
+      "bytes": 10791,
+      "sha256": "aeaeb04fd7faab37221190a22fec5d2e948b6a1c67f133d73fa60a624bf0a7cb"
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 111576,
+      "sha256": "dc803e1f27f090c9757289a0b39d308aaf0d573e4a8c3758ff8217a3dc9723e8"
+    },
+    {
+      "file": "docs/development/family-growth-requirement-traceability.md",
+      "bytes": 27395,
+      "sha256": "f8c3dd025bbf2c00ace5b5eec097d21ed8b0ae154b007fa3865b2cd1f7de42e9"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md",
+      "bytes": 8589,
+      "sha256": "22d9cc281d61ce8c653f193f1e12e74d304d56bf9a24dd9d7f13a1f7caa0051b"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "bytes": 168973,
+      "sha256": "eecf2e4a4bb2f6bb68b044a395a1ab8795e5a35793951af634696958861353b5"
+    },
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 26976,
+      "sha256": "0772b61e87bd3eace5bca8172d13ef2c56a7746d7464cf42833066610cf7a1b9"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/engineering-closure.md",
+      "bytes": 3962,
+      "sha256": "ff68e40548b81c1f0b189675b38ff61bc56362c6ce68fce04a42c8cf3139ab9f"
+    }
+  ],
+  "results": [
+    {
+      "name": "red",
+      "suites": 1,
+      "passed": 171,
+      "failed": 79,
+      "pending": 0,
+      "success": false
+    },
+    {
+      "name": "green",
+      "suites": 1,
+      "passed": 250,
+      "failed": 0,
+      "pending": 0,
+      "success": true
+    }
+  ],
+  "checks": {
+    "documentation": "PASS",
+    "targetedEslint": "PASS",
+    "gitDiffCheck": "PASS"
+  },
+  "businessTestsRerun": false,
+  "artifacts": [
+    {
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/engineering-closure/red.json",
+      "bytes": 563734,
+      "sha256": "778d7e8d5043df4a68881afcb8d331320bb9d93bda93314b029f5dd8dfdf9ebe"
+    },
+    {
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/engineering-closure/red.log",
+      "bytes": 149121,
+      "sha256": "792a3430437b79e002c4c6e1d08817e7d42061f2e02d83fbdec43311609d6767"
+    },
+    {
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/engineering-closure/green.json",
+      "bytes": 121789,
+      "sha256": "190f01756ba2d61010837745248748fb1d147edd068cf8161afbd6e9e058f613"
+    },
+    {
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/engineering-closure/green.log",
+      "bytes": 29053,
+      "sha256": "0dbae016b71d6d947e47d18b6a16f0130bea4b025c442d178cc5e873e3dd8a6f"
+    },
+    {
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/engineering-closure/docs.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/engineering-closure/lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/engineering-closure/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
 import TaskCompletionEvidence from '../../components/family/TaskCompletionEvidence';
 import TaskHelpPanel from '../../components/family/TaskHelpPanel';
+import LearningSourceLink from '../../components/family/LearningSourceLink';
 import { useTaskCompletion } from '../../hooks/useTaskCompletion';
 import { captureSession, isSessionCurrent, loadChildSession, subscribeSessionChanges } from '../../services/familySession';
 import { completeOwnTask, getOwnTask, getOwnCompletionRecovery, recoverOwnTaskCompletion,
@@ -27,6 +28,7 @@ const ChildTaskDetail = ({ scope, session, scopeKey, grade }) => {
         <span className={`child-dimension is-${task.dimension}`}>{DIMENSION_LABELS[task.dimension] || task.dimension}</span>
         <h1>{task.title}</h1>
       </div></div>
+      <LearningSourceLink item={task} role="student" />
       <section className="child-section" aria-labelledby="task-plan-title">
         <h2 id="task-plan-title">任务安排</h2>
         {task.description && <p>{task.description}</p>}

@@ -1,0 +1,513 @@
+diff --git a/backend/tests/t2/learningSources.integration.test.js b/backend/tests/t2/learningSources.integration.test.js
+index dd2317c8..5efa9c7a 100644
+--- a/backend/tests/t2/learningSources.integration.test.js
++++ b/backend/tests/t2/learningSources.integration.test.js
+@@ -17,6 +17,23 @@ beforeAll(async () => {
+ });
+ afterAll(async () => { await runtime?.stop(); });
+ 
++test('child no-ID lost creation is discoverable by read only, isolated from sibling and stable on repeated reads', async () => {
++  runtime.dropNextResponse({ method: 'POST', path: '/api/mistakes' });
++  await expect(child.post('/api/mistakes', { subject: 'Synthetic unknown child creation', reason: 'concept',
++    sourceTaskId: fixture.tasks.child.taskId, questionMediaIds: [], childAnswerMediaIds: [] })).rejects.toThrow();
++  const before = await runtime.inspect();
++  const saved = before.database.Mistake.filter(row => row.subject === 'Synthetic unknown child creation');
++  expect(saved).toHaveLength(1);
++  const list = expectData(await child.get('/api/mistakes?mastered=false&pageSize=100')).items;
++  expect(list.filter(row => row.mistakeId === saved[0]._id)).toHaveLength(1);
++  expect(list.find(row => row.mistakeId === saved[0]._id)).toMatchObject({ familyId: fixture.familyId,
++    childId: fixture.actors.child.childId, sourceTaskId: fixture.tasks.child.taskId });
++  expect(expectData(await sibling.get('/api/mistakes?mastered=false&pageSize=100')).items
++    .some(row => row.mistakeId === saved[0]._id)).toBe(false);
++  await child.get('/api/mistakes?mastered=false&pageSize=100');
++  expect(await runtime.inspect()).toEqual(before);
++});
++
+ test('formal services connect task, manual mistake, correction, review and due reminder without automatic mastery', async () => {
+   const source = fixture.tasks.child;
+   const original = expectData(await child.get(taskUrl(source))).task;
+diff --git a/docs/development/family-self-directed-learning-mvp-gate.md b/docs/development/family-self-directed-learning-mvp-gate.md
+index 352a91bf..ea0b5be2 100644
+--- a/docs/development/family-self-directed-learning-mvp-gate.md
++++ b/docs/development/family-self-directed-learning-mvp-gate.md
+@@ -5093,3 +5093,23 @@ SL-05 的 T6 工程实施见本节，原产品级 PLANNED 追踪仍保留 T7 综
+ T6 status 仍 IN_PROGRESS、总门禁 OPEN；仅工程实现和本地合成验证完成，不擅自作用户关闭批准。
+ DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、T5 两项 OPEN_NONBLOCKING、T4 现状、
+ 高级恢复/新回收 REMAINDER_DEFERRED、T7/T8/T9 责任不变。Kubernetes 来源配置仍属部署前未完成项。
++
++### 26.3 孩子无 ID 未知创建 P2 修订（待复评）
++
++用户授权修复本次独立复审发现的 P2：关闭表单会丢失未知创建保护，且提示核对列表但没有实际重读。
++原 §26.2 冻结候选和失败证据保留；本节修订及其新增证据单独记录，不能把原 667/47 结果称为本次源码验证。
++
++- 显式 GET 列表等待真实返回；失败保留未知状态和重试，不调用 POST。成功读取不自动解锁，用户需明确核对。
++- 创建前保留按家庭/孩子隔离的 sessionStorage 单一未知位；不存题目、附件或 token；关闭/刷新/退出切回保护仍在。
++  当前 403 清理私有界面；旧会话响应不能更新新身份或删除原未知标记；既有 retainSubmitted 保留已提交附件。
++- 自查补强：列表只发现新行，保留其他错题草稿和未知 PATCH 锁；反例首次 1 failed / 30 passed，修复后纳入全量。
++- 非作者静态复核另发现同身份迟到列表重新加入刚掌握旧行的竞态；永久反例 1 failed / 31 passed，
++  已同时排除读取开始时已有 ID 与当前 ID，不恢复读取期间已移除的旧行。
++- 本次修复、测试和候选证据见 [P2 修订与评审记录](./evidence/t6-unknown-create-p2-2026-10-27/README.md)。
++  实现状态 READY_FOR_REVIEW，尚未取得用户关闭批准；T6 status IN_PROGRESS、gate OPEN 不变。
++- 最终前端 52 suites / 676 tests、构建、正式 HTTP 5 suites / 27 tests、T6 Chromium 4/4、
++  文档状态与定向门禁 183/183、受影响 lint 通过。Parfit 最终非作者静态复核无新增具体发现，
++  未冒称独立重复运行。两次自查/复核红灯及浏览器 GET 故障夹具错误失败均保留。
++
++保留历史失败、Docker INCOMPLETE_FAILED、DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING、
++高级恢复/新回收 REMAINDER_DEFERRED；仅本地合成验证，不提交、推送、合并或部署。
+diff --git a/docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md b/docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md
+index 29e28cfe..b389b0f1 100644
+--- a/docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md
++++ b/docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md
+@@ -54,6 +54,13 @@
+ - 两步分别明确保存。取消第二步不删除第一步；第二步失败保留本身份表单，并提供查看已保存对象入口。
+ - 明确创建响应未知不等于失败：提示先检查列表，不自动再次创建；沿既有明确 resourceId 的媒体
+   pending 恢复入口接续，不发明全局幂等 UUID 或通用恢复机制。
++- 孩子创建无 resourceId 时提供显式“重新读取错题列表”，等待当前身份下的真实 GET 完成；
++  网络/5xx/损坏响应保留未知保护和重试入口，403 清空私有视图。列表只发现新增行，不能重置其他行草稿或未知 PATCH 锁。
++  提交前在 sessionStorage 以 familyId/childId 为范围保存单一未知位，不保存题目、附件、命令或凭据；
++  关闭表单、刷新及同标签退出/切回原孩子不丢失保护，其他孩子不继承该标记或私有内容，旧响应不能解除新会话的锁。
++  存储不可用时不提交；明确写前拒绝或已知成功可清除标记。无 ID 结果未知不能自动再次 POST。
++  列表成功后仍需用户明确“已核对列表，结束本次记录”；过滤/分页列表未出现不证明保存失败。
++  本标记不是跨设备恢复或创建幂等协议，关闭整个标签、清除浏览器存储后的持久恢复不在本次承诺内。
+ - 媒体 pending/传输未知后用既有 retainSubmitted 接管已提交草稿，关闭、卸载或切换身份不能删除
+   可能已绑定的媒体。恢复原对象不以来源再次可读为前提；来源故障和媒体 pending 同时发生须测试。
+ - 明确 SOURCE_SERVICE_UNAVAILABLE 在创建时发生于写入前，可保留表单人工重试，不能当成所有
+diff --git a/frontend/web/src/__tests__/family/T6LearningSources.test.js b/frontend/web/src/__tests__/family/T6LearningSources.test.js
+index bda89b5e..ceff692a 100644
+--- a/frontend/web/src/__tests__/family/T6LearningSources.test.js
++++ b/frontend/web/src/__tests__/family/T6LearningSources.test.js
+@@ -7,7 +7,7 @@ import TasksPage from '../../pages/family/TasksPage';
+ import ChildMistakesPage from '../../pages/child/ChildMistakesPage';
+ import * as parentApi from '../../services/familyApi';
+ import * as childApi from '../../services/childApi';
+-import { saveParentSession, saveChildSession } from '../../services/familySession';
++import { saveParentSession, saveChildSession, clearChildSession } from '../../services/familySession';
+ 
+ jest.mock('../../services/familyApi');
+ jest.mock('../../services/childApi');
+@@ -37,6 +37,131 @@ const show = (url = '/app/mistakes') => {
+ };
+ const childSession = n => ({ token: `synthetic-child-${n}`, child: { childId: id(n), familyId: id(4), name: `孩子${n}` } });
+ 
++async function unknownChildCreate(user) {
++  childApi.createOwnMistake.mockRejectedValueOnce(new Error('response lost'));
++  await user.click(await screen.findByRole('button', { name: '记录新错题' }));
++  await user.type(screen.getByLabelText('科目'), '未知创建');
++  await user.selectOptions(screen.getByLabelText('错因'), 'concept');
++  await user.click(screen.getByRole('button', { name: '保存', exact: true }));
++  await screen.findByText(/保存结果尚未确认/);
++}
++
++test.each(['offline', 503])('child no-ID create requires explicit list read; close and %s retain protection without POST', async failure => {
++  const user = userEvent.setup(); show('/child/mistakes');
++  await unknownChildCreate(user);
++  await user.click(screen.getByRole('button', { name: '取消', exact: true }));
++  expect(screen.getByRole('button', { name: '记录新错题' })).toBeDisabled();
++  childApi.listOwnMistakes.mockRejectedValueOnce(failure === 'offline' ? new Error('offline') : fail(503, 'UNAVAILABLE'));
++  await user.click(screen.getByRole('button', { name: '重新读取错题列表' }));
++  await waitFor(() => expect(childApi.listOwnMistakes).toHaveBeenCalledTimes(2));
++  expect(screen.getByRole('button', { name: '记录新错题' })).toBeDisabled();
++  expect(screen.queryByRole('button', { name: '已核对列表，结束本次记录' })).not.toBeInTheDocument();
++  childApi.listOwnMistakes.mockResolvedValueOnce({ items: [mistake({ subject: '未知创建' })] });
++  await user.click(screen.getByRole('button', { name: '重新读取错题列表' }));
++  await screen.findByRole('button', { name: '已核对列表，结束本次记录' });
++  expect(screen.getByRole('button', { name: '记录新错题' })).toBeDisabled();
++  await user.click(screen.getByRole('button', { name: '已核对列表，结束本次记录' }));
++  expect(screen.getByRole('button', { name: '记录新错题' })).toBeEnabled();
++  expect(childApi.createOwnMistake).toHaveBeenCalledTimes(1);
++  expect(childApi.deleteOwnPrivateMedia).not.toHaveBeenCalled();
++});
++
++test('child create abandoned during account change stays protected after return and ignores old successful POST', async () => {
++  const user = userEvent.setup(), pending = deferred();
++  childApi.createOwnMistake.mockReturnValueOnce(pending.promise);
++  show('/child/mistakes');
++  await user.click(await screen.findByRole('button', { name: '记录新错题' }));
++  await user.type(screen.getByLabelText('科目'), '不可持久化的私有内容');
++  await user.selectOptions(screen.getByLabelText('错因'), 'concept');
++  await user.click(screen.getByRole('button', { name: '保存', exact: true }));
++  expect(screen.getByRole('button', { name: '取消', exact: true })).toBeDisabled();
++  expect(Object.values(sessionStorage).join('')).not.toContain('不可持久化');
++  await act(async () => clearChildSession());
++  expect(screen.queryByLabelText('科目')).not.toBeInTheDocument();
++  await act(async () => saveChildSession(childSession(2)));
++  expect(await screen.findByRole('button', { name: '记录新错题' })).toBeDisabled();
++  await act(async () => pending.resolve({ mistake: mistake({ knowledgePointName: '旧提交响应' }) }));
++  expect(screen.queryByText('旧提交响应')).not.toBeInTheDocument();
++  expect(screen.getByRole('button', { name: '记录新错题' })).toBeDisabled();
++  expect(childApi.createOwnMistake).toHaveBeenCalledTimes(1);
++});
++
++test('child unknown-create empty list is not proof of failed creation or automatic permission to repost', async () => {
++  const user = userEvent.setup(); show('/child/mistakes');
++  await unknownChildCreate(user);
++  await user.click(screen.getByRole('button', { name: '重新读取错题列表' }));
++  await screen.findByRole('button', { name: '已核对列表，结束本次记录' });
++  expect(screen.getByRole('button', { name: '记录新错题' })).toBeDisabled();
++  expect(screen.getByText(/列表未出现不代表保存失败/)).toBeInTheDocument();
++  expect(childApi.createOwnMistake).toHaveBeenCalledTimes(1);
++});
++
++test('child unknown-create list discovery preserves other row drafts and unknown PATCH locks', async () => {
++  const user = userEvent.setup(), first = mistake({ knowledgePointName: '未决旧错题' });
++  childApi.listOwnMistakes.mockResolvedValue({ items: [first] });
++  childApi.reviewOwnMistake.mockRejectedValue(new Error('PATCH response lost'));
++  show('/child/mistakes');
++  await user.type(await screen.findByLabelText('我的解释（未决旧错题）'), '原草稿');
++  await user.click(screen.getByRole('button', { name: '我还不会 未决旧错题' }));
++  await screen.findByText(/保存结果尚未确认/);
++  await unknownChildCreate(user);
++  childApi.listOwnMistakes.mockResolvedValueOnce({ items: [{ ...first }, mistake({ mistakeId: id(6), knowledgePointName: '新发现错题' })] });
++  await user.click(screen.getByRole('button', { name: '重新读取错题列表' }));
++  await screen.findByRole('heading', { name: '新发现错题' });
++  expect(screen.getByLabelText('我的解释（未决旧错题）')).toHaveValue('原草稿');
++  expect(screen.getByRole('button', { name: '我还不会 未决旧错题' })).toBeDisabled();
++  expect(childApi.reviewOwnMistake).toHaveBeenCalledTimes(1);
++  expect(childApi.createOwnMistake).toHaveBeenCalledTimes(1);
++});
++
++test('child unknown-create late list cannot reinsert a row mastered while the read was pending', async () => {
++  const user = userEvent.setup(), first = mistake({ knowledgePointName: '即将掌握的错题' }), pending = deferred();
++  childApi.listOwnMistakes.mockResolvedValue({ items: [first] });
++  childApi.reviewOwnMistake.mockResolvedValue({ mistake: { ...first, mastered: true, reviewed: true } });
++  show('/child/mistakes');
++  await screen.findByRole('heading', { name: '即将掌握的错题' });
++  await unknownChildCreate(user);
++  childApi.listOwnMistakes.mockReturnValueOnce(pending.promise);
++  await user.click(screen.getByRole('button', { name: '重新读取错题列表' }));
++  await user.click(screen.getByRole('button', { name: '我已经会了 即将掌握的错题' }));
++  await waitFor(() => expect(screen.queryByRole('heading', { name: '即将掌握的错题' })).not.toBeInTheDocument());
++  await act(async () => pending.resolve({ items: [{ ...first }, mistake({ mistakeId: id(6), knowledgePointName: '应发现的新错题' })] }));
++  expect(await screen.findByRole('heading', { name: '应发现的新错题' })).toBeInTheDocument();
++  expect(screen.queryByRole('heading', { name: '即将掌握的错题' })).not.toBeInTheDocument();
++  expect(childApi.reviewOwnMistake).toHaveBeenCalledTimes(1);
++  expect(childApi.createOwnMistake).toHaveBeenCalledTimes(1);
++});
++
++test('child unknown-create marker survives remount and account return; late list cannot leak or unlock', async () => {
++  const user = userEvent.setup(), view = show('/child/mistakes');
++  await unknownChildCreate(user);
++  view.unmount(); show('/child/mistakes');
++  expect(await screen.findByRole('button', { name: '记录新错题' })).toBeDisabled();
++  const pending = deferred(); childApi.listOwnMistakes.mockReturnValueOnce(pending.promise);
++  await user.click(screen.getByRole('button', { name: '重新读取错题列表' }));
++  await act(async () => saveChildSession(childSession(9)));
++  expect(await screen.findByRole('button', { name: '记录新错题' })).toBeEnabled();
++  await act(async () => pending.resolve({ items: [mistake({ knowledgePointName: '迟到的私有错题' })] }));
++  expect(screen.queryByText('迟到的私有错题')).not.toBeInTheDocument();
++  expect(screen.queryByRole('button', { name: '已核对列表，结束本次记录' })).not.toBeInTheDocument();
++  await act(async () => saveChildSession(childSession(2)));
++  expect(await screen.findByRole('button', { name: '记录新错题' })).toBeDisabled();
++  expect(screen.getByRole('button', { name: '重新读取错题列表' })).toBeEnabled();
++  expect(childApi.createOwnMistake).toHaveBeenCalledTimes(1);
++});
++
++test.each([403, 'foreign'])('child unknown-create list %s clears private view and keeps protection', async rejection => {
++  const user = userEvent.setup(); show('/child/mistakes');
++  await unknownChildCreate(user);
++  if (rejection === 403) childApi.listOwnMistakes.mockRejectedValueOnce(fail(403, 'CHILD_ACCESS_DENIED'));
++  else childApi.listOwnMistakes.mockResolvedValueOnce({ items: [mistake({ childId: id(9), knowledgePointName: '他人错题' })] });
++  await user.click(screen.getByRole('button', { name: '重新读取错题列表' }));
++  await waitFor(() => expect(screen.queryByRole('button', { name: '记录新错题' })).not.toBeInTheDocument());
++  expect(screen.queryByText('他人错题')).not.toBeInTheDocument();
++  expect(screen.queryByLabelText('科目')).not.toBeInTheDocument();
++  expect(childApi.createOwnMistake).toHaveBeenCalledTimes(1);
++});
++
+ beforeEach(() => {
+   jest.resetAllMocks(); localStorage.clear(); sessionStorage.clear();
+   saveParentSession({ token: 'synthetic-parent', user: { id: id(1), name: '家长', role: 'parent' } });
+diff --git a/frontend/web/src/pages/child/ChildMistakesPage.js b/frontend/web/src/pages/child/ChildMistakesPage.js
+index bf8fd6c0..e60445a0 100644
+--- a/frontend/web/src/pages/child/ChildMistakesPage.js
++++ b/frontend/web/src/pages/child/ChildMistakesPage.js
+@@ -37,6 +37,13 @@ const normalizedMediaIds = (item, field, legacyField) => {
+   return item?.[legacyField] ? [item[legacyField]] : [];
+ };
+ 
++// Only an uncertainty bit survives a form/session change, never the command or private contents.
++const unknownCreateKey = child => `family-growth.child-mistake-unknown.v1:${child.familyId}:${child.childId}`;
++const hasUnknownCreate = child => {
++  try { return sessionStorage.getItem(unknownCreateKey(child)) !== null; }
++  catch { return true; }
++};
++
+ const ChildMediaCollection = ({ isCurrent, onDenied, ...props }) => {
+   const guard = fn => async (...args) => {
+     if (!isCurrent()) throw new Error('当前身份已变化');
+@@ -71,7 +78,7 @@ const useActiveMistakeView = ownerCurrent => {
+   return useCallback(() => alive.current && ownerCurrent(), [ownerCurrent]);
+ };
+ 
+-const ChildMistakeCreateForm = ({ onCancel, onCreated, setError, setMessage, isCurrent: ownerCurrent, onDenied, source }) => {
++const ChildMistakeCreateForm = ({ onCancel, onCreated, onWriteStart, onWriteSettled, onWriteRejected, setError, setMessage, isCurrent: ownerCurrent, onDenied, source }) => {
+   const isCurrent = useActiveMistakeView(ownerCurrent);
+   const mediaDrafts = useDraftMedia({ deleteMedia: deleteOwnPrivateMedia, canDelete: ownerCurrent });
+   const [subject, setSubject] = useState(source?.subject || '');
+@@ -93,6 +100,7 @@ const ChildMistakeCreateForm = ({ onCancel, onCreated, setError, setMessage, isC
+   const save = async (event) => {
+     event.preventDefault();
+     if (!subject.trim() || !reason.trim() || writing.current || recovery || uploadCount > 0 || !isCurrent()) return;
++    if (!onWriteStart()) return;
+     writing.current = true;
+     setSaving(true);
+     setMessage('');
+@@ -116,14 +124,16 @@ const ChildMistakeCreateForm = ({ onCancel, onCreated, setError, setMessage, isC
+       if (!isCurrent()) return;
+       if ([401, 403].includes(error?.response?.status)) { onDenied(); return; }
+       if (sourceErrorCode(error) === 'SOURCE_SERVICE_UNAVAILABLE') {
++        onWriteRejected();
+         [...questionMediaIds, ...childAnswerMediaIds].forEach(id => mediaDrafts.replace(id));
+         setError('来源服务暂不可用，本次尚未保存，可手动重试。');
+       } else if (!error?.response || error.response.status >= 500) {
+         const id = error?.response?.data?.error?.details?.resourceId;
+         setRecovery({ id: isLearningId(id) ? id : null });
+         setError('保存结果尚未确认，附件已保留。请先读取原错题或核对列表。');
+-      } else setError(messageFor(error, '暂时无法记录错题。'));
++      } else { onWriteRejected(); setError(messageFor(error, '暂时无法记录错题。')); }
+     } finally {
++      onWriteSettled();
+       if (isCurrent()) { writing.current = false; setSaving(false); }
+     }
+   };
+@@ -149,7 +159,7 @@ const ChildMistakeCreateForm = ({ onCancel, onCreated, setError, setMessage, isC
+       {source && <p>来源任务：{source.title}</p>}
+       {recovery && (recovery.id
+         ? <button type="button" className="child-secondary-button" disabled={saving} onClick={readRecovery}>继续读取原错题</button>
+-        : <p>请关闭表单并核对错题列表，避免重复记录。</p>)}
++        : <p>保存结果未知，请重新读取错题列表并核对，避免重复记录。</p>)}
+       <fieldset className="task-editor-fields" disabled={saving || Boolean(recovery)}>
+       <label>
+         科目
+@@ -176,7 +186,7 @@ const ChildMistakeCreateForm = ({ onCancel, onCreated, setError, setMessage, isC
+         </button>
+       </div>
+       </fieldset>
+-      <button type="button" className="child-secondary-button" disabled={uploadCount > 0} onClick={close}>取消</button>
++      <button type="button" className="child-secondary-button" disabled={saving || uploadCount > 0} onClick={close}>取消</button>
+     </form>
+   );
+ };
+@@ -292,6 +302,11 @@ const ScopedChildMistakesPage = ({ session, child }) => {
+   const [target, setTarget] = useState(null);
+   const [hiddenSources, setHiddenSources] = useState(() => new Set());
+   const [blocked, setBlocked] = useState(false);
++  const [unknownCreate, setUnknownCreate] = useState(() => hasUnknownCreate(child));
++  const [createBusy, setCreateBusy] = useState(false);
++  const [listReading, setListReading] = useState(false);
++  const [listChecked, setListChecked] = useState(false);
++  const listReadInFlight = useRef(false), manualList = useRef(false);
+   const alive = useRef(true), denied = useRef(false), generation = useRef(0);
+   const focusedDetail = useRef(null);
+   const isCurrent = useCallback(() => alive.current && !denied.current && isSessionCurrent(session), [session]);
+@@ -305,6 +320,7 @@ const ScopedChildMistakesPage = ({ session, child }) => {
+   }, []);
+ 
+   useEffect(() => {
++    if (manualList.current) return;
+     if (isLearningDenied(resource.error)) clearPrivate();
+     else if (isCurrent()) {
+       const listed = resource.data?.items || [], focused = focusedDetail.current;
+@@ -312,6 +328,46 @@ const ScopedChildMistakesPage = ({ session, child }) => {
+     }
+   }, [resource.data, resource.error, clearPrivate, isCurrent]);
+ 
++  const clearUnknownCreate = () => {
++    if (!isCurrent()) return false;
++    try { sessionStorage.removeItem(unknownCreateKey(child)); }
++    catch { setError('无法保存核对状态，请保留当前页面并重试。'); return false; }
++    setUnknownCreate(false); setListChecked(false);
++    return true;
++  };
++  const startCreate = () => {
++    if (!isCurrent() || unknownCreate || hasUnknownCreate(child)) return false;
++    try { sessionStorage.setItem(unknownCreateKey(child), '1'); }
++    catch { setError('无法保存提交保护状态，本次尚未提交。'); return false; }
++    setUnknownCreate(true); setListChecked(false); setCreateBusy(true);
++    return true;
++  };
++  const readUnknownCreateList = async () => {
++    if (!isCurrent() || !unknownCreate || createBusy || listReadInFlight.current) return;
++    const existingIds = new Set(items.map(item => item.mistakeId));
++    listReadInFlight.current = true; manualList.current = true;
++    setListReading(true); setListChecked(false); setError(''); setShowForm(false);
++    try {
++      const result = await listOwnMistakes({ mastered: false, pageSize: 100 });
++      if (!isCurrent()) return;
++      if (!Array.isArray(result?.items)) throw new Error('Invalid mistake list');
++      const listed = result.items.map(row => {
++        if (!isLearningId(row?.mistakeId)) throw new Error('Invalid mistake ID');
++        return assertLearningScope(row, 'mistakeId', row.mistakeId, child.familyId, child.childId);
++      });
++      // Discovery must not replace other rows' drafts or release their unknown PATCH locks.
++      setItems(current => [...current, ...listed.filter(row => !existingIds.has(row.mistakeId)
++        && !current.some(item => item.mistakeId === row.mistakeId))]);
++      setListChecked(true);
++    } catch (cause) {
++      if (!isCurrent()) return;
++      if (isLearningDenied(cause)) clearPrivate();
++      else setError('读取失败，保存结果仍未知，请重试读取；不要重复记录。');
++    } finally {
++      if (isCurrent()) { listReadInFlight.current = false; setListReading(false); }
++    }
++  };
++
+   const readDetail = async next => {
+     if (!isCurrent()) return;
+     const version = ++generation.current;
+@@ -348,6 +404,7 @@ const ScopedChildMistakesPage = ({ session, child }) => {
+ 
+   const created = (mistake) => {
+     if (!isCurrent()) return;
++    clearUnknownCreate();
+     setItems((current) => [mistake, ...current.filter((item) => item.mistakeId !== mistake.mistakeId)]);
+     setShowForm(false);
+     setMessage('错题已记录。');
+@@ -373,10 +430,16 @@ const ScopedChildMistakesPage = ({ session, child }) => {
+       {error && <p className="child-form-error" role="alert">{error}</p>}
+       <div className="child-inline-actions child-mistake-create-actions">
+         {!showForm && !blocked && (
+-          <button type="button" className="child-primary-button" disabled={Boolean(busyId)} onClick={() => { setSource(null); setMessage(''); setError(''); setShowForm(true); }}>记录新错题</button>
++          <button type="button" className="child-primary-button" disabled={Boolean(busyId) || unknownCreate} onClick={() => { setSource(null); setMessage(''); setError(''); setShowForm(true); }}>记录新错题</button>
+         )}
+       </div>
++      {unknownCreate && !blocked && <div className="child-mistake-recovery" role="region" aria-label="未知记录核对">
++        <p>上一笔记录尚待核对。列表未出现不代表保存失败，请勿重复提交。</p>
++        <button type="button" className="child-secondary-button" disabled={createBusy || listReading || Boolean(busyId)} onClick={readUnknownCreateList}>重新读取错题列表</button>
++        {listChecked && <button type="button" className="child-secondary-button" onClick={clearUnknownCreate}>已核对列表，结束本次记录</button>}
++      </div>}
+       {showForm && !blocked && <ChildMistakeCreateForm isCurrent={isCurrent} onDenied={clearPrivate} source={source}
++        onWriteStart={startCreate} onWriteRejected={clearUnknownCreate} onWriteSettled={() => { if (isCurrent()) setCreateBusy(false); }}
+         onCancel={() => setShowForm(false)} onCreated={created} setError={setError} setMessage={setMessage} />}
+       {target && !blocked && <button type="button" className="child-secondary-button" disabled={Boolean(busyId)} onClick={() => readDetail(target)}>重试读取</button>}
+       {resource.state === 'loading' && <FamilyDataState state="loading" />}
+diff --git a/tests/e2e/t2/learningSources.spec.js b/tests/e2e/t2/learningSources.spec.js
+index 729c9b92..7e49524b 100644
+--- a/tests/e2e/t2/learningSources.spec.js
++++ b/tests/e2e/t2/learningSources.spec.js
+@@ -20,6 +20,58 @@ async function login(page, name) {
+   }
+ }
+ 
++test('child lost create keeps its lock across close, failed list read, reload and account return without repost', async ({ page }, info) => {
++  await login(page, 'child');
++  await page.goto(runtime.webUrl + '/child/mistakes');
++  await page.getByRole('button', { name: '记录新错题', exact: true }).click();
++  await page.getByLabel('科目', { exact: true }).fill('Synthetic unknown child record');
++  await page.getByRole('combobox', { name: /错因/ }).selectOption('concept');
++  await page.getByLabel('题目附件', { exact: true }).setInputFiles({ name: fixture.image.name,
++    mimeType: fixture.image.mimeType, buffer: fixture.image.bytes });
++  await expect(page.getByRole('button', { name: '保存', exact: true })).toBeEnabled();
++  let posts = 0;
++  page.on('request', request => { if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/mistakes') posts += 1; });
++  runtime.dropNextResponse({ method: 'POST', path: '/api/mistakes' });
++  await page.getByRole('button', { name: '保存', exact: true }).click();
++  await expect(page.getByRole('alert')).toContainText('保存结果尚未确认');
++  await page.getByRole('button', { name: '取消', exact: true }).click();
++  await expect(page.getByRole('button', { name: '记录新错题', exact: true })).toBeDisabled();
++  const before = await runtime.inspect();
++  const saved = before.database.Mistake.filter(row => row.subject === 'Synthetic unknown child record');
++  expect(saved).toHaveLength(1); expect(saved[0].questionMediaIds).toHaveLength(1);
++  const interruptList = async route => {
++    if (route.request().method() === 'GET') await route.abort('connectionfailed');
++    else await route.continue();
++  };
++  await page.route('**/api/mistakes?*', interruptList);
++  await page.getByRole('button', { name: '重新读取错题列表', exact: true }).click();
++  await expect(page.getByRole('alert')).toContainText('保存结果仍未知');
++  await expect(page.getByRole('button', { name: '记录新错题', exact: true })).toBeDisabled();
++  await expect(page.getByRole('button', { name: '已核对列表，结束本次记录', exact: true })).toHaveCount(0);
++  await page.unroute('**/api/mistakes?*', interruptList);
++  await page.reload();
++  await expect(page.getByRole('button', { name: '记录新错题', exact: true })).toBeDisabled();
++  await page.goto(runtime.webUrl + '/child/me');
++  await page.getByRole('button', { name: '退出孩子端', exact: true }).click();
++  await login(page, 'sibling'); await page.goto(runtime.webUrl + '/child/mistakes');
++  await expect(page.getByRole('button', { name: '记录新错题', exact: true })).toBeEnabled();
++  await expect(page.getByText('Synthetic unknown child record', { exact: true })).toHaveCount(0);
++  await page.goto(runtime.webUrl + '/child/me');
++  await page.getByRole('button', { name: '退出孩子端', exact: true }).click();
++  await login(page, 'child'); await page.goto(runtime.webUrl + '/child/mistakes');
++  await expect(page.getByRole('button', { name: '记录新错题', exact: true })).toBeDisabled();
++  await page.getByRole('button', { name: '重新读取错题列表', exact: true }).click();
++  await expect(page.getByRole('button', { name: '已核对列表，结束本次记录', exact: true })).toBeVisible();
++  await expect(page.getByRole('heading', { name: 'Synthetic unknown child record', exact: true })).toBeVisible();
++  await page.screenshot({ path: info.outputPath('child-unknown-create-list.png'), fullPage: true });
++  await page.getByRole('button', { name: '已核对列表，结束本次记录', exact: true }).click();
++  await expect(page.getByRole('button', { name: '记录新错题', exact: true })).toBeEnabled();
++  expect(posts).toBe(1);
++  const after = await runtime.inspect();
++  for (const collection of ['Mistake', 'Reference', 'Asset', 'Ledger']) expect(after.database[collection]).toEqual(before.database[collection]);
++  expect((await parent.get(`/api/media/${saved[0].questionMediaIds[0]}/access`)).status).toBe(200);
++});
++
+ test('real pages connect source work, manual mistake image, correction review and child source revisit', async ({ page, browser }, info) => {
+   const childContext = await browser.newContext({ viewport: { width: 820, height: 1180 }, isMobile: true, hasTouch: true });
+   const childPage = await childContext.newPage(), errors = [];
+diff --git a/docs/development/evidence/t6-unknown-create-p2-2026-10-27/README.md b/docs/development/evidence/t6-unknown-create-p2-2026-10-27/README.md
+new file mode 100644
+index 00000000..3651d65c
+--- /dev/null
++++ b/docs/development/evidence/t6-unknown-create-p2-2026-10-27/README.md
+@@ -0,0 +1,61 @@
++# T6 孩子无 ID 未知创建 P2 修订与评审
++
++状态：READY_FOR_REVIEW；T6 IN_PROGRESS / OPEN。仅本地合成，不提交、推送、合并或部署。
++
++## 范围与候选
++
++原候选为 [T6 工程冻结记录](../t6-engineering-2026-10-27/README.md)，原补丁 SHA-256
++`b7a0ab2e674f82c8e8a2ea41ea54a5c0354453dfda213bd8e3335caa616f50c0`。
++本次是增量修订，不覆盖原冻结文件或历史失败；新 [candidate.patch](./candidate.patch) 相对于该候选，
++[validation.json](./validation.json) 记录逐文件前后哈希、补丁和本轮归档证据哈希。
++
++本轮仅调整 ChildMistakesPage、前端永久反例、既有正式 HTTP/浏览器测试及相关设计/门禁。
++未改变后端 API、数据库、来源鉴权、创建幂等契约或高级恢复范围。
++
++## 修订与自查
++
++1. 原 P2：无 ID 未知创建后关闭表单，旧列表不重读且新建重新可用。新增显式列表 GET，失败不解锁，成功后明确人工核对，不自动 POST。
++2. 提交前保存按家庭/孩子隔离的 sessionStorage 单一未知位，不存私有正文、媒体、token 或原命令。关闭表单/刷新/同标签重登与切回保留标记；其他身份看不到旧内容。已知成功或明确拒绝才自动清除，失权仅清理视图。
++3. 页面存储不可用时不发送创建。提交响应迟到，即使同孩子重新登录，也不能清除新会话保护。原 resourceId 恢复和 retainSubmitted 保持。
++4. 自查发现首次列表替换实现会重置旧行草稿和未知 PATCH 锁，先补反例见红后改为仅合入新发现的行。旧行只能由其原详情重读解除未知锁。
++5. 有过滤和分页的列表不是未提交证明；人工结束核对不会重发原请求。标签关闭/存储清除/跨设备的无 ID 持久恢复不在本次范围，不宣称全局幂等。
++6. Parfit 非作者静态复核指出同身份迟到列表会重新加入读取期间刚掌握的旧行。永久反例复现 1 failed / 31 passed；合并同时排除读取开始时已有 ID 和当前 ID，避免恢复已移除的旧行。
++
++## 验证证据
++
++- 原实现永久反例：4 failed / 23 passed，分别覆盖关闭+失败读取、重挂载/切换迟到响应、403、跨孩子响应。
++- 首个修订前端全量：52 suites / 674 tests passed；自查补强反例：1 failed / 30 passed，保留红灯。
++- 自查草稿补强后的前端全量：52 suites / 675 tests passed；构建成功。追加迟到列表反例后最终结果见下面检查点。新增总计 9 个永久案例，原断言未删除或放宽。
++- 正式来源 HTTP：5/5，通过实际 Gateway 与业务服务证明丢失 POST 响应后原记录能由 GET 发现、兄弟隔离和重复 GET 零写。
++- 浏览器首轮：1 failed / 3 passed。失败为既有运行时拒绝 GET 故障注入 `T2_INVALID_FAULT`，非产品失败；改用浏览器网络中断，无 mock 成功响应或运行时扩容，修订轮 4/4 通过。
++- 最终构建浏览器及完整正式 HTTP 结果见 validation.json 和下面最终检查点；不复用早期构建冒称最终验证。
++
++最终检查点：完整前端 52 suites / 676 tests passed，构建成功；完整正式 HTTP 5 suites / 27 tests passed；
++最终构建的 T6 Chromium 4/4 passed（26.6 秒）；文档状态检查通过，状态门禁定向
++1 suite / 183 tests passed；受影响四文件 lint 和 diff 检查通过。原 675 项与早期浏览器结果均作为中间检查点保留。
++
++作者自查完成；Parfit 非作者最终静态复核确认 `existingIds` 在 await 前捕获、只合入新增行、身份及 scope 校验未削弱，
++在本次修订范围内无新增具体发现。该复核未运行重复测试，不冒称独立运行证据；本文件所有最终执行计数均为主线程实测。
++实现与测试已提交本地复评，未代替用户批准关闭 P2 或 T6。
++
++正式 HTTP/页面使用真实 Gateway、user、homework、resource、progress、analytics、notification、临时 Mongo 副本集和临时媒体。
++POST 丢响应由现有合成代理注入，GET 断网由 Playwright route.abort 注入；组件测试 mock API。
++浏览器验证含上传图片、POST 成功丢响应、关闭、GET 断网、刷新、真实退出/兄弟登录/原孩子重登、人工核对、单 POST 和绑定附件保留。
++Browser plugin not available；复用仓库 Playwright，不新增测试框架。Chromium 不代表 WebKit 或真实 iPad。
++
++## 复验命令
++
++使用 Node 22.15.0 和现有依赖，前端命令在 frontend/web 下执行。
++
++```sh
++CI=true /usr/local/bin/node node_modules/react-scripts/scripts/test.js --watchAll=false --testPathIgnorePatterns=src/__tests__/legacy --runInBand
++CI=true /usr/local/bin/node node_modules/react-scripts/scripts/build.js
++/usr/local/bin/node node_modules/jest/bin/jest.js --config=backend/tests/t2/jest.config.js --runInBand
++T2_WEB_BUILD="$PWD/frontend/web/build" /usr/local/bin/node node_modules/@playwright/test/cli.js test --config=playwright.t2.config.js tests/e2e/t2/learningSources.spec.js
++/usr/local/bin/node scripts/check-family-docs.js
++git diff --check
++```
++
++原始证据归档在忽略目录 `release-gate-artifacts/t6-unknown-create-p2-2026-10-27/`，不把本地日志误当公开提交内容。
++历史家庭全量失败、Docker INCOMPLETE_FAILED、DEVICE_PENDING、两项 T5 非阻断补测和高级恢复/新回收 REMAINDER_DEFERRED 均保持。
++不重跑未改变的完整后端历史套件，不宣称本轮全仓发布门禁通过；T6 总门禁不提前关闭。
