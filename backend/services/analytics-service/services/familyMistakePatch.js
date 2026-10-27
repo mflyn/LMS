@@ -1,5 +1,8 @@
+const { parseLearningSource } = require('../../../common/services/learningSource');
+
 const PARENT_CREATE_FIELDS = [
   'childId',
+  'sourceTaskId',
   'subject',
   'knowledgePointId',
   'knowledgePointName',
@@ -19,6 +22,7 @@ const PARENT_CREATE_FIELDS = [
 
 const CHILD_CREATE_FIELDS = [
   'childId',
+  'sourceTaskId',
   'subject',
   'reason',
   'questionMediaIds',
@@ -32,7 +36,7 @@ const CHILD_CREATE_FIELDS = [
   'reviewReminderDate'
 ];
 
-const PARENT_PATCH_FIELDS = PARENT_CREATE_FIELDS.filter((field) => field !== 'childId');
+const PARENT_PATCH_FIELDS = PARENT_CREATE_FIELDS.filter((field) => !['childId', 'sourceTaskId'].includes(field));
 
 const CHILD_PATCH_FIELDS = [
   'questionMediaIds',
@@ -145,6 +149,7 @@ const parseFamilyMistakeInput = ({ body = {}, role, operation }) => {
   allowed.forEach((field) => {
     if (hasOwn(body, field)) data[field] = body[field];
   });
+  if (operation === 'create') Object.assign(data, parseLearningSource(body));
   return normalizeMistakeMediaInput(data);
 };
 

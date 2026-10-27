@@ -6,6 +6,7 @@ import DailyLearningPlanPanel from '../../components/family/DailyLearningPlanPan
 import { useChildDataResource } from '../../hooks/useChildDataResource';
 import { listOwnReminders, listOwnTasks } from '../../services/childApi';
 import { captureSession, isSessionCurrent, loadChildSession, subscribeSessionChanges } from '../../services/familySession';
+import { isLearningId, mistakeUrl } from '../../services/learningSources';
 
 const DIMENSION_LABELS = {
   moral: '德育',
@@ -103,7 +104,10 @@ const ChildTodayContent = ({ session, child }) => {
         {reminders.data && reminderItems.length === 0 && <p className="child-empty-copy">今天暂无提醒。</p>}
         <ul className="child-reminder-list">
           {reminderItems.map((item, index) => (
-            <li key={item.sourceId || item.reminderId || `${item.type}-${index}`}>{item.title}</li>
+            <li key={item.sourceId || item.reminderId || `${item.type}-${index}`}>{item.title}
+              {item.type === 'mistake_review' && item.childId === child.childId && isLearningId(item.sourceId)
+                && <Link className="child-back-link" to={mistakeUrl('student', item.sourceId)}>复习此错题</Link>}
+            </li>
           ))}
         </ul>
       </section>

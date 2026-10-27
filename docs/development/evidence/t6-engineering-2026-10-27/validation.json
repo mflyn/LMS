@@ -1,0 +1,1890 @@
+{
+  "schemaVersion": 1,
+  "at": "2026-10-27T11:21:55.446Z",
+  "base": "62cedfa35dc581c494179f7edda82aba0754b94e",
+  "scope": "LOCAL_SYNTHETIC_ONLY / NO_COMMIT / NO_PUSH / NO_MERGE / NO_DEPLOY",
+  "gate": "OPEN",
+  "device": "DEVICE_PENDING",
+  "deferred": "REMAINDER_DEFERRED",
+  "dockerAudit": "INCOMPLETE_FAILED",
+  "history": {
+    "preserved": true,
+    "firstFamilyRun": {
+      "suitesFailed": 3,
+      "suitesPassed": 149,
+      "testsFailed": 5,
+      "testsPassed": 4380,
+      "jsonUnavailable": "Native PATH-dependent git spawn error caused circular JSON serialization; text log preserved"
+    }
+  },
+  "results": [
+    {
+      "name": "family-backend-revised",
+      "success": true,
+      "suites": 152,
+      "passed": 4388,
+      "failed": 0,
+      "pending": 0,
+      "startTime": 1793098869974,
+      "suitesSummary": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "status": "passed",
+          "assertions": 183,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionIsolation.test.js",
+          "status": "passed",
+          "assertions": 2,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/checkGitClean.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRecoveryReadiness.test.js",
+          "status": "passed",
+          "assertions": 142,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionRetentionReadiness.test.js",
+          "status": "passed",
+          "assertions": 142,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRestore.test.js",
+          "status": "passed",
+          "assertions": 118,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionPrivacyReadiness.test.js",
+          "status": "passed",
+          "assertions": 84,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionThreeServiceHttp.test.js",
+          "status": "passed",
+          "assertions": 59,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionPrivacyHttp.test.js",
+          "status": "passed",
+          "assertions": 29,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionProductionAssembly.test.js",
+          "status": "passed",
+          "assertions": 121,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/growthTasks.test.js",
+          "status": "passed",
+          "assertions": 28,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRecoveryReader.test.js",
+          "status": "passed",
+          "assertions": 128,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetirementRestore.test.js",
+          "status": "passed",
+          "assertions": 63,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaReferenceOperationService.test.js",
+          "status": "passed",
+          "assertions": 92,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetentionFairness.test.js",
+          "status": "passed",
+          "assertions": 12,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionConfirmationService.test.js",
+          "status": "passed",
+          "assertions": 33,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRecoveryCapture.test.js",
+          "status": "passed",
+          "assertions": 61,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionMediaPrivacy.test.js",
+          "status": "passed",
+          "assertions": 34,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetirementHttp.test.js",
+          "status": "passed",
+          "assertions": 12,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionGuardReadiness.test.js",
+          "status": "passed",
+          "assertions": 38,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionService.test.js",
+          "status": "passed",
+          "assertions": 67,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js",
+          "status": "passed",
+          "assertions": 55,
+          "failed": []
+        },
+        {
+          "file": "backend/services/analytics-service/__tests__/familyMistakes.test.js",
+          "status": "passed",
+          "assertions": 16,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaReferenceOperationReadiness.test.js",
+          "status": "passed",
+          "assertions": 81,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/rewards.test.js",
+          "status": "passed",
+          "assertions": 14,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionReadiness.test.js",
+          "status": "passed",
+          "assertions": 53,
+          "failed": []
+        },
+        {
+          "file": "backend/services/analytics-service/__tests__/familyMistakeSources.test.js",
+          "status": "passed",
+          "assertions": 33,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionProtocolDispatch.test.js",
+          "status": "passed",
+          "assertions": 61,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetirement.test.js",
+          "status": "passed",
+          "assertions": 44,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/growthLogs.test.js",
+          "status": "passed",
+          "assertions": 11,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionAttachmentIsolation.test.js",
+          "status": "passed",
+          "assertions": 65,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionHttp.test.js",
+          "status": "passed",
+          "assertions": 39,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionCompose.test.js",
+          "status": "passed",
+          "assertions": 62,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionPublicHttp.test.js",
+          "status": "passed",
+          "assertions": 39,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/routes/parentMembership.test.js",
+          "status": "passed",
+          "assertions": 18,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionRetirement.test.js",
+          "status": "passed",
+          "assertions": 79,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionMutationService.test.js",
+          "status": "passed",
+          "assertions": 74,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionReferenceReadiness.test.js",
+          "status": "passed",
+          "assertions": 69,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionActivationReadiness.test.js",
+          "status": "passed",
+          "assertions": 26,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionProductionAssembly.test.js",
+          "status": "passed",
+          "assertions": 41,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/routes/children.test.js",
+          "status": "passed",
+          "assertions": 10,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/models/User.test.js",
+          "status": "passed",
+          "assertions": 29,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskHelpService.test.js",
+          "status": "passed",
+          "assertions": 44,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/knowledgePoints.test.js",
+          "status": "passed",
+          "assertions": 9,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionStarHttp.test.js",
+          "status": "passed",
+          "assertions": 25,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionMutationHttp.test.js",
+          "status": "passed",
+          "assertions": 44,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionOperations.test.js",
+          "status": "passed",
+          "assertions": 13,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetirementRecoveryHttp.test.js",
+          "status": "passed",
+          "assertions": 2,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/familyMedia.test.js",
+          "status": "passed",
+          "assertions": 43,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionRetentionConfiguration.test.js",
+          "status": "passed",
+          "assertions": 46,
+          "failed": []
+        },
+        {
+          "file": "backend/services/analytics-service/__tests__/familyMistakeMediaSaga.test.js",
+          "status": "passed",
+          "assertions": 11,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionMediaClientContract.test.js",
+          "status": "passed",
+          "assertions": 14,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/knowledgePointHistory.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionReadHttp.test.js",
+          "status": "passed",
+          "assertions": 38,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/internalStars.test.js",
+          "status": "passed",
+          "assertions": 6,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/services/childAvatarMediaService.test.js",
+          "status": "passed",
+          "assertions": 52,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRestoreProof.test.js",
+          "status": "passed",
+          "assertions": 90,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/routes/authContract.test.js",
+          "status": "passed",
+          "assertions": 7,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/growthTaskMediaReferences.test.js",
+          "status": "passed",
+          "assertions": 15,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionUpload.test.js",
+          "status": "passed",
+          "assertions": 21,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/routes/family.test.js",
+          "status": "passed",
+          "assertions": 8,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/models/FamilyMembership.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/routes/childMediaReferences.test.js",
+          "status": "passed",
+          "assertions": 8,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionUploadSafety.test.js",
+          "status": "passed",
+          "assertions": 21,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/scripts/repairFamilyRelationships.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/services/notification-service/__tests__/familyNotifications.test.js",
+          "status": "passed",
+          "assertions": 14,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetentionEnrollment.test.js",
+          "status": "passed",
+          "assertions": 10,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/familyMediaPrivacy.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskSources.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionProductionStartup.test.js",
+          "status": "passed",
+          "assertions": 13,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/integration/progress-flow.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/routes/progress.test.js",
+          "status": "passed",
+          "assertions": 6,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/server.test.js",
+          "status": "passed",
+          "assertions": 7,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionMediaService.test.js",
+          "status": "passed",
+          "assertions": 16,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/startup.test.js",
+          "status": "passed",
+          "assertions": 9,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaReferences.test.js",
+          "status": "passed",
+          "assertions": 19,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/serverLifecycle.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/middleware/auth.test.js",
+          "status": "passed",
+          "assertions": 9,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetentionOperations.test.js",
+          "status": "passed",
+          "assertions": 10,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/routes/authLogout.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/services/user-service/__tests__/models/User.mediaReferences.test.js",
+          "status": "passed",
+          "assertions": 15,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/models/Progress.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaUserDeletionRecoveryModel.test.js",
+          "status": "passed",
+          "assertions": 34,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/routes/reports.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/services/progress-service/__tests__/integration/progress-flow.simple.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/models/Homework.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/common/repositories/__tests__/familyReadRepository.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRecoveryJournal.test.js",
+          "status": "passed",
+          "assertions": 64,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/serverLifecycle.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaCleanup.test.js",
+          "status": "passed",
+          "assertions": 3,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskAttachmentMediaService.test.js",
+          "status": "passed",
+          "assertions": 114,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/models/GrowthTask.mediaReferences.test.js",
+          "status": "passed",
+          "assertions": 57,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/models/GrowthTaskCompletionOperation.test.js",
+          "status": "passed",
+          "assertions": 42,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionStorageReadiness.test.js",
+          "status": "passed",
+          "assertions": 63,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaReferenceOperationModel.test.js",
+          "status": "passed",
+          "assertions": 31,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/models/DailyLearningPlan.test.js",
+          "status": "passed",
+          "assertions": 10,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/services/growthTaskChecklist.test.js",
+          "status": "passed",
+          "assertions": 45,
+          "failed": []
+        },
+        {
+          "file": "backend/services/homework-service/__tests__/starAwardClient.test.js",
+          "status": "passed",
+          "assertions": 9,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionActivation.test.js",
+          "status": "passed",
+          "assertions": 48,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetirementJournal.test.js",
+          "status": "passed",
+          "assertions": 70,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaDeletionJournal.test.js",
+          "status": "passed",
+          "assertions": 19,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRecoveryEvidence.test.js",
+          "status": "passed",
+          "assertions": 107,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/completionProtocolIsolation.test.js",
+          "status": "passed",
+          "assertions": 7,
+          "failed": []
+        },
+        {
+          "file": "backend/services/analytics-service/__tests__/task6Startup.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/common/services/__tests__/completionRetirementClient.test.js",
+          "status": "passed",
+          "assertions": 72,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/dailyLearningPlanRoutes.test.js",
+          "status": "passed",
+          "assertions": 16,
+          "failed": []
+        },
+        {
+          "file": "backend/services/analytics-service/__tests__/server.test.js",
+          "status": "passed",
+          "assertions": 8,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/task5Deployment.test.js",
+          "status": "passed",
+          "assertions": 18,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/task5QualityGate.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/serverLifecycle.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/task6Startup.test.js",
+          "status": "passed",
+          "assertions": 11,
+          "failed": []
+        },
+        {
+          "file": "backend/common/services/__tests__/learningSource.test.js",
+          "status": "passed",
+          "assertions": 36,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/orphanRetentionRuntime.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaProcessor.test.js",
+          "status": "passed",
+          "assertions": 33,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/proxyIdentity.integration.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/privateMediaStore.test.js",
+          "status": "passed",
+          "assertions": 12,
+          "failed": []
+        },
+        {
+          "file": "backend/common/__tests__/createBaseApp.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/services/notification-service/__tests__/familyNotificationSourceRepository.test.js",
+          "status": "passed",
+          "assertions": 3,
+          "failed": []
+        },
+        {
+          "file": "backend/common/services/__tests__/completionMediaReferenceClient.test.js",
+          "status": "passed",
+          "assertions": 99,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaModels.test.js",
+          "status": "passed",
+          "assertions": 8,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/familyTask6Routes.test.js",
+          "status": "passed",
+          "assertions": 3,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/familyTask5Routes.test.js",
+          "status": "passed",
+          "assertions": 3,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/clamAvScanner.test.js",
+          "status": "passed",
+          "assertions": 8,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/task6Deployment.test.js",
+          "status": "passed",
+          "assertions": 8,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/productionErrorContract.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/common/utils/__tests__/familyAccess.test.js",
+          "status": "passed",
+          "assertions": 12,
+          "failed": []
+        },
+        {
+          "file": "backend/common/middleware/__tests__/errorHandler.test.js",
+          "status": "passed",
+          "assertions": 22,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/familyTask7Routes.test.js",
+          "status": "passed",
+          "assertions": 2,
+          "failed": []
+        },
+        {
+          "file": "backend/common/middleware/__tests__/requestValidator.test.js",
+          "status": "passed",
+          "assertions": 21,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/composeFamilySecuritySmoke.test.js",
+          "status": "passed",
+          "assertions": 2,
+          "failed": []
+        },
+        {
+          "file": "backend/common/test/__tests__/httpTestHarness.test.js",
+          "status": "passed",
+          "assertions": 9,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/familyTask12Routes.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionEvidenceEncodingBudget.test.js",
+          "status": "passed",
+          "assertions": 6,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/familyNoLegacyDataRoute.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/completionOperationsCli.test.js",
+          "status": "passed",
+          "assertions": 20,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/authLogoutRoute.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/common/middleware/__tests__/auth.test.js",
+          "status": "passed",
+          "assertions": 18,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/secureMediaDeployment.test.js",
+          "status": "passed",
+          "assertions": 6,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaSecurity.test.js",
+          "status": "passed",
+          "assertions": 15,
+          "failed": []
+        },
+        {
+          "file": "backend/common/services/__tests__/mediaReferenceClient.test.js",
+          "status": "passed",
+          "assertions": 24,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/mediaCapability.test.js",
+          "status": "passed",
+          "assertions": 13,
+          "failed": []
+        },
+        {
+          "file": "backend/common/services/__tests__/completionMediaUnbindClient.test.js",
+          "status": "passed",
+          "assertions": 29,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/releaseGate.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/identityEnvelope.test.js",
+          "status": "passed",
+          "assertions": 3,
+          "failed": []
+        },
+        {
+          "file": "backend/common/middleware/__tests__/gatewayIdentity.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/composeFamilySmoke.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/common/services/__tests__/mongoTransaction.test.js",
+          "status": "passed",
+          "assertions": 3,
+          "failed": []
+        },
+        {
+          "file": "backend/gateway/__tests__/portConfig.test.js",
+          "status": "passed",
+          "assertions": 3,
+          "failed": []
+        },
+        {
+          "file": "backend/services/resource-service/__tests__/userDeletionRecoveryDependencies.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/common/utils/__tests__/logRedaction.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/common/config/__tests__/logger.middleware.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/common/contracts/__tests__/apiExamples.test.js",
+          "status": "passed",
+          "assertions": 3,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "name": "formal-http-all",
+      "success": true,
+      "suites": 5,
+      "passed": 26,
+      "failed": 0,
+      "pending": 0,
+      "startTime": 1793098780476,
+      "suitesSummary": [
+        {
+          "file": "backend/tests/t2/runtime.integration.test.js",
+          "status": "passed",
+          "assertions": 5,
+          "failed": []
+        },
+        {
+          "file": "backend/tests/t2/completion.integration.test.js",
+          "status": "passed",
+          "assertions": 9,
+          "failed": []
+        },
+        {
+          "file": "backend/tests/t2/dailyLearningPlan.integration.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/tests/t2/help.integration.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        },
+        {
+          "file": "backend/tests/t2/learningSources.integration.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "name": "source-final-http",
+      "success": true,
+      "suites": 1,
+      "passed": 4,
+      "failed": 0,
+      "pending": 0,
+      "startTime": 1793099434400,
+      "suitesSummary": [
+        {
+          "file": "backend/tests/t2/learningSources.integration.test.js",
+          "status": "passed",
+          "assertions": 4,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "name": "task11-integration",
+      "success": true,
+      "suites": 4,
+      "passed": 6,
+      "failed": 0,
+      "pending": 0,
+      "startTime": 1793099399569,
+      "suitesSummary": [
+        {
+          "file": "backend/tests/task11/family-growth-demo-flow.integration.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        },
+        {
+          "file": "backend/tests/task11/apiClient.integration.test.js",
+          "status": "passed",
+          "assertions": 2,
+          "failed": []
+        },
+        {
+          "file": "backend/tests/task11/runtime.integration.test.js",
+          "status": "passed",
+          "assertions": 2,
+          "failed": []
+        },
+        {
+          "file": "backend/tests/task11/redaction.integration.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "name": "status-final",
+      "success": true,
+      "suites": 2,
+      "passed": 184,
+      "failed": 0,
+      "pending": 0,
+      "startTime": 1793100078986,
+      "suitesSummary": [
+        {
+          "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "status": "passed",
+          "assertions": 183,
+          "failed": []
+        },
+        {
+          "file": "backend/common/deployment/__tests__/checkGitClean.test.js",
+          "status": "passed",
+          "assertions": 1,
+          "failed": []
+        }
+      ]
+    }
+  ],
+  "frontend": {
+    "suites": 52,
+    "passed": 667,
+    "failed": 0,
+    "command": [
+      "/bin/zsh",
+      "-lc",
+      "CI=true DEBUG_PRINT_LIMIT=0 NODE_PATH='/Users/linmingfeng/GitHub PRJ/LMS/frontend/web/node_modules:/Users/linmingfeng/GitHub PRJ/LMS/node_modules' /usr/local/bin/node node_modules/react-scripts/scripts/test.js --watchAll=false --runInBand --testPathIgnorePatterns=src/__tests__/legacy"
+    ],
+    "exitCode": 0
+  },
+  "browsers": {
+    "finalChromium": 47,
+    "task11Chromium": 4,
+    "actualIpad": false,
+    "webkit": "NOT_RUN_THIS_BATCH"
+  },
+  "runtime": {
+    "mode": "enabled",
+    "cleanup": false,
+    "services": [
+      "gateway",
+      "user",
+      "homework",
+      "resource",
+      "progress",
+      "analytics",
+      "notification"
+    ],
+    "database": "temporary MongoDB replica set, shared synthetic database",
+    "storage": "temporary synthetic files",
+    "componentTests": "mock APIs permitted; formal HTTP/browser use real factories and real service requests"
+  },
+  "candidateFiles": [
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 25609,
+      "sha256": "81e7c788dc28d54a88aee38e577f9239bb884549e99fd76a63aed1fbe9ee56b0"
+    },
+    {
+      "file": "backend/common/services/__tests__/learningSource.test.js",
+      "bytes": 13408,
+      "sha256": "03cf82e07e5538b661ed6836a0f0cbc2e454a926b3c7d4c9a9e96d108b673ab2"
+    },
+    {
+      "file": "backend/common/services/learningSource.js",
+      "bytes": 7049,
+      "sha256": "9c73857b207d124abfe6d768891aadf5d3c70454bb0be8c040baef74f21e5b9f"
+    },
+    {
+      "file": "backend/services/analytics-service/__tests__/familyMistakeSources.test.js",
+      "bytes": 21317,
+      "sha256": "c7393559a7f376d2fe12c99a7a25e192094273c1a3fc8a83e6046f5d036241f7"
+    },
+    {
+      "file": "backend/services/analytics-service/app.js",
+      "bytes": 2598,
+      "sha256": "ce587e08e30996d94b43fc7fdd4829b34b40a1a895a2c106a0f60231385d6979"
+    },
+    {
+      "file": "backend/services/analytics-service/jest.attachments.config.js",
+      "bytes": 631,
+      "sha256": "a37bce3b593e08a53543b051594e62ee8a8df763d968dd36ee90e44f2ea3d241"
+    },
+    {
+      "file": "backend/services/analytics-service/models/FamilyMistake.js",
+      "bytes": 5037,
+      "sha256": "fb532316d0b2b109aa103df6f0167f01396b8586fd258ef0f871d7fde010264a"
+    },
+    {
+      "file": "backend/services/analytics-service/routes/familyMistakes.js",
+      "bytes": 16314,
+      "sha256": "f925b4b7f157d230f8eb3830b6d57d93833259486f99c41b331129ba351304e0"
+    },
+    {
+      "file": "backend/services/analytics-service/services/familyMistakePatch.js",
+      "bytes": 5263,
+      "sha256": "2ff1872438332f1123d1d39ea154a940e314158195a35989af4f2621e2a01460"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionIsolation.test.js",
+      "bytes": 3652,
+      "sha256": "1fb33ebff1485d8715f5133fd6998705ac202938ebd13e28ae8545da03f56a64"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionProductionAssembly.test.js",
+      "bytes": 98660,
+      "sha256": "b82868ba63c52634e46c60231557b93a5d37bd7a5e10527d9cd6b6079c4f246f"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/growthTaskSources.test.js",
+      "bytes": 9770,
+      "sha256": "f54fe66a116e9de7e2bc4a3c2f874a28e9074ab9910359d84df9878aaf371785"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/setup.js",
+      "bytes": 2220,
+      "sha256": "72206410227a4922d61ccf3d45985efc62b9c4364bbcd89de749f07e9cedb0b1"
+    },
+    {
+      "file": "backend/services/homework-service/models/GrowthTask.js",
+      "bytes": 11758,
+      "sha256": "89f66575e5faebb3e114ae1da490f9fa45465341212f307c844ed5556587747c"
+    },
+    {
+      "file": "backend/services/homework-service/routes/growthTaskCompletionProduction.js",
+      "bytes": 6023,
+      "sha256": "89983b478a3c740695c6a441475ca305af238f16be7a1397f2810fc6e4563909"
+    },
+    {
+      "file": "backend/services/homework-service/routes/growthTasks.js",
+      "bytes": 22340,
+      "sha256": "8f63244ce6cb09c94dc48a63fc618e55b0013668980f39e915845973faa81e8e"
+    },
+    {
+      "file": "backend/services/homework-service/server.js",
+      "bytes": 11590,
+      "sha256": "65b929c4d37985cd14e194e3f8dbaca4606b73e6e56d343905dd039c389288be"
+    },
+    {
+      "file": "backend/services/homework-service/services/growthTaskCompletionReadService.js",
+      "bytes": 8023,
+      "sha256": "c86da5a231f158f0e8d86f470b901b1b0905e5c8f17ed77f0735007ba7d5db34"
+    },
+    {
+      "file": "backend/services/homework-service/services/growthTaskPatch.js",
+      "bytes": 5853,
+      "sha256": "f37754c47eb2f3b6752ff8b92145ad43c53cae7876973d7df15a7dc4a0262243"
+    },
+    {
+      "file": "backend/tests/t2/learningSources.integration.test.js",
+      "bytes": 9656,
+      "sha256": "83a720d1f4ad73c114a7574622e8c4b1df2a6dfe9830292cffefd61ac240f2b4"
+    },
+    {
+      "file": "backend/tests/t2/serviceRuntime.js",
+      "bytes": 13967,
+      "sha256": "18cfe6212234e46e26be114f9eed3afbab03c07270681360b765ca0f4eedf5ad"
+    },
+    {
+      "file": "docker-compose.china.yml",
+      "bytes": 7520,
+      "sha256": "b79566b6739ecac16504db452f16741f2f9b1b663a73c7c3c8959fe0c077191b"
+    },
+    {
+      "file": "docker-compose.family.yml",
+      "bytes": 10289,
+      "sha256": "c2b7a07f1b6dcfcee51b8634f2e273b873081c11edc372d1381b342af71fccf6"
+    },
+    {
+      "file": "docker-compose.ubuntu.yml",
+      "bytes": 8281,
+      "sha256": "8d989e312602892fc02684056971c478ea6f5af86455b96c25688d41215cfd2e"
+    },
+    {
+      "file": "docker-compose.yml",
+      "bytes": 8366,
+      "sha256": "04afabc46e5ab5b4b871a2641f0bdac4bc395dbff714318c83873f71f5ef1028"
+    },
+    {
+      "file": "docs/api/family-learning-tracker-api.md",
+      "bytes": 130027,
+      "sha256": "6abbde2549e2a11783af44ce35c99ced35cbb7eaa2c80f558f27f0e96ce7c5fa"
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 111564,
+      "sha256": "4c1a479d3caf73550e0634e302cdfdc5a90ef3c037ff1ef8c57374eeccf32033"
+    },
+    {
+      "file": "docs/development/README.md",
+      "bytes": 10565,
+      "sha256": "bf33c31d4363ec13f25fa7e68f66f07baa0180c35b388bf77dbe83b6ab6842b1"
+    },
+    {
+      "file": "docs/development/family-growth-requirement-traceability.md",
+      "bytes": 27292,
+      "sha256": "7c2a8f3a2fc7d132bfa0e759ebc54fc96e6fc252ade893c67f883238eba53052"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 488995,
+      "sha256": "6650d9aec09c068bb5670af667fa665bb841739d10fea4bed25f3e69e19b18fa"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 84210,
+      "sha256": "af39ecf046598f2187f3978cdd01f3724756434ac3fc3c083454d6e2a629e82b"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md",
+      "bytes": 7568,
+      "sha256": "c4c8b5e3cbca63ba3d5d7c46c93669ca16570767f6a9e1426a69e0b05d8b6843"
+    },
+    {
+      "file": "docs/user-guide/child-guide.md",
+      "bytes": 6152,
+      "sha256": "9603d1807ffd20f54c6f971e354fd85b7dc8aba2284a12f049089808db7f4be0"
+    },
+    {
+      "file": "docs/user-guide/parent-guide.md",
+      "bytes": 13096,
+      "sha256": "dfaf6cbe218c98954ce08904f28dbe55639160034df3c5129dd5c42727cc8f1e"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/T6AppNavigation.test.js",
+      "bytes": 9979,
+      "sha256": "f43736c377a229b3b8c909fde2728f1a795a71fc87f670bd8d1e8d09e567b317"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/T6LearningSources.test.js",
+      "bytes": 22130,
+      "sha256": "c14bf97a36bb56a02e5be94108055be2219ff70d40f76cb157e45179cfaaeae6"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/Task9LogsMistakes.test.js",
+      "bytes": 13174,
+      "sha256": "7fdfa6017df52f8cc5f2e5407e7ed5c031e9c609b83aa13b5faf3b60fc9bc96e"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TaskCompletionReview.test.js",
+      "bytes": 6322,
+      "sha256": "da3a59a32b02a3b2f64872be2d3bf455a16a94e5f3f52e5aa660a3b5b8220781"
+    },
+    {
+      "file": "frontend/web/src/components/family/LearningSourceLink.js",
+      "bytes": 1017,
+      "sha256": "15332b7678547cbd11912782f9f2d402af61bba19e04074f56ea596cfe5adf66"
+    },
+    {
+      "file": "frontend/web/src/components/family/TaskCompletionReview.js",
+      "bytes": 4437,
+      "sha256": "ffd46331f7c64d7edbb02ba11ac45937332e9e0f4ec3c21e96d8c7e7ac3d7955"
+    },
+    {
+      "file": "frontend/web/src/hooks/useTaskCompletion.js",
+      "bytes": 12990,
+      "sha256": "deba2af0db1db5c663d7257c11a179b40b69054697df027b2cb7f1dfe1b1d9db"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildMistakesPage.js",
+      "bytes": 20904,
+      "sha256": "c48e51906b95ebf099de1876c46695368d2c7696c193c4b5868a11487ab15108"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildTaskPage.js",
+      "bytes": 4627,
+      "sha256": "6d1a04e35a50ead88dc0f7c73918b87605abf4da4019fc2b6b1cf4b68ae0ce66"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildTodayPage.js",
+      "bytes": 5699,
+      "sha256": "1447abc246b76b612da244b635e10752eadecad025b75a6fd786f1a6dfd8609b"
+    },
+    {
+      "file": "frontend/web/src/pages/family/MistakesPage.js",
+      "bytes": 20331,
+      "sha256": "01c0e0ef67521f2ab7ee7903b159b1f3a94a6c3eb6bb60e3ce3d2586d6f65e03"
+    },
+    {
+      "file": "frontend/web/src/pages/family/RemindersPage.js",
+      "bytes": 5835,
+      "sha256": "26a3b21a92ec5ffdd23fd7d21f5da9ea5ed74879eebf58d649e00ec6d6799268"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TasksPage.js",
+      "bytes": 31130,
+      "sha256": "4bb3b1bf06ac5f16cd28c97eed7eb6cdcb2fc2bbafaef2e9bf82159195bc24ce"
+    },
+    {
+      "file": "frontend/web/src/services/childApi.js",
+      "bytes": 6790,
+      "sha256": "3873770a86d68f3c34aa5e56b95e1ba23203a991700743a391ea12ee8ca2c57e"
+    },
+    {
+      "file": "frontend/web/src/services/familyApi.js",
+      "bytes": 9970,
+      "sha256": "08c4ea0aeca053860e59a784346948f8b052b5a94b17488c1c6b7666477a55c9"
+    },
+    {
+      "file": "frontend/web/src/services/learningSources.js",
+      "bytes": 1213,
+      "sha256": "7a5e8e478ddeef5064c42ae08cb09ee1455d280c588aca29970646be78079b3a"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "bytes": 167882,
+      "sha256": "2e10a3260c65e0b9b32d9dd54ff8a0fe554adfc26b779dc24b7334bb7cc21255"
+    },
+    {
+      "file": "scripts/release-family-gate.sh",
+      "bytes": 3472,
+      "sha256": "929fa7de096a8883e314cccabccd894dcee4de4aec0f3731b66c4c2e7d1c5add"
+    },
+    {
+      "file": "tests/e2e/t2/learningSources.spec.js",
+      "bytes": 12646,
+      "sha256": "c5287a2654e7913c016a13b1365c99cea6887ebd08f88ee0870a9c109a300b28"
+    }
+  ],
+  "patch": {
+    "file": "docs/development/evidence/t6-engineering-2026-10-27/candidate.patch",
+    "sha256": "b7a0ab2e674f82c8e8a2ea41ea54a5c0354453dfda213bd8e3335caa616f50c0",
+    "excludes": "evidence directory to avoid self-reference"
+  },
+  "artifacts": [
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/browser-all.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/browser-all.log",
+      "bytes": 7334,
+      "sha256": "ba805ca4ff1c0f1c34cfce180f24c5fa02f21c5d834e21ec90d0d0c3676d6c38"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/browser-final-p2.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/browser-final-p2.log",
+      "bytes": 7333,
+      "sha256": "2919f4f969adb1ec44839a304399cecc5a7febcdab6d6187018d3781cd14f05e"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/browser-new-final.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/browser-new-final.log",
+      "bytes": 739,
+      "sha256": "e9694b85cce894e9d294d0e3d40f510d7e0a5d902d21c664cb9363a880e2c87b"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/browser-new-revised.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/browser-new-revised.log",
+      "bytes": 2611,
+      "sha256": "7e739c787af387afa252d82603eac51f7d724eaa9b9df798f6d9e82962867a15"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/browser-new.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/browser-new.log",
+      "bytes": 2232,
+      "sha256": "c0d2ff0a164414eccb82794f609b5fd2dc238b8e770caa4af1b1e6b9b16b3f0d"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/build-p2-final.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/build-p2-final.log",
+      "bytes": 895,
+      "sha256": "8c8316b552b62a1f5cc706424d9bac1d21fdc558e9fe48caa7a6f4b5916eb961"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/docs-current.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/docs-current.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/family-backend-revised.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/family-backend-revised.json",
+      "bytes": 1590264,
+      "sha256": "e528e3537610fd344e94a171a137b37c85aa79a010c99d3772cf4cdfab6590f9"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/family-backend-revised.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/family-backend-revised.log",
+      "bytes": 46051,
+      "sha256": "f66c48198c718f86b9a32327086b3cfb509be789027242a3b30a4094c72ade9b"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/family-backend.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/family-backend.log",
+      "bytes": 2294822,
+      "sha256": "ce5da897c5f8b2a76a4a24c9950ffebe06b442f83e5231e6ad3d1cf7410254e9"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/formal-http-all.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/formal-http-all.json",
+      "bytes": 13048,
+      "sha256": "294828768c1fb71885d9960c3af792e66b13b18ee3ce5d4fbd4d20f833614819"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/formal-http-all.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/formal-http-all.log",
+      "bytes": 1425,
+      "sha256": "72890c7ce3df1c2ba32a11b6432085f3944e0cb93861bc6a31f29c2f5a15c86d"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/homework.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/homework.json",
+      "bytes": 142223,
+      "sha256": "fd894e1b52089ec8b1904b46d5a55ed0d41f6dbb9fbe4207267c6880dd03331f"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/homework.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/homework.log",
+      "bytes": 6305,
+      "sha256": "30799c16a8a21673e211881d1e6b95a9f57ec398ef3decc53f460d3f57534e6e"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/legacy-isolation.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/legacy-isolation.json",
+      "bytes": 1520,
+      "sha256": "30257906d618d0e14bcab006f641fea3fc9d425713c3e87d02451450403c9f85"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/legacy-isolation.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/legacy-isolation.log",
+      "bytes": 1374,
+      "sha256": "879a2ee293eb5e8ebb5053736ec7895cf4c6df82cacdaa89125e4b44bb638587"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/lint-final-backend.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/lint-final-backend.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/source-final-http.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/source-final-http.json",
+      "bytes": 2353,
+      "sha256": "dcf2aa66c25a1ad5b606e06e7e2d8aacc09f19118ec1552d5814990abde39a1f"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/source-final-http.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/source-final-http.log",
+      "bytes": 978,
+      "sha256": "b51c186e28ade918022f6d6911c5576822f1f95128575d072c4aeeded885775a"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/sources-http.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/sources-http.json",
+      "bytes": 2351,
+      "sha256": "d7aa58160e5bb1ce4777c14741a4f978c41d0bc9fd478c723c1d4b0656cb54b1"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/sources-http.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/sources-http.log",
+      "bytes": 969,
+      "sha256": "c5882b7e397e770a4fa105bb37ea5c0d0fe804fb9d17d353450ab588aa040b7a"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/status-final.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/status-final.json",
+      "bytes": 86357,
+      "sha256": "bcc1276bd5adb8c2e5e3c32f212e18fced06a347a1edeb9b4ed7c275215d7f43"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/status-final.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/status-final.log",
+      "bytes": 594,
+      "sha256": "3a4ff6d4bdeac49f3b8cf8d7cf18778e2231d08eabe9a31830051f26e560bf09"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/status-gate.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/status-gate.json",
+      "bytes": 86234,
+      "sha256": "e7d960176df1a370564691e65cfeae5acf30578bf120f88db24876b0c8c561bf"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/status-gate.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/status-gate.log",
+      "bytes": 542,
+      "sha256": "d37b995c8a8925acf9f4a84cf6ad45f0bc6e27be8bc8149c69a912bc474817e9"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/task11-browser.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/task11-browser.log",
+      "bytes": 2295,
+      "sha256": "8e3ddd2c9969f8e71e6c68555a286b53d48a5c4f6cd9215027f2a4090be25b64"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/task11-integration.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/task11-integration.json",
+      "bytes": 3803,
+      "sha256": "f8efbab57f4ff9b6f45d0422930e615dd9499ce8e46259048124728621b45fd6"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/task11-integration.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/main/task11-integration.log",
+      "bytes": 874,
+      "sha256": "3ec851bcb2082a4b9f90920ce339282e9cbecd4795bd6373c5bb06ea8a688d51"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/final-663.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/final-663.json",
+      "bytes": 4114,
+      "sha256": "89ec76dc9fc527f80010fc8ab5f6c15fc721a52e28ccfbf168aaa13ac0a0cb03"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/final-663.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/final-663.log",
+      "bytes": 2825,
+      "sha256": "b6cd61bacc1d4efa234b82cc86f540ff8f649814a7507062930a3e3858f36f2f"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/final-build.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/final-build.json",
+      "bytes": 1961,
+      "sha256": "4f16e1bfa729499b99c511cdebfa85467eda736e7938227c71c024b5f762a78e"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/final-build.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/final-build.log",
+      "bytes": 891,
+      "sha256": "602a1d500af1cc6baf45b3ab003bb56b39e199307f35ceeb70a2cfd2ebcd3aea"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/final-lint.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/final-lint.json",
+      "bytes": 2228,
+      "sha256": "2624a160bb898bacec283e646a992ed268c7cf4dcc13c62b90c78a4cb1c338d0"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/final-lint.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/final-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/manifest.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/manifest.json",
+      "bytes": 3920,
+      "sha256": "0e8ec249f034b55c6cd45be5cb14c2b890d56eaabf9331ba4c43eb2c6103b3bf"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-app-navigation-6.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-app-navigation-6.json",
+      "bytes": 11887,
+      "sha256": "fb54f263019244e5f9a6e6c58c5ccc4f0b22ef332a416f2cb4f5d30e37452303"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-app-navigation-6.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-app-navigation-6.log",
+      "bytes": 10455,
+      "sha256": "02364199872e562fc3397608559c8e952fd44ea7c70dec3a36e23c75d2649366"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-existing-help-regression-2.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-existing-help-regression-2.json",
+      "bytes": 8806,
+      "sha256": "6cae9302fb693ec4feb16aa5f2b0ae248eef356dcbc0ce844e322f971790ef90"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-existing-help-regression-2.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-existing-help-regression-2.log",
+      "bytes": 7441,
+      "sha256": "a92b8aa65b94b97deb6a70fc6b57aee0370e55e9b483070a7e57cf4eccd175de"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-initial-12.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-initial-12.json",
+      "bytes": 85109,
+      "sha256": "50c51727b556393f8d9a39f7a8a126e381a6f0e3640bc9c4f3c117826972b854"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-initial-12.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-initial-12.log",
+      "bytes": 65536,
+      "sha256": "8d03f42c6b8046e542616e5e72de0d74e1efa91bedbfcbcf971ca4e5de1f598c"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-lint-unused-imports-2.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-lint-unused-imports-2.json",
+      "bytes": 2161,
+      "sha256": "d533057e97d461fde24c840a95be9952f35c0a157fe442e29a9869bb857b50c1"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-lint-unused-imports-2.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-lint-unused-imports-2.log",
+      "bytes": 361,
+      "sha256": "ae493b0a70a9feb95c2773f27c809bdd5adfd868ed6d30ec28dff12bc8167861"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-media-403-2.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-media-403-2.json",
+      "bytes": 6264,
+      "sha256": "f16a9bad49ef6ba54dd77394c5fe63daf0a009ad43e5a0d5c2f229d0c2c2dc8b"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-media-403-2.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-media-403-2.log",
+      "bytes": 4914,
+      "sha256": "eb2dd51f8c24774b8e47a80c67a6ae6baf731afe336f6fa198c2a70cea0e83ab"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-source-denial-race-1.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-source-denial-race-1.json",
+      "bytes": 4073,
+      "sha256": "88b0387b32ba2b851b5aba403770e29ea0ff582aa6e35a886c7ad1b30fcf51d5"
+    },
+    {
+      "source": "/private/tmp/lms-t6-frontend-evidence-NfsEIh/red-source-denial-race-1.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-initial/red-source-denial-race-1.log",
+      "bytes": 2766,
+      "sha256": "7ef0f4e424995ecffaf54de9f871b986d067172c920306b078c9aa83a49e8854"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/manifest.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/manifest.json",
+      "bytes": 2137,
+      "sha256": "912613fb9ee19d53faa06e1a5a5da312cf8314f52fef815cf0fd42b6b21e795f"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/p2-full-green-667.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/p2-full-green-667.json",
+      "bytes": 4108,
+      "sha256": "d8689a109b4e3ebcdbf9f64b45a4716056c17c6f9c4c911cd4bee5e422c1d0fc"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/p2-full-green-667.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/p2-full-green-667.log",
+      "bytes": 2819,
+      "sha256": "44862f05d1bced3d825b88ee03b22ad569a3ab4feab4f972bc3462a4619e02a4"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/p2-lint-green.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/p2-lint-green.json",
+      "bytes": 2228,
+      "sha256": "188ab38f92e7c1fd200b0efbb0d83959c230c61528c6116458c4d755aca8181f"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/p2-lint-green.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/p2-lint-green.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/p2-red-3.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/p2-red-3.json",
+      "bytes": 6708,
+      "sha256": "637b3ecbf6ea80599a843931082c26e67ad67b7a8163c566c2064927515622f6"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/p2-red-3.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/p2-red-3.log",
+      "bytes": 5354,
+      "sha256": "7a9aa433310798856957621666fd4646ceb7f56c3a43bb686595339c910195a4"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/p2-targeted-green-43.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/p2-targeted-green-43.json",
+      "bytes": 1904,
+      "sha256": "c3bdcfc91bb318dc65e5b416d5316023e3c9ef0b6a11652ddeb1f7a8734991ce"
+    },
+    {
+      "source": "/private/tmp/lms-t6-p2-evidence-jbZVXr/p2-targeted-green-43.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-p2/p2-targeted-green-43.log",
+      "bytes": 448,
+      "sha256": "aa562bd32198e7c2bf7c8c0f4d4d4801b08c8a9d04f29409acac3682d92df596"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/SHA256SUMS",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/SHA256SUMS",
+      "bytes": 2085,
+      "sha256": "787fdf64b069ea0e30f7d9c72579913b5f0304f5d49dc2e64916f4bd8e1e3fc5"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-after-end-hashes.command.txt",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-after-end-hashes.command.txt",
+      "bytes": 359,
+      "sha256": "6c34822f28d4765d5e7f160d88effdb5d400314345780d70d07cc5ced56029ed"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-after-end-hashes.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-after-end-hashes.log",
+      "bytes": 379,
+      "sha256": "d73fec0a75fbb17783d4d716e4d617713c4b90ac99bf2d38e165c9e1cd3fa2c4"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-after-end-hashes.record.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-after-end-hashes.record.json",
+      "bytes": 1750,
+      "sha256": "5ce7294e93d236b56fcc1783322fcd63dee8cf901f8a7b5aa14313d7b0071cbe"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-after-start-hashes.command.txt",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-after-start-hashes.command.txt",
+      "bytes": 406,
+      "sha256": "146fcb925b829a2bd685e05ee67ba4422036f5861815a65ebd9720f156356643"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-after-start-hashes.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-after-start-hashes.log",
+      "bytes": 459,
+      "sha256": "62dc75c069ccf851c132741f509e6920315088c43182bec897508386bcbba7b1"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-after-start-hashes.record.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-after-start-hashes.record.json",
+      "bytes": 1945,
+      "sha256": "7fee63a21c309f634b6b3bc7ea6b58a7fee2a8022defb71898d08f1c58af795f"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-before-hashes.command.txt",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-before-hashes.command.txt",
+      "bytes": 744,
+      "sha256": "d44f48a9ea56010eded3606e14445fd1bd1275cfa82d57f8b6537bfe93503969"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-before-hashes.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-before-hashes.log",
+      "bytes": 1448,
+      "sha256": "5c128ae85de9da6df2d007160b05e6b2f4898bd525ee56f25b3d5efc63bfdda1"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/candidate-before-hashes.record.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/candidate-before-hashes.record.json",
+      "bytes": 3609,
+      "sha256": "46d0d50f3a9044bcda311557b58cf51f981e5852bddf2cb6ef9591e3a9dc6e4a"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/green-child-mistakes-10.command.txt",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/green-child-mistakes-10.command.txt",
+      "bytes": 119,
+      "sha256": "b71a60013a19a28d49d50b1adf6844a28b64399a93c266f7038a15fe3bfc0203"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/green-child-mistakes-10.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/green-child-mistakes-10.log",
+      "bytes": 1373,
+      "sha256": "6a343ab0807185ffdea8d6179ff0f2c61680db247676f82913129ed15d601f22"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/green-child-mistakes-10.record.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/green-child-mistakes-10.record.json",
+      "bytes": 2295,
+      "sha256": "3f1e5f952d1b982ef33625289add7be8c3443656ea8c216eb80e372b2abb0323"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/green-t6-33.command.txt",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/green-t6-33.command.txt",
+      "bytes": 114,
+      "sha256": "f92823552ab956ca2200c1c5940558d1fcdb2b0360fb2c62882b7b3187d320e9"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/green-t6-33.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/green-t6-33.log",
+      "bytes": 515,
+      "sha256": "2989080a400861e851731aafddc4e9852e67b077496770f42556d13122ea9803"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/green-t6-33.record.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/green-t6-33.record.json",
+      "bytes": 1416,
+      "sha256": "0af40c24caaa9600d62f34bdee5881939e54c54b175fdb35ba357aba9b8424be"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/manifest.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/manifest.json",
+      "bytes": 22538,
+      "sha256": "712875c4ef36c663d608bd48c7bd8c66a978baa80496817cc7599e37f93f204a"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/probe-after.command.txt",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/probe-after.command.txt",
+      "bytes": 3444,
+      "sha256": "9c0988f43af94a87ad1ffa9fd25d2f5831dc8fa08dcb81779e2c40858171d9a8"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/probe-after.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/probe-after.log",
+      "bytes": 447,
+      "sha256": "d48379a84fb2d619402a482f15b7eee721ce5f79d953ed3ce7028f4b7e0e4612"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/probe-after.record.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/probe-after.record.json",
+      "bytes": 8066,
+      "sha256": "3f0a7405ab768e658cb920b5eff6fda1dc9153850e09196bd822b2febf9c6f73"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/probe-before.command.txt",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/probe-before.command.txt",
+      "bytes": 3096,
+      "sha256": "002fbf3c5afc1bd428fe73ce3cf37de3317eeb25cbc41f7783796c0f5d3f150e"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/probe-before.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/probe-before.log",
+      "bytes": 363,
+      "sha256": "3a3e884df7e305bc39c64987f4c3b3ad0bff3e141c46cf5624eac874c02e224a"
+    },
+    {
+      "source": "/tmp/t6-frontend-independent-review/probe-before.record.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/frontend-independent/probe-before.record.json",
+      "bytes": 7302,
+      "sha256": "f3685362f27c485b2e384f2ac378c2dc447991a7dfced6b87d90f31c82573929"
+    },
+    {
+      "source": "/tmp/t6-common-source-independent-review.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/independent/t6-common-source-independent-review.json",
+      "bytes": 12566,
+      "sha256": "81b93aa2ed0d98c2446a428e8f4adabbe6d511e2410bc00b9be551bb2b17ee4b"
+    },
+    {
+      "source": "/tmp/t6-common-source-independent-review.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/independent/t6-common-source-independent-review.log",
+      "bytes": 3201,
+      "sha256": "1963fd27f93ec08440ac922d81ce770c1199e0d8a1b5ae4ef460c453b6843e2c"
+    },
+    {
+      "source": "/tmp/t6-source-combinations-green.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/independent/t6-source-combinations-green.json",
+      "bytes": 44814,
+      "sha256": "6592db36fe2c0272e3546066fdfdf6bfbf5ec96ba7373db25653f1177b687e35"
+    },
+    {
+      "source": "/tmp/t6-source-combinations-green.log",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/independent/t6-source-combinations-green.log",
+      "bytes": 962975,
+      "sha256": "a5707578dbd81ae6f1ac3f3204e83d65f2d09f2081cf13ed40cacc550a89fb0d"
+    },
+    {
+      "source": "/tmp/t6-source-drop-reader-red.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/independent/t6-source-drop-reader-red.json",
+      "bytes": 3705,
+      "sha256": "c51a20418c6fd647d4994a4381902465f0fc18b067cf492f47bbc96ede238e96"
+    },
+    {
+      "source": "/tmp/t6-source-drop-projection-red.json",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/independent/t6-source-drop-projection-red.json",
+      "bytes": 48045,
+      "sha256": "06390261bc354e22a9e2516cef405ee755c3d5112131cffc5c683091fe21366c"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/browser-final-p2/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/screenshots/child-source-review-ipad-layout.png",
+      "bytes": 80043,
+      "sha256": "83b94e04b692005ef1db959b3e6b340ffe3957a765a54ba613c165f3ac28829a"
+    },
+    {
+      "source": "/tmp/lms-t6-engineering-20261027/browser-final-p2/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "file": "release-gate-artifacts/t6-engineering-2026-10-27/screenshots/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    }
+  ]
+}

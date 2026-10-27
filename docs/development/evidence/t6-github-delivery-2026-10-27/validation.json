@@ -1,0 +1,811 @@
+{
+  "date": "2026-10-27",
+  "baseCommit": "62cedfa35dc581c494179f7edda82aba0754b94e",
+  "branch": "codex/t6-engineering-delivery",
+  "scope": "ENGINEERING_SYNTHETIC_ONLY",
+  "t6Gate": "CLOSED",
+  "gitAuthorization": "BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY",
+  "historicalFailures": "PRESERVED",
+  "device": "DEVICE_PENDING",
+  "dockerAudit": "INCOMPLETE_FAILED",
+  "nonblocking": [
+    "T5-NB-001 OPEN_NONBLOCKING",
+    "T5-NB-002 OPEN_NONBLOCKING"
+  ],
+  "deferred": "REMAINDER_DEFERRED",
+  "results": [
+    {
+      "name": "family-linked",
+      "suites": 152,
+      "passed": 4455,
+      "failed": 0,
+      "pending": 0,
+      "exitCode": 0
+    },
+    {
+      "name": "frontend",
+      "suites": 52,
+      "passed": 678,
+      "failed": 0,
+      "pending": 0,
+      "exitCode": 0
+    },
+    {
+      "name": "http",
+      "suites": 5,
+      "passed": 27,
+      "failed": 0,
+      "pending": 0,
+      "exitCode": 0
+    }
+  ],
+  "chromium": {
+    "passed": 48,
+    "failed": 0,
+    "exitCode": 0,
+    "duration": "4.2m",
+    "realDevice": false
+  },
+  "checks": {
+    "fullLint": "PASS",
+    "docs": "PASS",
+    "composeConfig": [
+      "family",
+      "ubuntu",
+      "root",
+      "china"
+    ],
+    "sourceAndDocsDiff": "PASS",
+    "stagedAllDiff": "95 whitespace notices; each verified as a single-space blank context line in the three immutable candidate.patch files; all other staged files pass; no Git rules changed",
+    "build": "PASS"
+  },
+  "environment": {
+    "node": "22.15.0",
+    "dependencyInstall": "existing dependencies linked temporarily then unlinked; CI clean install pending",
+    "dockerStarted": false
+  },
+  "interruptedRuns": [
+    {
+      "log": "release-gate-artifacts/t6-github-delivery-2026-10-27/family.log",
+      "exitCode": 130,
+      "reason": "NODE_PATH alone does not satisfy existing relative node_modules imports; stopped and corrected local dependency links"
+    },
+    {
+      "log": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser.log",
+      "exitCode": 130,
+      "failed": 3,
+      "didNotRun": 45,
+      "reason": "macOS sandbox MachPort permission denied; rerun after authorized local browser execution"
+    }
+  ],
+  "sensitivityCheck": {
+    "heuristicFindings": 0,
+    "manualReview": "Credential literals inspected as synthetic fixtures; no raw logs, environment files, private keys or dependency symlinks staged",
+    "limitation": "Heuristic scan plus human review; not a guarantee of absence of secrets. Raw logs remain ignored."
+  },
+  "historicalArtifactsVerified": 156,
+  "reviewedFilesVerified": 52,
+  "candidateFiles": [
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 27034,
+      "sha256": "e0b8716e905d49bd8a419f7c6bbdc9554304f29056650cf1abb9d874cd369b1c"
+    },
+    {
+      "file": "backend/common/services/__tests__/learningSource.test.js",
+      "bytes": 13408,
+      "sha256": "03cf82e07e5538b661ed6836a0f0cbc2e454a926b3c7d4c9a9e96d108b673ab2"
+    },
+    {
+      "file": "backend/common/services/learningSource.js",
+      "bytes": 7049,
+      "sha256": "9c73857b207d124abfe6d768891aadf5d3c70454bb0be8c040baef74f21e5b9f"
+    },
+    {
+      "file": "backend/services/analytics-service/__tests__/familyMistakeSources.test.js",
+      "bytes": 21317,
+      "sha256": "c7393559a7f376d2fe12c99a7a25e192094273c1a3fc8a83e6046f5d036241f7"
+    },
+    {
+      "file": "backend/services/analytics-service/app.js",
+      "bytes": 2598,
+      "sha256": "ce587e08e30996d94b43fc7fdd4829b34b40a1a895a2c106a0f60231385d6979"
+    },
+    {
+      "file": "backend/services/analytics-service/jest.attachments.config.js",
+      "bytes": 631,
+      "sha256": "a37bce3b593e08a53543b051594e62ee8a8df763d968dd36ee90e44f2ea3d241"
+    },
+    {
+      "file": "backend/services/analytics-service/models/FamilyMistake.js",
+      "bytes": 5037,
+      "sha256": "fb532316d0b2b109aa103df6f0167f01396b8586fd258ef0f871d7fde010264a"
+    },
+    {
+      "file": "backend/services/analytics-service/routes/familyMistakes.js",
+      "bytes": 16314,
+      "sha256": "f925b4b7f157d230f8eb3830b6d57d93833259486f99c41b331129ba351304e0"
+    },
+    {
+      "file": "backend/services/analytics-service/services/familyMistakePatch.js",
+      "bytes": 5263,
+      "sha256": "2ff1872438332f1123d1d39ea154a940e314158195a35989af4f2621e2a01460"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionIsolation.test.js",
+      "bytes": 3652,
+      "sha256": "1fb33ebff1485d8715f5133fd6998705ac202938ebd13e28ae8545da03f56a64"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/growthTaskCompletionProductionAssembly.test.js",
+      "bytes": 98660,
+      "sha256": "b82868ba63c52634e46c60231557b93a5d37bd7a5e10527d9cd6b6079c4f246f"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/growthTaskSources.test.js",
+      "bytes": 9770,
+      "sha256": "f54fe66a116e9de7e2bc4a3c2f874a28e9074ab9910359d84df9878aaf371785"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/setup.js",
+      "bytes": 2220,
+      "sha256": "72206410227a4922d61ccf3d45985efc62b9c4364bbcd89de749f07e9cedb0b1"
+    },
+    {
+      "file": "backend/services/homework-service/models/GrowthTask.js",
+      "bytes": 11758,
+      "sha256": "89f66575e5faebb3e114ae1da490f9fa45465341212f307c844ed5556587747c"
+    },
+    {
+      "file": "backend/services/homework-service/routes/growthTaskCompletionProduction.js",
+      "bytes": 6023,
+      "sha256": "89983b478a3c740695c6a441475ca305af238f16be7a1397f2810fc6e4563909"
+    },
+    {
+      "file": "backend/services/homework-service/routes/growthTasks.js",
+      "bytes": 22340,
+      "sha256": "8f63244ce6cb09c94dc48a63fc618e55b0013668980f39e915845973faa81e8e"
+    },
+    {
+      "file": "backend/services/homework-service/server.js",
+      "bytes": 11590,
+      "sha256": "65b929c4d37985cd14e194e3f8dbaca4606b73e6e56d343905dd039c389288be"
+    },
+    {
+      "file": "backend/services/homework-service/services/growthTaskCompletionReadService.js",
+      "bytes": 8023,
+      "sha256": "c86da5a231f158f0e8d86f470b901b1b0905e5c8f17ed77f0735007ba7d5db34"
+    },
+    {
+      "file": "backend/services/homework-service/services/growthTaskPatch.js",
+      "bytes": 5853,
+      "sha256": "f37754c47eb2f3b6752ff8b92145ad43c53cae7876973d7df15a7dc4a0262243"
+    },
+    {
+      "file": "backend/tests/t2/learningSources.integration.test.js",
+      "bytes": 10899,
+      "sha256": "fe4f0619263ddfd0052898ff2070f8c70b17c283a52dbadaa27590dfb8273460"
+    },
+    {
+      "file": "backend/tests/t2/serviceRuntime.js",
+      "bytes": 13967,
+      "sha256": "18cfe6212234e46e26be114f9eed3afbab03c07270681360b765ca0f4eedf5ad"
+    },
+    {
+      "file": "docker-compose.china.yml",
+      "bytes": 7520,
+      "sha256": "b79566b6739ecac16504db452f16741f2f9b1b663a73c7c3c8959fe0c077191b"
+    },
+    {
+      "file": "docker-compose.family.yml",
+      "bytes": 10289,
+      "sha256": "c2b7a07f1b6dcfcee51b8634f2e273b873081c11edc372d1381b342af71fccf6"
+    },
+    {
+      "file": "docker-compose.ubuntu.yml",
+      "bytes": 8281,
+      "sha256": "8d989e312602892fc02684056971c478ea6f5af86455b96c25688d41215cfd2e"
+    },
+    {
+      "file": "docker-compose.yml",
+      "bytes": 8366,
+      "sha256": "04afabc46e5ab5b4b871a2641f0bdac4bc395dbff714318c83873f71f5ef1028"
+    },
+    {
+      "file": "docs/api/family-learning-tracker-api.md",
+      "bytes": 130027,
+      "sha256": "6abbde2549e2a11783af44ce35c99ced35cbb7eaa2c80f558f27f0e96ce7c5fa"
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 111576,
+      "sha256": "dc803e1f27f090c9757289a0b39d308aaf0d573e4a8c3758ff8217a3dc9723e8"
+    },
+    {
+      "file": "docs/development/README.md",
+      "bytes": 10791,
+      "sha256": "aeaeb04fd7faab37221190a22fec5d2e948b6a1c67f133d73fa60a624bf0a7cb"
+    },
+    {
+      "file": "docs/development/evidence/t6-engineering-2026-10-27/README.md",
+      "bytes": 7374,
+      "sha256": "dffb7feb0de6c7b30d927e02fd50a2ffaa15a170f8fb8557f47f3360b3249a1e"
+    },
+    {
+      "file": "docs/development/evidence/t6-engineering-2026-10-27/candidate.patch",
+      "bytes": 260725,
+      "sha256": "b7a0ab2e674f82c8e8a2ea41ea54a5c0354453dfda213bd8e3335caa616f50c0"
+    },
+    {
+      "file": "docs/development/evidence/t6-engineering-2026-10-27/review.md",
+      "bytes": 4401,
+      "sha256": "6277efe0578787045a7196f039853f82a3c3200db2e03a9fa4ac1d845ef04692"
+    },
+    {
+      "file": "docs/development/evidence/t6-engineering-2026-10-27/validation.json",
+      "bytes": 70770,
+      "sha256": "ca3fa1ba396b5a55b18f56faa4bacf49ee8c876347146d9f51665e85dc49558f"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/README.md",
+      "bytes": 4231,
+      "sha256": "30076bc84c87cfdbe59e4d0d38a4a21ccbac03f53e314ea2e57880a181dee0fc"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/candidate.patch",
+      "bytes": 11411,
+      "sha256": "42d785fd363232f1888122199bcac8ff99e89f499420d9e1b4cf03e7bd47ecb9"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/closure-evidence.json",
+      "bytes": 7554,
+      "sha256": "b359b1df2c66ef9b93c89766dae6a1cc5bf054a99e841f2bf4be71739234aa59"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/closure-review.md",
+      "bytes": 6365,
+      "sha256": "5607949627894b8b7c77a35b90fe2f11d6d1f96d25175a20296be036638312ba"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/engineering-closure-evidence.json",
+      "bytes": 6150,
+      "sha256": "440243948f6229eef992946121e077df72e51f6fe75d322332778e8a3b130865"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/engineering-closure.md",
+      "bytes": 3962,
+      "sha256": "ff68e40548b81c1f0b189675b38ff61bc56362c6ce68fce04a42c8cf3139ab9f"
+    },
+    {
+      "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/validation.json",
+      "bytes": 6582,
+      "sha256": "fd8fd21884edaa544d2dce73931f25b293380f6e4e0fb53c3dcbc87e717465e4"
+    },
+    {
+      "file": "docs/development/evidence/t6-unknown-create-p2-2026-10-27/README.md",
+      "bytes": 5530,
+      "sha256": "61671945b3188942c0692010abb7f786e88328c3e8413d695847d7c41c4328ae"
+    },
+    {
+      "file": "docs/development/evidence/t6-unknown-create-p2-2026-10-27/candidate.patch",
+      "bytes": 37372,
+      "sha256": "8581711eb4bf106a6a284f6387f123ed07574e368201cec9a48c1b75faabaa4d"
+    },
+    {
+      "file": "docs/development/evidence/t6-unknown-create-p2-2026-10-27/validation.json",
+      "bytes": 16475,
+      "sha256": "4b0a8e22636270e276bf7a32aed7323ae3fa7e2023a2fc04831a0e0928b8863b"
+    },
+    {
+      "file": "docs/development/family-growth-requirement-traceability.md",
+      "bytes": 27395,
+      "sha256": "f8c3dd025bbf2c00ace5b5eec097d21ed8b0ae154b007fa3865b2cd1f7de42e9"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 496378,
+      "sha256": "c554407c764f6b89c0117f9866c6f479bf90e27f9a04055a4c0d1a242fb1f5ab"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-t6-github-handoff.md",
+      "bytes": 7819,
+      "sha256": "466cecfcee1391b457c3649ebbf2892ddc336b85a2941c29e190b22364d275f2"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 85069,
+      "sha256": "434e4ad7fe46a5496cbebe0b1a77b6210da467cb59fd6c49c60cb0b3da5ec9a4"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md",
+      "bytes": 8589,
+      "sha256": "22d9cc281d61ce8c653f193f1e12e74d304d56bf9a24dd9d7f13a1f7caa0051b"
+    },
+    {
+      "file": "docs/user-guide/child-guide.md",
+      "bytes": 6152,
+      "sha256": "9603d1807ffd20f54c6f971e354fd85b7dc8aba2284a12f049089808db7f4be0"
+    },
+    {
+      "file": "docs/user-guide/parent-guide.md",
+      "bytes": 13096,
+      "sha256": "dfaf6cbe218c98954ce08904f28dbe55639160034df3c5129dd5c42727cc8f1e"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/T6AppNavigation.test.js",
+      "bytes": 9979,
+      "sha256": "f43736c377a229b3b8c909fde2728f1a795a71fc87f670bd8d1e8d09e567b317"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/T6LearningSources.test.js",
+      "bytes": 34355,
+      "sha256": "5248eb68144a3ef615976b8916faf7b8216c80a3d7354438d08599598c92bc0f"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/Task9LogsMistakes.test.js",
+      "bytes": 13174,
+      "sha256": "7fdfa6017df52f8cc5f2e5407e7ed5c031e9c609b83aa13b5faf3b60fc9bc96e"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TaskCompletionReview.test.js",
+      "bytes": 6322,
+      "sha256": "da3a59a32b02a3b2f64872be2d3bf455a16a94e5f3f52e5aa660a3b5b8220781"
+    },
+    {
+      "file": "frontend/web/src/components/family/LearningSourceLink.js",
+      "bytes": 1017,
+      "sha256": "15332b7678547cbd11912782f9f2d402af61bba19e04074f56ea596cfe5adf66"
+    },
+    {
+      "file": "frontend/web/src/components/family/TaskCompletionReview.js",
+      "bytes": 4437,
+      "sha256": "ffd46331f7c64d7edbb02ba11ac45937332e9e0f4ec3c21e96d8c7e7ac3d7955"
+    },
+    {
+      "file": "frontend/web/src/hooks/useTaskCompletion.js",
+      "bytes": 12990,
+      "sha256": "deba2af0db1db5c663d7257c11a179b40b69054697df027b2cb7f1dfe1b1d9db"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildMistakesPage.js",
+      "bytes": 24648,
+      "sha256": "73cbfb3992142da1620cf6647a153891d914226a6df822545a8b778ed0ae7d4f"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildTaskPage.js",
+      "bytes": 4627,
+      "sha256": "6d1a04e35a50ead88dc0f7c73918b87605abf4da4019fc2b6b1cf4b68ae0ce66"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildTodayPage.js",
+      "bytes": 5699,
+      "sha256": "1447abc246b76b612da244b635e10752eadecad025b75a6fd786f1a6dfd8609b"
+    },
+    {
+      "file": "frontend/web/src/pages/family/MistakesPage.js",
+      "bytes": 20331,
+      "sha256": "01c0e0ef67521f2ab7ee7903b159b1f3a94a6c3eb6bb60e3ce3d2586d6f65e03"
+    },
+    {
+      "file": "frontend/web/src/pages/family/RemindersPage.js",
+      "bytes": 5835,
+      "sha256": "26a3b21a92ec5ffdd23fd7d21f5da9ea5ed74879eebf58d649e00ec6d6799268"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TasksPage.js",
+      "bytes": 31130,
+      "sha256": "4bb3b1bf06ac5f16cd28c97eed7eb6cdcb2fc2bbafaef2e9bf82159195bc24ce"
+    },
+    {
+      "file": "frontend/web/src/services/childApi.js",
+      "bytes": 6790,
+      "sha256": "3873770a86d68f3c34aa5e56b95e1ba23203a991700743a391ea12ee8ca2c57e"
+    },
+    {
+      "file": "frontend/web/src/services/familyApi.js",
+      "bytes": 9970,
+      "sha256": "08c4ea0aeca053860e59a784346948f8b052b5a94b17488c1c6b7666477a55c9"
+    },
+    {
+      "file": "frontend/web/src/services/learningSources.js",
+      "bytes": 1213,
+      "sha256": "7a5e8e478ddeef5064c42ae08cb09ee1455d280c588aca29970646be78079b3a"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "bytes": 169033,
+      "sha256": "c095b7a1c29273d7b812feffa8dd9dba8914e2528b02dabea59c4a4c939794ab"
+    },
+    {
+      "file": "scripts/release-family-gate.sh",
+      "bytes": 3472,
+      "sha256": "929fa7de096a8883e314cccabccd894dcee4de4aec0f3731b66c4c2e7d1c5add"
+    },
+    {
+      "file": "tests/e2e/t2/learningSources.spec.js",
+      "bytes": 16640,
+      "sha256": "9bc0c506d259970a51959de1561b31d7102d3ab39d7dc33e01f98361779d75b2"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/family.log",
+      "bytes": 1283,
+      "sha256": "853832e273906a690eb8f25a7e088669ae28c0e41f2f79cc1c57ee6ba5accda3"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/family-linked.json",
+      "bytes": 1626075,
+      "sha256": "12c0ce04d793dd9a20142ac95f615ba8115eab23f6927f1e90e0e917923207cc"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/family-linked.log",
+      "bytes": 2236189,
+      "sha256": "7de24955cb3daa1f52b026bf9d5bbb59e01703195f8f8f6832b854fa3e55547d"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/frontend.json",
+      "bytes": 188426,
+      "sha256": "4f37d936ddf0150194f68820c4aaac3cea285c62358a722612913d1124c9376b"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/frontend.log",
+      "bytes": 2911,
+      "sha256": "02aed5a304d141d6fd0e517376c57fb869f102fcbccab11e4cf352cb0996660a"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/http.json",
+      "bytes": 13453,
+      "sha256": "11054728d40a5ac9a5b7b70cf77674e925a5b12f895ed822af4133d6a7caa1b9"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/http.log",
+      "bytes": 1389,
+      "sha256": "eacbe2c35abac481d87df8702cb694a5bc90c0e82594272c24285035b5f726cf"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser.log",
+      "bytes": 18497,
+      "sha256": "ee16e9657120965f15e3b5add83c0a89caacfd1ee31de38d5d920ee251f51c41"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized.log",
+      "bytes": 7502,
+      "sha256": "0179aa5bf7dc02123020024bdc1d2d9d9a84e6880ce1a4e40975a04617fcdb21"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/docs.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/build.log",
+      "bytes": 879,
+      "sha256": "0ce7b471715ea30c2bb9259484e5bb7b614dbac97ec5e17fe9e905db60ce6a71"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/staged-all-diff.log",
+      "bytes": 9315,
+      "sha256": "7ffaf922ce0e4c9a6efa832004dc5b734aa6784477594601b31bd5caaff77ebc"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/scope-audit.json",
+      "bytes": 13705,
+      "sha256": "e6deca6062f88cbdb0e5d22dc3d4c3f195965fdbf98ed0c6dcfd00b4b8f375fd"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser/.last-run.json",
+      "bytes": 199,
+      "sha256": "a725126756c2e44499bc6abafccb31eed33f2ca7a1bb336792a4aba82d62dcb9"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/error-context.md",
+      "bytes": 5592,
+      "sha256": "2b703bd99f27c497d7a62ae555b82c1a5c256b3d06bccef3b16e3a0081ebd20f"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/error-context.md",
+      "bytes": 5592,
+      "sha256": "d414e1a26773b49b814418abf7dc4d12f3b776e6c1718d1ac074db95ce6b2d60"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser/checklist-parent-edit-uses-8d233-sponse-is-read-not-replayed/error-context.md",
+      "bytes": 5597,
+      "sha256": "db6b3432db38f41075a731a05c7ce55b0daa654b0534ae4e0b5fc487788fec6f"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-partial-form.png",
+      "bytes": 109961,
+      "sha256": "8fa56311111ac45f956b963639558aa5b5612343c1e5dbfc7b511c863b84872b"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-1280.png",
+      "bytes": 96487,
+      "sha256": "cf71e1c47ee2890bc1f1a85e98e5279d9ade97fad9863b220078628dfbd720e7"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-390.png",
+      "bytes": 90328,
+      "sha256": "4879cbd600d4ed21f05084e48d78877d492416b0bbd4155824fef8fd71a187ed"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-768.png",
+      "bytes": 96129,
+      "sha256": "881de3e38717ee49a4913d5e8731a08a6f6605d631566b6d17e738a73d06913c"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-1280.png",
+      "bytes": 120837,
+      "sha256": "b6506d664b50fb3394ab950a65b62cbb2aaaf9056dc0dd11a7c4f5161b50c7c5"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-390.png",
+      "bytes": 75824,
+      "sha256": "b182e7322a0550bbc0095f43dbe03a75182de667a70904f225d5968485f4c947"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-768.png",
+      "bytes": 90247,
+      "sha256": "a302ff03bc887d79abf290df19aebc990f88f12b64f20a57b8a856ae23fa1538"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-partial-form.png",
+      "bytes": 121629,
+      "sha256": "96804ee1c52ab499fdc8606b2a02039c711373b794fd99f46fb1c8d25fcc1bb5"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-1280.png",
+      "bytes": 96862,
+      "sha256": "acd11b6729ec42deacf7fbe33f56e9ff494cdab49ad48075602793a1d3615e6c"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-390.png",
+      "bytes": 90830,
+      "sha256": "0b57d9d0c56829efb324dde873a81addc4dc3d321f0d80d45af36570563ddac8"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-768.png",
+      "bytes": 96502,
+      "sha256": "5ed861a13cf5eee56b702e78d4840b2a42baa11021bfe83b52c02b3c126a344e"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-1280.png",
+      "bytes": 121064,
+      "sha256": "2c5f4be7e684d958791ef56fba442625a471716df3338ae214bee38a0613ca56"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-390.png",
+      "bytes": 76047,
+      "sha256": "a563c3463d3f5bc40dfd1fbbfa8ca3e052d9ab80cb1474175d834d3e5fd730ba"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-768.png",
+      "bytes": 90484,
+      "sha256": "cab0c1d38db78557711f7dca9900ede35f8d3a0aa1f799cf0e5fdc8fdafde6bf"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 90689,
+      "sha256": "4c10799b15af3a34806e9fc0a79da2492abe9668ce0341ddf917bad103612344"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 91867,
+      "sha256": "31f45541af2544b5b3f651b6fa0ccb4ef8180119e0f966bbed4e3f281cd4e65d"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 86954,
+      "sha256": "5c64c534688204cd5882d822245b69ea7b4e59f5be792e4f6d3e3eb25e74fd8e"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 91777,
+      "sha256": "647ff636f0ed8d898117bfa977d29466a5b8b10a0fc2173b436be559613790a6"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 63086,
+      "sha256": "1e007c359ca30a00bea5e12fee79e1696d915ff4019ec8ee28faa09aa2deecd8"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 80522,
+      "sha256": "caac260d3d3d691f16cbdf3d5afc34a91bd5f85dd7a12e3f9bbbf4b669323cf8"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 52580,
+      "sha256": "a8e7dab0a4bd98fd157d736142e2e10f047e570bc8869617c202efa3651d6d99"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61808,
+      "sha256": "d06a749dbf6a30c68ac4f9a598c61989d9b9b0a7bfa56c27072f9218873008e0"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/child-intentional-clear.png",
+      "bytes": 89032,
+      "sha256": "13c72ba89f5d2635aa66f29f09a452c70e79e4062b3836cae018c89030c739e0"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/child-invalid-estimate.png",
+      "bytes": 95046,
+      "sha256": "48ff0c7c7c065f3957754744d18925c9deb73dc8c8c7bffb69b0fde066ff963b"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 110575,
+      "sha256": "94f96e3a7515063a1bc6cf2106703322d7acf4ac0a13e6803d50e10d01071704"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 98120,
+      "sha256": "dc85ad27b7f8349e3519ce81d076962db4e66847cfc025b5ada92782bd9cd2d6"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 106464,
+      "sha256": "18f93baed5575f58ef3bc60a4dd50d483dc8f4a62b17dbc14e2f1fcb2cc5b873"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 137645,
+      "sha256": "232c2208cdd44f03714a5c9c9d437b7ed1c381cf5ea4ef277a44503029bd2c77"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 116960,
+      "sha256": "55eec4176b8301159907d28d3d99f28e5e652bc0e069252409271792bb5763bc"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 138069,
+      "sha256": "7d368bc8b862a6c451959d360389df74b19447a8f967c31b217688e3895b91a5"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 102029,
+      "sha256": "682f2c4d83e540edc5d744f055a64b1aed9c8c6a0ca9bd5c6ccdb361e7fb6eb7"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 88624,
+      "sha256": "946a74c4872f0a5a4e9d630f33cb662190871c57480413ad1a31bb996e1247cb"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 97708,
+      "sha256": "eb1f83afbea5f0eee41d7a1aa7f9ffee2e40cec5759546e48b2637f5c01cebb5"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129228,
+      "sha256": "9f1a4a9501a6a0ff6591d5de55b52c90ccb1f9050cea1894c0749cd7c9278ed0"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107514,
+      "sha256": "5ace6e32e272e95dde70918512ae30ae334460091198a6b8a6dd61a06e44ef23"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128188,
+      "sha256": "12c7851c237d35075f97490b3157cc9eb453888b958239e76661371f95836433"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/parent-intentional-clear.png",
+      "bytes": 125457,
+      "sha256": "952b3ae554cb7e97d006969a2fc8b63bfc253a4a746be1ab3e0e9d3365641f5f"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/parent-invalid-estimate.png",
+      "bytes": 131553,
+      "sha256": "9098329ab8a3ea0fc908b3aa0882ba22c4e7b7c3fc96454a2ead91c4dc63e0d5"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-a-write-superseding-t-8d7e5-itted-lost-response-exactly/slow-read-original-retry.png",
+      "bytes": 103380,
+      "sha256": "27fc6e78b8863283445e018ea227b45558dabd08ccff4ec0c9d5a5da7b4fdb0c"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-detail-refresh-denied-10c62-a-held-successful-help-read/help-denied-late-read.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-detail-refresh-denied-4bed8--held-successful-help-write/help-denied-late-write.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-parent-list-denial-af-a9188-clears-the-open-help-dialog/parent-list-denied.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-parent-list-denial-is-792f6--held-successful-help-write/parent-denied-late-write.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-parent-list-denial-isolates-a-held-successful-help-read/parent-denied-late-read.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1024x768.png",
+      "bytes": 103166,
+      "sha256": "fe34e75c63fa1f5ef04e9045f334d56cd579224e7c8664ac4acf7de730707bc3"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1280x800.png",
+      "bytes": 104734,
+      "sha256": "807b9ef2750bf8c62587d76e86add4752526b724bd57a0a7c176fff0e431a635"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-390x844.png",
+      "bytes": 93383,
+      "sha256": "8f36f30af2000b850f155c2daccf593cf2c250634995363f0f146a20cbaa1e69"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-768x1024.png",
+      "bytes": 99987,
+      "sha256": "401b7d2ff7a61a56251fe91264f98afd15eedf6a4d2e7b4b47ed8898070615a1"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1024x768.png",
+      "bytes": 77044,
+      "sha256": "34d0f5e877fa4795347b0bc86e626a7682d784967e1f0198a708b414c3c0eff7"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1280x800.png",
+      "bytes": 87409,
+      "sha256": "cb8c79c74c1281b32a1af00a583739d6e7d93e51a7420f47b299a1d870a572fa"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-390x844.png",
+      "bytes": 56600,
+      "sha256": "e4a0b46164f2bc40a16210efc14d748ac381fe928f2cc8f57e82fec5ccd9ea27"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-768x1024.png",
+      "bytes": 73266,
+      "sha256": "1e0b198981ee363329a9ccbb4fd453d060cc8c73aacd5ed3d1d79116e2ab56a5"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/learningSources-child-lost-df9f0-count-return-without-repost/child-unknown-create-list.png",
+      "bytes": 99283,
+      "sha256": "0258d27ed231f65b309b54ac1b16f2bf5afa188f9e90c7408c22f7d8df0dedfa"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "bytes": 80048,
+      "sha256": "71af726ef6c355e02a6f764d39fc6916e3229af368248cd1aa45f97cd93711b3"
+    },
+    {
+      "file": "release-gate-artifacts/t6-github-delivery-2026-10-27/browser-authorized/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    }
+  ],
+  "ci": "PENDING_PR_CREATION",
+  "serverExecution": "NOT_RUN",
+  "merge": "NOT_AUTHORIZED",
+  "deployment": "NOT_AUTHORIZED"
+}

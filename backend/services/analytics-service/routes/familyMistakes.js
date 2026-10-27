@@ -6,6 +6,7 @@ const { authenticateGateway } = require('../../../common/middleware/auth');
 const { isObjectId, resolveChildAccess } = require('../../../common/utils/familyAccess');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
 const { runMongoTransaction } = require('../../../common/services/mongoTransaction');
+const { createLearningSourceReader, sourceProjection } = require('../../../common/services/learningSource');
 const FamilyMistake = require('../models/FamilyMistake');
 const FamilyMistakeStateEvent = require('../models/FamilyMistakeStateEvent');
 const {
@@ -100,6 +101,7 @@ const mistakeView = (mistake) => {
     mistakeId: mistake._id.toString(),
     familyId: mistake.familyId.toString(),
     childId: mistake.childId.toString(),
+    ...sourceProjection(mistake),
     dimension: mistake.dimension,
     subject: mistake.subject,
     knowledgePointId: mistake.knowledgePointId ? mistake.knowledgePointId.toString() : undefined,
@@ -137,6 +139,11 @@ const createFamilyMistakesRouter = ({
   MistakeModel = FamilyMistake,
   StateEventModel = FamilyMistakeStateEvent,
   familyMistakeMediaService = null,
+  learningSourceReader = createLearningSourceReader({
+    MistakeModel,
+    taskUrl: process.env.HOMEWORK_SERVICE_URL,
+    serviceToken: process.env.INTERNAL_SERVICE_TOKEN
+  }),
   now = () => new Date(),
   runTransaction = (work) => runMongoTransaction({ mongooseInstance: mongoose, work })
 } = {}) => {
@@ -177,6 +184,7 @@ const createFamilyMistakesRouter = ({
         createdBy: req.user.id,
         updatedBy: req.user.id
       };
+      if (sourceInput.sourceTaskId) await learningSourceReader.require(sourceInput);
 
       if (hasMediaMutation) {
         const mistake = await familyMistakeMediaService.create({
@@ -296,7 +304,8 @@ const createFamilyMistakesRouter = ({
       const viewSource = familyMistakeMediaService && mistake.mediaReferenceState === 'pending'
         ? await familyMistakeMediaService.resume(mistake._id.toString())
         : mistake;
-      return res.json({ success: true, data: { mistake: mistakeView(viewSource) } });
+      const source = viewSource.sourceTaskId ? await learningSourceReader.describe(viewSource) : {};
+      return res.json({ success: true, data: { mistake: { ...mistakeView(viewSource), ...source } } });
     } catch (error) {
       if (sendServiceError(res, error)) return undefined;
       return sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error');

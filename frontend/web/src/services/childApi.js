@@ -122,6 +122,7 @@ const childPost = async (path, body, allowedFields) => {
 };
 
 export const createOwnMistake = (payload) => childPost('/api/mistakes', payload, [
+  'sourceTaskId',
   'subject',
   'reason',
   'childExplanation',
@@ -141,6 +142,10 @@ export const listOwnMistakes = (params, signal) => childGet('/api/mistakes', par
   'page',
   'pageSize'
 ], signal);
+
+export const getOwnMistake = (mistakeId, signal, expectedSession) => childGet(
+  `/api/mistakes/${encodeURIComponent(mistakeId)}`, undefined, [], signal, expectedSession
+);
 
 export const reviewOwnMistake = (mistakeId, payload, signal) => childPatch(
   `/api/mistakes/${encodeURIComponent(mistakeId)}`,

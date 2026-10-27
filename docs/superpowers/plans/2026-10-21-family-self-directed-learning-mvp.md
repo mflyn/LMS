@@ -1,6 +1,6 @@
 # 家庭自主学习 MVP 开发计划
 
-> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6-T9 待执行）；T5 总门禁已批准限定合成范围关闭，T4 状态未变；Git 仅授权专用分支和 PR，不合并或部署（Gate §25.6），DEVICE_PENDING、非阻断补测、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留。
+> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7-T9 待执行）；T5 已交付 main，T6 仅关闭本地合成工程（Gate §26.6），不提交、推送、合并或部署；T4 状态未变，DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留。
 > 日期：2026-10-21
 > 执行约定：按仓库 AGENTS.md 逐包实施、验证和交付；不要求自动创建工作树、启动子智能体、提交或推送。
 > T0 契约基线及后续评审已获用户确认；R3-LEARNING 与门禁 P2 已关闭，T1 按用户指令开始分阶段实施，证据见增量 Gate §17–§18。
@@ -653,24 +653,45 @@ children 路由改向。验证家长资料、PIN、已有 children 操作不受�
 
 ### T6：人工错题、订正与延迟复习连接
 
+2026-10-27 用户已批准限定合成工程总门禁关闭；总门禁 CLOSED，设计及分批状态见 Gate §26.6。
+实施细化见 [T6 设计](../specs/2026-10-27-family-self-directed-learning-t6-design.md)。
+T6-1 契约/设计 -> T6-2 后端 -> T6-3 页面 -> T6-4 复习 -> T6-5 集成与独立复评。
+本轮不沿用 T5 Git 授权，不自动关闭任何真机或后置责任。
+
 依赖：T5（业务上主要依赖 T2）。模式：严格。对应工作包 5。
 
 修改：`FamilyMistake.js`、`routes/familyMistakes.js`、`GrowthTask.js`/路由、MistakesPage、TasksPage、
 API 包装及对应测试。关联字段目标：错题可有 sourceTaskId；订正任务可有 sourceTaskId 或
 sourceMistakeId。均为可选，不要求回填历史对象。
 
-- [ ] 在正式契约中固定来源字段和跨服务受控读取；子域所有者验证真实资源，不相信客户端的孩子信息。
-- [ ] 来源不存在和跨家庭/跨孩子来源对公开调用统一返回 `404 RESOURCE_NOT_FOUND`，真实原因只
+- [x] 在正式契约中固定来源字段和跨服务受控读取；子域所有者验证真实资源，不相信客户端的孩子信息。
+- [x] 来源不存在和跨家庭/跨孩子来源对公开调用统一返回 `404 RESOURCE_NOT_FOUND`，真实原因只
   进入脱敏内部审计，避免资源存在性侧信道。
-- [ ] 从任务详情进入现有错题表单，预填 subject/来源，家长填写错因和知识点；从错题进入
+- [x] 从任务详情进入现有错题表单，预填 subject/来源，家长填写错因和知识点；从错题进入
   现有任务创建表单建立订正任务；两个动作分别明确提交，不建设跨服务原子向导。
-- [ ] 不把 task_completion ID 直接写入 mistake_answer；第一版提示家长重新上传正确 purpose 的图片。
-- [ ] 创建后能回到来源；来源已不可读取时显示“来源不可用”，不泄露其他孩子标题或媒体。
-- [ ] 使用现有 reviewReminderDate 和提醒；复习题由家长准备；不自动更新 corrected/mastered。
-- [ ] 写测试：同 scope 成功、兄弟姐妹/跨家庭/不存在来源拒绝、purpose 错误拒绝、服务失败可重试、
+- [x] 不把 task_completion ID 直接写入 mistake_answer；第一版提示家长重新上传正确 purpose 的图片。
+- [x] 创建后能回到来源；来源已不可读取时显示“来源不可用”，不泄露其他孩子标题或媒体。
+- [x] 使用现有 reviewReminderDate 和提醒；复习题由家长准备；不自动更新 corrected/mastered。
+- [x] 写测试：同 scope 成功、兄弟姐妹/跨家庭/不存在来源拒绝、purpose 错误拒绝、服务失败可重试、
   一个步骤成功另一个未做时保留已保存内容。沿用原创建接口重试语义，不承诺尚未实现的全局去重。
 
 验收：一条真实错题走完来源、人工判断、订正和约定日期复习；无需 AI、K12 或自动判题。
+
+上述为已批准关闭的限定合成工程实现/用例范围，不表示产品、设备或真实部署验收完成。独立评审与永久反例见
+[T6 评审记录](../../development/evidence/t6-engineering-2026-10-27/review.md)，实际运行结果见 Gate §26。
+当前总门禁 CLOSED，仅限 ENGINEERING_SYNTHETIC_ONLY；DEVICE_PENDING、T4 既有状态、T7/T8/T9 责任和后置范围不变。
+
+2026-10-27：用户已批准关闭“普通重新加载拒绝优先”P2，Gate §26.4 为 CLOSED_APPROVED。
+计划七项验收条件已逐项核对，批准前总门禁关闭材料见
+[T6 限定合成工程关闭评审](../../development/evidence/t6-reload-denied-p2-2026-10-27/closure-review.md)。
+用户随后批准 T6 限定合成工程关闭，当前 T6 CLOSED；最新批准及验证边界见
+[T6 总门禁关闭记录](../../development/evidence/t6-reload-denied-p2-2026-10-27/engineering-closure.md)。
+不自动启动 T7；后续用户已单独授权专用分支提交推送及 PR/CI 检查，仍不合并、不部署。
+Docker INCOMPLETE_FAILED 和两项非阻断补测继续保留；交接见 Gate §26.7。
+
+固定 a3aa01cf 的独立服务器合成回归随后通过，来源、计数、QA 工具失败与收尾见
+[服务器验证记录](../../development/evidence/t6-server-synthetic-2026-10-27/README.md)及 Gate §26.8。
+只补充执行证据，不改变本工程关闭的批准范围；真机、T7/T8/T9 和所有后置责任保持，本次记录不新增 Git 授权。
 
 ### T7：周复盘导航与完整工程回归
 

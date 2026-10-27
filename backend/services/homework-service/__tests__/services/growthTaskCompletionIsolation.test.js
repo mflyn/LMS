@@ -10,10 +10,13 @@ const mongoose=require('mongoose');
 const id=()=>new mongoose.Types.ObjectId();
 // Preserve legacy cold-loading assertions; enabled and maintenance have separate formal-chain coverage.
 const env={COMPLETION_PROTOCOL_MODE:'legacy',RESOURCE_SERVICE_URL:'http://synthetic-unused',MEDIA_REFERENCE_SERVICE_TOKEN:'synthetic-isolation-token-32-characters',MEDIA_REFERENCE_TIMEOUT_MS:'1000'};
-test('production composition still injects only the legacy attachment service',()=>{
+test('legacy composition adds only read-only sources and does not load the completion protocol',()=>{
   const deps=createTask6MediaDependencies({env});expect(Object.keys(deps)).toEqual(['attachmentMediaService']);
   const factory=jest.fn(()=>require('express').Router());createProductionApp({env,growthTaskRouterFactory:factory});
-  expect(Object.keys(factory.mock.calls[0][0])).toEqual(['attachmentMediaService']);
+  expect(Object.keys(factory.mock.calls[0][0])).toEqual(['attachmentMediaService', 'sourceReader']);
+  expect(Object.keys(factory.mock.calls[0][0].sourceReader)).toEqual(['require', 'describe']);
+  expect(factory.mock.calls[0][0].sourceReader.require).toEqual(expect.any(Function));
+  expect(factory.mock.calls[0][0].sourceReader.describe).toEqual(expect.any(Function));
   const excluded=['growthTaskCompletionService.js','growthTaskCompletionMediaService.js','growthTaskCompletionConfirmationService.js',
     'growthTaskCompletionMutationService.js','growthTaskCompletionMutation.js','growthTaskCompletionReadiness.js',
     'GrowthTaskCompletionOperation.js','completionMediaReferenceClient.js','growthTaskCompletion.js',

@@ -33,6 +33,8 @@ const requireArrayInput = (path, { allowUndefined = false } = {}) => (value) => 
 };
 
 const growthTaskSchema = new Schema({
+  sourceTaskId: { type: Schema.Types.ObjectId, immutable: true },
+  sourceMistakeId: { type: Schema.Types.ObjectId, immutable: true },
   childId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
@@ -241,6 +243,9 @@ growthTaskSchema.add(require('./growthTaskHelpFields').fields);
 growthTaskSchema.index({ familyId: 1, childId: 1, dimension: 1, status: 1 });
 
 growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next) {
+  if (this.sourceTaskId && this.sourceMistakeId) {
+    this.invalidate('sourceMistakeId', 'Only one learning source is permitted');
+  }
   const publicIds = this.attachmentMediaIds || [];
   const currentBindings = this.attachmentMediaBindings || [];
   const state = this.mediaReferenceState;

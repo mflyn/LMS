@@ -1,10 +1,11 @@
 const { createChecklist, checklistPatch, assertChecklistPatch } = require('./growthTaskChecklist');
+const { parseLearningSource } = require('../../../common/services/learningSource');
 const CREATE_FIELD_NAMES = [
   'childId', 'dimension', 'area', 'subject', 'title', 'taskType',
   'description', 'dueDate', 'estimatedMinutes', 'targetAmount',
-  'unit', 'priority', 'attachmentMediaIds'
+  'unit', 'priority', 'attachmentMediaIds', 'sourceTaskId', 'sourceMistakeId'
 ];
-const PATCH_FIELD_NAMES = CREATE_FIELD_NAMES.filter((field) => field !== 'childId');
+const PATCH_FIELD_NAMES = CREATE_FIELD_NAMES.filter((field) => !['childId', 'sourceTaskId', 'sourceMistakeId'].includes(field));
 const EDITABLE_PATH_NAMES = PATCH_FIELD_NAMES.filter((field) => field !== 'attachmentMediaIds');
 const INTERNAL_PATH_NAMES = [...EDITABLE_PATH_NAMES, 'checklistSnapshot', 'checklistVersion'];
 
@@ -95,6 +96,7 @@ const parseGrowthTaskCreate = (body, { checklistEnabled = false } = {}) => {
     throw validationError('Invalid growth task dimension');
   }
   if (checklistEnabled) Object.assign(taskInput, createChecklist(body));
+  Object.assign(taskInput, parseLearningSource(body));
 
   return {
     taskInput,

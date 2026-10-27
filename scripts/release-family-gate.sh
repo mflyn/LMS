@@ -64,6 +64,7 @@ run_step 04-family-regression npm run test:family-regression
 run_step 05-task11-integration npm run test:family-flow:integration
 run_step 06-task12-integration-first npm run test:task12:integration
 run_step 07-task12-integration-second npm run test:task12:integration
+run_step 07b-self-directed-integration npm run test:t2:integration
 run_step 08-frontend-clean-install npm ci --prefix frontend/web
 run_step 09-frontend-tests npm run test:ci --prefix frontend/web -- --runInBand
 run_step 10-frontend-build npm run build --prefix frontend/web
@@ -75,6 +76,7 @@ else
 fi
 run_step 12-task11-e2e npm run test:family-flow:e2e
 run_step 13-task12-e2e npm run test:task12:e2e
+run_step 13b-self-directed-e2e env T2_WEB_BUILD="$repository_root/frontend/web/build" npm run test:t2:e2e
 
 compose_touched=1
 run_step 14-compose-config compose_family config --quiet

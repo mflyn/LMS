@@ -2060,6 +2060,27 @@ GET 不补写；历史 needsHelp 不转换为独立求助。求助只更新上�
   purpose 重新上传，不增加跨 purpose 复制接口。
 - 复习继续使用现有 `reviewReminderDate` 和提醒；不自动写 corrected、mastered 或掌握事件。
 
+T6 实施细化（2026-10-27，设计与实现状态见增量 Gate，不据此声明已交付）：
+
+- 来源仅在创建时设定，PATCH 不接受来源字段；旧无来源对象不回填。
+- 内部 GET `/api/internal/learning-sources/tasks/:sourceId`（homework）和
+  `/api/internal/learning-sources/mistakes/:sourceId`（analytics），仅接受 familyId/childId 查询参数，
+  用 `x-service-token` 验证 INTERNAL_SERVICE_TOKEN。Gateway 不向公开 API 代理这些内部路由。
+- 最小响应为 `{success:true,data:{source:{id,familyId,childId,subject,title}}}`，不含媒体或正文。
+  调用方验证来源 ID、scope 与响应形状；失败关闭，不跟随重定向。
+  合法来源任务的 subject 缺省时规范化为空串，不新增来源必须为智育的限制。
+- 来源缺失统一 `{success:false,error:{code:"RESOURCE_NOT_FOUND",message:"RESOURCE_NOT_FOUND",details:[]}}`。
+  超时、配置/凭据错误和不合约响应返回 `503 SOURCE_SERVICE_UNAVAILABLE`，不泄露上游正文。
+- 单对象详情才实时解析来源；创建/列表保留来源 ID，不引入列表跨服务逐条查询。
+  确定不存在时 `sourceAvailable:false,source:null`；依赖故障返回 503，不假装永久不可用。
+- 不新增创建全局幂等：响应未知先核对列表，已有明确 resourceId 的 pending 接续沿用原协议。
+  两步骤分别保存，来源在首次验证之后消失不回滚已保存对象，不自动重新创建。
+- 创建阶段明确的 SOURCE_SERVICE_UNAVAILABLE 发生在写入前，允许保留表单人工重试；媒体
+  pending/传输未知可能已保存，必须保留已提交媒体，关闭或切换身份不删除它们。原对象媒体恢复
+  不以来源再次可读为前提，不能因来源故障重新 POST。
+
+实施设计：[T6 人工错题、订正与复习连接](../superpowers/specs/2026-10-27-family-self-directed-learning-t6-design.md)。
+
 ### 14.6 `SL-06`、`SL-07`：复用接口和部署边界
 
 `SL-06` 不新增孩子修改 WeeklyReport 的接口。孩子反思继续使用现有 GrowthLog

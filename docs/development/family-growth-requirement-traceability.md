@@ -116,6 +116,15 @@ FGT-MVP-1.7 requirement set，也不改变其实现证据。只有对应 T 任�
 | `SL-06` | T7、T9 | PRD 14 | Architecture 12.1 | API 14.6 | progress/analytics、Parent/Child Web | 孩子反思、家长反馈、历史周统计不改写、四周复盘 | PLANNED |
 | `SL-07` | T8、T9 | PRD 14 | Architecture 12.6 | API 14.6/14.7 | deployment and family validation | iPad Safari、Ubuntu 重启、NAS 隔离恢复、回滚、四周试点 | PLANNED |
 
+2026-10-27 T6 工程增量：三种不可变创建来源、权威同 scope 校验、来源回看、人工订正和复习导航已进入
+本地合成工程批准关闭。实现及逐项证据见 [Gate §26](./family-self-directed-learning-mvp-gate.md#26-t6-人工错题订正与复习连接2026-10-27)
+和 [T6 验证记录](./evidence/t6-engineering-2026-10-27/README.md)。SL-05 仍保留 PLANNED，
+T6 总门禁 CLOSED，仅限 ENGINEERING_SYNTHETIC_ONLY，未代替 T7 综合验收或 DEVICE_PENDING；
+Docker INCOMPLETE_FAILED、两项非阻断补测、高级恢复及新回收 REMAINDER_DEFERRED 保留。
+
+T6 后续固定 a3aa01cf 的 [独立服务器合成验证](evidence/t6-server-synthetic-2026-10-27/README.md)
+已通过，作为 SL-05 的补充工程证据，不将其 PLANNED 改为产品验收完成；M01–M08、D01–D04 与 T7/T8/T9 仍待验收。
+
 T0 只建立上述契约、迁移/兼容规则和增量 Gate，不提供任何 `SL-*` 功能实现证据。当前执行记录见
 [自主学习 MVP 增量 Gate](./family-self-directed-learning-mvp-gate.md)。
 

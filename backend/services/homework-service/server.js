@@ -16,6 +16,7 @@ const homeworkRoutes = require('./routes/homework');
 const growthTaskRoutes = require('./routes/growthTasks');
 const { createGrowthTaskRouter } = growthTaskRoutes;
 const GrowthTask = require('./models/GrowthTask');
+const { createLearningSourceReader, createLearningSourceRouter } = require('../../common/services/learningSource');
 const { createDailyLearningPlanRouter } = require('./routes/dailyLearningPlans');
 const { createGrowthTaskAttachmentMediaService } = require('./services/growthTaskAttachmentMediaService');
 const { validateClientConfig } = require('./services/starAwardClient');
@@ -51,6 +52,8 @@ const createApp = ({
   growthTaskRouter = growthTaskRoutes,
   homeworkRouter = homeworkRoutes,
   retirementRouter,
+  learningSourceRouter = createLearningSourceRouter({ kind: 'tasks', Model: GrowthTask,
+    serviceToken: process.env.INTERNAL_SERVICE_TOKEN }),
   appLogger = logger
 } = {}) => {
   const app = express();
@@ -65,6 +68,7 @@ const createApp = ({
   app.use('/api/homework', homeworkRouter);
   app.use('/api/growth-tasks', growthTaskRouter);
   app.use('/api/children', createDailyLearningPlanRouter());
+  app.use('/api/internal/learning-sources', learningSourceRouter);
   if (retirementRouter) app.use('/api/internal/completion-media-retirements', retirementRouter);
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', service: 'homework-service' });
@@ -88,6 +92,8 @@ const createProductionApp = ({
   assertCompletionConnection(connection, mongoose.connection);
   const { attachmentMediaService } = (createMediaDependencies || createTask6MediaDependencies)({
     env, appLogger, completionIsolation: mode === 'enabled' });
+  const sourceReader = createLearningSourceReader({ TaskModel: GrowthTask,
+    mistakeUrl: env.ANALYTICS_SERVICE_URL, serviceToken: env.INTERNAL_SERVICE_TOKEN });
   let growthTaskRouter, retirementRouter;
   if (mode === 'enabled') {
     const { runMongoTransaction } = require('../../common/services/mongoTransaction');
@@ -104,19 +110,20 @@ const createProductionApp = ({
     const mediaReferenceClient = createCompletionMediaReferenceClient({ resourceServiceUrl: env.RESOURCE_SERVICE_URL,
       serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN, timeout: Number(env.MEDIA_REFERENCE_TIMEOUT_MS || 3000) });
     const { awardTaskStar } = createStarAwardClient(starAwardConfig(env));
-    growthTaskRouter = createGrowthTaskCompletionProductionRouter({ transactionRunner, attachmentMediaService,
+    growthTaskRouter = createGrowthTaskCompletionProductionRouter({ transactionRunner, attachmentMediaService, sourceReader,
       completionService: createGrowthTaskCompletionService({ transactionRunner, mediaReferenceClient }),
       confirmationService: createGrowthTaskCompletionConfirmationService({ transactionRunner, awardTaskStar }),
-      readService: createGrowthTaskCompletionReadService({ transactionRunner }),
+      readService: createGrowthTaskCompletionReadService({ transactionRunner, sourceReader }),
       mutationService: createGrowthTaskCompletionMutationService({ transactionRunner }) });
     retirementRouter = createCompletionMediaRetirementRouter({ env,
       service: createCompletionMediaRetirementService({ transactionRunner }) });
   } else {
-    growthTaskRouter = (growthTaskRouterFactory || createGrowthTaskRouter)({ attachmentMediaService });
+    growthTaskRouter = (growthTaskRouterFactory || createGrowthTaskRouter)({ attachmentMediaService, sourceReader });
   }
   return withCompletionMode(createApp({
     growthTaskRouter,
     retirementRouter,
+    learningSourceRouter: createLearningSourceRouter({ kind: 'tasks', Model: GrowthTask, serviceToken: env.INTERNAL_SERVICE_TOKEN }),
     appLogger
   }), { mode, service: 'homework', env });
 };

@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-27",
+  "defect": "T6 ordinary reload denial priority P2",
+  "defectStatus": "CLOSED_APPROVED",
+  "approval": "User approved this P2 closure after review; T6 total gate requires separate approval.",
+  "t6Status": "IN_PROGRESS",
+  "t6Gate": "OPEN",
+  "closureMaterialStatus": "READY_FOR_APPROVAL",
+  "device": "DEVICE_PENDING",
+  "dockerAudit": "INCOMPLETE_FAILED",
+  "nonblocking": "T5-NB-001/002 OPEN_NONBLOCKING",
+  "deferred": "REMAINDER_DEFERRED",
+  "restrictions": [
+    "NO_COMMIT",
+    "NO_PUSH",
+    "NO_MERGE",
+    "NO_DEPLOY"
+  ],
+  "frozenCandidate": {
+    "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/candidate.patch",
+    "bytes": 11411,
+    "sha256": "42d785fd363232f1888122199bcac8ff99e89f499420d9e1b4cf03e7bd47ecb9"
+  },
+  "frozenManifest": {
+    "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/validation.json",
+    "bytes": 6582,
+    "sha256": "fd8fd21884edaa544d2dce73931f25b293380f6e4e0fb53c3dcbc87e717465e4"
+  },
+  "historicalArtifactsVerified": 156,
+  "unchangedCandidateFilesVerified": 53,
+  "documentationUpdates": [
+    {
+      "before": {
+        "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "bytes": 492289,
+        "sha256": "88235e8eacffc91faab785f5e20f5045b83fdab92c4e4099ec8ab9c056b4fa7f"
+      },
+      "after": {
+        "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "bytes": 493969,
+        "sha256": "b21f01421d537a1eecaa62308c2178e1fb083963c692fdc77b030c322984453b"
+      }
+    },
+    {
+      "before": {
+        "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+        "bytes": 84210,
+        "sha256": "af39ecf046598f2187f3978cdd01f3724756434ac3fc3c083454d6e2a629e82b"
+      },
+      "after": {
+        "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+        "bytes": 84660,
+        "sha256": "afd58a4171934b4fab07f63836f3f6d39306b65c5b97d898ea86e78cae3906c3"
+      }
+    }
+  ],
+  "closureRecord": {
+    "file": "docs/development/evidence/t6-reload-denied-p2-2026-10-27/closure-review.md",
+    "bytes": 6365,
+    "sha256": "5607949627894b8b7c77a35b90fe2f11d6d1f96d25175a20296be036638312ba"
+  },
+  "results": [
+    {
+      "name": "review-frontend",
+      "suites": 52,
+      "passed": 678,
+      "failed": 0,
+      "pending": 0,
+      "success": true
+    },
+    {
+      "name": "review-mutation",
+      "suites": 1,
+      "passed": 32,
+      "failed": 2,
+      "pending": 0,
+      "success": false
+    },
+    {
+      "name": "review-restored",
+      "suites": 1,
+      "passed": 34,
+      "failed": 0,
+      "pending": 0,
+      "success": true
+    },
+    {
+      "name": "closure-documentation-gate",
+      "suites": 1,
+      "passed": 183,
+      "failed": 0,
+      "pending": 0,
+      "success": true
+    }
+  ],
+  "browser": {
+    "engine": "Chromium",
+    "passed": 4,
+    "failed": 0,
+    "seconds": 27.6
+  },
+  "artifacts": [
+    {
+      "source": "/tmp/t6-denial-review-full.json",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/full.json",
+      "bytes": 186970,
+      "sha256": "c1ca49b94869dfa6551e94cd84b45753051b41e81c4a22cad60193bf5d7ac9f0"
+    },
+    {
+      "source": "/tmp/t6-denial-review-full.log",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/full.log",
+      "bytes": 2894,
+      "sha256": "39b7a83c2cf892437f759fb1975b41c12dc6014de00f86fc1d3d56bf8b09867d"
+    },
+    {
+      "source": "/tmp/t6-denial-review-mutation.json",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/mutation.json",
+      "bytes": 12322,
+      "sha256": "8307c9d9f0fb94ba25f3386b3913856e43a53cd64577e0aa756f51d1e06b358f"
+    },
+    {
+      "source": "/tmp/t6-denial-review-mutation.log",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/mutation.log",
+      "bytes": 5631,
+      "sha256": "33e567c7239c069c021adfd493e2bbe8f38d80b187806040ffe26c2192c04e56"
+    },
+    {
+      "source": "/tmp/t6-denial-review-restored.json",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/restored.json",
+      "bytes": 9781,
+      "sha256": "41a8c88e872a36ca1ec6a3569783fb137b2d9e3b0430ac73df8ba1996f3b58be"
+    },
+    {
+      "source": "/tmp/t6-denial-review-restored.log",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/restored.log",
+      "bytes": 3618,
+      "sha256": "39bd6770a8c73e0d5fb656350eecb47741e070b5afecb36f67358f5366e952c8"
+    },
+    {
+      "source": "/tmp/t6-denial-review-build.log",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/build.log",
+      "bytes": 879,
+      "sha256": "2377092ddbf3dd99d7d4dd5bf8b93a6df9af3242e6e0ba9541beda71837236db"
+    },
+    {
+      "source": "/tmp/t6-denial-review-browser.log",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/browser.log",
+      "bytes": 906,
+      "sha256": "a40c5d954d61afd7e67e238da7aada8f0c2fe5ed5ccbbd95ee2d287584c9f794"
+    },
+    {
+      "source": "/tmp/t6-closure-docs.log",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/closure-docs.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "source": "/tmp/t6-closure-gate.json",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/closure-gate.json",
+      "bytes": 85728,
+      "sha256": "1dc784d68ca6ad63a25ac990187e329b2dad2fdf20bec4666468290254b48bed"
+    },
+    {
+      "source": "/tmp/t6-closure-gate.log",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/closure-gate.log",
+      "bytes": 19581,
+      "sha256": "b2f74d3e3fcc9e6d4ab34f470e3c2849a17963755319bb8a3ed6526f2f656efe"
+    },
+    {
+      "source": "/tmp/t6-closure-diff.log",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/closure-diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/t6-denial-review-browser/learningSources-child-lost-df9f0-count-return-without-repost/child-unknown-create-list.png",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/screenshots/learningSources-child-lost-df9f0-count-return-without-repost/child-unknown-create-list.png",
+      "bytes": 99283,
+      "sha256": "0258d27ed231f65b309b54ac1b16f2bf5afa188f9e90c7408c22f7d8df0dedfa"
+    },
+    {
+      "source": "/tmp/t6-denial-review-browser/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/screenshots/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "bytes": 80043,
+      "sha256": "83b94e04b692005ef1db959b3e6b340ffe3957a765a54ba613c165f3ac28829a"
+    },
+    {
+      "source": "/tmp/t6-denial-review-browser/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "file": "release-gate-artifacts/t6-reload-denied-p2-2026-10-27/closure-review/screenshots/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    }
+  ]
+}

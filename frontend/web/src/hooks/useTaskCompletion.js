@@ -63,7 +63,8 @@ export const useTaskCompletion = ({ scope, session, api }) => {
         return;
       }
       apply({ state: command ? 'uncertain' : 'error', task: null, command, message,
-        error: '详情加载失败，请重试。', recovery: null });
+        error: error?.response?.data?.error?.code === 'SOURCE_SERVICE_UNAVAILABLE'
+          ? '来源服务暂不可用，请重试读取。' : '详情加载失败，请重试。', recovery: null });
     }
   }, [api, apply, current, scope, session]);
 

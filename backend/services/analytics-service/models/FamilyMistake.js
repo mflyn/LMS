@@ -59,6 +59,10 @@ const familyMistakeSchema = new Schema({
     required: true,
     index: true
   },
+  sourceTaskId: {
+    type: Schema.Types.ObjectId,
+    immutable: true
+  },
   dimension: {
     type: String,
     enum: ['academic'],

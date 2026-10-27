@@ -4,9 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import GrowthLogsPage from '../../pages/family/GrowthLogsPage';
 import MistakesPage from '../../pages/family/MistakesPage';
+import { saveParentSession } from '../../services/familySession';
 import {
   createGrowthLog,
   createMistake,
+  getMistake,
   deletePrivateMedia,
   listGrowthLogs,
   listMistakes,
@@ -22,6 +24,7 @@ jest.mock('../../contexts/FamilyContext', () => ({
 }));
 
 const familyContext = (overrides = {}) => ({
+    family: { familyId: 'family-a' },
     selectedChildId: 'child-a1',
     selectedChild: { childId: 'child-a1', name: '小明' },
     childScopeVersion: 1,
@@ -37,6 +40,7 @@ const deferred = () => {
 jest.mock('../../services/familyApi', () => ({
   createGrowthLog: jest.fn(),
   createMistake: jest.fn(),
+  getMistake: jest.fn(),
   deletePrivateMedia: jest.fn(),
   getPrivateMediaAccess: jest.fn(),
   listGrowthLogs: jest.fn(),
@@ -60,6 +64,7 @@ const growthLog = (overrides = {}) => ({
 
 const mistake = (overrides = {}) => ({
   mistakeId: 'mistake-1',
+  familyId: 'family-a',
   childId: 'child-a1',
   dimension: 'academic',
   subject: '数学',
@@ -174,6 +179,8 @@ describe('Task 9 growth logs', () => {
 describe('Task 9 mistakes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    saveParentSession({ token: 'synthetic-parent', user: { id: 'parent-a', name: '家长', role: 'parent' } });
+    getMistake.mockResolvedValue({ mistake: mistake() });
     mockFamilyContext = familyContext();
     deletePrivateMedia.mockResolvedValue({});
     listMistakes.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
@@ -270,6 +277,7 @@ describe('Task 9 mistakes', () => {
 
   test('TC-MPA-WEB-004 normalizes a legacy scalar and clears it through the canonical group', async () => {
     const user = userEvent.setup();
+    getMistake.mockResolvedValueOnce({ mistake: mistake({ questionMediaId: 'legacy-question' }) });
     listMistakes.mockResolvedValueOnce({
       items: [mistake({ questionMediaId: 'legacy-question' })],
       total: 1

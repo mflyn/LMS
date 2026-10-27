@@ -14,9 +14,11 @@ const { createGrowthTaskCompletionMutationRouter } = require('./growthTaskComple
 const { createGrowthTaskCompletionRecoveryRouter } = require('./growthTaskCompletionRecovery');
 const { createGrowthTaskHelpRouter } = require('./growthTaskHelp');
 const { createGrowthTaskHelpService } = require('../services/growthTaskHelpService');
+const { createLearningSourceReader } = require('../../../common/services/learningSource');
 
 const createGrowthTaskCompletionProductionRouter = ({ completionService, confirmationService, readService,
-  mutationService, attachmentMediaService, transactionRunner } = {}) => {
+  mutationService, attachmentMediaService, transactionRunner,
+  sourceReader = createLearningSourceReader({ TaskModel: Task }) } = {}) => {
   if (typeof attachmentMediaService?.create !== 'function' || typeof attachmentMediaService?.mutate !== 'function'
     || typeof transactionRunner !== 'function') throw new TypeError('Isolated attachment service and transaction runner are required');
   const router = express.Router();
@@ -60,6 +62,7 @@ const createGrowthTaskCompletionProductionRouter = ({ completionService, confirm
     const access = await authorizedRead(session => authorizeParentChild(req.user, parsed.taskInput.childId, session));
     const taskInput = { ...parsed.taskInput, familyId: access.familyId, createdByParentId: req.user.id };
     await validate(taskInput);
+    await sourceReader.require(taskInput);
     const task = await attachmentMediaService.create({ taskInput, attachmentMediaIds: parsed.attachmentMediaIds || [] });
     logFamilyOperation(req, { operation: 'task.attachments.create', result: 'bound',
       familyId: String(task.familyId), childId: String(task.childId), taskId: String(task._id) });

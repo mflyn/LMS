@@ -211,7 +211,7 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
     ['T2 approval record scope widens', approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY'],
     ['T2 defect reopened', approval, '"T2-P2-JWT": "CLOSED"', '"T2-P2-JWT": "OPEN"', 'T2 approval record must close exactly the three reviewed P2 defects'],
     ['T2 approval record device passed', approval, '"device": "DEVICE_PENDING"', '"device": "PASSED"', 'T2 approval record must preserve pending and deferred boundaries'],
-    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
+    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
     ['T3 closure regresses', gate, '| T3 | CLOSED |', '| T3 | IN_PROGRESS |', 'exactly one CLOSED T3 row'],
     ['T3 missing', gate, '| T3 | CLOSED |', '| removed | CLOSED |', 'exactly one CLOSED T3 row'],
     ['T3 contradictory duplicate', gate, '| T3 | CLOSED |', '| T3 | CLOSED | current |\n|  T3  | OPEN |', 'exactly one CLOSED T3 row'],
@@ -259,10 +259,37 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
       [`T5 ${name} missing in ${file}`, file, before, '', `T5 current ${name} must remain ${expected}`],
       [`T5 ${name} contradicts in ${file}`, file, before, `${before}\n${before.slice(0, before.indexOf('** ') + 3)}${changed}`, `T5 current ${name} must remain ${expected}`]
     ])),
-    ...Array.from({ length: 4 }, (_, index) => `T${index + 6}`).map(task => [
+    ['T6 regresses to in progress', gate, '| T6 | CLOSED |', '| T6 | IN_PROGRESS |', 'T6 must have exactly one CLOSED current row'],
+    ['T6 regresses to not started', gate, '| T6 | CLOSED |', '| T6 | NOT_STARTED |', 'T6 must have exactly one CLOSED current row'],
+    ['T6 conflicting rows', gate, '| T6 | CLOSED |', '| T6 | IN_PROGRESS | current |\n| T6 | CLOSED |', 'T6 must have exactly one CLOSED current row'],
+    ['T6 plan status regresses', plan, 'T6 合成工程已关闭', 'T6 实施中', 'approved T1 plan status'],
+    ['T6 navigation regresses', navigation, 'T6 合成工程已关闭', 'T6 实施中', 'navigation must reflect T1 backend closure'],
+    ['T6 design status regresses', design, 'T6 合成工程已关闭', 'T6 实施中', 'system design must record T0 complete'],
+    ...[gate, 'docs/development/evidence/t6-reload-denied-p2-2026-10-27/engineering-closure.md'].flatMap(file => [
+      ['T6 status', 'CLOSED', 'IN_PROGRESS'],
+      ['T6 gate', 'CLOSED', 'OPEN'],
+      ['T6 scope', 'ENGINEERING_SYNTHETIC_ONLY', 'PRODUCTION'],
+      ['T6 Git', file === gate ? 'BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY' : 'NO_COMMIT / NO_PUSH / NO_MERGE / NO_DEPLOY', 'AUTHORIZED'],
+      ['T6 approval', 'APPROVED', 'PENDING'],
+      ['T6 historical failures', 'PRESERVED', 'ALL_GREEN'],
+      ['T6 device', 'DEVICE_PENDING', 'PASSED'],
+      ['T6 Docker audit', 'INCOMPLETE_FAILED', 'PASSED'],
+      ['T6 nonblocking', 'T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING', 'CLOSED'],
+      ['T6 deferred', 'REMAINDER_DEFERRED', 'CLOSED'],
+      ['T6 deployment', 'T8_PENDING / NOT_AUTHORIZED', 'AUTHORIZED']
+    ].flatMap(([key, value, changed]) => {
+      const before = `**${key}:** ${value}`, invalid = `**${key}:** ${changed}`;
+      const message = `${key} must remain uniquely ${value}`;
+      return [
+        [`${key} changed in ${file}`, file, before, invalid, message],
+        [`${key} missing in ${file}`, file, before, '', message],
+        [`${key} contradicts in ${file}`, file, before, `${before}\n${invalid}`, message]
+      ];
+    })),
+    ...Array.from({ length: 3 }, (_, index) => `T${index + 7}`).map(task => [
       `${task} starts without approval`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | IN_PROGRESS |`, `keep ${task} as NOT_STARTED`
     ]),
-    ...Array.from({ length: 4 }, (_, index) => `T${index + 6}`).map(task => [
+    ...Array.from({ length: 3 }, (_, index) => `T${index + 7}`).map(task => [
       `${task} has conflicting current rows`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | CLOSED | invented |\n| ${task} | NOT_STARTED |`, `keep ${task} as NOT_STARTED`
     ]),
     ['plan status regresses', plan, 'T1 后端工程已关闭', 'T1 执行中', 'approved T1 plan status'],

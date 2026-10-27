@@ -5,6 +5,7 @@ const { AppError } = require('../../../common/middleware/errorTypes');
 const { resolveChildAccess } = require('../../../common/utils/familyAccess');
 const { parsePagination } = require('../../../common/utils/familyResponse');
 const { formatLocalDate, getWeekRange } = require('../../../common/utils/familyDate');
+const { sourceProjection, createLearningSourceReader } = require('../../../common/services/learningSource');
 
 const ID = /^[0-9a-f]{24}$/i;
 const objectId = value => typeof value === 'string' && ID.test(value);
@@ -22,6 +23,7 @@ const EVIDENCE_FIELDS = ['actualMinutes', 'actualAmount', 'difficulty', 'needsHe
 const taskView = task => {
   const evidence = task.completionEvidence;
   return {
+    ...sourceProjection(task),
     ...pick(task, TASK_FIELDS), taskId: String(task._id), childId: String(task.childId), familyId: String(task.familyId),
     createdByParentId: String(task.createdByParentId), attachmentMediaIds: ids(task.attachmentMediaIds),
     ...(task.confirmedByParentId ? { confirmedByParentId: String(task.confirmedByParentId) } : {}),
@@ -46,7 +48,8 @@ const taskView = task => {
   };
 };
 
-const createGrowthTaskCompletionReadService = ({ transactionRunner, now = Date.now } = {}) => {
+const createGrowthTaskCompletionReadService = ({ transactionRunner, now = Date.now,
+  sourceReader = createLearningSourceReader({ TaskModel: Task }) } = {}) => {
   if (typeof transactionRunner !== 'function' || typeof now !== 'function') throw new TypeError('Read transaction runner and clock are required');
   const read = async work => {
     try {
@@ -74,7 +77,8 @@ const createGrowthTaskCompletionReadService = ({ transactionRunner, now = Date.n
       || actor.childProfile?.tokenVersion !== identity.tokenVersion)) throw denied();
     return access;
   };
-  const detail = ({ identity, taskId } = {}) => read(async session => {
+  const detail = async ({ identity, taskId } = {}) => {
+    const result = await read(async session => {
     identityCheck(identity);
     if (!objectId(taskId)) throw invalid();
     const task = await Task.findById(taskId).session(session).lean();
@@ -82,7 +86,11 @@ const createGrowthTaskCompletionReadService = ({ transactionRunner, now = Date.n
     const access = await authorize(identity, String(task.childId), session);
     if (String(access.familyId) !== String(task.familyId)) throw denied();
     return { success: true, data: { task: taskView(task) } };
-  });
+    });
+    // Resolve the source after the authorized snapshot, without holding a DB transaction over HTTP.
+    Object.assign(result.data.task, await sourceReader.describe(result.data.task));
+    return result;
+  };
   const list = ({ identity, query = {} } = {}) => read(async session => {
     identityCheck(identity);
     if (!query || typeof query !== 'object' || Array.isArray(query)) throw invalid();
