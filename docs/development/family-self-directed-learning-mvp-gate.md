@@ -86,7 +86,7 @@
 | T2 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；T2-1/T2-R 及三项 P2 CLOSED，T2-2 至 T2-6 汇总批准关闭（§22.6 / 执行记录 §17）；D2B-05 查询缺陷单独 CLOSED（§22.7），原失败快照保留；DEVICE_PENDING，T8_PENDING / NOT_AUTHORIZED，T2-G REMAINDER_DEFERRED |
 | T3 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY；两项 P2 独立复评及导航测试 P3 关闭见 §23.8；最新 CI 通过后可合并，DEVICE_PENDING、REMAINDER_DEFERRED 和不部署边界保留 |
 | T4 | IN_PROGRESS | §24.9 求助投影 P2 已批准关闭；§24.10 固定候选服务器独立合成自动化通过，真机/人工待验收；总门禁 OPEN，关闭需用户批准 |
-| T5 | CLOSED | §25.5 用户已批准限定合成工程；总门禁 CLOSED，仅 ENGINEERING_SYNTHETIC_ONLY；DEVICE_PENDING、非阻断补测与后置边界保留 |
+| T5 | CLOSED | §25.5 用户已批准限定合成工程；总门禁 CLOSED，仅 ENGINEERING_SYNTHETIC_ONLY；合并后双入口、WebKit 测试导航及异常收尾已批准关闭见 §25.9；DEVICE_PENDING、非阻断补测与后置边界保留 |
 | T6 | NOT_STARTED | 一条真实错题走完来源、订正和延迟复习连接 |
 | T7 | NOT_STARTED | SL-01 至 SL-06 纳入集成/E2E 和完整发布 Gate |
 | T8 | NOT_STARTED | 家庭 Ubuntu、iPad、NAS 恢复和回滚有实测证据 |
@@ -4919,3 +4919,95 @@ lint、构建通过；Nash 独立静态复核无新发现，不冒充独立运�
 [CI 修订记录](evidence/t5-ci-fix-2026-10-27/README.md)。本节是本地修订快照，PR 完整 CI
 以新提交 Actions 结果为准，不提前声明可合并。T5 限定工程批准、DEVICE_PENDING、两项
 OPEN_NONBLOCKING、历史失败、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED 均保持。
+
+### 25.8 合并后独立 QA 两项 P2 收口候选（2026-10-27）
+
+本节保留批准前的候选与失败快照；当前关闭状态以 §25.9 为准，不改写以下历史 OPEN / 待复评记录。
+
+PR #31 与文档 PR #32 已合并，不改写 §25.5 的限定工程批准及此前 Git 授权快照。
+后续 Ubuntu 独立 QA 在 `3858093e` 上记录 Chromium 完整 37 passed / 1 failed、
+WebKit 完整 37 passed / 1 failed；失败不同，原报告 NOT_PASS 和冻结证据必须保留。
+用户现授权优先处理 T5 收口，T6 暂不推进；本轮仅本地合成验证，不提交、推送、合并或部署。
+
+- `QA-T5-E2E-LINK-001`：待独立复评。T2 用例全页定位同时匹配两个合法入口；
+  新反例在两引擎均重现，修订为限定“今天的任务”，并断言两个区域各唯一且 href 一致。
+- `QA-T5-WEBKIT-PAGEERROR-002`：保持 OPEN，提交测试导航修订候选，不声称引擎缺陷已修复。
+  真实日计划对照确认：旧文档在替换期间发起新 XHR，可产生 access-control pageerror，
+  新请求未到服务端。业务用例改走已有家长导航，保留原重登、reload、零错误与业务断言；
+  新增 pending/已完成响应两种永久导航用例。独立 QA 仍需判断修订是否满足原问题关闭条件。
+  收尾修复后的完整 WebKit 43 passed / 1 failed 又在清单孩子硬跳转处记录相同类型错误；
+  该文件两个孩子业务入口已补真实待办链接及文档身份保护，原失败/源码快照保留，重新验证独立记账。
+- 开发候选静态复核另发现异常收尾 P2：unroute/attach 抛错可能跳过 stop；
+  已补三组失败注入反例及关闭等待测试，收尾逐步 await 并保留全部错误，不以忽略错误换取通过。
+  该项修复及独立静态复核记录与两项原问题分开，不冒充 Ubuntu 运行验收。
+
+最终本地候选 WebKit / Chromium 各 44 passed（原 38 + 导航 2 + 收尾 4），无跳过或重试；
+代码静态复审未发现新问题，文档校验和受影响测试 lint 通过。原 WebKit 43/1 失败及
+源码快照、原独立 QA 37/1 两套失败均保留；这些本地结果不关闭两项原 P2。
+
+修订、自查、原始失败、验证结果及候选绑定见
+[T5 合并后 QA 修订交接](evidence/t5-postmerge-qa-2026-10-27/README.md)。
+本地通过不替代 Ubuntu 2 CPU / 3 GiB / 无 swap 的固定候选独立全套复验；不套用历史计数。
+历史失败、8 项真机 DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING、T7/T9、
+T8_PENDING / NOT_AUTHORIZED、D01/T2-G 和高级恢复/新回收 REMAINDER_DEFERRED 保持。
+
+### 25.9 合并后 QA 修订复审通过与批准关闭（2026-10-27）
+
+**T5 postmerge review:** APPROVED
+**T5 postmerge link:** CLOSED
+**T5 postmerge navigation:** CLOSED / TEST_NAVIGATION_ONLY
+**T5 postmerge cleanup:** CLOSED
+**T5 postmerge Docker audit:** INCOMPLETE_FAILED
+**T5 postmerge Git:** NO_COMMIT / NO_PUSH / NO_MERGE / NO_DEPLOY
+**T5 postmerge next task:** T6 NOT_STARTED
+
+用户明确批准本次复审并授权关闭以下三项；只更新记录，不沿用 §25.6–§25.7 的历史提交/PR 权限。
+
+| 问题 | 当前状态 | 关闭依据与边界 |
+| --- | --- | --- |
+| QA-T5-E2E-LINK-001 双入口定位 | CLOSED | 两个合法区域各唯一、精确 href 一致；保留原入口点击及完整业务断言 |
+| QA-T5-WEBKIT-PAGEERROR-002 测试导航 | CLOSED / TEST_NAVIGATION_ONLY | 家长/孩子真实导航及 pending/完成响应永久用例通过；不声称原生 WebKit 引擎或任意硬跳转已修复 |
+| 异常收尾 P2（Zeno 静态复核） | CLOSED | unroute/attach/stop 逐项 await、错误聚合；四项永久用例通过，独立去 await 变异命中原等待断言 |
+
+绑定基线 `d28a30c0199428f5d193fe97cb1747e37934f780` 与冻结补丁
+`dba6c4cf9cd14f30f5624c0281173e804aac06f1753885d5ffa5892d82bf2160`。
+本线程已批准的串行依据为 `t5-independent-review-20261027-serial-r2`：Ubuntu 服务按 2 CPU / 3 GiB / swap 0
+串行复验，WebKit、Chromium 各 44 passed（原 38 + 新增 6，均无跳过、flaky、unexpected），
+原健康脚本四次全部通过。原单 worker、零重试及 120000/10000/15000 预算不变；浏览器客户端
+实际在 Mac，经 SSH 回环访问 Ubuntu 正式合成服务，不冒称 Linux 浏览器或 iPad 真机。
+完整证据路径、375 项清单及报告/摘要 SHA256 见
+[批准关闭与证据绑定](evidence/t5-postmerge-qa-2026-10-27/README.md#批准关闭与最终串行证据)。
+
+**T5 postmerge independent QA:** PASS_R2_LIMITED_ENGINEERING_SYNTHETIC
+
+测试／评审线程随后同步另一份最终独立 R2：在本线程资源全部退出后，使用全新 QA 目录和同一冻结
+候选自行复验，未使用上述 375 项归档替代实测。该线程 Chromium/WebKit 各 44/44、原健康 4/4
+通过；六项旧全页点击/旧 goto 反例均命中预期断言，原生机制见证实际复现且新 API ingress 为 0，
+15 个阶段前/中/后隔离守卫通过。实际限额、原预算及零错误断言不变，结论为
+PASS_R2_LIMITED_ENGINEERING_SYNTHETIC；两原 P2 及异常收尾关闭状态与本节一致。
+其独立 R2 的 325 项冻结清单、报告与验证摘要 SHA256 见
+[测试／评审线程最终独立 R2](evidence/t5-postmerge-qa-2026-10-27/README.md#测试评审线程最终独立-r2-补充绑定)。
+两个线程和轮次分别记账，不累计重叠覆盖数、不拼接绿灯；本次只补充文档引用，不重跑测试。
+
+串行轮次独立于开发运行及首轮并行 QA，不拼接绿灯。原独立 37/1 两套失败、开发 43/1、
+首轮并行负载与容器集合审计失败、另一 QA 的 Bridge RPC timeout 均保留。
+测试／评审线程 R1 的 326 项归档保持 NOT_ACCEPTED，健康桥接超时在其新 R2 未复现，
+不声称准确根因已完全定位，也不直接归因于并发；原 413/428/326/375 项冻结记录均不改写。
+追加 Docker 历史事件回溯无法覆盖完整时段，保持 INCOMPLETE_FAILED，不改绿；
+串行依据为授权协调、另一批完成/idle 确认与八阶段前后守卫，不声称完整事件审计或独占主机性能基准。
+原十个常驻服务及 1764 份候选文件一致，本轮临时资源与专用 SSH 已收尾。
+
+本次只是上述问题的批准关闭，不扩大 §25.5 的 ENGINEERING_SYNTHETIC_ONLY 总门禁范围。
+历史失败 PRESERVED、DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING、T8_PENDING /
+NOT_AUTHORIZED、T7/T9 义务、D01/T2-G 及高级恢复/新回收 REMAINDER_DEFERRED 保持。
+不提交、推送、合并或部署，不启动 T6；冻结候选、原复审报告和证据清单保持原字节，
+本节及交接记录的批准后文档增量不冒称为已冻结测试候选的一部分。
+
+### 25.10 收尾 Git 交付授权（2026-10-27）
+
+用户在 §25.9 记录完成后明确授权“合并提交推送掉”。本次允许将四份已复审测试文件与
+两份关闭记录提交至 `codex/t5-postmerge-qa-closeout`，在最新候选 CI 通过后以 merge commit
+合并 main，并核查合并后 CI。§25.9 的 NO_COMMIT 等标记保留为当时授权快照，不代表当前禁止交付。
+本授权不修改冻结测试证据，不扩大 ENGINEERING_SYNTHETIC_ONLY 范围；历史失败、Docker
+INCOMPLETE_FAILED、DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING 及 REMAINDER_DEFERRED
+全部保留。不删除分支、不部署、不启动 T6。

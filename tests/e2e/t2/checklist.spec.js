@@ -1,5 +1,7 @@
 const { test, expect } = require('@playwright/test');
+const { randomUUID } = require('crypto');
 const { createT2WebRuntime } = require('./webRuntime');
+const { openParentTasks } = require('./parentNavigation');
 const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
 
 let runtime, fixture, parent;
@@ -27,8 +29,19 @@ function monitor(page) {
   page.on('console', message => { if (['warning', 'error'].includes(message.type())) errors.push(message.type()); });
   return errors;
 }
+async function openChildTask(page, task) {
+  const link = page.getByRole('region', { name: '今日计划', exact: true })
+    .getByRole('link', { name: task.title, exact: true });
+  const target = `/child/tasks/${task.taskId}`, identity = randomUUID();
+  await expect(link).toHaveCount(1);
+  await expect(link).toHaveAttribute('href', target);
+  await page.evaluate(value => { window.t5ChecklistDocument = value; }, identity);
+  await link.click();
+  await expect(page).toHaveURL(runtime.webUrl + target);
+  expect(await page.evaluate(() => window.t5ChecklistDocument)).toBe(identity);
+}
 async function createViaPage(page, title) {
-  await page.goto(runtime.webUrl + '/app/tasks');
+  await openParentTasks(page, runtime.webUrl);
   await page.getByRole('button', { name: '新建任务', exact: true }).click();
   await page.getByLabel('任务标题', { exact: true }).fill(title);
   await page.getByLabel('学科', { exact: true }).fill('数学');
@@ -68,7 +81,7 @@ for (const grade of [1, 4]) test(`grade ${grade}: real checklist creation, indep
     const updated = expectData(await parent.get(path(task))).task;
     expect(updated.checklistVersion).toBe(2);
     expect(updated.checklistSnapshot.map(item => item.itemId)).toEqual(task.checklistSnapshot.map(item => item.itemId).reverse());
-    await login(childPage, 'child'); await childPage.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
+    await login(childPage, 'child'); await openChildTask(childPage, task);
     await expect(childPage.getByRole('group', { name: '完成清单' })).toBeVisible();
     if (grade === 1) {
       await expect(childPage.getByText('补充记录（选填）', { exact: true })).toBeVisible();
@@ -230,7 +243,7 @@ test('child help remains visible after checklist-only save and can be resolved w
   const childContext = await browser.newContext();
   const childPage = await childContext.newPage(), errors = monitor(page), childErrors = monitor(childPage);
   try {
-    await login(childPage, 'child'); await childPage.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
+    await login(childPage, 'child'); await openChildTask(childPage, task);
     await childPage.getByRole('button', { name: '我需要帮助', exact: true }).click();
     await childPage.getByRole('button', { name: '发送求助', exact: true }).click();
     await expect(childPage.getByText('求助已发送。')).toBeVisible();
