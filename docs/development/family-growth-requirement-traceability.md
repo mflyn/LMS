@@ -157,3 +157,36 @@ SL-02 的 T3 工程实现映射如下；总体仍 PLANNED，不替代 T7 集成�
 | 家长列表拒绝清私有求助、慢读被写入接管 | TasksPage 的当前 scope 401/403 卸载；TaskHelpPanel 读写 loading 所有权 | TaskHelpPages 的拒绝/迟到读写/非鉴权错误对照、TaskHelpPanel 慢读反例、help.spec.js 正式撤权和已提交丢响应重试；两项 P2 已独立复评关闭，旧失败保留；导航测试 P3 及证据来源见 Gate §23.8 |
 
 执行结果、独立评审和失败事实见[Gate §23](family-self-directed-learning-mvp-gate.md#23-t3-独立求助实施与工程验收2026-10-25)。
+
+2026-10-26 T5 单独授权增量：前文为历史状态。T5 当前 IN_PROGRESS / 总门禁 OPEN，
+只允许本地合成开发验证，不授权 Git、服务器测试或部署。SL-04 总体仍 PLANNED，
+T7 综合验收和真机/家庭价值义务不能由本轮组件或接口测试替代。
+
+| T5 条件 | 实现 | 永久验证 |
+| --- | --- | --- |
+| 空计划零写、唯一日期作用域、0–20 项、版本 CAS | DailyLearningPlan、dailyLearningPlanService、dailyLearningPlans 路由 | DailyLearningPlan 模型测试、dailyLearningPlan 服务测试、正式 HTTP dailyLearningPlan.integration |
+| 实时家庭/孩子权限、日期/午夜、任务状态竞争与失败回滚 | 既有 resolveChildAccess、家庭时区、事务内 Task 栅栏和计划 CAS | 跨家庭/兄弟姐妹/撤权/失效 token、可控首次创建竞争、任务终态竞争、午夜、索引不合格和缺失引用 |
+| 实际估时输入者、重排保留、清空/unknown、家长字段不变 | 服务端 estimateRecordedBy/updatedByActor；日计划不修改任务教学字段 | TC-SL-ESTIMATE-001..004 映射见服务/组件/正式 HTTP，比较任务全文和其他集合/账本 |
+| 精确 Gateway 路由与严格输入 | dailyLearningPlanInput、Gateway 清洗前精确校验 | 原始 JSON 非有限数值及非法键、旧 children/PIN 路由、匿名拒绝优先 |
+| 孩子排序/估时、家长代录、分页与真实详情入口 | DailyLearningPlanPanel、ChildTodayPage、TodayPage、TasksPage | 组件及 dailyLearningPlan.spec；低/高年级、多视口、分页外计划项、scope 绑定导航 |
+| 原请求重试、显式采用最新版本、退出和迟到响应隔离 | 复用 familySession 与新日计划 API 包装，不引入 operation UUID | 丢响应原版本冲突/只读核对、普通读失败、跨标签/孩子切换、迟到 PUT 成功/401/403 |
+
+阶段进展与独立评审问题见 [Gate §25](family-self-directed-learning-mvp-gate.md#25-t5-今日计划开发授权与阶段记录2026-10-26)。
+本映射不代表用户已验收；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED、REMAINDER_DEFERRED 均保留。
+
+2026-10-27 工程验证更新：T5 已具备本地合成工程提交验收条件，Gate §25.2 保持总门禁 OPEN。
+家庭后端 149/4290、前端 49/624、正式 HTTP 4/22、完整浏览器 34 passed；独立前端
+10/121、后端 6/87 及原索引/限流探针验证修复，计数有重叠不累加。构建中索引、提前拒绝绕过
+限流、跨午夜及未知结果提示问题的永久保护见 [验收证据映射](evidence/t5-synthetic-2026-10-26/README.md)。
+SL-04 总体仍 PLANNED，不把 T5 工程证据替代 T7 综合验收；历史失败与后置义务不变。
+
+2026-10-27 修订收口：用户批准 QA-T5-NUMERIC-INPUT-001（P2）、QA-T5-DESIGN-CONFLICT-002（P3）
+复审通过并关闭。原生未完成数字零写、主动清空、输入者保持、原命令重试及标准冲突契约的
+候选和复验绑定见 [关闭评审材料](evidence/t5-numeric-fix-2026-10-27/closure-review.md)。
+T5 总门禁仍 OPEN / 待单独批准，SL-04 仍 PLANNED，T7 综合验收义务不变；
+T5-NB-001/002 是未完成的非阻断补测，不计入已覆盖，DEVICE_PENDING 和后置范围保留。
+
+2026-10-27 后续用户批准：T5 限定合成工程 APPROVED / CLOSED，取代以上 OPEN 快照。
+批准绑定、验证及边界见 [T5 批准记录](evidence/t5-numeric-fix-2026-10-27/approved-closure.md)与 Gate §25.5。
+SL-04 总体仍 PLANNED，T7 综合验收、DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING、
+T8/T9 和 REMAINDER_DEFERRED 保留；不以工程关闭声明真机、部署或学习效果通过。

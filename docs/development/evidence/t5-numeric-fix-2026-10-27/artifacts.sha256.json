@@ -1,0 +1,918 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-27T00:37:32.123Z",
+  "archiveRoot": "release-gate-artifacts/t5-numeric-fix-2026-10-27/dev-r1",
+  "note": "Separate developer remediation evidence; original independent r1 and previous developer archive unchanged.",
+  "files": [
+    {
+      "file": "baseline-build.json",
+      "bytes": 15068,
+      "sha256": "a731bb279633155bbbd631228eccb04a7edd11c33e87fe782abbead695c59311"
+    },
+    {
+      "file": "baseline-build.log",
+      "bytes": 1272,
+      "sha256": "b259156cf3e4a2b669c24a9413178efa7108693fc35be69ec1b0f52e90138df1"
+    },
+    {
+      "file": "baseline-candidate.json",
+      "bytes": 9426,
+      "sha256": "678b650ebdd85a8c2dc8b05ab6845ab53449380f4fef6493658d3894cfd5c64d"
+    },
+    {
+      "file": "baseline-web/asset-manifest.json",
+      "bytes": 369,
+      "sha256": "f52399255d4e9251e5db40a8f325e2804c56725393615c1909b7342272875bf7"
+    },
+    {
+      "file": "baseline-web/index.html",
+      "bytes": 725,
+      "sha256": "5fcc5519c8e73e490e2e5373cfea57dcdede508a70f727188f561d4299867847"
+    },
+    {
+      "file": "baseline-web/manifest.json",
+      "bytes": 180,
+      "sha256": "ff7923e959200fe2ca0e6450a39002ae26e9d62e0ef69c40186ebe172835fa76"
+    },
+    {
+      "file": "baseline-web/static/css/main.da77081e.css",
+      "bytes": 29859,
+      "sha256": "62c71a1507fd7134697f924fd682af90a37e03d78024eb9605cd8b16afe9fcc2"
+    },
+    {
+      "file": "baseline-web/static/css/main.da77081e.css.map",
+      "bytes": 47905,
+      "sha256": "316a40763d24253f58dcfb9b523d098b5b1efee52ccc5fdd69db62726ab40a3f"
+    },
+    {
+      "file": "baseline-web/static/js/main.1160c4ce.js",
+      "bytes": 531003,
+      "sha256": "99c4e283c8984e06a67efd3d9b1679836623c999343d0e09523aef80478bd264"
+    },
+    {
+      "file": "baseline-web/static/js/main.1160c4ce.js.LICENSE.txt",
+      "bytes": 13194,
+      "sha256": "776626e2a539bae6c6ffdae382b2fc62045dcd76b3f6b6e40c37726056e87f22"
+    },
+    {
+      "file": "baseline-web/static/js/main.1160c4ce.js.map",
+      "bytes": 1996709,
+      "sha256": "a69368cd9caffe948f49b3e260c60c9ac0d5a3df5d4ece5d9af7513dac37147f"
+    },
+    {
+      "file": "baseline/backend/common/createBaseApp.js",
+      "bytes": 7252,
+      "sha256": "e88d954c47af6b19ea581d10ebdb2de4eb560539795bee3874139c88b4abbc69"
+    },
+    {
+      "file": "baseline/backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 24430,
+      "sha256": "cf4e9d21215d1b456f88d15460996bdc65fcdd9b70a81dc694905eb5f7efce73"
+    },
+    {
+      "file": "baseline/backend/common/utils/dailyLearningPlanInput.js",
+      "bytes": 1543,
+      "sha256": "f5183b8a00eb4138a31b21a6afaca5c85362769e6f6b549ec8a17bd54fdb5b6b"
+    },
+    {
+      "file": "baseline/backend/gateway/__tests__/dailyLearningPlanRoutes.test.js",
+      "bytes": 5354,
+      "sha256": "86bd1d69e6d6726b03a6f00a68073ec4ea074b896e253a72733faa5683bbb4d3"
+    },
+    {
+      "file": "baseline/backend/gateway/server.js",
+      "bytes": 5808,
+      "sha256": "1149da007585ba541cbb77de3e52d18b566e03e31b0216e2303d454ecafc88d0"
+    },
+    {
+      "file": "baseline/backend/services/homework-service/__tests__/models/DailyLearningPlan.test.js",
+      "bytes": 1726,
+      "sha256": "cde6f5a950eb9cad6527469b78799f0a3f02438f4c19b17f208f366d8c7410f8"
+    },
+    {
+      "file": "baseline/backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js",
+      "bytes": 30062,
+      "sha256": "8a3a395e7f6515b389320a71ee88c2f135c67d49c36e8872ef50623ce3d2c900"
+    },
+    {
+      "file": "baseline/backend/services/homework-service/__tests__/setup.js",
+      "bytes": 2212,
+      "sha256": "024eee18388341345e7da506ee2aed482db9d0007e092a3e040589b812184420"
+    },
+    {
+      "file": "baseline/backend/services/homework-service/models/DailyLearningPlan.js",
+      "bytes": 1603,
+      "sha256": "902265a5d02d8f1e478847c035b27c1dbe929841c6de2d77493bcd9a1f057a78"
+    },
+    {
+      "file": "baseline/backend/services/homework-service/routes/dailyLearningPlans.js",
+      "bytes": 914,
+      "sha256": "fd6f4ab7c999761575b3fcfe3d9ce0362440ff0b81c844e61670bea773cbbaca"
+    },
+    {
+      "file": "baseline/backend/services/homework-service/server.js",
+      "bytes": 10923,
+      "sha256": "6b5f3c2e7b552b01356b3a19404d28363481ed30cea1d219d64337f5b0b5baca"
+    },
+    {
+      "file": "baseline/backend/services/homework-service/services/dailyLearningPlanService.js",
+      "bytes": 7515,
+      "sha256": "0cf94fc54dd911e2261410d73e3a40994792cdfdf94fc03e7361e8a311132a1d"
+    },
+    {
+      "file": "baseline/backend/services/user-service/__tests__/routes/children.test.js",
+      "bytes": 12671,
+      "sha256": "b5d9e7facb428f94f0a9c2cdd6000baa2605e1fe2df3ed4377f6d5ca8fdebfc8"
+    },
+    {
+      "file": "baseline/backend/services/user-service/controllers/familyController.js",
+      "bytes": 19686,
+      "sha256": "5569c409582118092236aeb4272cafa881a547dd749938d7af4f0edb7077761b"
+    },
+    {
+      "file": "baseline/backend/tests/t2/dailyLearningPlan.integration.test.js",
+      "bytes": 5869,
+      "sha256": "5e84867076eb8d5571757595ec0d03a271f6365c9e9f6c31cbd99f7a833e7e1c"
+    },
+    {
+      "file": "baseline/backend/tests/t2/serviceRuntime.js",
+      "bytes": 13631,
+      "sha256": "3ae4a4dbedd223c7fd9412f73d5bb31e656c152651f8ebf5ad9ffd5e8d37f914"
+    },
+    {
+      "file": "baseline/backend/tests/task11/apiClient.integration.test.js",
+      "bytes": 2780,
+      "sha256": "6fd6b337f02045cbacb653a9bf1af58dfe4e65b8338f02eab3a53db99871b130"
+    },
+    {
+      "file": "baseline/backend/tests/task11/apiClient.js",
+      "bytes": 1894,
+      "sha256": "72426878b6b9fd7726a58b8eb14228e8d20cd084049f24e037a2ec889f92e000"
+    },
+    {
+      "file": "baseline/docs/README.md",
+      "bytes": 6031,
+      "sha256": "be7d6e9c721b3f410fb7ba2fa3c3c4408870a2c38daeed603173ca0571cc1b0d"
+    },
+    {
+      "file": "baseline/docs/api/family-learning-tracker-api.md",
+      "bytes": 128080,
+      "sha256": "9374a93631ffa1b15b9f011b101a270ddb579262c12e77376ad2d35982b7e0fc"
+    },
+    {
+      "file": "baseline/docs/architecture/family-ai-learning-platform-design.md",
+      "bytes": 121292,
+      "sha256": "8950a4229c016818205b68ad48784c51f3a0090ca3897d1f5179cfd634121f49"
+    },
+    {
+      "file": "baseline/docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 110853,
+      "sha256": "1f00246fcbfe198afccde2747e5936d594f36050659fdd1c42ce39b41b3334d8"
+    },
+    {
+      "file": "baseline/docs/development/README.md",
+      "bytes": 10526,
+      "sha256": "59175372599f41f8e7e730bf0acb3fcfa2f32538b9b88f6dea8415dc596adb43"
+    },
+    {
+      "file": "baseline/docs/development/evidence/t5-synthetic-2026-10-26/README.md",
+      "bytes": 10826,
+      "sha256": "0e22b8a11b55a12fb58e6e751b5c5b6017bd994810b80932d761d832e7240840"
+    },
+    {
+      "file": "baseline/docs/development/family-growth-requirement-traceability.md",
+      "bytes": 25820,
+      "sha256": "1d1849d41a902437b23fa5b29fcbf4ac29e036de7d6397c1c37b29fe215e7f7b"
+    },
+    {
+      "file": "baseline/docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 466623,
+      "sha256": "949b467233b99fdcdbf5f6c6bb7da2b811f121e0b0e0c70b149a1feeb9139f29"
+    },
+    {
+      "file": "baseline/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 82038,
+      "sha256": "9c897797d2dc00af900a247ab38d5cdedabc20e3665dc2e35ec16f4cb79b7a96"
+    },
+    {
+      "file": "baseline/eslint.config.js",
+      "bytes": 3116,
+      "sha256": "e07f77b892f797151efe704c839715933e7b0482f2ade2e367e34e13d5d69143"
+    },
+    {
+      "file": "baseline/frontend/web/src/__tests__/family/DailyPlanTaskNavigation.test.js",
+      "bytes": 2062,
+      "sha256": "5fbcd0c091f44980e3bf90525d5c8e44f43ad76769795e863448a8089169030c"
+    },
+    {
+      "file": "baseline/frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+      "bytes": 20266,
+      "sha256": "11e316ff0986137d3e25019a3c0ae095a8c16e9518a163238d0925c75b8c2b33"
+    },
+    {
+      "file": "baseline/frontend/web/src/__tests__/shared/dailyLearningPlanApi.test.js",
+      "bytes": 3345,
+      "sha256": "509bef414275534f20adc7b22413242c0709a499b30c0252c2ba65779da6a1ff"
+    },
+    {
+      "file": "baseline/frontend/web/src/components/family/DailyLearningPlanPanel.css",
+      "bytes": 2008,
+      "sha256": "3ce564afc8d3f300f631c9a8d965384061b6057cbc73118e30dd032d3af4272f"
+    },
+    {
+      "file": "baseline/frontend/web/src/components/family/DailyLearningPlanPanel.js",
+      "bytes": 17487,
+      "sha256": "c76fb113470927c2c9e41e215d686e59e5922ffa4badc97a31ba973b8e29918b"
+    },
+    {
+      "file": "baseline/frontend/web/src/pages/child/ChildTodayPage.js",
+      "bytes": 5381,
+      "sha256": "2e417aa2390a67fa4a95a0e5b1fddeb4f52b7f8aee9a15a1f0d5340f75cdbd97"
+    },
+    {
+      "file": "baseline/frontend/web/src/pages/family/TasksPage.js",
+      "bytes": 27276,
+      "sha256": "8a7f7db97891b1fda04bda3208f775c811512391c40d1b14bfc1efc8647dcbdd"
+    },
+    {
+      "file": "baseline/frontend/web/src/pages/family/TodayPage.js",
+      "bytes": 6590,
+      "sha256": "7799da741f442955dd1d41584e09f484ccef16b7883107117f9007493b0560f2"
+    },
+    {
+      "file": "baseline/frontend/web/src/services/childApi.js",
+      "bytes": 6598,
+      "sha256": "e0e81568f59e10aec039613e0ac1e4e540a3b855679c262ac32202553f02129a"
+    },
+    {
+      "file": "baseline/frontend/web/src/services/dailyLearningPlan.js",
+      "bytes": 594,
+      "sha256": "df2264f86805af95a1077e7f1861796bac0f7c746ad93c815732b281ba443801"
+    },
+    {
+      "file": "baseline/frontend/web/src/services/familyApi.js",
+      "bytes": 9803,
+      "sha256": "1f611169b16ecf8f421c047171280f46bc2865ce836cdede2c0dd23ca18bfbb8"
+    },
+    {
+      "file": "baseline/scripts/check-family-docs.js",
+      "bytes": 167033,
+      "sha256": "f1901f1c0a72eaaaedab786636b3066d3de2d7d17df49ee9cd280c6830c31291"
+    },
+    {
+      "file": "baseline/tests/e2e/t2/dailyLearningPlan.spec.js",
+      "bytes": 12862,
+      "sha256": "c5b7e7b228cbb00890f07e99a059706f8df56b72e11e6622e60557b5321d1c64"
+    },
+    {
+      "file": "browser-green.json",
+      "bytes": 15211,
+      "sha256": "1ab1eb3edc8c3c9f0a95d48f2b9207ac681b0e36e5faa6fcc2097b054294afb4"
+    },
+    {
+      "file": "browser-green.log",
+      "bytes": 2274,
+      "sha256": "3952439bb9977497aa3dc38b0b8ee6b248570d15f186b5db51c713cd071a461c"
+    },
+    {
+      "file": "browser-red.json",
+      "bytes": 15266,
+      "sha256": "a8dd97bb5a08b029254189722723fdb72a73eeac358e32a5a6f21ab13f675e9c"
+    },
+    {
+      "file": "browser-red.log",
+      "bytes": 5162,
+      "sha256": "a5abcf1cda5c6c57a24e1efdee27a290699052ed4c04d6c31b58de300612b4da"
+    },
+    {
+      "file": "candidate-files/backend/common/createBaseApp.js",
+      "bytes": 7252,
+      "sha256": "e88d954c47af6b19ea581d10ebdb2de4eb560539795bee3874139c88b4abbc69"
+    },
+    {
+      "file": "candidate-files/backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 24430,
+      "sha256": "cf4e9d21215d1b456f88d15460996bdc65fcdd9b70a81dc694905eb5f7efce73"
+    },
+    {
+      "file": "candidate-files/backend/common/utils/dailyLearningPlanInput.js",
+      "bytes": 1543,
+      "sha256": "f5183b8a00eb4138a31b21a6afaca5c85362769e6f6b549ec8a17bd54fdb5b6b"
+    },
+    {
+      "file": "candidate-files/backend/gateway/__tests__/dailyLearningPlanRoutes.test.js",
+      "bytes": 5354,
+      "sha256": "86bd1d69e6d6726b03a6f00a68073ec4ea074b896e253a72733faa5683bbb4d3"
+    },
+    {
+      "file": "candidate-files/backend/gateway/server.js",
+      "bytes": 5808,
+      "sha256": "1149da007585ba541cbb77de3e52d18b566e03e31b0216e2303d454ecafc88d0"
+    },
+    {
+      "file": "candidate-files/backend/services/homework-service/__tests__/models/DailyLearningPlan.test.js",
+      "bytes": 1726,
+      "sha256": "cde6f5a950eb9cad6527469b78799f0a3f02438f4c19b17f208f366d8c7410f8"
+    },
+    {
+      "file": "candidate-files/backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js",
+      "bytes": 30062,
+      "sha256": "8a3a395e7f6515b389320a71ee88c2f135c67d49c36e8872ef50623ce3d2c900"
+    },
+    {
+      "file": "candidate-files/backend/services/homework-service/__tests__/setup.js",
+      "bytes": 2212,
+      "sha256": "024eee18388341345e7da506ee2aed482db9d0007e092a3e040589b812184420"
+    },
+    {
+      "file": "candidate-files/backend/services/homework-service/models/DailyLearningPlan.js",
+      "bytes": 1603,
+      "sha256": "902265a5d02d8f1e478847c035b27c1dbe929841c6de2d77493bcd9a1f057a78"
+    },
+    {
+      "file": "candidate-files/backend/services/homework-service/routes/dailyLearningPlans.js",
+      "bytes": 914,
+      "sha256": "fd6f4ab7c999761575b3fcfe3d9ce0362440ff0b81c844e61670bea773cbbaca"
+    },
+    {
+      "file": "candidate-files/backend/services/homework-service/server.js",
+      "bytes": 10923,
+      "sha256": "6b5f3c2e7b552b01356b3a19404d28363481ed30cea1d219d64337f5b0b5baca"
+    },
+    {
+      "file": "candidate-files/backend/services/homework-service/services/dailyLearningPlanService.js",
+      "bytes": 7515,
+      "sha256": "0cf94fc54dd911e2261410d73e3a40994792cdfdf94fc03e7361e8a311132a1d"
+    },
+    {
+      "file": "candidate-files/backend/services/user-service/__tests__/routes/children.test.js",
+      "bytes": 12671,
+      "sha256": "b5d9e7facb428f94f0a9c2cdd6000baa2605e1fe2df3ed4377f6d5ca8fdebfc8"
+    },
+    {
+      "file": "candidate-files/backend/services/user-service/controllers/familyController.js",
+      "bytes": 19686,
+      "sha256": "5569c409582118092236aeb4272cafa881a547dd749938d7af4f0edb7077761b"
+    },
+    {
+      "file": "candidate-files/backend/tests/t2/dailyLearningPlan.integration.test.js",
+      "bytes": 5869,
+      "sha256": "5e84867076eb8d5571757595ec0d03a271f6365c9e9f6c31cbd99f7a833e7e1c"
+    },
+    {
+      "file": "candidate-files/backend/tests/t2/serviceRuntime.js",
+      "bytes": 13631,
+      "sha256": "3ae4a4dbedd223c7fd9412f73d5bb31e656c152651f8ebf5ad9ffd5e8d37f914"
+    },
+    {
+      "file": "candidate-files/backend/tests/task11/apiClient.integration.test.js",
+      "bytes": 2780,
+      "sha256": "6fd6b337f02045cbacb653a9bf1af58dfe4e65b8338f02eab3a53db99871b130"
+    },
+    {
+      "file": "candidate-files/backend/tests/task11/apiClient.js",
+      "bytes": 1894,
+      "sha256": "72426878b6b9fd7726a58b8eb14228e8d20cd084049f24e037a2ec889f92e000"
+    },
+    {
+      "file": "candidate-files/docs/README.md",
+      "bytes": 6031,
+      "sha256": "be7d6e9c721b3f410fb7ba2fa3c3c4408870a2c38daeed603173ca0571cc1b0d"
+    },
+    {
+      "file": "candidate-files/docs/api/family-learning-tracker-api.md",
+      "bytes": 128080,
+      "sha256": "9374a93631ffa1b15b9f011b101a270ddb579262c12e77376ad2d35982b7e0fc"
+    },
+    {
+      "file": "candidate-files/docs/architecture/family-ai-learning-platform-design.md",
+      "bytes": 121292,
+      "sha256": "8950a4229c016818205b68ad48784c51f3a0090ca3897d1f5179cfd634121f49"
+    },
+    {
+      "file": "candidate-files/docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 111457,
+      "sha256": "f5c16c51161e38d5095155bb1801668871abc21f67fdad1038eac95b739577bf"
+    },
+    {
+      "file": "candidate-files/docs/development/README.md",
+      "bytes": 10526,
+      "sha256": "59175372599f41f8e7e730bf0acb3fcfa2f32538b9b88f6dea8415dc596adb43"
+    },
+    {
+      "file": "candidate-files/docs/development/evidence/t5-numeric-fix-2026-10-27/README.md",
+      "bytes": 8268,
+      "sha256": "90ef049557ab2b868267816f9e8bb34ad36362c0eeaf660ffadb906017923077"
+    },
+    {
+      "file": "candidate-files/docs/development/evidence/t5-synthetic-2026-10-26/README.md",
+      "bytes": 10826,
+      "sha256": "0e22b8a11b55a12fb58e6e751b5c5b6017bd994810b80932d761d832e7240840"
+    },
+    {
+      "file": "candidate-files/docs/development/family-growth-requirement-traceability.md",
+      "bytes": 25820,
+      "sha256": "1d1849d41a902437b23fa5b29fcbf4ac29e036de7d6397c1c37b29fe215e7f7b"
+    },
+    {
+      "file": "candidate-files/docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 468214,
+      "sha256": "d4c93cc58683af9b8afd8ac244bb01a77a134fe1bd0569d7435d81aa8705f1e0"
+    },
+    {
+      "file": "candidate-files/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 82388,
+      "sha256": "b1a127f8c51e0b716b4837537224d9b090dd8c3369fe9b53ff5aca5df652565b"
+    },
+    {
+      "file": "candidate-files/eslint.config.js",
+      "bytes": 3116,
+      "sha256": "e07f77b892f797151efe704c839715933e7b0482f2ade2e367e34e13d5d69143"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/__tests__/family/DailyPlanTaskNavigation.test.js",
+      "bytes": 2062,
+      "sha256": "5fbcd0c091f44980e3bf90525d5c8e44f43ad76769795e863448a8089169030c"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+      "bytes": 24677,
+      "sha256": "2f683ec8ebef91f604d979ff02b89c5cd236250acd35fd09d0da009b5dd9e1b6"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/__tests__/shared/dailyLearningPlanApi.test.js",
+      "bytes": 3345,
+      "sha256": "509bef414275534f20adc7b22413242c0709a499b30c0252c2ba65779da6a1ff"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/components/family/DailyLearningPlanPanel.css",
+      "bytes": 2008,
+      "sha256": "3ce564afc8d3f300f631c9a8d965384061b6057cbc73118e30dd032d3af4272f"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/components/family/DailyLearningPlanPanel.js",
+      "bytes": 18106,
+      "sha256": "fffd7364258be1ce11d510688811abdbf5c5afb2907554013b2c4920085d993b"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/pages/child/ChildTodayPage.js",
+      "bytes": 5381,
+      "sha256": "2e417aa2390a67fa4a95a0e5b1fddeb4f52b7f8aee9a15a1f0d5340f75cdbd97"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/pages/family/TasksPage.js",
+      "bytes": 27276,
+      "sha256": "8a7f7db97891b1fda04bda3208f775c811512391c40d1b14bfc1efc8647dcbdd"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/pages/family/TodayPage.js",
+      "bytes": 6590,
+      "sha256": "7799da741f442955dd1d41584e09f484ccef16b7883107117f9007493b0560f2"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/services/childApi.js",
+      "bytes": 6598,
+      "sha256": "e0e81568f59e10aec039613e0ac1e4e540a3b855679c262ac32202553f02129a"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/services/dailyLearningPlan.js",
+      "bytes": 594,
+      "sha256": "df2264f86805af95a1077e7f1861796bac0f7c746ad93c815732b281ba443801"
+    },
+    {
+      "file": "candidate-files/frontend/web/src/services/familyApi.js",
+      "bytes": 9803,
+      "sha256": "1f611169b16ecf8f421c047171280f46bc2865ce836cdede2c0dd23ca18bfbb8"
+    },
+    {
+      "file": "candidate-files/scripts/check-family-docs.js",
+      "bytes": 167033,
+      "sha256": "f1901f1c0a72eaaaedab786636b3066d3de2d7d17df49ee9cd280c6830c31291"
+    },
+    {
+      "file": "candidate-files/tests/e2e/t2/dailyLearningPlan.spec.js",
+      "bytes": 19513,
+      "sha256": "4c5bec785ba12ee05b56722be6e9518996a1651c8a17637dde4547e11a4081ae"
+    },
+    {
+      "file": "candidate-manifest.json",
+      "bytes": 9121,
+      "sha256": "9257b422075c3026409ff4aa6a5901e4917870d00e00730eaba0e5f4debd149f"
+    },
+    {
+      "file": "component-green.json",
+      "bytes": 15184,
+      "sha256": "011527ecf4ca7fb3c31dc96add458efab28dc21321ff5ca6bf79b7997af2926c"
+    },
+    {
+      "file": "component-green.log",
+      "bytes": 3444,
+      "sha256": "6e7e67e2b39f81395fb4ebd8056a8884d0bb1fd71ca506077691a31edc71c34c"
+    },
+    {
+      "file": "component-red.json",
+      "bytes": 15180,
+      "sha256": "043ab784ea251559966d7359565a56749a586dde2b8aa3dd6b7cb961b594ecd7"
+    },
+    {
+      "file": "component-red.log",
+      "bytes": 6450,
+      "sha256": "ffffcdb86cb6debf3c05abde5cebca75bd6fa4d47b18afe0b759fddb8d3fe42f"
+    },
+    {
+      "file": "diff-check.json",
+      "bytes": 15009,
+      "sha256": "0c932eb48340bdb1b5072c387c9002cd9b006e9f2fc9d6f5e70b4a49096c8753"
+    },
+    {
+      "file": "diff-check.log",
+      "bytes": 288,
+      "sha256": "ec8caa03c1736e8ae8396e8ab51bf29eb5ab663f0d1f3aa3a5392d03d0e24c64"
+    },
+    {
+      "file": "docs-check-final.json",
+      "bytes": 15030,
+      "sha256": "408f3613811dbf1f554d74b28aa4924c577aed699dfaea6b29acdc84d5cffa7e"
+    },
+    {
+      "file": "docs-check-final.log",
+      "bytes": 627,
+      "sha256": "cb76714f5c69999a3d28a66725b4e1a635158db7061109ce074db90c1a4ff764"
+    },
+    {
+      "file": "docs-check.json",
+      "bytes": 15018,
+      "sha256": "a55f1b1f1a2ff435095e2fbe448711ad14927ff304bf9e337bdf50fdb28a3a42"
+    },
+    {
+      "file": "docs-check.log",
+      "bytes": 621,
+      "sha256": "97939f23f17e8549bd7632939874396f4063ed3abc0b6a32fa0fdd79cf285a2c"
+    },
+    {
+      "file": "docs-gate-final.json",
+      "bytes": 15142,
+      "sha256": "1535e2ee9053ed6e4dd8f2d8a90ffab4a4d22c720b85f6dba117ac71cf983a2a"
+    },
+    {
+      "file": "docs-gate-final.log",
+      "bytes": 17590,
+      "sha256": "392e6f047d311f8f08a6301774cd4565c3dbc223729c827898350686f6b61557"
+    },
+    {
+      "file": "docs-gate.json",
+      "bytes": 15130,
+      "sha256": "95ac9a25715cfb13fc3836b08467074caa5eb292a0aa6d5a9701a58f27a8c570"
+    },
+    {
+      "file": "docs-gate.log",
+      "bytes": 17584,
+      "sha256": "c60102636389c874733c560d2ccc228ab2e2d17172e5282d0ba38f2d85fc26f4"
+    },
+    {
+      "file": "fixed-build.json",
+      "bytes": 15062,
+      "sha256": "8d9152e42c20d0fc2a800a79436e81ba827d28b44f7fdf030d3b9a38a66d9307"
+    },
+    {
+      "file": "fixed-build.log",
+      "bytes": 1287,
+      "sha256": "24e7685960374cc33b3837ad6d01e3ed9e9386c6618863a7b062cde9446c59b4"
+    },
+    {
+      "file": "fixed-web/asset-manifest.json",
+      "bytes": 369,
+      "sha256": "34a5007265688d549401cbe8be78a924ba5274c63687dd97e1c8d6b55bb25b11"
+    },
+    {
+      "file": "fixed-web/index.html",
+      "bytes": 725,
+      "sha256": "ceff88272dbf53677f76c0d7f8f79bd3e98f27f0164de5ddd664a500bdbd50c6"
+    },
+    {
+      "file": "fixed-web/manifest.json",
+      "bytes": 180,
+      "sha256": "ff7923e959200fe2ca0e6450a39002ae26e9d62e0ef69c40186ebe172835fa76"
+    },
+    {
+      "file": "fixed-web/static/css/main.da77081e.css",
+      "bytes": 29859,
+      "sha256": "62c71a1507fd7134697f924fd682af90a37e03d78024eb9605cd8b16afe9fcc2"
+    },
+    {
+      "file": "fixed-web/static/css/main.da77081e.css.map",
+      "bytes": 47905,
+      "sha256": "316a40763d24253f58dcfb9b523d098b5b1efee52ccc5fdd69db62726ab40a3f"
+    },
+    {
+      "file": "fixed-web/static/js/main.962fc6eb.js",
+      "bytes": 531591,
+      "sha256": "c4e209ce3d9fbc8973c9f06359e45539e4c6805c07788f2f8209760291895540"
+    },
+    {
+      "file": "fixed-web/static/js/main.962fc6eb.js.LICENSE.txt",
+      "bytes": 13194,
+      "sha256": "776626e2a539bae6c6ffdae382b2fc62045dcd76b3f6b6e40c37726056e87f22"
+    },
+    {
+      "file": "fixed-web/static/js/main.962fc6eb.js.map",
+      "bytes": 1997795,
+      "sha256": "b12c22709bb85ac48909378b89bbe01d6969a734ed349501f8e91a2e0eb11e54"
+    },
+    {
+      "file": "formal-http.json",
+      "bytes": 15022,
+      "sha256": "d4535f0ea4e9fc62b58998c80813bcfd2a1b0b68afae18b68fdfa9d1d8a6857c"
+    },
+    {
+      "file": "formal-http.log",
+      "bytes": 1488,
+      "sha256": "9bfdee59b2588d0b03a6a6edf751db595c2ff5df701694ffe85400f3e8034583"
+    },
+    {
+      "file": "freeze-verification.json",
+      "bytes": 3489,
+      "sha256": "24a220bddf7d2003aa18e365711aa2feda2873050ea37a9785a7fb32c26580eb"
+    },
+    {
+      "file": "freeze.cjs",
+      "bytes": 7414,
+      "sha256": "f73e8589d3e827059755d9037ce810c084f6566a73ffe65b80778bedf7ae8808"
+    },
+    {
+      "file": "frontend-full.json",
+      "bytes": 15097,
+      "sha256": "a803113947ca59439c7bdc3093746173bebb5f291767f2a4d38fe1cac12e50a4"
+    },
+    {
+      "file": "frontend-full.log",
+      "bytes": 3162,
+      "sha256": "25c8d4a1e883000a0a161a1b750dce2d727f96c2f89972bde6ebf5aa6276c902"
+    },
+    {
+      "file": "lint-focused.json",
+      "bytes": 15214,
+      "sha256": "957c46a58f55b078640e95d019c4837f2eb75062d69d905ed0d1651b0bfbe996"
+    },
+    {
+      "file": "lint-focused.log",
+      "bytes": 481,
+      "sha256": "9b8f8a89b8d573d0b884b8852c0b628f8ef9fc9b2f2042cf9a9f68db8eaa65f0"
+    },
+    {
+      "file": "original-child-green-output/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "original-child-green-output/number-input-incomplete-na-bd912-ntly-clear-a-saved-estimate/native-incomplete-number.png",
+      "bytes": 90101,
+      "sha256": "ccaa0ef2b476914c0de3093c9ef9c7a6f9da99ac665d1bb6980ed52d8d23da88"
+    },
+    {
+      "file": "original-child-green-results.json",
+      "bytes": 5439,
+      "sha256": "b41d6e3358e15ca3dee80aac254013dde9e09c24c735d9996760874fdc7b3214"
+    },
+    {
+      "file": "original-child-green.json",
+      "bytes": 15410,
+      "sha256": "b2ba8c6c262865b829ea4d211f7b4fb27a04b9773c7286a75f58dfbd29f772aa"
+    },
+    {
+      "file": "original-child-green.log",
+      "bytes": 1239,
+      "sha256": "f8c8c7b16fde46b07c1b822acc10647c834a8f05b2bd61beaca4cb589a71023a"
+    },
+    {
+      "file": "original-child-red-output/.last-run.json",
+      "bytes": 96,
+      "sha256": "370e6ca1bb9d307ebbf65461ce76a70b65793000a8f3b46bb2aeb6468611f22a"
+    },
+    {
+      "file": "original-child-red-output/number-input-incomplete-na-bd912-ntly-clear-a-saved-estimate/error-context.md",
+      "bytes": 7276,
+      "sha256": "7e760db6bd98ee4f107c22df9fc6ce53078fb1a36229b54908e14fd4473a2ddb"
+    },
+    {
+      "file": "original-child-red-output/number-input-incomplete-na-bd912-ntly-clear-a-saved-estimate/native-incomplete-number.png",
+      "bytes": 82760,
+      "sha256": "6375329a5f36c24859ddef3905eba68e76fd2b5e37a08ecd478149d238f3c42b"
+    },
+    {
+      "file": "original-child-red-results.json",
+      "bytes": 12698,
+      "sha256": "ac3ed99259e682721d5b15334f913835a162ff369ed15cf4b427aad29c68bdaf"
+    },
+    {
+      "file": "original-child-red.json",
+      "bytes": 15405,
+      "sha256": "c71a80cfe6a5c2aa0111acfa9de1505115f64224d73c8e63b159575c2dd3d06b"
+    },
+    {
+      "file": "original-child-red.log",
+      "bytes": 3314,
+      "sha256": "edbcc66390efe02c9bdb08330f1e64485e5291e5a505ddc1c4415e66d454cd52"
+    },
+    {
+      "file": "original-controls-green-output/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "original-controls-green-output/number-controls-parent-inc-902cc-estimate-or-estimator-audit/parent-invalid-after-save.png",
+      "bytes": 110787,
+      "sha256": "dbff74310ab75c00de2eb5f83ff1ebcbc6b604599385153e5ee70270aceb6474"
+    },
+    {
+      "file": "original-controls-green-output/number-controls-parent-inc-902cc-estimate-or-estimator-audit/parent-invalid-before-save.png",
+      "bytes": 110787,
+      "sha256": "dbff74310ab75c00de2eb5f83ff1ebcbc6b604599385153e5ee70270aceb6474"
+    },
+    {
+      "file": "original-controls-green-results.json",
+      "bytes": 7543,
+      "sha256": "8852ab647380fa8b5d3ba05c25b6687e582f34c5cf94008c75270e0defd8ca71"
+    },
+    {
+      "file": "original-controls-green.json",
+      "bytes": 15430,
+      "sha256": "add5b45d9241390459e921873404add2f7816d7e4262b8f71427768b650e9a67"
+    },
+    {
+      "file": "original-controls-green.log",
+      "bytes": 1656,
+      "sha256": "5ae12b3d67c9fa9c9ae62ef7c3420ac662270dbf43c584dcad342382446a998c"
+    },
+    {
+      "file": "original-controls-red-output/.last-run.json",
+      "bytes": 96,
+      "sha256": "ec3e413706827b5468acd836113edbb65013ae7be41b5c9311abd08c9bcf84ad"
+    },
+    {
+      "file": "original-controls-red-output/number-controls-parent-inc-902cc-estimate-or-estimator-audit/error-context.md",
+      "bytes": 11136,
+      "sha256": "fd45a9600b344bedce7b5f0d837e283900a490a4729bb3f88d121dc88045f9cc"
+    },
+    {
+      "file": "original-controls-red-output/number-controls-parent-inc-902cc-estimate-or-estimator-audit/parent-invalid-after-save.png",
+      "bytes": 106435,
+      "sha256": "d91eef92c1b5c1e594f3e6c1a358c6ad99d60f0c4873eac7e571a533603d6de3"
+    },
+    {
+      "file": "original-controls-red-output/number-controls-parent-inc-902cc-estimate-or-estimator-audit/parent-invalid-before-save.png",
+      "bytes": 103715,
+      "sha256": "30b8758a432f91bcc2b3463d7b948a80a1bd3c96cc2118bdc021687f88024308"
+    },
+    {
+      "file": "original-controls-red-results.json",
+      "bytes": 16151,
+      "sha256": "da3807e07c9617bad55b20608ebcc7f996ea66c55ad4cd95982b414250eca86f"
+    },
+    {
+      "file": "original-controls-red.json",
+      "bytes": 15425,
+      "sha256": "8a964fd34e151eb10459ac9d907a9a59e7dd4edb41f78a8cc91f3af3a4145c11"
+    },
+    {
+      "file": "original-controls-red.log",
+      "bytes": 4245,
+      "sha256": "cdc437f8565c23049025c45a705d57552dd2811d95444c301dbbe6031008402a"
+    },
+    {
+      "file": "original-probes/browser.config.cjs",
+      "bytes": 503,
+      "sha256": "370616a80c38425f146cbb506f86b41e942816a8c7d787f4a36174285a0c4a3a"
+    },
+    {
+      "file": "original-probes/number-controls.config.cjs",
+      "bytes": 106,
+      "sha256": "b11db85ae1f2bc0539572ed8493f305fd47babc8a6ea711a1c8ea34c7bd4f93d"
+    },
+    {
+      "file": "original-probes/number-controls.spec.cjs",
+      "bytes": 3860,
+      "sha256": "24b717c10d24e28a87e6c5db22628a9dd1b164b39a3d35e15ba8fc854e61b1ea"
+    },
+    {
+      "file": "original-probes/number-input.spec.cjs",
+      "bytes": 2075,
+      "sha256": "0bf16c80653ad149a2082503b5fcbdcd197b81afa65de18a34064f901ba1b015"
+    },
+    {
+      "file": "permanent-green-output/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/child-intentional-clear.png",
+      "bytes": 89032,
+      "sha256": "13c72ba89f5d2635aa66f29f09a452c70e79e4062b3836cae018c89030c739e0"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/child-invalid-estimate.png",
+      "bytes": 95046,
+      "sha256": "48ff0c7c7c065f3957754744d18925c9deb73dc8c8c7bffb69b0fde066ff963b"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 110575,
+      "sha256": "94f96e3a7515063a1bc6cf2106703322d7acf4ac0a13e6803d50e10d01071704"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 98120,
+      "sha256": "dc85ad27b7f8349e3519ce81d076962db4e66847cfc025b5ada92782bd9cd2d6"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 106464,
+      "sha256": "18f93baed5575f58ef3bc60a4dd50d483dc8f4a62b17dbc14e2f1fcb2cc5b873"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 137645,
+      "sha256": "232c2208cdd44f03714a5c9c9d437b7ed1c381cf5ea4ef277a44503029bd2c77"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 116960,
+      "sha256": "55eec4176b8301159907d28d3d99f28e5e652bc0e069252409271792bb5763bc"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 138069,
+      "sha256": "7d368bc8b862a6c451959d360389df74b19447a8f967c31b217688e3895b91a5"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 102029,
+      "sha256": "682f2c4d83e540edc5d744f055a64b1aed9c8c6a0ca9bd5c6ccdb361e7fb6eb7"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 88624,
+      "sha256": "946a74c4872f0a5a4e9d630f33cb662190871c57480413ad1a31bb996e1247cb"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 97708,
+      "sha256": "eb1f83afbea5f0eee41d7a1aa7f9ffee2e40cec5759546e48b2637f5c01cebb5"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129228,
+      "sha256": "9f1a4a9501a6a0ff6591d5de55b52c90ccb1f9050cea1894c0749cd7c9278ed0"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107514,
+      "sha256": "5ace6e32e272e95dde70918512ae30ae334460091198a6b8a6dd61a06e44ef23"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128188,
+      "sha256": "12c7851c237d35075f97490b3157cc9eb453888b958239e76661371f95836433"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/parent-intentional-clear.png",
+      "bytes": 125457,
+      "sha256": "952b3ae554cb7e97d006969a2fc8b63bfc253a4a746be1ab3e0e9d3365641f5f"
+    },
+    {
+      "file": "permanent-green-output/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/parent-invalid-estimate.png",
+      "bytes": 131553,
+      "sha256": "9098329ab8a3ea0fc908b3aa0882ba22c4e7b7c3fc96454a2ead91c4dc63e0d5"
+    },
+    {
+      "file": "permanent-red-output/.last-run.json",
+      "bytes": 145,
+      "sha256": "33d05612682fd9516c69c715012d53b2339d868feb24d4f94945500d561b7559"
+    },
+    {
+      "file": "permanent-red-output/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/error-context.md",
+      "bytes": 19949,
+      "sha256": "64ea0142ef1d3f99db34f8a3c1f96dd39e8212f6d5ed5f84044d7a3fff7d702a"
+    },
+    {
+      "file": "permanent-red-output/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/error-context.md",
+      "bytes": 21793,
+      "sha256": "a7bae5be0639049392f516c36c1683013332d253ce6b5de7c44aaea10d28ab62"
+    },
+    {
+      "file": "probe-path-adaptation.json",
+      "bytes": 1500,
+      "sha256": "aa2d615f2047794d51596a249a6e241095562b1236310838bf233b91fdd8b2dc"
+    },
+    {
+      "file": "revision.patch",
+      "bytes": 29028,
+      "sha256": "acdbdccae9267335dbcd46800f7d120af83318597e78716aedb144fd3425f119"
+    },
+    {
+      "file": "run.cjs",
+      "bytes": 2283,
+      "sha256": "0b6edc58a5bae1e14e4993192e49f5ea2a9fc78774f526a83116ac05c6f44e47"
+    }
+  ]
+}

@@ -44,9 +44,11 @@ module.exports = [
       'backend/common/deployment/__tests__/**/*.js',
       'backend/common/repositories/**/*family*.js',
       'backend/common/services/**/*{media,Media,mongoTransaction}*.js',
-      'backend/common/utils/**/*{family,Family}*.js',
+      'backend/common/utils/**/*{family,Family,dailyLearningPlan}*.js',
       'backend/gateway/**/*.js',
-      'backend/services/**/*{family,Family,growth,Growth,media,Media,child,Child,notification,Notification,reminder,Reminder}*.js',
+      'backend/services/**/*{family,Family,growth,Growth,media,Media,child,Child,notification,Notification,reminder,Reminder,dailyLearningPlan,DailyLearningPlan}*.js',
+      'backend/tests/t2/dailyLearningPlan.integration.test.js',
+      'tests/e2e/t2/dailyLearningPlan.spec.js',
       'backend/services/{user,homework,resource}-service/{app,server}.js',
       'scripts/**/*.js',
       'eslint.config.js',
@@ -67,7 +69,7 @@ module.exports = [
       'frontend/web/src/contexts/{AuthContext,ChildAuthContext,FamilyContext}.js',
       'frontend/web/src/hooks/{useAsyncResource,useChildDataResource,useChildResource}.js',
       'frontend/web/src/pages/{child,family}/**/*.{js,jsx}',
-      'frontend/web/src/services/{childApi,childScope,childSession,familyApi,familySession}.js',
+      'frontend/web/src/services/{childApi,childScope,childSession,familyApi,familySession,dailyLearningPlan}.js',
       'frontend/web/src/__tests__/{child,family,shared}/**/*.{js,jsx}'
     ],
     languageOptions: {

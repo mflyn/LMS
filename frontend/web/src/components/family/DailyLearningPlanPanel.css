@@ -1,0 +1,19 @@
+.daily-plan { border-top: 1px solid #d7dce2; padding: 20px 0; min-width: 0; }
+.daily-plan-heading, .daily-plan-task, .daily-plan-actions, .daily-plan-tools, .daily-plan-estimates { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.daily-plan-heading { justify-content: space-between; }
+.daily-plan h2 { font-size: 20px; margin: 0; }
+.daily-plan h3 { font-size: 17px; margin-top: 24px; }
+.daily-plan-items { margin: 16px 0; }
+.daily-plan-item { padding: 14px 0; border-bottom: 1px solid #e0e4e9; }
+.daily-plan-task > a, .daily-plan-task > strong { overflow-wrap: anywhere; flex: 1 1 180px; }
+.daily-plan-controls { padding: 10px 0; border: 0; display: flex; flex-wrap: wrap; align-items: end; gap: 12px; min-width: 0; }
+.daily-plan-controls label { display: flex; flex-direction: column; gap: 6px; overflow-wrap: anywhere; max-width: 100%; }
+.daily-plan-controls input { width: 110px; min-height: 44px; padding: 6px; border: 1px solid #9ba6b1; border-radius: 4px; font-size: 16px; }
+.daily-plan button { min-width: 44px; min-height: 44px; padding: 8px 12px; border: 1px solid #9ba6b1; border-radius: 4px; background: #fff; color: #203c3b; cursor: pointer; font-size: 15px; }
+.daily-plan button:disabled { opacity: .5; cursor: not-allowed; }
+.daily-plan button:focus-visible, .daily-plan a:focus-visible { outline: 3px solid #16836e; outline-offset: 2px; }
+.daily-plan-candidates { list-style: none; padding: 0; }
+.daily-plan-candidates li { display: grid; grid-template-columns: minmax(0, 1fr) auto 44px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e0e4e9; }
+.daily-plan-candidates a { overflow-wrap: anywhere; }
+.daily-plan .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 520px) { .daily-plan-candidates li { grid-template-columns: minmax(0, 1fr) 44px; } .daily-plan-candidates li > span { grid-column: 1; grid-row: 2; } .daily-plan-candidates button { grid-column: 2; grid-row: 1 / 3; } }

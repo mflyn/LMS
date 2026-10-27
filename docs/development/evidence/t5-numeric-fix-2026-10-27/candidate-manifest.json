@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-27T00:37:31.907Z",
+  "baseCommit": "20da7e855413394454ba0a41c659cfd67abfa975",
+  "baseTree": "c5250f65fa61ca027a9f895b45e551732959bfca",
+  "originalCandidateSha256": "678b650ebdd85a8c2dc8b05ab6845ab53449380f4fef6493658d3894cfd5c64d",
+  "status": "FIXED_PENDING_INDEPENDENT_REVIEW",
+  "gate": "OPEN",
+  "device": "DEVICE_PENDING",
+  "deferred": "REMAINDER_DEFERRED",
+  "definition": "Base commit plus these 42 files; includes preexisting T5 and shared AI/K12 changes, not newly owned by this revision. Generated manifest/patch/index excluded from its own file list.",
+  "changedSinceOriginalCandidate": [
+    "docs/architecture/family-self-directed-learning-system-design.md",
+    "docs/development/evidence/t5-numeric-fix-2026-10-27/README.md",
+    "docs/development/family-self-directed-learning-mvp-gate.md",
+    "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+    "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+    "frontend/web/src/components/family/DailyLearningPlanPanel.js",
+    "tests/e2e/t2/dailyLearningPlan.spec.js"
+  ],
+  "files": [
+    {
+      "file": "backend/common/createBaseApp.js",
+      "bytes": 7252,
+      "sha256": "e88d954c47af6b19ea581d10ebdb2de4eb560539795bee3874139c88b4abbc69"
+    },
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 24430,
+      "sha256": "cf4e9d21215d1b456f88d15460996bdc65fcdd9b70a81dc694905eb5f7efce73"
+    },
+    {
+      "file": "backend/common/utils/dailyLearningPlanInput.js",
+      "bytes": 1543,
+      "sha256": "f5183b8a00eb4138a31b21a6afaca5c85362769e6f6b549ec8a17bd54fdb5b6b"
+    },
+    {
+      "file": "backend/gateway/__tests__/dailyLearningPlanRoutes.test.js",
+      "bytes": 5354,
+      "sha256": "86bd1d69e6d6726b03a6f00a68073ec4ea074b896e253a72733faa5683bbb4d3"
+    },
+    {
+      "file": "backend/gateway/server.js",
+      "bytes": 5808,
+      "sha256": "1149da007585ba541cbb77de3e52d18b566e03e31b0216e2303d454ecafc88d0"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/models/DailyLearningPlan.test.js",
+      "bytes": 1726,
+      "sha256": "cde6f5a950eb9cad6527469b78799f0a3f02438f4c19b17f208f366d8c7410f8"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js",
+      "bytes": 30062,
+      "sha256": "8a3a395e7f6515b389320a71ee88c2f135c67d49c36e8872ef50623ce3d2c900"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/setup.js",
+      "bytes": 2212,
+      "sha256": "024eee18388341345e7da506ee2aed482db9d0007e092a3e040589b812184420"
+    },
+    {
+      "file": "backend/services/homework-service/models/DailyLearningPlan.js",
+      "bytes": 1603,
+      "sha256": "902265a5d02d8f1e478847c035b27c1dbe929841c6de2d77493bcd9a1f057a78"
+    },
+    {
+      "file": "backend/services/homework-service/routes/dailyLearningPlans.js",
+      "bytes": 914,
+      "sha256": "fd6f4ab7c999761575b3fcfe3d9ce0362440ff0b81c844e61670bea773cbbaca"
+    },
+    {
+      "file": "backend/services/homework-service/server.js",
+      "bytes": 10923,
+      "sha256": "6b5f3c2e7b552b01356b3a19404d28363481ed30cea1d219d64337f5b0b5baca"
+    },
+    {
+      "file": "backend/services/homework-service/services/dailyLearningPlanService.js",
+      "bytes": 7515,
+      "sha256": "0cf94fc54dd911e2261410d73e3a40994792cdfdf94fc03e7361e8a311132a1d"
+    },
+    {
+      "file": "backend/services/user-service/__tests__/routes/children.test.js",
+      "bytes": 12671,
+      "sha256": "b5d9e7facb428f94f0a9c2cdd6000baa2605e1fe2df3ed4377f6d5ca8fdebfc8"
+    },
+    {
+      "file": "backend/services/user-service/controllers/familyController.js",
+      "bytes": 19686,
+      "sha256": "5569c409582118092236aeb4272cafa881a547dd749938d7af4f0edb7077761b"
+    },
+    {
+      "file": "backend/tests/t2/dailyLearningPlan.integration.test.js",
+      "bytes": 5869,
+      "sha256": "5e84867076eb8d5571757595ec0d03a271f6365c9e9f6c31cbd99f7a833e7e1c"
+    },
+    {
+      "file": "backend/tests/t2/serviceRuntime.js",
+      "bytes": 13631,
+      "sha256": "3ae4a4dbedd223c7fd9412f73d5bb31e656c152651f8ebf5ad9ffd5e8d37f914"
+    },
+    {
+      "file": "backend/tests/task11/apiClient.integration.test.js",
+      "bytes": 2780,
+      "sha256": "6fd6b337f02045cbacb653a9bf1af58dfe4e65b8338f02eab3a53db99871b130"
+    },
+    {
+      "file": "backend/tests/task11/apiClient.js",
+      "bytes": 1894,
+      "sha256": "72426878b6b9fd7726a58b8eb14228e8d20cd084049f24e037a2ec889f92e000"
+    },
+    {
+      "file": "docs/README.md",
+      "bytes": 6031,
+      "sha256": "be7d6e9c721b3f410fb7ba2fa3c3c4408870a2c38daeed603173ca0571cc1b0d"
+    },
+    {
+      "file": "docs/api/family-learning-tracker-api.md",
+      "bytes": 128080,
+      "sha256": "9374a93631ffa1b15b9f011b101a270ddb579262c12e77376ad2d35982b7e0fc"
+    },
+    {
+      "file": "docs/architecture/family-ai-learning-platform-design.md",
+      "bytes": 121292,
+      "sha256": "8950a4229c016818205b68ad48784c51f3a0090ca3897d1f5179cfd634121f49"
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 111457,
+      "sha256": "f5c16c51161e38d5095155bb1801668871abc21f67fdad1038eac95b739577bf"
+    },
+    {
+      "file": "docs/development/README.md",
+      "bytes": 10526,
+      "sha256": "59175372599f41f8e7e730bf0acb3fcfa2f32538b9b88f6dea8415dc596adb43"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/README.md",
+      "bytes": 8268,
+      "sha256": "90ef049557ab2b868267816f9e8bb34ad36362c0eeaf660ffadb906017923077"
+    },
+    {
+      "file": "docs/development/evidence/t5-synthetic-2026-10-26/README.md",
+      "bytes": 10826,
+      "sha256": "0e22b8a11b55a12fb58e6e751b5c5b6017bd994810b80932d761d832e7240840"
+    },
+    {
+      "file": "docs/development/family-growth-requirement-traceability.md",
+      "bytes": 25820,
+      "sha256": "1d1849d41a902437b23fa5b29fcbf4ac29e036de7d6397c1c37b29fe215e7f7b"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 468214,
+      "sha256": "d4c93cc58683af9b8afd8ac244bb01a77a134fe1bd0569d7435d81aa8705f1e0"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 82388,
+      "sha256": "b1a127f8c51e0b716b4837537224d9b090dd8c3369fe9b53ff5aca5df652565b"
+    },
+    {
+      "file": "eslint.config.js",
+      "bytes": 3116,
+      "sha256": "e07f77b892f797151efe704c839715933e7b0482f2ade2e367e34e13d5d69143"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/DailyPlanTaskNavigation.test.js",
+      "bytes": 2062,
+      "sha256": "5fbcd0c091f44980e3bf90525d5c8e44f43ad76769795e863448a8089169030c"
+    },
+    {
+      "file": "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+      "bytes": 24677,
+      "sha256": "2f683ec8ebef91f604d979ff02b89c5cd236250acd35fd09d0da009b5dd9e1b6"
+    },
+    {
+      "file": "frontend/web/src/__tests__/shared/dailyLearningPlanApi.test.js",
+      "bytes": 3345,
+      "sha256": "509bef414275534f20adc7b22413242c0709a499b30c0252c2ba65779da6a1ff"
+    },
+    {
+      "file": "frontend/web/src/components/family/DailyLearningPlanPanel.css",
+      "bytes": 2008,
+      "sha256": "3ce564afc8d3f300f631c9a8d965384061b6057cbc73118e30dd032d3af4272f"
+    },
+    {
+      "file": "frontend/web/src/components/family/DailyLearningPlanPanel.js",
+      "bytes": 18106,
+      "sha256": "fffd7364258be1ce11d510688811abdbf5c5afb2907554013b2c4920085d993b"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildTodayPage.js",
+      "bytes": 5381,
+      "sha256": "2e417aa2390a67fa4a95a0e5b1fddeb4f52b7f8aee9a15a1f0d5340f75cdbd97"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TasksPage.js",
+      "bytes": 27276,
+      "sha256": "8a7f7db97891b1fda04bda3208f775c811512391c40d1b14bfc1efc8647dcbdd"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TodayPage.js",
+      "bytes": 6590,
+      "sha256": "7799da741f442955dd1d41584e09f484ccef16b7883107117f9007493b0560f2"
+    },
+    {
+      "file": "frontend/web/src/services/childApi.js",
+      "bytes": 6598,
+      "sha256": "e0e81568f59e10aec039613e0ac1e4e540a3b855679c262ac32202553f02129a"
+    },
+    {
+      "file": "frontend/web/src/services/dailyLearningPlan.js",
+      "bytes": 594,
+      "sha256": "df2264f86805af95a1077e7f1861796bac0f7c746ad93c815732b281ba443801"
+    },
+    {
+      "file": "frontend/web/src/services/familyApi.js",
+      "bytes": 9803,
+      "sha256": "1f611169b16ecf8f421c047171280f46bc2865ce836cdede2c0dd23ca18bfbb8"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "bytes": 167033,
+      "sha256": "f1901f1c0a72eaaaedab786636b3066d3de2d7d17df49ee9cd280c6830c31291"
+    },
+    {
+      "file": "tests/e2e/t2/dailyLearningPlan.spec.js",
+      "bytes": 19513,
+      "sha256": "4c5bec785ba12ee05b56722be6e9518996a1651c8a17637dde4547e11a4081ae"
+    }
+  ],
+  "entriesSha256": "44f7011d0118108e9660e4b8ab6698e2968c65318d9bacb0ff0f882c34997b8e",
+  "patchSha256": "acdbdccae9267335dbcd46800f7d120af83318597e78716aedb144fd3425f119"
+}

@@ -1,0 +1,120 @@
+{
+  "at": "2026-10-27T00:37:31.908Z",
+  "executor": "development thread; not independent QA",
+  "historical": [
+    {
+      "root": "/Users/linmingfeng/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t5-full-review-2026-10-27/r1",
+      "checked": 108,
+      "mismatches": []
+    },
+    {
+      "root": "release-gate-artifacts/t5-synthetic-2026-10-26",
+      "checked": 364,
+      "mismatches": []
+    }
+  ],
+  "probes": [
+    {
+      "file": "number-input.spec.cjs",
+      "onlyRootPathChanged": true,
+      "originalSha256": "5e4a7aad1a734c3014b166c39d03f9339f9d9613ce6f22087ea9f80553e990ff",
+      "adaptedSha256": "0bf16c80653ad149a2082503b5fcbdcd197b81afa65de18a34064f901ba1b015"
+    },
+    {
+      "file": "number-controls.spec.cjs",
+      "onlyRootPathChanged": true,
+      "originalSha256": "4367b24ea516b982fbb6704bf2a7fcc2101de89fc22aaca4a42aa2386460af12",
+      "adaptedSha256": "24b717c10d24e28a87e6c5db22628a9dd1b164b39a3d35e15ba8fc854e61b1ea"
+    },
+    {
+      "file": "browser.config.cjs",
+      "onlyRootPathChanged": true,
+      "originalSha256": "1eeac0de6ea08c2eae885b7cc51e05ec438edbdedb43470d4788da2e4f94e0e9",
+      "adaptedSha256": "370616a80c38425f146cbb506f86b41e942816a8c7d787f4a36174285a0c4a3a"
+    },
+    {
+      "file": "number-controls.config.cjs",
+      "onlyRootPathChanged": true,
+      "originalSha256": "b11db85ae1f2bc0539572ed8493f305fd47babc8a6ea711a1c8ea34c7bd4f93d",
+      "adaptedSha256": "b11db85ae1f2bc0539572ed8493f305fd47babc8a6ea711a1c8ea34c7bd4f93d"
+    }
+  ],
+  "runs": [
+    {
+      "label": "component-green",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "frontend-full",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "fixed-build",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "browser-green",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "original-child-green",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "original-controls-green",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "formal-http",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "lint-focused",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "docs-check-final",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "docs-gate-final",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    },
+    {
+      "label": "diff-check",
+      "exitCode": 0,
+      "sourceStableDuringRun": true,
+      "testedCodeMatchesCandidate": true
+    }
+  ],
+  "baselineFileCount": 41,
+  "currentFileCount": 42,
+  "changedFileCount": 7,
+  "patchReplay": {
+    "exitCode": 0,
+    "checked": 42,
+    "mismatches": []
+  },
+  "candidateEntriesSha256": "44f7011d0118108e9660e4b8ab6698e2968c65318d9bacb0ff0f882c34997b8e",
+  "patchSha256": "acdbdccae9267335dbcd46800f7d120af83318597e78716aedb144fd3425f119"
+}

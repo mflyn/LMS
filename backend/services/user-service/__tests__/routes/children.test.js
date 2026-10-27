@@ -92,6 +92,17 @@ describe('children routes', () => {
     app = createApp();
   });
 
+  test('authorized profile exposes live family timezone for the child daily plan without assuming device timezone', async () => {
+    const parent = await createParent(), family = await createFamily(app, parent), child = await createChild(app, parent);
+    await Family.updateOne({ _id: family.familyId }, { $set: { timezone: 'Pacific/Honolulu' } });
+    const url = `/api/children/${child.childId}`;
+    const parentRead = await (await request(app)).get(url).set(parentHeaders(parent, 'GET', url));
+    expect(parentRead.status).toBe(200); expect(parentRead.body.data.timezone).toBe('Pacific/Honolulu');
+    const actor = { id: child.childId, childId: child.childId, familyId: family.familyId, role: 'student', tokenVersion: 0 };
+    const childRead = await (await request(app)).get(url).set(signedHeaders(actor, 'GET', url));
+    expect(childRead.status).toBe(200); expect(childRead.body.data.timezone).toBe('Pacific/Honolulu');
+  });
+
   test('parent adds multiple children to own family', async () => {
     const parent = await createParent();
     await createFamily(app, parent, '小明的家');

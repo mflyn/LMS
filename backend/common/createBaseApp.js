@@ -103,6 +103,9 @@ function createBaseApp(options = {}) {
   // Body parsers (限制大小)
   app.use(express.json({ limit: options.requestBodyLimit || '10kb' }));
   app.use(express.urlencoded({ extended: true, limit: options.requestBodyLimit || '10kb' }));
+
+  // Optional strict input boundary, before sanitizers can erase keys or coerce values.
+  if (options.beforeSanitize) app.use(options.beforeSanitize);
   
   // NoSQL injection sanitize
   app.use(mongoSanitize());

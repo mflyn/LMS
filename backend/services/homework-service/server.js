@@ -16,6 +16,7 @@ const homeworkRoutes = require('./routes/homework');
 const growthTaskRoutes = require('./routes/growthTasks');
 const { createGrowthTaskRouter } = growthTaskRoutes;
 const GrowthTask = require('./models/GrowthTask');
+const { createDailyLearningPlanRouter } = require('./routes/dailyLearningPlans');
 const { createGrowthTaskAttachmentMediaService } = require('./services/growthTaskAttachmentMediaService');
 const { validateClientConfig } = require('./services/starAwardClient');
 const { resolveCompletionMode, assertCompletionAssemblyAvailable, withCompletionMode,
@@ -63,6 +64,7 @@ const createApp = ({
   app.use(requestTimeout());
   app.use('/api/homework', homeworkRouter);
   app.use('/api/growth-tasks', growthTaskRouter);
+  app.use('/api/children', createDailyLearningPlanRouter());
   if (retirementRouter) app.use('/api/internal/completion-media-retirements', retirementRouter);
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', service: 'homework-service' });

@@ -6,6 +6,7 @@ describe('Task 11 public API client', () => {
       post: jest.fn().mockResolvedValue({ status: 200, data: { success: true } }),
       get: jest.fn().mockResolvedValue({ status: 200, data: { success: true } }),
       patch: jest.fn().mockResolvedValue({ status: 200, data: { success: true } }),
+      put: jest.fn().mockResolvedValue({ status: 200, data: { success: true } }),
       delete: jest.fn().mockResolvedValue({ status: 200, data: { success: true } })
     };
     const api = createTask11ApiClient({ httpClient });
@@ -15,6 +16,9 @@ describe('Task 11 public API client', () => {
     await api.loginChild({ familyId: 'family-a', childId: 'child-a', pin: '2468' });
     await api.asParent('parent-token').get('/api/families/me');
     await api.asChild('child-token').patch('/api/growth-tasks/task-a/complete', { actualMinutes: 20 });
+    await api.asChild('child-token').put('/api/children/child-a/daily-learning-plans/2026-10-26', { expectedVersion: 0, items: [] });
+    expect(httpClient.put).toHaveBeenCalledWith('/api/children/child-a/daily-learning-plans/2026-10-26',
+      { expectedVersion: 0, items: [] }, { headers: { Authorization: 'Bearer child-token' } });
 
     expect(httpClient.post).toHaveBeenNthCalledWith(1, '/api/auth/register', { email: 'parent@example.com' });
     expect(httpClient.post).toHaveBeenNthCalledWith(2, '/api/auth/login', { username: 'parent', password: 'password' });

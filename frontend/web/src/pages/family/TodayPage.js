@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import FamilyDataState from '../../components/family/FamilyDataState';
+import DailyLearningPlanPanel from '../../components/family/DailyLearningPlanPanel';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildResource } from '../../hooks/useChildResource';
 import {
@@ -30,7 +31,7 @@ const mondayFor = (timezone) => {
 };
 
 const TodayPage = () => {
-  const { family, selectedChild } = useFamily();
+  const { family, selectedChild, childScopeVersion } = useFamily();
   const weekStart = useMemo(() => mondayFor(family?.timezone || 'Asia/Shanghai'), [family?.timezone]);
   const loadTasks = useCallback(
     ({ childId, signal }) => listGrowthTasks({ childId, scope: 'today' }, signal),
@@ -118,6 +119,9 @@ const TodayPage = () => {
         <article><span>本周成长投入</span><strong>{weekly?.totalDurationMinutes == null ? '—' : `${weekly.totalDurationMinutes} 分钟`}</strong></article>
         <article><span>待复习错题</span><strong>{pendingMistakes ?? '—'}</strong></article>
       </div>
+
+      <DailyLearningPlanPanel role="parent" familyId={family?.familyId} childId={selectedChild.childId}
+        timezone={family?.timezone} grade={selectedChild.grade} scopeVersion={childScopeVersion} />
 
       <div className="family-section-grid">
         <section className="family-panel" aria-labelledby="today-task-list-title">

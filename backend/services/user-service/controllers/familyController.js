@@ -393,11 +393,13 @@ const createGetChild = (childAvatarMediaService) => async (req, res) => {
         return sendError(res, 403, 'Children can only access their own profile');
       }
       const child = await User.findById(childId);
+      const family = child && await Family.findOne({ _id: child.familyId, childIds: child._id });
+      if (!family) return sendError(res, 403, 'Cannot access this family child');
       const resumed = child && childAvatarMediaService
         ? await childAvatarMediaService.resume(child)
         : child;
       return resumed
-        ? res.json({ success: true, data: { child: childView(resumed, childAvatarMediaService) } })
+        ? res.json({ success: true, data: { child: childView(resumed, childAvatarMediaService), timezone: family.timezone } })
         : sendError(res, 404, 'Child not found');
     }
 
@@ -412,7 +414,7 @@ const createGetChild = (childAvatarMediaService) => async (req, res) => {
     }
 
     const resumed = childAvatarMediaService ? await childAvatarMediaService.resume(child) : child;
-    return res.json({ success: true, data: { child: childView(resumed, childAvatarMediaService) } });
+    return res.json({ success: true, data: { child: childView(resumed, childAvatarMediaService), timezone: family.timezone } });
   } catch (error) {
     if (error.status && error.code) {
       return sendFamilyError(res, error.status, error.code, error.message, error.details || []);

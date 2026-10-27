@@ -815,8 +815,21 @@ sequenceDiagram
   alt 版本一致
     HW-->>UI: 保存后的计划 + 新 version
   else 有其他设备更新
-    HW-->>UI: 409 + 最新计划摘要
-    UI-->>C: 刷新后重新确认
+    HW-->>UI: 409 VERSION_CONFLICT（标准错误，不含最新计划）
+    UI->>GW: 独立 GET 日计划
+    GW->>HW: 已验证身份 + 原计划日期
+    alt 读取成功
+      HW-->>UI: 最新计划及 version
+      UI-->>C: 比较完整顺序与估时，保留草稿和原命令供核对
+      C->>UI: 显式采用最新计划
+      UI->>UI: 替换草稿和版本，清除原命令，不自动保存
+    else 普通读取失败
+      HW-->>UI: 读取错误（或网络失败）
+      UI-->>C: 保留草稿和原命令，允许重读，不自动覆盖
+    else 身份或权限拒绝
+      HW-->>UI: 401 / 403
+      UI->>UI: 清除私有计划、草稿和原命令
+    end
   end
 ```
 
@@ -1215,7 +1228,8 @@ PASS/PARTIAL/FAIL、停止和缺失规则统一引用[增量 Gate §14](../devel
 
 执行拆分见[自主学习 MVP 开发计划](../superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md)。
 该计划按本节范围列出 T0–T9、文件落点、测试和发布/家庭验证步骤；T0 已完成契约基线，
-T1 后端工程已关闭，仅限既定合成验收；T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5–T9 待执行。
+T1 后端工程已关闭，仅限既定合成验收；T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6–T9 待执行。
+T5 总门禁经用户批准限定合成范围关闭，T4 状态不变；DEVICE_PENDING、非阻断补测和后置范围保留，Git 仅授权专用分支和 PR，不合并或部署，批准与边界见 Gate §25.5–25.6。
 T3 限定合成验收及两项 P2 独立复评关闭见增量 Gate §23.8；真机 DEVICE_PENDING、SL-02 PLANNED、T7 集成及真实部署边界不变。
 T0/T1 证据见增量 Gate §17–§18；T2-2 至 T2-6 及三项 P2 已获用户批准关闭；当前工程裁决见 Gate §22.6 和[执行记录 §17](../development/family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)。最新全量 D2B-05 失败不改写，不代表高级恢复通过。
 T2 关闭范围为 ENGINEERING_SYNTHETIC_ONLY；DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED 及高级恢复/新回收 REMAINDER_DEFERRED 保留，不外推为 SL-01 整体通过。

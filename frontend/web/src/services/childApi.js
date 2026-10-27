@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { requestWithSession, sessionRequestOptions } from './familySession';
+import { dailyPlanPayload } from './dailyLearningPlan';
 
 const unwrap = (response) => response?.data?.data ?? response?.data;
 
@@ -69,6 +70,18 @@ export const listOwnTasks = (params, signal) => childGet('/api/growth-tasks', pa
   'page',
   'pageSize'
 ], signal);
+
+export const getOwnDailyLearningPlan = async (localDate, signal, expectedSession) => unwrap(
+  await childRequest((config, session) => axios.get(
+    `/api/children/${encodeURIComponent(session.actorId)}/daily-learning-plans/${encodeURIComponent(localDate)}`, config
+  ), signal, expectedSession)
+);
+export const saveOwnDailyLearningPlan = async (localDate, body, signal, expectedSession) => unwrap(
+  await childRequest((config, session) => axios.put(
+    `/api/children/${encodeURIComponent(session.actorId)}/daily-learning-plans/${encodeURIComponent(localDate)}`,
+    dailyPlanPayload(body), config
+  ), signal, expectedSession)
+);
 
 export const getOwnTask = (taskId, signal, expectedSession) => childGet(
   `/api/growth-tasks/${encodeURIComponent(taskId)}`,

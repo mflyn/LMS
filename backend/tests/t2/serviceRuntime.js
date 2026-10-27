@@ -23,6 +23,7 @@ const dependencies = () => {
     const models = {
       Role: require('../../common/models/Role'), Family: require('../../common/models/Family'),
       User: require('../../common/models/User'), Task: require('../../services/homework-service/models/GrowthTask'),
+      DailyPlan: require('../../services/homework-service/models/DailyLearningPlan'),
       Operation: require('../../services/homework-service/models/GrowthTaskCompletionOperation'),
       Guard: require('../../services/homework-service/models/CompletionMediaGuard'),
       Asset: require('../../services/resource-service/models/MediaAsset'),
@@ -205,7 +206,7 @@ const createT2Runtime = async ({ beforeStart } = {}) => {
       scanner: 'trusted-local; no ClamAV claim', database: 'shared isolated synthetic database; cross-service commands use HTTP' },
       droppedResponses: state.dropped,
       dropNextResponse: ({ service = 'api-gateway', method, path: target }) => {
-        if (!state.servers.some(row => row.name === service) || !['POST', 'PATCH', 'DELETE'].includes(method)
+        if (!state.servers.some(row => row.name === service) || !['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
           || typeof target !== 'string' || !target.startsWith('/api/') || target.includes('?')) throw safeError({ code: 'T2_INVALID_FAULT' });
         state.faults.push({ service, method, path: target });
       }

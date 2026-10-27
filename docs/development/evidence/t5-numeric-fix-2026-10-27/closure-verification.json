@@ -1,0 +1,147 @@
+{
+  "at": "2026-10-27T01:04:43.777Z",
+  "scope": "documentation-only approved issue closure; total T5 gate OPEN",
+  "closedIssues": [
+    "QA-T5-NUMERIC-INPUT-001",
+    "QA-T5-DESIGN-CONFLICT-002"
+  ],
+  "nonblockingOpen": [
+    "T5-NB-001",
+    "T5-NB-002"
+  ],
+  "candidateEntriesSha256": "44f7011d0118108e9660e4b8ab6698e2968c65318d9bacb0ff0f882c34997b8e",
+  "patch": {
+    "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/revision.patch",
+    "sha256": "acdbdccae9267335dbcd46800f7d120af83318597e78716aedb144fd3425f119"
+  },
+  "reviewReport": {
+    "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1/REVIEW.md",
+    "sha256": "fa21a1f11bca3704735ac5750db5378dff59168d988f431cbfe1beec0e45bb2b"
+  },
+  "reviewManifest": {
+    "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1/manifest.json",
+    "sha256": "c3620baac3152481b2cddb13a0b19ee66119625331f551912ba9280824334c31"
+  },
+  "intendedDocumentationDrift": [
+    "docs/development/family-growth-requirement-traceability.md",
+    "docs/development/family-self-directed-learning-mvp-gate.md",
+    "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md"
+  ],
+  "unchangedCandidateFiles": 39,
+  "files": [
+    {
+      "file": "docs/development/family-growth-requirement-traceability.md",
+      "sha256": "de2c08cd91eccb75d939668e4ab3768868595afc5cdf1a04d639e1c1bd989463"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "ddc49f1b8f828a04a86aec070b0c85b03260580296865bfc0bf63d0530588e91"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "2d4b7599312fa5756b26d2983550696c39c49e5a01665e2f63c49e512510d047"
+    },
+    {
+      "file": "docs/development/evidence/t5-numeric-fix-2026-10-27/closure-review.md",
+      "sha256": "3dcd3fea642934b8be1bc4b9151c5297f5291a719b6779947a674b74abde2b3d"
+    }
+  ],
+  "integrity": [
+    {
+      "root": "release-gate-artifacts/t5-numeric-fix-2026-10-27/dev-r1",
+      "count": 182,
+      "mismatches": []
+    },
+    {
+      "root": "release-gate-artifacts/t5-numeric-fix-2026-10-27/review-r1",
+      "count": 84,
+      "mismatches": []
+    },
+    {
+      "root": "release-gate-artifacts/t5-synthetic-2026-10-26",
+      "count": 364,
+      "mismatches": []
+    },
+    {
+      "root": "/Users/linmingfeng/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t5-full-review-2026-10-27/r1",
+      "count": 108,
+      "mismatches": []
+    }
+  ],
+  "runs": [
+    {
+      "label": "docs-check",
+      "command": [
+        "npm",
+        "run",
+        "docs:family:check"
+      ],
+      "cwd": "/Users/linmingfeng/GitHub PRJ/LMS",
+      "exitCode": 0,
+      "changed": [],
+      "startedAt": "2026-10-27T01:03:48.797Z",
+      "finishedAt": "2026-10-27T01:03:49.354Z"
+    },
+    {
+      "label": "docs-state",
+      "command": [
+        "npm",
+        "run",
+        "test:family-regression",
+        "--",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/familyDocumentationGate.test.js"
+      ],
+      "cwd": "/Users/linmingfeng/GitHub PRJ/LMS",
+      "exitCode": 0,
+      "changed": [],
+      "startedAt": "2026-10-27T01:03:49.522Z",
+      "finishedAt": "2026-10-27T01:04:09.743Z"
+    },
+    {
+      "label": "diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/Users/linmingfeng/GitHub PRJ/LMS",
+      "exitCode": 0,
+      "changed": [],
+      "startedAt": "2026-10-27T01:03:50.672Z",
+      "finishedAt": "2026-10-27T01:03:50.769Z"
+    }
+  ],
+  "validationArchive": "release-gate-artifacts/t5-numeric-fix-2026-10-27/closure-validation",
+  "validationArtifacts": [
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/closure-validation/diff-check.json",
+      "sha256": "0c58426094b64c20535f7b25f42b2539d9b08eb514a7fcb626921c1555abaeca"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/closure-validation/diff-check.log",
+      "sha256": "78afc1e04cc00b478b66eb0e59b1ca47ac2f9109345bed3262cb433e12758ce3"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/closure-validation/docs-check.json",
+      "sha256": "26a42e4bc33a2ddf8902923537be2855337dc84e6b8ab785d66dc52e405f7e60"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/closure-validation/docs-check.log",
+      "sha256": "5efcdbe65306ccb35be5918338a83396b6dea4edb64016c6015959bfd25994ed"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/closure-validation/docs-state.json",
+      "sha256": "aee0350cae5abffb0151c00a5cfb10578ec8fe6d3f22447d7b18930bd52c2bd0"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/closure-validation/docs-state.log",
+      "sha256": "a3a9ae6aa5301bd469bb46310cac1d12dcc8be1a2ef27f8e4443351d591c5e75"
+    },
+    {
+      "file": "release-gate-artifacts/t5-numeric-fix-2026-10-27/closure-validation/run.cjs",
+      "sha256": "0b6edc58a5bae1e14e4993192e49f5ea2a9fc78774f526a83116ac05c6f44e47"
+    }
+  ],
+  "note": "Source candidate and original evidence remain frozen. This generated file excludes itself. Documentation drift is intentional; do not relabel the current workspace as the original 42-file snapshot."
+}

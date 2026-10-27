@@ -1,6 +1,6 @@
 # 家庭自主学习 MVP 开发计划
 
-> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5-T9 待执行）；T1/T2/T3 仅限既定合成验收，DEVICE_PENDING、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留，不代表完整功能交付或真实部署获批。
+> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6-T9 待执行）；T5 总门禁已批准限定合成范围关闭，T4 状态未变；Git 仅授权专用分支和 PR，不合并或部署（Gate §25.6），DEVICE_PENDING、非阻断补测、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留。
 > 日期：2026-10-21
 > 执行约定：按仓库 AGENTS.md 逐包实施、验证和交付；不要求自动创建工作树、启动子智能体、提交或推送。
 > T0 契约基线及后续评审已获用户确认；R3-LEARNING 与门禁 P2 已关闭，T1 按用户指令开始分阶段实施，证据见增量 Gate §17–§18。
@@ -595,6 +595,39 @@ T4 总门禁仍 OPEN，不以此前勾选或全绿结果替代用户验收批准
 
 依赖：T4。模式：严格。对应工作包 4。
 
+**T5:** CLOSED
+**T5 gate:** CLOSED
+**T5 approval:** APPROVED
+**T5 scope:** LOCAL_SYNTHETIC_ONLY
+**T5 closure:** APPROVED / CLOSED / ENGINEERING_SYNTHETIC_ONLY
+**T5 historical failures:** PRESERVED
+**T5 nonblocking:** T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING
+**T5 device:** DEVICE_PENDING
+**T5 deployment:** T8_PENDING / NOT_AUTHORIZED
+**T5 deferred:** REMAINDER_DEFERRED
+**T5 Git:** BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY
+
+用户新目标已授权完整开发，接续 T4 已完成工程基线；上文 T4 段与 Gate §24 的
+T5 NOT_STARTED / 依赖授权未满足保留为历史，不再阻塞本次开发，也不意味着 T4 总门禁关闭。
+当前分批记录见 [Gate §25.2](../../development/family-self-directed-learning-mvp-gate.md#252-t5-本地合成工程提交验收2026-10-27)：
+A 基线/设计核对、B 后端、C 前端及 D 正式 HTTP/浏览器与独立复评已完成工程验证，提交用户验收。
+原 46/605、首次全量失败及后续独立发现保留在历史记录；修订后家庭后端 149 suites/4290 passed，
+前端 49/624、正式 HTTP 4/22、完整浏览器 34 passed。索引构建/限流及前端两项 P2 已独立复评。
+下面勾选仅表示工程实现和证据具备，不关闭总门禁，不替代用户、真机或 T7 综合验收。
+后续独立 QA 的数字输入 P2 / 冲突图 P3 已完成开发修订与自查，仍待独立复评，不能沿用上述
+提交验收快照视为关闭。最新状态及冻结材料见 Gate §25.3 和
+[修订交接](../../development/evidence/t5-numeric-fix-2026-10-27/README.md)，两项为
+FIXED_PENDING_INDEPENDENT_REVIEW；总门禁仍 OPEN。
+2026-10-27 后续复审已通过，用户批准关闭上述 P2/P3，两项当前 CLOSED；上段待复评为历史。
+最新关闭记录见 Gate §25.4 及[总门禁关闭评审材料](../../development/evidence/t5-numeric-fix-2026-10-27/closure-review.md)。
+T5 工程关闭申请 READY_FOR_APPROVAL，总门禁仍 OPEN，须另获用户批准；两项非阻断补测
+T5-NB-001/002 保持 OPEN_NONBLOCKING，不冒称已经补齐。
+上述为分阶段历史。用户现已另行批准 T5 限定合成工程总门禁关闭，当前以 Gate §25.5 和
+[批准记录](../../development/evidence/t5-numeric-fix-2026-10-27/approved-closure.md)为准。
+原候选/失败证据不覆盖；DEVICE_PENDING、两项非阻断补测、T7/T8/T9及后置范围保持原义务。
+开发及关闭阶段仅本地合成家庭、临时数据库/存储，当时无 Git 写入授权；当前仅授权专用分支提交、推送及 PR（Gate §25.6），不合并或部署。T6–T9 不启动，
+D01/T2-G、高级恢复/新回收仍后置且保持默认关闭，真机与服务器测试另行安排和授权。
+
 新增：第 2 节 DailyLearningPlan 模型/路由/service，及 homework 下对应模型、服务、路由测试。
 修改：homework/server、gateway/server、ChildTodayPage、API 包装与前端测试。
 
@@ -602,19 +635,19 @@ T4 总门禁仍 OPEN，不以此前勾选或全绿结果替代用户验收批准
 注意 Gateway 的 `/api/children` 原有归属：只把具体日计划路径代理给 homework，不能把全部
 children 路由改向。验证家长资料、PIN、已有 children 操作不受影响。
 
-- [ ] 写模型测试：唯一 familyId/childId/localDate，最多 20 项且 taskId 不重复，估时可空或整数 1–240。
-- [ ] TC-SL-ESTIMATE-001..004：短/中/长映射 5/15/30 或留空；新增/改分钟记录 estimateRecordedBy，
+- [x] 写模型测试：唯一 familyId/childId/localDate，最多 20 项且 taskId 不重复，估时可空或整数 1–240。
+- [x] TC-SL-ESTIMATE-001..004：短/中/长映射 5/15/30 或留空；新增/改分钟记录 estimateRecordedBy，
   仅排序保持原归属、updatedByActor 为本次操作者；清空归属/旧数据 unknown；伪造 actor 字段和跨孩子拒绝。
   父母共管仍按实时成员检查；CAS 失败不写审计，旧版本客户端无需提交审计字段。
-- [ ] 写首次并发创建测试：不存在时 expectedVersion=0，成功保存 version=1；唯一索引竞争
+- [x] 写首次并发创建测试：不存在时 expectedVersion=0，成功保存 version=1；唯一索引竞争
   返回 409，后续 CAS 更新递增；GET 不存在返回空计划/version=0，不在 GET 时隐式写入。
-- [ ] 只允许写家庭“今天”；历史只读，未来计划留后续。逐项验证同孩子任务归属，新增项限 pending；
+- [x] 只允许写家庭“今天”；历史只读，未来计划留后续。逐项验证同孩子任务归属，新增项限 pending；
   当日已完成项目可保留展示，取消/归档项目不再可行动，旧任务仍能从普通任务列表查找。
-- [ ] 日计划不修改 dueDate、不复制 task status；服务端读取时依据当前任务状态投影。
+- [x] 日计划不修改 dueDate、不复制 task status；服务端读取时依据当前任务状态投影。
   未选中的到期任务保留在“其他待办”，避免孩子排序后遗漏学校作业。
-- [ ] 孩子上下移动任务并可选估时，家长 estimatedMinutes 不被覆盖；家长代录明示实际输入者，不计独立估时。
+- [x] 孩子上下移动任务并可选估时，家长 estimatedMinutes 不被覆盖；家长代录明示实际输入者，不计独立估时。
   冲突提示重新选择，不自动重放覆盖他人；数字/图标快捷值可互换，不新增能力画像。
-- [ ] 加入午夜、无权限、首次并发、同一任务跨日参考、不同孩子同日期和旧 Gateway 路由测试。
+- [x] 加入午夜、无权限、首次并发、同一任务跨日参考、不同孩子同日期和旧 Gateway 路由测试。
 
 验收：顺序可保存且孩子间独立；无拖拽依赖、周排课或时间优化算法。
 
