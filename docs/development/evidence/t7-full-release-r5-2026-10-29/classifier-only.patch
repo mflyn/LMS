@@ -1,0 +1,46 @@
+--- a/monitor.py
++++ b/monitor.py
+@@ -7,7 +7,7 @@
+     stderr=data(result.stderr);stdout=data(result.stdout)
+     diagnostics=[]
+     for line in stderr.decode(errors='replace').splitlines()[:8]:
+-        match=re.fullmatch(r'(?:Error response from daemon: |Error: )?No such (container|object): ([a-f0-9]{12,64})',line.strip())
++        match=re.fullmatch(r'(?:(?:Error response from daemon: |Error: )?No such|error: no such) (container|object): ([a-f0-9]{12,64})',line.strip())
+         if match:
+             item={'category':'MISSING_'+match[1].upper()}
+             if match[2] in ids:item['requestedId']=match[2]
+--- a/inspect-test.py
++++ b/inspect-test.py
+@@ -32,6 +32,32 @@
+         self.assertEqual(row['stderrSha256'],hashlib.sha256(message.encode()).hexdigest())
+         self.assertEqual(row['diagnostics'],[{'category':'MISSING_CONTAINER','requestedId':ID}])
+ 
++    def test_lowercase_missing_object_records_bytes_and_still_stops(self):
++        message=('error: no such object: '+ID+'\n').encode()
++        row,_=self.failure(raw=message)
++        self.assertEqual(row['exit'],1)
++        self.assertEqual(row['stderrBytes'],len(message))
++        self.assertEqual(row['stderrSha256'],hashlib.sha256(message).hexdigest())
++        self.assertEqual(row['diagnostics'],[{'category':'MISSING_OBJECT','requestedId':ID}])
++
++    def test_lowercase_missing_container_partial_output_still_stops(self):
++        row,_=self.failure('error: no such container: '+ID+'\n',stdout='{"id":"partial"}\n')
++        self.assertGreater(row['stdoutBytes'],0)
++        self.assertEqual(row['diagnostics'],[{'category':'MISSING_CONTAINER','requestedId':ID}])
++
++    def test_lowercase_unrequested_identifier_is_not_exposed(self):
++        row,raw=self.failure('error: no such object: '+('b'*64)+'\n')
++        self.assertEqual(row['diagnostics'],[{'category':'MISSING_OBJECT'}])
++        self.assertNotIn('b'*64,raw)
++
++    def test_lowercase_error_with_extra_content_is_not_trusted(self):
++        for message in ['error: no such object: '+ID+' PRIVATE',
++                        'PRIVATE error: no such object: '+ID]:
++            with self.subTest(message=message):
++                row,raw=self.failure(message)
++                self.assertEqual(row['diagnostics'],[{'category':'UNCLASSIFIED'}])
++                self.assertNotIn('PRIVATE',raw)
++
+     def test_unknown_error_is_hashed_without_leaking_content(self):
+         message='daemon failed password=PRIVATE child-name=PRIVATE '+('x'*10000)
+         row,raw=self.failure(message)

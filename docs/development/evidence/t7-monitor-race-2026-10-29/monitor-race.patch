@@ -1,0 +1,725 @@
+--- a/monitor.py
++++ b/monitor.py
+@@ -1,6 +1,152 @@
+ import json,subprocess,time,shutil,base64,sys,os,hashlib,re
+ from pathlib import Path
+ 
++def missing_ids(result,ids,rows,baseline,project):
++    if not re.fullmatch(r'family-growth-isolated-[a-z0-9-]+',project) or result.returncode!=1:
++        raise RuntimeError('INSPECTION_FAILED')
++    if not ids or len(ids)!=len(set(ids)) or any(not re.fullmatch('[a-f0-9]{64}',i) for i in ids):
++        raise RuntimeError('INSPECTION_ID_SET')
++    try:
++        lines=result.stderr.decode('ascii').splitlines()
++        found=[]
++        if not 1<=len(lines)<=8:raise ValueError()
++        for line in lines:
++            match=re.fullmatch(r'(?:(?:Error response from daemon: |Error: )?No such|error: no such) (?:container|object): ([a-f0-9]{64})',line)
++            if not match:raise ValueError()
++            found.append(match[1])
++        returned=[r['id'] for r in rows]
++        if len(found)!=len(set(found)) or len(returned)!=len(set(returned)):raise ValueError()
++        if set(found)&set(returned) or set(found)|set(returned)!=set(ids):raise ValueError()
++        if set(found)&set(baseline) or not set(baseline)<=set(returned):raise ValueError()
++        return found
++    except (ValueError,KeyError,TypeError,UnicodeError):
++        raise RuntimeError('INSPECTION_ID_SET') from None
++
++def deletion_proofs(events,missing,project,started,listed,until,observed):
++    try:
++        if not isinstance(events,list) or not 1<=len(events)<256:raise ValueError()
++        grouped={i:[] for i in missing}
++        for event in events:
++            actor=event['Actor'];identifier=actor['ID'];attrs=actor['Attributes'];stamp=event['timeNano']
++            if event['Type']!='container' or identifier not in grouped:raise ValueError()
++            if type(stamp) is not int or not started<=stamp<=until:raise ValueError()
++            if attrs.get('lms.isolation.run')!=project:raise ValueError()
++            if attrs.get('com.docker.compose.project')!=project:raise ValueError()
++            grouped[identifier].append(event)
++        proofs=[]
++        for identifier,chain in grouped.items():
++            actions=[e['Action'] for e in chain]
++            lifecycle=[a for a in actions if a not in ['attach','detach']]
++            if not actions or actions[0]!='create' or actions[-1]!='destroy':raise ValueError()
++            if lifecycle!=['create','start','die','destroy']:raise ValueError()
++            stamps=[e['timeNano'] for e in chain]
++            if any(a>=b for a,b in zip(stamps,stamps[1:])) or stamps[-1]<listed:raise ValueError()
++            cached=observed.get(identifier)
++            if not cached or cached['run']!=project or not stamps[0]<=cached['timeNano']<stamps[-1]:raise ValueError()
++            if not bounded(cached['row']):raise ValueError()
++            roles=[]
++            identities=[]
++            for event in chain:
++                attrs=event['Actor']['Attributes'];service=attrs.get('com.docker.compose.service')
++                jobs=['fresh','user','progress','homework','resource','analytics','notification',
++                      'storage','preflight-homework','preflight-resource']
++                if service=='release-prepare' and attrs.get('name') in [project+'-prepare-'+j for j in jobs]:
++                    role='prepare'
++                elif service=='mongo-init' and str(attrs.get('com.docker.compose.oneoff','')).lower()=='true':
++                    role='mongo-init'
++                else:raise ValueError()
++                roles.append(role)
++                identities.append((attrs.get('name'),service,attrs.get('com.docker.compose.project'),attrs.get('com.docker.compose.oneoff')))
++                if event['Action']=='die' and attrs.get('exitCode')!='0':raise ValueError()
++            if len(set(roles))!=1 or len(set(identities))!=1:raise ValueError()
++            proofs.append({'id':identifier,'role':roles[0],'actions':actions,'timeNanos':stamps,
++                           'limitObservedAt':cached['timeNano'],'cpuLimit':cpu_limit(cached['row']),
++                           'memoryLimit':cached['row']['memory']})
++        return proofs
++    except (ValueError,KeyError,TypeError,AttributeError):
++        raise RuntimeError('DELETION_NOT_PROVEN') from None
++
++def fetch_deletion_proofs(missing,project,started,listed,until,observed,timeout=2):
++    args=['docker','events','--since',str(started//1000000000),
++          '--until',str(until//1000000000)+'.'+str(until%1000000000).zfill(9),
++          '--filter','type=container','--format','{{json .}}']
++    for identifier in missing:args.extend(['--filter','container='+identifier])
++    try:
++        result=subprocess.run(args,text=False,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=timeout)
++        if result.returncode or result.stderr or len(result.stdout)>1048576:raise ValueError()
++        def unique(pairs):
++            value={}
++            for key,item in pairs:
++                if key in value:raise ValueError()
++                value[key]=item
++            return value
++        events=[json.loads(line,object_pairs_hook=unique) for line in result.stdout.splitlines()]
++        proofs=deletion_proofs(events,missing,project,started,listed,until,observed)
++        print(json.dumps({'kind':'deletionEvidence','time':time.time(),'bytes':len(result.stdout),
++            'sha256':hashlib.sha256(result.stdout).hexdigest(),'proofs':proofs}),file=sys.stderr,flush=True)
++        return proofs
++    except (ValueError,TypeError,UnicodeError,OSError,subprocess.TimeoutExpired):
++        raise RuntimeError('DELETION_EVIDENCE_FAILED') from None
++
++def remaining(deadline,limit=10):
++    value=min(limit,deadline-time.monotonic())
++    if value<=0:raise RuntimeError('INSPECTION_DEADLINE')
++    return value
++
++def cpu_limit(row):
++    if row['nano']>0:return row['nano']/1e9
++    if row['quota']>0 and row['period']>0:return row['quota']/row['period']
++    return 100
++
++def bounded(row):
++    return 0<cpu_limit(row)<=2.000001 and 0<row['memory']<=3*1024**3 and row['swap']==row['memory'] and not row['oom']
++
++def inspect_once(deadline):
++    ids=subprocess.check_output(['docker','ps','-aq','--no-trunc'],text=True,timeout=remaining(deadline)).split()
++    if not ids or len(ids)!=len(set(ids)):raise RuntimeError('INSPECTION_ID_SET')
++    fmt='{"id":{{json .Id}},"name":{{json .Name}},"pid":{{json .State.Pid}},"running":{{json .State.Running}},"started":{{json .State.StartedAt}},"restarts":{{json .RestartCount}},"memory":{{json .HostConfig.Memory}},"swap":{{json .HostConfig.MemorySwap}},"nano":{{json .HostConfig.NanoCpus}},"quota":{{json .HostConfig.CpuQuota}},"period":{{json .HostConfig.CpuPeriod}},"oom":{{json .State.OOMKilled}},"run":{{json (index .Config.Labels "lms.isolation.run")}}}'
++    try:
++        result=subprocess.run(['docker','inspect','--format',fmt,*ids],text=False,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=remaining(deadline))
++    except subprocess.TimeoutExpired as error:
++        inspection_failure(error,ids,timed_out=True)
++        raise RuntimeError('INSPECTION_TIMEOUT') from None
++    if result.returncode:inspection_failure(result,ids)
++    try:
++        rows=[json.loads(line) for line in result.stdout.splitlines() if line.strip()]
++        for row in rows:
++            for field in ['id','name','started']:
++                if not isinstance(row[field],str):raise ValueError()
++            for field in ['pid','restarts','memory','swap','nano','quota','period']:
++                if type(row[field]) is not int:raise ValueError()
++            for field in ['running','oom']:
++                if type(row[field]) is not bool:raise ValueError()
++        if not result.returncode:
++            if result.stderr or len(rows)!=len(ids) or {r['id'] for r in rows}!=set(ids):raise ValueError()
++        return ids,result,rows
++    except (ValueError,KeyError,TypeError,UnicodeError):
++        raise RuntimeError('INSPECTION_INVALID_ROWS') from None
++
++def budget_sample(rows,before,last,streak):
++    baseline={c['id']:(c['running'],c['started'],c['restarts']) for c in before['containers']}
++    actual={c['id']:(c['running'],c['started'],c['restarts']) for c in rows if c['id'] in baseline}
++    new=[c for c in rows if c['id'] not in baseline]
++    m={r.split(':')[0]:int(r.split()[1])*1024 for r in open('/proc/meminfo')}
++    vm=dict(r.split() for r in open('/proc/vmstat'));swap=int(vm['pswpin'])+int(vm['pswpout'])
++    streak=streak+1 if last is not None and swap-last>1024 else 0
++    free=shutil.disk_usage('/home/REDACTED').free
++    reason=None
++    if actual!=baseline:reason='ORIGINAL_CONTAINER_CHANGED'
++    if m['MemAvailable']<1.5*1024**3:reason='LOW_MEMORY'
++    if free<max(before['free']-12*1024**3,20*1024**3):reason='DISK_BUDGET'
++    if streak>=3:reason='SUSTAINED_SWAP'
++    active=[r for r in new if r['running']]
++    cpus=sum(cpu_limit(r) for r in active)
++    memory=sum(r['memory'] for r in active)
++    if cpus>2.000001 or memory>3*1024**3:reason='CONTAINER_BUDGET'
++    if any(r['memory']<=0 or r['swap']!=r['memory'] or r['oom'] for r in active):reason='UNBOUNDED_OR_OOM'
++    sample={'time':time.time(),'available':m['MemAvailable'],'free':free,'swapPages':swap,'swapInPages':int(vm['pswpin']),'swapOutPages':int(vm['pswpout']),'new':new,'reason':reason}
++    return sample,m,vm,streak
++
+ def inspection_failure(result,ids,timed_out=False):
+     def data(value):
+         return value if isinstance(value,bytes) else (value or '').encode()
+@@ -63,42 +209,40 @@
+ 
+ before=json.loads(base64.b64decode('__BASELINE__'))
+ baseline={c['id']:(c['running'],c['started'],c['restarts']) for c in before['containers']}
++project='__RUN_PROJECT__'
++started=time.time_ns()
++observed={}
+ last=None
+ streak=0
+ while True:
+     try:
+-        ids=subprocess.check_output(['docker','ps','-aq'],text=True,timeout=10).split()
+-        fmt='{"id":{{json .Id}},"name":{{json .Name}},"pid":{{json .State.Pid}},"running":{{json .State.Running}},"started":{{json .State.StartedAt}},"restarts":{{json .RestartCount}},"memory":{{json .HostConfig.Memory}},"swap":{{json .HostConfig.MemorySwap}},"nano":{{json .HostConfig.NanoCpus}},"quota":{{json .HostConfig.CpuQuota}},"period":{{json .HostConfig.CpuPeriod}},"oom":{{json .State.OOMKilled}}}'
+-        try:
+-            inspected=subprocess.run(['docker','inspect','--format',fmt,*ids],text=False,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=10)
+-        except subprocess.TimeoutExpired as error:
+-            inspection_failure(error,ids,timed_out=True)
+-            raise RuntimeError('INSPECTION_TIMEOUT') from None
+-        if inspected.returncode:
+-            inspection_failure(inspected,ids)
+-            raise RuntimeError('INSPECTION_FAILED')
+-        rows=[json.loads(x) for x in inspected.stdout.splitlines() if x.strip()]
+-        actual={c['id']:(c['running'],c['started'],c['restarts']) for c in rows if c['id'] in baseline}
+-        new=[c for c in rows if c['id'] not in baseline]
+-        m={r.split(':')[0]:int(r.split()[1])*1024 for r in open('/proc/meminfo')}
+-        vm=dict(r.split() for r in open('/proc/vmstat'));swap=int(vm['pswpin'])+int(vm['pswpout'])
+-        streak=streak+1 if last is not None and swap-last>1024 else 0;last=swap
+-        free=shutil.disk_usage('/home/REDACTED').free
+-        reason=None
+-        if actual!=baseline:reason='ORIGINAL_CONTAINER_CHANGED'
+-        if m['MemAvailable']<1.5*1024**3:reason='LOW_MEMORY'
+-        if free<max(before['free']-12*1024**3,20*1024**3):reason='DISK_BUDGET'
+-        if streak>=3:reason='SUSTAINED_SWAP'
+-        active=[r for r in new if r['running']]
+-        cpus=sum(r['nano']/1e9 if r['nano'] else r['quota']/r['period'] if r['period']>0 else 100 for r in active)
+-        memory=sum(r['memory'] for r in active)
+-        if cpus>2.000001 or memory>3*1024**3:reason='CONTAINER_BUDGET'
+-        if any(r['memory']<=0 or r['swap']!=r['memory'] or r['oom'] for r in active):reason='UNBOUNDED_OR_OOM'
+-        sample={'time':time.time(),'available':m['MemAvailable'],'free':free,'swapPages':swap,'swapInPages':int(vm['pswpin']),'swapOutPages':int(vm['pswpout']),'new':new,'reason':reason}
++        deadline=time.monotonic()+10
++        listed=time.time_ns()
++        ids,inspected,rows=inspect_once(deadline)
++        missing=missing_ids(inspected,ids,rows,baseline,project) if inspected.returncode else []
++        sample,m,vm,next_streak=budget_sample(rows,before,last,streak)
++        proofs=[]
++        if missing and not sample['reason']:
++            if any(i not in observed for i in missing):raise RuntimeError('MISSING_LIMIT_EVIDENCE')
++            proofs=fetch_deletion_proofs(missing,project,started,listed,time.time_ns(),observed,remaining(deadline,2))
++            # One fresh snapshot only, after positive proof. A second race is fatal.
++            _,fresh,rows=inspect_once(deadline)
++            if fresh.returncode:raise RuntimeError('RECONCILIATION_SNAPSHOT_FAILED')
++            if set(missing)&{r['id'] for r in rows}:raise RuntimeError('DELETION_CONFLICT')
++            sample,m,vm,next_streak=budget_sample(rows,before,last,streak)
++        last=sample['swapPages'];streak=next_streak
++        if not sample['reason']:
++            stamp=time.time_ns()
++            observed={r['id']:{'run':project,'timeNano':stamp,'row':r} for r in rows
++                      if r['id'] not in baseline and r.get('run')==project and bounded(r)}
++            remaining(deadline)
++        if proofs:
++            print(json.dumps({'kind':'inspectionReconciled','time':time.time(),'proofs':proofs,
++                'freshSnapshot':True,'reason':sample['reason']}),file=sys.stderr,flush=True)
+         print(json.dumps(sample),flush=True)
+         # Emit the stop frame first: optional observations must never delay the stop signal.
+         observe(rows,sample)
+-        if reason:raise SystemExit(1)
++        if sample['reason']:raise SystemExit(1)
+         time.sleep(3)
+     except BrokenPipeError:
+         break
+--- a/run.js
++++ b/run.js
+@@ -5,7 +5,7 @@
+ const net = require('net');
+ const base = __dirname;
+ const repo = '/Users/REDACTED/GitHub PRJ/LMS';
+-const meta = {"directory":"/private/tmp/t7-full-release-r5-5LHJzb","project":"family-growth-isolated-t7-full-55ea888c"};
++const meta = {"directory":"/private/tmp/t7-monitor-race-po7Abo","project":"family-growth-isolated-t7-race-po7abo"};
+ const project = meta.project;
+ const checkout = path.join(base, 'checkout');
+ const evidence = path.join(base, 'evidence');
+@@ -117,7 +117,9 @@
+       }
+     }
+     fs.writeFileSync(path.join(evidence, 'effective-config.redacted.json'), JSON.stringify(resolved, null, 2));
+-    const monitoring = fs.readFileSync(path.join(base, 'monitor.py'), 'utf8').replace('__BASELINE__', Buffer.from(JSON.stringify(before)).toString('base64'));
++    const monitoring = fs.readFileSync(path.join(base, 'monitor.py'), 'utf8')
++      .replace('__BASELINE__', Buffer.from(JSON.stringify(before)).toString('base64'))
++      .replace('__RUN_PROJECT__', project);
+     monitor = cp.spawn('ssh', [...ssh, 'python3 -u -'], { stdio: ['pipe', 'pipe', 'pipe'] });
+     monitor.on('error', () => stop('MONITOR_SPAWN_FAILED'));
+     monitor.stdin.on('error', () => stop('MONITOR_INPUT_FAILED'));
+--- a/runner-test.cjs
++++ b/runner-test.cjs
+@@ -3,21 +3,28 @@
+ const results = [];
+ const cases = ['success', 'signal', 'term-resistant-child', 'stop-log-failure', 'stalled-monitor', 'chmod-failure', 'open-failure', 'cancel-failure', 'wrong-sha'];
+ async function test(kind) {
++  console.log(`RUNNER_CASE ${kind}`);
+   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 't7-runner-control-'));
+   try {
+     fs.mkdirSync(path.join(dir, 'checkout'));
+     fs.mkdirSync(path.join(dir, 'checkout/scripts'));
+-    fs.writeFileSync(path.join(dir, 'checkout/scripts/release-family-gate.sh'), `#!/bin/bash
+-      echo $$ > ../release.pid
+-      trap 'echo stopped > ../release-stopped; exit 143' TERM INT
+-      ${kind === 'term-resistant-child' ? `node -e 'process.on("SIGTERM",()=>{});require("fs").writeFileSync("../grandchild.ready","ready");setInterval(()=>{},1000)' & echo $! > ../grandchild.pid` : ''}
+-      echo started > ../release-started
+-      ${kind === 'success' || kind === 'cancel-failure' ? 'sleep 0.2; exit 0' : 'sleep 20'}
++    fs.writeFileSync(path.join(dir, 'checkout/scripts/release-family-gate.sh'), '#!/bin/bash\nexec node ../fixture-release.cjs\n');
++    fs.writeFileSync(path.join(dir, 'fixture-release.cjs'), `
++      const fs=require('fs'),cp=require('child_process');
++      fs.writeFileSync('../release.pid',String(process.pid));
++      const stop=()=>{fs.writeFileSync('../release-stopped','stopped');process.exit(143)};
++      process.on('SIGTERM',stop);process.on('SIGINT',stop);
++      function start(){
++        ${kind === 'term-resistant-child' ? `const child=cp.spawn(process.execPath,['-e','process.on("SIGTERM",()=>{});require("fs").writeFileSync("../grandchild.ready","ready");setInterval(()=>{},1000)'],{stdio:'ignore'});fs.writeFileSync('../grandchild.pid',String(child.pid));` : ''}
++        fs.writeFileSync('../release-started','started');
++        ${kind === 'success' || kind === 'cancel-failure' ? 'setTimeout(()=>process.exit(0),200)' : 'setInterval(()=>{},1000)'};
++      }
++      ${kind === 'stalled-monitor' ? 'setTimeout(start,300)' : 'start()'};
+     `);
+     const source = fs.readFileSync(path.join(root, 'run.js'), 'utf8')
+       .replace('> 20000', '> 200').replace('}, 1000)', '}, 20)').replaceAll('15000', '300');
+     fs.writeFileSync(path.join(dir, 'run.js'), source);
+-    fs.writeFileSync(path.join(dir, 'monitor.py'), '# test transport does not execute Python');
++    fs.writeFileSync(path.join(dir, 'monitor.py'), 'project="__RUN_PROJECT__"\n# test transport does not execute Python');
+     fs.writeFileSync(path.join(dir, 'cleanup.js'), `const fs=require('fs');fs.unlinkSync(__dirname+'/synthetic.env');console.log('fixture cleanup');`);
+     const preload = `
+       const cp=require('child_process'),fs=require('fs'),path=require('path');
+@@ -39,8 +46,14 @@
+         return spawnSync.call(this,bin,args,opts);
+       };
+       cp.spawn=function(bin,args,opts){
+-        if(bin==='ssh')return spawn.call(this,process.execPath,['-e',kind==='stalled-monitor'?'setInterval(()=>{},1000)':
+-          'setInterval(()=>console.log(JSON.stringify({time:Date.now()/1000,new:[],reason:null})),20)'],opts);
++        if(bin==='ssh'){
++          const child=spawn.call(this,process.execPath,['-e',kind==='stalled-monitor'?
++            'const fs=require("fs");setInterval(()=>{if(!fs.existsSync(process.env.FIXTURE_DIR+"/release-started"))console.log(JSON.stringify({time:Date.now()/1000,new:[],reason:null}))},20)':
++            'setInterval(()=>console.log(JSON.stringify({time:Date.now()/1000,new:[],reason:null})),20)'],opts);
++          const end=child.stdin.end.bind(child.stdin);
++          child.stdin.end=function(input,...rest){fs.writeFileSync(base+'/monitor-input',input);return end(input,...rest)};
++          return child;
++        }
+         return spawn.call(this,bin,args,opts);
+       };
+       fs.chmodSync=function(p,...a){if(kind==='chmod-failure'&&p.endsWith('docker.sock'))throw Error('fixture chmod');return chmod.call(this,p,...a)};
+@@ -60,6 +73,12 @@
+     clearTimeout(timeout); clearInterval(signalTimer);
+     assert.equal(status.signal, null, output);
+     assert.equal(status.code, kind === 'success' ? 0 : 1, output);
++    if (fs.existsSync(path.join(dir, 'monitor-input'))) {
++      const input=fs.readFileSync(path.join(dir, 'monitor-input'),'utf8');
++      const expected=JSON.parse(source.match(/const meta = (.*);/)[1]).project;
++      assert(input.includes(expected));
++      assert(!input.includes('__RUN_PROJECT__'));
++    }
+     if (kind === 'wrong-sha') {
+       assert(output.includes('WRONG_FIXED_CANDIDATE'));
+       assert(!fs.existsSync(path.join(dir, 'release-started')));
+@@ -71,6 +90,7 @@
+     if (kind === 'cancel-failure') assert.equal(cancellations.filter(c => !c.cancelled).length, 1);
+     else assert(cancellations.every(c => c.cancelled));
+     if (['signal', 'term-resistant-child', 'stop-log-failure', 'stalled-monitor'].includes(kind)) {
++      assert(fs.existsSync(path.join(dir, 'release-started')));
+       assert(fs.existsSync(path.join(dir, 'release-stopped')));
+       const pid = Number(fs.readFileSync(path.join(dir, 'release.pid')));
+       assert.throws(() => process.kill(pid, 0), /ESRCH/);
+--- a/race-test.py
++++ b/race-test.py
+@@ -0,0 +1,205 @@
++import ast
++import copy
++import io
++import json
++import unittest
++from pathlib import Path
++from types import SimpleNamespace
++from unittest.mock import patch
++
++SOURCE=(Path(__file__).parent/'monitor.py').read_text()
++TREE=ast.parse(SOURCE)
++PREFIX=ast.Module(body=[n for n in TREE.body if isinstance(n,(ast.Import,ast.ImportFrom,ast.FunctionDef))],type_ignores=[])
++NS={}
++exec(compile(PREFIX,'monitor.py','exec'),NS)
++ID='a'*64
++ORIGINAL='b'*64
++LIVE='c'*64
++PROJECT='family-growth-isolated-t7-race-test'
++START=100000000000
++LISTED=110000000000
++UNTIL=120000000000
++
++def events(actions=('create','start','die','destroy')):
++    rows=[]
++    for index,action in enumerate(actions):
++        attrs={'lms.isolation.run':PROJECT,'com.docker.compose.project':PROJECT,
++               'com.docker.compose.service':'release-prepare','name':PROJECT+'-prepare-storage'}
++        if action=='die':attrs['exitCode']='0'
++        rows.append({'Type':'container','Action':action,'Actor':{'ID':ID,'Attributes':attrs},
++                     'timeNano':(START if action in ['create','start','commit'] else LISTED)+index+1})
++    return rows
++
++def observed(identifier=ID):
++    return {identifier:{'run':PROJECT,'timeNano':LISTED-1,'row':{
++        'nano':400000000,'quota':0,'period':0,'memory':256*1024**2,'swap':256*1024**2,'oom':False}}}
++
++class RaceTests(unittest.TestCase):
++    def setUp(self):
++        for name in ['deletion_proofs','missing_ids','fetch_deletion_proofs']:
++            self.assertTrue(callable(NS.get(name)),name+' is not implemented')
++
++    def proofs(self,value=None,missing=None,cache=None):
++        return NS['deletion_proofs'](events() if value is None else value,
++            [ID] if missing is None else missing,PROJECT,START,LISTED,UNTIL,observed() if cache is None else cache)
++
++    def missing(self,stderr=None,rows=None,requested=None,code=1):
++        result=SimpleNamespace(returncode=code,stderr=(stderr or ('error: no such object: '+ID+'\n')).encode())
++        return NS['missing_ids'](result,[ORIGINAL,ID] if requested is None else requested,
++            [{'id':ORIGINAL}] if rows is None else rows,{ORIGINAL:None},PROJECT)
++
++    def test_current_run_normal_deletion_is_proven(self):
++        proof=self.proofs()
++        self.assertEqual([p['id'] for p in proof],[ID])
++        self.assertEqual(proof[0]['actions'],['create','start','die','destroy'])
++
++    def test_unproven_builder_commit_cannot_replace_role_proof(self):
++        chain=events(('create','commit','destroy'))
++        for event in chain:
++            attrs=event['Actor']['Attributes']
++            for key in ['com.docker.compose.project','com.docker.compose.service','name']:del attrs[key]
++        with self.assertRaises(RuntimeError):self.proofs(chain)
++        with self.assertRaises(RuntimeError):self.proofs(events(('create','destroy')))
++
++    def test_complete_partial_inspect_set_only(self):
++        self.assertEqual(self.missing(),[ID])
++        for rows in [[],[{'id':ORIGINAL},{'id':ID}],[{'id':ORIGINAL},{'id':ORIGINAL}],
++                     [{'id':ORIGINAL},{'id':LIVE}]]:
++            with self.subTest(rows=rows),self.assertRaises(RuntimeError):self.missing(rows=rows)
++
++    def test_original_short_ambiguous_unrequested_and_duplicate_ids_rejected(self):
++        for error in [ORIGINAL,ID[:12],LIVE]:
++            with self.subTest(error=error),self.assertRaises(RuntimeError):
++                self.missing(stderr='error: no such object: '+error+'\n')
++        with self.assertRaises(RuntimeError):self.missing(requested=[ORIGINAL,ID,ID])
++        with self.assertRaises(RuntimeError):self.missing(stderr=('error: no such object: '+ID+'\n')*2)
++
++    def test_mixed_unknown_stderr_and_exit_codes_never_reconciled(self):
++        for stderr in ['error: no such object: '+ID+'\nPRIVATE error',
++                       'error: no such object: '+ID+' PRIVATE','error: no such object: '+ID+'\n\nPRIVATE']:
++            with self.subTest(stderr=stderr),self.assertRaises(RuntimeError):self.missing(stderr=stderr)
++        for code in [2,-15,0]:
++            with self.subTest(code=code),self.assertRaises(RuntimeError):self.missing(code=code)
++
++    def test_foreign_missing_or_conflicting_ownership_rejected(self):
++        for key,value in [('lms.isolation.run',None),('lms.isolation.run','another-run'),
++                          ('com.docker.compose.project','another-run')]:
++            value_events=events()
++            if value is None:del value_events[1]['Actor']['Attributes'][key]
++            else:value_events[1]['Actor']['Attributes'][key]=value
++            with self.subTest(key=key,value=value),self.assertRaises(RuntimeError):self.proofs(value_events)
++
++    def test_failed_killed_oom_restarted_or_incomplete_lifecycle_rejected(self):
++        for actions in [('create','start','destroy'),('create','start','kill','die','destroy'),
++                        ('create','start','oom','die','destroy'),('create','start','restart','die','destroy'),
++                        ('create','die','start','destroy'),('start','die','destroy'),
++                        ('create','start','die'),('create','start','die','destroy','start')]:
++            with self.subTest(actions=actions),self.assertRaises(RuntimeError):self.proofs(events(actions))
++        bad=events();bad[2]['Actor']['Attributes']['exitCode']='137'
++        with self.assertRaises(RuntimeError):self.proofs(bad)
++
++    def test_old_future_duplicate_and_out_of_order_events_rejected(self):
++        cases=[]
++        old=events();old[0]['timeNano']=START-1;cases.append(old)
++        before_list=events();before_list[-1]['timeNano']=LISTED-1;cases.append(before_list)
++        future=events();future[-1]['timeNano']=UNTIL+1;cases.append(future)
++        duplicate=events();duplicate[1]['timeNano']=duplicate[0]['timeNano'];cases.append(duplicate)
++        reversed_events=events();reversed_events[1],reversed_events[2]=reversed_events[2],reversed_events[1];cases.append(reversed_events)
++        wrong_type=events();wrong_type[0]['Type']='image';cases.append(wrong_type)
++        extra=events();extra.append(copy.deepcopy(extra[-1]));extra[-1]['Actor']['ID']=LIVE;cases.append(extra)
++        for value in cases:
++            with self.subTest(value=value),self.assertRaises(RuntimeError):self.proofs(value)
++
++    def test_truncated_and_malformed_evidence_rejected(self):
++        for value in [[],events()*64,[{}],['PRIVATE'],events()[:3]]:
++            with self.subTest(value=value),self.assertRaises(RuntimeError):self.proofs(value)
++
++    def test_multiple_missing_ids_require_every_proof(self):
++        second=copy.deepcopy(events())
++        for row in second:row['Actor']['ID']=LIVE
++        self.assertEqual(len(self.proofs(events()+second,[ID,LIVE],{**observed(),**observed(LIVE)})),2)
++        with self.assertRaises(RuntimeError):self.proofs(events(),[ID,LIVE])
++
++    def test_event_fetch_is_bounded_and_filtered_without_hiding_actions(self):
++        result=SimpleNamespace(returncode=0,stdout=b'\n'.join(json.dumps(x).encode() for x in events()),stderr=b'')
++        with patch('subprocess.run',return_value=result) as called:
++            proof=NS['fetch_deletion_proofs']([ID],PROJECT,START,LISTED,UNTIL,observed())
++        self.assertEqual(proof[0]['id'],ID)
++        args=called.call_args.args[0]
++        self.assertEqual(args[:2],['docker','events'])
++        self.assertIn('container='+ID,args)
++        self.assertNotIn('event=destroy',args)
++        self.assertEqual(called.call_args.kwargs['timeout'],2)
++        self.assertFalse(called.call_args.kwargs['text'])
++
++    def test_event_fetch_errors_are_sanitized_and_never_retried(self):
++        for index,result in enumerate([SimpleNamespace(returncode=1,stdout=b'',stderr=b'PRIVATE'),
++                       SimpleNamespace(returncode=0,stdout=b'PRIVATE',stderr=b''),
++                       SimpleNamespace(returncode=0,stdout=b'x'*1048577,stderr=b''),
++                       SimpleNamespace(returncode=0,stdout=b'',stderr=b'PRIVATE')]):
++            with self.subTest(case=index),patch('subprocess.run',return_value=result) as called:
++                with self.assertRaises(RuntimeError) as error:NS['fetch_deletion_proofs']([ID],PROJECT,START,LISTED,UNTIL,observed())
++                self.assertNotIn('PRIVATE',str(error.exception))
++                self.assertEqual(called.call_count,1)
++
++    def test_unobserved_unbounded_or_stale_limit_evidence_rejected(self):
++        cases=[{},observed()]
++        cases[1][ID]['run']='other'
++        for field,value in [('timeNano',START-1),('timeNano',UNTIL+1)]:
++            case=observed();case[ID][field]=value;cases.append(case)
++        for field,value in [('nano',0),('nano',2100000000),('memory',0),('swap',-1),('oom',True)]:
++            case=observed();case[ID]['row'][field]=value;cases.append(case)
++        for case in cases:
++            with self.subTest(case=case),self.assertRaises(RuntimeError):self.proofs(cache=case)
++        with self.assertRaises(RuntimeError):self.proofs(events(('create','start','update','die','destroy')))
++
++    def test_application_role_wrong_prepare_name_and_role_changes_rejected(self):
++        for field,value in [('com.docker.compose.service','homework-service'),('name',PROJECT+'-prepare-unapproved')]:
++            chain=events()
++            for event in chain:event['Actor']['Attributes'][field]=value
++            with self.subTest(field=field),self.assertRaises(RuntimeError):self.proofs(chain)
++        chain=events();chain[-1]['Actor']['Attributes']['name']=PROJECT+'-prepare-fresh'
++        with self.assertRaises(RuntimeError):self.proofs(chain)
++
++    def test_mongo_init_requires_actual_oneoff_labels(self):
++        chain=events()
++        for event in chain:
++            attrs=event['Actor']['Attributes'];attrs['com.docker.compose.service']='mongo-init'
++            attrs['com.docker.compose.oneoff']='True';attrs['name']=PROJECT+'-mongo-init-run-test'
++        self.assertEqual(self.proofs(chain)[0]['role'],'mongo-init')
++        del chain[-1]['Actor']['Attributes']['com.docker.compose.oneoff']
++        with self.assertRaises(RuntimeError):self.proofs(chain)
++
++    def test_duplicate_json_keys_fail_closed(self):
++        result=SimpleNamespace(returncode=0,stdout=b'{"Type":"image","Type":"container"}',stderr=b'')
++        with patch('subprocess.run',return_value=result):
++            with self.assertRaises(RuntimeError):NS['fetch_deletion_proofs']([ID],PROJECT,START,LISTED,UNTIL,observed())
++
++    def test_deadline_does_not_extend_for_reconciliation(self):
++        with patch('time.monotonic',return_value=8.5):
++            self.assertEqual(NS['remaining'](10,2),1.5)
++        with patch('time.monotonic',return_value=10):
++            with self.assertRaises(RuntimeError):NS['remaining'](10)
++
++    def test_normal_attach_detach_retains_complete_lifecycle(self):
++        chain=events(('create','attach','start','die','detach','destroy'))
++        # A normal attachment is before start; keep the daemon chronology explicit.
++        chain[1]['timeNano']=START+2;chain[2]['timeNano']=START+3
++        self.assertEqual(self.proofs(chain)[0]['actions'],['create','attach','start','die','detach','destroy'])
++        for actions in [('attach','create','start','die','destroy'),('create','start','die','destroy','detach')]:
++            with self.subTest(actions=actions),self.assertRaises(RuntimeError):self.proofs(events(actions))
++
++    def test_prepare_without_successful_run_or_project_is_rejected(self):
++        with self.assertRaises(RuntimeError):self.proofs(events(('create','commit','destroy')))
++        chain=events()
++        for event in chain:del event['Actor']['Attributes']['com.docker.compose.project']
++        with self.assertRaises(RuntimeError):self.proofs(chain)
++
++    def test_label_and_commit_do_not_prove_disposable_builder_role(self):
++        chain=events(('create','commit','destroy'))
++        for event in chain:
++            attrs=event['Actor']['Attributes']
++            for key in ['com.docker.compose.project','com.docker.compose.service','name']:del attrs[key]
++        with self.assertRaises(RuntimeError):self.proofs(chain)
++
++if __name__=='__main__':unittest.main(verbosity=2)
+--- a/race-loop-test.py
++++ b/race-loop-test.py
+@@ -0,0 +1,191 @@
++import base64
++import importlib.util
++import io
++import json
++import subprocess
++import unittest
++from pathlib import Path
++from types import SimpleNamespace
++from unittest.mock import patch
++
++ROOT=Path(__file__).parent
++spec=importlib.util.spec_from_file_location('proof_fixtures',ROOT/'race-test.py')
++fixture=importlib.util.module_from_spec(spec);spec.loader.exec_module(fixture)
++ID=fixture.ID;ORIGINAL=fixture.ORIGINAL;LIVE=fixture.LIVE;PROJECT=fixture.PROJECT
++
++def row(identifier,**changes):
++    value=dict(id=identifier,name='/synthetic',pid=1,running=True,started='fixed',restarts=0,
++               memory=1024**3,swap=1024**3,nano=1800000000,quota=0,period=0,oom=False)
++    value.update(changes)
++    return value
++
++class EndSamples(Exception):pass
++
++class LoopTests(unittest.TestCase):
++    def run_case(self,first=None,fresh=None,event_rows=None,event_error=None,first_error=None,
++                 fresh_error=None,available=6000000,free=50*1024**3,history=False,swap=(0,0),cache=True,overrun=False):
++        before={'containers':[row(ORIGINAL)],'free':50*1024**3}
++        source=(ROOT/'monitor.py').read_text().replace('__BASELINE__',base64.b64encode(json.dumps(before).encode()).decode()).replace('__RUN_PROJECT__',PROJECT)
++        if history:source=source.replace('last=None\nstreak=0','last=0\nstreak=2')
++        if cache is True:source=source.replace('observed={}', 'observed='+repr(fixture.observed()))
++        first=first if first is not None else [row(ORIGINAL),row(LIVE)]
++        fresh=fresh if fresh is not None else [row(ORIGINAL),row(LIVE)]
++        first_error=first_error if first_error is not None else 'error: no such object: '+ID+'\n'
++        err=io.StringIO();out=io.StringIO();commands=[];vm_reads=0
++        def inspect_result(rows,error):
++            return SimpleNamespace(returncode=1 if error else 0,stderr=error.encode(),stdout='\n'.join(map(json.dumps,rows)).encode())
++        def run(args,**kwargs):
++            commands.append(args[:2])
++            if args[1]=='events':
++                if event_error:raise event_error
++                return SimpleNamespace(returncode=0,stderr=b'',stdout='\n'.join(map(json.dumps,fixture.events() if event_rows is None else event_rows)).encode())
++            count=sum(c[1]=='inspect' for c in commands)
++            if cache=='prime' and count==1:
++                return inspect_result([row(ORIGINAL),row(ID,run=PROJECT,nano=400000000,
++                    memory=256*1024**2,swap=256*1024**2),row(LIVE,nano=1400000000)],'')
++            if count==(2 if cache=='prime' else 1):return inspect_result(first,first_error)
++            return inspect_result(fresh,fresh_error or '')
++        def opened(path,*args,**kwargs):
++            nonlocal vm_reads
++            if path=='/proc/meminfo':return io.StringIO('MemAvailable: '+str(available)+' kB\nSwapTotal: 8000000 kB\nSwapFree: 8000000 kB\n')
++            if path=='/proc/vmstat':
++                value=swap[min(vm_reads,len(swap)-1)];vm_reads+=1
++                return io.StringIO('pswpin '+str(value)+'\npswpout 0\noom_kill 0\n')
++            raise AssertionError(path)
++        failure=None;namespace={};sleeps=0
++        def sleep(_):
++            nonlocal sleeps
++            sleeps+=1
++            if cache!='prime' or sleeps>1:raise EndSamples()
++        def monotonic():
++            if overrun and sum(c[1]=='inspect' for c in commands)>=2:return 211
++            return 200
++        lists=[' '.join([ORIGINAL,ID,LIVE]),' '.join(r['id'] for r in fresh)]
++        times=[fixture.START,fixture.LISTED,fixture.UNTIL,fixture.UNTIL+1]
++        if cache=='prime':
++            lists.insert(0,lists[0]);times=[fixture.START,fixture.START+1,fixture.LISTED-1,
++                                        fixture.LISTED,fixture.UNTIL,fixture.UNTIL+1]
++        with patch('subprocess.check_output',side_effect=lists) as listed, \
++             patch('subprocess.run',side_effect=run),patch('builtins.open',side_effect=opened), \
++             patch.object(Path,'read_text',side_effect=PermissionError()), \
++             patch('shutil.disk_usage',return_value=SimpleNamespace(free=free)), \
++             patch('time.time_ns',side_effect=times), \
++             patch('time.monotonic',side_effect=monotonic),patch('time.sleep',side_effect=sleep), \
++             patch('sys.stdout',out),patch('sys.stderr',err):
++            try:exec(compile(source,'monitor.py','exec'),namespace)
++            except (RuntimeError,SystemExit) as error:failure=error
++            except EndSamples:pass
++        return dict(samples=[json.loads(v) for v in out.getvalue().splitlines()],
++                    evidence=[json.loads(v) for v in err.getvalue().splitlines()],commands=commands,
++                    lists=listed.call_count,failure=failure,vm_reads=vm_reads,cache=namespace.get('observed'))
++
++    def test_proven_deletion_requires_one_fresh_snapshot_before_success(self):
++        result=self.run_case()
++        self.assertIsNone(result['failure'])
++        self.assertEqual(result['lists'],2)
++        self.assertEqual(result['commands'],[['docker','inspect'],['docker','events'],['docker','inspect']])
++        self.assertEqual(len(result['samples']),1)
++        self.assertIsNone(result['samples'][0]['reason'])
++        self.assertEqual([e['kind'] for e in result['evidence'][:3]],['inspectionFailure','deletionEvidence','inspectionReconciled'])
++
++    def test_known_original_change_stops_before_any_proof_query(self):
++        result=self.run_case(first=[row(ORIGINAL,restarts=1),row(LIVE)])
++        self.assertEqual(result['commands'],[['docker','inspect']])
++        self.assertEqual(result['samples'][0]['reason'],'ORIGINAL_CONTAINER_CHANGED')
++        self.assertIsInstance(result['failure'],SystemExit)
++
++    def test_concurrent_budget_failures_stop_without_query_or_success(self):
++        cases=[({'first':[row(ORIGINAL),row(LIVE,nano=2100000000)]},'CONTAINER_BUDGET'),
++               ({'first':[row(ORIGINAL),row(LIVE,memory=4*1024**3,swap=4*1024**3)]},'CONTAINER_BUDGET'),
++               ({'first':[row(ORIGINAL),row(LIVE,oom=True)]},'UNBOUNDED_OR_OOM'),
++               ({'available':1000},'LOW_MEMORY'),({'free':30*1024**3},'DISK_BUDGET'),
++               ({'history':True,'swap':(1025,1025)},'SUSTAINED_SWAP')]
++        for kwargs,reason in cases:
++            with self.subTest(reason=reason):
++                result=self.run_case(**kwargs)
++                self.assertEqual(result['commands'],[['docker','inspect']])
++                self.assertEqual(result['samples'][0]['reason'],reason)
++                self.assertIsInstance(result['failure'],SystemExit)
++
++    def test_unlabelled_and_foreign_missing_containers_never_emit_success(self):
++        for run in [None,'other']:
++            value=fixture.events()
++            for item in value:item['Actor']['Attributes']['lms.isolation.run']=run
++            result=self.run_case(event_rows=value)
++            self.assertEqual(result['samples'],[])
++            self.assertIsInstance(result['failure'],RuntimeError)
++            self.assertEqual(result['lists'],1)
++
++    def test_unknown_and_original_missing_do_not_query_or_emit_success(self):
++        for error,first in [('PRIVATE error',[row(ORIGINAL),row(LIVE)]),
++                            ('error: no such object: '+ORIGINAL+'\n',[row(LIVE)])]:
++            result=self.run_case(first_error=error,first=first)
++            self.assertEqual(result['samples'],[])
++            self.assertEqual(result['commands'],[['docker','inspect']])
++
++    def test_proof_timeout_does_not_retry_or_emit_success(self):
++        result=self.run_case(event_error=subprocess.TimeoutExpired('events',2))
++        self.assertEqual(result['samples'],[])
++        self.assertEqual(result['commands'],[['docker','inspect'],['docker','events']])
++        self.assertEqual(str(result['failure']),'DELETION_EVIDENCE_FAILED')
++
++    def test_second_inspect_failure_cannot_recursively_reconcile(self):
++        result=self.run_case(fresh_error='error: no such object: '+LIVE+'\n',fresh=[row(ORIGINAL)])
++        self.assertEqual(result['samples'],[])
++        self.assertEqual(result['commands'],[['docker','inspect'],['docker','events'],['docker','inspect']])
++        self.assertIsInstance(result['failure'],RuntimeError)
++
++    def test_surviving_or_reappearing_removed_id_rejected(self):
++        result=self.run_case(fresh=[row(ORIGINAL),row(LIVE),row(ID)])
++        self.assertEqual(result['samples'],[])
++        self.assertEqual(str(result['failure']),'DELETION_CONFLICT')
++
++    def test_fresh_original_change_or_budget_violation_still_stops(self):
++        for fresh,reason in [([row(ORIGINAL,restarts=1),row(LIVE)],'ORIGINAL_CONTAINER_CHANGED'),
++                             ([row(LIVE)],'ORIGINAL_CONTAINER_CHANGED'),
++                             ([row(ORIGINAL),row(LIVE,nano=2100000000)],'CONTAINER_BUDGET')]:
++            result=self.run_case(fresh=fresh)
++            self.assertEqual(result['samples'][0]['reason'],reason)
++            self.assertIsInstance(result['failure'],SystemExit)
++
++    def test_reconciliation_preserves_swap_history(self):
++        result=self.run_case(history=True,swap=(1024,1025))
++        self.assertEqual(result['commands'],[['docker','inspect'],['docker','events'],['docker','inspect']])
++        self.assertEqual(result['samples'][0]['reason'],'SUSTAINED_SWAP')
++
++    def test_partial_or_duplicate_exit_zero_snapshot_rejected(self):
++        for rows in [[row(ORIGINAL)], [row(ORIGINAL),row(ORIGINAL),row(LIVE)]]:
++            result=self.run_case(first=rows,first_error='')
++            self.assertEqual(result['samples'],[])
++            self.assertEqual(result['commands'],[['docker','inspect']])
++
++    def test_never_observed_missing_container_stops_without_query(self):
++        result=self.run_case(cache=False)
++        self.assertEqual(result['samples'],[])
++        self.assertEqual(result['commands'],[['docker','inspect']])
++        self.assertEqual(str(result['failure']),'MISSING_LIMIT_EVIDENCE')
++
++    def test_successful_snapshot_caches_only_owned_bounded_full_ids(self):
++        result=self.run_case(cache=False,first_error='',first=[row(ORIGINAL),
++            row(ID,run=PROJECT,nano=400000000,memory=256*1024**2,swap=256*1024**2),
++            row(LIVE,nano=1400000000)])
++        self.assertIsNone(result['failure'])
++        self.assertEqual(set(result['cache']),{ID})
++        self.assertEqual(result['cache'][ID]['row']['memory'],256*1024**2)
++
++    def test_two_real_loop_iterations_create_limit_cache_then_reconcile(self):
++        result=self.run_case(cache='prime')
++        self.assertIsNone(result['failure'])
++        self.assertEqual(len(result['samples']),2)
++        self.assertTrue(all(s['reason'] is None for s in result['samples']))
++        self.assertEqual(result['lists'],3)
++        self.assertEqual(result['commands'],[['docker','inspect'],['docker','inspect'],['docker','events'],['docker','inspect']])
++        self.assertNotIn(ID,result['cache'])
++
++    def test_late_successful_inspect_cannot_emit_success(self):
++        result=self.run_case(overrun=True)
++        self.assertEqual(result['samples'],[])
++        self.assertEqual(str(result['failure']),'INSPECTION_DEADLINE')
++        self.assertNotIn('inspectionReconciled',[e['kind'] for e in result['evidence']])
++
++if __name__=='__main__':unittest.main(verbosity=2)

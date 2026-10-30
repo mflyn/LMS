@@ -1,0 +1,135 @@
+{
+  "status": "IMPLEMENTATION_REVIEW_PASSED",
+  "base": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+  "reviewAgent": "01a18282-fc69-7052-927c-ead7dad6296f",
+  "fullRelease": "NOT_RUN",
+  "retained": [
+    "T4 OPEN",
+    "T7 OPEN",
+    "DEVICE_PENDING",
+    "historical failures",
+    "REMAINDER_DEFERRED"
+  ],
+  "files": [
+    {
+      "path": "scripts/release-family-gate.sh",
+      "bytes": 7570,
+      "sha256": "9c58218129aa85db8f5ea273c0feb8e7ba69031bd55556944fa268f99a1f1b46"
+    },
+    {
+      "path": "scripts/release-isolated-compose.js",
+      "bytes": 4871,
+      "sha256": "7d4d3a29dc7dcc775c169ea08d8ecc081632be9dbe5caa3ca4dc9e6b3432429c"
+    },
+    {
+      "path": "scripts/release-isolated-prepare.js",
+      "bytes": 4295,
+      "sha256": "4a745d907dbdaaa6e057d08bc63c0a756c65ff831a2461cd1cb7c200139d8669"
+    },
+    {
+      "path": "scripts/run-isolated-prepare.sh",
+      "bytes": 636,
+      "sha256": "f5ddb6e7f84f256bad33a1b55a307b734272fed5c9779812de892d9b973c6297"
+    },
+    {
+      "path": "backend/common/deployment/__tests__/releaseIsolation.test.js",
+      "bytes": 14668,
+      "sha256": "740ad71de1c021695d9b0cb8ef7e2a917680d9d4f49ecb750ce42839aeda2722"
+    },
+    {
+      "path": "backend/common/deployment/__tests__/releasePreparation.test.js",
+      "bytes": 8528,
+      "sha256": "b9f9a48f88dddd462d364030b7ad3f0a6d2ebee7c5a09619ee89230693fce0a2"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/archive-check-final.json",
+      "bytes": 2981,
+      "sha256": "78354137e7efe3b55578a0bfef489582477bb45adb3fdfc95b1e3def927a36be"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/archive-check.json",
+      "bytes": 2731,
+      "sha256": "18810f3b9c7b6ac134dec026aeb6d6cbd35242ca6e5c8249f09369272d6bbb18"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/current-scope.json",
+      "bytes": 15719,
+      "sha256": "1318692cbf5da073df058c83a88a7ac2a73904b223a39e56c47f892cfc8c6811"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/docs.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/entry-candidate.patch",
+      "bytes": 42014,
+      "sha256": "dc00541754e011a67813a0d693272cda827503fed6d5219074d5cc10ff1bba66"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/red.log",
+      "bytes": 16325,
+      "sha256": "501b348a25aee39496f18151d8af705fdb0929bb5ceec8374ae781931e549a7c"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/review-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/review-red.log",
+      "bytes": 6308,
+      "sha256": "c372af40077940059157944e90a648dc55a6a2709be3adb16b14eb270ced1bc0"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/review-targeted-fixed.log",
+      "bytes": 738,
+      "sha256": "9eaf46ac5b641a803fb8c0636fd5a4ddc1a8de669e17157d6f405a363f0409af"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/review-targeted.log",
+      "bytes": 1622,
+      "sha256": "7574f00d92a9a0b8945d78f59abfbcc63f2160e245db7939c8e34c69a16ca03b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/run-location.json",
+      "bytes": 112,
+      "sha256": "3073188132ba2cd3d5add8e9b59937801dbd2cafdc5edfbce6cad6fe6144cac5"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/scope-scan.json",
+      "bytes": 17335,
+      "sha256": "57de7cc2753f1185bef812f18fc5a334c5eeb8005b7cd2946e28df17d1648217"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/shell.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/state.log",
+      "bytes": 30226,
+      "sha256": "07ff2dac37619079fb7268570fa61badb082350edb4c99b44614ba1a9f8d52bc"
+    },
+    {
+      "path": "release-gate-artifacts/t7-full-release-entry-2026-10-28/targeted.log",
+      "bytes": 755,
+      "sha256": "98805ab9614f8b6d2b20400198b298a02f8463a0c3ca22a0bceab85d2440e4f3"
+    },
+    {
+      "path": "docs/development/evidence/t7-full-release-entry-2026-10-28/README.md",
+      "bytes": 3320,
+      "sha256": "2a9435e2e2ae3a02e1e893b7121e5bf4311c491b743e5f743127f86b866800ef"
+    }
+  ]
+}

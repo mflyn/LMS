@@ -1,0 +1,168 @@
+{
+  "status": "SELF_REVIEW_PASSED_INDEPENDENT_REVIEW_PENDING",
+  "base": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+  "patchSha256": "19a30a5f19ca79a5cf290864bb66ea2949e72c0dccce3218ea1e7deb8565cf5f",
+  "validation": {
+    "red": {
+      "command": "focused FamilyMembership model suite before model fix",
+      "exit": 1,
+      "suites": 1,
+      "failedTests": 2,
+      "passedTests": 6
+    },
+    "userRegression": {
+      "command": "node node_modules/jest/bin/jest.js --config=backend/jest.config.js --selectProjects user-service --runInBand --coverage=false",
+      "exit": 0,
+      "suites": 13,
+      "tests": 178
+    },
+    "membershipHttp": {
+      "command": "npm run test:task12:integration",
+      "exit": 0,
+      "suites": 1,
+      "tests": 2
+    },
+    "lint": {
+      "command": "npm run lint",
+      "exit": 0
+    },
+    "diff": {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    "selfReview": {
+      "scope": "remove only redundant ordinary familyId index; retain required field, partial unique and token unique indexes, compound prefix for family reads",
+      "indexNameHintsInCallers": false,
+      "realIndexesModified": false,
+      "existingOrdinaryIndexMigration": "NOT_AUTHORIZED_NOT_IMPLEMENTED",
+      "status": "SELF_REVIEW_PASSED_INDEPENDENT_REVIEW_PENDING"
+    }
+  },
+  "files": [
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/indexes-after.json",
+      "size": 620,
+      "sha256": "7d06b9fce9744c5ea9f71c42f43190146094baf954a16d7e2b8423d1a1b645a0"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/indexes-before.json",
+      "size": 715,
+      "sha256": "de503aa41d89da2baac741434aec755897d53982b21d7eae93b55063e78b2969"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/lint.log",
+      "size": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/model-before.js",
+      "size": 1416,
+      "sha256": "15b35ae6857050015f8364a2874f74a9a99b62c2290f774c6a8345289c9119b5"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/model-red.log",
+      "size": 3218,
+      "sha256": "457d201d30a6a335111acf862ab610f6b707d87cf6569c2873f05dc10013c6e5"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/mongo44-green.log",
+      "size": 1289,
+      "sha256": "4f230635ea28b368513eeb07f1bbc2dfe4a2237f1d30c30d5b51e54e335bc99d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/mongo44-red.log",
+      "size": 1026,
+      "sha256": "8fe8bb2c6354c2cfd90dfb4d28811fe44cb75fc8096a5d471c76d7af9f132d3b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/probe-cleanup.json",
+      "size": 1049,
+      "sha256": "57d4712f88ff79feb79490b4426843d5ac7f2bcd4567d9ec99d1fc90f729b053"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/probe-verification.json",
+      "size": 84,
+      "sha256": "22a9a42e3c11a34f52b7003b7f1c7d413e6565b3df0fd6810dfa457e43f4d70b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/green-commands.json",
+      "size": 6543,
+      "sha256": "9c440f549f5e06cf1b50f525f7fbede0ed6d309a306e0e3aed6fdf0381ea3035"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/green-container.json",
+      "size": 691,
+      "sha256": "41cc61c2838a498f90998aac97824844de9959f8486e6f6a41f5f9793a6275c1"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/green-container.log",
+      "size": 12378,
+      "sha256": "ad07f575a2840298527c68d1b88b209deb8a0cb3429ba0207715aa2fc1588557"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/green-result.json",
+      "size": 1499,
+      "sha256": "6a5baa55907c4e1e2805cb95e87e9812272b939eaa8ba44e222ce45d3cc77a12"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/indexes-after.json",
+      "size": 620,
+      "sha256": "7d06b9fce9744c5ea9f71c42f43190146094baf954a16d7e2b8423d1a1b645a0"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/indexes-before.json",
+      "size": 715,
+      "sha256": "de503aa41d89da2baac741434aec755897d53982b21d7eae93b55063e78b2969"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/red-commands.json",
+      "size": 4587,
+      "sha256": "db3c916041be5d2c6be3f87f8c595c847e0ba15e6fec9c01795c126ad5bcd8f6"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/red-container.json",
+      "size": 691,
+      "sha256": "4ebb33339efef4aca2a9080296daa36054b689bda3b524cd583155e3ae66d5ef"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/red-container.log",
+      "size": 12302,
+      "sha256": "5a093b53e5203648b632d0835db76def672c2d2476c566ec6520c6634c0dcd13"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/remote/red-result.json",
+      "size": 1214,
+      "sha256": "a93db88ec1506ea722561db72b47bc1351f711d6f65e44adf882e44fdca13227"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/server-before.json",
+      "size": 14693,
+      "sha256": "0328f29ac14ba4bb6605a601f3639e76233dcda206cb517337067de1dac9495b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/t7-index-cleanup.py",
+      "size": 740,
+      "sha256": "5ebce52c8902260115c429816ddbf81c16f63ea72af24e5bcbf4b0ef6c21fb85"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/t7-index-probe.py",
+      "size": 5541,
+      "sha256": "1a167a23edee659d68f9ac14a9baf7445bb57f06266ee59a1ce3a56147802244"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/task12-integration.log",
+      "size": 714,
+      "sha256": "de5b4591dec60acb9f464b945bb52d4c958d6824fbc7015269ad6a3ac7802340"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/user-regression.log",
+      "size": 54072,
+      "sha256": "e94f677da4ab7301581e68b825e150d43bcde3a79f831174e0041d6af8702178"
+    },
+    {
+      "path": "release-gate-artifacts/t7-index-compatibility-2026-10-28/validation-results.json",
+      "size": 1027,
+      "sha256": "537bd88d4bf922b9b9aad6a8f1493e4c904ab5fab143df39ccd97523c146307f"
+    }
+  ]
+}

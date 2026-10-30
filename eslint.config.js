@@ -19,6 +19,7 @@ const sharedRules = {
 module.exports = [
   {
     ignores: [
+      'release-gate-artifacts/**',
       '**/node_modules/**',
       '**/build/**',
       '**/coverage/**',
@@ -48,7 +49,11 @@ module.exports = [
       'backend/gateway/**/*.js',
       'backend/services/**/*{family,Family,growth,Growth,media,Media,child,Child,notification,Notification,reminder,Reminder,dailyLearningPlan,DailyLearningPlan}*.js',
       'backend/tests/t2/dailyLearningPlan.integration.test.js',
+      'backend/tests/t2/weeklyReflection.integration.test.js',
+      'backend/services/analytics-service/services/weeklyReportService.js',
+      'backend/services/analytics-service/__tests__/weeklyReports.test.js',
       'tests/e2e/t2/dailyLearningPlan.spec.js',
+      'tests/e2e/t2/weekly{Reflection,MathLoop}.spec.js',
       'backend/services/{user,homework,resource}-service/{app,server}.js',
       'scripts/**/*.js',
       'eslint.config.js',
@@ -69,7 +74,7 @@ module.exports = [
       'frontend/web/src/contexts/{AuthContext,ChildAuthContext,FamilyContext}.js',
       'frontend/web/src/hooks/{useAsyncResource,useChildDataResource,useChildResource}.js',
       'frontend/web/src/pages/{child,family}/**/*.{js,jsx}',
-      'frontend/web/src/services/{childApi,childScope,childSession,familyApi,familySession,dailyLearningPlan}.js',
+      'frontend/web/src/services/{childApi,childScope,childSession,familyApi,familySession,dailyLearningPlan,reflection}.js',
       'frontend/web/src/__tests__/{child,family,shared}/**/*.{js,jsx}'
     ],
     languageOptions: {

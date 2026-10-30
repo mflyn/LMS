@@ -1,0 +1,104 @@
+--- a/run.js
++++ b/run.js
+@@ -5,11 +5,11 @@
+ const net = require('net');
+ const base = __dirname;
+ const repo = '/Users/REDACTED/GitHub PRJ/LMS';
+-const meta = {"directory":"/private/tmp/t7-monitor-race-po7Abo","project":"family-growth-isolated-t7-race-po7abo"};
++const meta = {"directory":"/private/tmp/t7-compat-kwdBg6","project":"family-growth-isolated-t7-compat-kwdbg6"};
+ const project = meta.project;
+ const checkout = path.join(base, 'checkout');
+ const evidence = path.join(base, 'evidence');
+-const master = '/tmp/lms-t7-docker-check-20261029.sock';
++const master = '/tmp/lms-t7-compat-20261029.sock';
+ const host = 'qa@192.0.2.10';
+ const ssh = ['-S', master, '-o', 'BatchMode=yes', host];
+ const socket = path.join(base, 'docker.sock');
+@@ -107,7 +107,7 @@
+     if (command('git', ['status', '--porcelain'], { cwd: checkout, env })) throw Error('DIRTY_CHECKOUT');
+     fs.writeFileSync(path.join(evidence, 'identity.json'), JSON.stringify({ project, sha, port,
+       node: nodeVersion, git: gitVersion, docker: command('docker', ['version', '--format', '{{json .}}'], { env }),
+-      fullRelease: 'RUNNING', storageConfirmedScope: 'fresh synthetic volumes; real probe still required before startup' }, null, 2));
++      fullRelease: 'NOT_RUN_COMPATIBILITY_ONLY', authorizedStages: '14-16', storageConfirmedScope: 'fresh synthetic volumes; real probe still required before startup' }, null, 2));
+     const resolved = JSON.parse(command('docker', ['compose', '--project-name', project,
+       '--file', path.join(checkout, 'docker-compose.family.yml'), '--file', path.join(base, 'override.yml'),
+       '--env-file', envFile, 'config', '--format', 'json'], { env, cwd: checkout }));
+@@ -152,7 +152,7 @@
+         safeRecord('monitor-failure.json', { code });
+       }
+     });
+-    release = cp.spawn('/bin/bash', ['scripts/release-family-gate.sh'], { cwd: checkout, env,
++    release = cp.spawn('/bin/bash', [path.join(base, 'stages.sh')], { cwd: checkout, env,
+       detached: true, stdio: ['ignore', releaseLog, releaseLog] });
+     const code = await new Promise(resolve => {
+       release.on('error', () => resolve({ status: 1, signal: null }));
+@@ -164,11 +164,12 @@
+     await new Promise(resolve => monitor.exitCode !== null || monitor.signalCode !== null ? resolve() : monitor.once('exit', resolve));
+     const after = JSON.parse(command('ssh', [...ssh, 'python3 -'], { input: audit }));
+     fs.writeFileSync(path.join(evidence, 'server-after-release.json'), JSON.stringify(after, null, 2));
+-    const result = { ...code, monitorFailure, stopReason, sha, project, fullRelease: code.status === 0 && !monitorFailure && !stopReason ? 'PASS' : 'FAILED_STOPPED',
++    const result = { ...code, monitorFailure, stopReason, sha, project, fullRelease: 'NOT_RUN_COMPATIBILITY_ONLY',
++      compatibilityStages: code.status === 0 && !monitorFailure && !stopReason ? 'PASS' : 'FAILED_STOPPED', stages17and18: 'NOT_RUN',
+       remainingCleanup: 'Own volumes/images and credential files only, after evidence capture', gates: 'T4/T7 OPEN' };
+     fs.writeFileSync(path.join(evidence, 'result.json'), JSON.stringify(result, null, 2));
+     console.log(JSON.stringify(result));
+-    process.exitCode = result.fullRelease === 'PASS' ? 0 : 1;
++    process.exitCode = result.compatibilityStages === 'PASS' ? 0 : 1;
+   } finally {
+     clearInterval(heartbeat);
+     completed = true;
+--- a/cleanup.js
++++ b/cleanup.js
+@@ -2,7 +2,7 @@
+ const base = __dirname, evidence = path.join(base, 'evidence');
+ const before = JSON.parse(fs.readFileSync(path.join(evidence, 'server-before.json')));
+ const identity = JSON.parse(fs.readFileSync(path.join(evidence, 'identity.json')));
+-const master = '/tmp/lms-t7-docker-check-20261029.sock', host = 'qa@192.0.2.10';
++const master = '/tmp/lms-t7-compat-20261029.sock', host = 'qa@192.0.2.10';
+ const buildLog = fs.existsSync(path.join(evidence, '15-compose-build.log')) ? fs.readFileSync(path.join(evidence, '15-compose-build.log'), 'utf8') : '';
+ const firstFrom = buildLog.split(/Step 2\//)[0];
+ const pulledNodeDigest = firstFrom.includes('Pulling from library/node') ? firstFrom.match(/Digest: (sha256:[a-f0-9]{64})/)?.[1] : null;
+--- a/runner-test.cjs
++++ b/runner-test.cjs
+@@ -9,6 +9,7 @@
+     fs.mkdirSync(path.join(dir, 'checkout'));
+     fs.mkdirSync(path.join(dir, 'checkout/scripts'));
+     fs.writeFileSync(path.join(dir, 'checkout/scripts/release-family-gate.sh'), '#!/bin/bash\nexec node ../fixture-release.cjs\n');
++    fs.writeFileSync(path.join(dir, 'stages.sh'), '#!/bin/bash\nexec node ../fixture-release.cjs\n');
+     fs.writeFileSync(path.join(dir, 'fixture-release.cjs'), `
+       const fs=require('fs'),cp=require('child_process');
+       fs.writeFileSync('../release.pid',String(process.pid));
+@@ -46,6 +47,10 @@
+         return spawnSync.call(this,bin,args,opts);
+       };
+       cp.spawn=function(bin,args,opts){
++        if(bin==='/bin/bash'){
++          require('assert').deepStrictEqual(args.map(p=>fs.realpathSync(p)),[fs.realpathSync(path.join(base,'stages.sh'))]);
++          fs.writeFileSync(base+'/selected-stage-entry','14-16');
++        }
+         if(bin==='ssh'){
+           const child=spawn.call(this,process.execPath,['-e',kind==='stalled-monitor'?
+             'const fs=require("fs");setInterval(()=>{if(!fs.existsSync(process.env.FIXTURE_DIR+"/release-started"))console.log(JSON.stringify({time:Date.now()/1000,new:[],reason:null}))},20)':
+@@ -95,7 +100,7 @@
+       const pid = Number(fs.readFileSync(path.join(dir, 'release.pid')));
+       assert.throws(() => process.kill(pid, 0), /ESRCH/);
+       const result = JSON.parse(fs.readFileSync(path.join(dir, 'evidence/result.json')));
+-      assert.equal(result.fullRelease, 'FAILED_STOPPED');
++      assert.equal(result.compatibilityStages, 'FAILED_STOPPED');
+       assert.equal(result.stopReason, kind === 'stalled-monitor' ? 'MONITOR_SAMPLE_TIMEOUT' : 'RUNNER_SIGTERM');
+       if (kind === 'term-resistant-child') {
+         const grandchild = Number(fs.readFileSync(path.join(dir, 'grandchild.pid')));
+@@ -103,6 +108,13 @@
+         assert(fs.existsSync(path.join(dir, 'evidence/forced-stop.json')));
+       }
+     }
++    if (fs.existsSync(path.join(dir, 'evidence/result.json'))) {
++      const result = JSON.parse(fs.readFileSync(path.join(dir, 'evidence/result.json')));
++      assert.equal(result.fullRelease, 'NOT_RUN_COMPATIBILITY_ONLY');
++      assert.equal(result.stages17and18, 'NOT_RUN');
++      assert.equal(fs.readFileSync(path.join(dir, 'selected-stage-entry'), 'utf8'), '14-16');
++      if (kind === 'success') assert.equal(result.compatibilityStages, 'PASS');
++    }
+     assert(!fs.existsSync(path.join(dir, 'synthetic.env')));
+     results.push({ case: kind, status: 'PASS', exit: status.code });
+   } finally { fs.rmSync(dir, { recursive: true, force: true }); }

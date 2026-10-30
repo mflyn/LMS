@@ -7,8 +7,7 @@ const familyParentInvitationSchema = new Schema({
   familyId: {
     type: Schema.Types.ObjectId,
     ref: 'Family',
-    required: true,
-    index: true
+    required: true
   },
   invitedByParentId: {
     type: Schema.Types.ObjectId,
@@ -57,6 +56,7 @@ familyParentInvitationSchema.index(
     name: 'one_pending_parent_invitation_per_family'
   }
 );
+// Also covers family-only reads without a conflicting ordinary index on MongoDB 4.4.
 familyParentInvitationSchema.index({ familyId: 1, status: 1, expiresAt: 1 });
 
 const FamilyParentInvitation = mongoose.models.FamilyParentInvitation

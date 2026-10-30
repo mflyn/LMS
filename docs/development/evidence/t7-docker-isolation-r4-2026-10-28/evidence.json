@@ -1,0 +1,539 @@
+{
+  "status": "STAGE_16_PASS / STAGE_17_INVALID_EVIDENCE / ENTRYPOINT_REVIEW_REQUIRED",
+  "stages": {
+    "14": {
+      "exit": 0,
+      "status": "PASS"
+    },
+    "15": {
+      "exit": 0,
+      "status": "PASS"
+    },
+    "16": {
+      "exit": 0,
+      "status": "PASS"
+    },
+    "17": {
+      "rawExit": 0,
+      "status": "INVALID_EVIDENCE_ENTRYPOINT_NOT_EXECUTED"
+    },
+    "18": "NOT_AUTHORIZED"
+  },
+  "auxiliaryHealthCapture": "FAILED_PRESERVED",
+  "retained": [
+    "T4 OPEN",
+    "T7 OPEN",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "historical failures",
+    "T5-NB-001/002 OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED"
+  ],
+  "files": [
+    {
+      "path": "docs/development/evidence/t7-docker-isolation-r4-2026-10-28/README.md",
+      "bytes": 4932,
+      "sha256": "30cbfed7a3c3aa80815bdae273ca097987de87ca624bc4ce1bb812defa0dbe47"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 546385,
+      "sha256": "648de05399572a50b8fe9f830552e7f8a2ce34622afa05befe0ba694b69dab97"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 89266,
+      "sha256": "94516abe5395608936e7fda57b367beba120e843477ce03322ad9905350fd642"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/14-console.log",
+      "bytes": 152,
+      "sha256": "fae646737876f93f05ba4490f516992506e18308dcdd2804eed58602ca235fac"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/15-console.log",
+      "bytes": 453,
+      "sha256": "41bbf122e2c433fc097583a2a8893b1d7edd0b1ad84b0155badd1a46efd05f90"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/16-17-console.log",
+      "bytes": 446,
+      "sha256": "4809d113010e1b29f04b1583b226c4dd841b137ef35e5f2b5170c32c4e6958b0"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/17-adjudication.json",
+      "bytes": 616,
+      "sha256": "f513b0774043c8575ecc1d334d00b91be4daab8cdae01e471ee71b47152901b8"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/budget-summary.json",
+      "bytes": 116,
+      "sha256": "cf0b6a76f0ed2dc8f28120fe218ed67a3f686e5f85cee8b21b890c0e35e85f34"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/candidate-verification.json",
+      "bytes": 160,
+      "sha256": "d321b363779c07c62aabf29d0220e1f3732ec110455833cdb9d98cb6f6ad535b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/directory-cleanup.json",
+      "bytes": 136,
+      "sha256": "70ecfc1a7b8c543f6260474fe4cdcc2c72ff0f6826b6c595a75eaa7c70ec2c9a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/docs-check.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/docs-gates.log",
+      "bytes": 507,
+      "sha256": "d651d5dbb03cee02bbe1843e55c203891b64671019a45cc45c0d77d8fff6608f"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/entry.patch",
+      "bytes": 3721,
+      "sha256": "4625a5187304766d2ac69ec1439795ec6706cc26ac92ebd34b4a4abeb691e9f9"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/final-validation.json",
+      "bytes": 629,
+      "sha256": "16aaa9dc18a0d3cc3e8947d6155273118e32d2ef40c11a5201a0b222c2b3312d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/frozen-candidate-before-test-portability.json",
+      "bytes": 2282,
+      "sha256": "b9f689032ed4d2a02a4ee60cafae91ff20912dd894cd0ac1be3c9c95fa779b69"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/frozen-candidate.json",
+      "bytes": 2385,
+      "sha256": "c47bf850c7f58a5574b9db171b907b9ccbb17d0feca28c6e16ff2b190095cb25"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/live-health-capture-failure.json",
+      "bytes": 498,
+      "sha256": "eee58cdb5bf4e1cd33eee555a1d6b6cb05a9b6205d512b3622adb042ee716564"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/original-resources-unchanged.json",
+      "bytes": 231,
+      "sha256": "e108b3e999018642957338b056b09838b31318fe381b8dd16f65b272d95363a4"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/r3-source-comparison.json",
+      "bytes": 72,
+      "sha256": "0e56329fb28e8c81f7ba1f989bf412a5da3c51f4c009fb6ba2c73060a33cda7a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/14-compose-config.log",
+      "bytes": 91,
+      "sha256": "febbcea847ffbc5585a4ce55c38f4c07db05ddf146f40800354be3a1485b8cd8"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/14-result.json",
+      "bytes": 56,
+      "sha256": "8ce7b8e3a93be95f11df326d7f072f967d319a24c0369293668583ea18c3e32d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-base-node-pull.log",
+      "bytes": 200,
+      "sha256": "abbcb7bc02a91a9194057815d6d212667a1f8ca3edf65e03c554252f2baa6a55"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-build-analytics-service.log",
+      "bytes": 1280,
+      "sha256": "12337f812c6bf61f844a869f16170fd61c58dd6a90f86154d9f284c2f20e2cbc"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-build-gateway.log",
+      "bytes": 2182,
+      "sha256": "d6683dc5a9128c1c3eb35f989dbad01db170cd1315382a179616a9d0e1c1413a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-build-homework-service.log",
+      "bytes": 1278,
+      "sha256": "55c29eb63b5b5f3ca6a3af137ea4564013932c0a0e5fddba54c9c62275ec1c80"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-build-notification-service.log",
+      "bytes": 1286,
+      "sha256": "ebf0ad865f4e591c3a3042b08eede76bbd9b2a39140745c717ef7f5c76c881dc"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-build-progress-service.log",
+      "bytes": 1278,
+      "sha256": "dc212ad5508ccb9198fe78a5c1acf4e8bf54cbe7f5fc3b79165d03ca5f2a8fc6"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-build-resource-service.log",
+      "bytes": 1766,
+      "sha256": "75363b4dbc9c6a18a196890d57be92a6e0ff9135b4ded7a2cb9271854a3d188d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-build-user-service.log",
+      "bytes": 1270,
+      "sha256": "c9e1e71efc3e572adf00ef4d14cf813991392ec79e5fe903431d43f777fe2ff5"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/15-result.json",
+      "bytes": 230,
+      "sha256": "74cfae88e2bb82e3b951455743046ad555912f4a33a9df6a19b16ede5d0db062"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-compose-start.log",
+      "bytes": 5929,
+      "sha256": "e50217affde7b40934e26c948031200f0024b1cbfb83c7e2760b347d2305e64c"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-fresh-database.log",
+      "bytes": 939,
+      "sha256": "577e4a1213271ea8e17c09837ce457c0e11b0883d7c1c55c06a09e4e9075f0ad"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-index-analytics.log",
+      "bytes": 1445,
+      "sha256": "4a6367c1d2dee5b9786966522e854bd6cb440e087e7c374d226f69e504a7d57f"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-index-homework.log",
+      "bytes": 1533,
+      "sha256": "e31b7c40fbc08658816999bd6b8828c8aab08b5c0051d4245395e61750a57050"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-index-notification.log",
+      "bytes": 335,
+      "sha256": "4bf3130106759e3339bee8ba76b89974b6302b1ccc5c8aef2c234b5de527892e"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-index-progress.log",
+      "bytes": 1993,
+      "sha256": "a8c7ec7f6b7c0f5d176824b52925eccbe2f0232564ee396276a9e539a40da027"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-index-resource.log",
+      "bytes": 2931,
+      "sha256": "10c1d6d7479e2a902450bfa688334cfdff7a0ed9f7f21f8937539ce1580cf12b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-index-user.log",
+      "bytes": 2235,
+      "sha256": "b26d94f6b9ba437c3e8466b14427876625aca6c2100ee3ad6c8594bbcbf5bc3a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-mongo-init.log",
+      "bytes": 139,
+      "sha256": "3098d16b466e2792bd5de923ea67d0c4f93b2c6fb74e85ee49c682f00e3aca40"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-mongo.log",
+      "bytes": 1061,
+      "sha256": "efab233a223bba68fec32a5a56f8a53d345e1f38bb8313331074031f67cb8124"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-preflight-homework.log",
+      "bytes": 76,
+      "sha256": "f8c2faa209608bcf46878a7139199eb94e92a193438e27a00cb3f58f8d8cc944"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-preflight-resource.log",
+      "bytes": 102,
+      "sha256": "a759977f0b9fe514ef042c38c2ed66867a11cc74f18e4c26354ef4ce93b93fe4"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-result.json",
+      "bytes": 77,
+      "sha256": "e076df04af365e3354a5a983b0160d8fbe3d1b03b35a0d2a3fa6ce2fa298c541"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-storage.log",
+      "bytes": 124,
+      "sha256": "89d0c8472b9f3a52eaf0ac4aecd819be14dbd2da3df738e12e5cecca585ad22b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-volume-completion-journal.log",
+      "bytes": 54,
+      "sha256": "5ab3d13ba1b93b3f557938a124840169c4826e8205add006b7fcc6ef4831175c"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/16-volume-resource-data.log",
+      "bytes": 49,
+      "sha256": "66759dd95bc9133b03d2ad72ccbb9e56bfa05987341bd68d8de30848a3cae3db"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/17-compose-smoke.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/17-result.json",
+      "bytes": 154,
+      "sha256": "cbc01934451f12c73b235fa674b06a3f8fbb793dcc78e548b580a243a4ba940e"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/analytics-service.iid",
+      "bytes": 71,
+      "sha256": "0a1e4bf73e1a0be31f4d4505ae58709f50039c5dbd61d7bceceffc15bd759bfd"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/base-node.json",
+      "bytes": 236,
+      "sha256": "6a20b26450d7a64b97bfb53910f7f9f83e5099845cf636031db071822f41db59"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/budget.jsonl",
+      "bytes": 9273,
+      "sha256": "74e69a3370685f0dd00bcfcac27edf8d4bd69c56a2a151f9dc3da19bcfb81056"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/build-commands.jsonl",
+      "bytes": 3628,
+      "sha256": "e24de829f34eedabe3a883ea635447db232ea0f12f3f05ca2538b36d175edfd5"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/build-containers.jsonl",
+      "bytes": 8111,
+      "sha256": "7b7ca47cdc3a710ee41c06c77321756fb0e717b47f383733ca736f3759189f62"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/cleanup-commands.json",
+      "bytes": 7184,
+      "sha256": "ffc366a30a6e79865bb907a1b70d33cc30008bbec13ac8cc80660ce7f0717bc5"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/cleanup-result.json",
+      "bytes": 358,
+      "sha256": "80fc77ad1ff38d42dbedbaeb4a001b19027755fa1af4739a8c2aa9e898277a30"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-3189e86719b6.log",
+      "bytes": 9576,
+      "sha256": "fb8a691f73930578dda452205f84a6cf86f45eec54d12c638da2714ffc0fc9a8"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-6cf5c58ed3ee.log",
+      "bytes": 8344,
+      "sha256": "dca27c66b7485d7109096654f59c02020928420fff8c2c9587c842480e619ff4"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-7ff7029c20b4.log",
+      "bytes": 7768,
+      "sha256": "2e9854a13b328732d0581446faf303b02631e927af532677b1aa2d3945e37dcd"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-9184401cd40e.log",
+      "bytes": 4868,
+      "sha256": "5fa5df18bd93b1a770e081520d3d50f1dc25a2b3e45520721ae1fde957c9a8f3"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-a633712143cd.log",
+      "bytes": 7335,
+      "sha256": "89c4dea6386a27772a86eaf107d592d211eb420423afa3f9052835e2178cce0b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-b177a023dbb7.log",
+      "bytes": 69,
+      "sha256": "51320936936508eca14363bf8c1c183451c6cd806ab3e487d6ac89b3d71e587d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-c7dfe717a180.log",
+      "bytes": 8467,
+      "sha256": "1f5bb6ba8153bc89a8c867bfbbb8d54b325a497a326edb69fb99198b246c4edd"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-d6abd9db48d4.log",
+      "bytes": 241952,
+      "sha256": "6f49d06372c738980f22e975c56932296f7da72cc8b4c2e752dc85f30a155c9b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/container-e6c442b0bb87.log",
+      "bytes": 9497,
+      "sha256": "060a6b18e695978ee27235cd398e6c6e1f27bbaead3d359403d70fd101dbbc51"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/effective-config-start.redacted.json",
+      "bytes": 15314,
+      "sha256": "14c120d3219670fe0576db6e6aa656c6a5c4dbd55ea6784c85cee9389c631e91"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/effective-config.redacted.json",
+      "bytes": 15315,
+      "sha256": "497d9556f29ca5d1dfc72ae4a0b0a4a72da34656e10d66108a925a822b2ef90c"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/gateway.iid",
+      "bytes": 71,
+      "sha256": "32362d36566d171c044ae33653280bbdbe06271a6554b43560a7018900729ce0"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/homework-service.iid",
+      "bytes": 71,
+      "sha256": "0586569ea0232ccbfafaa4942dfba06d760eb0b64638c5c70a3c0e51e5dc2d5d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/notification-service.iid",
+      "bytes": 71,
+      "sha256": "41fe76b7639bc93d77f176bde45327aa2d2874cf2cff6d2a2a12acb25dd3217f"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/progress-service.iid",
+      "bytes": 71,
+      "sha256": "b7f5806b7e0708bb519da916346c5d7abad8c48544417506c6619d0d6f075e55"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/remote-evidence-hashes.json",
+      "bytes": 5665,
+      "sha256": "561dbd84179572f49eca7fe834663bc2b0791c04f39dfab686ce1e15fe335200"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/remote-source-hashes.json",
+      "bytes": 54723,
+      "sha256": "4eb429585ca973dd398cec51fda8f50f772db5e7c0b7fc8e002673352f8a7c5a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/resource-service.iid",
+      "bytes": 71,
+      "sha256": "e0b5bb7a4a2dc84a6adcecebac3230c525bb3729e16975899dcbdd9fe0c0ad62"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/resources-before-cleanup.json",
+      "bytes": 33132,
+      "sha256": "ba03579560cb362e04f186749ccba509db1d6c7d5a044fd17d516fbeda8c720d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/runtime-budget.jsonl",
+      "bytes": 8610,
+      "sha256": "c3ff16aa83d7b97a6961658ce4d6334fdb5e85281b6871b34239de90cf37ed5e"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/runtime-commands.jsonl",
+      "bytes": 9903,
+      "sha256": "23537e5a4433353c8a9f2442ab98b6ad44ffadfc50a5afa0768fdb009c7cdb7a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/runtime-limits.json",
+      "bytes": 2487,
+      "sha256": "aa46e872b3cccec8d6b2ea7c71115c4cad7f04a59a10b7464abd1212500dfeef"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/secret-scan.json",
+      "bytes": 98,
+      "sha256": "9a77e34ccc7424c72357aebf8148b39de0a07d20be822731b9f0ee6553a3320d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/source-check.json",
+      "bytes": 48,
+      "sha256": "b177676e66bcc479730cef0ad0455520198b3de5cbb6de01c94fee77c4cb7fb7"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/success-stop.log",
+      "bytes": 520,
+      "sha256": "8633b1ec90aa9f7919b018c57a5138a52d15b93e26c33a8f3bbbecccf8b71a3e"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/remote/user-service.iid",
+      "bytes": 71,
+      "sha256": "2bf6097564916f58133b512530e83082446af12c3a03eac334bda4b7d0173a25"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/server-after-teardown.json",
+      "bytes": 14694,
+      "sha256": "a863657818192c4a4e9a8fcc08c431729a5a26cfb7438d76bb5742d7b29b7efc"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/server-before.json",
+      "bytes": 14693,
+      "sha256": "4d8e01efdd5a8a5814c3560d7abf33e4d0c603c317ed6f38a1795827030ce5de"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/source-manifest.json",
+      "bytes": 70764,
+      "sha256": "f453ebed0226b797d66aa3eaec4d2d5399cb9a60fe03500add14c18eca212b65"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/storage-fix-before-test-portability.patch",
+      "bytes": 4952,
+      "sha256": "052be51a9442c1b0869bc0414c71d6402826042bd3a04576bd8064d3bfda8b6a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/storage-fix.patch",
+      "bytes": 5048,
+      "sha256": "adc279cb6e83b6e1a1fa882d67cdad1d1b6165a71f49a8023b0262d0044994f2"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/archive.js",
+      "bytes": 2666,
+      "sha256": "1b22a434b7388e71e01debcd0282e9841a3cba33c82c6ebddf2e9f38405b0246"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/bootstrap.js",
+      "bytes": 3064,
+      "sha256": "93cecde34d686cb8fb783618332277dcef9692757fc24bf41fdb0b472e06bdd5"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/build.py",
+      "bytes": 4767,
+      "sha256": "a87c0e45b44eeb781586a52bd9c49530060fb9754adc9749a09af252529c7968"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/capture.py",
+      "bytes": 2963,
+      "sha256": "747c797d8233e35a261c26bf05caa0ac45bee1a4e8eb892a4ca730c7f568b7c1"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/cleanup.py",
+      "bytes": 2856,
+      "sha256": "41b7df75727c91e063c40c5ebefee44429bbfb20a80187f15e6cc4e6a74a50eb"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/index.js",
+      "bytes": 1448,
+      "sha256": "23a23fd9915c67a0390c2b097265b4ac0af0bed304687cb699e59eb285d5c0aa"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/live-health.py",
+      "bytes": 889,
+      "sha256": "0a92ad702fa1c117692d2b537e25b0eb3e8048e402e4949e495f4e0b6a3d4f1d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/override.yml",
+      "bytes": 1910,
+      "sha256": "bdc12beaa5f12b09de26bb392af3eba52d88369b3bad109127a7e415cc74037e"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/preflight.js",
+      "bytes": 1157,
+      "sha256": "aefd840c4d4042fab26e87e0aa8071afea1d38c2c8ac83a1127c3a69eb71a116"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/prepare.py",
+      "bytes": 2987,
+      "sha256": "e89606e4ecca3099772d9a820fef6fde420b1eb47b974dec7dd0c40c5ef93d70"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/remove-directory.py",
+      "bytes": 668,
+      "sha256": "634cec0700ddd4cdc3363795a67779071360180bbb40647b126e20bc10ea8388"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/runtime.py",
+      "bytes": 7128,
+      "sha256": "625f129c6c4367ed9af6fa43756c2ce286662580cbf6c23c279f851f067bee98"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/source.tar.gz",
+      "bytes": 842768,
+      "sha256": "a24a200732ad56055df70a29103756f2778b2a72198ad4054acd0e8982ff8b19"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/stop-success.py",
+      "bytes": 920,
+      "sha256": "19e9512d6203e760361174ef0bbfc3b2d1b9c4d5fd9e139f0f0fda5a85d4aa0c"
+    },
+    {
+      "path": "release-gate-artifacts/t7-docker-isolation-r4-2026-10-28/tools/storage.js",
+      "bytes": 643,
+      "sha256": "e5af1fbf0783e126f1910bcb595ec73143fd5dabd53b0734d696ee14668c9a43"
+    }
+  ]
+}

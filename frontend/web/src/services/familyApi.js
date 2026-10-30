@@ -162,9 +162,13 @@ export const recoverTaskCompletion = (taskId, operationId, signal, expectedSessi
 );
 export const cancelOrArchiveGrowthTask = (taskId) => parentDelete(`/api/growth-tasks/${taskId}`);
 
-export const listGrowthLogs = (params, signal) => parentGet('/api/growth-logs', params, signal);
-export const createGrowthLog = (payload) => parentPost('/api/growth-logs', payload);
-export const updateGrowthLog = (logId, payload) => parentPatch(`/api/growth-logs/${logId}`, payload);
+export const listGrowthLogs = (params, signal, expectedSession) => parentGet('/api/growth-logs', params, signal, expectedSession);
+export const createGrowthLog = (payload, signal, expectedSession) => parentPost(
+  '/api/growth-logs', payload, sessionRequestOptions(signal, expectedSession)
+);
+export const updateGrowthLog = (logId, payload, signal, expectedSession) => parentPatch(
+  `/api/growth-logs/${encodeURIComponent(logId)}`, payload, sessionRequestOptions(signal, expectedSession)
+);
 
 export const listKnowledgePoints = (params, signal) => parentGet('/api/knowledge-points', params, signal);
 export const createKnowledgePoint = (payload) => parentPost('/api/knowledge-points', payload);
@@ -180,10 +184,10 @@ export const getMistake = (mistakeId, signal, expectedSession) => parentGet(
 export const createMistake = (payload) => parentPost('/api/mistakes', payload);
 export const updateMistake = (mistakeId, payload) => parentPatch(`/api/mistakes/${mistakeId}`, payload);
 
-export const getWeeklyReport = (params, signal) => parentGet('/api/reports/weekly', params, signal);
-export const updateWeeklyReportFeedback = (reportId, payload) => parentPatch(
-  `/api/reports/weekly/${reportId}/feedback`,
-  payload
+export const getWeeklyReport = (params, signal, expectedSession) => parentGet('/api/reports/weekly', params, signal, expectedSession);
+export const updateWeeklyReportFeedback = (reportId, payload, signal, expectedSession) => parentPatch(
+  `/api/reports/weekly/${encodeURIComponent(reportId)}/feedback`,
+  payload, sessionRequestOptions(signal, expectedSession)
 );
 
 export const listFamilyReminders = (params, signal) => parentGet('/api/notifications/family', params, signal);

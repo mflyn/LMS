@@ -1,0 +1,131 @@
+{
+  "status": "LOCAL_EXECUTOR_FIX_VERIFIED / SERVER_REVALIDATION_PENDING / INDEPENDENT_REVIEW_PENDING",
+  "verificationScope": "local loopback HTTP fixture; real original Node CLI; no Docker/server rerun",
+  "priorR4Stage17": "INVALID_EVIDENCE_ENTRYPOINT_NOT_EXECUTED",
+  "retained": [
+    "T4 OPEN",
+    "T7 OPEN",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "historical failures",
+    "T5-NB-001/002 OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED"
+  ],
+  "files": [
+    {
+      "path": "backend/common/deployment/__tests__/composeFamilySmoke.test.js",
+      "bytes": 8246,
+      "sha256": "c1cacbca2052f0fca63188d3b1fb86ec142a9a0af332e635f0468d73efa57fca"
+    },
+    {
+      "path": "docs/development/evidence/t7-smoke-executor-2026-10-28/README.md",
+      "bytes": 4438,
+      "sha256": "ab0845e1d2b2f634c27b356bf2a7ce81c919d4f565adf24b82ae06e60fa7fcc4"
+    },
+    {
+      "path": "docs/development/evidence/t7-smoke-executor-2026-10-28/candidate.patch",
+      "bytes": 8726,
+      "sha256": "a557372bd11bdb90d27850dc78b50b98339eea6f964c663eba79abcbe2f29f58"
+    },
+    {
+      "path": "docs/development/evidence/t7-smoke-executor-2026-10-28/prepare-candidate.js",
+      "bytes": 3682,
+      "sha256": "889a4caad0403ddb742a1cdebbea5238a6f008d6dcf4ab328540b84d5c187a0e"
+    },
+    {
+      "path": "docs/development/evidence/t7-smoke-executor-2026-10-28/prepare.patch",
+      "bytes": 1136,
+      "sha256": "dd901f89c00af5a3d30868780bbaf9541018ab404403a85264245cdc4cc510f0"
+    },
+    {
+      "path": "docs/development/evidence/t7-smoke-executor-2026-10-28/runtime-candidate.py",
+      "bytes": 7402,
+      "sha256": "21862f0270056baf94fb66b05287c21dd121c535380da21ceda4b3064a75700c"
+    },
+    {
+      "path": "docs/development/evidence/t7-smoke-executor-2026-10-28/runtime.patch",
+      "bytes": 2973,
+      "sha256": "5bdfe7bbc3c93a051b82425ee7a607e5e26579ded4c9f897299d07fdb27d5864"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 547927,
+      "sha256": "af50a9c85332d55cff07545cb789ef6e5c27186e59daec1a9b55ccad9c3e6cd3"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 89721,
+      "sha256": "2033ec4e4476dcbcb4eacc04a535cd6daa4fa321d436973560df9d7b46a05339"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/docs-check.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/docs-gates.log",
+      "bytes": 491,
+      "sha256": "cc5a67878c1f1438e76cfc3e5a1718c5191a757cc47bedc0542b79d42cf70b44"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/green.log",
+      "bytes": 1083,
+      "sha256": "d667c121813799e0f0c3a875c79deecd2210de4b748dd2db5229ac7ca9a45522"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/lint-final.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/red.log",
+      "bytes": 7153,
+      "sha256": "b9bb2458b3bb35b281e08f518ba7c7f8099a24fdf5c2b429b1114d4d40098040"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/regression-final.log",
+      "bytes": 616,
+      "sha256": "cc8d0aeca6aeea7ae3f37b6ca290328004bb1d32aa6894ed117e89473824f92b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/regression.log",
+      "bytes": 616,
+      "sha256": "ac28578377999d355d58ad860e1c6ce691651fac50754e1237e0a5b92b214001"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/tools/index.js",
+      "bytes": 1570,
+      "sha256": "19cbb179c7798b2beb8e810337a4eb8ab6e55ea4ad527e1f8441e00ea4e4d52d"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/unchanged-runtime-source.json",
+      "bytes": 149,
+      "sha256": "b3fb473046be4e545115cec66ff54634e5cce1dfa1dde26da0de40a46eaccb87"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/validation.json",
+      "bytes": 854,
+      "sha256": "9f8e4908401dfb49883ff04a41847d6d06ff375c996e2aaff0d835ecbe2346b8"
+    },
+    {
+      "path": "release-gate-artifacts/t7-smoke-executor-2026-10-28/wiring-check.json",
+      "bytes": 365,
+      "sha256": "261013d1137ccd764196f63995be1f1f5dedfb6959afab72a2d9c6d256772f39"
+    },
+    {
+      "path": "scripts/compose-family-smoke.js",
+      "bytes": 5403,
+      "sha256": "4a0dac42bda4d53ef6f6af87d0f1ef83d06df138ffc26ff2186326c1901dfd5c"
+    },
+    {
+      "path": "scripts/run-isolated-compose-smoke.sh",
+      "bytes": 1313,
+      "sha256": "996c539ef54f3dde6d438b4214fa7faa28342b729ff5e01ee2e68f1d9485814e"
+    }
+  ]
+}

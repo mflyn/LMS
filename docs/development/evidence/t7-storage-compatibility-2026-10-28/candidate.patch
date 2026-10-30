@@ -1,0 +1,89 @@
+diff --git a/backend/common/deployment/__tests__/completionCompose.test.js b/backend/common/deployment/__tests__/completionCompose.test.js
+index 9d0df218..6f405f02 100644
+--- a/backend/common/deployment/__tests__/completionCompose.test.js
++++ b/backend/common/deployment/__tests__/completionCompose.test.js
+@@ -3,6 +3,8 @@ const path = require('path');
+ const yaml = require('js-yaml');
+ const { validate } = require('../../../../scripts/check-family-docs');
+ const dotenv = require('dotenv');
++const os = require('os');
++const { execFileSync } = require('child_process');
+ const root = path.resolve(__dirname, '../../../..');
+ const templates = ['backend/.env.example', 'docker-compose.ubuntu.env.example'];
+ const defaults = { COMPLETION_PROTOCOL_MODE: 'legacy', COMPLETION_WRITES_PAUSED: 'false', COMPLETION_STORAGE_CONFIRMED: 'false' };
+@@ -12,6 +14,35 @@ const environment = service => Object.fromEntries(service.environment.map(item =
+   return [item.slice(0, separator), item.slice(separator + 1)];
+ }));
+ 
++const imageDirectories = ['private-media', 'completion-journal'];
++const checkImageDirectorySetup = source => {
++  const command = source.replace(/\\\r?\n\s*/g, ' ').split('\n')
++    .find(line => line.startsWith('RUN mkdir -p /var/lib/family-growth/'))?.slice(4);
++  if (!command) throw Error('Missing image directory preparation');
++  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'resource-image-directories-'));
++  try {
++    // Keep mutation results independent of the developer or CI process umask.
++    execFileSync('/bin/sh', ['-ec', 'umask 022; ' + command.replaceAll('/var/lib/family-growth', temporary)]);
++    for (const name of imageDirectories) {
++      const stat = fs.statSync(path.join(temporary, name));
++      if (!stat.isDirectory() || (stat.mode & 0o777) !== 0o700 || stat.uid !== process.getuid()) {
++        throw Error('Unsafe image directory: ' + name);
++      }
++    }
++  } finally { fs.rmSync(temporary, { recursive: true, force: true }); }
++};
++
++test('resource image prepares both private empty-volume roots with owner-only permissions', () => {
++  checkImageDirectorySetup(fs.readFileSync(path.join(root, 'backend/services/resource-service/Dockerfile'), 'utf8'));
++});
++
++test.each(imageDirectories)('image preparation gate rejects removing the %s permission assignment', name => {
++  const source = fs.readFileSync(path.join(root, 'backend/services/resource-service/Dockerfile'), 'utf8');
++  const mutation = source.replace(`chmod 0700 /var/lib/family-growth/${name}`, 'true');
++  expect(mutation).not.toBe(source);
++  expect(() => checkImageDirectorySetup(mutation)).toThrow('Unsafe image directory: ' + name);
++});
++
+ test.each(['docker-compose.family.yml', 'docker-compose.ubuntu.yml'])('%s keeps completion opt-in with a separate journal', file => {
+   const config = read(file);
+   for (const name of ['homework-service', 'resource-service']) {
+diff --git a/backend/services/resource-service/Dockerfile b/backend/services/resource-service/Dockerfile
+index cd326189..d27fea7b 100644
+--- a/backend/services/resource-service/Dockerfile
++++ b/backend/services/resource-service/Dockerfile
+@@ -4,7 +4,10 @@ WORKDIR /app
+ COPY package*.json ./
+ RUN npm ci --omit=dev
+ COPY backend ./backend
+-RUN mkdir -p /var/lib/family-growth/private-media
++# Empty named volumes inherit these permissions on every container creation.
++RUN mkdir -p /var/lib/family-growth/private-media /var/lib/family-growth/completion-journal \
++    && chmod 0700 /var/lib/family-growth/private-media \
++    && chmod 0700 /var/lib/family-growth/completion-journal
+ 
+ WORKDIR /app/backend/services/resource-service
+ EXPOSE 3005
+diff --git a/backend/services/resource-service/__tests__/completionStorageReadiness.test.js b/backend/services/resource-service/__tests__/completionStorageReadiness.test.js
+index aba0d4bd..7a18a6a1 100644
+--- a/backend/services/resource-service/__tests__/completionStorageReadiness.test.js
++++ b/backend/services/resource-service/__tests__/completionStorageReadiness.test.js
+@@ -13,6 +13,19 @@ beforeEach(async () => {
+ });
+ afterEach(async () => { jest.restoreAllMocks(); await fs.rm(base, { recursive: true, force: true }); });
+ const run = () => assertCompletionStorageReadiness({ env });
++test.each(['PRIVATE_MEDIA_ROOT', 'COMPLETION_DELETION_JOURNAL_ROOT'])('rejects a foreign owner on %s before probing', async key => {
++  const original = fs.lstat;
++  jest.spyOn(fs, 'lstat').mockImplementation(async file => {
++    const stat = await original(file);
++    if (file === env[key]) stat.uid = process.getuid() + 1;
++    return stat;
++  });
++  const open = jest.spyOn(fs, 'open');
++  await expect(run()).rejects.toMatchObject({ code: 'COMPLETION_STORAGE_NOT_READY' });
++  expect(open).not.toHaveBeenCalled();
++  expect(await fs.readdir(env[key])).toEqual([]);
++  expect((await fs.stat(env[key])).mode & 0o777).toBe(0o700);
++});
+ test('enabled retention namespaces are checked without provisioning missing directories', async () => {
+   env.COMPLETION_PROTOCOL_MODE = 'enabled';
+   await run();

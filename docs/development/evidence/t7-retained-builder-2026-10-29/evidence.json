@@ -1,0 +1,45 @@
+{
+  "status": "LOCAL_REVIEWED_NOT_SERVER_READY",
+  "archive": "release-gate-artifacts/t7-retained-builder-2026-10-29",
+  "manifestSha256": "ebefb3e2ab1ec12efa68f6aa3342bbaa78bcd768899a69a79fb3037b133592ab",
+  "sourcePatchHash": "5b6edb9c774fa5f47195d1883c6e5ae487c5a3e441e605503dbce21c76106bd1",
+  "candidateSha256": "043db2284c0bf48b4ebd1ade62713ef5f0102d9479373645a43e714dcbe40129",
+  "documentationNote": "candidate.json and snapshot preserve the reviewed pre-final-documentation state; final-documentation contains the updated closure records, not a new source candidate",
+  "verification": {
+    "familyCommon": {
+      "suites": 48,
+      "tests": 1189
+    },
+    "independentSource": {
+      "suites": 4,
+      "tests": 214
+    },
+    "outerMock": 56,
+    "mutantsDetected": 13
+  },
+  "independentReports": [
+    "independent-source-review.md",
+    "independent-outer-review.md"
+  ],
+  "preserved": [
+    "T4 OPEN",
+    "T7 OPEN",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "two OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED",
+    "historical failures"
+  ],
+  "notPerformed": [
+    "server revalidation",
+    "Git commit",
+    "push",
+    "merge",
+    "deployment"
+  ],
+  "nextPrerequisites": [
+    "separately authorized fixed candidate",
+    "remote monitor termination verification",
+    "separately authorized bounded server validation"
+  ]
+}

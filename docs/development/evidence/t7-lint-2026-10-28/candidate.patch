@@ -1,0 +1,2972 @@
+diff --git a/backend/common/deployment/__tests__/familyDocumentationGate.test.js b/backend/common/deployment/__tests__/familyDocumentationGate.test.js
+index 4f60e002..18792b2b 100644
+--- a/backend/common/deployment/__tests__/familyDocumentationGate.test.js
++++ b/backend/common/deployment/__tests__/familyDocumentationGate.test.js
+@@ -211,7 +211,7 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
+     ['T2 approval record scope widens', approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY'],
+     ['T2 defect reopened', approval, '"T2-P2-JWT": "CLOSED"', '"T2-P2-JWT": "OPEN"', 'T2 approval record must close exactly the three reviewed P2 defects'],
+     ['T2 approval record device passed', approval, '"device": "DEVICE_PENDING"', '"device": "PASSED"', 'T2 approval record must preserve pending and deferred boundaries'],
+-    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
++    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 实施中，T8–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
+     ['T3 closure regresses', gate, '| T3 | CLOSED |', '| T3 | IN_PROGRESS |', 'exactly one CLOSED T3 row'],
+     ['T3 missing', gate, '| T3 | CLOSED |', '| removed | CLOSED |', 'exactly one CLOSED T3 row'],
+     ['T3 contradictory duplicate', gate, '| T3 | CLOSED |', '| T3 | CLOSED | current |\n|  T3  | OPEN |', 'exactly one CLOSED T3 row'],
+@@ -286,10 +286,22 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
+         [`${key} contradicts in ${file}`, file, before, `${before}\n${invalid}`, message]
+       ];
+     })),
+-    ...Array.from({ length: 3 }, (_, index) => `T${index + 7}`).map(task => [
++    ['T7 closes without approval', gate, '| T7 | IN_PROGRESS |', '| T7 | CLOSED |', 'keep T7 as IN_PROGRESS'],
++    ['T7 has conflicting current rows', gate, '| T7 | IN_PROGRESS |', '| T7 | CLOSED | invented |\n| T7 | IN_PROGRESS |', 'keep T7 as IN_PROGRESS'],
++    ...[['engineering gate', 'OPEN'], ['device', 'DEVICE_PENDING'], ['Docker audit', 'INCOMPLETE_FAILED'],
++      ['nonblocking', 'T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING'],
++      ['deferred', 'REMAINDER_DEFERRED'], ['historical failures', 'PRESERVED']].flatMap(([key, value]) => {
++      const marker = `**T7 ${key}:** ${value}`;
++      return [
++        [`T7 ${key} removed`, gate, marker, '', `T7 ${key} must remain uniquely ${value}`],
++        [`T7 ${key} changed`, gate, marker, `**T7 ${key}:** CLOSED`, `T7 ${key} must remain uniquely ${value}`],
++        [`T7 ${key} duplicated`, gate, marker, `${marker}\n${marker}`, `T7 ${key} must remain uniquely ${value}`]
++      ];
++    }),
++    ...['T8', 'T9'].map(task => [
+       `${task} starts without approval`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | IN_PROGRESS |`, `keep ${task} as NOT_STARTED`
+     ]),
+-    ...Array.from({ length: 3 }, (_, index) => `T${index + 7}`).map(task => [
++    ...['T8', 'T9'].map(task => [
+       `${task} has conflicting current rows`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | CLOSED | invented |\n| ${task} | NOT_STARTED |`, `keep ${task} as NOT_STARTED`
+     ]),
+     ['plan status regresses', plan, 'T1 后端工程已关闭', 'T1 执行中', 'approved T1 plan status'],
+diff --git a/backend/common/deployment/__tests__/task5QualityGate.test.js b/backend/common/deployment/__tests__/task5QualityGate.test.js
+index 1cf419fb..60f1724f 100644
+--- a/backend/common/deployment/__tests__/task5QualityGate.test.js
++++ b/backend/common/deployment/__tests__/task5QualityGate.test.js
+@@ -1,8 +1,66 @@
+ const path = require('path');
++const { execFileSync } = require('child_process');
+ 
+ const repositoryRoot = path.resolve(__dirname, '../../../..');
+ 
++const serverPaths = [
++  'backend/services/analytics-service/services/weeklyReportService.js',
++  'backend/services/analytics-service/__tests__/weeklyReports.test.js',
++  'backend/tests/t2/weeklyReflection.integration.test.js',
++  'backend/common/deployment/__tests__/task5QualityGate.test.js',
++  'scripts/check-family-docs.js'
++];
++const browserPaths = [
++  'frontend/web/src/components/family/ReflectionPanel.js',
++  'frontend/web/src/pages/family/ReportsPage.js',
++  'frontend/web/src/components/family/source-snapshot/Probe.js',
++  'frontend/web/src/components/family/release-gate-artifacts/Probe.js'
++];
++const archivePaths = [
++  'release-gate-artifacts/t5/source-snapshot/frontend/web/src/pages/family/TasksPage.js',
++  'release-gate-artifacts/t7/preserved/backend/services/analytics-service/services/weeklyReportService.js'
++];
++
++// ESLint loads its normal flat config in Node, outside Jest's module sandbox.
++const probe = `
++  const fs = require('fs');
++  const { ESLint } = require('eslint');
++  const paths = JSON.parse(fs.readFileSync(0, 'utf8'));
++  (async () => {
++    const lint = new ESLint({ cwd: process.cwd() });
++    const results = {};
++    for (const file of paths) {
++      const ignored = await lint.isPathIgnored(file);
++      const config = await lint.calculateConfigForFile(file);
++      const browser = file.startsWith('frontend/');
++      const invalid = browser
++        ? 'export default function Probe() { return <div>{__t7_missing_reference__()}</div>; }'
++        : '__t7_missing_reference__();';
++      const valid = browser
++        ? 'export default function Probe() { return <div>ok</div>; }'
++        : file.includes('__tests__')
++          ? "test('synthetic', () => expect(true).toBe(true));"
++          : 'module.exports = () => process.version;';
++      const [bad] = await lint.lintText(invalid, { filePath: file });
++      const [good] = await lint.lintText(valid, { filePath: file });
++      results[file] = { ignored, noUndef: config?.rules?.['no-undef'],
++        bad: { errorCount: bad.errorCount, messages: bad.messages },
++        good: { errorCount: good.errorCount, warningCount: good.warningCount } };
++    }
++    process.stdout.write(JSON.stringify(results));
++  })().catch(error => { process.stderr.write(error.stack); process.exitCode = 1; });
++`;
++
+ describe('stage 5 static quality gate', () => {
++  let results;
++  beforeAll(() => {
++    results = JSON.parse(execFileSync(process.execPath, ['-e', probe], {
++      cwd: repositoryRoot,
++      input: JSON.stringify([...archivePaths, ...serverPaths, ...browserPaths]),
++      encoding: 'utf8'
++    }));
++  });
++
+   test('exports an ESLint 9 flat configuration for server and browser code', () => {
+     const config = require(path.join(repositoryRoot, 'eslint.config.js'));
+ 
+@@ -22,4 +80,19 @@ describe('stage 5 static quality gate', () => {
+       })
+     ]));
+   });
++
++  test.each(archivePaths)('ignores only the root historical archive: %s', file => {
++    expect(results[file].ignored).toBe(true);
++  });
++
++  test.each([...serverPaths, ...browserPaths])('keeps real source linted and rejects undefined references: %s', file => {
++    const result = results[file];
++    expect(result.ignored).toBe(false);
++    expect(result.noUndef?.[0]).toBe(2);
++    expect(result.bad.errorCount).toBeGreaterThan(0);
++    expect(result.bad.messages).toEqual(expect.arrayContaining([
++      expect.objectContaining({ ruleId: 'no-undef', severity: 2, messageId: 'undef' })
++    ]));
++    expect(result.good).toEqual({ errorCount: 0, warningCount: 0 });
++  });
+ });
+diff --git a/backend/services/analytics-service/__tests__/weeklyReports.test.js b/backend/services/analytics-service/__tests__/weeklyReports.test.js
+index b49ba57d..4fa84a5e 100644
+--- a/backend/services/analytics-service/__tests__/weeklyReports.test.js
++++ b/backend/services/analytics-service/__tests__/weeklyReports.test.js
+@@ -1,4 +1,6 @@
+-const request = require('supertest');
++const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
++const { request, close: closeHttp } = createHttpTestHarness();
++afterEach(closeHttp);
+ 
+ process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-at-least-32-characters-long';
+ process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
+@@ -478,6 +480,93 @@ describe('Task 6 weekly reports service', () => {
+     expect(await WeeklyReport.countDocuments()).toBe(1);
+   });
+ 
++  test.each(['current', 'promotion', 'insert-race'].flatMap(mode =>
++    ['custom', 'empty', 'same-as-generated'].map(feedback => [mode, feedback])))(
++    'T7 feedback survives %s snapshot write with %s suggestion', async (mode, feedback) => {
++    const repository = makeRepository({ tasks: makeTasks({ planned: 1, completed: 1 }) });
++    let report = mode === 'insert-race' ? null : await readReport(makeService({ repository, now: CURRENT_NOW }));
++    repository.listMistakeProjection.mockResolvedValue([mistake()]);
++    const feedbackAt = date('2026-06-25T00:00:00.000Z');
++    let expected, injected = false;
++    const writeFeedback = async target => {
++      expected = feedback === 'empty' ? '' : feedback === 'same-as-generated' ? target.generatedSuggestion : '$statistics';
++      await WeeklyReport.collection.updateOne({ _id: target._id }, { $set: {
++        parentNote: 'Concurrent parent feedback', nextWeekSuggestion: expected,
++        feedbackUpdatedBy: new WeeklyReport.base.Types.ObjectId(PARENT_A_ID), feedbackUpdatedAt: feedbackAt
++      } });
++      injected = true;
++    };
++    const originalUpdate = WeeklyReport.findOneAndUpdate.bind(WeeklyReport);
++    const originalCreate = WeeklyReport.create.bind(WeeklyReport);
++    const spy = mode === 'insert-race'
++      ? jest.spyOn(WeeklyReport, 'create').mockImplementationOnce(async data => {
++        report = await originalCreate(data);
++        await writeFeedback(report);
++        // The competing insertion is real; the original insertion loses the unique index race.
++        return originalCreate(data);
++      })
++      : jest.spyOn(WeeklyReport, 'findOneAndUpdate').mockImplementationOnce(async (...args) => {
++        await writeFeedback(report);
++        return originalUpdate(...args);
++      });
++    try {
++      const result = await readReport(makeService({ repository, now: mode === 'promotion' ? ENDED_NOW : CURRENT_NOW }));
++      expect(injected).toBe(true);
++      const persisted = await WeeklyReport.findById(result._id);
++      for (const value of [result, persisted]) {
++        expect(value.nextWeekSuggestion).toBe(expected);
++        expect(value.parentNote).toBe('Concurrent parent feedback');
++        expect(value.feedbackUpdatedAt.toISOString()).toBe(feedbackAt.toISOString());
++        expect(value.feedbackUpdatedBy.toString()).toBe(PARENT_A_ID);
++        expect(value.familyId.toString()).toBe(FAMILY_A_ID);
++        expect(value.childId.toString()).toBe(CHILD_A1_ID);
++        expect(value.frozen).toBe(mode === 'promotion');
++      }
++      const raw = await WeeklyReport.collection.findOne({ _id: result._id });
++      expect(raw.familyId._bsontype).toBe('ObjectId');
++      expect(raw.childId._bsontype).toBe('ObjectId');
++      expect(raw.generatedAt).toBeInstanceOf(Date);
++      expect(raw.sourceCutoffAt).toBeInstanceOf(Date);
++      expect(await WeeklyReport.countDocuments()).toBe(1);
++    } finally { spy.mockRestore(); }
++  });
++
++  test.each(['untouched', 'note-only', 'empty', 'same-as-generated', 'legacy-custom'])(
++    'T7 suggestion refresh preserves %s feedback semantics', async kind => {
++    const repository = makeRepository();
++    const service = makeService({ repository, now: CURRENT_NOW });
++    const first = await readReport(service);
++    const expected = kind === 'empty' ? '' : kind === 'legacy-custom' ? '$parent-custom' : first.generatedSuggestion;
++    if (kind !== 'untouched') {
++      await WeeklyReport.collection.updateOne({ _id: first._id }, { $set: {
++        nextWeekSuggestion: expected,
++        ...(kind === 'legacy-custom' ? {} : { parentNote: 'Parent note', feedbackUpdatedAt: date(CURRENT_NOW) })
++      } });
++    }
++    repository.listMistakeProjection.mockResolvedValue([mistake()]);
++    const second = await readReport(service);
++    expect(second.generatedSuggestion).not.toBe(first.generatedSuggestion);
++    expect(second.nextWeekSuggestion).toBe(kind === 'untouched' ? second.generatedSuggestion : expected);
++  });
++
++  test('T7 late current-week update returns the frozen winner without changing it', async () => {
++    const repository = makeRepository();
++    const currentService = makeService({ repository, now: CURRENT_NOW });
++    await readReport(currentService);
++    const original = WeeklyReport.findOneAndUpdate.bind(WeeklyReport);
++    let winner;
++    const spy = jest.spyOn(WeeklyReport, 'findOneAndUpdate').mockImplementationOnce(async (...args) => {
++      winner = await readReport(makeService({ repository, now: ENDED_NOW }));
++      return original(...args);
++    });
++    try {
++      const result = await readReport(currentService);
++      expect(result).not.toBeNull();
++      expect(result.toObject()).toEqual(winner.toObject());
++      expect((await WeeklyReport.findById(winner._id)).toObject()).toEqual(winner.toObject());
++    } finally { spy.mockRestore(); }
++  });
++
+   test('TC-T6-REPORT-015 maps source failures to 503 and stores no failed snapshot', async () => {
+     const repository = makeRepository();
+     repository.listGrowthLogProjection.mockRejectedValueOnce(new Error('growth logs down'));
+@@ -499,32 +588,32 @@ describe('Task 6 weekly reports routes', () => {
+     const childPath = weeklyPath({ weekStart: WEEK_START });
+     const siblingPath = weeklyPath({ childId: CHILD_A1_ID, weekStart: WEEK_START });
+ 
+-    const parentResponse = await request(app)
++    const parentResponse = await (await request(app))
+       .get(parentPath)
+       .set(signedHeaders(parentA(), 'GET', parentPath))
+       .expect(200);
+     expect(parentResponse.body.success).toBe(true);
+     expect(parentResponse.body.data.report.childId).toBe(CHILD_A1_ID);
+ 
+-    const childResponse = await request(app)
++    const childResponse = await (await request(app))
+       .get(childPath)
+       .set(signedHeaders(childA1(), 'GET', childPath))
+       .expect(200);
+     expect(childResponse.body.data.report.childId).toBe(CHILD_A1_ID);
+ 
+-    const parentBDenied = await request(app)
++    const parentBDenied = await (await request(app))
+       .get(parentPath)
+       .set(signedHeaders(parentB(), 'GET', parentPath))
+       .expect(403);
+     expect(parentBDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
+ 
+-    const siblingDenied = await request(app)
++    const siblingDenied = await (await request(app))
+       .get(siblingPath)
+       .set(signedHeaders(childA2(), 'GET', siblingPath))
+       .expect(403);
+     expect(siblingDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
+ 
+-    const childBDenied = await request(app)
++    const childBDenied = await (await request(app))
+       .get(parentPath)
+       .set(signedHeaders(childB1(), 'GET', parentPath))
+       .expect(403);
+@@ -536,7 +625,7 @@ describe('Task 6 weekly reports routes', () => {
+     const report = await seedFrozenReport();
+     const feedbackPath = `/api/reports/weekly/${report._id}/feedback`;
+ 
+-    const parentResponse = await request(app)
++    const parentResponse = await (await request(app))
+       .patch(feedbackPath)
+       .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
+       .send({
+@@ -547,14 +636,14 @@ describe('Task 6 weekly reports routes', () => {
+     expect(parentResponse.body.data.report.parentNote).toBe('本周复盘很认真');
+     expect(parentResponse.body.data.report.nextWeekSuggestion).toBe('下周继续整理错题');
+ 
+-    const childDenied = await request(app)
++    const childDenied = await (await request(app))
+       .patch(feedbackPath)
+       .set(signedHeaders(childA1(), 'PATCH', feedbackPath))
+       .send({ parentNote: 'not allowed' })
+       .expect(403);
+     expect(childDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
+ 
+-    const forbidden = await request(app)
++    const forbidden = await (await request(app))
+       .patch(feedbackPath)
+       .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
+       .send({ statistics: { taskCompletionRate: 100 } })
+@@ -562,7 +651,7 @@ describe('Task 6 weekly reports routes', () => {
+     expect(forbidden.body.error.code).toBe('FIELD_ACCESS_DENIED');
+ 
+     const unknownPath = '/api/reports/weekly/665000000000000000009999/feedback';
+-    const missing = await request(app)
++    const missing = await (await request(app))
+       .patch(unknownPath)
+       .set(signedHeaders(parentA(), 'PATCH', unknownPath))
+       .send({ parentNote: 'missing' })
+@@ -576,12 +665,12 @@ describe('Task 6 weekly reports routes', () => {
+     const feedbackPath = `/api/reports/weekly/${report._id}/feedback`;
+     const original = report.toObject();
+ 
+-    await request(app)
++    await (await request(app))
+       .patch(feedbackPath)
+       .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
+       .send({ parentNote: '第一次反馈' })
+       .expect(200);
+-    const second = await request(app)
++    const second = await (await request(app))
+       .patch(feedbackPath)
+       .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
+       .send({ parentNote: '第二次反馈', nextWeekSuggestion: '新的家庭建议' })
+diff --git a/backend/services/analytics-service/jest.attachments.config.js b/backend/services/analytics-service/jest.attachments.config.js
+index 66a015e2..dcca5a82 100644
+--- a/backend/services/analytics-service/jest.attachments.config.js
++++ b/backend/services/analytics-service/jest.attachments.config.js
+@@ -5,7 +5,8 @@ module.exports = {
+   testMatch: [
+     '<rootDir>/__tests__/familyMistakes.test.js',
+     '<rootDir>/__tests__/familyMistakeMediaSaga.test.js',
+-    '<rootDir>/__tests__/familyMistakeSources.test.js'
++    '<rootDir>/__tests__/familyMistakeSources.test.js',
++    '<rootDir>/__tests__/weeklyReports.test.js'
+   ],
+   moduleNameMapper: {
+     '^axios$': '<rootDir>/../../../node_modules/axios/dist/node/axios.cjs',
+diff --git a/backend/services/analytics-service/services/weeklyReportService.js b/backend/services/analytics-service/services/weeklyReportService.js
+index 549807d9..06dcc218 100644
+--- a/backend/services/analytics-service/services/weeklyReportService.js
++++ b/backend/services/analytics-service/services/weeklyReportService.js
+@@ -302,6 +302,26 @@ const retryFrozenWinner = async (WeeklyReportModel, identity) => {
+   throw reportError('AGGREGATION_UNAVAILABLE', 'Frozen weekly report is not visible', 503);
+ };
+ 
++const snapshotUpdate = (snapshot, frozen) => [{
++  $set: {
++    // Pipeline updates do not cast identity strings. Existing BSON identities stay untouched.
++    ...Object.fromEntries(Object.entries({ ...snapshot, frozen })
++      .filter(([key]) => key !== 'familyId' && key !== 'childId')
++      .map(([key, value]) => [key, { $literal: value }])),
++    nextWeekSuggestion: {
++      // All expressions in this stage read the same pre-update document, including its old default.
++      $cond: [{ $or: [
++        { $ne: [{ $ifNull: ['$feedbackUpdatedAt', null] }, null] },
++        { $ne: [{ $ifNull: ['$feedbackUpdatedBy', null] }, null] },
++        { $and: [
++          { $ne: [{ $ifNull: ['$nextWeekSuggestion', ''] }, ''] },
++          { $ne: ['$nextWeekSuggestion', '$generatedSuggestion'] }
++        ] }
++      ] }, { $ifNull: ['$nextWeekSuggestion', ''] }, { $literal: snapshot.generatedSuggestion }]
++    }
++  }
++}];
++
+ const createWeeklyReportService = ({
+   WeeklyReportModel,
+   repository,
+@@ -334,7 +354,6 @@ const createWeeklyReportService = ({
+     const effectiveChildId = user.role === 'student' ? user.childId : childId;
+     if (!effectiveChildId) throw reportError('VALIDATION_ERROR', 'childId is required', 400);
+ 
+-    const weekEnd = addLocalDateDays(weekStart, 6);
+     const cutoff = localDateStartToUtc(addLocalDateDays(weekStart, 7), timezone);
+     const generatedAt = now();
+     const ended = generatedAt.getTime() >= cutoff.getTime();
+@@ -358,37 +377,29 @@ const createWeeklyReportService = ({
+       generatedAt
+     });
+     const existing = await WeeklyReportModel.findOne(identity);
+-    const existingHasFeedbackOverride = existing
+-      && existing.nextWeekSuggestion
+-      && existing.nextWeekSuggestion !== existing.generatedSuggestion;
+-    const update = {
+-      ...snapshot,
+-      nextWeekSuggestion: existingHasFeedbackOverride
+-        ? existing.nextWeekSuggestion
+-        : snapshot.generatedSuggestion
+-    };
+ 
+     if (!ended) {
+       const current = await WeeklyReportModel.findOneAndUpdate(
+         { ...identity, frozen: false },
+-        { $set: { ...update, frozen: false } },
++        snapshotUpdate(snapshot, false),
+         { new: true }
+       );
+       if (current) return current;
+       try {
+         return await WeeklyReportModel.create({
+-          ...update,
++          ...snapshot,
+           frozen: false,
+           parentNote: '',
+           nextWeekSuggestion: snapshot.generatedSuggestion
+         });
+       } catch (error) {
+         if (error && error.code === 11000) {
+-          return WeeklyReportModel.findOneAndUpdate(
++          const winner = await WeeklyReportModel.findOneAndUpdate(
+             { ...identity, frozen: false },
+-            { $set: { ...update, frozen: false } },
++            snapshotUpdate(snapshot, false),
+             { new: true }
+           );
++          return winner || retryFrozenWinner(WeeklyReportModel, identity);
+         }
+         throw error;
+       }
+@@ -397,12 +408,7 @@ const createWeeklyReportService = ({
+     if (existing && existing.frozen === false) {
+       const promoted = await WeeklyReportModel.findOneAndUpdate(
+         { ...identity, frozen: false },
+-        {
+-          $set: {
+-            ...update,
+-            frozen: true
+-          }
+-        },
++        snapshotUpdate(snapshot, true),
+         { new: true }
+       );
+       if (promoted) return promoted;
+@@ -411,7 +417,7 @@ const createWeeklyReportService = ({
+ 
+     try {
+       return await WeeklyReportModel.create({
+-        ...update,
++        ...snapshot,
+         frozen: true,
+         parentNote: '',
+         nextWeekSuggestion: snapshot.generatedSuggestion
+diff --git a/backend/tests/t2/weeklyReflection.integration.test.js b/backend/tests/t2/weeklyReflection.integration.test.js
+new file mode 100644
+index 00000000..e1add3e8
+--- /dev/null
++++ b/backend/tests/t2/weeklyReflection.integration.test.js
+@@ -0,0 +1,250 @@
++const { randomUUID } = require('crypto');
++const { createT2Runtime } = require('./serviceRuntime');
++const { expectData } = require('./syntheticSeed');
++const { formatLocalDate } = require('../../common/utils/familyDate');
++
++let runtime, fixture, parent, coparent, outsider, children;
++const taskPath = task => `/api/growth-tasks/${task.taskId}`;
++const date = () => formatLocalDate(new Date(), 'Asia/Shanghai');
++const monday = localDate => {
++  const value = new Date(localDate + 'T00:00:00Z');
++  value.setUTCDate(value.getUTCDate() - (value.getUTCDay() + 6) % 7);
++  return value.toISOString().slice(0, 10);
++};
++const logBody = (childId, fields = {}) => ({ childId, date: date(), dimension: 'academic', subject: '数学',
++  content: 'Synthetic mathematical reflection', childReflection: 'Synthetic check before answer', ...fields });
++const logs = async (client, childId) => expectData(await client.get(`/api/growth-logs?childId=${childId}&pageSize=100`));
++beforeAll(async () => {
++  runtime = await createT2Runtime(); fixture = await runtime.seed();
++  [parent, coparent, outsider] = await Promise.all(['parent', 'coparent', 'outsider'].map(runtime.login));
++  children = [];
++  for (const name of ['child', 'sibling']) {
++    const childId = fixture.actors[name].childId;
++    expectData(await parent.patch(`/api/children/${childId}`, { grade: 1 }));
++    children.push({ childId, grade: 1, client: await runtime.login(name) });
++  }
++  const third = expectData(await parent.post('/api/children', { name: 'Synthetic grade four', grade: 4 }), 201).child;
++  expectData(await parent.post(`/api/children/${third.childId}/pin`, { pin: '9753' }));
++  const credentials = { familyId: fixture.familyId, childId: third.childId, pin: '9753' };
++  children.push({ childId: third.childId, grade: 4, client: runtime.api.asChild(expectData(await runtime.api.loginChild(credentials)).token) });
++});
++afterAll(async () => { await runtime?.stop(); });
++
++test.each([0, 1, 2])('synthetic child %s completes formal mathematical chain and weekly reflection with real coparent audit', async index => {
++  const { childId, client } = children[index];
++  const reportPath = `/api/reports/weekly?childId=${childId}&weekStart=${monday(date())}`;
++  const baseline = expectData(await parent.get(reportPath)).report;
++  const task = expectData(await parent.post('/api/growth-tasks', { childId, title: `Synthetic T7 arithmetic ${index}`,
++    dimension: 'academic', subject: '数学', taskType: 'practice', dueDate: date(),
++    checklistSnapshot: [{ itemId: 'read', label: '读清题目', required: true }, { itemId: 'check', label: '检查结果', required: true }] }), 201).task;
++  const planPath = `/api/children/${childId}/daily-learning-plans/${date()}`;
++  const plan = expectData(await client.get(planPath)).plan;
++  const planned = expectData(await client.put(planPath, { expectedVersion: plan.version,
++    items: [{ taskId: task.taskId, childEstimatedMinutes: 10 }] })).plan;
++  expect(planned.items[0].estimateRecordedBy).toEqual({ actorId: childId, role: 'student' });
++  const requested = expectData(await client.patch(taskPath(task) + '/help', {
++    action: 'request', expectedHelpVersion: 0, helpType: 'cannot_start', note: 'Synthetic guidance request' })).task;
++  expect(requested.helpRequest.requestedByActor).toEqual({ id: childId, role: 'student' });
++  const handled = expectData(await coparent.patch(taskPath(task) + '/help', {
++    action: 'resolve', expectedHelpVersion: 1, parentResponse: 'Synthetic read the question first' })).task;
++  expect(handled.helpRequest.resolvedByActor).toEqual({ id: fixture.actors.coparent.userId, role: 'parent' });
++  const upload = new FormData(); upload.append('purpose', 'task_completion');
++  upload.append('file', new Blob([fixture.image.bytes], { type: 'image/png' }), 'synthetic-math.png');
++  const media = expectData(await client.post('/api/media', upload), 201).media;
++  const command = { operationId: randomUUID(), expectedCompletionVersion: 0, expectedChecklistVersion: task.checklistVersion,
++    checkedItemIds: ['read', 'check'], completionMediaIds: [media.mediaId], childNote: 'Synthetic checked work', actualMinutes: 10 };
++  expect((await client.patch(taskPath(task) + '/complete', { ...command, expectedChecklistVersion: 0 })).status).toBe(409);
++  runtime.dropNextResponse({ method: 'PATCH', path: taskPath(task) + '/complete' });
++  await expect(client.patch(taskPath(task) + '/complete', command)).rejects.toThrow();
++  const completed = expectData(await client.patch(taskPath(task) + '/complete', command)).task;
++  expect(completed.completionVersion).toBe(1);
++  const seen = expectData(await coparent.get(taskPath(task))).task;
++  expect(seen.completionMediaIds).toEqual([media.mediaId]);
++  expectData(await coparent.get(`/api/media/${media.mediaId}/access`));
++  expect((await coparent.patch(taskPath(task) + '/confirm', { expectedCompletionVersion: 0 })).status).toBe(409);
++  const confirmed = expectData(await coparent.patch(taskPath(task) + '/confirm', {
++    expectedCompletionVersion: seen.completionVersion, parentFeedback: 'Synthetic reviewed this work' })).task;
++  expect(confirmed).toMatchObject({ status: 'confirmed', parentFeedback: 'Synthetic reviewed this work' });
++  expectData(await parent.patch(taskPath(task) + '/confirm', { expectedCompletionVersion: seen.completionVersion }));
++  const mistake = expectData(await parent.post('/api/mistakes', { childId, sourceTaskId: task.taskId, subject: '数学',
++    reason: 'calculation', reviewReminderDate: '2026-11-04' }), 201).mistake;
++  const correction = expectData(await parent.post('/api/growth-tasks', { childId, sourceMistakeId: mistake.mistakeId,
++    title: 'Synthetic correction', dimension: 'academic', subject: '数学', taskType: 'correction', dueDate: date() }), 201).task;
++  expect(expectData(await client.get(taskPath(correction))).task.source.id).toBe(mistake.mistakeId);
++  expectData(await client.patch(taskPath(correction) + '/complete', { operationId: randomUUID(), expectedCompletionVersion: 0,
++    expectedChecklistVersion: 0, checkedItemIds: [], completionMediaIds: [] }));
++  const correctionSeen = expectData(await parent.get(taskPath(correction))).task;
++  expectData(await parent.patch(taskPath(correction) + '/confirm', { expectedCompletionVersion: correctionSeen.completionVersion }));
++  const reminders = async day => expectData(await client.get(`/api/notifications/family?childId=${childId}&date=${day}`)).items;
++  expect((await reminders('2026-11-03')).some(row => row.sourceId === mistake.mistakeId)).toBe(false);
++  expect((await reminders('2026-11-04')).some(row => row.sourceId === mistake.mistakeId)).toBe(true);
++  expectData(await client.patch(`/api/mistakes/${mistake.mistakeId}`, { reviewed: true, childExplanation: 'Synthetic corrected reasoning' }));
++  expect(expectData(await client.get(`/api/mistakes/${mistake.mistakeId}`)).mistake).toMatchObject({ reviewed: true, mastered: false });
++  const beforeReflection = await runtime.inspect();
++  const beforeReport = expectData(await parent.get(reportPath)).report;
++  expect(beforeReport.statistics).toMatchObject({ recordDays: 0, totalDurationMinutes: 0,
++    completedTaskCount: 2, plannedTaskCount: baseline.statistics.plannedTaskCount + 2, mistakeCount: 1 });
++  const log = expectData(await client.post('/api/growth-logs', logBody(childId)), 201).log;
++  expect(log).toMatchObject({ familyId: fixture.familyId, childId, createdBy: childId, updatedBy: childId });
++  expect((await logs(client, childId)).items.find(row => row.logId === log.logId)).toEqual(log);
++  const proxy = expectData(await coparent.patch(`/api/growth-logs/${log.logId}`, { childReflection: 'Synthetic parent-assisted reflection' })).log;
++  expect(proxy).toMatchObject({ createdBy: childId, updatedBy: fixture.actors.coparent.userId });
++  const report = expectData(await coparent.get(reportPath)).report;
++  expect(report.statistics).toEqual({ ...beforeReport.statistics, recordDays: 1 });
++  expect(report.statistics.taskCompletionRate).toBe(Math.round(20000 / report.statistics.plannedTaskCount) / 100);
++  const feedback = expectData(await coparent.patch(`/api/reports/weekly/${report.reportId}/feedback`, {
++    parentNote: 'Synthetic review of learning', nextWeekSuggestion: 'Synthetic one careful check' })).report;
++  expect(feedback.statistics).toEqual(report.statistics);
++  expect(feedback.feedbackUpdatedBy).toBe(fixture.actors.coparent.userId);
++  expect(expectData(await parent.get(reportPath)).report.parentNote).toBe(feedback.parentNote);
++  const after = await runtime.inspect();
++  expect(after.database.Task).toEqual(beforeReflection.database.Task);
++  expect(after.database.Ledger).toEqual(beforeReflection.database.Ledger);
++  expect(after.database.Ledger.filter(row => row.sourceId === task.taskId)).toHaveLength(1);
++  expect(after.database.Reference.filter(row => row.mediaId === media.mediaId && row.state === 'bound')).toHaveLength(1);
++});
++
++test('reflection POST lost acknowledgement is discoverable after relogin without repost; history stays frozen', async () => {
++  const { childId, client } = children[0];
++  const reportPath = `/api/reports/weekly?childId=${childId}&weekStart=2020-01-06`;
++  const frozen = expectData(await parent.get(reportPath)).report;
++  expect(frozen.frozen).toBe(true);
++  const body = logBody(childId, { date: '2020-01-07', content: 'Synthetic lost reflection' });
++  const count = (await logs(client, childId)).total;
++  runtime.dropNextResponse({ method: 'POST', path: '/api/growth-logs' });
++  await expect(client.post('/api/growth-logs', body)).rejects.toThrow();
++  const relogged = await runtime.login('child');
++  const listed = await logs(relogged, childId);
++  expect(listed.total).toBe(count + 1);
++  expect(listed.items.filter(row => row.content === body.content)).toHaveLength(1);
++  const saved = listed.items.find(row => row.content === body.content);
++  expectData(await relogged.patch(`/api/growth-logs/${saved.logId}`, { childReflection: '' }));
++  expect((await logs(relogged, childId)).items.find(row => row.logId === saved.logId).childReflection).toBe('');
++  const reread = expectData(await parent.get(reportPath)).report;
++  expect(reread.reportId).toBe(frozen.reportId);
++  expect(reread.frozen).toBe(true);
++  expect(reread.generatedAt).toBe(frozen.generatedAt);
++  expect(reread.statistics).toEqual(frozen.statistics);
++  expect(reread.sourceCutoffAt).toEqual(frozen.sourceCutoffAt);
++  expect((await logs(relogged, childId)).total).toBe(count + 1);
++});
++
++test('a nonzero historical snapshot survives an eligible source mutation while reflection and feedback remain editable', async () => {
++  const { childId, client } = children[0];
++  const log = expectData(await parent.post('/api/growth-logs', logBody(childId, {
++    date: '2020-01-14', durationMinutes: 25, content: 'Synthetic historical learning'
++  })), 201).log;
++  // Only the temporary runtime fixture is backdated; all reads and business edits use real HTTP.
++  const mongoose = runtime.mongooseInstances.find(instance => instance.models.GrowthLog);
++  expect(mongoose).toBeDefined();
++  const seeded = await mongoose.connection.collection('growthlogs').updateOne({ _id: new mongoose.Types.ObjectId(log.logId) },
++    { $set: { createdAt: new Date('2020-01-14T04:00:00Z') } });
++  expect(seeded.modifiedCount).toBe(1);
++  const reportPath = `/api/reports/weekly?childId=${childId}&weekStart=2020-01-13`;
++  const frozen = expectData(await parent.get(reportPath)).report;
++  expect(frozen.frozen).toBe(true);
++  expect(frozen.statistics).toMatchObject({ recordDays: 1, totalDurationMinutes: 25 });
++  expectData(await parent.patch(`/api/growth-logs/${log.logId}`, { durationMinutes: 90 }));
++  expectData(await client.patch(`/api/growth-logs/${log.logId}`, { childReflection: 'Synthetic later reflection' }));
++  expectData(await coparent.patch(`/api/reports/weekly/${frozen.reportId}/feedback`, { parentNote: 'Synthetic later feedback' }));
++  const reread = expectData(await parent.get(reportPath)).report;
++  expect(reread).toMatchObject({ reportId: frozen.reportId, frozen: true, generatedAt: frozen.generatedAt,
++    sourceCutoffAt: frozen.sourceCutoffAt, statistics: frozen.statistics,
++    parentNote: 'Synthetic later feedback', feedbackUpdatedBy: fixture.actors.coparent.userId });
++  expect(reread.statistics).toEqual(frozen.statistics);
++  const source = (await logs(client, childId)).items.find(row => row.logId === log.logId);
++  expect(source).toMatchObject({ durationMinutes: 90, childReflection: 'Synthetic later reflection' });
++});
++
++test.each(['$parent-feedback', ''])('formal GET delayed before persistence preserves concurrent coparent feedback %s', async nextWeekSuggestion => {
++  const childId = children[0].childId;
++  const reportPath = `/api/reports/weekly?childId=${childId}&weekStart=${monday(date())}`;
++  const before = expectData(await parent.get(reportPath)).report;
++  const Model = runtime.mongooseInstances.find(instance => instance.models.WeeklyReport).models.WeeklyReport;
++  const original = Model.findOneAndUpdate.bind(Model);
++  let enter, release, intercepted = false, pending;
++  const entered = new Promise(resolve => { enter = resolve; });
++  const held = new Promise(resolve => { release = resolve; });
++  const spy = jest.spyOn(Model, 'findOneAndUpdate').mockImplementation(async (...args) => {
++    if (!intercepted && args[0].frozen === false && args[0].weekStart === before.weekStart) {
++      intercepted = true; enter(); await held;
++    }
++    return original(...args);
++  });
++  try {
++    pending = parent.get(reportPath);
++    await Promise.race([entered, pending.then(() => { throw new Error('GET did not reach the held database write'); })]);
++    const saved = expectData(await coparent.patch(`/api/reports/weekly/${before.reportId}/feedback`, {
++      parentNote: 'Synthetic concurrent feedback', nextWeekSuggestion
++    })).report;
++    expect(saved.feedbackUpdatedBy).toBe(fixture.actors.coparent.userId);
++    release();
++    const delayed = expectData(await pending).report;
++    const reread = expectData(await parent.get(reportPath)).report;
++    for (const report of [delayed, reread]) {
++      expect(report).toMatchObject({ reportId: saved.reportId, nextWeekSuggestion,
++        parentNote: saved.parentNote, feedbackUpdatedBy: saved.feedbackUpdatedBy, feedbackUpdatedAt: saved.feedbackUpdatedAt });
++      expect(report.statistics).toEqual(before.statistics);
++    }
++  } finally {
++    release();
++    if (pending) await Promise.allSettled([pending]);
++    spy.mockRestore();
++  }
++});
++
++test('real services reject sibling/family/field escalation and anonymous access, without altering reflection', async () => {
++  const { childId, client } = children[0];
++  const log = expectData(await client.post('/api/growth-logs', logBody(childId)), 201).log;
++  for (const actor of [children[1].client, outsider]) {
++    expect((await actor.get(`/api/growth-logs?childId=${childId}`)).status).toBe(403);
++    expect((await actor.patch(`/api/growth-logs/${log.logId}`, { childReflection: 'forbidden' })).status).toBe(403);
++  }
++  for (const field of ['parentNote', 'updatedBy', 'familyId']) {
++    expect((await client.patch(`/api/growth-logs/${log.logId}`, { [field]: fixture.actors.parent.userId })).status).toBe(403);
++  }
++  expect((await client.post('/api/growth-logs', logBody(children[1].childId))).status).toBe(403);
++  const report = expectData(await parent.get(`/api/reports/weekly?childId=${childId}&weekStart=${monday(date())}`)).report;
++  for (const response of [
++    await outsider.get(`/api/reports/weekly?childId=${childId}&weekStart=${monday(date())}`),
++    await outsider.patch(`/api/reports/weekly/${report.reportId}/feedback`, { parentNote: 'forbidden outsider' })
++  ]) {
++    expect(response.status).toBe(403);
++    expect(response.data?.data).toBeUndefined();
++  }
++  expect((await client.patch(`/api/reports/weekly/${report.reportId}/feedback`, { parentNote: 'forbidden' })).status).toBe(403);
++  expect((await fetch(runtime.baseUrl + `/api/growth-logs?childId=${childId}`)).status).toBe(401);
++  const beforeExpired = await logs(client, childId);
++  for (const name of ['child', 'parent']) {
++    const token = require('jsonwebtoken').sign({ id: fixture.actors[name].userId,
++      role: name === 'child' ? 'student' : 'parent', tokenVersion: 0 }, process.env.JWT_SECRET, { expiresIn: -1 });
++    const expired = name === 'child' ? runtime.api.asChild(token) : runtime.api.asParent(token);
++    for (const response of [
++      await expired.get(`/api/growth-logs?childId=${childId}`),
++      await expired.post('/api/growth-logs', logBody(childId, { content: 'Expired identity must not create' })),
++      await expired.patch(`/api/growth-logs/${log.logId}`, { childReflection: 'Expired identity must not update' }),
++      await expired.patch(`/api/reports/weekly/${report.reportId}/feedback`, { parentNote: 'Expired feedback' })
++    ]) {
++      expect(response.status).toBe(401);
++      expect(response.data.error.code).toBe('UNAUTHENTICATED');
++      expect(response.data.data).toBeUndefined();
++    }
++  }
++  expect(await logs(client, childId)).toEqual(beforeExpired);
++  expect((await logs(client, childId)).items.find(row => row.logId === log.logId)).toEqual(log);
++  const after = expectData(await parent.get(`/api/reports/weekly?childId=${childId}&weekStart=${monday(date())}`)).report;
++  for (const field of ['reportId', 'parentNote', 'nextWeekSuggestion', 'feedbackUpdatedBy', 'feedbackUpdatedAt', 'statistics']) {
++    expect(after[field]).toEqual(report[field]);
++  }
++  const foreignChild = fixture.actors.foreignChild.childId;
++  const foreign = expectData(await outsider.post('/api/growth-logs', logBody(foreignChild, {
++    content: 'Synthetic foreign family record', durationMinutes: 91
++  })), 201).log;
++  const sibling = expectData(await parent.post('/api/growth-logs', logBody(children[1].childId, {
++    content: 'Synthetic sibling record', durationMinutes: 73
++  })), 201).log;
++  const own = await logs(client, childId);
++  expect(own.items.some(row => [foreign.logId, sibling.logId].includes(row.logId))).toBe(false);
++  expect(own.items.every(row => row.familyId === fixture.familyId && row.childId === childId)).toBe(true);
++  expect(expectData(await parent.get(`/api/reports/weekly?childId=${childId}&weekStart=${monday(date())}`)).report.statistics).toEqual(after.statistics);
++});
+diff --git a/docs/api/family-learning-tracker-api.md b/docs/api/family-learning-tracker-api.md
+index 50c12b5b..f043989c 100644
+--- a/docs/api/family-learning-tracker-api.md
++++ b/docs/api/family-learning-tracker-api.md
+@@ -1038,6 +1038,11 @@ message 暴露 token 曾经存在、由谁创建或由谁接受。
+ 
+ 仅家长可提交 `parentNote` 和 `nextWeekSuggestion`，每项最多 1000 字；孩子提交返回 `403 FIELD_ACCESS_DENIED`。该操作不得修改统计字段、weekStart/weekEnd、familyId 或 childId。成功返回完整 report。孩子周反思通过成长记录的 `childReflection` 派生，MVP 不提供孩子修改 WeeklyReport 的接口。
+ 
++周报统计刷新不得覆盖并发保存的家长反馈。已有反馈审计标记表示整份反馈已人工保存，因此即使
++仅修改寄语，也保留当前下周建议（包括显式空串或与原系统建议相同的文本）；系统建议仍独立更新。
++没有人工反馈且下周建议仍为默认值时，可随系统建议更新。历史非空自定义建议继续保留；没有审计
++且为空/默认值的旧记录无法识别历史人工意图，不承诺自动恢复。上述规则不新增字段或请求格式。
++
+ ## 8. Private Media
+ 
+ ### 8.1 上传私有媒体
+diff --git a/docs/architecture/family-self-directed-learning-system-design.md b/docs/architecture/family-self-directed-learning-system-design.md
+index b63800f3..65037860 100644
+--- a/docs/architecture/family-self-directed-learning-system-design.md
++++ b/docs/architecture/family-self-directed-learning-system-design.md
+@@ -1228,7 +1228,7 @@ PASS/PARTIAL/FAIL、停止和缺失规则统一引用[增量 Gate §14](../devel
+ 
+ 执行拆分见[自主学习 MVP 开发计划](../superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md)。
+ 该计划按本节范围列出 T0–T9、文件落点、测试和发布/家庭验证步骤；T0 已完成契约基线，
+-T1 后端工程已关闭，仅限既定合成验收；T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7–T9 待执行。
++T1 后端工程已关闭，仅限既定合成验收；T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 实施中，T8–T9 待执行。
+ T5 总门禁经用户批准限定合成范围关闭，T4 状态不变；DEVICE_PENDING、非阻断补测和后置范围保留，Git 仅授权专用分支和 PR，不合并或部署，批准与边界见 Gate §25.5–25.6。
+ T3 限定合成验收及两项 P2 独立复评关闭见增量 Gate §23.8；真机 DEVICE_PENDING、SL-02 PLANNED、T7 集成及真实部署边界不变。
+ T0/T1 证据见增量 Gate §17–§18；T2-2 至 T2-6 及三项 P2 已获用户批准关闭；当前工程裁决见 Gate §22.6 和[执行记录 §17](../development/family-self-directed-learning-t2-execution.md#17-t2-限定合成范围批准关闭2026-10-24)。最新全量 D2B-05 失败不改写，不代表高级恢复通过。
+diff --git a/docs/development/README.md b/docs/development/README.md
+index 81688804..29d5b5f5 100644
+--- a/docs/development/README.md
++++ b/docs/development/README.md
+@@ -33,7 +33,7 @@
+ 旧 Task Gate 只证明对应历史范围。FGT-MVP-1.7 发布判定使用已纳入 Task 12 的统一
+ 发布 Gate；目标环境启用前还必须完成 Task 12 Gate 规定的数据修复检查。
+ 
+-## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7-T9 待执行）
++## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 实施中，T8-T9 待执行）
+ 
+ [T6 工程总门禁关闭记录](./evidence/t6-reload-denied-p2-2026-10-27/engineering-closure.md)
+ 仅关闭合成工程范围；DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测及后置责任不变。
+diff --git a/docs/development/family-growth-requirement-traceability.md b/docs/development/family-growth-requirement-traceability.md
+index c767991f..7fcf7a95 100644
+--- a/docs/development/family-growth-requirement-traceability.md
++++ b/docs/development/family-growth-requirement-traceability.md
+@@ -116,6 +116,24 @@ FGT-MVP-1.7 requirement set，也不改变其实现证据。只有对应 T 任
+ | `SL-06` | T7、T9 | PRD 14 | Architecture 12.1 | API 14.6 | progress/analytics、Parent/Child Web | 孩子反思、家长反馈、历史周统计不改写、四周复盘 | PLANNED |
+ | `SL-07` | T8、T9 | PRD 14 | Architecture 12.6 | API 14.6/14.7 | deployment and family validation | iPad Safari、Ubuntu 重启、NAS 隔离恢复、回滚、四周试点 | PLANNED |
+ 
++2026-10-28 T7 实施映射（未验收关闭）：`ReflectionPanel`、`ChildReflectionPage`、`ReportsPage`
++复用成长记录/周报契约；`reflectionApi`、`reflectionState`、`ReflectionPanel`、`T7Reports`、
++`T7AppNavigation` 测试覆盖 SL-06 权限、分页、周次、未知写入和会话隔离。
++`weeklyReflection.integration.test.js` 连接 SL-01 作品/版本/奖励、SL-02 求助、SL-03 清单、
++SL-04 孩子估时、SL-05 来源/订正/到期复习和 SL-06 反思/反馈/冻结；浏览器
++`weeklyMathLoop.spec.js`、`weeklyReflection.spec.js` 对应真实页面链路，执行结果以 Gate §27 后续记录为准。
++SL-01–06 保持 PLANNED；本映射不代表新增场景已全部通过，不关闭 T4/T7、真机或 T9 四周价值验收。
++
++2026-10-28 后续工程证据：三孩子数学链路及反思正式 HTTP/浏览器已通过，统计与跨家庭反例经
++独立六项 HTTP 和五项变异复验；前端 739、家庭后端 4473、T2--T7 HTTP 33、浏览器 54 项通过。
++具体候选与非重叠计数见 [T7 交付候选](evidence/t7-engineering-2026-10-28/README.md)。
++完整 release 在历史归档 lint 失败，不等于发布通过；上述 PLANNED、T4/T7 OPEN、真机与 T9 责任保留。
++
++服务端反馈竞争修订后追加证据（不覆盖上面的旧候选快照）：家庭后端 153 suites / 4506 tests，
++正式 HTTP 6 suites / 35 tests（含真实过期 JWT 拒绝），Chromium 54 tests，Task11 HTTP 6 与浏览器 4
++均通过；周报并发永久反例及独立变异见 Gate §27.6–27.7。整份反馈审计下的保守保留行为已写入 API，
++不新增统计或审计字段。工程候选待用户验收，所有 PLANNED 和保留责任不变。
++
+ 2026-10-27 T6 工程增量：三种不可变创建来源、权威同 scope 校验、来源回看、人工订正和复习导航已进入
+ 本地合成工程批准关闭。实现及逐项证据见 [Gate §26](./family-self-directed-learning-mvp-gate.md#26-t6-人工错题订正与复习连接2026-10-27)
+ 和 [T6 验证记录](./evidence/t6-engineering-2026-10-27/README.md)。SL-05 仍保留 PLANNED，
+diff --git a/docs/development/family-self-directed-learning-mvp-gate.md b/docs/development/family-self-directed-learning-mvp-gate.md
+index 1b608aa2..0493db9b 100644
+--- a/docs/development/family-self-directed-learning-mvp-gate.md
++++ b/docs/development/family-self-directed-learning-mvp-gate.md
+@@ -88,7 +88,7 @@
+ | T4 | IN_PROGRESS | §24.9 求助投影 P2 已批准关闭；§24.10 固定候选服务器独立合成自动化通过，真机/人工待验收；总门禁 OPEN，关闭需用户批准 |
+ | T5 | CLOSED | §25.5 用户已批准限定合成工程；总门禁 CLOSED，仅 ENGINEERING_SYNTHETIC_ONLY；合并后双入口、WebKit 测试导航及异常收尾已批准关闭见 §25.9；DEVICE_PENDING、非阻断补测与后置边界保留 |
+ | T6 | CLOSED | §26.6 用户批准限定合成工程关闭；§26.7 仅授权专用分支/PR；DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测和后置责任保留；不合并、不部署 |
+-| T7 | NOT_STARTED | SL-01 至 SL-06 纳入集成/E2E 和完整发布 Gate |
++| T7 | IN_PROGRESS | OPEN；七项 P2 已获批准并 CLOSED（§27.8）；§27.10 已实施获批 lint 最小修订并提交独立复评，完整发布仍保留 §27.7 失败，未重跑或关闭总门禁 |
+ | T8 | NOT_STARTED | 家庭 Ubuntu、iPad、NAS 恢复和回滚有实测证据 |
+ | T9 | NOT_STARTED | §14 每孩子及总体价值判定；总体 PASS 才关闭，PARTIAL/FAIL 不冒充完成 |
+ 
+@@ -5196,3 +5196,308 @@ T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED 和 T7/T8/T9 责任全部保
+ 既有 CLOSED / ENGINEERING_SYNTHETIC_ONLY 及当前 Git 标记不扩大；本次只做本地文档记录，不新增提交、
+ 推送、PR 写入、合并或部署。M01–M08 MANUAL_PENDING/DEVICE_PENDING、D01–D04、T4 状态、
+ Docker INCOMPLETE_FAILED、两项 OPEN_NONBLOCKING、REMAINDER_DEFERRED 及 T7/T8/T9 责任保持。
++
++## 27. T7 周复盘导航与完整数学闭环
++
++### 27.1 授权范围与设计（2026-10-28）
++
++**T7 engineering gate:** OPEN
++**T7 device:** DEVICE_PENDING
++**T7 Docker audit:** INCOMPLETE_FAILED
++**T7 nonblocking:** T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING
++**T7 deferred:** REMAINDER_DEFERRED
++**T7 historical failures:** PRESERVED
++
++用户已授权自主推进 T7 实施、自查、独立评审和合成验证；未授权提交、推送、合并或部署，
++T7 总门禁 OPEN。基线为 main `7d519d20`，T6 已随 PR #34 合并；§26 旧 Git 限制保留为历史快照。
++T4 当前仍 IN_PROGRESS / OPEN：已查 §24.9–24.10，仅有缺陷关闭和自动化结果，没有总门禁关闭批准。
++T4 不阻止本轮开发，但必须保留在最终验收剩余项中。所有历史失败、DEVICE_PENDING、
++Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED 不变。
++
++方案选择：复用 GrowthLog 和 WeeklyReport，而非新建周反思模型或复制家长页面给孩子。
++新增轻量孩子反思路由，Today 提供入口；家长 ReportsPage 同周展示反思、提供代录入口，
++成长记录页展示反思并链接周报。复用一个按角色/家庭/孩子隔离的反思组件，保持现有普通记录功能。
++不新增 API、索引、后端幂等协议、结构化周报、自动评分、AI、回收或恢复装配。
++
++- 日期采用家庭 LocalDate，按周一至周日查询并分页；切换周次不将旧列表或响应展示为新周数据。
++- 优先选择现有成长记录，只 PATCH childReflection（最多 500 字，允许显式清空）；不覆盖记录正文、
++  时长或家长备注。新建要求选择日期并填写非空 content 和 childReflection，dimension 默认 academic，
++  subject 默认数学，可明确选择其他维度；不自动复制时长、不强制每周唯一、不隐藏其他维度记录。
++- 家长请求使用真实家长会话和 childId；孩子 API 从当前会话绑定本人。审计沿用 createdBy/updatedBy；
++  UI 标明家长代录方式，不把家长输入描述为孩子独立完成。周报反馈仍仅由家长填写。
++- 每次写前持久化最小不确定标记（role/actor/family/child、create 或 logId），无正文、token 或图片。
++  标记保存失败则不发送写请求。明确成功/明确业务拒绝才清除；无响应、5xx及无法确定结果继续锁定。
++  同一组件保留原输入，关闭/刷新/重登后保留非正文保护标记，必须显式完整重读并人工核对；
++  读取失败或空列表不会自动解锁，不自动 POST/PATCH。核对后结束旧编辑，重新选择当前记录才能再写，
++  不把未知 PATCH 原正文无条件重放到后来版本。此保护不是服务端幂等或跨设备唯一性承诺。
++- 退出/换身份清除私有视图与内存草稿；角色/会话/孩子/周次作用域和请求代次阻断迟到成功及 finally。
++  当前身份任意 401/403 优先清理私有视图并使其他请求失效；普通网络错误保留当前草稿和锁。
++- ReportsPage 的反馈读写同样绑定实际 reportId、孩子和周次；未知反馈 PATCH 先重新读取/核对再编辑。
++  已结束周统计冻结，反思是可变成长记录，不写入统计快照；新反思可能按既有规则增加当前周记录天数，
++  但不虚构时长、任务完成或奖励。回滚只撤销本轮页面入口和代码，不删除既有记录，无数据迁移。
++
++### 27.2 批次与验证映射
++
++| 批次 | 交付 | 验证和退出材料 |
++| --- | --- | --- |
++| T7-1 | 本设计、最小契约映射、T4/T6 状态核对 | 自查与独立设计评审；状态校验同步真实进度，不关闭门禁 |
++| T7-2 | childApi、孩子反思组件/路由/Today 入口 | API/组件红绿；输入限制、清空、刷新、未知写入、读取失败、拒绝及迟到响应 |
++| T7-3 | 家长同周反思、代录、记录/周报导航 | 共管真实 actor、孩子/周次切换、反馈未知结果、历史统计冻结 |
++| T7-4 | 正式 HTTP 和真实页面全数学链路 | 两家庭/三孩子/两家长；可控日期复习；版本/奖励/权限/媒体保护；全量相关回归、构建和 release Gate |
++
++现有 test:family-flow:* 保留；新增综合场景进入 test:t2:* 的 enabled 正式装配，不新建测试框架。
++SL-01–05 复用既有永久反例并补跨阶段集成；SL-06 覆盖反思、反馈、审计、冻结和分页日期边界。
++设计/实现/测试分别自查并独立复评，缺陷保留红灯及修复后的永久反例；完整 Gate 的 Docker/Git 清洁
++前提不可绕过。真机、T4 批准、T8/T9 和既有后置事项单独列出，SL 状态不因本轮工程通过自动 COVERED。
++
++### 27.3 实施与自查快照（2026-10-28，非验收关闭）
++
++- 工作区：原始项目目录 main `7d519d20`，所有本轮修改仍未提交；旧 worktree 不覆盖。
++- 最小设计独立评审：PASS（评审者 `01a17fcf-f93c-7ea0-a699-0049224cef22`），仅设计通过。
++  已采纳完整分页核对、跨周反馈代次、记录 actor 不等同反思作者、家庭时区建议。
++- 已接入孩子受保护反思入口、共享反思编辑、家长周报同周反思/代录；成长记录展示反思并导航到对应周。
++  普通记录编辑未修改反思时不再回传旧反思。没有新增后端模型、业务接口、幂等或回收协议。
++- 前端 API 红灯：15 项中 12 失败/3 通过；实现后与既有 child/family API 合计 29 通过。
++  真实 App 入口最初 2 项均因入口缺失失败；接入后通过，另补 Honolulu 周日及缺失/无效时区反例。
++- 家长周报红灯：3 项失败，实际复现跨周迟到成功覆盖草稿、旧 finally 解锁及未知反馈未锁定；修后通过。
++  旧 Task 9 统计、反馈断言保留，仅补实际身份/归属/周次夹具和捕获会话参数断言。
++- 第一轮前端完整回归：`npm run test:ci --prefix frontend/web -- --runInBand`，57 suites / 721 tests PASS。
++  这是后续独立复评修订前快照，不能代替最终候选回归。构建先有新增 ref cleanup lint 警告，
++  修正 effect 捕获后再次 build 编译成功；保留既有 Browserslist 数据老化提示，不借机升级依赖。
++- 正式 HTTP：`npm run test:t2:integration -- --runTestsByPath backend/tests/t2/weeklyReflection.integration.test.js`，
++  1 suite / 5 tests PASS。两个家庭，主家庭两个一年级/一个四年级及共管家长；三个孩子均跑完整数学链，
++  含真实上传、完成丢响应原命令重放、版本冲突、奖励幂等、反思丢响应重登发现、冻结与越权拒绝。
++  使用既有 enabled 正式装配/临时副本集，扫描仍为 trusted-local，不能声称验证 ClamAV/真实部署。
++- 独立代码复评发现 `T7-REFLECTION-P2-001`（换周丢失拒绝保护）和 `T7-REFLECTION-P2-002`
++  （全量核对结果误作当前周可编辑列表）。永久反例修前 5 failed / 7 passed，修后 12 passed。
++  家长周报同类跨周拒绝补测修前失败、修后通过；两项均 FIXED_PENDING_INDEPENDENT_REVIEW，未关闭。
++- 文档校验 PASS；`familyDocumentationGate.test.js` 268 tests PASS，包括 T7 不得提前关闭、
++  既有待验状态不得删除/改写/重复、T8/T9 不得擅自启动的永久反例。
++- 剩余：独立修订复评、完整浏览器数学链、最新全量回归/构建/发布 Gate、指南/追踪及完整候选归档。
++  不将上述局部通过写为 T7 全绿；T4 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
++  两项 OPEN_NONBLOCKING 与 REMAINDER_DEFERRED 均保持。
++
++### 27.4 页面复评与综合测试补强（2026-10-28，未关闭门禁）
++
++以下接续 §27.3 阶段快照，不覆盖红灯，不构成用户验收批准。
++
++- 独立评审者 `01a17fcf-f93c-7ea0-a699-0049224cef22` 对前两项页面 P2 和新增
++  `T7-REPORT-P2-003`（同周旧 GET 在反馈 PATCH 后回填）复评 PASS；实际执行
++  ReflectionPanel 12、T7Reports 7、T7AppNavigation 5，合计 3 suites / 24 tests，退出码 0，4.238 秒。
++  状态为 INDEPENDENT_REVIEW_PASSED / PENDING_USER_ACCEPTANCE，不自行关闭。
++  同周旧 GET 反例修前 1 failed / 5 passed；写入开始和结束分别失效旧读，当前身份 403 仍优先撤销。
++- 浏览器真实发现预填 textarea 包在 label 内导致精确标签包含正文；改用 useId/htmlFor 独立标签，
++  保留标签永久反例。早期未指定 build、沙箱 Chromium 启动拒绝、标签定位失败均保留，不并入成功计数。
++- 当前页面全链：`weeklyMathLoop.spec.js` 三个孩子分别通过排序/估时、求助、共管处理、重点清单、
++  图片上传、实际查看版本审核、来源错题、订正、复习、反思和周报反馈；另有一年级/四年级反思代录回看
++  及未知创建失败重读/关闭/退出/兄弟姐妹隔离/原 actor 重登核对，共 6 browser tests PASS，46.9 秒。
++  `/tmp/lms-t7-browser-math-loop-role-20261028` 保留报告和截图，768/1024/390 视口不代表真机通过。
++  之前三轮链路编排失败分别为重点项精确名称、保留求助筛选、select 标签含选项；修正真实 UI 操作和
++  精确 role 定位，没有延长超时、删减断言或替换成功响应。
++- 最新已完成全前端：57 suites / 734 tests PASS，37.53 秒，
++  `/tmp/lms-t7-full-frontend-20261028.json`。随后只补五项反思输入/存储测试，单套件 17/17 PASS；
++  不把 734 与五项相加伪称新的全量结果。构建退出码 0，`main.cc6bee40.js`，仅既有 Browserslist 老化提示。
++- 独立集成复评实际运行原 HTTP 5/5 PASS，10.51 秒，但发现三项断言强度缺口：
++  `T7-COVERAGE-P2-004` 非零历史冻结，`005` 当前周应计入的非零结果，`006` 周报跨家庭拒绝后不变性。
++  已补非零历史 25 分钟源记录变更为 90 分钟仍冻结、生成标识/时间不变、当前周两完成任务/一错题/一天记录、
++  反思前后仅记录天数变化、外家庭家长读取/写反馈拒绝及 actor/统计不变、外家庭和兄弟姐妹不同记录内容隔离。
++  仅临时数据库夹具回填历史 createdAt，业务修改及验收读写仍走真实 HTTP，没有给产品新增回填接口。
++  补强首轮 2 failed / 4 passed 是测试错误预期整数 67，按现有两位小数契约改为 66.67；
++  `/tmp/lms-t7-http-strengthened-20261028.json` 保留。修后 6/6 PASS，11.595 秒，
++  `/tmp/lms-t7-http-strengthened-green-20261028.json`。三项仍 FIXED_PENDING_INDEPENDENT_REVIEW。
++- 真实边界：Gateway、用户/作业/资源/进度/分析/通知正式工厂和路由，enabled 与原预检，临时 Mongo 副本集和私有文件。
++  各服务共享一个隔离合成库；统计用既有只读投影，未验证独立数据库部署。trusted-local 扫描不代表 ClamAV；
++  logger 静默，actor 字段验证不扩大为操作日志链验收。高级恢复与新回收保持关闭。
++- 根命令 `npm run lint` 退出码 1：44 项均来自已有 `release-gate-artifacts` 历史备份的 JSX 解析。
++  不删除/改写历史、不放宽规则。新增 reflection 服务及 T7 HTTP/E2E 已纳入既有严格规则；
++  `npx eslint frontend/web/src backend scripts tests eslint.config.js playwright.config.js playwright.t2.config.js test-mock.js`
++  退出码 0，属于代码目录定向结果，不能替代根命令或完整发布 Gate 通过。
++- 家长/孩子指南及 SL-01–06 映射已更新；文档校验通过。家庭全量、最新补强浏览器、完整发布 Gate、
++  最终候选及证据哈希仍待收口。T4 OPEN、T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
++  T5-NB-001/002 OPEN_NONBLOCKING 与 REMAINDER_DEFERRED 保持；没有 Git 写入或部署。
++
++### 27.5 最新完整回归与独立补强复验（2026-10-28，未批准关闭）
++
++本节追加到 §27.3–27.4 的历史快照之后，不回写旧失败、旧计数或当时待复评状态。
++最终前端 57 suites / 739 tests PASS；家庭后端 152 suites / 4473 tests PASS；正式 T2--T7 HTTP
++6 suites / 33 tests PASS；Task11 HTTP 4 suites / 6 tests PASS，均无失败或跳过。
++固定构建 Chromium T2--T7 全量 54 passed / 0 failed / 0 flaky / 0 skipped，298.598 秒；
++Task11 Chromium 4 passed，19.1 秒。构建成功，main.cc6bee40.js；浏览器未与构建清空同目录并发。
++
++独立评审 Beauvoir 实际执行最终 T7 HTTP 6/6 PASS，11.025 秒，随后串行执行五项内存变异：
++历史非零冻结、任务/成长记录/错题三个统计投影、反馈目标家庭检查，全部被目标业务断言拦截。
++每轮只选择一个目标用例（1 failed / 5 非目标 skipped），无运行时错误，源码前后哈希一致；
++不能混称基础回归有跳过，也不将 M1 的早期 toMatchObject 失败当作后续 toEqual 的独立保护。
++三项统计/隔离 P2 当前 VERIFIED_FIXED / INDEPENDENT_REVIEW_PASSED，连同前三项代码修订
++提交用户验收，不自行写为用户批准关闭。
++
++原始 JSON、浏览器失败/截图、独立变异命令和哈希清单保留于
++`release-gate-artifacts/t7-engineering-2026-10-28/`。完整候选及证据见
++[T7 工程候选](evidence/t7-engineering-2026-10-28/README.md)和[复评记录](evidence/t7-engineering-2026-10-28/review.md)。
++发布 Gate 已按原脚本实际尝试；首次 npm cache EPERM，独立临时缓存安装成功后在 02-lint
++因既有归档 JSX 44 errors 退出 1，03--18 未执行、Docker 未启动；安装漏洞提示见复评记录。
++不得将独立命令通过等同完整发布 Gate、CI、Ubuntu 或真机通过。
++
++T4 IN_PROGRESS/OPEN、T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、
++T5-NB-001/002 OPEN_NONBLOCKING 与高级恢复/新回收 REMAINDER_DEFERRED 保留。
++没有真实部署或 Git 写入，SL-01–06 不提前整体 COVERED；T8/T9 责任不变。
++
++### 27.6 服务端周报反馈竞争 P2（2026-10-28，修订中）
++
++最终归档独立核对确认原候选 f9c0f7d4 的 29 文件/210 原始证据及固定构建一致，但发现
++`T7-REPORT-P2-007`：统计 GET 先读旧建议，再更新统计时覆盖并发反馈 PATCH。
++当前周、冻结提升及插入唯一键竞争均已由真实 Mongo 反例复现；另补迟到当前周请求返回冻结赢家、
++显式清空/保存旧默认、无人工反馈默认演进及 legacy 自定义兼容。扩展红灯 12 failed / 3 passed，
++18 项非目标未运行；修复后完整周报套件 33/33 PASS。原完整回归是修复前候选证据，不冒称本修订已全量通过。
++
++方案经独立静态审阅：三个更新路径使用同一单阶段 Mongo 更新管道，从更新时旧文档决定是否保留
++nextWeekSuggestion；snapshot 作为 literal 写入且不重写 familyId/childId，保留 ObjectId/Date。
++不写 parentNote 或反馈审计；仍仅更新 frozen:false，迟到当前请求返回已冻结赢家，不返回空报告。
++任一已有 feedbackUpdatedAt/By 表示整份反馈已人工保存，含只改寄语时也保留当前建议；这是既有
++整份反馈审计粒度下的保守行为，不声称精确识别哪个字段被编辑。无审计的旧非空自定义建议保留；
++既无审计又为空/默认值的历史意图无法辨认，不新增修复或历史回填。
++
++周报旧套件被原家庭与 legacy 矩阵同时遗漏，已纳入现有 analytics-attachments 的 Mongo setup，
++不另建框架、不缩减其他套件。新增正式 HTTP 在 GET 真正持久化前暂停，真实共管 PATCH 后释放，
++核验响应及重读的建议、actor、时间和统计。独立复评及修订后回归待完成，T7 OPEN 和全部保留状态不变。
++
++后续独立复评：VERIFIED_FIXED / INDEPENDENT_REVIEW_PASSED，待用户验收。Beauvoir 实际运行
++最终回环 harness 版本周报 33/33、正式 HTTP 8/8，均零失败/跳过；内存逆转 harness 的 import、
++afterEach 及 11 处调用可复原旧测试哈希，断言未减。F1 静态旧读建议变异被模型 8/9 及 HTTP 2/2
++目标用例杀死；F2 忽略审计变异被模型 3/5 及 HTTP 1/2 目标用例杀死，非目标选择与基础回归分列。
++current 的文本/清空有正式 HTTP 并发证据，promotion/duplicate 由真实 Mongo 模型反例覆盖，
++不扩大宣称所有窗口都经过 HTTP。证据原件为 lms-t7-feedback-independent-20261028-Vz2Cb1。
++修订后家庭完整回归已启动；早期 4473/33/54 等记录保留为旧候选，不改写为本修订结果。
++
++### 27.7 修订后完整候选与验收交接（2026-10-28，总门禁 OPEN）
++
++本节接续 §27.6，不覆盖旧候选、失败或当时的待验状态。修订后实际结果：
++
++| 入口 | 本次结果 | 原始证据（T7 原始归档目录内） |
++| --- | --- | --- |
++| test:family-regression | 153 suites / 4506 passed，0 failed / skipped，exit 0 | post-feedback-family.json、post-feedback-family-command.json |
++| test:t2:integration | 6 suites / 35 passed，0 failed / skipped，exit 0；含真实过期 JWT 断言 | post-expiry-http.json、post-expiry-http-command.json |
++| test:family-flow:integration | 4 suites / 6 passed，exit 0 | post-feedback-checks/task11-http.json、commands.json |
++| test:t2:e2e | 54 passed，0 failed / flaky / skipped，294.128 秒，exit 0 | post-feedback-checks/formal-browser.json、commands.json |
++| test:family-flow:e2e | 4 passed，17.3 秒，exit 0 | post-feedback-checks/task11-browser.log、commands.json |
++
++前端生产源码未随服务端 P2 改动，原最终 57 suites / 739 tests、构建 main.cc6bee40.js 证据继续适用；
++固定构建九个本轮实现文件的 source map 与源码一致，不虚构新构建或重跑。家庭新增 33 项来自补入
++原遗漏的周报套件（18 既有 + 15 新增），不是旧计数简单相加，以上 4506 来自实际全量 JSON。
++正式 HTTP 增加两个共管竞争用例；最后一次再补真实 expiresIn:-1 的家长/孩子 JWT，八个拒绝请求
++覆盖记录读取/创建/更新和周报反馈，断言 401 UNAUTHENTICATED、无 data 及列表/记录/周报不变。
++该补测没有增加 test 数量，完整 35 项在补测后重跑通过；此前浏览器结果不冒称执行了这些 HTTP 断言。
++
++独立过期身份复验 8/8 PASS，exit 0；新增块移除可复原前一测试文件哈希，生产源码未变。
++证据原件 lms-t7-expired-http-independent-20261028-cPHa9M，与 §27.6 的两个竞争变异分别归档。
++七项 P2 当前 VERIFIED_FIXED / INDEPENDENT_REVIEW_PASSED，等待用户验收，不自行标记批准关闭。
++
++最终完整发布脚本另保存 release-final-candidate：独立 cache 安装成功后仍在 02-lint 因历史 JSX
++44 errors 退出 1，28.771 秒；03--18 未执行、Docker 未启动，不得将独立入口结果代替脚本全绿。
++文档/状态校验、代码目录 lint、差异检查和最终候选哈希见证据目录 README、review 和 validation。
++T4 IN_PROGRESS/OPEN、T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项非阻断补测、
++历史失败和 REMAINDER_DEFERRED 不变；没有提交、推送、合并、服务器访问或部署。
++
++### 27.8 七项 P2 批准关闭与复验证据绑定（2026-10-28）
++
++批准依据：用户明确要求“复审通过，更新门禁和评审记录，关闭本次七项 P2，绑定冻结候选与本轮复验证据”。
++本次只关闭下列问题，不关闭 T7 工程总门禁，不把 §27.3–27.7 的历史待验状态改写成当时已批准。
++
++| 问题 | 当前状态 | 关闭依据 |
++| --- | --- | --- |
++| T7-REFLECTION-P2-001 | CLOSED | 同身份跨周拒绝优先、旧身份迟到响应隔离的永久反例及本轮前端复验 |
++| T7-REFLECTION-P2-002 | CLOSED | 全量核对结束后重新读取当前周，pending/失败/成功三分支反例 |
++| T7-REPORT-P2-003 | CLOSED | 写入前/中旧 GET 的代次失效、迟到拒绝优先及原反馈不被回填 |
++| T7-COVERAGE-P2-004 | CLOSED | 非零历史冻结反例、正式 HTTP 复验及已归档 M1 变异 |
++| T7-COVERAGE-P2-005 | CLOSED | 当前周非零任务/记录/错题统计、正式 HTTP 复验及三个 M2 变异 |
++| T7-COVERAGE-P2-006 | CLOSED | 外家庭报告 GET/PATCH 拒绝和对象不变性、正式 HTTP 复验及 M3 变异 |
++| T7-REPORT-P2-007 | CLOSED | 三种快照写入窗口的 15 项永久反例、周报 33 项及正式 HTTP 复验，已归档 F1/F2 变异 |
++
++批准绑定的完整补丁 SHA-256 为
++`61e4591c8eb4520395d9e27e029cf14b6c8918db333acb614e025f86f3d898f7`；
++原 validation.json SHA-256 为 `19ab93679c2695373efc5c9de5edffbed8f9f5cbbe1350f007dc698c85b8af8f`。
++原补丁/索引不重生成，33 个候选文件及 394 份原证据保留；本次关闭记录是独立文档增量，
++不是原冻结候选的替换。两份候选内文档（本 Gate 和实施计划）允许追加关闭记录，其他候选文件不变。
++
++本轮复验实际运行前端 7 suites / 79 tests、周报模型 33 tests、正式 HTTP 6 suites / 35 tests、
++文档状态门禁 268 tests，均 exit 0；六条 T7 Chromium 场景首次因 macOS MachPortRendezvous 权限
++在启动阶段失败，获准本机浏览器权限后同候选/原预算/原断言 6 passed、0 failed/flaky/skipped。
++两轮证据分开保留，不称首次通过。复验未重跑全量 4506/739/54 或全部历史变异，只核对原归档。
++
++原件 `/private/tmp/lms-t7-rereview-val9jF` 已逐字节归档至
++`release-gate-artifacts/t7-p2-closure-2026-10-28/rereview`；新增索引和批准摘要见
++[七项 P2 关闭记录](evidence/t7-engineering-2026-10-28/p2-closure.md)及
++[关闭证据索引](evidence/t7-engineering-2026-10-28/p2-closure-evidence.json)。
++此前 review/README/final-review 与 Gate/计划的原文另存 pre-closure-documents，不覆盖历史失败。
++
++### 27.9 剩余验收与 lint 阻断处理提案（待批准，未实施）
++
++当前仍缺：完整 release 脚本通过及 07b/13b 实际执行证据、隔离 Docker 阶段证据、
++18-git-clean 前提和 T7 总门禁明确关闭批准。前端构建与单独回归已具备，不能替代上述条件。
++工作区仍有未提交交付，禁止为了通过 Git clean 擅自提交、清理或跳过检查。
++T4 IN_PROGRESS/OPEN 单列等待批准，不由本轮七项问题关闭代替；真机、T8/T9 责任仍未完成。
++
++lint 根因已核实：`npm run lint` 使用 `eslint .`，ESLint flat config 未自动继承 `.gitignore` 中的
++`release-gate-artifacts/`。历史快照 JSX 不在正式前端 parser 匹配路径内，产生 44 项解析错误。
++另通过 ESLint calculateConfigForFile 核实，weeklyReportService.js 和 weeklyReports.test.js 的
++有效规则数均为 0；不是被忽略，而是没有命中当前 sharedRules。此前代码目录 lint 通过不能代表
++这两份文件执行了推荐规则，后续实施必须补齐这个检查范围缺口。
++
++推荐最小方案（PROPOSED_WAITING_APPROVAL）：
++
++1. 仅在根 flat config 的全局 ignores 精确加入 `release-gate-artifacts/**`；保留所有原件及哈希，
++   不忽略正式 backend/frontend/tests/scripts，也不全局忽略 `**/source-snapshot/**`、JSX 或测试。
++2. 将两份周报服务/测试文件显式纳入既有 Node/Jest sharedRules；不关闭规则、不降低 error，
++   若暴露真实源码 lint 问题则做最小修复，不使用 eslint-disable 掩盖。
++3. 复用 task5QualityGate.test.js 和现有 ESLint API 补永久反例：历史路径被精确忽略，正式前端
++   JSX 和上述后端文件仍受检查；在内存源码注入 no-undef 验证产生 error。移除忽略或扩大到正式
++   源码目录、取消周报规则覆盖都应失败。不新增测试框架或并行发布入口。
++4. 执行质量门禁测试和原 `npm run lint`，保留 44 错误历史；有实现改动才补受影响业务回归。
++   批准后的完整 release 使用新的证据目录和隔离合成边界，逐阶段记录，不承诺 lint 修复就等于
++   Docker/Git clean/总门禁全部通过。需要新增环境或 Git 授权时停止说明，不绕过检查。
++
++备选为将 lint 改为显式目录清单，但容易漏掉未来新增目录，不推荐；为历史副本扩展 JSX parser
++并修订副本既会污染证据，也不能验证现行源码，故不采用。回滚只撤回后续 lint 配置/测试增量，
++无需触碰业务数据、历史归档或已批准七项 P2。此方案尚未实施，等待用户批准。
++
++T7 OPEN、T4 OPEN、历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
++T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED 全部保持；不部署或执行 Git 写入。
++
++### 27.10 获批 lint 最小修订与复评交接（2026-10-28）
++
++接续 §27.9：独立评审线程转达用户明确批准按该最小方案实施、方案自查后修复并补永久反例；
++当前状态 FIXED_PENDING_INDEPENDENT_REVIEW。新增质量问题 QA-T7-LINT-COVERAGE-001 尚未关闭，
++不重开或覆盖 §27.8 已批准的七项 P2。§27.9 的待批准表述保留为当时状态，本节为后续进展。
++
++根 ESLint 全局 ignores 仅新增 `release-gate-artifacts/**`，两份周报文件显式纳入现有 Node/Jest
++sharedRules；没有降级规则、增加 eslint-disable 或改动历史副本。复用 task5QualityGate.test.js
++调用真实 ESLint API，检查根归档、正式前后端/脚本及嵌套同名目录；合法 JSX/Node/Jest 为零警告，
++内存未定义调用必须报 no-undef/error。没有新增发布入口或测试框架。
++
++实施前根 lint 44 errors 原样保留；永久反例初版含缺失规则访问的 TypeError，保留该失败后改为
++直接断言，重跑得到 4 failed / 8 passed 的有效红灯。配置后质量 12 passed，但根 lint 新暴露
++三项真实错误：周报测试两处调用换行和服务未使用的 weekEnd。最小修复仅合并调用括号位置及
++删除该未使用局部值；测试 AST 前后一致、服务 diff 只有一行删除，未修改测试断言或业务契约。
++
++本批开发验证（本机 macOS / Node 26.9.0，临时 Mongo 副本集、合成数据）：
++
++| 入口/变异 | 实际结果 |
++| --- | --- |
++| 原 npm run lint | 最小源码修复后 exit 0；44 错误及后续 3 错误的两轮失败单独保存 |
++| task5QualityGate.test.js | 12 passed，0 failed/skipped |
++| weeklyReports.test.js | 33 passed，0 failed/skipped |
++| npm run test:t2:integration | 6 suites / 35 passed，0 failed/skipped，58.310 秒 |
++| 内存撤销根归档排除 | 2 failed / 10 passed；有效断言失败 |
++| 内存误排除正式 backend / frontend | 各 4 failed / 8 passed；有效断言失败 |
++| 内存分别撤销周报服务 / 测试规则 | 各 1 failed / 11 passed；有效断言失败 |
++
++五次变异均通过独立 Node 进程内存加载 config，不改磁盘源码；有逐次注入标记和前后哈希。
++开发自查已核对范围、永久反例、源码最小性及历史证据；这不是独立复评结论。最终文档/质量
++联合校验、精确文件哈希、新增量补丁和原候选关联见
++[lint 修订交接](evidence/t7-lint-2026-10-28/README.md)。
++
++完整 release 未重跑，03--18、07b/13b 实际发布执行、Docker 和 Git clean 前提仍缺；
++不得把本批根 lint 通过替代完整发布通过。现有工作区不清理、不提交以迁就 Git clean。
++原 candidate.patch、validation.json、七项关闭索引及独立复评原件不重写，本批另行冻结增量。
++T4/T7 OPEN、DEVICE_PENDING/MANUAL_PENDING、Docker INCOMPLETE_FAILED、历史失败、两项
++OPEN_NONBLOCKING 和 REMAINDER_DEFERRED 保留，T8/T9 不启动。不访问真实数据、部署或 Git 写入。
+diff --git a/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md b/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md
+index 594d25af..978d5b65 100644
+--- a/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md
++++ b/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md
+@@ -1,6 +1,6 @@
+ # 家庭自主学习 MVP 开发计划
+ 
+-> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7-T9 待执行）；T5 已交付 main，T6 仅关闭本地合成工程（Gate §26.6），不提交、推送、合并或部署；T4 状态未变，DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留。
++> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 实施中，T8-T9 待执行）；T5/T6 已交付 main，T6 合成关闭范围见 Gate §26.6，旧 Git 限制保留为历史；T7 当前仅本地合成实施，不提交、推送、合并或部署。T4 总门禁仍 OPEN，DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留。
+ > 日期：2026-10-21
+ > 执行约定：按仓库 AGENTS.md 逐包实施、验证和交付；不要求自动创建工作树、启动子智能体、提交或推送。
+ > T0 契约基线及后续评审已获用户确认；R3-LEARNING 与门禁 P2 已关闭，T1 按用户指令开始分阶段实施，证据见增量 Gate §17–§18。
+@@ -695,20 +695,35 @@ Docker INCOMPLETE_FAILED 和两项非阻断补测继续保留；交接见 Gate 
+ 
+ ### T7：周复盘导航与完整工程回归
+ 
++当前 IN_PROGRESS / OPEN；接续 Gate §27 最小设计及独立设计评审。孩子/家长页面及三个孩子正式
++HTTP/浏览器完整链路已有合成证据；统计/隔离补强独立复验、前后端和浏览器完整相关回归已通过，
++服务端反馈竞争修订、真实过期身份反例和最新完整候选见 §27.6–27.7。完整发布未通过不写全绿，
++不以自查或自动化关闭总门禁，历史失败不覆盖。
++
++2026-10-28 用户批准七项 P2 关闭，绑定原冻结候选和本轮复验，见 Gate §27.8。
++本批准不关闭 T7/T4；下面两项完整发布要求仍未勾选。lint 精确归档排除、两份周报后端规则覆盖
++及永久反例方案见 Gate §27.9，该节记录关闭七项 P2 时的 PROPOSED_WAITING_APPROVAL 状态。
++后续用户批准该最小修订，开发实施与验证见 Gate §27.10，当前 FIXED_PENDING_INDEPENDENT_REVIEW；
++根 lint 已通过，新增覆盖问题尚待独立复评。原完整发布失败仍保留，不能据此勾选下列发布要求。
++
+ 依赖：T1–T6。模式：标准；新增孩子入口的授权用严格边界校验。对应工作包 6 工程部分。
+ 
+ 修改：成长记录/ReportsPage 的必要入口，ChildTodayPage；需要时新增一个轻量
+ `frontend/web/src/pages/child/ChildReflectionPage.js` 并在 App 注册，复用现有 growth-logs API。
+ 更新 `docs/user-guide/parent-guide.md`、`child-guide.md` 和本轮 Gate。
+ 
+-- [ ] 孩子可填写或由家长代录现有 childReflection；一年级一句话即可；家长沿现有周报反馈。
+-- [ ] 不新增孩子修改 WeeklyReport 的接口；结束周统计继续冻结，反思按既有成长记录语义保存。
+-- [ ] 在 Task 11 集成/E2E 入口增加数学闭环测试：排序 → 求助 → 处理 → 自检 → 上传 → 确认
++- [x] 孩子可填写或由家长代录现有 childReflection；一年级一句话即可；家长沿现有周报反馈。
++- [x] 不新增孩子修改 WeeklyReport 的接口；结束周统计继续冻结，反思按既有成长记录语义保存。
++- [x] 保留 Task 11 回归，在现有 T2 enabled 集成/E2E 入口增加数学闭环测试：排序 → 求助 → 处理 → 自检 → 上传 → 确认
+   → 错题 → 订正任务 → 复习日期 → 成长反思/周报。用可控日期测延迟复习，不让测试真实等待数天。
+-- [ ] 建立两个家庭的合成夹具，一个家庭三个孩子及两位家长，验证越权和代录身份；测试中不放真实孩子数据。
++- [x] 建立两个家庭的合成夹具，一个家庭三个孩子及两位家长，验证越权和代录身份；测试中不放真实孩子数据。
+ - [ ] 执行相关回归、前端构建；再运行完整发布 Gate 并保存版本和日志，不把既有通过记录当新增覆盖。
+ - [ ] 确认发布脚本确实运行了新测试；扩展已有测试入口优先，不为每个包新建一套命令。
+ 
++上述勾选仅表示有合成工程证据，不表示总门禁批准。回归和构建已通过，完整发布 Gate 已尝试但在
++02-lint 被既有归档 JSX 44 errors 阻断；07b/13b 静态入口已纳入新增测试，但本轮 release 没有执行到
++这两步，不能把单独命令通过冒充完整脚本通过。原失败、T4 OPEN、DEVICE_PENDING 和后置责任保留。
++
+ 验收：SL-01–06 有代码/测试对应；孩子页可用、家长工作可完成、周报统计没被新功能改坏。
+ 
+ ### T8：家庭 Ubuntu 发布、备份恢复和回滚验收
+diff --git a/docs/user-guide/child-guide.md b/docs/user-guide/child-guide.md
+index 22357ec3..22f52a98 100644
+--- a/docs/user-guide/child-guide.md
++++ b/docs/user-guide/child-guide.md
+@@ -1,6 +1,6 @@
+ # 孩子操作指南
+ 
+-孩子端只显示当前孩子自己的任务、待复习错题、星星、奖励和个人资料。请先向
++孩子端只显示当前孩子自己的任务、成长反思、待复习错题、星星、奖励和个人资料。请先向
+ 家长取得 Family ID、Child ID 和 PIN。
+ 
+ ## 1. 使用 PIN 登录
+@@ -21,7 +21,7 @@ PIN 只告诉家长或负责照顾你的家庭成员，不要发到群聊或公
+ 
+ | 导航 | 可以做什么 |
+ | --- | --- |
+-| 今天 | 查看今天的任务和提醒 |
++| 今天 | 查看今天的任务和提醒，进入“本周反思” |
+ | 错题 | 复习还没有掌握的错题 |
+ | 成就 | 查看星星、家庭奖励和已完成的成长 |
+ | 我的 | 查看个人资料和退出孩子端 |
+@@ -84,11 +84,11 @@ PIN 只告诉家长或负责照顾你的家庭成员，不要发到群聊或公
+ 选择“我已经会了”后，这道题会从待复习列表中移出。如果仍有疑问，应选择
+ “我还不会”并请家长帮助。
+ 
+-### 订正与来源回看（T6 合成候选，尚待验收）
++### 订正与来源回看（T6 限定合成工程已验收）
+ 
+ 家长创建订正任务后，仍从任务页完成、提交作品并查看家长反馈。详情中的“查看来源错题”可以打开对应错题，
+ 错题中的“查看来源任务”可以回看原任务。只能查看当前账号有权限的记录；来源不可用时不显示原来的私有内容。
+-完成或获家长确认不会替你选择“我已经会了”，复习后再作真实判断。此候选尚待工程验收，真机保持 DEVICE_PENDING。
++完成或获家长确认不会替你选择“我已经会了”，复习后再作真实判断。工程验收不代表真实家庭已部署，真机保持 DEVICE_PENDING。
+ 
+ ## 6. 查看成就和奖励
+ 
+@@ -112,3 +112,18 @@ PIN 只告诉家长或负责照顾你的家庭成员，不要发到群聊或公
+ 
+ 遇到暂时无法加载时，先选择页面上的重新加载操作。仍然失败时，告诉家长当前
+ 页面和提示内容，但不要把 PIN 放进截图。
++
++## 8. 本周反思（T7 工程候选，尚待验收）
++
++1. 从“今天”进入“本周反思”，在“反思所在周”选择要回看的日期；页面按家庭时区所在自然周显示记录。
++2. 优先在已有记录上选择“修改反思”，写一句收获或下一次想改进的事，选择“保存反思”。一年级一句话即可，也可请家长代录。
++3. 没有合适记录时选择“新增反思”，填写记录日期、成长维度、记录内容和反思。反思最多 500 字，不需要填写学习时长。
++4. 保存后可刷新页面回看。修改已有反思时允许主动清空；不更改原记录正文、学习时长或家长备注。
++
++“保存结果尚未确定”不等于失败。当前编辑会保留输入并禁止再次提交；选择“重读全部记录并核对”，
++与已保存记录逐条核对后，明确选择“已核对，结束上次编辑”。没有找到记录也不能证明上次保存失败。
++读取失败时继续保留保护，请稍后重新读取，不要反复新建。结束核对后重新选择记录编辑，不自动重放原修改。
++
++关闭编辑、刷新或退出重登不能当作解除未知写入的办法。同一孩子重登后仍需核对；退出会清除私有界面和内存草稿，
++不会替你保留未保存正文。换成兄弟姐妹账号不会显示你的反思或保护提示。
++反思不会额外发星，也不会替你把错题标为掌握。当前候选仅作合成验证，真实 iPad 保持 DEVICE_PENDING。
+diff --git a/docs/user-guide/parent-guide.md b/docs/user-guide/parent-guide.md
+index f0d965f0..119f90fb 100644
+--- a/docs/user-guide/parent-guide.md
++++ b/docs/user-guide/parent-guide.md
+@@ -155,7 +155,7 @@
+ 通过“复盘”可以更新孩子解释、家长备注以及“已订正、已复习、已掌握”状态，
+ 然后选择“保存复盘”。已有错题的学科不能在复盘时修改。
+ 
+-### 关联任务与订正（T6 合成候选，尚待验收）
++### 关联任务与订正（T6 限定合成工程已验收）
+ 
+ 1. 在当前孩子的任务“查看作品”中选择“记录错题”，系统读取原任务后预填学科与来源。
+    无学科的来源需要自行填写；来源只读，不能借链接切换到其他孩子。
+@@ -195,6 +195,20 @@
+ 当前周的统计会随本周数据变化。已经结束的一周会保留当时的统计结果，家长反馈
+ 仍可继续更新。
+ 
++### 孩子反思和家长代录（T7 工程候选，尚待验收）
++
++先确认顶部“当前孩子”，再选择“周一开始”。周报下方“孩子反思与家长代录”展示该孩子同周的成长记录，
++可选择已有记录的“修改反思”，或按实际日期新增记录。成长记录页也提供通往对应周报的链接。
++修改反思只更改孩子反思字段，最多 500 字，允许显式清空；新增时须填写记录内容和反思，不虚构时长。
++家长代录保留实际操作家长身份，不能把代录视为孩子独立填写。共管家长按既有家庭权限操作。
++
++反思保存结果未知时，使用“重读全部记录并核对”，确认后结束旧编辑，再重新选择记录；读取失败或空列表不会自动解除保护，
++也不会再次提交。家长寄语或下周建议结果未知时，选择“重读周报反馈”，检查已保存内容后再明确“采用重新读取的反馈”。
++退出重登后仍需处理该身份下的未知记录，但不会恢复私有正文草稿。切换孩子或周次时不要将旧页面内容当作新对象的数据。
++
++补写反思不重算已冻结的历史周统计；家长反馈不改变统计、任务或奖励。当前周记录天数仍按已有成长记录规则统计，
++不是反思次数或能力评分。本候选尚未关闭 T7 总门禁，不代表真实家庭已部署，真机保持 DEVICE_PENDING。
++
+ ## 9. 提醒设置
+ 
+ “提醒”显示当天提醒，并可配置以下项目：
+diff --git a/eslint.config.js b/eslint.config.js
+index 266e6b11..c5781771 100644
+--- a/eslint.config.js
++++ b/eslint.config.js
+@@ -19,6 +19,7 @@ const sharedRules = {
+ module.exports = [
+   {
+     ignores: [
++      'release-gate-artifacts/**',
+       '**/node_modules/**',
+       '**/build/**',
+       '**/coverage/**',
+@@ -48,7 +49,11 @@ module.exports = [
+       'backend/gateway/**/*.js',
+       'backend/services/**/*{family,Family,growth,Growth,media,Media,child,Child,notification,Notification,reminder,Reminder,dailyLearningPlan,DailyLearningPlan}*.js',
+       'backend/tests/t2/dailyLearningPlan.integration.test.js',
++      'backend/tests/t2/weeklyReflection.integration.test.js',
++      'backend/services/analytics-service/services/weeklyReportService.js',
++      'backend/services/analytics-service/__tests__/weeklyReports.test.js',
+       'tests/e2e/t2/dailyLearningPlan.spec.js',
++      'tests/e2e/t2/weekly{Reflection,MathLoop}.spec.js',
+       'backend/services/{user,homework,resource}-service/{app,server}.js',
+       'scripts/**/*.js',
+       'eslint.config.js',
+@@ -69,7 +74,7 @@ module.exports = [
+       'frontend/web/src/contexts/{AuthContext,ChildAuthContext,FamilyContext}.js',
+       'frontend/web/src/hooks/{useAsyncResource,useChildDataResource,useChildResource}.js',
+       'frontend/web/src/pages/{child,family}/**/*.{js,jsx}',
+-      'frontend/web/src/services/{childApi,childScope,childSession,familyApi,familySession,dailyLearningPlan}.js',
++      'frontend/web/src/services/{childApi,childScope,childSession,familyApi,familySession,dailyLearningPlan,reflection}.js',
+       'frontend/web/src/__tests__/{child,family,shared}/**/*.{js,jsx}'
+     ],
+     languageOptions: {
+diff --git a/frontend/web/src/App.js b/frontend/web/src/App.js
+index 802cf5cc..59161cbc 100644
+--- a/frontend/web/src/App.js
++++ b/frontend/web/src/App.js
+@@ -33,6 +33,7 @@ import ChildTaskPage from './pages/child/ChildTaskPage';
+ import ChildMistakesPage from './pages/child/ChildMistakesPage';
+ import ChildAchievementsPage from './pages/child/ChildAchievementsPage';
+ import ChildProfilePage from './pages/child/ChildProfilePage';
++import ChildReflectionPage from './pages/child/ChildReflectionPage';
+ 
+ const ParentFamilyBoundary = () => (
+   <FamilyProvider>
+@@ -72,6 +73,7 @@ const AppRoutes = () => (
+         <Route path="mistakes" element={<ChildMistakesPage />} />
+         <Route path="achievements" element={<ChildAchievementsPage />} />
+         <Route path="me" element={<ChildProfilePage />} />
++        <Route path="reflection" element={<ChildReflectionPage />} />
+       </Route>
+     </Route>
+     {LEGACY_SCHOOL_PATHS.map((path) => (
+diff --git a/frontend/web/src/__tests__/family/T7AppNavigation.test.js b/frontend/web/src/__tests__/family/T7AppNavigation.test.js
+new file mode 100644
+index 00000000..31f8b59f
+--- /dev/null
++++ b/frontend/web/src/__tests__/family/T7AppNavigation.test.js
+@@ -0,0 +1,63 @@
++import React from 'react';
++import { render, screen } from '@testing-library/react';
++import userEvent from '@testing-library/user-event';
++import App from '../../App';
++import * as api from '../../services/childApi';
++import { saveChildSession } from '../../services/familySession';
++
++jest.mock('../../services/childApi');
++const id = n => String(n).padStart(24, '0');
++beforeEach(() => {
++  jest.resetAllMocks(); localStorage.clear(); sessionStorage.clear();
++  saveChildSession({ token: 'synthetic', child: { childId: id(1), familyId: id(2), name: '合成孩子', grade: 1 } });
++  api.getOwnProfile.mockResolvedValue({ child: { childId: id(1), familyId: id(2), grade: 1 }, timezone: 'Pacific/Honolulu' });
++  api.listOwnGrowthLogs.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 100 });
++  api.listOwnTasks.mockResolvedValue({ items: [], total: 0 });
++  api.listOwnReminders.mockResolvedValue({ items: [] });
++  api.listOwnCompletionRecoveries.mockResolvedValue({ items: [], total: 0 });
++  api.getOwnDailyLearningPlan.mockResolvedValue({ plan: { version: 0, items: [] } });
++});
++test('real App child reflection route saves and refreshes an actual selected week', async () => {
++  window.history.pushState({}, '', '/child/reflection?weekStart=2026-10-26'); render(<App />);
++  expect(await screen.findByRole('heading', { name: '本周反思' })).toBeInTheDocument();
++  const user = userEvent.setup();
++  await user.click(await screen.findByRole('button', { name: '新增反思' }));
++  expect(screen.getByPlaceholderText('今天学会了什么？写一句话就好。')).toBeInTheDocument();
++  await user.type(screen.getByLabelText('记录内容'), '合成数学练习');
++  await user.type(screen.getByLabelText('我的反思'), '先读题再计算');
++  const log = { logId: id(3), familyId: id(2), childId: id(1), date: '2026-10-26',
++    dimension: 'academic', content: '合成数学练习', childReflection: '先读题再计算' };
++  api.createOwnGrowthLog.mockResolvedValue({ log });
++  api.listOwnGrowthLogs.mockResolvedValue({ items: [log], total: 1, page: 1, pageSize: 100 });
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  expect(await screen.findByText('先读题再计算')).toBeInTheDocument();
++  expect(api.createOwnGrowthLog).toHaveBeenCalledTimes(1);
++  await user.click(screen.getByRole('button', { name: '重新加载反思' }));
++  expect(await screen.findByText('先读题再计算')).toBeInTheDocument();
++  expect(api.listOwnGrowthLogs.mock.calls.every(([query]) => query.from === '2026-10-26' && query.to === '2026-11-01')).toBe(true);
++});
++test('Today links to the protected reflection page and can return without another login', async () => {
++  window.history.pushState({}, '', '/child/today'); render(<App />);
++  const user = userEvent.setup();
++  await user.click(await screen.findByRole('link', { name: '本周反思' }));
++  expect(await screen.findByRole('heading', { name: '本周反思' })).toBeInTheDocument();
++  await user.click(screen.getByRole('link', { name: '返回今天' }));
++  expect(await screen.findByRole('heading', { name: '今天', level: 1 })).toBeInTheDocument();
++});
++test('default week uses the family Sunday even when UTC has already reached Monday', async () => {
++  jest.useFakeTimers(); jest.setSystemTime(new Date('2026-10-26T00:30:00Z'));
++  try {
++    window.history.pushState({}, '', '/child/reflection'); render(<App />);
++    await screen.findByRole('button', { name: '新增反思' });
++    expect(screen.getByLabelText('反思所在周')).toHaveValue('2026-10-19');
++    expect(api.listOwnGrowthLogs).toHaveBeenCalledWith(expect.objectContaining({ from: '2026-10-19', to: '2026-10-25' }), expect.anything(), expect.anything());
++  } finally { jest.useRealTimers(); }
++});
++test.each([undefined, 'Invalid/Timezone'])('missing or invalid family zone %s never loads records or enables a write', async timezone => {
++  api.getOwnProfile.mockResolvedValue({ child: { childId: id(1), familyId: id(2), grade: 1 }, timezone });
++  window.history.pushState({}, '', '/child/reflection'); render(<App />);
++  await screen.findByText('读取失败，请重试。');
++  expect(screen.queryByRole('button', { name: '新增反思' })).not.toBeInTheDocument();
++  expect(api.listOwnGrowthLogs).not.toHaveBeenCalled();
++  expect(api.createOwnGrowthLog).not.toHaveBeenCalled();
++});
+diff --git a/frontend/web/src/__tests__/family/T7Reports.test.js b/frontend/web/src/__tests__/family/T7Reports.test.js
+new file mode 100644
+index 00000000..936b01fd
+--- /dev/null
++++ b/frontend/web/src/__tests__/family/T7Reports.test.js
+@@ -0,0 +1,120 @@
++import React from 'react';
++import { act, fireEvent, render, screen } from '@testing-library/react';
++import userEvent from '@testing-library/user-event';
++import { MemoryRouter } from 'react-router-dom';
++import ReportsPage from '../../pages/family/ReportsPage';
++import * as api from '../../services/familyApi';
++import { saveParentSession } from '../../services/familySession';
++
++jest.mock('../../services/familyApi');
++jest.mock('../../contexts/FamilyContext', () => ({ useFamily: () => ({
++  family: { familyId: '000000000000000000000002', timezone: 'Asia/Shanghai' },
++  selectedChildId: '000000000000000000000001', childScopeVersion: 1,
++  selectedChild: { childId: '000000000000000000000001', name: '合成孩子', grade: 4 }
++}) }));
++const id = n => String(n).padStart(24, '0');
++const report = (weekStart, note = '') => ({ reportId: id(weekStart === '2026-10-26' ? 4 : 5),
++  familyId: id(2), childId: id(1), weekStart, weekEnd: '2026-11-01', parentNote: note,
++  nextWeekSuggestion: '', frozen: true, statistics: { recordDays: 3, totalDurationMinutes: 40 } });
++const open = () => render(<MemoryRouter initialEntries={['/app/reports?weekStart=2026-10-26']}><ReportsPage /></MemoryRouter>);
++beforeEach(() => {
++  jest.resetAllMocks(); localStorage.clear(); sessionStorage.clear();
++  saveParentSession({ token: 'synthetic-parent', user: { id: id(8), role: 'parent' } });
++  api.getWeeklyReport.mockImplementation(({ weekStart }) => Promise.resolve({ report: report(weekStart) }));
++  api.listGrowthLogs.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 100 });
++});
++test.each(['success', 'failure'])('switching weeks ignores old feedback %s and old finally while the new week saves', async outcome => {
++  const user = userEvent.setup(); open();
++  await user.type(await screen.findByLabelText('家长寄语'), '甲周草稿');
++  let oldFinish, newFinish;
++  api.updateWeeklyReportFeedback.mockImplementationOnce(() => new Promise((resolve, reject) => {
++    oldFinish = () => outcome === 'success' ? resolve({ report: report('2026-10-26', '甲周结果') }) : reject(new Error('old failure'));
++  })).mockImplementationOnce(() => new Promise(resolve => { newFinish = resolve; }));
++  await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
++  fireEvent.change(screen.getByLabelText('周一开始'), { target: { value: '2026-11-02' } });
++  await user.type(await screen.findByLabelText('家长寄语'), '乙周草稿');
++  await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
++  await act(async () => oldFinish());
++  expect(screen.getByLabelText('家长寄语')).toHaveValue('乙周草稿');
++  expect(screen.getByRole('button', { name: '保存周报反馈' })).toBeDisabled();
++  expect(screen.queryByText('周报反馈已保存。')).not.toBeInTheDocument();
++  expect(screen.queryByText('old failure')).not.toBeInTheDocument();
++  await act(async () => newFinish({ report: report('2026-11-02', '乙周草稿') }));
++  await screen.findByText('周报反馈已保存。');
++});
++test('unknown feedback cannot PATCH again until explicit reread and adoption', async () => {
++  const user = userEvent.setup(); open();
++  await user.type(await screen.findByLabelText('家长寄语'), '待核对寄语');
++  api.updateWeeklyReportFeedback.mockRejectedValueOnce(new Error('lost response'));
++  await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
++  await screen.findByText(/周报反馈保存结果尚未确定/);
++  expect(screen.getByLabelText('家长寄语')).toHaveValue('待核对寄语');
++  api.getWeeklyReport.mockRejectedValueOnce(new Error('offline'));
++  await user.click(screen.getByRole('button', { name: '重读周报反馈' }));
++  await screen.findByText('读取失败，请重试。');
++  expect(screen.getByRole('button', { name: '保存周报反馈' })).toBeDisabled();
++  api.getWeeklyReport.mockResolvedValue({ report: report('2026-10-26', '服务端寄语') });
++  await user.click(screen.getByRole('button', { name: '重读周报反馈' }));
++  await user.click(await screen.findByRole('button', { name: '采用重新读取的反馈' }));
++  expect(screen.getByLabelText('家长寄语')).toHaveValue('服务端寄语');
++  expect(api.updateWeeklyReportFeedback).toHaveBeenCalledTimes(1);
++  expect(screen.getByText('40 分钟')).toBeInTheDocument();
++});
++test('a same-identity denial from the old week clears the new report and reflection, and cannot be cleared by switching weeks', async () => {
++  const user = userEvent.setup(); open();
++  await user.type(await screen.findByLabelText('家长寄语'), '甲周草稿'); let reject;
++  api.updateWeeklyReportFeedback.mockImplementation(() => new Promise((resolve, fail) => { reject = fail; }));
++  await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
++  fireEvent.change(screen.getByLabelText('周一开始'), { target: { value: '2026-11-02' } });
++  await screen.findByLabelText('家长寄语');
++  await act(async () => reject({ response: { status: 403 } }));
++  expect(screen.getByText('当前身份无法读取此记录。')).toBeInTheDocument();
++  expect(screen.queryByLabelText('家长寄语')).not.toBeInTheDocument();
++  expect(screen.queryByRole('button', { name: '新增反思' })).not.toBeInTheDocument();
++  fireEvent.change(screen.getByLabelText('周一开始'), { target: { value: '2026-11-09' } });
++  await act(async () => {});
++  expect(screen.getByText('当前身份无法读取此记录。')).toBeInTheDocument();
++  expect(api.getWeeklyReport).toHaveBeenCalledTimes(2);
++});
++test('same-week old GET cannot overwrite successful feedback or be resubmitted with the other edited field', async () => {
++  const user = userEvent.setup(); open();
++  await screen.findByLabelText('家长寄语'); let finish;
++  api.getWeeklyReport.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
++  await user.click(screen.getByRole('button', { name: '重新加载周报' }));
++  await user.type(screen.getByLabelText('家长寄语'), '最新寄语');
++  api.updateWeeklyReportFeedback.mockResolvedValue({ report: report('2026-10-26', '最新寄语') });
++  await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
++  await screen.findByText('周报反馈已保存。');
++  await act(async () => finish({ report: report('2026-10-26', '已过时寄语') }));
++  expect(screen.getByLabelText('家长寄语')).toHaveValue('最新寄语');
++  expect(screen.getByRole('button', { name: '重新加载周报' })).toBeEnabled();
++  await user.type(screen.getByLabelText('下周建议'), '下一步');
++  await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
++  expect(api.updateWeeklyReportFeedback.mock.calls[1][1]).toEqual({ parentNote: '最新寄语', nextWeekSuggestion: '下一步' });
++});
++test('stale same-week GET denial still clears a successfully saved report', async () => {
++  const user = userEvent.setup(); open();
++  await screen.findByLabelText('家长寄语'); let fail;
++  api.getWeeklyReport.mockImplementationOnce(() => new Promise((resolve, reject) => { fail = reject; }));
++  await user.click(screen.getByRole('button', { name: '重新加载周报' }));
++  await user.type(screen.getByLabelText('家长寄语'), '最新寄语');
++  api.updateWeeklyReportFeedback.mockResolvedValue({ report: report('2026-10-26', '最新寄语') });
++  await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
++  await screen.findByText('周报反馈已保存。');
++  await act(async () => fail({ response: { status: 403 } }));
++  expect(screen.getByText('当前身份无法读取此记录。')).toBeInTheDocument();
++  expect(screen.queryByDisplayValue('最新寄语')).not.toBeInTheDocument();
++});
++test('a GET started during a pending write is also invalidated at write settlement', async () => {
++  const user = userEvent.setup(); open();
++  await user.type(await screen.findByLabelText('家长寄语'), '已提交的新寄语');
++  let finishWrite, finishRead;
++  api.updateWeeklyReportFeedback.mockImplementationOnce(() => new Promise(resolve => { finishWrite = resolve; }));
++  await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
++  api.getWeeklyReport.mockImplementationOnce(() => new Promise(resolve => { finishRead = resolve; }));
++  await user.click(screen.getByRole('button', { name: '重新加载周报' }));
++  await act(async () => finishWrite({ report: report('2026-10-26', '已提交的新寄语') }));
++  expect(screen.getByRole('button', { name: '重新加载周报' })).toBeEnabled();
++  await act(async () => finishRead({ report: report('2026-10-26', '写入前的旧值') }));
++  expect(screen.getByLabelText('家长寄语')).toHaveValue('已提交的新寄语');
++});
+diff --git a/frontend/web/src/__tests__/family/Task9LogsMistakes.test.js b/frontend/web/src/__tests__/family/Task9LogsMistakes.test.js
+index 910ce758..7bf15cfd 100644
+--- a/frontend/web/src/__tests__/family/Task9LogsMistakes.test.js
++++ b/frontend/web/src/__tests__/family/Task9LogsMistakes.test.js
+@@ -135,6 +135,21 @@ describe('Task 9 growth logs', () => {
+     expect(await screen.findByText('完成 600 个')).toBeInTheDocument();
+   });
+ 
++  test('shows reflection and dated weekly navigation; ordinary editing does not resend an unchanged reflection', async () => {
++    const user = userEvent.setup();
++    listGrowthLogs.mockResolvedValue({ items: [growthLog({ childReflection: '孩子旧反思', date: '2026-07-11' })], total: 1 });
++    updateGrowthLog.mockResolvedValue({ log: growthLog({ childReflection: '孩子新反思', content: '调整正文' }) });
++    renderPage(<GrowthLogsPage />);
++    expect(await screen.findByText('孩子旧反思')).toBeInTheDocument();
++    expect(screen.getByRole('link', { name: '查看本周复盘：完成 500 个' })).toHaveAttribute('href', '/app/reports?weekStart=2026-07-06');
++    await user.click(screen.getByRole('button', { name: '编辑 完成 500 个' }));
++    await user.clear(screen.getByLabelText('记录内容'));
++    await user.type(screen.getByLabelText('记录内容'), '调整正文');
++    await user.click(screen.getByRole('button', { name: '保存成长记录' }));
++    await screen.findByText('孩子新反思');
++    expect(updateGrowthLog.mock.calls[0][1]).not.toHaveProperty('childReflection');
++  });
++
+   test('distinguishes a retryable error from an empty log list', async () => {
+     const user = userEvent.setup();
+     listGrowthLogs
+diff --git a/frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js b/frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js
+index ba6a23d8..ab781339 100644
+--- a/frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js
++++ b/frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js
+@@ -3,12 +3,14 @@ import { render, screen, waitFor, within } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { MemoryRouter } from 'react-router-dom';
+ import ReportsPage from '../../pages/family/ReportsPage';
++import { saveParentSession } from '../../services/familySession';
+ import RemindersPage from '../../pages/family/RemindersPage';
+ import RewardsPage from '../../pages/family/RewardsPage';
+ import {
+   createReward,
+   getNotificationSettings,
+   getWeeklyReport,
++  listGrowthLogs,
+   listFamilyReminders,
+   listRewards,
+   redeemReward,
+@@ -18,9 +20,9 @@ import {
+ 
+ jest.mock('../../contexts/FamilyContext', () => ({
+   useFamily: () => ({
+-    family: { familyId: 'family-a', timezone: 'Asia/Shanghai' },
+-    selectedChildId: 'child-a1',
+-    selectedChild: { childId: 'child-a1', name: '小明' },
++    family: { familyId: '000000000000000000000002', timezone: 'Asia/Shanghai' },
++    selectedChildId: '000000000000000000000001',
++    selectedChild: { childId: '000000000000000000000001', name: '小明' },
+     childScopeVersion: 1
+   })
+ }));
+@@ -29,6 +31,7 @@ jest.mock('../../services/familyApi', () => ({
+   createReward: jest.fn(),
+   getNotificationSettings: jest.fn(),
+   getWeeklyReport: jest.fn(),
++  listGrowthLogs: jest.fn(),
+   listFamilyReminders: jest.fn(),
+   listRewards: jest.fn(),
+   redeemReward: jest.fn(),
+@@ -37,8 +40,9 @@ jest.mock('../../services/familyApi', () => ({
+ }));
+ 
+ const report = {
+-  reportId: 'report-1',
+-  childId: 'child-a1',
++  reportId: '000000000000000000000003',
++  familyId: '000000000000000000000002',
++  childId: '000000000000000000000001',
+   weekStart: '2026-07-06',
+   weekEnd: '2026-07-12',
+   statistics: {
+@@ -66,10 +70,14 @@ const settings = {
+ };
+ 
+ const routerFuture = { v7_startTransition: true, v7_relativeSplatPath: true };
+-const renderPage = (page) => render(<MemoryRouter future={routerFuture}>{page}</MemoryRouter>);
++const renderPage = (page) => render(<MemoryRouter future={routerFuture} initialEntries={['/app/reports?weekStart=2026-07-06']}>{page}</MemoryRouter>);
+ 
+ describe('Task 9 reports', () => {
+-  beforeEach(() => jest.clearAllMocks());
++  beforeEach(() => {
++    jest.clearAllMocks(); localStorage.clear(); sessionStorage.clear();
++    saveParentSession({ token: 'synthetic-parent', user: { id: '000000000000000000000008', role: 'parent' } });
++    listGrowthLogs.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 100 });
++  });
+ 
+   test('renders nested report statistics and saves parent feedback', async () => {
+     const user = userEvent.setup();
+@@ -84,9 +92,9 @@ describe('Task 9 reports', () => {
+     await user.type(screen.getByLabelText('家长寄语'), '本周坚持得很好');
+     await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
+ 
+-    await waitFor(() => expect(updateWeeklyReportFeedback).toHaveBeenCalledWith('report-1', expect.objectContaining({
++    await waitFor(() => expect(updateWeeklyReportFeedback).toHaveBeenCalledWith(report.reportId, expect.objectContaining({
+       parentNote: '本周坚持得很好'
+-    })));
++    }), undefined, expect.objectContaining({ actorId: '000000000000000000000008', role: 'parent' })));
+   });
+ });
+ 
+@@ -143,7 +151,7 @@ describe('Task 9 rewards', () => {
+     await user.click(screen.getByRole('button', { name: '保存奖励' }));
+ 
+     await waitFor(() => expect(createReward).toHaveBeenCalledWith({
+-      childId: 'child-a1', title: '选择晚餐', requiredStars: 20
++      childId: '000000000000000000000001', title: '选择晚餐', requiredStars: 20
+     }));
+   });
+ 
+diff --git a/frontend/web/src/__tests__/shared/ReflectionPanel.test.js b/frontend/web/src/__tests__/shared/ReflectionPanel.test.js
+new file mode 100644
+index 00000000..cd5ffaa6
+--- /dev/null
++++ b/frontend/web/src/__tests__/shared/ReflectionPanel.test.js
+@@ -0,0 +1,204 @@
++import React from 'react';
++import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
++import userEvent from '@testing-library/user-event';
++import ReflectionPanel from '../../components/family/ReflectionPanel';
++import * as api from '../../services/childApi';
++import { saveChildSession, clearChildSession } from '../../services/familySession';
++
++jest.mock('../../services/childApi');
++const id = n => String(n).padStart(24, '0');
++const row = { logId: id(3), familyId: id(2), childId: id(1), date: '2026-10-26', content: '合成练习',
++  dimension: 'academic', childReflection: '先读题', durationMinutes: 20 };
++const result = items => ({ items, page: 1, pageSize: 100, total: items.length });
++const login = (n = 1) => saveChildSession({ token: `child-${n}`, child: { childId: id(n), familyId: id(2), name: '合成孩子' } });
++const props = { role: 'student', familyId: id(2), childId: id(1), grade: 1, weekStart: '2026-10-26' };
++const open = () => render(<ReflectionPanel {...props} />);
++beforeEach(() => {
++  jest.resetAllMocks(); localStorage.clear(); sessionStorage.clear(); login();
++  api.listOwnGrowthLogs.mockResolvedValue(result([row]));
++  api.updateOwnGrowthLog.mockResolvedValue({ log: { ...row, childReflection: '检查结果' } });
++  api.createOwnGrowthLog.mockResolvedValue({ log: row });
++});
++const edit = async user => {
++  await user.click(await screen.findByRole('button', { name: '修改反思：合成练习' }));
++  await user.clear(screen.getByLabelText('我的反思'));
++  await user.type(screen.getByLabelText('我的反思'), '检查结果');
++};
++test('editing an existing record writes reflection only and permits explicit clearing', async () => {
++  const user = userEvent.setup(); open(); await edit(user);
++  const textarea = screen.getByLabelText('我的反思', { exact: true });
++  expect(textarea.id).toBeTruthy();
++  expect(textarea.labels[0].textContent).toBe('我的反思');
++  expect(textarea.labels[0]).not.toContainElement(textarea);
++  await user.clear(screen.getByLabelText('我的反思'));
++  api.updateOwnGrowthLog.mockResolvedValue({ log: { ...row, childReflection: '' } });
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  await screen.findByText('反思已保存。');
++  expect(api.updateOwnGrowthLog).toHaveBeenCalledWith(id(3), { childReflection: '' }, expect.anything(), expect.anything());
++  expect(api.createOwnGrowthLog).not.toHaveBeenCalled();
++});
++test.each(['blank-content', 'blank-reflection', 'oversized'])('invalid %s input never creates a record or write marker', async kind => {
++  const user = userEvent.setup(); open();
++  await user.click(await screen.findByRole('button', { name: '新增反思' }));
++  fireEvent.change(screen.getByLabelText('记录内容'), { target: { value: kind === 'blank-content' ? '   ' : '合成记录' } });
++  fireEvent.change(screen.getByLabelText('我的反思'), { target: {
++    value: kind === 'blank-reflection' ? '   ' : kind === 'oversized' ? '字'.repeat(501) : '合成反思'
++  } });
++  fireEvent.submit(screen.getByRole('button', { name: '保存反思' }).closest('form'));
++  await screen.findByText('请填写记录内容和反思，反思不能超过 500 字。');
++  expect(api.createOwnGrowthLog).not.toHaveBeenCalled();
++  expect(api.updateOwnGrowthLog).not.toHaveBeenCalled();
++  expect(Object.keys(sessionStorage).some(key => key.startsWith('family-growth.reflection-write.v1:'))).toBe(false);
++});
++test('a 500-character reflection is accepted and an unknown grade uses the simple prompt', async () => {
++  const user = userEvent.setup(); render(<ReflectionPanel {...props} grade={null} />);
++  await user.click(await screen.findByRole('button', { name: '修改反思：合成练习' }));
++  expect(screen.getByLabelText('我的反思')).toHaveAttribute('placeholder', '今天的收获和下一步');
++  const value = '字'.repeat(500);
++  fireEvent.change(screen.getByLabelText('我的反思'), { target: { value } });
++  api.updateOwnGrowthLog.mockResolvedValue({ log: { ...row, childReflection: value } });
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  await screen.findByText('反思已保存。');
++  expect(api.updateOwnGrowthLog).toHaveBeenCalledWith(row.logId, { childReflection: value }, expect.anything(), expect.anything());
++});
++test('failure to persist the write marker sends no request and preserves the editable input', async () => {
++  const user = userEvent.setup(); open(); await edit(user);
++  const spy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota'); });
++  try {
++    await user.click(screen.getByRole('button', { name: '保存反思' }));
++    await screen.findByText('无法保存写入保护或存在未核对记录，请重新打开并核对。');
++    expect(api.updateOwnGrowthLog).not.toHaveBeenCalled();
++    expect(screen.getByLabelText('我的反思')).toHaveValue('检查结果');
++  } finally { spy.mockRestore(); }
++});
++test('unknown create retains draft, failed/empty rereads retain lock, and explicit reconciliation never posts again', async () => {
++  const user = userEvent.setup(); open();
++  await user.click(await screen.findByRole('button', { name: '新增反思' }));
++  await user.type(screen.getByLabelText('记录内容'), '数学练习');
++  await user.type(screen.getByLabelText('我的反思'), '检查结果');
++  api.createOwnGrowthLog.mockRejectedValue(new Error('lost response'));
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  expect(await screen.findByText(/保存结果尚未确定/)).toBeInTheDocument();
++  expect(screen.getByLabelText('我的反思')).toHaveValue('检查结果');
++  expect(screen.getByRole('button', { name: '保存反思' })).toBeDisabled();
++  api.listOwnGrowthLogs.mockRejectedValue(new Error('offline'));
++  await user.click(screen.getByRole('button', { name: '重读全部记录并核对' }));
++  await screen.findByText('读取失败，请重试。');
++  expect(screen.queryByRole('button', { name: '已核对，结束上次编辑' })).not.toBeInTheDocument();
++  api.listOwnGrowthLogs.mockResolvedValue(result([]));
++  await user.click(screen.getByRole('button', { name: '重读全部记录并核对' }));
++  await screen.findByRole('button', { name: '已核对，结束上次编辑' });
++  expect(screen.getByRole('button', { name: '保存反思' })).toBeDisabled();
++  await user.click(screen.getByRole('button', { name: '已核对，结束上次编辑' }));
++  expect(screen.queryByLabelText('我的反思')).not.toBeInTheDocument();
++  expect(api.createOwnGrowthLog).toHaveBeenCalledTimes(1);
++});
++test('logout removes private draft; the same actor must reconcile unknown PATCH after relogin', async () => {
++  const user = userEvent.setup(); open(); await edit(user);
++  api.updateOwnGrowthLog.mockRejectedValue({ response: { status: 503 } });
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  await screen.findByText(/保存结果尚未确定/);
++  act(() => clearChildSession());
++  expect(screen.queryByDisplayValue('检查结果')).not.toBeInTheDocument();
++  act(() => login(4));
++  expect(screen.queryByText(/保存结果尚未确定/)).not.toBeInTheDocument();
++  act(() => login());
++  await screen.findByText(/保存结果尚未确定/);
++  expect(screen.queryByDisplayValue('检查结果')).not.toBeInTheDocument();
++  expect(api.updateOwnGrowthLog).toHaveBeenCalledTimes(1);
++});
++test('ordinary network reload preserves the draft, but current 403 clears all private state', async () => {
++  const user = userEvent.setup(); open(); await edit(user);
++  api.listOwnGrowthLogs.mockRejectedValueOnce(new Error('offline'));
++  await user.click(screen.getByRole('button', { name: '重新加载反思' }));
++  await screen.findByText('读取失败，请重试。');
++  expect(screen.getByLabelText('我的反思')).toHaveValue('检查结果');
++  api.listOwnGrowthLogs.mockRejectedValueOnce({ response: { status: 403 } });
++  await user.click(screen.getByRole('button', { name: '重新加载反思' }));
++  await screen.findByText('当前身份无法读取此记录。');
++  expect(screen.queryByText('合成练习')).not.toBeInTheDocument();
++  expect(screen.queryByDisplayValue('检查结果')).not.toBeInTheDocument();
++});
++test('403 from a refresh invalidates a pending successful write response', async () => {
++  const user = userEvent.setup(); open(); await edit(user); let finish;
++  api.updateOwnGrowthLog.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  api.listOwnGrowthLogs.mockRejectedValueOnce({ response: { status: 403 } });
++  await user.click(screen.getByRole('button', { name: '重新加载反思' }));
++  await screen.findByText('当前身份无法读取此记录。');
++  await act(async () => finish({ log: { ...row, childReflection: '迟到私有内容' } }));
++  expect(screen.queryByText('反思已保存。')).not.toBeInTheDocument();
++  expect(screen.queryByText('迟到私有内容')).not.toBeInTheDocument();
++});
++test('week replacement ignores old write success and finally and keeps the unknown marker', async () => {
++  const user = userEvent.setup(); const view = open(); await edit(user); let finish;
++  api.updateOwnGrowthLog.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  api.listOwnGrowthLogs.mockResolvedValue(result([]));
++  view.rerender(<ReflectionPanel {...props} weekStart="2026-11-02" />);
++  await screen.findByText(/保存结果尚未确定/);
++  await act(async () => finish({ log: row }));
++  expect(screen.queryByText('反思已保存。')).not.toBeInTheDocument();
++  expect(screen.queryByDisplayValue('检查结果')).not.toBeInTheDocument();
++  expect(screen.getByRole('button', { name: '新增反思' })).toBeDisabled();
++  await waitFor(() => expect(api.listOwnGrowthLogs).toHaveBeenCalledTimes(2));
++});
++
++test('same-identity 403 remains denied after changing week', async () => {
++  const user = userEvent.setup(); const view = open(); await edit(user);
++  api.listOwnGrowthLogs.mockRejectedValueOnce({ response: { status: 403 } });
++  await user.click(screen.getByRole('button', { name: '重新加载反思' }));
++  await screen.findByText('当前身份无法读取此记录。');
++  api.listOwnGrowthLogs.mockResolvedValue(result([{ ...row, content: '不可重新显示' }]));
++  view.rerender(<ReflectionPanel {...props} weekStart="2026-11-02" />);
++  await act(async () => {});
++  expect(screen.getByText('当前身份无法读取此记录。')).toBeInTheDocument();
++  expect(screen.queryByText('不可重新显示')).not.toBeInTheDocument();
++  expect(api.listOwnGrowthLogs).toHaveBeenCalledTimes(2);
++});
++test('late 403 from another week of the same identity clears the current week', async () => {
++  const user = userEvent.setup(); const view = open(); await edit(user); let reject;
++  api.updateOwnGrowthLog.mockImplementation(() => new Promise((resolve, fail) => { reject = fail; }));
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  api.listOwnGrowthLogs.mockResolvedValue(result([{ ...row, content: '新周内容' }]));
++  view.rerender(<ReflectionPanel {...props} weekStart="2026-11-02" />);
++  await screen.findByText('新周内容');
++  await act(async () => reject({ response: { status: 403 } }));
++  expect(screen.getByText('当前身份无法读取此记录。')).toBeInTheDocument();
++  expect(screen.queryByText('新周内容')).not.toBeInTheDocument();
++});
++test('late 403 from a replaced identity cannot deny the new authenticated session', async () => {
++  const user = userEvent.setup(); open(); await edit(user); let reject;
++  api.updateOwnGrowthLog.mockImplementation(() => new Promise((resolve, fail) => { reject = fail; }));
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  act(() => login());
++  await screen.findByText(/保存结果尚未确定/);
++  await act(async () => reject({ response: { status: 403 } }));
++  expect(screen.queryByText('当前身份无法读取此记录。')).not.toBeInTheDocument();
++  expect(screen.getByText(/保存结果尚未确定/)).toBeInTheDocument();
++});
++test.each(['pending', 'failed', 'success'])('finishing all-week reconciliation never exposes historical rows as current-week edits (%s)', async state => {
++  const user = userEvent.setup(); open(); await edit(user);
++  api.updateOwnGrowthLog.mockRejectedValueOnce(new Error('lost'));
++  await user.click(screen.getByRole('button', { name: '保存反思' }));
++  await screen.findByText(/保存结果尚未确定/);
++  const old = { ...row, logId: id(9), date: '2026-10-19', content: '历史周记录' };
++  api.listOwnGrowthLogs.mockResolvedValueOnce(result([row, old]));
++  await user.click(screen.getByRole('button', { name: '重读全部记录并核对' }));
++  await screen.findByText('历史周记录');
++  let finish;
++  api.listOwnGrowthLogs.mockImplementationOnce(() => new Promise((resolve, reject) => {
++    finish = () => state === 'failed' ? reject(new Error('offline')) : resolve(result([row]));
++  }));
++  await user.click(screen.getByRole('button', { name: '已核对，结束上次编辑' }));
++  expect(screen.queryByText('历史周记录')).not.toBeInTheDocument();
++  expect(screen.queryByRole('button', { name: '修改反思：历史周记录' })).not.toBeInTheDocument();
++  expect(screen.getByRole('button', { name: '新增反思' })).toBeDisabled();
++  if (state !== 'pending') {
++    await act(async () => finish());
++    expect(screen.queryByText('历史周记录')).not.toBeInTheDocument();
++    if (state === 'success') expect(screen.getByRole('button', { name: '修改反思：合成练习' })).toBeEnabled();
++    else expect(screen.getByRole('button', { name: '新增反思' })).toBeDisabled();
++  }
++  expect(api.updateOwnGrowthLog).toHaveBeenCalledTimes(1);
++});
+diff --git a/frontend/web/src/__tests__/shared/reflectionApi.test.js b/frontend/web/src/__tests__/shared/reflectionApi.test.js
+new file mode 100644
+index 00000000..63cdcb6f
+--- /dev/null
++++ b/frontend/web/src/__tests__/shared/reflectionApi.test.js
+@@ -0,0 +1,68 @@
++import axios from 'axios';
++import * as child from '../../services/childApi';
++import * as parent from '../../services/familyApi';
++import { captureSession, saveChildSession, saveParentSession } from '../../services/familySession';
++
++jest.mock('axios');
++const save = (role, token = 'a') => role === 'student'
++  ? saveChildSession({ token, child: { childId: token, familyId: 'f', name: '合成孩子' } })
++  : saveParentSession({ token, user: { id: token, role: 'parent' } });
++beforeEach(() => { jest.resetAllMocks(); localStorage.clear(); sessionStorage.clear(); });
++
++test('child reflection create binds the actor and drops parent, audit, duration and foreign-child fields', async () => {
++  save('student'); const session = captureSession('student'), signal = new AbortController().signal;
++  axios.post.mockResolvedValue({ data: { success: true, data: { log: { logId: 'saved' } } } });
++  const payload = { date: '2026-10-26', dimension: 'academic', subject: '数学', content: '练习', childReflection: '学会检查',
++    childId: 'other', familyId: 'other', parentNote: 'forged', createdBy: 'forged', durationMinutes: 99 };
++  await expect(child.createOwnGrowthLog(payload, signal, session)).resolves.toEqual({ log: { logId: 'saved' } });
++  expect(axios.post).toHaveBeenCalledWith('/api/growth-logs', {
++    childId: 'a', date: payload.date, dimension: payload.dimension, subject: payload.subject,
++    content: payload.content, childReflection: payload.childReflection
++  }, { signal, headers: { Authorization: 'Bearer a' } });
++});
++
++test('child list keeps pagination/date filters but never accepts another child or family', async () => {
++  save('student'); axios.get.mockResolvedValue({ data: { data: { items: [] } } });
++  await child.listOwnGrowthLogs({ from: '2026-10-26', to: '2026-11-01', page: 2, pageSize: 100,
++    childId: 'other', familyId: 'other' });
++  const [url, config] = axios.get.mock.calls[0];
++  const query = new URL(url, 'http://synthetic.test').searchParams;
++  expect(Object.fromEntries(query)).toEqual({ from: '2026-10-26', to: '2026-11-01', page: '2', pageSize: '100' });
++  expect(config.headers.Authorization).toBe('Bearer a');
++});
++
++test('child reflection PATCH preserves explicit empty and cannot overwrite other record fields', async () => {
++  save('student'); axios.patch.mockResolvedValue({ data: { data: { log: {} } } });
++  await child.updateOwnGrowthLog('log/id', { childReflection: '', content: 'old', parentNote: 'forged', durationMinutes: 0 });
++  expect(axios.patch).toHaveBeenCalledWith('/api/growth-logs/log%2Fid', { childReflection: '' },
++    { headers: { Authorization: 'Bearer a' } });
++});
++
++const invoke = (role, method, session) => role === 'student'
++  ? method === 'get' ? child.listOwnGrowthLogs({}, undefined, session)
++    : method === 'post' ? child.createOwnGrowthLog({}, undefined, session)
++      : child.updateOwnGrowthLog('log', { childReflection: 'note' }, undefined, session)
++  : method === 'get' ? parent.listGrowthLogs({ childId: 'a' }, undefined, session)
++    : method === 'post' ? parent.createGrowthLog({ childId: 'a' }, undefined, session)
++      : parent.updateGrowthLog('log', { childReflection: 'note' }, undefined, session);
++
++test.each(['parent', 'student'].flatMap(role => ['get', 'post', 'patch'].map(method => [role, method])))(
++  '%s %s rejects a captured old session before any request', async (role, method) => {
++    save(role); const old = captureSession(role); save(role, 'b');
++    await expect(invoke(role, method, old)).rejects.toMatchObject({ code: 'SESSION_CHANGED' });
++    expect(axios[method]).not.toHaveBeenCalled();
++  }
++);
++test.each(['parent', 'student'].flatMap(role => [200, 401, 403].map(status => [role, status])))(
++  '%s late write %s cannot return private data or expire replacement identity', async (role, status) => {
++    save(role); let finish;
++    axios.post.mockImplementation(() => new Promise((resolve, reject) => {
++      finish = () => status === 200 ? resolve({ data: { data: { log: { content: 'private' } } } })
++        : reject({ response: { status } });
++    }));
++    const request = invoke(role, 'post', captureSession(role));
++    save(role, 'b'); finish();
++    await expect(request).rejects.toMatchObject({ code: 'SESSION_CHANGED' });
++    expect(captureSession(role).actorId).toBe('b');
++  }
++);
+diff --git a/frontend/web/src/__tests__/shared/reflectionState.test.js b/frontend/web/src/__tests__/shared/reflectionState.test.js
+new file mode 100644
+index 00000000..184377e4
+--- /dev/null
++++ b/frontend/web/src/__tests__/shared/reflectionState.test.js
+@@ -0,0 +1,65 @@
++import { reflectionWeek, readReflectionLogs, readReflectionWrite, beginReflectionWrite, clearReflectionWrite } from '../../services/reflection';
++import { saveChildSession, clearChildSession } from '../../services/familySession';
++
++const id = n => String(n).padStart(24, '0');
++const scope = { role: 'student', actorId: id(1), familyId: id(2), childId: id(1) };
++const row = n => ({ logId: id(n), familyId: id(2), childId: id(1), date: '2026-10-26', childReflection: '合成反思' });
++beforeEach(() => { localStorage.clear(); sessionStorage.clear(); });
++
++test.each([
++  ['2026-10-25', '2026-10-19', '2026-10-25'],
++  ['2026-10-26', '2026-10-26', '2026-11-01'],
++  ['2027-01-01', '2026-12-28', '2027-01-03']
++])('week %s uses calendar arithmetic, not browser timezone', (date, from, to) => {
++  expect(reflectionWeek(date)).toEqual({ from, to });
++});
++test.each(['', '2026-02-30', '2026-1-1', '2026-10-26\n'])('rejects invalid date %j', date => {
++  expect(() => reflectionWeek(date)).toThrow();
++});
++test('complete recovery read includes all pages and no implicit week/dimension filter', async () => {
++  const rows = Array.from({ length: 101 }, (_, i) => row(i + 10));
++  const load = jest.fn(({ page }) => Promise.resolve({ page, pageSize: 100, total: 101,
++    items: page === 1 ? rows.slice(0, 100) : rows.slice(100) }));
++  expect(await readReflectionLogs(load, scope)).toEqual(rows);
++  expect(load.mock.calls.map(([query]) => query)).toEqual([
++    { childId: id(1), page: 1, pageSize: 100 }, { childId: id(1), page: 2, pageSize: 100 }
++  ]);
++});
++test.each(['foreign', 'duplicate', 'missing', 'changedTotal'])('incomplete or unsafe %s list cannot be used to reconcile', async mode => {
++  const first = Array.from({ length: 100 }, (_, i) => row(i + 10));
++  const last = mode === 'foreign' ? { ...row(110), childId: id(99) } : mode === 'duplicate' ? first[0] : row(110);
++  const load = jest.fn(({ page }) => Promise.resolve({ page, pageSize: 100,
++    total: page === 2 && mode === 'changedTotal' ? 102 : 101,
++    items: page === 1 ? first : mode === 'missing' ? [] : [last] }));
++  await expect(readReflectionLogs(load, scope)).rejects.toThrow();
++});
++test('unknown marker survives logout without retaining reflection, content or credentials', () => {
++  saveChildSession({ token: 'secret-token', child: { childId: id(1), familyId: id(2), name: '合成孩子' } });
++  const marker = beginReflectionWrite(scope, { logId: id(9), childReflection: '私密内容', token: 'secret-token' });
++  clearChildSession();
++  expect(readReflectionWrite(scope)).toEqual(marker);
++  expect(marker.raw).not.toContain('私密内容');
++  expect(marker.raw).not.toContain('secret-token');
++  expect(readReflectionWrite({ ...scope, actorId: id(3), childId: id(3) })).toBeNull();
++  expect(readReflectionWrite({ ...scope, familyId: id(4) })).toBeNull();
++});
++test('begin cannot overwrite an unresolved marker; clearing is exact-marker scoped', () => {
++  const marker = beginReflectionWrite(scope, {});
++  expect(() => beginReflectionWrite(scope, {})).toThrow();
++  expect(clearReflectionWrite(scope, { ...marker, raw: 'wrong' })).toBe(false);
++  expect(readReflectionWrite(scope)).toEqual(marker);
++  expect(clearReflectionWrite(scope, marker)).toBe(true);
++  expect(readReflectionWrite(scope)).toBeNull();
++});
++test('corrupt marker fails closed and can be explicitly reconciled without parsing private text', () => {
++  beginReflectionWrite(scope, {});
++  sessionStorage.setItem(sessionStorage.key(0), 'broken');
++  const marker = readReflectionWrite(scope);
++  expect(marker.kind).toBe('unknown');
++  expect(() => beginReflectionWrite(scope, {})).toThrow();
++  expect(clearReflectionWrite(scope, marker)).toBe(true);
++});
++test('unavailable persistence fails closed before a caller can send a write', () => {
++  const spy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota'); });
++  try { expect(() => beginReflectionWrite(scope, {})).toThrow('quota'); } finally { spy.mockRestore(); }
++});
+diff --git a/frontend/web/src/components/family/ReflectionPanel.js b/frontend/web/src/components/family/ReflectionPanel.js
+new file mode 100644
+index 00000000..8ecbf7a5
+--- /dev/null
++++ b/frontend/web/src/components/family/ReflectionPanel.js
+@@ -0,0 +1,181 @@
++import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
++import * as childApi from '../../services/childApi';
++import * as familyApi from '../../services/familyApi';
++import { captureSession, isSessionCurrent, subscribeSessionChanges } from '../../services/familySession';
++import { assertLearningScope, isLearningDenied, isLearningId, learningReadMessage } from '../../services/learningSources';
++import { beginReflectionWrite, clearReflectionWrite, readReflectionLogs, readReflectionWrite, reflectionWeek } from '../../services/reflection';
++
++const DIMENSIONS = [['academic', '智育'], ['moral', '德育'], ['physical', '体育'], ['artistic', '美育'], ['labor', '劳育']];
++const unknownText = '保存结果尚未确定，请重读全部记录并人工核对，不要重复提交。';
++
++const ReflectionEditor = ({ role, familyId, childId, grade, weekStart, session, isAllowed, deny }) => {
++  const reflectionInputId = useId();
++  const scope = useMemo(() => ({ role, actorId: session.actorId, familyId, childId }), [role, session, familyId, childId]);
++  const [rows, setRows] = useState([]);
++  const [editor, setEditor] = useState(null);
++  const [loading, setLoading] = useState(false);
++  const [busy, setBusy] = useState(false);
++  const [error, setError] = useState('');
++  const [message, setMessage] = useState('');
++  const [unknown, setUnknown] = useState(() => {
++    try { return readReflectionWrite(scope); } catch { return { storageError: true }; }
++  });
++  const [reconciled, setReconciled] = useState(false);
++  const [rowScope, setRowScope] = useState('week'), [listReady, setListReady] = useState(false);
++  const alive = useRef(true), readSequence = useRef(0), writing = useRef(false);
++  const controllers = useRef(new Set());
++  const current = useCallback(() => alive.current && isAllowed(), [isAllowed]);
++  const load = useCallback(async (all = false) => {
++    if (!current()) return;
++    const sequence = ++readSequence.current, controller = new AbortController();
++    controllers.current.add(controller);
++    setLoading(true); setError(''); setReconciled(false); setListReady(false);
++    const assertActive = () => {
++      if (!current() || sequence !== readSequence.current) throw Object.assign(new Error('stale'), { code: 'SESSION_CHANGED' });
++    };
++    try {
++      const list = role === 'student' ? childApi.listOwnGrowthLogs : familyApi.listGrowthLogs;
++      const result = await readReflectionLogs(query => list(query, controller.signal, session), scope,
++        all ? {} : reflectionWeek(weekStart), assertActive);
++      assertActive();
++      setRows(result); setReconciled(all); setRowScope(all ? 'all' : 'week'); setListReady(!all);
++    } catch (readError) {
++      // A same-scope denial wins even when another refresh superseded this request.
++      if (isAllowed() && isLearningDenied(readError)) { deny(); return; }
++      if (!current()) return;
++      if (sequence === readSequence.current && readError?.code !== 'SESSION_CHANGED') setError(learningReadMessage(readError));
++    } finally {
++      controllers.current.delete(controller);
++      if (current() && sequence === readSequence.current) setLoading(false);
++    }
++  }, [current, role, scope, session, weekStart, isAllowed, deny]);
++  useEffect(() => {
++    alive.current = true;
++    const pendingControllers = controllers.current;
++    load();
++    return () => { alive.current = false; pendingControllers.forEach(controller => controller.abort()); };
++  }, [load]);
++
++  const save = async event => {
++    event.preventDefault();
++    if (!current() || writing.current || unknown || !editor) return;
++    if (editor.childReflection.length > 500 || (!editor.logId && (!editor.content.trim() || !editor.childReflection.trim()))) {
++      setError('请填写记录内容和反思，反思不能超过 500 字。'); return;
++    }
++    let marker;
++    try {
++      reflectionWeek(editor.date);
++      marker = beginReflectionWrite(scope, editor.logId ? { logId: editor.logId } : {});
++    } catch {
++      setError('无法保存写入保护或存在未核对记录，请重新打开并核对。'); return;
++    }
++    writing.current = true; setBusy(true); setError(''); setMessage(''); setReconciled(false);
++    const controller = new AbortController(); controllers.current.add(controller);
++    try {
++      const create = role === 'student' ? childApi.createOwnGrowthLog : familyApi.createGrowthLog;
++      const patch = role === 'student' ? childApi.updateOwnGrowthLog : familyApi.updateGrowthLog;
++      const result = editor.logId
++        ? await patch(editor.logId, { childReflection: editor.childReflection }, controller.signal, session)
++        : await create({ childId, date: editor.date, dimension: editor.dimension, subject: editor.subject,
++          content: editor.content.trim(), childReflection: editor.childReflection.trim() }, controller.signal, session);
++      if (!current()) return;
++      const log = result?.log;
++      assertLearningScope(log, 'logId', editor.logId || log?.logId, familyId, childId);
++      if (!isLearningId(log.logId) || typeof log.childReflection !== 'string') throw new Error('Invalid saved record');
++      if (!clearReflectionWrite(scope, marker)) throw new Error('Write marker changed');
++      setUnknown(null); setEditor(null); setMessage('反思已保存。');
++      await load();
++    } catch (saveError) {
++      if (isAllowed() && isLearningDenied(saveError)) { deny(); return; }
++      if (!current()) return;
++      const status = saveError?.response?.status;
++      if ([400, 409, 422].includes(status)) {
++        try {
++          if (!clearReflectionWrite(scope, marker)) throw new Error('Write marker changed');
++          setError('保存被拒绝，请检查输入或重新读取记录。');
++        } catch { setUnknown(marker); }
++      } else setUnknown(marker);
++    } finally {
++      controllers.current.delete(controller);
++      if (current()) { writing.current = false; setBusy(false); }
++    }
++  };
++  const finishReconciliation = () => {
++    if (!current() || !reconciled || busy || !unknown || unknown.storageError) return;
++    try {
++      if (!clearReflectionWrite(scope, unknown)) throw new Error('Write marker changed');
++      setUnknown(null); setEditor(null); setReconciled(false); setRows([]); setRowScope('week'); setListReady(false);
++      setMessage('已结束上次编辑，请重新选择记录。');
++      load();
++    } catch { setError('无法解除写入保护，请重新打开并核对。'); }
++  };
++
++  const locked = busy || Boolean(unknown);
++  return <section className="family-panel" aria-label="成长反思">
++    <div className="family-page-heading"><h2>{role === 'student' ? '我的反思' : '孩子反思与家长代录'}</h2>
++      <button type="button" className="family-button" onClick={() => load()}>重新加载反思</button></div>
++    {loading && <p role="status">正在读取反思…</p>}
++    {error && <p role="alert" className="family-form-error">{error}</p>}
++    {message && <p role="status" className="family-success-message">{message}</p>}
++    {unknown && <div role="alert">
++      <p>{unknown.storageError ? '无法读取写入保护，暂不能保存。请恢复浏览器存储后重新打开。' : unknownText}</p>
++      {!unknown.storageError && <button type="button" className="family-button" disabled={loading || busy} onClick={() => load(true)}>重读全部记录并核对</button>}
++      {reconciled && !unknown.storageError && <button type="button" className="family-button" onClick={finishReconciliation}>已核对，结束上次编辑</button>}
++    </div>}
++    {rowScope === 'all' && <p>以下是该孩子的全部记录。没有找到记录也不能确定上次保存失败。</p>}
++    <ul className="family-list">{rows.map(log => <li key={log.logId}>
++      <div><strong>{log.content}</strong><p>{log.date}</p><p>{log.childReflection || '尚未填写反思'}</p>
++        {log.parentNote && <p>家长备注：{log.parentNote}</p>}</div>
++      <button type="button" className="family-button" aria-label={`修改反思：${log.content}`} disabled={locked || !listReady}
++        onClick={() => { setEditor({ ...log, childReflection: log.childReflection || '' }); setMessage(''); }}>修改反思</button>
++    </li>)}</ul>
++    {!loading && rows.length === 0 && <p>暂无成长记录。</p>}
++    <button type="button" className="family-button" disabled={locked || !listReady} onClick={() => {
++      setEditor({ date: weekStart, dimension: 'academic', subject: '数学', content: '', childReflection: '' }); setMessage('');
++    }}>新增反思</button>
++    {editor && <form className="family-feedback-form" onSubmit={save}>
++      {role === 'parent' && <p>本次由家长代录。</p>}
++      {!editor.logId && <>
++        <label>记录日期<input type="date" required value={editor.date} disabled={locked}
++          onChange={e => setEditor({ ...editor, date: e.target.value })} /></label>
++        <label>成长维度<select value={editor.dimension} disabled={locked} onChange={e => setEditor({ ...editor, dimension: e.target.value })}>
++          {DIMENSIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
++        <label>学科<input value={editor.subject} maxLength={50} disabled={locked} onChange={e => setEditor({ ...editor, subject: e.target.value })} /></label>
++        <label>记录内容<textarea required maxLength={1000} value={editor.content} disabled={locked} onChange={e => setEditor({ ...editor, content: e.target.value })} /></label>
++      </>}
++      <label htmlFor={reflectionInputId}>{role === 'student' ? '我的反思' : '孩子反思'}</label>
++      <textarea id={reflectionInputId} maxLength={500} required={!editor.logId} disabled={locked}
++        placeholder={grade === 1 ? '今天学会了什么？写一句话就好。' : grade === 4 ? '哪里做得好，下一次想怎样改进？' : '今天的收获和下一步'}
++        value={editor.childReflection} onChange={e => setEditor({ ...editor, childReflection: e.target.value })} />
++      <button className="family-button primary" type="submit" disabled={locked}>保存反思</button>
++      <button className="family-button" type="button" onClick={() => setEditor(null)}>关闭反思编辑</button>
++    </form>}
++  </section>;
++};
++
++// Permission revocation belongs to the identity/child, not the displayed week.
++const ReflectionScope = props => {
++  const { session, isAllowed: parentAllowed, onDenied } = props;
++  const alive = useRef(true), refused = useRef(false);
++  const [denied, setDenied] = useState(false);
++  const isAllowed = useCallback(() => alive.current && !refused.current && isSessionCurrent(session)
++    && (!parentAllowed || parentAllowed()), [session, parentAllowed]);
++  const deny = useCallback(() => {
++    if (!isAllowed()) return;
++    refused.current = true; setDenied(true); onDenied?.();
++  }, [isAllowed, onDenied]);
++  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
++  if (denied) return <p role="alert">当前身份无法读取此记录。</p>;
++  return <ReflectionEditor {...props} key={props.weekStart} isAllowed={isAllowed} deny={deny} />;
++};
++
++const ReflectionPanel = props => {
++  const [session, setSession] = useState(() => captureSession(props.role));
++  useEffect(() => subscribeSessionChanges(() => setSession(captureSession(props.role))), [props.role]);
++  if (!session || !isSessionCurrent(session) || (props.role === 'student' && session.actorId !== props.childId)) {
++    return <p role="alert">请使用当前孩子或家长身份重新登录。</p>;
++  }
++  return <ReflectionScope {...props} session={session}
++    key={`${session.role}:${session.actorId}:${session.revision}:${props.familyId}:${props.childId}`} />;
++};
++export default ReflectionPanel;
+diff --git a/frontend/web/src/pages/child/ChildReflectionPage.js b/frontend/web/src/pages/child/ChildReflectionPage.js
+new file mode 100644
+index 00000000..de14c2d1
+--- /dev/null
++++ b/frontend/web/src/pages/child/ChildReflectionPage.js
+@@ -0,0 +1,58 @@
++import React, { useEffect, useState } from 'react';
++import { Link, useSearchParams } from 'react-router-dom';
++import ReflectionPanel from '../../components/family/ReflectionPanel';
++import { useChildAuth } from '../../contexts/ChildAuthContext';
++import { getOwnProfile } from '../../services/childApi';
++import { isSessionCurrent } from '../../services/familySession';
++import { familyLocalDate } from '../../services/dailyLearningPlan';
++import { assertLearningScope, learningReadMessage } from '../../services/learningSources';
++import { reflectionWeek } from '../../services/reflection';
++
++const ScopedReflectionPage = ({ child, session }) => {
++  const [query, setQuery] = useSearchParams();
++  const [profile, setProfile] = useState(null), [error, setError] = useState(''), [attempt, setAttempt] = useState(0);
++  useEffect(() => {
++    let active = true;
++    const controller = new AbortController();
++    const load = async () => {
++      setError(''); setProfile(null);
++      try {
++        const result = await getOwnProfile({ signal: controller.signal, session });
++        if (!active || !isSessionCurrent(session)) return;
++        assertLearningScope(result?.child, 'childId', child.childId, child.familyId, child.childId);
++        const today = familyLocalDate(result.timezone);
++        setProfile({ ...result.child, today });
++      } catch (cause) {
++        if (active && isSessionCurrent(session)) setError(learningReadMessage(cause));
++      }
++    };
++    load();
++    return () => { active = false; controller.abort(); };
++  }, [child.childId, child.familyId, session, attempt]);
++  let weekStart, invalidDate = false;
++  if (profile) {
++    try { weekStart = reflectionWeek(query.get('weekStart') || profile.today).from; }
++    catch { invalidDate = true; }
++  }
++  return <section className="child-page" aria-labelledby="reflection-page-title">
++    <div className="child-page-heading"><h1 id="reflection-page-title">本周反思</h1><Link className="child-back-link" to="/child/today">返回今天</Link></div>
++    {error && <div role="alert">{error}<button type="button" className="family-button" onClick={() => setAttempt(n => n + 1)}>重试读取资料</button></div>}
++    {!profile && !error && <p role="status">正在读取资料…</p>}
++    {profile && <>
++      <label>反思所在周<input type="date" value={weekStart || ''} onChange={event => {
++        if (!event.target.value) return;
++        setQuery({ weekStart: reflectionWeek(event.target.value).from });
++      }} /></label>
++      {invalidDate ? <p role="alert">请选择有效日期。</p> : <ReflectionPanel role="student" familyId={child.familyId}
++        childId={child.childId} grade={profile.grade} weekStart={weekStart} />}
++    </>}
++  </section>;
++};
++
++const ChildReflectionPage = () => {
++  const { child, sessionSnapshot } = useChildAuth();
++  if (!child || !isSessionCurrent(sessionSnapshot)) return <p role="alert">请重新登录后查看反思。</p>;
++  return <ScopedReflectionPage child={child} session={sessionSnapshot}
++    key={`${sessionSnapshot.revision}:${child.childId}:${child.familyId}`} />;
++};
++export default ChildReflectionPage;
+diff --git a/frontend/web/src/pages/child/ChildTodayPage.js b/frontend/web/src/pages/child/ChildTodayPage.js
+index 630c70a9..ddde9a89 100644
+--- a/frontend/web/src/pages/child/ChildTodayPage.js
++++ b/frontend/web/src/pages/child/ChildTodayPage.js
+@@ -63,6 +63,7 @@ const ChildTodayContent = ({ session, child }) => {
+           <p className="child-eyebrow">今天也向前一步</p>
+           <h1 id="child-today-title">今天</h1>
+         </div>
++        <Link className="child-back-link" to="/child/reflection">本周反思</Link>
+       </div>
+ 
+       <DailyLearningPlanPanel role="student" childId={child.childId} familyId={child.familyId} grade={child.grade} />
+diff --git a/frontend/web/src/pages/family/GrowthLogsPage.js b/frontend/web/src/pages/family/GrowthLogsPage.js
+index 37198e8b..9c528a4a 100644
+--- a/frontend/web/src/pages/family/GrowthLogsPage.js
++++ b/frontend/web/src/pages/family/GrowthLogsPage.js
+@@ -1,9 +1,11 @@
+ import React, { useCallback, useEffect, useState } from 'react';
++import { Link } from 'react-router-dom';
+ import FamilyDataState from '../../components/family/FamilyDataState';
+ import FamilyDialog from '../../components/family/FamilyDialog';
+ import { useFamily } from '../../contexts/FamilyContext';
+ import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
+ import { createGrowthLog, listGrowthLogs, updateGrowthLog } from '../../services/familyApi';
++import { reflectionWeek } from '../../services/reflection';
+ 
+ const DIMENSIONS = [
+   ['moral', '德育'], ['academic', '智育'], ['physical', '体育'],
+@@ -68,7 +70,8 @@ const GrowthLogsPage = () => {
+       difficulty: form.difficulty || undefined,
+       physicalState: form.physicalState || undefined,
+       mood: form.mood || undefined,
+-      childReflection: form.childReflection,
++      ...(editor.mode === 'create' || form.childReflection !== (editor.log.childReflection || '')
++        ? { childReflection: form.childReflection } : {}),
+       parentNote: form.parentNote
+     };
+     try {
+@@ -115,6 +118,8 @@ const GrowthLogsPage = () => {
+               <div className="family-inline-actions"><span className={`family-dimension is-${item.dimension}`}>{DIMENSIONS.find(([value]) => value === item.dimension)?.[1]}</span><span>{item.date}</span></div>
+               <h2>{item.content}</h2>
+               <p>{item.subject || item.area || '综合成长'}{item.durationMinutes != null ? ` · ${item.durationMinutes} 分钟` : ''}</p>
++              {item.childReflection && <p>{item.childReflection}</p>}
++              <Link to={`/app/reports?weekStart=${reflectionWeek(item.date).from}`} aria-label={`查看本周复盘：${item.content}`}>查看本周复盘</Link>
+             </div>
+             <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.content}`} onClick={() => openEditor(item)}>编辑</button>
+           </article>
+diff --git a/frontend/web/src/pages/family/ReportsPage.js b/frontend/web/src/pages/family/ReportsPage.js
+index a2019a7e..e61a147b 100644
+--- a/frontend/web/src/pages/family/ReportsPage.js
++++ b/frontend/web/src/pages/family/ReportsPage.js
+@@ -1,84 +1,112 @@
+-import React, { useCallback, useEffect, useState } from 'react';
++import React, { useCallback, useEffect, useRef, useState } from 'react';
++import { useSearchParams } from 'react-router-dom';
+ import FamilyDataState from '../../components/family/FamilyDataState';
++import ReflectionPanel from '../../components/family/ReflectionPanel';
+ import { useFamily } from '../../contexts/FamilyContext';
+-import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
+ import { getWeeklyReport, updateWeeklyReportFeedback } from '../../services/familyApi';
++import { captureSession, isSessionCurrent, subscribeSessionChanges } from '../../services/familySession';
++import { familyLocalDate } from '../../services/dailyLearningPlan';
++import { assertLearningScope, isLearningDenied, isLearningId, learningReadMessage } from '../../services/learningSources';
++import { reflectionWeek } from '../../services/reflection';
+ 
+ const DIMENSIONS = [
+   ['moral', '德育'], ['academic', '智育'], ['physical', '体育'],
+   ['artistic', '美育'], ['labor', '劳育']
+ ];
+ 
+-const localDate = (date, timezone) => {
+-  const parts = new Intl.DateTimeFormat('en-CA', {
+-    timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit'
+-  }).formatToParts(date);
+-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+-  return `${values.year}-${values.month}-${values.day}`;
+-};
+-const currentMonday = (timezone) => {
+-  const date = new Date(`${localDate(new Date(), timezone)}T00:00:00.000Z`);
+-  const offset = date.getUTCDay() === 0 ? 6 : date.getUTCDay() - 1;
+-  date.setUTCDate(date.getUTCDate() - offset);
+-  return date.toISOString().slice(0, 10);
+-};
+-const messageFor = (error) => error?.response?.data?.error?.message || error?.message || '保存失败，请重试。';
+-
+-const ReportsPage = () => {
+-  const { family, selectedChild } = useFamily();
+-  const [weekStart, setWeekStart] = useState(() => currentMonday(family?.timezone || 'Asia/Shanghai'));
+-  const load = useCallback(
+-    ({ childId, signal }) => getWeeklyReport({ childId, weekStart }, signal),
+-    [weekStart]
+-  );
+-  const resource = useChildResource({ load });
+-  const mutationGuard = useChildMutationGuard();
+-  const report = resource.data?.report;
++const feedbackOf = report => ({ parentNote: report?.parentNote || '', nextWeekSuggestion: report?.nextWeekSuggestion || '' });
++const ScopedReport = ({ family, selectedChild, weekStart, session, isAllowed, deny }) => {
++  const markerKey = `family-growth.weekly-feedback-write.v1:${JSON.stringify([session.actorId, family.familyId, selectedChild.childId, weekStart])}`;
++  const [report, setReport] = useState(null);
+   const [feedback, setFeedback] = useState({ parentNote: '', nextWeekSuggestion: '' });
+   const [busy, setBusy] = useState(false);
++  const [loading, setLoading] = useState(false);
+   const [error, setError] = useState('');
+   const [message, setMessage] = useState('');
+-
++  const [unknown, setUnknown] = useState(() => { try { return sessionStorage.getItem(markerKey) !== null; } catch { return true; } });
++  const [latest, setLatest] = useState(null);
++  const alive = useRef(true), writing = useRef(false), dirty = useRef(false), sequence = useRef(0);
++  const current = useCallback(() => alive.current && isAllowed(), [isAllowed]);
++  const validate = useCallback(value => {
++    assertLearningScope(value, 'reportId', value?.reportId, family.familyId, selectedChild.childId);
++    if (!isLearningId(value.reportId) || value.weekStart !== weekStart) {
++      throw Object.assign(new Error('Invalid report scope'), { response: { status: 403 } });
++    }
++    return value;
++  }, [family.familyId, selectedChild.childId, weekStart]);
++  const load = useCallback(async (reconcile = false) => {
++    if (!current()) return;
++    const ticket = ++sequence.current;
++    setLoading(true); setError(''); setLatest(null);
++    try {
++      const result = await getWeeklyReport({ childId: selectedChild.childId, weekStart }, undefined, session);
++      if (!current()) return;
++      const value = validate(result?.report);
++      if (ticket !== sequence.current) return;
++      setReport(value);
++      if (reconcile) setLatest(value);
++      else if (!dirty.current && !writing.current) setFeedback(feedbackOf(value));
++    } catch (cause) {
++      if (isAllowed() && isLearningDenied(cause)) { deny(); return; }
++      if (current() && ticket === sequence.current) setError(learningReadMessage(cause));
++    } finally { if (current() && ticket === sequence.current) setLoading(false); }
++  }, [current, selectedChild.childId, weekStart, session, validate, deny, isAllowed]);
+   useEffect(() => {
+-    setFeedback({
+-      parentNote: report?.parentNote || '',
+-      nextWeekSuggestion: report?.nextWeekSuggestion || ''
+-    });
+-  }, [report]);
++    alive.current = true; load();
++    return () => { alive.current = false; };
++  }, [load]);
+ 
+   const saveFeedback = async (event) => {
+     event.preventDefault();
+-    const mutationScope = mutationGuard.captureScope();
+-    setBusy(true);
+-    setError('');
++    if (!current() || writing.current || unknown || !report) return;
++    if (feedback.parentNote.length > 1000 || feedback.nextWeekSuggestion.length > 1000) { setError('反馈不能超过 1000 字。'); return; }
++    try {
++      if (sessionStorage.getItem(markerKey) !== null) { setUnknown(true); return; }
++      sessionStorage.setItem(markerKey, 'pending');
++      if (sessionStorage.getItem(markerKey) !== 'pending') throw new Error('storage');
++    } catch { setUnknown(true); setError('无法保存写入保护，请核对后重试。'); return; }
++    sequence.current += 1; setLoading(false);
++    writing.current = true; setBusy(true); setError(''); setMessage(''); setLatest(null);
+     try {
+-      const result = await updateWeeklyReportFeedback(report.reportId, feedback);
+-      if (!mutationGuard.isCurrentScope(mutationScope)) return;
+-      setFeedback({
+-        parentNote: result.report.parentNote || '',
+-        nextWeekSuggestion: result.report.nextWeekSuggestion || ''
+-      });
++      const result = await updateWeeklyReportFeedback(report.reportId, feedback, undefined, session);
++      if (!current()) return;
++      const value = validate(result?.report);
++      if (value.reportId !== report.reportId) throw new Error('Report changed');
++      sessionStorage.removeItem(markerKey);
++      setFeedback(feedbackOf(value)); dirty.current = false;
+       setMessage('周报反馈已保存。');
+     } catch (saveError) {
+-      if (!mutationGuard.isCurrentScope(mutationScope)) return;
+-      setError(messageFor(saveError));
++      if (isAllowed() && isLearningDenied(saveError)) { deny(); return; }
++      if (!current()) return;
++      if ([400, 409, 422].includes(saveError?.response?.status)) {
++        try { sessionStorage.removeItem(markerKey); setError('保存被拒绝，请核对反馈。'); }
++        catch { setUnknown(true); }
++      } else setUnknown(true);
+     } finally {
+-      setBusy(false);
++      if (current()) {
++        // Reads begun before or during this write cannot refill its now-saved form.
++        sequence.current += 1; setLoading(false); setLatest(null);
++        writing.current = false; setBusy(false);
++      }
+     }
+   };
+-
+-  if (!selectedChild) return <FamilyDataState state="empty" />;
++  const adopt = () => {
++    if (!current() || busy || !latest) return;
++    try {
++      sessionStorage.removeItem(markerKey); setUnknown(false); setFeedback(feedbackOf(latest));
++      dirty.current = false; setLatest(null); setMessage('已采用重新读取的反馈。');
++    } catch { setError('无法解除写入保护，请稍后重试。'); }
++  };
+ 
+   const stats = report?.statistics || {};
+   return (
+-    <section className="family-page family-page-wide" aria-labelledby="reports-page-title">
+-      <div className="family-page-heading">
+-        <div><p className="family-eyebrow">{selectedChild.name}的阶段总结</p><h1 id="reports-page-title">周报</h1></div>
+-        <label>周一开始<input type="date" value={weekStart} onChange={(event) => setWeekStart(event.target.value)} /></label>
+-      </div>
+-      {resource.state === 'loading' && <FamilyDataState state="loading" />}
+-      {resource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={resource.reload} />}
+-      {resource.state === 'error' && <FamilyDataState state="error" error={resource.error} />}
++    <>
++      <button type="button" className="family-button" disabled={loading} onClick={() => load(unknown)}>{unknown ? '重读周报反馈' : '重新加载周报'}</button>
++      {loading && <FamilyDataState state="loading" />}
++      {error && <p role="alert">{error}</p>}
++      {unknown && <p role="alert">周报反馈保存结果尚未确定，请重读核对后再编辑。</p>}
++      {latest && <div><p>已读取的家长寄语：{latest.parentNote || '空白'}</p><p>已读取的下周建议：{latest.nextWeekSuggestion || '空白'}</p>
++        <button type="button" className="family-button" disabled={busy} onClick={adopt}>采用重新读取的反馈</button></div>}
+       {report && (
+         <>
+           <div className="family-metric-grid">
+@@ -93,16 +121,57 @@ const ReportsPage = () => {
+           </div>
+           <form className="family-panel family-feedback-form" onSubmit={saveFeedback}>
+             <h2>家长反馈</h2>
+-            <label>家长寄语<textarea maxLength="1000" value={feedback.parentNote} onChange={(event) => setFeedback((value) => ({ ...value, parentNote: event.target.value }))} /></label>
+-            <label>下周建议<textarea maxLength="1000" value={feedback.nextWeekSuggestion} onChange={(event) => setFeedback((value) => ({ ...value, nextWeekSuggestion: event.target.value }))} /></label>
+-            {error && <p className="family-form-error" role="alert">{error}</p>}
++            <label>家长寄语<textarea maxLength="1000" disabled={busy || unknown} value={feedback.parentNote} onChange={(event) => { dirty.current = true; setFeedback((value) => ({ ...value, parentNote: event.target.value })); }} /></label>
++            <label>下周建议<textarea maxLength="1000" disabled={busy || unknown} value={feedback.nextWeekSuggestion} onChange={(event) => { dirty.current = true; setFeedback((value) => ({ ...value, nextWeekSuggestion: event.target.value })); }} /></label>
+             {message && <p className="family-success-message" role="status">{message}</p>}
+-            <button type="submit" className="family-button primary" disabled={busy || (!feedback.parentNote.trim() && !feedback.nextWeekSuggestion.trim())}>保存周报反馈</button>
++            <button type="submit" className="family-button primary" disabled={busy || unknown}>保存周报反馈</button>
+           </form>
+         </>
+       )}
+-    </section>
++    </>
+   );
+ };
+ 
++const ReportScope = props => {
++  const { session, family, selectedChild, weekStart } = props;
++  const alive = useRef(true), refused = useRef(false);
++  const [denied, setDenied] = useState(false);
++  const isAllowed = useCallback(() => alive.current && !refused.current && isSessionCurrent(session), [session]);
++  const deny = useCallback(() => {
++    if (!isAllowed()) return;
++    refused.current = true; setDenied(true);
++  }, [isAllowed]);
++  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
++  if (denied) return <p role="alert">当前身份无法读取此记录。</p>;
++  return <>
++    <ScopedReport {...props} key={weekStart} isAllowed={isAllowed} deny={deny} />
++    <ReflectionPanel role="parent" familyId={family.familyId} childId={selectedChild.childId} grade={selectedChild.grade}
++      weekStart={weekStart} isAllowed={isAllowed} onDenied={deny} />
++  </>;
++};
++
++const ReportsPage = () => {
++  const { family, selectedChild, childScopeVersion } = useFamily();
++  const [query, setQuery] = useSearchParams();
++  const [, changed] = useState(0);
++  useEffect(() => subscribeSessionChanges(() => changed(n => n + 1)), []);
++  const session = captureSession('parent');
++  if (!selectedChild || !family) return <FamilyDataState state="empty" />;
++  if (!isSessionCurrent(session)) return <p role="alert">请重新登录后查看周报。</p>;
++  let weekStart;
++  try { weekStart = reflectionWeek(query.get('weekStart') || familyLocalDate(family.timezone)).from; }
++  catch { weekStart = ''; }
++  return <section className="family-page family-page-wide" aria-labelledby="reports-page-title">
++    <div className="family-page-heading">
++      <div><p className="family-eyebrow">{selectedChild.name}的阶段总结</p><h1 id="reports-page-title">周报</h1></div>
++      <label>周一开始<input type="date" value={weekStart} onChange={event => {
++        if (event.target.value) setQuery({ weekStart: reflectionWeek(event.target.value).from });
++      }} /></label>
++    </div>
++    {weekStart ? <ReportScope family={family} selectedChild={selectedChild} weekStart={weekStart} session={session}
++      key={`${session.actorId}:${session.revision}:${family.familyId}:${selectedChild.childId}:${childScopeVersion}`} />
++      : <p role="alert">请选择有效日期，并确认家庭时区。</p>}
++  </section>;
++};
++
+ export default ReportsPage;
+diff --git a/frontend/web/src/services/childApi.js b/frontend/web/src/services/childApi.js
+index 573fd44c..4ed9f113 100644
+--- a/frontend/web/src/services/childApi.js
++++ b/frontend/web/src/services/childApi.js
+@@ -63,6 +63,21 @@ export const getOwnProfile = async (signal) => {
+   return unwrap(response);
+ };
+ 
++export const listOwnGrowthLogs = (params, signal, expectedSession) => childGet(
++  '/api/growth-logs', params, ['from', 'to', 'dimension', 'page', 'pageSize'], signal, expectedSession
++);
++
++export const createOwnGrowthLog = async (payload, signal, expectedSession) => unwrap(
++  await childRequest((config, session) => axios.post('/api/growth-logs', {
++    ...pick(payload, ['date', 'dimension', 'subject', 'content', 'childReflection']),
++    childId: session.actorId
++  }, config), signal, expectedSession)
++);
++
++export const updateOwnGrowthLog = (logId, payload, signal, expectedSession) => childPatch(
++  `/api/growth-logs/${encodeURIComponent(logId)}`, payload, ['childReflection'], signal, expectedSession
++);
++
+ export const listOwnTasks = (params, signal) => childGet('/api/growth-tasks', params, [
+   'scope',
+   'status',
+diff --git a/frontend/web/src/services/familyApi.js b/frontend/web/src/services/familyApi.js
+index ea4c7dcf..c922f60e 100644
+--- a/frontend/web/src/services/familyApi.js
++++ b/frontend/web/src/services/familyApi.js
+@@ -162,9 +162,13 @@ export const recoverTaskCompletion = (taskId, operationId, signal, expectedSessi
+ );
+ export const cancelOrArchiveGrowthTask = (taskId) => parentDelete(`/api/growth-tasks/${taskId}`);
+ 
+-export const listGrowthLogs = (params, signal) => parentGet('/api/growth-logs', params, signal);
+-export const createGrowthLog = (payload) => parentPost('/api/growth-logs', payload);
+-export const updateGrowthLog = (logId, payload) => parentPatch(`/api/growth-logs/${logId}`, payload);
++export const listGrowthLogs = (params, signal, expectedSession) => parentGet('/api/growth-logs', params, signal, expectedSession);
++export const createGrowthLog = (payload, signal, expectedSession) => parentPost(
++  '/api/growth-logs', payload, sessionRequestOptions(signal, expectedSession)
++);
++export const updateGrowthLog = (logId, payload, signal, expectedSession) => parentPatch(
++  `/api/growth-logs/${encodeURIComponent(logId)}`, payload, sessionRequestOptions(signal, expectedSession)
++);
+ 
+ export const listKnowledgePoints = (params, signal) => parentGet('/api/knowledge-points', params, signal);
+ export const createKnowledgePoint = (payload) => parentPost('/api/knowledge-points', payload);
+@@ -180,10 +184,10 @@ export const getMistake = (mistakeId, signal, expectedSession) => parentGet(
+ export const createMistake = (payload) => parentPost('/api/mistakes', payload);
+ export const updateMistake = (mistakeId, payload) => parentPatch(`/api/mistakes/${mistakeId}`, payload);
+ 
+-export const getWeeklyReport = (params, signal) => parentGet('/api/reports/weekly', params, signal);
+-export const updateWeeklyReportFeedback = (reportId, payload) => parentPatch(
+-  `/api/reports/weekly/${reportId}/feedback`,
+-  payload
++export const getWeeklyReport = (params, signal, expectedSession) => parentGet('/api/reports/weekly', params, signal, expectedSession);
++export const updateWeeklyReportFeedback = (reportId, payload, signal, expectedSession) => parentPatch(
++  `/api/reports/weekly/${encodeURIComponent(reportId)}/feedback`,
++  payload, sessionRequestOptions(signal, expectedSession)
+ );
+ 
+ export const listFamilyReminders = (params, signal) => parentGet('/api/notifications/family', params, signal);
+diff --git a/frontend/web/src/services/reflection.js b/frontend/web/src/services/reflection.js
+new file mode 100644
+index 00000000..948a3be2
+--- /dev/null
++++ b/frontend/web/src/services/reflection.js
+@@ -0,0 +1,66 @@
++import { assertLearningScope, isLearningId } from './learningSources';
++
++export const reflectionWeek = localDate => {
++  if (typeof localDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(localDate)) throw new Error('请选择有效日期。');
++  const date = new Date(`${localDate}T00:00:00.000Z`);
++  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== localDate) throw new Error('请选择有效日期。');
++  date.setUTCDate(date.getUTCDate() - (date.getUTCDay() + 6) % 7);
++  const from = date.toISOString().slice(0, 10);
++  date.setUTCDate(date.getUTCDate() + 6);
++  return { from, to: date.toISOString().slice(0, 10) };
++};
++
++// Reconciliation is not limited to the displayed week: a parent may have moved a record's date.
++export const readReflectionLogs = async (load, scope, range = {}, assertActive = () => {}) => {
++  const items = [], seen = new Set();
++  let expectedTotal;
++  for (let page = 1; ; page += 1) {
++    assertActive();
++    const result = await load({ childId: scope.childId, ...range, page, pageSize: 100 });
++    assertActive();
++    if (!result || !Array.isArray(result.items) || !Number.isInteger(result.total) || result.total < 0
++      || result.page !== page || result.pageSize !== 100
++      || (expectedTotal !== undefined && result.total !== expectedTotal)) throw new Error('记录列表已变化或不完整，请重新读取。');
++    expectedTotal = result.total;
++    if (result.items.length !== Math.min(100, expectedTotal - items.length)) throw new Error('记录列表不完整，请重新读取。');
++    for (const row of result.items) {
++      assertLearningScope(row, 'logId', row?.logId, scope.familyId, scope.childId);
++      if (!isLearningId(row.logId) || seen.has(row.logId)) throw new Error('记录列表已变化，请重新读取。');
++      seen.add(row.logId);
++      items.push(row);
++    }
++    if (items.length === expectedTotal) return items;
++  }
++};
++
++const markerKey = scope => {
++  if (!['parent', 'student'].includes(scope.role)
++    || ![scope.actorId, scope.familyId, scope.childId].every(isLearningId)
++    || (scope.role === 'student' && scope.actorId !== scope.childId)) throw new Error('无效的反思身份。');
++  return `family-growth.reflection-write.v1:${JSON.stringify([scope.role, scope.actorId, scope.familyId, scope.childId])}`;
++};
++export const readReflectionWrite = scope => {
++  const raw = sessionStorage.getItem(markerKey(scope));
++  if (raw === null) return null;
++  try {
++    const data = JSON.parse(raw);
++    if (data?.kind === 'create' || (data?.kind === 'patch' && isLearningId(data.logId))) return { ...data, raw };
++  } catch { /* An unreadable marker still means the previous write may have reached the server. */ }
++  return { kind: 'unknown', raw };
++};
++export const beginReflectionWrite = (scope, { logId } = {}) => {
++  if (readReflectionWrite(scope)) throw new Error('请先核对上次保存结果。');
++  if (logId !== undefined && !isLearningId(logId)) throw new Error('无效的记录。');
++  // This local revision distinguishes successive writes; it is not a server idempotency key.
++  const revision = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
++  const data = logId ? { kind: 'patch', logId, revision } : { kind: 'create', revision };
++  const raw = JSON.stringify(data);
++  sessionStorage.setItem(markerKey(scope), raw);
++  if (sessionStorage.getItem(markerKey(scope)) !== raw) throw new Error('无法保存写入保护，请稍后重试。');
++  return { ...data, raw };
++};
++export const clearReflectionWrite = (scope, marker) => {
++  if (!marker || sessionStorage.getItem(markerKey(scope)) !== marker.raw) return false;
++  sessionStorage.removeItem(markerKey(scope));
++  return true;
++};
+diff --git a/scripts/check-family-docs.js b/scripts/check-family-docs.js
+index d10ee6a3..3a07038f 100644
+--- a/scripts/check-family-docs.js
++++ b/scripts/check-family-docs.js
+@@ -3359,10 +3359,10 @@ function validate() {
+       `reconciliation ${task} must be CLOSED`, errors);
+   }
+   for (const [document, marker, message] of [
+-    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7-T9 待执行）', 'approved T1 plan status and bounded T2/T3/T5/T6 closure'],
++    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 实施中，T8-T9 待执行）', 'approved T1 plan status and bounded T2/T3/T5/T6 closure'],
+     [selfDirectedPlan, '- [x] R4 入口验收及 T1 关闭：CLOSED', 'approved R4 plan checkbox'],
+     [reconciliation, '| R4 正式入口验收及 T1 关闭 | CLOSED |', 'approved R4 reconciliation row'],
+-    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2/T3/T5/T6 closure'],
++    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 实施中，T8-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2/T3/T5/T6 closure'],
+     [read('docs/deployment/completion-operations.md'), '**Status:** CLOSED（R1–R4 及 T1 后端工程总门禁', 'operations must reflect T1 backend closure']
+   ]) {
+     assert(document.includes(marker), message, errors);
+@@ -3540,7 +3540,17 @@ function validate() {
+         `${name}: ${key} must remain uniquely ${value}`, errors);
+     }
+   }
+-  for (const task of Array.from({ length: 3 }, (_, index) => `T${index + 7}`)) {
++  const t7Rows = taskStatusRows.filter(cells => cells[1] === 'T7');
++  assert(t7Rows.length === 1 && t7Rows[0][2] === 'IN_PROGRESS', 'self-directed Gate must keep T7 as IN_PROGRESS', errors);
++  const t7Section = selfDirectedGate.slice(selfDirectedGate.indexOf('## 27. T7 '));
++  for (const [key, value] of [['engineering gate', 'OPEN'], ['device', 'DEVICE_PENDING'],
++    ['Docker audit', 'INCOMPLETE_FAILED'], ['nonblocking', 'T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING'],
++    ['deferred', 'REMAINDER_DEFERRED'], ['historical failures', 'PRESERVED']]) {
++    const prefix = `**T7 ${key}:**`;
++    const lines = t7Section.split('\n').map(line => line.trim()).filter(line => line.startsWith(prefix));
++    assert(lines.length === 1 && lines[0] === `${prefix} ${value}`, `T7 ${key} must remain uniquely ${value}`, errors);
++  }
++  for (const task of ['T8', 'T9']) {
+     const rows = taskStatusRows.filter(cells => cells[1] === task);
+     assert(
+       rows.length === 1 && rows[0][2] === 'NOT_STARTED',
+@@ -3552,7 +3562,7 @@ function validate() {
+   for (const [name, markdown, marker] of [
+     ['research', selfDirectedResearch, '状态：拟议方案'],
+     ['design', selfDirectedDesign, '状态：拟议设计'],
+-    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7-T9 待执行）'],
++    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 实施中，T8-T9 待执行）'],
+     ['Gate', selfDirectedGate, '**Status:** T0 CONTRACT BASELINE']
+   ]) {
+     assert(markdown.includes(marker), `self-directed ${name} must remain explicitly planned`, errors);
+@@ -3686,7 +3696,7 @@ function validate() {
+   assert(
+     implementationStatus.includes('T0 已完成契约基线') &&
+       implementationStatus.includes('T1 后端工程已关闭，仅限既定合成验收') &&
+-      implementationStatus.includes('T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7–T9 待执行'),
++      implementationStatus.includes('T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 实施中，T8–T9 待执行'),
+     'system design must record T0 complete, T1 closed and T2 closed in section 15',
+     errors
+   );
+diff --git a/tests/e2e/t2/weeklyMathLoop.spec.js b/tests/e2e/t2/weeklyMathLoop.spec.js
+new file mode 100644
+index 00000000..ee6a0188
+--- /dev/null
++++ b/tests/e2e/t2/weeklyMathLoop.spec.js
+@@ -0,0 +1,146 @@
++const { test, expect } = require('@playwright/test');
++const { createT2WebRuntime } = require('./webRuntime');
++const { openParentTasks } = require('./parentNavigation');
++const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
++const { formatLocalDate } = require('../../../backend/common/utils/familyDate');
++let runtime, fixture, parent;
++test.beforeEach(async () => {
++  runtime = await createT2WebRuntime(); fixture = runtime.fixture; parent = await runtime.login('parent');
++  for (const name of ['child', 'sibling']) expectData(await parent.patch(`/api/children/${fixture.actors[name].childId}`, { grade: 1 }));
++  const third = expectData(await parent.post('/api/children', { name: 'Synthetic grade four', grade: 4 }), 201).child;
++  expectData(await parent.post(`/api/children/${third.childId}/pin`, { pin: '9753' }));
++  fixture.actors.third = { userId: third.childId, childId: third.childId, familyId: fixture.familyId, pin: '9753' };
++});
++test.afterEach(async () => { await runtime?.stop(); });
++async function login(page, name) {
++  const actor = fixture.actors[name];
++  await page.goto(runtime.webUrl + (actor.pin ? '/child/login' : '/login'));
++  if (actor.pin) {
++    await page.getByLabel('家庭 ID').fill(actor.familyId); await page.getByLabel('孩子 ID').fill(actor.childId);
++    await page.getByLabel('PIN').fill(actor.pin); await page.getByRole('button', { name: '进入我的成长空间' }).click();
++    await expect(page).toHaveURL(/\/child\/today$/);
++  } else {
++    await page.getByLabel('用户名').fill(actor.username); await page.getByLabel('密码', { exact: true }).fill(actor.password);
++    await page.getByRole('button', { name: '登录', exact: true }).click(); await expect(page).toHaveURL(/\/app\/today$/);
++  }
++}
++for (const name of ['child', 'sibling', 'third']) test(`${name}: complete real-page math learning and weekly reflection chain`, async ({ page, browser }, info) => {
++  const childId = fixture.actors[name].childId, today = formatLocalDate(new Date(), 'Asia/Shanghai');
++  const week = new Date(`${today}T00:00:00Z`);
++  week.setUTCDate(week.getUTCDate() - (week.getUTCDay() + 6) % 7);
++  const reportPath = `/api/reports/weekly?childId=${childId}&weekStart=${week.toISOString().slice(0, 10)}`;
++  const baseline = expectData(await parent.get(reportPath)).report;
++  const create = title => parent.post('/api/growth-tasks', { childId, title, dimension: 'academic', subject: '数学',
++    taskType: 'practice', dueDate: today, checklistSnapshot: [{ itemId: 'read', label: '读清题目', required: true }] });
++  const task = expectData(await create(`Synthetic ${name} mathematics`), 201).task;
++  const second = expectData(await create(`Synthetic ${name} next practice`), 201).task;
++  const context = await browser.newContext({ viewport: { width: 768, height: 1024 }, hasTouch: true });
++  const child = await context.newPage(), errors = [];
++  for (const target of [page, child]) {
++    target.on('pageerror', error => errors.push(error.message));
++    target.on('console', message => { if (['warning', 'error'].includes(message.type())) errors.push(message.type()); });
++  }
++  try {
++    await login(child, name);
++    const plan = child.getByRole('region', { name: '今日计划', exact: true });
++    await plan.getByRole('button', { name: `加入今日计划 ${task.title}`, exact: true }).click();
++    await plan.getByRole('button', { name: `加入今日计划 ${second.title}`, exact: true }).click();
++    await plan.getByLabel(`${task.title} 估计分钟`).fill('15');
++    await plan.getByRole('button', { name: `下移 ${task.title}`, exact: true }).click();
++    await plan.getByRole('button', { name: '保存今日计划', exact: true }).click();
++    await expect(plan.getByText('今日计划已保存。')).toBeVisible();
++    const savedPlan = expectData(await parent.get(`/api/children/${childId}/daily-learning-plans/${today}`)).plan;
++    expect(savedPlan.items.map(item => item.taskId)).toEqual([second.taskId, task.taskId]);
++    expect(savedPlan.items[1].estimateRecordedBy).toEqual({ actorId: childId, role: 'student' });
++    await plan.getByRole('link', { name: task.title, exact: true }).click();
++    await child.getByRole('button', { name: '我需要帮助', exact: true }).click();
++    await child.getByRole('button', { name: '发送求助', exact: true }).click();
++    await expect(child.getByText('求助已发送。')).toBeVisible();
++    await login(page, 'coparent');
++    await page.getByLabel('当前孩子').selectOption(childId);
++    await page.getByRole('link', { name: '待处理求助', exact: true }).click();
++    await page.getByRole('button', { name: `求助 ${task.title}`, exact: true }).click();
++    await page.getByLabel('给孩子的回应（可不填）').fill('Synthetic read carefully');
++    await page.getByRole('button', { name: '标记已处理', exact: true }).click();
++    await expect(page.getByText('Synthetic read carefully', { exact: true })).toBeVisible();
++    await page.getByRole('dialog').getByRole('button', { name: '关闭', exact: true }).click();
++    await child.getByRole('button', { name: '刷新详情', exact: true }).click();
++    await expect(child.getByText('Synthetic read carefully', { exact: true })).toBeVisible();
++    await child.getByRole('checkbox', { name: '读清题目（重点项）', exact: true }).check();
++    await child.getByLabel('添加完成图片').setInputFiles({ name: fixture.image.name, mimeType: fixture.image.mimeType, buffer: fixture.image.bytes });
++    await expect(child.getByText('已添加 1/10')).toBeVisible();
++    await child.getByRole('button', { name: '提交完成情况', exact: true }).click();
++    await expect(child.getByText('作品版本 1', { exact: true })).toBeVisible();
++    await openParentTasks(page, runtime.webUrl);
++    await page.getByRole('combobox', { name: '求助状态', exact: true }).selectOption('');
++    await page.getByRole('button', { name: `查看 ${task.title}`, exact: true }).click();
++    await page.getByRole('button', { name: '查看完成图片 1', exact: true }).click();
++    const image = page.getByRole('img', { name: '完成图片 1', exact: true });
++    await expect.poll(() => image.evaluate(node => node.naturalWidth)).toBeGreaterThan(0);
++    await page.getByRole('textbox', { name: '家长反馈', exact: true }).fill('Synthetic seen-version feedback');
++    await page.getByRole('button', { name: '确认并发放星星', exact: true }).click();
++    await expect(page.getByText('星星已到账', { exact: true })).toBeVisible();
++    await child.reload(); await expect(child.getByText('Synthetic seen-version feedback', { exact: true })).toBeVisible();
++    await page.getByRole('link', { name: '记录错题', exact: true }).click();
++    const mistakeForm = page.getByRole('dialog', { name: '记录错题', exact: true });
++    await mistakeForm.getByLabel('知识点', { exact: true }).fill(`Synthetic ${name} arithmetic`);
++    await mistakeForm.getByLabel('提醒复习日期').fill(today);
++    const savedMistake = page.waitForResponse(response => response.request().method() === 'POST' && new URL(response.url()).pathname === '/api/mistakes');
++    await mistakeForm.getByRole('button', { name: '保存错题', exact: true }).click();
++    const mistake = (await (await savedMistake).json()).data.mistake;
++    expect(mistake.sourceTaskId).toBe(task.taskId);
++    await page.getByRole('button', { name: `复盘 Synthetic ${name} arithmetic`, exact: true }).click();
++    await page.getByRole('button', { name: '创建订正任务', exact: true }).click();
++    const taskForm = page.getByRole('dialog', { name: '新建任务', exact: true });
++    await taskForm.getByLabel('任务标题').fill(`Synthetic ${name} correction`);
++    await taskForm.getByLabel('截止日期', { exact: true }).fill(today);
++    const savedCorrection = page.waitForResponse(response => response.request().method() === 'POST' && new URL(response.url()).pathname === '/api/growth-tasks');
++    await taskForm.getByRole('button', { name: '保存任务', exact: true }).click();
++    const correction = (await (await savedCorrection).json()).data.task;
++    expect(correction.sourceMistakeId).toBe(mistake.mistakeId);
++    await child.goto(runtime.webUrl + `/child/tasks/${correction.taskId}`);
++    await expect(child.getByRole('link', { name: /查看来源错题/ })).toBeVisible();
++    await child.getByRole('button', { name: '提交完成情况', exact: true }).click();
++    await expect(child.getByText('作品版本 1', { exact: true })).toBeVisible();
++    await page.getByRole('button', { name: '查看已保存任务', exact: true }).click();
++    await page.getByRole('button', { name: '确认并发放星星', exact: true }).click();
++    await expect(page.getByText('星星已到账', { exact: true })).toBeVisible();
++    await page.getByRole('dialog', { name: '作品查看与审核', exact: true }).getByRole('button', { name: '关闭', exact: true }).click();
++    await page.getByRole('navigation', { name: '家长导航', exact: true }).getByRole('link', { name: '提醒', exact: true }).click();
++    await page.getByRole('link', { name: '复习此错题', exact: true }).click();
++    const review = page.getByRole('dialog', { name: '错题复盘', exact: true });
++    await review.getByRole('checkbox', { name: '已复习', exact: true }).check();
++    await review.getByRole('button', { name: '保存复盘', exact: true }).click();
++    await expect(page.getByText('复盘已保存。', { exact: true })).toBeVisible();
++    await child.getByRole('link', { name: '今天', exact: true }).click();
++    await child.getByRole('link', { name: '本周反思', exact: true }).click();
++    await child.getByRole('button', { name: '新增反思' }).click();
++    await child.getByLabel('记录内容', { exact: true }).fill(`Synthetic ${name} full loop reflection`);
++    await child.getByLabel('我的反思', { exact: true }).fill('Synthetic ask, check and review');
++    await child.getByRole('button', { name: '保存反思', exact: true }).click();
++    await expect(child.getByText('反思已保存。', { exact: true })).toBeVisible();
++    await page.getByRole('navigation', { name: '家长导航', exact: true }).getByRole('link', { name: '周报', exact: true }).click();
++    await expect(page.getByText('Synthetic ask, check and review', { exact: true })).toBeVisible();
++    const report = expectData(await parent.get(reportPath)).report;
++    expect(report.statistics).toMatchObject({ recordDays: 1, totalDurationMinutes: 0, completedTaskCount: 2,
++      plannedTaskCount: baseline.statistics.plannedTaskCount + 3, mistakeCount: 1 });
++    const rate = Math.round(20000 / report.statistics.plannedTaskCount) / 100;
++    expect(report.statistics.taskCompletionRate).toBe(rate);
++    await expect(page.getByText(`${rate}%`, { exact: true })).toBeVisible();
++    await expect(page.getByText(`2/${report.statistics.plannedTaskCount} 个任务`, { exact: false })).toBeVisible();
++    await expect(page.getByText('记录天数', { exact: true }).locator('..').locator('strong')).toHaveText('1');
++    await expect(page.getByText('新增错题', { exact: true }).locator('..').locator('strong')).toHaveText('1');
++    await page.getByLabel('家长寄语').fill('Synthetic complete learning review');
++    await page.getByRole('button', { name: '保存周报反馈', exact: true }).click();
++    await expect(page.getByText('周报反馈已保存。', { exact: true })).toBeVisible();
++    const snapshot = await runtime.inspect();
++    expect(snapshot.database.Ledger.filter(row => [task.taskId, correction.taskId].includes(row.sourceId))).toHaveLength(2);
++    expect(snapshot.database.Mistake.find(row => row._id === mistake.mistakeId)).toMatchObject({ reviewed: true, mastered: false });
++    expect(snapshot.database.Task.find(row => row._id === task.taskId)).toMatchObject({ confirmedByParentId: fixture.actors.coparent.userId });
++    for (const [label, target] of [['child', child], ['parent', page]]) {
++      expect(await target.locator('html').evaluate(node => node.scrollWidth <= node.ownerDocument.defaultView.innerWidth)).toBe(true);
++      await target.screenshot({ path: info.outputPath(`${name}-${label}-full-loop.png`), fullPage: true });
++    }
++    expect(errors).toEqual([]);
++  } finally { await context.close(); }
++});
+diff --git a/tests/e2e/t2/weeklyReflection.spec.js b/tests/e2e/t2/weeklyReflection.spec.js
+new file mode 100644
+index 00000000..9ddeae89
+--- /dev/null
++++ b/tests/e2e/t2/weeklyReflection.spec.js
+@@ -0,0 +1,143 @@
++const { test, expect } = require('@playwright/test');
++const { createT2WebRuntime } = require('./webRuntime');
++const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
++let runtime, fixture, parent;
++test.beforeEach(async () => {
++  runtime = await createT2WebRuntime(); fixture = runtime.fixture; parent = await runtime.login('parent');
++});
++test.afterEach(async () => { await runtime?.stop(); });
++async function login(page, name) {
++  const actor = fixture.actors[name], child = Boolean(actor.pin);
++  await page.goto(runtime.webUrl + (child ? '/child/login' : '/login'));
++  if (child) {
++    await page.getByLabel('家庭 ID').fill(actor.familyId);
++    await page.getByLabel('孩子 ID').fill(actor.childId);
++    await page.getByLabel('PIN').fill(actor.pin);
++    await page.getByRole('button', { name: '进入我的成长空间' }).click();
++    await expect(page).toHaveURL(/\/child\/today$/);
++  } else {
++    await page.getByLabel('用户名').fill(actor.username);
++    await page.getByLabel('密码', { exact: true }).fill(actor.password);
++    await page.getByRole('button', { name: '登录', exact: true }).click();
++    await expect(page).toHaveURL(/\/app\/today$/);
++  }
++}
++const monitor = page => {
++  const errors = [];
++  page.on('pageerror', error => errors.push(error.message));
++  page.on('console', message => { if (['warning', 'error'].includes(message.type())) errors.push(message.type()); });
++  return errors;
++};
++async function capture(page, info, name) {
++  expect(await page.title()).toBeTruthy();
++  await expect(page.locator('iframe#webpack-dev-server-client-overlay')).toHaveCount(0);
++  expect(await page.locator('html').evaluate(node => node.scrollWidth <= node.ownerDocument.defaultView.innerWidth)).toBe(true);
++  await page.screenshot({ path: info.outputPath(name), fullPage: true });
++}
++for (const grade of [1, 4]) test(`grade ${grade}: child reflection, real coparent proxy and weekly feedback survive reload`, async ({ page, browser }, info) => {
++  const childId = fixture.actors.child.childId;
++  expectData(await parent.patch(`/api/children/${childId}`, { grade }));
++  const childContext = await browser.newContext({ viewport: { width: 768, height: 1024 } });
++  const childPage = await childContext.newPage(), childErrors = monitor(childPage), parentErrors = monitor(page);
++  try {
++    await login(childPage, 'child');
++    await childPage.getByRole('link', { name: '本周反思', exact: true }).click();
++    await expect(childPage).toHaveURL(/\/child\/reflection$/);
++    const weekStart = await childPage.getByLabel('反思所在周').inputValue();
++    await childPage.getByRole('button', { name: '新增反思' }).click();
++    await childPage.getByLabel('记录内容', { exact: true }).fill('Synthetic arithmetic reflection');
++    await childPage.getByLabel('我的反思', { exact: true }).fill('Synthetic read twice before calculating');
++    const saved = childPage.waitForResponse(response => response.request().method() === 'POST'
++      && new URL(response.url()).pathname === '/api/growth-logs');
++    await childPage.getByRole('button', { name: '保存反思' }).click();
++    expect((await saved).status()).toBe(201);
++    await expect(childPage.getByText('反思已保存。')).toBeVisible();
++    await childPage.reload();
++    await expect(childPage.getByText('Synthetic read twice before calculating', { exact: true })).toBeVisible();
++    await capture(childPage, info, 'child-reflection.png');
++    await childPage.setViewportSize({ width: 390, height: 844 });
++    await capture(childPage, info, 'child-reflection-mobile.png');
++    await childPage.setViewportSize({ width: 1024, height: 768 });
++    await capture(childPage, info, 'child-reflection-landscape.png');
++    await login(page, 'coparent');
++    await page.getByRole('link', { name: '周报', exact: true }).click();
++    await page.getByLabel('当前孩子').selectOption(childId);
++    await page.getByLabel('周一开始').fill(weekStart);
++    await expect(page.getByText('Synthetic read twice before calculating', { exact: true })).toBeVisible();
++    await page.getByRole('button', { name: '修改反思：Synthetic arithmetic reflection', exact: true }).click();
++    await expect(page.getByText('本次由家长代录。')).toBeVisible();
++    await page.getByLabel('孩子反思', { exact: true }).fill('Synthetic parent-assisted reflection');
++    await page.getByRole('button', { name: '保存反思' }).click();
++    await expect(page.getByText('反思已保存。')).toBeVisible();
++    const reportUrl = `/api/reports/weekly?childId=${childId}&weekStart=${weekStart}`;
++    const before = expectData(await parent.get(reportUrl)).report;
++    await page.getByLabel('家长寄语').fill('Synthetic family feedback');
++    await page.getByLabel('下周建议').fill('Synthetic one careful check');
++    await page.getByRole('button', { name: '保存周报反馈' }).click();
++    await expect(page.getByText('周报反馈已保存。')).toBeVisible();
++    await page.reload();
++    await expect(page.getByLabel('家长寄语')).toHaveValue('Synthetic family feedback');
++    await expect(page.getByLabel('下周建议')).toHaveValue('Synthetic one careful check');
++    await capture(page, info, 'parent-weekly-feedback.png');
++    await childPage.reload();
++    await expect(childPage.getByText('Synthetic parent-assisted reflection', { exact: true })).toBeVisible();
++    const logs = expectData(await parent.get(`/api/growth-logs?childId=${childId}`));
++    expect(logs.total).toBe(1);
++    expect(logs.items[0]).toMatchObject({ createdBy: childId, updatedBy: fixture.actors.coparent.userId,
++      childReflection: 'Synthetic parent-assisted reflection' });
++    const after = expectData(await parent.get(reportUrl)).report;
++    expect(after.statistics).toEqual(before.statistics);
++    expect(after.feedbackUpdatedBy).toBe(fixture.actors.coparent.userId);
++    expect((await runtime.inspect()).database.Ledger).toEqual([]);
++    expect(childErrors).toEqual([]); expect(parentErrors).toEqual([]);
++  } finally { await childContext.close(); }
++});
++
++test('committed reflection with lost response stays protected across failed reread, logout and sibling switch without repost', async ({ page }) => {
++  let creates = 0;
++  page.on('request', request => {
++    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/growth-logs') creates += 1;
++  });
++  await login(page, 'child');
++  await page.getByRole('link', { name: '本周反思', exact: true }).click();
++  await page.getByRole('button', { name: '新增反思', exact: true }).click();
++  await page.getByLabel('记录内容', { exact: true }).fill('Synthetic uncertain reflection');
++  await page.getByLabel('我的反思', { exact: true }).fill('Synthetic private input');
++  runtime.dropNextResponse({ method: 'POST', path: '/api/growth-logs' });
++  await page.getByRole('button', { name: '保存反思', exact: true }).click();
++  await expect(page.getByText(/保存结果尚未确定/)).toBeVisible();
++  await expect(page.getByLabel('我的反思', { exact: true })).toHaveValue('Synthetic private input');
++  await expect(page.getByRole('button', { name: '保存反思', exact: true })).toBeDisabled();
++  const before = expectData(await parent.get(`/api/growth-logs?childId=${fixture.actors.child.childId}`));
++  expect(before.total).toBe(1);
++  expect(before.items[0]).toMatchObject({ content: 'Synthetic uncertain reflection', createdBy: fixture.actors.child.childId });
++  await page.route('**/api/growth-logs?**', route => route.abort('failed'), { times: 1 });
++  await page.getByRole('button', { name: '重读全部记录并核对', exact: true }).click();
++  await expect(page.getByText('读取失败，请重试。', { exact: true })).toBeVisible();
++  await expect(page.getByRole('button', { name: '已核对，结束上次编辑', exact: true })).toHaveCount(0);
++  await expect(page.getByRole('button', { name: '保存反思', exact: true })).toBeDisabled();
++  await page.getByRole('button', { name: '关闭反思编辑', exact: true }).click();
++  await expect(page.getByRole('button', { name: '新增反思', exact: true })).toBeDisabled();
++  const logout = async () => {
++    await page.getByRole('link', { name: '我的', exact: true }).click();
++    await page.getByRole('button', { name: '退出孩子端', exact: true }).click();
++    await expect(page).toHaveURL(/\/child\/login/);
++  };
++  await logout(); await login(page, 'sibling');
++  await page.getByRole('link', { name: '本周反思', exact: true }).click();
++  await expect(page.getByRole('button', { name: '新增反思', exact: true })).toBeEnabled();
++  await expect(page.getByText(/Synthetic (uncertain reflection|private input)/)).toHaveCount(0);
++  await expect(page.getByText(/保存结果尚未确定/)).toHaveCount(0);
++  await logout(); await login(page, 'child');
++  await page.getByRole('link', { name: '本周反思', exact: true }).click();
++  await expect(page.getByText(/保存结果尚未确定/)).toBeVisible();
++  await expect(page.getByRole('button', { name: '新增反思', exact: true })).toBeDisabled();
++  await expect(page.getByLabel('我的反思', { exact: true })).toHaveCount(0);
++  await page.getByRole('button', { name: '重读全部记录并核对', exact: true }).click();
++  await expect(page.getByText('Synthetic private input', { exact: true })).toBeVisible();
++  await page.getByRole('button', { name: '已核对，结束上次编辑', exact: true }).click();
++  await expect(page.getByRole('button', { name: '修改反思：Synthetic uncertain reflection', exact: true })).toBeEnabled();
++  expect(creates).toBe(1);
++  expect(expectData(await parent.get(`/api/growth-logs?childId=${fixture.actors.child.childId}`))).toEqual(before);
++  expect((await runtime.inspect()).database.Ledger).toEqual([]);
++});

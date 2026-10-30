@@ -1,0 +1,325 @@
+{
+  "status": "SELF_REVIEW_PASSED_INDEPENDENT_REVIEW_PENDING",
+  "files": [
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/activation-regression.log",
+      "bytes": 799,
+      "sha256": "c23620415ffed20c1d455b026f631acc3851d4225806812162d78d6851a7d900"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/build-console.log",
+      "bytes": 263,
+      "sha256": "947fbc0bc59e933d67d104c6268fc904473343cb0dacf13061d68f9367886460"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/directory-cleanup.json",
+      "bytes": 99,
+      "sha256": "3bcba093f2710b4b8e855436963ba0c45b9fbb109327c047a9dfa32ed8e070bd"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/entry.patch",
+      "bytes": 3721,
+      "sha256": "4625a5187304766d2ac69ec1439795ec6706cc26ac92ebd34b4a4abeb691e9f9"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/fixed-build-console.log",
+      "bytes": 269,
+      "sha256": "9491289b47e3078e190317b299d9f91cb9651c5248350503f9042f79e6bae337"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/green-console.log",
+      "bytes": 213,
+      "sha256": "9849c9115f379de466be5c4ca4d7e4e2a051f6c254cc54667302b4c71e96094a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/lint-final.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/model-red.log",
+      "bytes": 7758,
+      "sha256": "61ecbe39c225abb29ca1eb775ead0b9fb28a5547eaf8595b371f7d2f8aa45105"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-console.log",
+      "bytes": 207,
+      "sha256": "014202500170260f6c705d29110b8dc0573757c2395a9f28e796ba2254a645f6"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/14-compose-config.log",
+      "bytes": 91,
+      "sha256": "febbcea847ffbc5585a4ce55c38f4c07db05ddf146f40800354be3a1485b8cd8"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/14-result.json",
+      "bytes": 56,
+      "sha256": "93c960c650f8c4af2aeaa0182a1cf9a289f5a7dc38fb16222ac9ba6235ad91af"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/15-base-node-pull.log",
+      "bytes": 200,
+      "sha256": "abbcb7bc02a91a9194057815d6d212667a1f8ca3edf65e03c554252f2baa6a55"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/15-build-resource-service.log",
+      "bytes": 2541,
+      "sha256": "e07e634d36c804be179685f08d5644f00b387c15980f376b92b27dc903288454"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/15-result.json",
+      "bytes": 230,
+      "sha256": "74cfae88e2bb82e3b951455743046ad555912f4a33a9df6a19b16ede5d0db062"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/base-node.json",
+      "bytes": 236,
+      "sha256": "6a20b26450d7a64b97bfb53910f7f9f83e5099845cf636031db071822f41db59"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/budget.jsonl",
+      "bytes": 4696,
+      "sha256": "c1530d2ae383f10e5768b235cb93b9d48cf393f15a1e1a6ecf2e0b6a0df01c01"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/build-commands.jsonl",
+      "bytes": 621,
+      "sha256": "7cd35a5ce3d44679290769ebd75bcc8c09c82121f18983aa66e17e07cfa2ec7b"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/build-containers.jsonl",
+      "bytes": 1799,
+      "sha256": "b7b63479cb7004f9294abecf53c3eec061b23bd5d991d6f6553fa9df8ecd012f"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/effective-config.redacted.json",
+      "bytes": 15315,
+      "sha256": "d6ab07b991a4d33b6d6fa0d93f2f197fcc00b7d80e5baafebae548611da6da8c"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/red-commands.json",
+      "bytes": 14855,
+      "sha256": "eda37338d14f495e1d22b94b5fd7f377313e0cb75f54f0ee8de5f91114009029"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/red-result.json",
+      "bytes": 44,
+      "sha256": "0a1d85f5f9b9ed589194c652027df92891dadf9b82c28359effdeb5d139bc9c6"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/remote-source-hashes.json",
+      "bytes": 54723,
+      "sha256": "e59dd73c7ecd46c4e818d32d23cd5ac4a44ba6862f15ee9a49c64efcf76672a9"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/resource-service.iid",
+      "bytes": 71,
+      "sha256": "d81382b57636cf4899479f0076b09165dd12c65eb0be63d73af412206b220f8a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/red-remote/source-check.json",
+      "bytes": 48,
+      "sha256": "b177676e66bcc479730cef0ad0455520198b3de5cbb6de01c94fee77c4cb7fb7"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/14-compose-config.log",
+      "bytes": 91,
+      "sha256": "febbcea847ffbc5585a4ce55c38f4c07db05ddf146f40800354be3a1485b8cd8"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/14-result.json",
+      "bytes": 56,
+      "sha256": "93c960c650f8c4af2aeaa0182a1cf9a289f5a7dc38fb16222ac9ba6235ad91af"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/15-base-node-pull.log",
+      "bytes": 200,
+      "sha256": "abbcb7bc02a91a9194057815d6d212667a1f8ca3edf65e03c554252f2baa6a55"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/15-build-resource-service.log",
+      "bytes": 2541,
+      "sha256": "e07e634d36c804be179685f08d5644f00b387c15980f376b92b27dc903288454"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/15-result.json",
+      "bytes": 230,
+      "sha256": "74cfae88e2bb82e3b951455743046ad555912f4a33a9df6a19b16ede5d0db062"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/base-node.json",
+      "bytes": 236,
+      "sha256": "6a20b26450d7a64b97bfb53910f7f9f83e5099845cf636031db071822f41db59"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/budget.jsonl",
+      "bytes": 6040,
+      "sha256": "dec2df4b2a0c01d731591f340f9b634b55c4c1d850af5a2748fd325cef716464"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/build-commands.jsonl",
+      "bytes": 1267,
+      "sha256": "c8d64828b894252b498a6ea1a77a94b08a0562cae1775d86cdc77d5b20d04926"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/build-containers.jsonl",
+      "bytes": 3349,
+      "sha256": "7c2de4ecc3d8a8656d0e3cf827affa434a2da024150361417951f058f64bb371"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/cleanup.json",
+      "bytes": 1931,
+      "sha256": "31de6a83ca83528a74b82d60bc8ef1b0765c933cd8c448e833b76012f1a87818"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/effective-config.redacted.json",
+      "bytes": 15315,
+      "sha256": "d6ab07b991a4d33b6d6fa0d93f2f197fcc00b7d80e5baafebae548611da6da8c"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/fixed-base-node-pull.log",
+      "bytes": 197,
+      "sha256": "c287c72993ae6421e85dc69b48c6cee80e96df9f1b1724f618fa9e22431be517"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/fixed-base-node.json",
+      "bytes": 236,
+      "sha256": "6a20b26450d7a64b97bfb53910f7f9f83e5099845cf636031db071822f41db59"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/fixed-build-resource-service.log",
+      "bytes": 1763,
+      "sha256": "86ec86001ef89975b83fe5e4b6de47ec5cb6a62df33badac7b5f139411a9c774"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/fixed-result.json",
+      "bytes": 230,
+      "sha256": "74cfae88e2bb82e3b951455743046ad555912f4a33a9df6a19b16ede5d0db062"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/green-commands.json",
+      "bytes": 19619,
+      "sha256": "27bf479ab8f3a58d815d5b5e6f01598d35de7a84a4e62810f1af4b3f98c76606"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/green-result.json",
+      "bytes": 45,
+      "sha256": "05121f9dfd22d28465beb1161cfefb3966b02b942e9490f5e6631a6fd5de63ff"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/red-commands.json",
+      "bytes": 14855,
+      "sha256": "eda37338d14f495e1d22b94b5fd7f377313e0cb75f54f0ee8de5f91114009029"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/red-result.json",
+      "bytes": 44,
+      "sha256": "0a1d85f5f9b9ed589194c652027df92891dadf9b82c28359effdeb5d139bc9c6"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/remote-source-hashes.json",
+      "bytes": 54723,
+      "sha256": "e59dd73c7ecd46c4e818d32d23cd5ac4a44ba6862f15ee9a49c64efcf76672a9"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/resource-service.fixed.iid",
+      "bytes": 71,
+      "sha256": "b9cb0aa22d4ad1cb2e637bab322179920ca0d726f279868206f7389813123610"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/resource-service.iid",
+      "bytes": 71,
+      "sha256": "d81382b57636cf4899479f0076b09165dd12c65eb0be63d73af412206b220f8a"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote/source-check.json",
+      "bytes": 48,
+      "sha256": "b177676e66bcc479730cef0ad0455520198b3de5cbb6de01c94fee77c4cb7fb7"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/remote-hashes.json",
+      "bytes": 2115,
+      "sha256": "d0a451d07af7cb2083138f6b7fe35f2b08aef8141aab32ba274b338183e329c7"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/self-review.json",
+      "bytes": 471,
+      "sha256": "3a7922c7ee9e9d4fbe985814801ad032d5b507c1abea2d18de4459c9f3a43dfc"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/server-after.json",
+      "bytes": 14693,
+      "sha256": "4d8e01efdd5a8a5814c3560d7abf33e4d0c603c317ed6f38a1795827030ce5de"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/server-before.json",
+      "bytes": 14694,
+      "sha256": "dcb2d84eb32b6d2c074513714458238977a0c8c94c292676bfb7037ab63e2c13"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/source-manifest.json",
+      "bytes": 70764,
+      "sha256": "e103ea8ae189d42208d0d2f4b52d25bf49fd16a65a4f142493285680a4ba06be"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/storage-tests-final.log",
+      "bytes": 563,
+      "sha256": "ca736ed22a43663c9687fe3fe460a2dc5a3ea267105df072e4d1a7801cf90bf7"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/storage-tests.log",
+      "bytes": 548,
+      "sha256": "6f2de3cb1730deadf02fa957f72a32a8d8c65eeae6312c099f53e9b77f954b39"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/tools/build.py",
+      "bytes": 4661,
+      "sha256": "a54ecbf8be7b31e39b237cb85e1de4c6c8cd89feda6d77393b8e39acd4f4c5ba"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/tools/cleanup.py",
+      "bytes": 1665,
+      "sha256": "1554968fc9c80bfcbebdf1a63dd41271c76401a82d2e5548aa259152d7d35aa4"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/tools/fixed-build.py",
+      "bytes": 4615,
+      "sha256": "ac188fea56d791bc50d8a8e0e829cf18b994dd86ee9ce527e369fd6446d889ec"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/tools/prepare.py",
+      "bytes": 2987,
+      "sha256": "2398646ad4550aed07b52597afef9055b23f340e4cc3570e92e8db3c9833258c"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/tools/probe.js",
+      "bytes": 1913,
+      "sha256": "abb8689358c61201e70bd38356cead845affd3af83799af35bed8b8a739276c1"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/tools/probe.py",
+      "bytes": 2544,
+      "sha256": "51711532ff547fc1f2bafd382a419343dac9f8cc8a179de855e22cb809629481"
+    },
+    {
+      "path": "release-gate-artifacts/t7-storage-compatibility-2026-10-28/tools/remove-directory.py",
+      "bytes": 501,
+      "sha256": "918ced8c5d796a218191af4af9d514677bd2fafdd5db0e8becd96ae8e8c428a3"
+    },
+    {
+      "path": "docs/development/evidence/t7-storage-compatibility-2026-10-28/candidate.patch",
+      "bytes": 5048,
+      "sha256": "adc279cb6e83b6e1a1fa882d67cdad1d1b6165a71f49a8023b0262d0044994f2"
+    },
+    {
+      "path": "docs/development/evidence/t7-storage-compatibility-2026-10-28/README.md",
+      "bytes": 4742,
+      "sha256": "efa31ee9a0a424bee352b567fb2d5e23d252098ac167c076b9a80032cbc5a2ed"
+    }
+  ]
+}

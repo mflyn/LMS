@@ -1,0 +1,41 @@
+--- a/runtime
++++ b/runtime
+@@ -1,4 +1,4 @@
+-import os, pathlib, subprocess, json, time, signal, shutil
++import os, pathlib, subprocess, json, time, signal, shutil, hashlib
+ root=pathlib.Path('/home/REDACTED/family-growth-isolated-t7-ff969474'); evidence=root/'evidence'
+ env=json.loads((root/'runner-env.json').read_text());before=json.loads((root/'server-before.json').read_text())
+ assert json.loads((evidence/'15-result.json').read_text())['exit']==0
+@@ -37,16 +37,20 @@
+  print(name+' exit='+str(p.returncode),flush=True)
+  if p.returncode:raise RuntimeError(name+'_FAILED')
+ def config():return json.loads(subprocess.check_output(compose+['config','--format','json'],env=env))
+-def job(service,name,source,extra=None,cpu='0.4',memory='256m'):
++def job(service,name,source,extra=None,cpu='0.4',memory='256m',smoke=False):
+  cfg=config()['services'][service];values=cfg.get('environment',{});values.update(extra or {})
+  ef=root/(name+'.env');ef.write_text(''.join(str(k)+'='+str(v)+'\n' for k,v in values.items()));ef.chmod(0o600)
+  args=['docker','run','--rm','-i','--name',root.name+'-'+name,'--label','lms.isolation.run='+root.name,
+   '--label','com.docker.compose.project='+root.name,'--cpus='+cpu,'--memory='+memory,'--memory-swap='+memory,
+-  '--pids-limit=128','--network',root.name+'_app-network','--env-file',str(ef),'--workdir','/app','--entrypoint','node']
++  '--pids-limit=128','--network',root.name+'_app-network','--env-file',str(ef),'--workdir','/app','--entrypoint','sh' if smoke else 'node']
+  if service=='resource-service':
+   for v,target in [('resource-data','/var/lib/family-growth/private-media'),('completion-journal','/var/lib/family-growth/completion-journal')]:
+    args+=['--mount','type=volume,src='+root.name+'_'+v+',dst='+target]
+- args += [root.name+'-'+service+':candidate','-']
++ if smoke:
++  runner=(root/'src/scripts/run-isolated-compose-smoke.sh').read_text()
++  args += [root.name+'-'+service+':candidate','-c',runner,'isolated-compose-smoke',hashlib.sha256(source.read_bytes()).hexdigest()]
++ else:
++  args += [root.name+'-'+service+':candidate','-']
+  run(name,args,source)
+  ef.unlink()
+ def stop_owned():
+@@ -86,7 +90,7 @@
+  (evidence/'runtime-limits.json').write_text(json.dumps(limits,indent=2))
+  (evidence/'16-result.json').write_text(json.dumps({'exit':0,'mode':'enabled','cleanup':False,'healthTimeoutSeconds':240}))
+  stage=17
+- job('gateway','17-compose-smoke',root/'src/scripts/compose-family-smoke.js',{'FAMILY_GATEWAY_BASE_URL':'http://gateway:3000'},cpu='0.1',memory='128m')
++ job('gateway','17-compose-smoke',root/'src/scripts/compose-family-smoke.js',{'FAMILY_GATEWAY_BASE_URL':'http://gateway:3000'},cpu='0.1',memory='128m',smoke=True)
+  (evidence/'17-result.json').write_text(json.dumps({'exit':0,'script':'original compose-family-smoke.js, unchanged',
+   'route':'isolated project network gateway:3000; no host-network','mode':'enabled'}))
+  sample();print('STAGES_14_17_PASSED; full release NOT RUN',flush=True)

@@ -33,7 +33,10 @@
 旧 Task Gate 只证明对应历史范围。FGT-MVP-1.7 发布判定使用已纳入 Task 12 的统一
 发布 Gate；目标环境启用前还必须完成 Task 12 Gate 规定的数据修复检查。
 
-## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7-T9 待执行）
+## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8-T9 待执行）
+
+[T7 限定合成工程关闭记录](./family-self-directed-learning-mvp-gate.md#2742-t7-限定合成工程总门禁批准关闭2026-10-30)
+经用户批准关闭，不连带关闭T4、真机或后置义务；当前Git交付为脱敏候选待复审（Gate §27.44），不推送、合并或部署。
 
 [T6 工程总门禁关闭记录](./evidence/t6-reload-denied-p2-2026-10-27/engineering-closure.md)
 仅关闭合成工程范围；DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测及后置责任不变。

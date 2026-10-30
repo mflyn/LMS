@@ -116,6 +116,49 @@ FGT-MVP-1.7 requirement set，也不改变其实现证据。只有对应 T 任�
 | `SL-06` | T7、T9 | PRD 14 | Architecture 12.1 | API 14.6 | progress/analytics、Parent/Child Web | 孩子反思、家长反馈、历史周统计不改写、四周复盘 | PLANNED |
 | `SL-07` | T8、T9 | PRD 14 | Architecture 12.6 | API 14.6/14.7 | deployment and family validation | iPad Safari、Ubuntu 重启、NAS 隔离恢复、回滚、四周试点 | PLANNED |
 
+2026-10-28 T7 实施映射（未验收关闭）：`ReflectionPanel`、`ChildReflectionPage`、`ReportsPage`
+复用成长记录/周报契约；`reflectionApi`、`reflectionState`、`ReflectionPanel`、`T7Reports`、
+`T7AppNavigation` 测试覆盖 SL-06 权限、分页、周次、未知写入和会话隔离。
+`weeklyReflection.integration.test.js` 连接 SL-01 作品/版本/奖励、SL-02 求助、SL-03 清单、
+SL-04 孩子估时、SL-05 来源/订正/到期复习和 SL-06 反思/反馈/冻结；浏览器
+`weeklyMathLoop.spec.js`、`weeklyReflection.spec.js` 对应真实页面链路，执行结果以 Gate §27 后续记录为准。
+SL-01–06 保持 PLANNED；本映射不代表新增场景已全部通过，不关闭 T4/T7、真机或 T9 四周价值验收。
+
+2026-10-28 后续工程证据：三孩子数学链路及反思正式 HTTP/浏览器已通过，统计与跨家庭反例经
+独立六项 HTTP 和五项变异复验；前端 739、家庭后端 4473、T2--T7 HTTP 33、浏览器 54 项通过。
+具体候选与非重叠计数见 [T7 交付候选](evidence/t7-engineering-2026-10-28/README.md)。
+完整 release 在历史归档 lint 失败，不等于发布通过；上述 PLANNED、T4/T7 OPEN、真机与 T9 责任保留。
+
+2026-10-30 发布分项补充：固定候选`0bddeb7e18200d3fd9e5879c096dd7229df538a2`的Ubuntu
+14–17及限定收尾通过，证据见Gate §27.39和
+`release-gate-artifacts/t7-mount-run-gr4xby-2026-10-30/RESULT.md`。该结果证明配置、七镜像构建、
+正式预检/健康启动及原媒体HTTP smoke，不是SL-01–06新增业务用例或完整release通过；原lint及
+后续Docker失败证据保留。完整01–18仍待授权执行，不能与历史业务测试拼接。
+现有完整入口07b通过`t2/jest.config.js`发现`weeklyReflection.integration.test.js`；13b通过
+`playwright.t2.config.js`发现`weeklyReflection.spec.js`和`weeklyMathLoop.spec.js`。这仅是入口
+覆盖核对，不代表已在最新完整运行中执行。T4 §24.11允许M01–M08后续安排，不阻止获批合成验证，
+但T4总门禁、MANUAL_PENDING/DEVICE_PENDING及T9四周价值义务不因此完成；SL-01–06保持PLANNED。
+
+随后同SHA获批执行一次完整入口（Gate §27.40）：07b实际6套件35项通过；12四项因本机Chromium
+启动权限失败，13/13b/14–18未执行，未拼接旧结果或重跑。日志同时有Watchpack EMFILE，环境异常
+尚待限定核实。此前“待授权/仅覆盖核对”为历史快照；本轮仍非完整release通过，SL-01–06、T4/T7
+及全部真机/后置义务保持原状态。
+
+2026-10-30再获批的同SHA新连续完整运行已通过（Gate §27.41）：07b实际6套件35项，13b实际54项，
+含三孩子数学链路及分龄反思、真实共管代录、周报反馈、未知写入/账号隔离；同轮原01–18及收尾
+全部通过。证据为`release-gate-artifacts/t7-full-native-trhe5i-2026-10-30/RESULT.md`，不拼接或
+覆盖§27.40失败。SL-01–06仍含人工、真机和T9价值义务，保持PLANNED；T7限定工程关闭待批准，
+不连带关闭T4或将后置功能计为完成。
+
+后续用户已批准 T7 限定合成工程关闭（2026-10-30，Gate §27.42）：固定0bddeb7e及同轮01–18、
+07b/13b、独立证据复核支持本工程范围 CLOSED。前述待批准为历史快照；SL-01–06总体仍PLANNED，
+保留T4人工、DEVICE_PENDING、T8/T9、两项非阻断及后置义务，不把本次工程关闭等同于全部产品验收。
+
+服务端反馈竞争修订后追加证据（不覆盖上面的旧候选快照）：家庭后端 153 suites / 4506 tests，
+正式 HTTP 6 suites / 35 tests（含真实过期 JWT 拒绝），Chromium 54 tests，Task11 HTTP 6 与浏览器 4
+均通过；周报并发永久反例及独立变异见 Gate §27.6–27.7。整份反馈审计下的保守保留行为已写入 API，
+不新增统计或审计字段。工程候选待用户验收，所有 PLANNED 和保留责任不变。
+
 2026-10-27 T6 工程增量：三种不可变创建来源、权威同 scope 校验、来源回看、人工订正和复习导航已进入
 本地合成工程批准关闭。实现及逐项证据见 [Gate §26](./family-self-directed-learning-mvp-gate.md#26-t6-人工错题订正与复习连接2026-10-27)
 和 [T6 验证记录](./evidence/t6-engineering-2026-10-27/README.md)。SL-05 仍保留 PLANNED，

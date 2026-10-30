@@ -1,0 +1,20 @@
+--- a/prepare
++++ b/prepare
+@@ -3,7 +3,7 @@
+ const crypto = require('crypto');
+ const cp = require('child_process');
+ const root = '/Users/REDACTED/GitHub PRJ/LMS';
+-const out = path.join(root, 'release-gate-artifacts/t7-docker-isolation-r4-2026-10-28');
++const out = path.join(root, 'release-gate-artifacts/t7-docker-isolation-r5-2026-10-28');
+ fs.mkdirSync(out);
+ const run = 'family-growth-isolated-t7-' + crypto.randomBytes(4).toString('hex');
+ const dest = '/home/REDACTED/' + run;
+@@ -14,7 +14,7 @@
+   (f.startsWith('backend/') && !/(^|\/)(node_modules|__tests__|tests?|coverage|uploads|logs)(\/|$)/.test(f)
+     && (/\.(js|json)$/.test(f) || /\/Dockerfile$/.test(f)))
+   || ['package.json','package-lock.json','.dockerignore','docker-compose.family.yml',
+-    'scripts/release-family-gate.sh','scripts/check-release-isolation.js','scripts/compose-family-smoke.js',
++    'scripts/release-family-gate.sh','scripts/check-release-isolation.js','scripts/compose-family-smoke.js','scripts/run-isolated-compose-smoke.sh',
+     'scripts/completion-operations.js'].includes(f));
+ const manifest = [];
+ for (const file of selected.sort()) {

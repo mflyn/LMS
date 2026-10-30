@@ -5,7 +5,8 @@ module.exports = {
   testMatch: [
     '<rootDir>/__tests__/familyMistakes.test.js',
     '<rootDir>/__tests__/familyMistakeMediaSaga.test.js',
-    '<rootDir>/__tests__/familyMistakeSources.test.js'
+    '<rootDir>/__tests__/familyMistakeSources.test.js',
+    '<rootDir>/__tests__/weeklyReports.test.js'
   ],
   moduleNameMapper: {
     '^axios$': '<rootDir>/../../../node_modules/axios/dist/node/axios.cjs',

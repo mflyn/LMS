@@ -63,6 +63,21 @@ export const getOwnProfile = async (signal) => {
   return unwrap(response);
 };
 
+export const listOwnGrowthLogs = (params, signal, expectedSession) => childGet(
+  '/api/growth-logs', params, ['from', 'to', 'dimension', 'page', 'pageSize'], signal, expectedSession
+);
+
+export const createOwnGrowthLog = async (payload, signal, expectedSession) => unwrap(
+  await childRequest((config, session) => axios.post('/api/growth-logs', {
+    ...pick(payload, ['date', 'dimension', 'subject', 'content', 'childReflection']),
+    childId: session.actorId
+  }, config), signal, expectedSession)
+);
+
+export const updateOwnGrowthLog = (logId, payload, signal, expectedSession) => childPatch(
+  `/api/growth-logs/${encodeURIComponent(logId)}`, payload, ['childReflection'], signal, expectedSession
+);
+
 export const listOwnTasks = (params, signal) => childGet('/api/growth-tasks', params, [
   'scope',
   'status',

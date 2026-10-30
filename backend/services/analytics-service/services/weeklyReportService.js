@@ -302,6 +302,26 @@ const retryFrozenWinner = async (WeeklyReportModel, identity) => {
   throw reportError('AGGREGATION_UNAVAILABLE', 'Frozen weekly report is not visible', 503);
 };
 
+const snapshotUpdate = (snapshot, frozen) => [{
+  $set: {
+    // Pipeline updates do not cast identity strings. Existing BSON identities stay untouched.
+    ...Object.fromEntries(Object.entries({ ...snapshot, frozen })
+      .filter(([key]) => key !== 'familyId' && key !== 'childId')
+      .map(([key, value]) => [key, { $literal: value }])),
+    nextWeekSuggestion: {
+      // All expressions in this stage read the same pre-update document, including its old default.
+      $cond: [{ $or: [
+        { $ne: [{ $ifNull: ['$feedbackUpdatedAt', null] }, null] },
+        { $ne: [{ $ifNull: ['$feedbackUpdatedBy', null] }, null] },
+        { $and: [
+          { $ne: [{ $ifNull: ['$nextWeekSuggestion', ''] }, ''] },
+          { $ne: ['$nextWeekSuggestion', '$generatedSuggestion'] }
+        ] }
+      ] }, { $ifNull: ['$nextWeekSuggestion', ''] }, { $literal: snapshot.generatedSuggestion }]
+    }
+  }
+}];
+
 const createWeeklyReportService = ({
   WeeklyReportModel,
   repository,
@@ -334,7 +354,6 @@ const createWeeklyReportService = ({
     const effectiveChildId = user.role === 'student' ? user.childId : childId;
     if (!effectiveChildId) throw reportError('VALIDATION_ERROR', 'childId is required', 400);
 
-    const weekEnd = addLocalDateDays(weekStart, 6);
     const cutoff = localDateStartToUtc(addLocalDateDays(weekStart, 7), timezone);
     const generatedAt = now();
     const ended = generatedAt.getTime() >= cutoff.getTime();
@@ -358,37 +377,29 @@ const createWeeklyReportService = ({
       generatedAt
     });
     const existing = await WeeklyReportModel.findOne(identity);
-    const existingHasFeedbackOverride = existing
-      && existing.nextWeekSuggestion
-      && existing.nextWeekSuggestion !== existing.generatedSuggestion;
-    const update = {
-      ...snapshot,
-      nextWeekSuggestion: existingHasFeedbackOverride
-        ? existing.nextWeekSuggestion
-        : snapshot.generatedSuggestion
-    };
 
     if (!ended) {
       const current = await WeeklyReportModel.findOneAndUpdate(
         { ...identity, frozen: false },
-        { $set: { ...update, frozen: false } },
+        snapshotUpdate(snapshot, false),
         { new: true }
       );
       if (current) return current;
       try {
         return await WeeklyReportModel.create({
-          ...update,
+          ...snapshot,
           frozen: false,
           parentNote: '',
           nextWeekSuggestion: snapshot.generatedSuggestion
         });
       } catch (error) {
         if (error && error.code === 11000) {
-          return WeeklyReportModel.findOneAndUpdate(
+          const winner = await WeeklyReportModel.findOneAndUpdate(
             { ...identity, frozen: false },
-            { $set: { ...update, frozen: false } },
+            snapshotUpdate(snapshot, false),
             { new: true }
           );
+          return winner || retryFrozenWinner(WeeklyReportModel, identity);
         }
         throw error;
       }
@@ -397,12 +408,7 @@ const createWeeklyReportService = ({
     if (existing && existing.frozen === false) {
       const promoted = await WeeklyReportModel.findOneAndUpdate(
         { ...identity, frozen: false },
-        {
-          $set: {
-            ...update,
-            frozen: true
-          }
-        },
+        snapshotUpdate(snapshot, true),
         { new: true }
       );
       if (promoted) return promoted;
@@ -411,7 +417,7 @@ const createWeeklyReportService = ({
 
     try {
       return await WeeklyReportModel.create({
-        ...update,
+        ...snapshot,
         frozen: true,
         parentNote: '',
         nextWeekSuggestion: snapshot.generatedSuggestion

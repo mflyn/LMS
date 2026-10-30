@@ -1,0 +1,570 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-28",
+  "authorization": "User approved closure of seven P2 only; lint implementation and T7 total gate closure not authorized.",
+  "status": {
+    "t4": "IN_PROGRESS / OPEN",
+    "t7": "IN_PROGRESS / OPEN",
+    "device": "DEVICE_PENDING",
+    "docker": "INCOMPLETE_FAILED",
+    "nonblocking": [
+      "T5-NB-001 OPEN_NONBLOCKING",
+      "T5-NB-002 OPEN_NONBLOCKING"
+    ],
+    "deferred": "REMAINDER_DEFERRED",
+    "lintPlan": "PROPOSED_WAITING_APPROVAL",
+    "history": "PRESERVED"
+  },
+  "issues": [
+    {
+      "id": "T7-REFLECTION-P2-001",
+      "status": "CLOSED",
+      "approval": "USER_APPROVED"
+    },
+    {
+      "id": "T7-REFLECTION-P2-002",
+      "status": "CLOSED",
+      "approval": "USER_APPROVED"
+    },
+    {
+      "id": "T7-REPORT-P2-003",
+      "status": "CLOSED",
+      "approval": "USER_APPROVED"
+    },
+    {
+      "id": "T7-COVERAGE-P2-004",
+      "status": "CLOSED",
+      "approval": "USER_APPROVED"
+    },
+    {
+      "id": "T7-COVERAGE-P2-005",
+      "status": "CLOSED",
+      "approval": "USER_APPROVED"
+    },
+    {
+      "id": "T7-COVERAGE-P2-006",
+      "status": "CLOSED",
+      "approval": "USER_APPROVED"
+    },
+    {
+      "id": "T7-REPORT-P2-007",
+      "status": "CLOSED",
+      "approval": "USER_APPROVED"
+    }
+  ],
+  "originalCandidate": {
+    "base": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+    "patch": {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/candidate.patch",
+      "bytes": 188462,
+      "sha256": "61e4591c8eb4520395d9e27e029cf14b6c8918db333acb614e025f86f3d898f7"
+    },
+    "validation": {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/validation.json",
+      "bytes": 120488,
+      "sha256": "19ab93679c2695373efc5c9de5edffbed8f9f5cbbe1350f007dc698c85b8af8f"
+    },
+    "originalRawFilesVerified": 394
+  },
+  "candidateFiles": [
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "bytes": 27917,
+      "sha256": "eed24ef899af75ac733e592269031105f9b08576bf489ac4ba893e4163175c41",
+      "frozenSha256": "eed24ef899af75ac733e592269031105f9b08576bf489ac4ba893e4163175c41",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+      "bytes": 28461,
+      "sha256": "3dbe0b639610a58dcde21d2aaf4e288f856d753f089cde8ff28a8e3640d77c3d",
+      "frozenSha256": "3dbe0b639610a58dcde21d2aaf4e288f856d753f089cde8ff28a8e3640d77c3d",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "backend/services/analytics-service/jest.attachments.config.js",
+      "bytes": 680,
+      "sha256": "6fc4cfb83a6d35b8d6c1641336b79031fd8b19cd16e082121cacdf55322602ec",
+      "frozenSha256": "6fc4cfb83a6d35b8d6c1641336b79031fd8b19cd16e082121cacdf55322602ec",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "backend/services/analytics-service/services/weeklyReportService.js",
+      "bytes": 14844,
+      "sha256": "9f9b038884d51a8a991d15b20f750a038f98a6279ed73c20322e4c8eff3261da",
+      "frozenSha256": "9f9b038884d51a8a991d15b20f750a038f98a6279ed73c20322e4c8eff3261da",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "backend/tests/t2/weeklyReflection.integration.test.js",
+      "bytes": 18217,
+      "sha256": "e3a0b08fc4078b2348c3d9814252966df5f9cb8a277387edf215a0ca18634e92",
+      "frozenSha256": "e3a0b08fc4078b2348c3d9814252966df5f9cb8a277387edf215a0ca18634e92",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "docs/api/family-learning-tracker-api.md",
+      "bytes": 130570,
+      "sha256": "48544fd2fc55bd430a388d7099d98d211f0578c3f622f5b221d6fd28461df06a",
+      "frozenSha256": "48544fd2fc55bd430a388d7099d98d211f0578c3f622f5b221d6fd28461df06a",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "docs/architecture/family-self-directed-learning-system-design.md",
+      "bytes": 111591,
+      "sha256": "95fd2ffd1afa5398c2d39cda1f5ed4968115921354e999104c3dd451fa55f446",
+      "frozenSha256": "95fd2ffd1afa5398c2d39cda1f5ed4968115921354e999104c3dd451fa55f446",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "docs/development/README.md",
+      "bytes": 10806,
+      "sha256": "9ce40a40cd7997d7d67437cf3de8986eefedfc6f91a10d4fd5122ce7a92ff026",
+      "frozenSha256": "9ce40a40cd7997d7d67437cf3de8986eefedfc6f91a10d4fd5122ce7a92ff026",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "docs/development/family-growth-requirement-traceability.md",
+      "bytes": 29371,
+      "sha256": "8c3f4128d99a88bf0038bfe333b4158a9fe47d10e296585b5c5d7126212887ea",
+      "frozenSha256": "8c3f4128d99a88bf0038bfe333b4158a9fe47d10e296585b5c5d7126212887ea",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 522312,
+      "sha256": "4fbd98f8656310541524be010bd6b9eabcbf76e8682fa887c32a189fafd39a73",
+      "frozenSha256": "1978bb63c9f0c12aad10f31d6fcd959dbf3c6a753d415573a527061ad9c2ab13",
+      "classification": "APPROVED_DOCUMENT_CLOSURE_DELTA"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 86728,
+      "sha256": "d20b4332a7b35a48594c3304b2c0493ab437f538cf27fb657179a2fd3a306fc3",
+      "frozenSha256": "5731a5647993a0c6f3bed65fc0dead2d3ef2932c68ccb037e3ec1442e89ecbb9",
+      "classification": "APPROVED_DOCUMENT_CLOSURE_DELTA"
+    },
+    {
+      "file": "docs/user-guide/child-guide.md",
+      "bytes": 7729,
+      "sha256": "431b1484eba93b0725a2d7e9d18dac9e563574dc9b57234db8842473fccdbbcf",
+      "frozenSha256": "431b1484eba93b0725a2d7e9d18dac9e563574dc9b57234db8842473fccdbbcf",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "docs/user-guide/parent-guide.md",
+      "bytes": 14536,
+      "sha256": "9f2bd9032d54d202344ebef68d529fd20788b937c4e136af00d48b37cf68b690",
+      "frozenSha256": "9f2bd9032d54d202344ebef68d529fd20788b937c4e136af00d48b37cf68b690",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "eslint.config.js",
+      "bytes": 3248,
+      "sha256": "a8de4df5a6b28ad32644cbf46e295201d9731f687f90423963fddfad8a538c41",
+      "frozenSha256": "a8de4df5a6b28ad32644cbf46e295201d9731f687f90423963fddfad8a538c41",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/App.js",
+      "bytes": 4506,
+      "sha256": "cebc769a9c37fd64c04ae06ce1b022dcdf85d5bb5a15f323a87a40083a10544b",
+      "frozenSha256": "cebc769a9c37fd64c04ae06ce1b022dcdf85d5bb5a15f323a87a40083a10544b",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/T7AppNavigation.test.js",
+      "bytes": 4324,
+      "sha256": "fc81f8bb6a54afffe2c1d622f95d85ab12d2da995bb6c1632fdf5883ce5e3a9e",
+      "frozenSha256": "fc81f8bb6a54afffe2c1d622f95d85ab12d2da995bb6c1632fdf5883ce5e3a9e",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/T7Reports.test.js",
+      "bytes": 8685,
+      "sha256": "8f3867c39bd75a2362d906653fe39b84e03795406e4ad21eb2c748e7b7e65551",
+      "frozenSha256": "8f3867c39bd75a2362d906653fe39b84e03795406e4ad21eb2c748e7b7e65551",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/Task9LogsMistakes.test.js",
+      "bytes": 14296,
+      "sha256": "b58a92fa49957fb159ac5140039dd787e52666e6bcaa09dd035a4258ef69229c",
+      "frozenSha256": "b58a92fa49957fb159ac5140039dd787e52666e6bcaa09dd035a4258ef69229c",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js",
+      "bytes": 8032,
+      "sha256": "512eb83f43a39f753c16129fd146849eff75cd41691417437ba3a6e2992abacf",
+      "frozenSha256": "512eb83f43a39f753c16129fd146849eff75cd41691417437ba3a6e2992abacf",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/__tests__/shared/ReflectionPanel.test.js",
+      "bytes": 13863,
+      "sha256": "07709d2005d1c9531d5249ef1e26cbe98d1cae42efe079f708ca87f69c94bdd7",
+      "frozenSha256": "07709d2005d1c9531d5249ef1e26cbe98d1cae42efe079f708ca87f69c94bdd7",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/__tests__/shared/reflectionApi.test.js",
+      "bytes": 4281,
+      "sha256": "432a7988c005c555cd56dfa25c542e3bd10416ee52f758fbc0d3608d593436d3",
+      "frozenSha256": "432a7988c005c555cd56dfa25c542e3bd10416ee52f758fbc0d3608d593436d3",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/__tests__/shared/reflectionState.test.js",
+      "bytes": 3975,
+      "sha256": "0dceb59d608b8e58f09e3f4d8033354e2be78ae9800058ce9453de3461d5cbbf",
+      "frozenSha256": "0dceb59d608b8e58f09e3f4d8033354e2be78ae9800058ce9453de3461d5cbbf",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/components/family/ReflectionPanel.js",
+      "bytes": 11721,
+      "sha256": "d68807dfb81c92cecb277288dcf825b9d55bb08559801ae9f2f59a2effa02219",
+      "frozenSha256": "d68807dfb81c92cecb277288dcf825b9d55bb08559801ae9f2f59a2effa02219",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildReflectionPage.js",
+      "bytes": 3109,
+      "sha256": "13d3f3716c7861c7153c253bab1760b7c4c01e1ac2ba054debe0400f013f281f",
+      "frozenSha256": "13d3f3716c7861c7153c253bab1760b7c4c01e1ac2ba054debe0400f013f281f",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildTodayPage.js",
+      "bytes": 5784,
+      "sha256": "271a0cc7189ad548416284b3cf809bb02b9b80819297f6da3396fc3e7a1ed843",
+      "frozenSha256": "271a0cc7189ad548416284b3cf809bb02b9b80819297f6da3396fc3e7a1ed843",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/pages/family/GrowthLogsPage.js",
+      "bytes": 10636,
+      "sha256": "83fa3ff4a0f2d8927693bba066befbff6dd950fd52932f36c5b728e64d5caa14",
+      "frozenSha256": "83fa3ff4a0f2d8927693bba066befbff6dd950fd52932f36c5b728e64d5caa14",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/pages/family/ReportsPage.js",
+      "bytes": 10958,
+      "sha256": "9a95def049564763743b31d1c81716b76355df6644f136a98a460888dd07e40b",
+      "frozenSha256": "9a95def049564763743b31d1c81716b76355df6644f136a98a460888dd07e40b",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/services/childApi.js",
+      "bytes": 7496,
+      "sha256": "0a7a376cdbb6238d6d0ea9e35c09970aaa0cf83a6cc6dc3ca6c673930da28ff0",
+      "frozenSha256": "0a7a376cdbb6238d6d0ea9e35c09970aaa0cf83a6cc6dc3ca6c673930da28ff0",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/services/familyApi.js",
+      "bytes": 10305,
+      "sha256": "39127ad61d0150ef663ef69aa9c0614e55559a8cc9388a1af3fb880142ec8a97",
+      "frozenSha256": "39127ad61d0150ef663ef69aa9c0614e55559a8cc9388a1af3fb880142ec8a97",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "frontend/web/src/services/reflection.js",
+      "bytes": 3685,
+      "sha256": "638543c5449f6b629da8063e17a91509df99afeb47047268bdcb6e57e6bcc5ac",
+      "frozenSha256": "638543c5449f6b629da8063e17a91509df99afeb47047268bdcb6e57e6bcc5ac",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "bytes": 169881,
+      "sha256": "38065f97a1d9e944b619f9aed91cf51f224d307721f5bf83be470267594f4037",
+      "frozenSha256": "38065f97a1d9e944b619f9aed91cf51f224d307721f5bf83be470267594f4037",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "tests/e2e/t2/weeklyMathLoop.spec.js",
+      "bytes": 12269,
+      "sha256": "bed969ba433c71055f62b2d698923e8932e6d2f0baab5d18d57a4ff63c93e801",
+      "frozenSha256": "bed969ba433c71055f62b2d698923e8932e6d2f0baab5d18d57a4ff63c93e801",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    },
+    {
+      "file": "tests/e2e/t2/weeklyReflection.spec.js",
+      "bytes": 9741,
+      "sha256": "34467cb0bb182c5109ea12fa5a3f40a33506bc4d95a05d4ceb4a09b6ffa13e24",
+      "frozenSha256": "34467cb0bb182c5109ea12fa5a3f40a33506bc4d95a05d4ceb4a09b6ffa13e24",
+      "classification": "UNCHANGED_FROZEN_CANDIDATE"
+    }
+  ],
+  "closureDocuments": [
+    {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/README.md",
+      "bytes": 8031,
+      "sha256": "df0878ccc3c71b6f6cfd4a73e24860e312c5e24a871d1126e1bc0423273d81cc"
+    },
+    {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/review.md",
+      "bytes": 6253,
+      "sha256": "9638247838f96c37a3c15564cc244fd92cefd1d99c0722f3a4ff13d88693f919"
+    },
+    {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/final-review.md",
+      "bytes": 2945,
+      "sha256": "d1f1be26f27f202dbec95fda950d083ed898d7b56ab2eb023063e50dce6b8992"
+    },
+    {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/p2-closure.md",
+      "bytes": 3390,
+      "sha256": "c3fb6475b1073f81e487c245dbb9bdc8faa5ec0faa4f4dc559830c9518aef8ce"
+    }
+  ],
+  "excludedSelf": "docs/development/evidence/t7-engineering-2026-10-28/p2-closure-evidence.json",
+  "originalReviewDirectory": "/private/tmp/lms-t7-rereview-val9jF",
+  "copiedReviewFiles": 37,
+  "artifacts": [
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/pre-closure-documents/docs/development/evidence/t7-engineering-2026-10-28/README.md",
+      "bytes": 7688,
+      "sha256": "df251e0207a1ffb8a0061b99b0db1ddfdb3813301dd2ffbf21385148085a68ef"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/pre-closure-documents/docs/development/evidence/t7-engineering-2026-10-28/final-review.md",
+      "bytes": 2732,
+      "sha256": "c34b3a2c2e01f5be91f620b0e92042fc69eb207d9b52e16906039fcf71e65367"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/pre-closure-documents/docs/development/evidence/t7-engineering-2026-10-28/review.md",
+      "bytes": 6039,
+      "sha256": "b127ae796a08c491629a0b9b33f43e10f24d07f0f7509e140058091baf726b19"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/pre-closure-documents/docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 516839,
+      "sha256": "1978bb63c9f0c12aad10f31d6fcd959dbf3c6a753d415573a527061ad9c2ab13"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/pre-closure-documents/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 86390,
+      "sha256": "5731a5647993a0c6f3bed65fc0dead2d3ef2932c68ccb037e3ec1442e89ecbb9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser/.last-run.json",
+      "bytes": 341,
+      "sha256": "b12cf4143b08f7c74a55e059d7cb0d1e81f62cee2b100399949b5be5c08b63a3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/error-context.md",
+      "bytes": 5580,
+      "sha256": "a29a932eb8706988697c6a297dc955317cf7bdda2747a8b010f90607c2195a6f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/error-context.md",
+      "bytes": 5582,
+      "sha256": "5aefe0a0f750376c98aef44b1b65b234935711debcca6c55b1f62745fbfee2cb"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/error-context.md",
+      "bytes": 5580,
+      "sha256": "447aa34bf6bae79e928f8d60998c1a634ff4227725db520fbe786d38477d5cfe"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser/weeklyReflection-committed-ee12b-bling-switch-without-repost/error-context.md",
+      "bytes": 5634,
+      "sha256": "27b34717f03b923da48282b65474c2baaf607d44f3cbd392260c4335fba5920f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/error-context.md",
+      "bytes": 5598,
+      "sha256": "2cefc99fd31fef1b772a688db92349b0f294b094cc58f0399f343d4fbde1929f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/error-context.md",
+      "bytes": 5598,
+      "sha256": "a84018de0c8c0617e0748e0fd3c7ff126f235baf550a8a3956f6472218330167"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-child-full-loop.png",
+      "bytes": 45953,
+      "sha256": "b3a1cd001361699953a2273d2d77c4cca8ce868eb6d5ff04cc54b76c7fe1c17f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-parent-full-loop.png",
+      "bytes": 138605,
+      "sha256": "8ec912c1de718e5d316abdbd6138b0392571c282f22b257401b4b6f42cefc70f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-child-full-loop.png",
+      "bytes": 46319,
+      "sha256": "72c594339a31773bc6da46de8bb6954f8df9c200fda1768524018c0e85ee9a6b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-parent-full-loop.png",
+      "bytes": 139557,
+      "sha256": "3477a090ce6fd03e2e59572e9544a424218f22653c1b7990dedcc47fcfaef90a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-child-full-loop.png",
+      "bytes": 46549,
+      "sha256": "b5cfb468ba32db71b11bf65976695c11cdaf7b9401c1a856a90525fe915f9e52"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-parent-full-loop.png",
+      "bytes": 140954,
+      "sha256": "afb0b07d82db3f2030d8c2e1010e4c3bdd40bb9e66e350cdd719f7f8e2f9881f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized-command.json",
+      "bytes": 287,
+      "sha256": "9ddc5951b12d1fa6daf717cfe0c3aca44feb8b06af51d44338dff7e9b8ac539e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized.json",
+      "bytes": 8684,
+      "sha256": "c1421929517683bd8aced451c47cfc0b9c15cabafad5b633a7ad351cca10b850"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-authorized.log",
+      "bytes": 1274,
+      "sha256": "36aab1138df3c9260b842bce1e47ef22bb1fca619141545a9fd1cad672ce774b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser-command.json",
+      "bytes": 287,
+      "sha256": "72304236841d6c94d4392c8c5d0cbe2fa5c73fa0323b85be141aed2367649a8c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser.json",
+      "bytes": 111272,
+      "sha256": "c7447f201e469125d43cd221029e4d84cf29303ca4e099494aec567c902b7d11"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/browser.log",
+      "bytes": 36612,
+      "sha256": "7916b2a23274d16ffd381274b2292c89d47fa664085ebbd7fe007e0324e74888"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/commands.json",
+      "bytes": 1896,
+      "sha256": "2b7ed283489c0a09f3c00e27371715829e30d4abdb110733813aa0fd8dabd01c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/doc-gate.json",
+      "bytes": 128766,
+      "sha256": "e792a1e3998baa4dbb0795bf1a0a235497786c28baf620e5ef009e0ba3a0a40d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/doc-gate.log",
+      "bytes": 30110,
+      "sha256": "d8471e7b6ec1818163f4a1f09c25e8762476582f63eadfc9f90534edfe643071"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/frontend.json",
+      "bytes": 21943,
+      "sha256": "fde5daea79d2b1e6b6c828576a9bf9198e28bfab1f1082f0a15112daffb10f6e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/frontend.log",
+      "bytes": 1508,
+      "sha256": "6c888137ca63d1422bb60c61eb5b6f77c4931a35be4f557cc42853dd2fa7ff08"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/http.json",
+      "bytes": 16695,
+      "sha256": "c40f97a8c934f65ee94f41197d2b370b157783aef1cf45f4bae20fb719eabc46"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/http.log",
+      "bytes": 1802,
+      "sha256": "cd4832e6c0b82e504aa8aa06d87ce9944ca306dcd53625c0d017061d120511b0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/weekly-model.json",
+      "bytes": 14197,
+      "sha256": "4b26d7644b110f041ba470e3d7b9e19b81343b9a34f905961c600dcd897a56ef"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/rereview/weekly-model.log",
+      "bytes": 16626,
+      "sha256": "da3d6b16678cddd4091f5f77c64b47de51c18d5218ea05ce7e199fac0353e502"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/validation/commands.json",
+      "bytes": 772,
+      "sha256": "21d330f713233801bf9e717929454ebdd2153c16e5980cf4027c07e65fcf6a53"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/validation/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/validation/doc-gate.json",
+      "bytes": 128780,
+      "sha256": "753657eeb36902796b9dc24b0941988ecd015cdd57a5af735a61f830363ea5b8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/validation/doc-gate.log",
+      "bytes": 30143,
+      "sha256": "839135d85b56284eb394f2b9c3b98c7d4ebb51d3e38ff27658de2744e61008de"
+    },
+    {
+      "file": "release-gate-artifacts/t7-p2-closure-2026-10-28/validation/docs.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    }
+  ],
+  "limits": [
+    "This is a document-only closure supplement, not a replacement candidate patch.",
+    "The first six browser failures and the authorized six passes are separate evidence.",
+    "Business tests were run in the preceding review; this turn validates documents and evidence only.",
+    "No Git commit, push, merge, deployment, release script or lint implementation was performed."
+  ]
+}

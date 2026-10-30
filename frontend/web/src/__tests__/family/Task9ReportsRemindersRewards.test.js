@@ -3,12 +3,14 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import ReportsPage from '../../pages/family/ReportsPage';
+import { saveParentSession } from '../../services/familySession';
 import RemindersPage from '../../pages/family/RemindersPage';
 import RewardsPage from '../../pages/family/RewardsPage';
 import {
   createReward,
   getNotificationSettings,
   getWeeklyReport,
+  listGrowthLogs,
   listFamilyReminders,
   listRewards,
   redeemReward,
@@ -18,9 +20,9 @@ import {
 
 jest.mock('../../contexts/FamilyContext', () => ({
   useFamily: () => ({
-    family: { familyId: 'family-a', timezone: 'Asia/Shanghai' },
-    selectedChildId: 'child-a1',
-    selectedChild: { childId: 'child-a1', name: '小明' },
+    family: { familyId: '000000000000000000000002', timezone: 'Asia/Shanghai' },
+    selectedChildId: '000000000000000000000001',
+    selectedChild: { childId: '000000000000000000000001', name: '小明' },
     childScopeVersion: 1
   })
 }));
@@ -29,6 +31,7 @@ jest.mock('../../services/familyApi', () => ({
   createReward: jest.fn(),
   getNotificationSettings: jest.fn(),
   getWeeklyReport: jest.fn(),
+  listGrowthLogs: jest.fn(),
   listFamilyReminders: jest.fn(),
   listRewards: jest.fn(),
   redeemReward: jest.fn(),
@@ -37,8 +40,9 @@ jest.mock('../../services/familyApi', () => ({
 }));
 
 const report = {
-  reportId: 'report-1',
-  childId: 'child-a1',
+  reportId: '000000000000000000000003',
+  familyId: '000000000000000000000002',
+  childId: '000000000000000000000001',
   weekStart: '2026-07-06',
   weekEnd: '2026-07-12',
   statistics: {
@@ -66,10 +70,14 @@ const settings = {
 };
 
 const routerFuture = { v7_startTransition: true, v7_relativeSplatPath: true };
-const renderPage = (page) => render(<MemoryRouter future={routerFuture}>{page}</MemoryRouter>);
+const renderPage = (page) => render(<MemoryRouter future={routerFuture} initialEntries={['/app/reports?weekStart=2026-07-06']}>{page}</MemoryRouter>);
 
 describe('Task 9 reports', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks(); localStorage.clear(); sessionStorage.clear();
+    saveParentSession({ token: 'synthetic-parent', user: { id: '000000000000000000000008', role: 'parent' } });
+    listGrowthLogs.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 100 });
+  });
 
   test('renders nested report statistics and saves parent feedback', async () => {
     const user = userEvent.setup();
@@ -84,9 +92,9 @@ describe('Task 9 reports', () => {
     await user.type(screen.getByLabelText('家长寄语'), '本周坚持得很好');
     await user.click(screen.getByRole('button', { name: '保存周报反馈' }));
 
-    await waitFor(() => expect(updateWeeklyReportFeedback).toHaveBeenCalledWith('report-1', expect.objectContaining({
+    await waitFor(() => expect(updateWeeklyReportFeedback).toHaveBeenCalledWith(report.reportId, expect.objectContaining({
       parentNote: '本周坚持得很好'
-    })));
+    }), undefined, expect.objectContaining({ actorId: '000000000000000000000008', role: 'parent' })));
   });
 });
 
@@ -143,7 +151,7 @@ describe('Task 9 rewards', () => {
     await user.click(screen.getByRole('button', { name: '保存奖励' }));
 
     await waitFor(() => expect(createReward).toHaveBeenCalledWith({
-      childId: 'child-a1', title: '选择晚餐', requiredStars: 20
+      childId: '000000000000000000000001', title: '选择晚餐', requiredStars: 20
     }));
   });
 

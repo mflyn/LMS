@@ -33,6 +33,7 @@ import ChildTaskPage from './pages/child/ChildTaskPage';
 import ChildMistakesPage from './pages/child/ChildMistakesPage';
 import ChildAchievementsPage from './pages/child/ChildAchievementsPage';
 import ChildProfilePage from './pages/child/ChildProfilePage';
+import ChildReflectionPage from './pages/child/ChildReflectionPage';
 
 const ParentFamilyBoundary = () => (
   <FamilyProvider>
@@ -72,6 +73,7 @@ const AppRoutes = () => (
         <Route path="mistakes" element={<ChildMistakesPage />} />
         <Route path="achievements" element={<ChildAchievementsPage />} />
         <Route path="me" element={<ChildProfilePage />} />
+        <Route path="reflection" element={<ChildReflectionPage />} />
       </Route>
     </Route>
     {LEGACY_SCHOOL_PATHS.map((path) => (

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "scope": "T7_PUBLIC_DERIVATIVES_ONLY",
+  "baseCommit": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+  "originalDeliveryCommit": "ef90d6cd55fc24ca97f988d58b400355bfaa1fdd",
+  "originalDeliveryPatchSha256": "2042bd082a11230943a585a405fef6725551861d8c3e319c5300fb7bf6da001c",
+  "originalFailureEvidence": "PRESERVED_LOCALLY",
+  "historicalDigestMeaning": "Existing hashes in historical evidence describe private originals, not these redacted derivatives.",
+  "files": [
+    {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/closure-evidence.json",
+      "originalSha256": "9411347016c272e5916a99b0f4c0f45bd34bf554ca91f3ebb069e1e859db8a0b",
+      "publicSha256": "fafab96207af2e217065865c615063a966450b5a2da8c65c59e27d86eb27eae6"
+    },
+    {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/closure.md",
+      "originalSha256": "c8fe13a31af5fbb3c868199fa0b871aa39c235f94a569d5b19ade6a1ef2d2483",
+      "publicSha256": "98d268a757cd467da53e0b152d0131eee9d4bd09d4f596e801b4374eabd336f1"
+    },
+    {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/validation.json",
+      "originalSha256": "bb5c954db53fb062b6dfcbd97a9cc2dea6e05412360b0863dd082a1bc0e49bfb",
+      "publicSha256": "6f1a42e028770bf9827e9f08db6fd93a544e5e8a90c2a207ebfbe0c4559bd4b6"
+    },
+    {
+      "file": "docs/development/evidence/t7-monitor-compat-2026-10-29/assembly.patch",
+      "originalSha256": "38afaf1690fd441f6469064d0a6c4672f49093d7afa3040a11e0bf9d74487098",
+      "publicSha256": "d3eb88ca75b27114cc967ce0c81d1a6a55e8bff498e270c8db73329e8185b4d3"
+    },
+    {
+      "file": "docs/development/evidence/t7-monitor-race-2026-10-29/monitor-race.patch",
+      "originalSha256": "aa567536aa575f15b4ec5a7897fe3a07dd628f8489c9cce9fd1ab27c8dced1d4",
+      "publicSha256": "f87f98865cc4eaac9a4f0174f59960b1ce0edba1c1f18ff6bfea61025ffe69e6"
+    },
+    {
+      "file": "docs/development/evidence/t7-smoke-executor-2026-10-28/prepare-candidate.js",
+      "originalSha256": "889a4caad0403ddb742a1cdebbea5238a6f008d6dcf4ab328540b84d5c187a0e",
+      "publicSha256": "0f305a053d0e555708887d2127c1e6ede029f0acd4249af29909a7bbef4ed05f"
+    },
+    {
+      "file": "docs/development/evidence/t7-smoke-executor-2026-10-28/prepare.patch",
+      "originalSha256": "dd901f89c00af5a3d30868780bbaf9541018ab404403a85264245cdc4cc510f0",
+      "publicSha256": "ea1c0b55730e0419ba79d19714914975e112458604938c5fc92b7300684b719c"
+    },
+    {
+      "file": "docs/development/evidence/t7-smoke-executor-2026-10-28/runtime-candidate.py",
+      "originalSha256": "21862f0270056baf94fb66b05287c21dd121c535380da21ceda4b3064a75700c",
+      "publicSha256": "3f7735dca47af5734ca6683730204a377ac55e64572a35fd36b3e64a68e49a13"
+    },
+    {
+      "file": "docs/development/evidence/t7-smoke-executor-2026-10-28/runtime.patch",
+      "originalSha256": "5bdfe7bbc3c93a051b82425ee7a607e5e26579ded4c9f897299d07fdb27d5864",
+      "publicSha256": "2a82ed8990dd3119d2a23dbcf2221c4d5f0db8cfe1927897fbcb4d6fcceb6503"
+    }
+  ]
+}

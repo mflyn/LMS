@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { createGrowthLog, listGrowthLogs, updateGrowthLog } from '../../services/familyApi';
+import { reflectionWeek } from '../../services/reflection';
 
 const DIMENSIONS = [
   ['moral', '德育'], ['academic', '智育'], ['physical', '体育'],
@@ -68,7 +70,8 @@ const GrowthLogsPage = () => {
       difficulty: form.difficulty || undefined,
       physicalState: form.physicalState || undefined,
       mood: form.mood || undefined,
-      childReflection: form.childReflection,
+      ...(editor.mode === 'create' || form.childReflection !== (editor.log.childReflection || '')
+        ? { childReflection: form.childReflection } : {}),
       parentNote: form.parentNote
     };
     try {
@@ -115,6 +118,8 @@ const GrowthLogsPage = () => {
               <div className="family-inline-actions"><span className={`family-dimension is-${item.dimension}`}>{DIMENSIONS.find(([value]) => value === item.dimension)?.[1]}</span><span>{item.date}</span></div>
               <h2>{item.content}</h2>
               <p>{item.subject || item.area || '综合成长'}{item.durationMinutes != null ? ` · ${item.durationMinutes} 分钟` : ''}</p>
+              {item.childReflection && <p>{item.childReflection}</p>}
+              <Link to={`/app/reports?weekStart=${reflectionWeek(item.date).from}`} aria-label={`查看本周复盘：${item.content}`}>查看本周复盘</Link>
             </div>
             <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.content}`} onClick={() => openEditor(item)}>编辑</button>
           </article>
