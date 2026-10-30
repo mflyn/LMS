@@ -1,0 +1,2310 @@
+{
+  "schemaVersion": 1,
+  "at": "2026-10-28T01:44:29.361Z",
+  "base": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+  "scope": "LOCAL_SYNTHETIC_ONLY / NO_COMMIT / NO_PUSH / NO_MERGE / NO_DEPLOY",
+  "gate": "OPEN",
+  "t4": "IN_PROGRESS / OPEN",
+  "device": "DEVICE_PENDING",
+  "dockerAudit": "INCOMPLETE_FAILED",
+  "nonblocking": [
+    "T5-NB-001 OPEN_NONBLOCKING",
+    "T5-NB-002 OPEN_NONBLOCKING"
+  ],
+  "deferred": "REMAINDER_DEFERRED",
+  "historicalFailures": "PRESERVED",
+  "runtime": "v26.9.0",
+  "candidate": {
+    "patch": "docs/development/evidence/t7-engineering-2026-10-28/candidate.patch",
+    "sha256": "61e4591c8eb4520395d9e27e029cf14b6c8918db333acb614e025f86f3d898f7",
+    "excludes": [
+      "docs/development/evidence/t7-engineering-2026-10-28"
+    ],
+    "files": [
+      {
+        "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+        "sha256": "eed24ef899af75ac733e592269031105f9b08576bf489ac4ba893e4163175c41"
+      },
+      {
+        "file": "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+        "sha256": "3dbe0b639610a58dcde21d2aaf4e288f856d753f089cde8ff28a8e3640d77c3d"
+      },
+      {
+        "file": "backend/services/analytics-service/jest.attachments.config.js",
+        "sha256": "6fc4cfb83a6d35b8d6c1641336b79031fd8b19cd16e082121cacdf55322602ec"
+      },
+      {
+        "file": "backend/services/analytics-service/services/weeklyReportService.js",
+        "sha256": "9f9b038884d51a8a991d15b20f750a038f98a6279ed73c20322e4c8eff3261da"
+      },
+      {
+        "file": "backend/tests/t2/weeklyReflection.integration.test.js",
+        "sha256": "e3a0b08fc4078b2348c3d9814252966df5f9cb8a277387edf215a0ca18634e92"
+      },
+      {
+        "file": "docs/api/family-learning-tracker-api.md",
+        "sha256": "48544fd2fc55bd430a388d7099d98d211f0578c3f622f5b221d6fd28461df06a"
+      },
+      {
+        "file": "docs/architecture/family-self-directed-learning-system-design.md",
+        "sha256": "95fd2ffd1afa5398c2d39cda1f5ed4968115921354e999104c3dd451fa55f446"
+      },
+      {
+        "file": "docs/development/README.md",
+        "sha256": "9ce40a40cd7997d7d67437cf3de8986eefedfc6f91a10d4fd5122ce7a92ff026"
+      },
+      {
+        "file": "docs/development/family-growth-requirement-traceability.md",
+        "sha256": "8c3f4128d99a88bf0038bfe333b4158a9fe47d10e296585b5c5d7126212887ea"
+      },
+      {
+        "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "sha256": "1978bb63c9f0c12aad10f31d6fcd959dbf3c6a753d415573a527061ad9c2ab13"
+      },
+      {
+        "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+        "sha256": "5731a5647993a0c6f3bed65fc0dead2d3ef2932c68ccb037e3ec1442e89ecbb9"
+      },
+      {
+        "file": "docs/user-guide/child-guide.md",
+        "sha256": "431b1484eba93b0725a2d7e9d18dac9e563574dc9b57234db8842473fccdbbcf"
+      },
+      {
+        "file": "docs/user-guide/parent-guide.md",
+        "sha256": "9f2bd9032d54d202344ebef68d529fd20788b937c4e136af00d48b37cf68b690"
+      },
+      {
+        "file": "eslint.config.js",
+        "sha256": "a8de4df5a6b28ad32644cbf46e295201d9731f687f90423963fddfad8a538c41"
+      },
+      {
+        "file": "frontend/web/src/App.js",
+        "sha256": "cebc769a9c37fd64c04ae06ce1b022dcdf85d5bb5a15f323a87a40083a10544b"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/T7AppNavigation.test.js",
+        "sha256": "fc81f8bb6a54afffe2c1d622f95d85ab12d2da995bb6c1632fdf5883ce5e3a9e"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/T7Reports.test.js",
+        "sha256": "8f3867c39bd75a2362d906653fe39b84e03795406e4ad21eb2c748e7b7e65551"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/Task9LogsMistakes.test.js",
+        "sha256": "b58a92fa49957fb159ac5140039dd787e52666e6bcaa09dd035a4258ef69229c"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js",
+        "sha256": "512eb83f43a39f753c16129fd146849eff75cd41691417437ba3a6e2992abacf"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/ReflectionPanel.test.js",
+        "sha256": "07709d2005d1c9531d5249ef1e26cbe98d1cae42efe079f708ca87f69c94bdd7"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/reflectionApi.test.js",
+        "sha256": "432a7988c005c555cd56dfa25c542e3bd10416ee52f758fbc0d3608d593436d3"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/reflectionState.test.js",
+        "sha256": "0dceb59d608b8e58f09e3f4d8033354e2be78ae9800058ce9453de3461d5cbbf"
+      },
+      {
+        "file": "frontend/web/src/components/family/ReflectionPanel.js",
+        "sha256": "d68807dfb81c92cecb277288dcf825b9d55bb08559801ae9f2f59a2effa02219"
+      },
+      {
+        "file": "frontend/web/src/pages/child/ChildReflectionPage.js",
+        "sha256": "13d3f3716c7861c7153c253bab1760b7c4c01e1ac2ba054debe0400f013f281f"
+      },
+      {
+        "file": "frontend/web/src/pages/child/ChildTodayPage.js",
+        "sha256": "271a0cc7189ad548416284b3cf809bb02b9b80819297f6da3396fc3e7a1ed843"
+      },
+      {
+        "file": "frontend/web/src/pages/family/GrowthLogsPage.js",
+        "sha256": "83fa3ff4a0f2d8927693bba066befbff6dd950fd52932f36c5b728e64d5caa14"
+      },
+      {
+        "file": "frontend/web/src/pages/family/ReportsPage.js",
+        "sha256": "9a95def049564763743b31d1c81716b76355df6644f136a98a460888dd07e40b"
+      },
+      {
+        "file": "frontend/web/src/services/childApi.js",
+        "sha256": "0a7a376cdbb6238d6d0ea9e35c09970aaa0cf83a6cc6dc3ca6c673930da28ff0"
+      },
+      {
+        "file": "frontend/web/src/services/familyApi.js",
+        "sha256": "39127ad61d0150ef663ef69aa9c0614e55559a8cc9388a1af3fb880142ec8a97"
+      },
+      {
+        "file": "frontend/web/src/services/reflection.js",
+        "sha256": "638543c5449f6b629da8063e17a91509df99afeb47047268bdcb6e57e6bcc5ac"
+      },
+      {
+        "file": "scripts/check-family-docs.js",
+        "sha256": "38065f97a1d9e944b619f9aed91cf51f224d307721f5bf83be470267594f4037"
+      },
+      {
+        "file": "tests/e2e/t2/weeklyMathLoop.spec.js",
+        "sha256": "bed969ba433c71055f62b2d698923e8932e6d2f0baab5d18d57a4ff63c93e801"
+      },
+      {
+        "file": "tests/e2e/t2/weeklyReflection.spec.js",
+        "sha256": "34467cb0bb182c5109ea12fa5a3f40a33506bc4d95a05d4ceb4a09b6ffa13e24"
+      }
+    ]
+  },
+  "results": [
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-family-regression-20261028.json",
+      "summary": {
+        "success": true,
+        "suites": 152,
+        "passed": 4473,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028.json",
+      "summary": {
+        "startTime": "2026-10-28T00:51:17.650Z",
+        "duration": 298598.176,
+        "expected": 54,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-frontend-20261028.json",
+      "summary": {
+        "success": true,
+        "suites": 57,
+        "passed": 734,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-frontend-final-inputs-20261028.json",
+      "summary": {
+        "success": true,
+        "suites": 57,
+        "passed": 739,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-http-strengthened-20261028.json",
+      "summary": {
+        "success": false,
+        "suites": 1,
+        "passed": 4,
+        "failed": 2,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-http-strengthened-green-20261028.json",
+      "summary": {
+        "success": true,
+        "suites": 1,
+        "passed": 6,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-t2-full-http-20261028.json",
+      "summary": {
+        "success": true,
+        "suites": 6,
+        "passed": 33,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-task11-http-20261028.json",
+      "summary": {
+        "success": true,
+        "suites": 4,
+        "passed": 6,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-family.json",
+      "summary": {
+        "success": true,
+        "suites": 153,
+        "passed": 4506,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-expiry-http.json",
+      "summary": {
+        "success": true,
+        "suites": 6,
+        "passed": 35,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/feedback-race-red.json",
+      "summary": {
+        "success": false,
+        "suites": 1,
+        "passed": 3,
+        "failed": 6,
+        "pending": 18
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/feedback-expanded-red.json",
+      "summary": {
+        "success": false,
+        "suites": 1,
+        "passed": 3,
+        "failed": 12,
+        "pending": 18
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/feedback-suite-green.json",
+      "summary": {
+        "success": true,
+        "suites": 1,
+        "passed": 33,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/feedback-formal-http.json",
+      "summary": {
+        "success": true,
+        "suites": 1,
+        "passed": 8,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/formal-http.json",
+      "summary": {
+        "success": true,
+        "suites": 6,
+        "passed": 35,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/task11-http.json",
+      "summary": {
+        "success": true,
+        "suites": 4,
+        "passed": 6,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/formal-browser.json",
+      "summary": {
+        "startTime": "2026-10-28T01:31:55.340Z",
+        "duration": 294128.20900000003,
+        "expected": 54,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    }
+  ],
+  "rawEvidence": [
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/feedback-expanded-red.json",
+      "bytes": 34330,
+      "sha256": "e4223d7eb720f6c6427689417b59fcd27e53762555ca18eb7519715081ee1935"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/feedback-formal-http.json",
+      "bytes": 3885,
+      "sha256": "1ddc9c038a1831d1f3990e8703b8f0a7e3cbe0679d994697c7008ae508baaa8f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/feedback-race-red.json",
+      "bytes": 21396,
+      "sha256": "568ff2f50ea4ab941d4eaf661d669fe7fbfa13bc7f2d1c1fa5e9b715ab22a331"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/feedback-suite-green.json",
+      "bytes": 14196,
+      "sha256": "c21669257111ab383f43c6f3b433ae957fb12b56c9676fc5847ab1d87616f3e4"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-checks/build-identity.json",
+      "bytes": 1052,
+      "sha256": "d401bcc70ac4aec1e6b92acd3a77d885014295d9801ee4529b9ee6c84dcb5d57"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-checks/build-source-match.json",
+      "bytes": 2397,
+      "sha256": "b1a15bdac31744a89214b306b71b32be72b26ebb900f5b6e8649e529cb562afe"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-checks/commands.json",
+      "bytes": 1144,
+      "sha256": "efe025760eab5a8fb1dc901710116ab06ff9c328342779eb24e17872cbe5bac3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-checks/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-checks/doc-gate.json",
+      "bytes": 128764,
+      "sha256": "0bf277bdbe06f93925c4feef3248e2dec1970b70680a18d2b0d387ef5bfa003a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-checks/doc-gate.log",
+      "bytes": 30138,
+      "sha256": "a654f31e685787667e47789681a1836e77175656176ea5e498ea3850672c2504"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-checks/docs.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-checks/source-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-revised-checks/commands.json",
+      "bytes": 1233,
+      "sha256": "14189b33ea760f6c20dee82569d9568800d6aa0352721decdeafe1986ba535b6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-revised-checks/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-revised-checks/doc-gate.json",
+      "bytes": 128767,
+      "sha256": "72414984c42c929660f7b333a7668982fd92fa8887b6c25987f65ade353d4284"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-revised-checks/doc-gate.log",
+      "bytes": 30134,
+      "sha256": "c42fde3268110149e3781faefcfe797f4f02018242aa111b9ab95e8912496088"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-revised-checks/docs.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/final-revised-checks/source-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-expiry-http-command.json",
+      "bytes": 221,
+      "sha256": "12037085ffd401c367cdc75c0f3eada8fdb8c2919945ea8edc57064aa1d60637"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-expiry-http.json",
+      "bytes": 16691,
+      "sha256": "d0bcd5a7b82da36783b1e6381faecfa1e863b8fabdf2c5fadcd1b156451a879c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-expiry-http.log",
+      "bytes": 1842,
+      "sha256": "bf11e8f28cde77bfd1d62e288c0c57ae4af70c7e909a1f27e8661c72b2eeaaa3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-partial-form.png",
+      "bytes": 109961,
+      "sha256": "8fa56311111ac45f956b963639558aa5b5612343c1e5dbfc7b511c863b84872b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-1280.png",
+      "bytes": 96487,
+      "sha256": "cf71e1c47ee2890bc1f1a85e98e5279d9ade97fad9863b220078628dfbd720e7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-390.png",
+      "bytes": 90328,
+      "sha256": "4879cbd600d4ed21f05084e48d78877d492416b0bbd4155824fef8fd71a187ed"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-768.png",
+      "bytes": 96129,
+      "sha256": "881de3e38717ee49a4913d5e8731a08a6f6605d631566b6d17e738a73d06913c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-1280.png",
+      "bytes": 120797,
+      "sha256": "dc331661feb0a4ff978a7cf7127154ebed748a916bcfc81df2bd2f5a0d18ef7e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-390.png",
+      "bytes": 75895,
+      "sha256": "690134f9ad2977ae3719cd48f761540dfb46e5fd566ac8c4d0ce3980ecf4f6ae"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-768.png",
+      "bytes": 90247,
+      "sha256": "a302ff03bc887d79abf290df19aebc990f88f12b64f20a57b8a856ae23fa1538"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-partial-form.png",
+      "bytes": 121629,
+      "sha256": "96804ee1c52ab499fdc8606b2a02039c711373b794fd99f46fb1c8d25fcc1bb5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-1280.png",
+      "bytes": 96862,
+      "sha256": "acd11b6729ec42deacf7fbe33f56e9ff494cdab49ad48075602793a1d3615e6c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-390.png",
+      "bytes": 90830,
+      "sha256": "0b57d9d0c56829efb324dde873a81addc4dc3d321f0d80d45af36570563ddac8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-768.png",
+      "bytes": 96502,
+      "sha256": "5ed861a13cf5eee56b702e78d4840b2a42baa11021bfe83b52c02b3c126a344e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-1280.png",
+      "bytes": 121064,
+      "sha256": "2c5f4be7e684d958791ef56fba442625a471716df3338ae214bee38a0613ca56"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-390.png",
+      "bytes": 76118,
+      "sha256": "79640f8d4391d1aaca14a6cf66cb785ccea395adfbb1ab03040ef851e992cea9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-768.png",
+      "bytes": 90484,
+      "sha256": "cab0c1d38db78557711f7dca9900ede35f8d3a0aa1f799cf0e5fdc8fdafde6bf"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 90892,
+      "sha256": "922cd20d7ca244ec2377b6546513bb51ebcd95c0aa762f0a1fb1ad75a4884e0a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 92062,
+      "sha256": "9c8550b90f8e4ad64aa741aa6aa35ad1d35f3ab1d91e11d3ef34d602a80c40a2"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 87125,
+      "sha256": "2843918f0324e54810e1c6a01f63d54cd7c1d8711bf104b88a2b896337524657"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 91974,
+      "sha256": "30e5cb29ee9f49e565d138f61a9deab8cbd81bef6e5355454114a85f81ffa509"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 63086,
+      "sha256": "1e007c359ca30a00bea5e12fee79e1696d915ff4019ec8ee28faa09aa2deecd8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 80522,
+      "sha256": "caac260d3d3d691f16cbdf3d5afc34a91bd5f85dd7a12e3f9bbbf4b669323cf8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 52724,
+      "sha256": "db885a55720dde15fb212ffe674c8195932d3f6c393e654b3259be6d19a31298"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61808,
+      "sha256": "d06a749dbf6a30c68ac4f9a598c61989d9b9b0a7bfa56c27072f9218873008e0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/child-intentional-clear.png",
+      "bytes": 91113,
+      "sha256": "9b5f1def592505e4a73103356c7ecfdfe4da05f9f0784a2a4dae3b03f85ceacc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/child-invalid-estimate.png",
+      "bytes": 97114,
+      "sha256": "624c40fec41d3f2e9bdb1aa7d0a13ca79c0137127ca37ee48088b7f4d78eb7ea"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 112711,
+      "sha256": "953c11a7329d9bd0eb953cd490957045ce413212059d7c04f1c7ecacda34a81f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 100196,
+      "sha256": "97df34bc344bf0513b149c4e2da39f881f9a2d5f14165646f34acd4727da5645"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 108574,
+      "sha256": "0398cfc9ffa9dc3ec37fa632f929253a0262e4a888d318ddc737e18c3c7b64dd"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 137997,
+      "sha256": "96c31435c4970f9c4a38b72b7cd59009d6e0d1e308753e1d005ae2aec0707610"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 117256,
+      "sha256": "e142719e60d4eaacb074a4069b63038cf2f32676c24afd958721580e983ef649"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 138390,
+      "sha256": "1ddc58a47bcdc7f2b5b76faceb04373a53f5235c8ce6d008b5ef51b2ba6df6b7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 104167,
+      "sha256": "5e559012e1c83295a3bf6501355a1c351bbb2d1a3d4a894be677879d9d8023fc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 90722,
+      "sha256": "5604d2d1ff7320cc5dbc70207c99f05f7b10339cbd6b43cd244f9fa4df0e42af"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 99806,
+      "sha256": "ffacb373f8ab8e9881529a38c207dc53ac76ae22be09891a21c959098d8d7658"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129580,
+      "sha256": "18497f2d919ac8a943d659e805e35edc2480fa4a49424319d908ae4e861b05dc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107814,
+      "sha256": "d8b17b5d4377919414a901a385c9aa0f223725f5bbdbbf9a9c54184cd0bc6fca"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128511,
+      "sha256": "3b5541536d7b87b7ee3e6e8f3e8497c7396f22ecdbf5245b474a9e6742b8d449"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/parent-intentional-clear.png",
+      "bytes": 125780,
+      "sha256": "c6c33ecb7a6ed79c3405ff15eb98142dd3784861fc9fd7aef198851d9516aa2d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/parent-invalid-estimate.png",
+      "bytes": 131851,
+      "sha256": "e1180cf2a4edfc8e127f04a397bcc59e9c8b97122f6730fd5f01dce97085e868"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-a-write-superseding-t-8d7e5-itted-lost-response-exactly/slow-read-original-retry.png",
+      "bytes": 103380,
+      "sha256": "27fc6e78b8863283445e018ea227b45558dabd08ccff4ec0c9d5a5da7b4fdb0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-detail-refresh-denied-10c62-a-held-successful-help-read/help-denied-late-read.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-detail-refresh-denied-4bed8--held-successful-help-write/help-denied-late-write.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-parent-list-denial-af-a9188-clears-the-open-help-dialog/parent-list-denied.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-parent-list-denial-is-792f6--held-successful-help-write/parent-denied-late-write.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-parent-list-denial-isolates-a-held-successful-help-read/parent-denied-late-read.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1024x768.png",
+      "bytes": 103166,
+      "sha256": "fe34e75c63fa1f5ef04e9045f334d56cd579224e7c8664ac4acf7de730707bc3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1280x800.png",
+      "bytes": 104734,
+      "sha256": "807b9ef2750bf8c62587d76e86add4752526b724bd57a0a7c176fff0e431a635"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-390x844.png",
+      "bytes": 93383,
+      "sha256": "8f36f30af2000b850f155c2daccf593cf2c250634995363f0f146a20cbaa1e69"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-768x1024.png",
+      "bytes": 99987,
+      "sha256": "401b7d2ff7a61a56251fe91264f98afd15eedf6a4d2e7b4b47ed8898070615a1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1024x768.png",
+      "bytes": 77044,
+      "sha256": "34d0f5e877fa4795347b0bc86e626a7682d784967e1f0198a708b414c3c0eff7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1280x800.png",
+      "bytes": 87409,
+      "sha256": "cb8c79c74c1281b32a1af00a583739d6e7d93e51a7420f47b299a1d870a572fa"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-390x844.png",
+      "bytes": 56600,
+      "sha256": "e4a0b46164f2bc40a16210efc14d748ac381fe928f2cc8f57e82fec5ccd9ea27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-768x1024.png",
+      "bytes": 73266,
+      "sha256": "1e0b198981ee363329a9ccbb4fd453d060cc8c73aacd5ed3d1d79116e2ab56a5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/learningSources-child-lost-df9f0-count-return-without-repost/child-unknown-create-list.png",
+      "bytes": 99283,
+      "sha256": "0258d27ed231f65b309b54ac1b16f2bf5afa188f9e90c7408c22f7d8df0dedfa"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "bytes": 80043,
+      "sha256": "83b94e04b692005ef1db959b3e6b340ffe3957a765a54ba613c165f3ac28829a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-child-full-loop.png",
+      "bytes": 45955,
+      "sha256": "0bdba9066cede3e9b70063db76dc66c10fce36f0adfc8988340be9249e93d237"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-parent-full-loop.png",
+      "bytes": 138605,
+      "sha256": "8ec912c1de718e5d316abdbd6138b0392571c282f22b257401b4b6f42cefc70f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-child-full-loop.png",
+      "bytes": 46319,
+      "sha256": "72c594339a31773bc6da46de8bb6954f8df9c200fda1768524018c0e85ee9a6b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-parent-full-loop.png",
+      "bytes": 139557,
+      "sha256": "3477a090ce6fd03e2e59572e9544a424218f22653c1b7990dedcc47fcfaef90a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-child-full-loop.png",
+      "bytes": 46549,
+      "sha256": "b5cfb468ba32db71b11bf65976695c11cdaf7b9401c1a856a90525fe915f9e52"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-parent-full-loop.png",
+      "bytes": 140954,
+      "sha256": "afb0b07d82db3f2030d8c2e1010e4c3bdd40bb9e66e350cdd719f7f8e2f9881f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/browser/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/commands.json",
+      "bytes": 2034,
+      "sha256": "f3676e89fd87bc722bf729dfc5487b85f6f940bd7859447f0004f743361455f6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/docs.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/formal-browser.json",
+      "bytes": 199506,
+      "sha256": "77a645d0b2ca4e2e7728dcc1c8806f251de3abde8b2c3c54e944a4f9df4e351f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/formal-browser.log",
+      "bytes": 8478,
+      "sha256": "db670777773c4243306623ada4ef8139852b5ca965ad68513b0b01b806917070"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/formal-http.json",
+      "bytes": 16691,
+      "sha256": "f89f2195a4655574b95e3b16eac35f4d86a0345c9ecec4e85e6545e196bad66c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/formal-http.log",
+      "bytes": 1908,
+      "sha256": "708b085d78ffe97d0220fae4ef5c87b6e94a38b09f84c6ffe608d6b360ef5cb3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/task11-browser/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/task11-browser.log",
+      "bytes": 2501,
+      "sha256": "ecaaae0e92873d5563567dac1c21c8c7175b0c55a56e1daa2ad31059bba6aa7f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/task11-http.json",
+      "bytes": 3731,
+      "sha256": "10e85c33130b4376d55a7d338bd93d7705d740dda5048a2a71b623fed26c633b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/task11-http.log",
+      "bytes": 1147,
+      "sha256": "708382cac29ae2a4f53c5a73578ec6ea92bbbbf3d66021473c03e9a77c6b4838"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-checks/task11-report/index.html",
+      "bytes": 548026,
+      "sha256": "6dda75cbbbf7a6b02a0a58d7f258f2fff028879deb58ebd67a9ca3532933beb5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-family-command.json",
+      "bytes": 247,
+      "sha256": "46a328473f597e694568f1cf4c7db9f1d32637a6ac4053301e868b1306f23c9a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-family.json",
+      "bytes": 1643863,
+      "sha256": "7c3d2b96813c1f949c2b918f27a4e3f25bdb45d9b97f25b5e92dcab634e3863b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/post-feedback-family.log",
+      "bytes": 2119715,
+      "sha256": "4f0f9f3cd86727e37cd3a62f3fd9ebc42d9f955065bf2669ca37844e44c77374"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/pre-server-feedback-p2/README.md",
+      "bytes": 6294,
+      "sha256": "e5c7babf833501aea8cab2c3754907e5c724859396f97bdd61454a2a282c83b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/pre-server-feedback-p2/candidate.patch",
+      "bytes": 164080,
+      "sha256": "f9c0f7d400e4e13c8911c01232b1a020bffe5a10335c55329e13e86f7230ca8f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/pre-server-feedback-p2/review.md",
+      "bytes": 4346,
+      "sha256": "f14f97a2e0113da0ad856c58785f0f0ab07b4be476baaa3a3e9e40d477f896a0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/pre-server-feedback-p2/validation.json",
+      "bytes": 68628,
+      "sha256": "3ad002c71a9fe48471a4fb78e01c3145e38505b9128572de6c50b5a1016d5e41"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-child-full-loop.png",
+      "bytes": 45953,
+      "sha256": "b3a1cd001361699953a2273d2d77c4cca8ce868eb6d5ff04cc54b76c7fe1c17f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-parent-full-loop.png",
+      "bytes": 138605,
+      "sha256": "8ec912c1de718e5d316abdbd6138b0392571c282f22b257401b4b6f42cefc70f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-child-full-loop.png",
+      "bytes": 46319,
+      "sha256": "72c594339a31773bc6da46de8bb6954f8df9c200fda1768524018c0e85ee9a6b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-parent-full-loop.png",
+      "bytes": 139557,
+      "sha256": "3477a090ce6fd03e2e59572e9544a424218f22653c1b7990dedcc47fcfaef90a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-child-full-loop.png",
+      "bytes": 46549,
+      "sha256": "b5cfb468ba32db71b11bf65976695c11cdaf7b9401c1a856a90525fe915f9e52"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-parent-full-loop.png",
+      "bytes": 140954,
+      "sha256": "afb0b07d82db3f2030d8c2e1010e4c3bdd40bb9e66e350cdd719f7f8e2f9881f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43892,
+      "sha256": "c443ca58dd17855bf997bfd23176daeed2f45fbaabc68e6b82168879bf0eab16"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-fixed-build-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-20261028/.last-run.json",
+      "bytes": 194,
+      "sha256": "2e7c17ac3fd28df379c16dc72617b1ca80360733450fae55f4a310fae1f83ab1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16227,
+      "sha256": "09a2f3fc47391599f469bc8b7c69ba778834b9f479db188e54161719b7700f67"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16237,
+      "sha256": "6f8d2ea93f97db8381b2f02b8ced64b8139a51bc3803075c42bc9288132dcc73"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16242,
+      "sha256": "565f397fff21b6f856a3828f6d85d164bd05dd040e75ecb0d53389906232edc1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-filter-20261028/.last-run.json",
+      "bytes": 194,
+      "sha256": "2e7c17ac3fd28df379c16dc72617b1ca80360733450fae55f4a310fae1f83ab1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-filter-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16402,
+      "sha256": "2b3ace71cf7718f827aa3dd42995f46b4fbddfadbc578d607abe4f810116ba3c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-filter-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16406,
+      "sha256": "8929cef48b10fb59130dbd2afac2ad80f216ec71e0e14865482aeaa2c309dc26"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-filter-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16407,
+      "sha256": "de1933691496c033ff6ff55578adc45d1a7c0b67e8738eb62a13f59aaddd2b58"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-label-20261028/.last-run.json",
+      "bytes": 194,
+      "sha256": "2e7c17ac3fd28df379c16dc72617b1ca80360733450fae55f4a310fae1f83ab1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-label-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16367,
+      "sha256": "f1ee9f2debad1b822230b3325712f030992a0dea402eb7e77752516675050e51"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-label-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16373,
+      "sha256": "7e8f3b6b32c3371bb5f7e68dc500d0a8a259adb8308f193300f8fe097439e897"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-label-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/error-context.md",
+      "bytes": 16372,
+      "sha256": "7823fcfb02809f9440fe246119102125b8ffc6692e5c137702e8a4b3a49be0b1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-child-full-loop.png",
+      "bytes": 45953,
+      "sha256": "b3a1cd001361699953a2273d2d77c4cca8ce868eb6d5ff04cc54b76c7fe1c17f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-parent-full-loop.png",
+      "bytes": 138605,
+      "sha256": "8ec912c1de718e5d316abdbd6138b0392571c282f22b257401b4b6f42cefc70f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-child-full-loop.png",
+      "bytes": 46319,
+      "sha256": "72c594339a31773bc6da46de8bb6954f8df9c200fda1768524018c0e85ee9a6b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-parent-full-loop.png",
+      "bytes": 139557,
+      "sha256": "3477a090ce6fd03e2e59572e9544a424218f22653c1b7990dedcc47fcfaef90a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-child-full-loop.png",
+      "bytes": 46549,
+      "sha256": "b5cfb468ba32db71b11bf65976695c11cdaf7b9401c1a856a90525fe915f9e52"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-parent-full-loop.png",
+      "bytes": 140954,
+      "sha256": "afb0b07d82db3f2030d8c2e1010e4c3bdd40bb9e66e350cdd719f7f8e2f9881f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-math-loop-role-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-missing-build-20261028/.last-run.json",
+      "bytes": 145,
+      "sha256": "9803393de13e99025df0e27c27a3054d7d9a0e240409190661c5bb24a8e4f2eb"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-missing-build-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/error-context.md",
+      "bytes": 2827,
+      "sha256": "1d7d2ed62fc908c3d6e58e96be779747597e6629d04a912c8298524e58023d02"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-missing-build-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/error-context.md",
+      "bytes": 2827,
+      "sha256": "970326a15c556e07e6c1e995bae57b1b2aa653af423d84dee7435cbf07a982c3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-20261028/.last-run.json",
+      "bytes": 145,
+      "sha256": "9803393de13e99025df0e27c27a3054d7d9a0e240409190661c5bb24a8e4f2eb"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/error-context.md",
+      "bytes": 5598,
+      "sha256": "3a570674a00e96b8de341a404b632c6b4be43ce9cd11213f36e590be6c0c8eb6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/error-context.md",
+      "bytes": 5598,
+      "sha256": "46cefc9581e3d2e2e69f2c2fe39b2947e4f51bb595c5af1dc8b81bf7038716be"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-label-fix-20261028/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-label-fix-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43892,
+      "sha256": "c443ca58dd17855bf997bfd23176daeed2f45fbaabc68e6b82168879bf0eab16"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-label-fix-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-label-fix-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-label-fix-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-local-20261028/.last-run.json",
+      "bytes": 145,
+      "sha256": "9803393de13e99025df0e27c27a3054d7d9a0e240409190661c5bb24a8e4f2eb"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-local-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-local-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/error-context.md",
+      "bytes": 12115,
+      "sha256": "8f7f90655f13c1b18d51232089fe1ce2e1b8b8872446812fb44b4956080c9d7d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-local-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-reflection-local-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/error-context.md",
+      "bytes": 12115,
+      "sha256": "0920867a67465e90f279356111f84c04bcb0eafcf1e45cb1be1ba419cb7fe728"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/.last-run.json",
+      "bytes": 96,
+      "sha256": "6361b8b2063423400e010149ba21636f138c93eeaee1ac838e5ac63241099937"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/error-context.md",
+      "bytes": 11462,
+      "sha256": "4fa4feb1ae98a528588ea89a983adc4679f99ecfe6e1196bf57b344b8fed93b6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-child-full-loop.png",
+      "bytes": 46319,
+      "sha256": "72c594339a31773bc6da46de8bb6954f8df9c200fda1768524018c0e85ee9a6b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-parent-full-loop.png",
+      "bytes": 139557,
+      "sha256": "3477a090ce6fd03e2e59572e9544a424218f22653c1b7990dedcc47fcfaef90a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-child-full-loop.png",
+      "bytes": 46549,
+      "sha256": "b5cfb468ba32db71b11bf65976695c11cdaf7b9401c1a856a90525fe915f9e52"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-parent-full-loop.png",
+      "bytes": 140954,
+      "sha256": "afb0b07d82db3f2030d8c2e1010e4c3bdd40bb9e66e350cdd719f7f8e2f9881f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-browser-strengthened-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/README.txt",
+      "bytes": 2043,
+      "sha256": "1bd1e32c139a4f6c45a5e18c5a59af7ea3d8395eb25d76eaa2b48d02454b2a56"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/SHA256SUMS",
+      "bytes": 797,
+      "sha256": "23b8130fa2e315b5d0cea2d5baaa1babd8df81a18a9402f0e8bec0e65d6290ce"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/command.json",
+      "bytes": 576,
+      "sha256": "0be25ce2db5748e6f7518e9bf8c61ae74453913b30697d6aeeb60268616c51ed"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/execution.json",
+      "bytes": 4465,
+      "sha256": "4822ac2dac6d252645765cd1acfcb073ccb18b85cddd65bd6c00fc3f58e3ab34"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/jest-result.json",
+      "bytes": 3886,
+      "sha256": "a5b6fc2daf3805dff06f460249d59654ac91d3caf0f4cca8bb915b52df291818"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/preflight.json",
+      "bytes": 1993,
+      "sha256": "ba11a1c0fff866b7a5806adf8bde2edb868a0f136415dadde9e0ce3a84c9d12c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/run.cjs",
+      "bytes": 3652,
+      "sha256": "7e4cd8c1bffb71b827438054a4f6f6a24d3e417c0243a257386edd1033a67f34"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/runner-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/runner-stdout.txt",
+      "bytes": 4465,
+      "sha256": "4822ac2dac6d252645765cd1acfcb073ccb18b85cddd65bd6c00fc3f58e3ab34"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/stderr.txt",
+      "bytes": 1480,
+      "sha256": "86b44205ff7e3460cb5c6d735d901d9678e5e010a72ddfb03bbba787d21303ac"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-expired-http-independent-20261028-cPHa9M/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-family-regression-20261028.json",
+      "bytes": 1630360,
+      "sha256": "9f7825d612c74ecc43532ccbed60ea75c3fa4d6d0470db4ea80a3199eed74e9a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-http/command.json",
+      "bytes": 707,
+      "sha256": "4f826d4d070badb25e5ffe57225d05c50f45b966250a342e35715c8dbd96afcd"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-http/execution.json",
+      "bytes": 569,
+      "sha256": "d33dcb02a23b8cf174c15e01991fa1ea9f8ac9a2c7db7e8c28d4d04333e76964"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-http/jest-result.json",
+      "bytes": 8597,
+      "sha256": "1f50c49e0915caf45c76c62da119ef238ed58ba010f33931119c06f58f83e9cd"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-http/stderr.txt",
+      "bytes": 3897,
+      "sha256": "fb448eb4b4aadd408b188a17b9a1a59082aef7f6fe90a3d901cc7c2537d15c3a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-http/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-model/command.json",
+      "bytes": 704,
+      "sha256": "b84fa1094d0f3b9d5d7ebb665c2a707266d6df977dd0d2c644a85123f62d3ccc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-model/execution.json",
+      "bytes": 567,
+      "sha256": "d4d41811d3b8dc600fbb6134cd313371b0b688e9d0599bd0b87c5e303a9c7459"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-model/jest-result.json",
+      "bytes": 28087,
+      "sha256": "c750536e3b36cc52db2698299ee970a51cf180544249c5b416a44e6cc5dba56a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-model/stderr.txt",
+      "bytes": 11572,
+      "sha256": "8cd4249d800ab81b5799d7b2fa70bfbf65def0f7636b72095274f9e99bddfadc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F1-model/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-http/command.json",
+      "bytes": 705,
+      "sha256": "9532ec4457740c21fae9ccee03620dfe8459ddb762ba287373e6e760f501ca40"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-http/execution.json",
+      "bytes": 567,
+      "sha256": "9cd19f982516521f97b912ea1ffa8043f457898aa067156197e5987ce204ebab"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-http/jest-result.json",
+      "bytes": 6213,
+      "sha256": "2ade65e2ef3ff432041b8e15824c36ef65e92a2b436a8edebd25eaa07e30edf2"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-http/stderr.txt",
+      "bytes": 2756,
+      "sha256": "d8113eac5427096b288edb3bf9a7ac8cfcb13038cd2c14bf9bd5d6edacd21fd8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-http/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-model/command.json",
+      "bytes": 713,
+      "sha256": "6d6ddf6bc8e470babf6e6d639272796a5e899b1ce4e2625fc3adfd93fa7ad4a7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-model/execution.json",
+      "bytes": 576,
+      "sha256": "d046373d91a28f75000d7da3d2bc4d72079c1351479c6cab09c4e257b234aa15"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-model/jest-result.json",
+      "bytes": 19507,
+      "sha256": "a558453c1174a694ba93760f86436e47274dbfe870710b248ae59dbd9c5a5932"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-model/stderr.txt",
+      "bytes": 6913,
+      "sha256": "66e67e3004c3a4c553566cd796c97207fba67604f0d36935a61b365408924189"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/F2-model/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/README.txt",
+      "bytes": 2551,
+      "sha256": "b5efb15db386d53192fefa6795dc816c51826d04b3fd7b7fe6690ce4e138680a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/SHA256SUMS",
+      "bytes": 5851,
+      "sha256": "3de3e736b39fccde9e3703ca80ffa7f1ed19a1a7c3ccd0037ed376f26089d4f1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-http/command.json",
+      "bytes": 586,
+      "sha256": "8ce3a69016684e2897bcf4ddf80ab87f157679f3de620ca8de183b5964dff928"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-http/execution.json",
+      "bytes": 476,
+      "sha256": "17f2d32e427bc705ccc907deae7d861aab460950f42fd60e8091a8a2254855cc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-http/jest-result.json",
+      "bytes": 3885,
+      "sha256": "32e6a75701f46ab12c3e7aeafcc06f3a7d1f670bb95ad46de9f9880cc5cc18c6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-http/stderr.txt",
+      "bytes": 1487,
+      "sha256": "9d84bbe7234852493fe1454fb0f84f2c1d6bc0d8ef89e66b0f840cf72531337c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-http/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-model/command.json",
+      "bytes": 644,
+      "sha256": "f49bb632f62917447c890e3c1b5b558b6139b65dacaba69296f4a29628e02cd2"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-model/execution.json",
+      "bytes": 552,
+      "sha256": "4324e2c6807aa2b1c3fc5fe5d5945ba273654c73e5649a68e0d41f13fbd8537f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-model/jest-result.json",
+      "bytes": 14196,
+      "sha256": "93d7dd70cb15981bb47681092b120c2ac7c0fefd9d18d8997d800c0ae67ce6ba"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-model/stderr.txt",
+      "bytes": 16964,
+      "sha256": "4d4fa3ff3b7808d8664fd23629ba3efebc8079db0fa6207cc58dc37b302d0be5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/baseline-model/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/executions.json",
+      "bytes": 6378,
+      "sha256": "952dc06170eca8982209ee15d032a1db83e95899128e9756be30e18c7a56d85e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F1-model/command.json",
+      "bytes": 710,
+      "sha256": "7865748d25b789d1073dee2a6b51c0bc9d769b0b30e10bf0c580ff9d220d3990"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F1-model/execution.json",
+      "bytes": 362,
+      "sha256": "1d9cff8cffb4f9875d124aae47df40eef0deef8f1821acfa95bc0a2210588f55"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F1-model/jest-result.json",
+      "bytes": 28086,
+      "sha256": "fa855d28653bb945e24c75798c4237555e116d8ce71c228b13c556e72255a79e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F1-model/stderr.txt",
+      "bytes": 11577,
+      "sha256": "a8d06019a21a5597b00239a997702a9c921406b0d2548d81a3ca75b8a20f3101"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F1-model/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F2-model/command.json",
+      "bytes": 719,
+      "sha256": "12392d991245a20e83b9a0eaa75bcd769810e6843de7c669b817fb3f3d6c5db1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F2-model/execution.json",
+      "bytes": 360,
+      "sha256": "b4c2e72b63623d2fe1dea2a8c2791a0149d3bc54c99ebb8e4505ffeea376d2ed"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F2-model/jest-result.json",
+      "bytes": 19507,
+      "sha256": "1baa4f444efdb5877d12a9e47734e31d5e2ce3e035e9262d570f17f222b08b39"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F2-model/stderr.txt",
+      "bytes": 6919,
+      "sha256": "0a0f4e0ded3661e711317bbb57ed181f244c074caa084a58bb0637a9aa84d59d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-F2-model/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-baseline-model/command.json",
+      "bytes": 650,
+      "sha256": "963a09ffa35ec016eb851ffc5bfb9f9fec9b38018d11d14deff9a923a243025f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-baseline-model/execution.json",
+      "bytes": 352,
+      "sha256": "e8b626c242446cc5f54117dd2b5b6775a1f96c43b07c85f2b9f6bb46ce42ceff"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-baseline-model/jest-result.json",
+      "bytes": 14195,
+      "sha256": "e70ca787e478af5c7d92b7013fadcd5db5543bf6cda949415d9f22eff22a5da9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-baseline-model/stderr.txt",
+      "bytes": 16740,
+      "sha256": "493a58d5b9ae5505439dd1af38fd71adadfb58b0a29a0730448d004d1635ade8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/final-baseline-model/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/harness-revision-executions.json",
+      "bytes": 4150,
+      "sha256": "c124db973592a2e0cba6dee1ecdcc469268be1cc8b33dd81c70ab0915ffafaf0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/harness-revision-preflight.json",
+      "bytes": 1851,
+      "sha256": "6a2be926b41e49e67ef7865100c6c03bc54bb7462ef44f09ab5cd55939ee983e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/harness-revision-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/harness-revision-stdout.txt",
+      "bytes": 852,
+      "sha256": "4e1da2e43fed60caf0fa0bbd52a66e074c3448091ec9adcd27687b3d53bf67d5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/jest-http.config.cjs",
+      "bytes": 249,
+      "sha256": "2a39cb595af015818503447f6d0751b29437ceeb1a013e2990f832c020d62d91"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/jest-model.config.cjs",
+      "bytes": 297,
+      "sha256": "20a7b09ef6776ce5ee18345902832d5c4bfaba7caba1514f9cf3dd28a37dad6f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/mutator.cjs",
+      "bytes": 2658,
+      "sha256": "9f4baa5dfa165e0470cf17370d0ac87baa68f2d268ae628a129c64edd59dff2c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/preflight-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/preflight-stdout.txt",
+      "bytes": 3542,
+      "sha256": "936678d6dfd93508e01eb4557538d55f1f11a60fc0d2ddb1ed7cfd0e7e140ee6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/preflight.json",
+      "bytes": 3542,
+      "sha256": "936678d6dfd93508e01eb4557538d55f1f11a60fc0d2ddb1ed7cfd0e7e140ee6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/review-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/review-stdout.txt",
+      "bytes": 3021,
+      "sha256": "e8855f22a0d757d929035fb871ca316c1ba6b87f2707fa3f0e43f591496bc71c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/review.cjs",
+      "bytes": 4868,
+      "sha256": "a1b11c25cb385ac2ef6cf4917285a31c4c822637eb320667b83e87f59ec3d724"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/review.json",
+      "bytes": 22200,
+      "sha256": "b6bb83308aa910c827a54a83b4273827d16852956ca97634b00819fb18ece6cb"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/run-harness-revision.cjs",
+      "bytes": 4058,
+      "sha256": "c91f360791fdb0ec324af5eb9f69c1a82db670d3e88e31f31c0fbc2991fbfdfc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/run.cjs",
+      "bytes": 5151,
+      "sha256": "484f8190c77cd1c4893353cf5b83ba3af86b9f2b1e4e426e928714a966f31d3d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/runner-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-feedback-independent-20261028-Vz2Cb1/runner-stdout.txt",
+      "bytes": 2790,
+      "sha256": "061467c8285b7ee8ec46728464164b6af011a73e5e0ecfd63fb69f311e02f276"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-partial-form.png",
+      "bytes": 109961,
+      "sha256": "8fa56311111ac45f956b963639558aa5b5612343c1e5dbfc7b511c863b84872b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-1280.png",
+      "bytes": 96487,
+      "sha256": "cf71e1c47ee2890bc1f1a85e98e5279d9ade97fad9863b220078628dfbd720e7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-390.png",
+      "bytes": 90328,
+      "sha256": "4879cbd600d4ed21f05084e48d78877d492416b0bbd4155824fef8fd71a187ed"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-read-768.png",
+      "bytes": 96129,
+      "sha256": "881de3e38717ee49a4913d5e8731a08a6f6605d631566b6d17e738a73d06913c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-1280.png",
+      "bytes": 120837,
+      "sha256": "b6506d664b50fb3394ab950a65b62cbb2aaaf9056dc0dd11a7c4f5161b50c7c5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-390.png",
+      "bytes": 75861,
+      "sha256": "3038d981cb795b3c0edb61621ce2e27dca3a4c6e83a384ae57d60280c3ec52d6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-1-real-che-8be1f-ubmission-review-and-reread/grade-1-review-768.png",
+      "bytes": 90247,
+      "sha256": "a302ff03bc887d79abf290df19aebc990f88f12b64f20a57b8a856ae23fa1538"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-partial-form.png",
+      "bytes": 121629,
+      "sha256": "96804ee1c52ab499fdc8606b2a02039c711373b794fd99f46fb1c8d25fcc1bb5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-1280.png",
+      "bytes": 96862,
+      "sha256": "acd11b6729ec42deacf7fbe33f56e9ff494cdab49ad48075602793a1d3615e6c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-390.png",
+      "bytes": 90830,
+      "sha256": "0b57d9d0c56829efb324dde873a81addc4dc3d321f0d80d45af36570563ddac8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-read-768.png",
+      "bytes": 96502,
+      "sha256": "5ed861a13cf5eee56b702e78d4840b2a42baa11021bfe83b52c02b3c126a344e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-1280.png",
+      "bytes": 121064,
+      "sha256": "2c5f4be7e684d958791ef56fba442625a471716df3338ae214bee38a0613ca56"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-390.png",
+      "bytes": 76118,
+      "sha256": "79640f8d4391d1aaca14a6cf66cb785ccea395adfbb1ab03040ef851e992cea9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/checklist-grade-4-real-che-f03d8-ubmission-review-and-reread/grade-4-review-768.png",
+      "bytes": 90484,
+      "sha256": "cab0c1d38db78557711f7dca9900ede35f8d3a0aa1f799cf0e5fdc8fdafde6bf"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1024x768.png",
+      "bytes": 90892,
+      "sha256": "922cd20d7ca244ec2377b6546513bb51ebcd95c0aa762f0a1fb1ad75a4884e0a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-1280x800.png",
+      "bytes": 92062,
+      "sha256": "9c8550b90f8e4ad64aa741aa6aa35ad1d35f3ab1d91e11d3ef34d602a80c40a2"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-390x844.png",
+      "bytes": 87125,
+      "sha256": "2843918f0324e54810e1c6a01f63d54cd7c1d8711bf104b88a2b896337524657"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/child-768x1024.png",
+      "bytes": 91974,
+      "sha256": "30e5cb29ee9f49e565d138f61a9deab8cbd81bef6e5355454114a85f81ffa509"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1024x768.png",
+      "bytes": 63086,
+      "sha256": "1e007c359ca30a00bea5e12fee79e1696d915ff4019ec8ee28faa09aa2deecd8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-1280x800.png",
+      "bytes": 80522,
+      "sha256": "caac260d3d3d691f16cbdf3d5afc34a91bd5f85dd7a12e3f9bbbf4b669323cf8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-390x844.png",
+      "bytes": 52724,
+      "sha256": "db885a55720dde15fb212ffe674c8195932d3f6c393e654b3259be6d19a31298"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/completion-real-pages-uplo-9146c-wports-and-privacy-deletion/parent-768x1024.png",
+      "bytes": 61808,
+      "sha256": "d06a749dbf6a30c68ac4f9a598c61989d9b9b0a7bfa56c27072f9218873008e0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/child-intentional-clear.png",
+      "bytes": 91113,
+      "sha256": "9b5f1def592505e4a73103356c7ecfdfe4da05f9f0784a2a4dae3b03f85ceacc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-child-na-72eeb-te-clearing-remain-possible/child-invalid-estimate.png",
+      "bytes": 97114,
+      "sha256": "624c40fec41d3f2e9bdb1aa7d0a13ca79c0137127ca37ee48088b7f4d78eb7ea"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-1280.png",
+      "bytes": 112711,
+      "sha256": "953c11a7329d9bd0eb953cd490957045ce413212059d7c04f1c7ecacda34a81f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-390.png",
+      "bytes": 100196,
+      "sha256": "97df34bc344bf0513b149c4e2da39f881f9a2d5f14165646f34acd4727da5645"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/child-grade-1-768.png",
+      "bytes": 108574,
+      "sha256": "0398cfc9ffa9dc3ec37fa632f929253a0262e4a888d318ddc737e18c3c7b64dd"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-1280.png",
+      "bytes": 137997,
+      "sha256": "96c31435c4970f9c4a38b72b7cd59009d6e0d1e308753e1d005ae2aec0707610"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-390.png",
+      "bytes": 117256,
+      "sha256": "e142719e60d4eaacb074a4069b63038cf2f32676c24afd958721580e983ef649"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-1--9430a-reads-with-real-actor-audit/parent-grade-1-768.png",
+      "bytes": 138390,
+      "sha256": "1ddc58a47bcdc7f2b5b76faceb04373a53f5235c8ce6d008b5ef51b2ba6df6b7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-1280.png",
+      "bytes": 104167,
+      "sha256": "5e559012e1c83295a3bf6501355a1c351bbb2d1a3d4a894be677879d9d8023fc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-390.png",
+      "bytes": 90722,
+      "sha256": "5604d2d1ff7320cc5dbc70207c99f05f7b10339cbd6b43cd244f9fa4df0e42af"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/child-grade-4-768.png",
+      "bytes": 99806,
+      "sha256": "ffacb373f8ab8e9881529a38c207dc53ac76ae22be09891a21c959098d8d7658"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-1280.png",
+      "bytes": 129580,
+      "sha256": "18497f2d919ac8a943d659e805e35edc2480fa4a49424319d908ae4e861b05dc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-390.png",
+      "bytes": 107814,
+      "sha256": "d8b17b5d4377919414a901a385c9aa0f223725f5bbdbbf9a9c54184cd0bc6fca"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-grade-4--6052f-reads-with-real-actor-audit/parent-grade-4-768.png",
+      "bytes": 128511,
+      "sha256": "3b5541536d7b87b7ee3e6e8f3e8497c7396f22ecdbf5245b474a9e6742b8d449"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/parent-intentional-clear.png",
+      "bytes": 125780,
+      "sha256": "c6c33ecb7a6ed79c3405ff15eb98142dd3784861fc9fd7aef198851d9516aa2d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/dailyLearningPlan-parent-n-b78ed-te-clearing-remain-possible/parent-invalid-estimate.png",
+      "bytes": 131851,
+      "sha256": "e1180cf2a4edfc8e127f04a397bcc59e9c8b97122f6730fd5f01dce97085e868"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-a-write-superseding-t-8d7e5-itted-lost-response-exactly/slow-read-original-retry.png",
+      "bytes": 103380,
+      "sha256": "27fc6e78b8863283445e018ea227b45558dabd08ccff4ec0c9d5a5da7b4fdb0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-detail-refresh-denied-10c62-a-held-successful-help-read/help-denied-late-read.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-detail-refresh-denied-4bed8--held-successful-help-write/help-denied-late-write.png",
+      "bytes": 28134,
+      "sha256": "de122072fc68d70c7d8fb3bb9cd67113455574eca2f7eecd73cd2914f44583cc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-parent-list-denial-af-a9188-clears-the-open-help-dialog/parent-list-denied.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-parent-list-denial-is-792f6--held-successful-help-write/parent-denied-late-write.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-parent-list-denial-isolates-a-held-successful-help-read/parent-denied-late-read.png",
+      "bytes": 57632,
+      "sha256": "1c7778e9e51e9a689e962ab3fd13e6d5cf4ded8e529fba4e726fb83230025a27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1024x768.png",
+      "bytes": 103166,
+      "sha256": "fe34e75c63fa1f5ef04e9045f334d56cd579224e7c8664ac4acf7de730707bc3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-1280x800.png",
+      "bytes": 104734,
+      "sha256": "807b9ef2750bf8c62587d76e86add4752526b724bd57a0a7c176fff0e431a635"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-390x844.png",
+      "bytes": 93383,
+      "sha256": "8f36f30af2000b850f155c2daccf593cf2c250634995363f0f146a20cbaa1e69"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-real-child-request-pa-a2128--request-responsive-layouts/child-help-768x1024.png",
+      "bytes": 99987,
+      "sha256": "401b7d2ff7a61a56251fe91264f98afd15eedf6a4d2e7b4b47ed8898070615a1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1024x768.png",
+      "bytes": 77044,
+      "sha256": "34d0f5e877fa4795347b0bc86e626a7682d784967e1f0198a708b414c3c0eff7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-1280x800.png",
+      "bytes": 87409,
+      "sha256": "cb8c79c74c1281b32a1af00a583739d6e7d93e51a7420f47b299a1d870a572fa"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-390x844.png",
+      "bytes": 56600,
+      "sha256": "e4a0b46164f2bc40a16210efc14d748ac381fe928f2cc8f57e82fec5ccd9ea27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/help-real-child-request-pa-a2128--request-responsive-layouts/parent-help-768x1024.png",
+      "bytes": 73266,
+      "sha256": "1e0b198981ee363329a9ccbb4fd453d060cc8c73aacd5ed3d1d79116e2ab56a5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/learningSources-child-lost-df9f0-count-return-without-repost/child-unknown-create-list.png",
+      "bytes": 99283,
+      "sha256": "0258d27ed231f65b309b54ac1b16f2bf5afa188f9e90c7408c22f7d8df0dedfa"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-ipad-layout.png",
+      "bytes": 80043,
+      "sha256": "83b94e04b692005ef1db959b3e6b340ffe3957a765a54ba613c165f3ac28829a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/learningSources-real-pages-8ce24-ew-and-child-source-revisit/child-source-review-mobile-layout.png",
+      "bytes": 73290,
+      "sha256": "8f3b9d3fd750431c8378f3d7493fc85f56996e4505fba47920bc23dd1f82ef19"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-child-full-loop.png",
+      "bytes": 45955,
+      "sha256": "0bdba9066cede3e9b70063db76dc66c10fce36f0adfc8988340be9249e93d237"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyMathLoop-child-compl-a8368-and-weekly-reflection-chain/child-parent-full-loop.png",
+      "bytes": 138605,
+      "sha256": "8ec912c1de718e5d316abdbd6138b0392571c282f22b257401b4b6f42cefc70f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-child-full-loop.png",
+      "bytes": 46319,
+      "sha256": "72c594339a31773bc6da46de8bb6954f8df9c200fda1768524018c0e85ee9a6b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyMathLoop-sibling-com-bcb08-and-weekly-reflection-chain/sibling-parent-full-loop.png",
+      "bytes": 139557,
+      "sha256": "3477a090ce6fd03e2e59572e9544a424218f22653c1b7990dedcc47fcfaef90a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-child-full-loop.png",
+      "bytes": 46549,
+      "sha256": "b5cfb468ba32db71b11bf65976695c11cdaf7b9401c1a856a90525fe915f9e52"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyMathLoop-third-compl-259f3-and-weekly-reflection-chain/third-parent-full-loop.png",
+      "bytes": 140954,
+      "sha256": "afb0b07d82db3f2030d8c2e1010e4c3bdd40bb9e66e350cdd719f7f8e2f9881f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyReflection-grade-1-c-a5b22-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-landscape.png",
+      "bytes": 43737,
+      "sha256": "e84407b24f1c33ad6ced616a089267fae1bffc6276e2ee2627590c2b663ed4b9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection-mobile.png",
+      "bytes": 40046,
+      "sha256": "536391fa7a8879e45fef439c3954015ebf8694004122d9d07d5b749c57893f0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/child-reflection.png",
+      "bytes": 43891,
+      "sha256": "a822c3df38877e36226daaaa864bff44340f536f16165fd86af61ef548701df6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028/weeklyReflection-grade-4-c-385d0-kly-feedback-survive-reload/parent-weekly-feedback.png",
+      "bytes": 131482,
+      "sha256": "ebc2ea59919ad772c4ea46772646e3e1399327b7dec44ae4fcd0f928f52b008c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-browser-20261028.json",
+      "bytes": 199420,
+      "sha256": "71b66040249cd84537102b3c1addca3d626b8d45be0e5549c58b37783c2563cb"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-frontend-20261028.json",
+      "bytes": 202663,
+      "sha256": "68b09851a5df243cf09bad592ee548b67c369deab1a42c70b920722889aef6b0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-full-frontend-final-inputs-20261028.json",
+      "bytes": 203901,
+      "sha256": "e12d033969c1ef436a93ad6c592d561ceaa1f34016caabd1182dd8e62672da6a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-http-strengthened-20261028.json",
+      "bytes": 5949,
+      "sha256": "06acadc2c664464bf8e89ce7fc9bbcb53292533970ab592b3dd28b1208b437cd"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-http-strengthened-green-20261028.json",
+      "bytes": 3162,
+      "sha256": "33ef99cb622d5e3c3b5f897741354633ea4a80fd1e815d0d0632803643b28b96"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M1/command.json",
+      "bytes": 663,
+      "sha256": "0aa7bd498d0db7020a591ce0dc4290c411bd04f3a93fdf95b80893c6d70599a3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M1/execution.json",
+      "bytes": 696,
+      "sha256": "067e034bc14b764e8727b02cb82cb0464e6c3ccfd29bd725da45aa3085ba6389"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M1/jest-result.json",
+      "bytes": 7831,
+      "sha256": "b03420d00a3a10a36d13f58da39b2c5096a4a25265d1692b6fd92c62e8ed78f3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M1/stderr.txt",
+      "bytes": 3446,
+      "sha256": "637cf4d787976d9739beff2cbb270125d520bf46c63c52a5e569a6ab0be3ce50"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M1/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_log/command.json",
+      "bytes": 686,
+      "sha256": "039df8d4bae912ac6274588fc14129e3c2a8f77b6a96488119699cb28da76595"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_log/execution.json",
+      "bytes": 692,
+      "sha256": "5518b4a53e6422544b47702414bb91c3e29a4a3c5667f49b1a45ec459547fe99"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_log/jest-result.json",
+      "bytes": 6927,
+      "sha256": "9b90c5c04845a42320eccb77b539698054567bd8d38ba73297431b7e56dc5a48"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_log/stderr.txt",
+      "bytes": 2734,
+      "sha256": "036f8dc2ccb77edf7a713d4f10f58b6390724df46f142fdd4171626bf4ab7140"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_log/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_mistake/command.json",
+      "bytes": 694,
+      "sha256": "cef961b7207e557b2f3cba6e0c080e3c4b993c74701f0e97edb43f8582dc8ff8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_mistake/execution.json",
+      "bytes": 687,
+      "sha256": "c6f2735668d0b4a51c0547ab21ec77fa3ffe16174be56bf2a6518896bc209df1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_mistake/jest-result.json",
+      "bytes": 5091,
+      "sha256": "1b32c87876c9df00fc4c2e8dd906adf1f7c651d5fb7506866a5502a16badef69"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_mistake/stderr.txt",
+      "bytes": 2548,
+      "sha256": "7b62505ae6b50b5174acf3d8f7831148f5a16268cb84ad38dc667d7a548ec206"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_mistake/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_task/command.json",
+      "bytes": 688,
+      "sha256": "658448270019aee669b884e7e0f11118476cec005994e57ddfb585784509f2db"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_task/execution.json",
+      "bytes": 690,
+      "sha256": "6c471ebb33c8495fa449c734bac590ba5cc54a7e3ced90d091bb45e06b2c1a2b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_task/jest-result.json",
+      "bytes": 5203,
+      "sha256": "ab9c72a97fe0d1a5bef1599175ade78caa41d6a65da0a63bd148ff49e258daa0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_task/stderr.txt",
+      "bytes": 2578,
+      "sha256": "9e2ec8d309a38d029ecb7757db578535909735cd26c85abe9ebbc44735b3ca2f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M2_task/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M3/command.json",
+      "bytes": 677,
+      "sha256": "4a0b7427ba77c26073510db60bfd8ef5b24c86b74ca86d825f9088815ff07108"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M3/execution.json",
+      "bytes": 723,
+      "sha256": "8570b041a85ca7364f7a92d9a790a55b37d866c67e24efc072e323979aed60f6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M3/jest-result.json",
+      "bytes": 4374,
+      "sha256": "ffe88be76828e26accdbb6104b395d00e323bff74a3f0ebd444c0141899e1a1d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M3/stderr.txt",
+      "bytes": 2151,
+      "sha256": "a58be365287af6bf29ed80f47698e3dbd87d2a5893c395a472a499550103451d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/M3/stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/README.txt",
+      "bytes": 1732,
+      "sha256": "90d542f9f78aab126954114c228b9531e01f730cd056e8a7341508673b5423f8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/RESULTS.txt",
+      "bytes": 1507,
+      "sha256": "9b644cd890072fc2ed0bb16ebf5e874b4940e0ef16720235c0aa2bf55ea35076"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/SHA256SUMS",
+      "bytes": 756,
+      "sha256": "3b981fea8028b836d0639ad22544b1678193e659ee833083469543f98acbf13a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/SHA256SUMS-executed",
+      "bytes": 3746,
+      "sha256": "43543df0e774e18b636ed05aaf2428b2ca7e98d49a0ce43e3f3c469ebafd96e0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/baseline-command.txt",
+      "bytes": 453,
+      "sha256": "b241c18cde6dd25863260ac59c4c76b227029a82614567822897f98a4565cb90"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/baseline-stdout-stderr.txt",
+      "bytes": 1319,
+      "sha256": "137ca90f9050515063ec7046ed90fbcdd0c230d926f2170493d852450298d3ec"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/execution-command.txt",
+      "bytes": 643,
+      "sha256": "4103466d9d1c5c08f2389885d9acd51a36c8a58e2ccf459c516ce19c497ea72e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/executions.json",
+      "bytes": 4884,
+      "sha256": "d787684199e2652ad4ad93cef25d5b9dea0a03767b182a718729ed0f01613f6c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/interpret-executions.cjs",
+      "bytes": 4900,
+      "sha256": "717c5cd43ca5581124ed4d69d21e3523aa7ba3402317adc2440b6ec64e4fe40f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/interpret-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/interpret-stdout.txt",
+      "bytes": 6615,
+      "sha256": "f3eb928572ab24eba188eded8a73efaaadccb807746a42df95e0fd5644f3eb0d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/jest.config.cjs",
+      "bytes": 298,
+      "sha256": "43c21b2fe7fc867b07bc7b5efd2514a0ee9ea289ed943bff5e8ba559a8f4f2ee"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/mutation-review.json",
+      "bytes": 6615,
+      "sha256": "f3eb928572ab24eba188eded8a73efaaadccb807746a42df95e0fd5644f3eb0d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/mutator.cjs",
+      "bytes": 2498,
+      "sha256": "3eb5663fe77261408bb80cdbf18f0058717db70ddc09e82d6d0a01882695937e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/preflight-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/preflight-stdout.txt",
+      "bytes": 3318,
+      "sha256": "4d18ce0c74060ee15e9b861295296de91a87a5061287a616aee968a3c51faf27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/preflight.json",
+      "bytes": 3318,
+      "sha256": "4d18ce0c74060ee15e9b861295296de91a87a5061287a616aee968a3c51faf27"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/run-mutations.cjs",
+      "bytes": 3494,
+      "sha256": "60baa562948190cb579d3607fedf3a672f3c24acdfc6c709998e0595b96790a4"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/runner-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-independent-mutation-20261028-3BDHpr/runner-stdout.txt",
+      "bytes": 3203,
+      "sha256": "97d9da8acc202b7ee3fc098678a9ba1f2482dee91ac6203fdeb08fd963e2c74b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-t2-full-http-20261028.json",
+      "bytes": 15968,
+      "sha256": "0e7f282aa0d964f07d1fb18d8113dc90153ebf35c39cfba1f84db71e7de12984"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-task11-browser-20261028/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-task11-browser-report-20261028/index.html",
+      "bytes": 548034,
+      "sha256": "907720541309fa92bd9a8d9670b1c7d5044324276d87e61ee09f49c6598291e0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/preserved/lms-t7-task11-http-20261028.json",
+      "bytes": 3731,
+      "sha256": "41d3e4393b71eebbac822c385dc60a943ee0ff5aa79b7986d68cbb122f1fa11f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-attempt/01-root-clean-install.log",
+      "bytes": 1155,
+      "sha256": "d2022a5aa9b41d68cfd0cdeaabcce06d1989b0a749c91308417c59230892a032"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-attempt/release-gate-summary.txt",
+      "bytes": 59,
+      "sha256": "7b250e2cdf95990fa704410da628732792b035037836ed76fb5b74fb086aa064"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-final-candidate/01-root-clean-install.log",
+      "bytes": 1486,
+      "sha256": "0976070aee4e1a030fbae16ec0f6898389d269b455bd9557389921a3cbc18035"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-final-candidate/02-lint.log",
+      "bytes": 9070,
+      "sha256": "b9f29c2e9aa63da3ca8f76289872f6287acf15648a236a43a133a717ea310b11"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-final-candidate/command.json",
+      "bytes": 76,
+      "sha256": "e11eb165887c33424910fcde43fd90912bfd449c044f4039443f9ebf8d36fa45"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-final-candidate/command.log",
+      "bytes": 10669,
+      "sha256": "f771c9bb940808591344047f5b2495cdb0b278b26b9123cc6a967f8328457167"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-final-candidate/release-gate-summary.txt",
+      "bytes": 57,
+      "sha256": "d2fa85a19230b84c444381858a263bac8515e552b97d438e6cc34be9529ae2c0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-isolated-cache/01-root-clean-install.log",
+      "bytes": 1485,
+      "sha256": "f74b6f081f57576c78ee5e5a06f9bfb158366d005d25ac2c8b2ffcb50236e070"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-isolated-cache/02-lint.log",
+      "bytes": 9070,
+      "sha256": "b9f29c2e9aa63da3ca8f76289872f6287acf15648a236a43a133a717ea310b11"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/release-isolated-cache/release-gate-summary.txt",
+      "bytes": 57,
+      "sha256": "d2fa85a19230b84c444381858a263bac8515e552b97d438e6cc34be9529ae2c0"
+    },
+    {
+      "file": "release-gate-artifacts/t7-engineering-2026-10-28/weekly-suite-discovery.log",
+      "bytes": 464,
+      "sha256": "f20a9c255ab5ce275987f04a962e4015dc2622859cd2e03987d28e40cd233e92"
+    }
+  ],
+  "limitations": [
+    "Raw logs and screenshots remain ignored local evidence, not public artifacts.",
+    "Candidate patch includes uncommitted files; base SHA is not the tested candidate identity.",
+    "Historical text-only tool results without raw logs are described as observations, not recreated logs.",
+    "Browser validation is Chromium, not an iPad or server deployment validation."
+  ]
+}

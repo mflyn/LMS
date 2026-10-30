@@ -1,4 +1,6 @@
-const request = require('supertest');
+const { createHttpTestHarness } = require('../../../common/test/httpTestHarness');
+const { request, close: closeHttp } = createHttpTestHarness();
+afterEach(closeHttp);
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-at-least-32-characters-long';
 process.env.GATEWAY_IDENTITY_SECRET = process.env.GATEWAY_IDENTITY_SECRET
@@ -478,6 +480,93 @@ describe('Task 6 weekly reports service', () => {
     expect(await WeeklyReport.countDocuments()).toBe(1);
   });
 
+  test.each(['current', 'promotion', 'insert-race'].flatMap(mode =>
+    ['custom', 'empty', 'same-as-generated'].map(feedback => [mode, feedback])))(
+    'T7 feedback survives %s snapshot write with %s suggestion', async (mode, feedback) => {
+    const repository = makeRepository({ tasks: makeTasks({ planned: 1, completed: 1 }) });
+    let report = mode === 'insert-race' ? null : await readReport(makeService({ repository, now: CURRENT_NOW }));
+    repository.listMistakeProjection.mockResolvedValue([mistake()]);
+    const feedbackAt = date('2026-06-25T00:00:00.000Z');
+    let expected, injected = false;
+    const writeFeedback = async target => {
+      expected = feedback === 'empty' ? '' : feedback === 'same-as-generated' ? target.generatedSuggestion : '$statistics';
+      await WeeklyReport.collection.updateOne({ _id: target._id }, { $set: {
+        parentNote: 'Concurrent parent feedback', nextWeekSuggestion: expected,
+        feedbackUpdatedBy: new WeeklyReport.base.Types.ObjectId(PARENT_A_ID), feedbackUpdatedAt: feedbackAt
+      } });
+      injected = true;
+    };
+    const originalUpdate = WeeklyReport.findOneAndUpdate.bind(WeeklyReport);
+    const originalCreate = WeeklyReport.create.bind(WeeklyReport);
+    const spy = mode === 'insert-race'
+      ? jest.spyOn(WeeklyReport, 'create').mockImplementationOnce(async data => {
+        report = await originalCreate(data);
+        await writeFeedback(report);
+        // The competing insertion is real; the original insertion loses the unique index race.
+        return originalCreate(data);
+      })
+      : jest.spyOn(WeeklyReport, 'findOneAndUpdate').mockImplementationOnce(async (...args) => {
+        await writeFeedback(report);
+        return originalUpdate(...args);
+      });
+    try {
+      const result = await readReport(makeService({ repository, now: mode === 'promotion' ? ENDED_NOW : CURRENT_NOW }));
+      expect(injected).toBe(true);
+      const persisted = await WeeklyReport.findById(result._id);
+      for (const value of [result, persisted]) {
+        expect(value.nextWeekSuggestion).toBe(expected);
+        expect(value.parentNote).toBe('Concurrent parent feedback');
+        expect(value.feedbackUpdatedAt.toISOString()).toBe(feedbackAt.toISOString());
+        expect(value.feedbackUpdatedBy.toString()).toBe(PARENT_A_ID);
+        expect(value.familyId.toString()).toBe(FAMILY_A_ID);
+        expect(value.childId.toString()).toBe(CHILD_A1_ID);
+        expect(value.frozen).toBe(mode === 'promotion');
+      }
+      const raw = await WeeklyReport.collection.findOne({ _id: result._id });
+      expect(raw.familyId._bsontype).toBe('ObjectId');
+      expect(raw.childId._bsontype).toBe('ObjectId');
+      expect(raw.generatedAt).toBeInstanceOf(Date);
+      expect(raw.sourceCutoffAt).toBeInstanceOf(Date);
+      expect(await WeeklyReport.countDocuments()).toBe(1);
+    } finally { spy.mockRestore(); }
+  });
+
+  test.each(['untouched', 'note-only', 'empty', 'same-as-generated', 'legacy-custom'])(
+    'T7 suggestion refresh preserves %s feedback semantics', async kind => {
+    const repository = makeRepository();
+    const service = makeService({ repository, now: CURRENT_NOW });
+    const first = await readReport(service);
+    const expected = kind === 'empty' ? '' : kind === 'legacy-custom' ? '$parent-custom' : first.generatedSuggestion;
+    if (kind !== 'untouched') {
+      await WeeklyReport.collection.updateOne({ _id: first._id }, { $set: {
+        nextWeekSuggestion: expected,
+        ...(kind === 'legacy-custom' ? {} : { parentNote: 'Parent note', feedbackUpdatedAt: date(CURRENT_NOW) })
+      } });
+    }
+    repository.listMistakeProjection.mockResolvedValue([mistake()]);
+    const second = await readReport(service);
+    expect(second.generatedSuggestion).not.toBe(first.generatedSuggestion);
+    expect(second.nextWeekSuggestion).toBe(kind === 'untouched' ? second.generatedSuggestion : expected);
+  });
+
+  test('T7 late current-week update returns the frozen winner without changing it', async () => {
+    const repository = makeRepository();
+    const currentService = makeService({ repository, now: CURRENT_NOW });
+    await readReport(currentService);
+    const original = WeeklyReport.findOneAndUpdate.bind(WeeklyReport);
+    let winner;
+    const spy = jest.spyOn(WeeklyReport, 'findOneAndUpdate').mockImplementationOnce(async (...args) => {
+      winner = await readReport(makeService({ repository, now: ENDED_NOW }));
+      return original(...args);
+    });
+    try {
+      const result = await readReport(currentService);
+      expect(result).not.toBeNull();
+      expect(result.toObject()).toEqual(winner.toObject());
+      expect((await WeeklyReport.findById(winner._id)).toObject()).toEqual(winner.toObject());
+    } finally { spy.mockRestore(); }
+  });
+
   test('TC-T6-REPORT-015 maps source failures to 503 and stores no failed snapshot', async () => {
     const repository = makeRepository();
     repository.listGrowthLogProjection.mockRejectedValueOnce(new Error('growth logs down'));
@@ -499,32 +588,32 @@ describe('Task 6 weekly reports routes', () => {
     const childPath = weeklyPath({ weekStart: WEEK_START });
     const siblingPath = weeklyPath({ childId: CHILD_A1_ID, weekStart: WEEK_START });
 
-    const parentResponse = await request(app)
+    const parentResponse = await (await request(app))
       .get(parentPath)
       .set(signedHeaders(parentA(), 'GET', parentPath))
       .expect(200);
     expect(parentResponse.body.success).toBe(true);
     expect(parentResponse.body.data.report.childId).toBe(CHILD_A1_ID);
 
-    const childResponse = await request(app)
+    const childResponse = await (await request(app))
       .get(childPath)
       .set(signedHeaders(childA1(), 'GET', childPath))
       .expect(200);
     expect(childResponse.body.data.report.childId).toBe(CHILD_A1_ID);
 
-    const parentBDenied = await request(app)
+    const parentBDenied = await (await request(app))
       .get(parentPath)
       .set(signedHeaders(parentB(), 'GET', parentPath))
       .expect(403);
     expect(parentBDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
 
-    const siblingDenied = await request(app)
+    const siblingDenied = await (await request(app))
       .get(siblingPath)
       .set(signedHeaders(childA2(), 'GET', siblingPath))
       .expect(403);
     expect(siblingDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
 
-    const childBDenied = await request(app)
+    const childBDenied = await (await request(app))
       .get(parentPath)
       .set(signedHeaders(childB1(), 'GET', parentPath))
       .expect(403);
@@ -536,7 +625,7 @@ describe('Task 6 weekly reports routes', () => {
     const report = await seedFrozenReport();
     const feedbackPath = `/api/reports/weekly/${report._id}/feedback`;
 
-    const parentResponse = await request(app)
+    const parentResponse = await (await request(app))
       .patch(feedbackPath)
       .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
       .send({
@@ -547,14 +636,14 @@ describe('Task 6 weekly reports routes', () => {
     expect(parentResponse.body.data.report.parentNote).toBe('本周复盘很认真');
     expect(parentResponse.body.data.report.nextWeekSuggestion).toBe('下周继续整理错题');
 
-    const childDenied = await request(app)
+    const childDenied = await (await request(app))
       .patch(feedbackPath)
       .set(signedHeaders(childA1(), 'PATCH', feedbackPath))
       .send({ parentNote: 'not allowed' })
       .expect(403);
     expect(childDenied.body.error.code).toBe('CHILD_ACCESS_DENIED');
 
-    const forbidden = await request(app)
+    const forbidden = await (await request(app))
       .patch(feedbackPath)
       .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
       .send({ statistics: { taskCompletionRate: 100 } })
@@ -562,7 +651,7 @@ describe('Task 6 weekly reports routes', () => {
     expect(forbidden.body.error.code).toBe('FIELD_ACCESS_DENIED');
 
     const unknownPath = '/api/reports/weekly/665000000000000000009999/feedback';
-    const missing = await request(app)
+    const missing = await (await request(app))
       .patch(unknownPath)
       .set(signedHeaders(parentA(), 'PATCH', unknownPath))
       .send({ parentNote: 'missing' })
@@ -576,12 +665,12 @@ describe('Task 6 weekly reports routes', () => {
     const feedbackPath = `/api/reports/weekly/${report._id}/feedback`;
     const original = report.toObject();
 
-    await request(app)
+    await (await request(app))
       .patch(feedbackPath)
       .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
       .send({ parentNote: '第一次反馈' })
       .expect(200);
-    const second = await request(app)
+    const second = await (await request(app))
       .patch(feedbackPath)
       .set(signedHeaders(parentA(), 'PATCH', feedbackPath))
       .send({ parentNote: '第二次反馈', nextWeekSuggestion: '新的家庭建议' })

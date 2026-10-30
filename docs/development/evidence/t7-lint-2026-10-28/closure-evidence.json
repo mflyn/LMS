@@ -1,0 +1,1056 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-28",
+  "status": "FROZEN_CLOSURE_SUPPLEMENT",
+  "authorization": "User authorized closure records for this lint issue and a proposed Docker/Git plan only; execution awaits separate approval.",
+  "issue": {
+    "id": "QA-T7-LINT-COVERAGE-001",
+    "status": "CLOSED",
+    "approval": "USER_APPROVED",
+    "independent": "INDEPENDENT_REVIEW_PASSED / VERIFIED_FIXED"
+  },
+  "rootArchiveScan": "RESOLVED_FOR_FROZEN_LINT_CANDIDATE_ONLY",
+  "boundaries": {
+    "t4": "OPEN",
+    "t7": "OPEN",
+    "device": "DEVICE_PENDING",
+    "manual": "MANUAL_PENDING",
+    "docker": "INCOMPLETE_FAILED",
+    "nonblocking": [
+      "T5-NB-001 OPEN_NONBLOCKING",
+      "T5-NB-002 OPEN_NONBLOCKING"
+    ],
+    "deferred": "REMAINDER_DEFERRED",
+    "t8t9": "NOT_STARTED",
+    "dockerGitProposal": "PROPOSED_WAITING_APPROVAL",
+    "fullReleaseRun": false,
+    "gitWrites": false,
+    "deployment": false
+  },
+  "base": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+  "frozen": {
+    "fullPatch": {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/candidate.patch",
+      "bytes": 202532,
+      "sha256": "515043584142e9819af05016a57d99eef3812b54ba763a403bb1a302aaa6a310"
+    },
+    "incrementalPatch": {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/incremental.patch",
+      "bytes": 13710,
+      "sha256": "082876d9f0378ae74806b7e9ea585265f4c0fc0db9fa2d763a2225d68b78089f"
+    },
+    "validation": {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/validation.json",
+      "bytes": 61101,
+      "sha256": "bb5c954db53fb062b6dfcbd97a9cc2dea6e05412360b0863dd082a1bc0e49bfb"
+    },
+    "unchangedCandidateFiles": [
+      {
+        "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+        "bytes": 27917,
+        "sha256": "eed24ef899af75ac733e592269031105f9b08576bf489ac4ba893e4163175c41"
+      },
+      {
+        "file": "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "bytes": 4129,
+        "sha256": "2bd0925abd421f17098b450bd057ec62843c0febc6c0e4e295193ba847ef7fc6"
+      },
+      {
+        "file": "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+        "bytes": 28465,
+        "sha256": "57ca21132537ae1196404605caecf21f452eb547c5dbade2a82f8d7884d6dbd9"
+      },
+      {
+        "file": "backend/services/analytics-service/jest.attachments.config.js",
+        "bytes": 680,
+        "sha256": "6fc4cfb83a6d35b8d6c1641336b79031fd8b19cd16e082121cacdf55322602ec"
+      },
+      {
+        "file": "backend/services/analytics-service/services/weeklyReportService.js",
+        "bytes": 14792,
+        "sha256": "5ea64dd713379c5b8fbf2efc6371e38b06b6840016f5a3edb1cece76d62c3b4b"
+      },
+      {
+        "file": "backend/tests/t2/weeklyReflection.integration.test.js",
+        "bytes": 18217,
+        "sha256": "e3a0b08fc4078b2348c3d9814252966df5f9cb8a277387edf215a0ca18634e92"
+      },
+      {
+        "file": "docs/api/family-learning-tracker-api.md",
+        "bytes": 130570,
+        "sha256": "48544fd2fc55bd430a388d7099d98d211f0578c3f622f5b221d6fd28461df06a"
+      },
+      {
+        "file": "docs/architecture/family-self-directed-learning-system-design.md",
+        "bytes": 111591,
+        "sha256": "95fd2ffd1afa5398c2d39cda1f5ed4968115921354e999104c3dd451fa55f446"
+      },
+      {
+        "file": "docs/development/README.md",
+        "bytes": 10806,
+        "sha256": "9ce40a40cd7997d7d67437cf3de8986eefedfc6f91a10d4fd5122ce7a92ff026"
+      },
+      {
+        "file": "docs/development/family-growth-requirement-traceability.md",
+        "bytes": 29371,
+        "sha256": "8c3f4128d99a88bf0038bfe333b4158a9fe47d10e296585b5c5d7126212887ea"
+      },
+      {
+        "file": "docs/user-guide/child-guide.md",
+        "bytes": 7729,
+        "sha256": "431b1484eba93b0725a2d7e9d18dac9e563574dc9b57234db8842473fccdbbcf"
+      },
+      {
+        "file": "docs/user-guide/parent-guide.md",
+        "bytes": 14536,
+        "sha256": "9f2bd9032d54d202344ebef68d529fd20788b937c4e136af00d48b37cf68b690"
+      },
+      {
+        "file": "eslint.config.js",
+        "bytes": 3435,
+        "sha256": "2fdcaf91b3607c6074454bb22c79c577841b70154285840c5a4119e6d80336a5"
+      },
+      {
+        "file": "frontend/web/src/App.js",
+        "bytes": 4506,
+        "sha256": "cebc769a9c37fd64c04ae06ce1b022dcdf85d5bb5a15f323a87a40083a10544b"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/T7AppNavigation.test.js",
+        "bytes": 4324,
+        "sha256": "fc81f8bb6a54afffe2c1d622f95d85ab12d2da995bb6c1632fdf5883ce5e3a9e"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/T7Reports.test.js",
+        "bytes": 8685,
+        "sha256": "8f3867c39bd75a2362d906653fe39b84e03795406e4ad21eb2c748e7b7e65551"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/Task9LogsMistakes.test.js",
+        "bytes": 14296,
+        "sha256": "b58a92fa49957fb159ac5140039dd787e52666e6bcaa09dd035a4258ef69229c"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js",
+        "bytes": 8032,
+        "sha256": "512eb83f43a39f753c16129fd146849eff75cd41691417437ba3a6e2992abacf"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/ReflectionPanel.test.js",
+        "bytes": 13863,
+        "sha256": "07709d2005d1c9531d5249ef1e26cbe98d1cae42efe079f708ca87f69c94bdd7"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/reflectionApi.test.js",
+        "bytes": 4281,
+        "sha256": "432a7988c005c555cd56dfa25c542e3bd10416ee52f758fbc0d3608d593436d3"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/reflectionState.test.js",
+        "bytes": 3975,
+        "sha256": "0dceb59d608b8e58f09e3f4d8033354e2be78ae9800058ce9453de3461d5cbbf"
+      },
+      {
+        "file": "frontend/web/src/components/family/ReflectionPanel.js",
+        "bytes": 11721,
+        "sha256": "d68807dfb81c92cecb277288dcf825b9d55bb08559801ae9f2f59a2effa02219"
+      },
+      {
+        "file": "frontend/web/src/pages/child/ChildReflectionPage.js",
+        "bytes": 3109,
+        "sha256": "13d3f3716c7861c7153c253bab1760b7c4c01e1ac2ba054debe0400f013f281f"
+      },
+      {
+        "file": "frontend/web/src/pages/child/ChildTodayPage.js",
+        "bytes": 5784,
+        "sha256": "271a0cc7189ad548416284b3cf809bb02b9b80819297f6da3396fc3e7a1ed843"
+      },
+      {
+        "file": "frontend/web/src/pages/family/GrowthLogsPage.js",
+        "bytes": 10636,
+        "sha256": "83fa3ff4a0f2d8927693bba066befbff6dd950fd52932f36c5b728e64d5caa14"
+      },
+      {
+        "file": "frontend/web/src/pages/family/ReportsPage.js",
+        "bytes": 10958,
+        "sha256": "9a95def049564763743b31d1c81716b76355df6644f136a98a460888dd07e40b"
+      },
+      {
+        "file": "frontend/web/src/services/childApi.js",
+        "bytes": 7496,
+        "sha256": "0a7a376cdbb6238d6d0ea9e35c09970aaa0cf83a6cc6dc3ca6c673930da28ff0"
+      },
+      {
+        "file": "frontend/web/src/services/familyApi.js",
+        "bytes": 10305,
+        "sha256": "39127ad61d0150ef663ef69aa9c0614e55559a8cc9388a1af3fb880142ec8a97"
+      },
+      {
+        "file": "frontend/web/src/services/reflection.js",
+        "bytes": 3685,
+        "sha256": "638543c5449f6b629da8063e17a91509df99afeb47047268bdcb6e57e6bcc5ac"
+      },
+      {
+        "file": "scripts/check-family-docs.js",
+        "bytes": 169881,
+        "sha256": "38065f97a1d9e944b619f9aed91cf51f224d307721f5bf83be470267594f4037"
+      },
+      {
+        "file": "tests/e2e/t2/weeklyMathLoop.spec.js",
+        "bytes": 12269,
+        "sha256": "bed969ba433c71055f62b2d698923e8932e6d2f0baab5d18d57a4ff63c93e801"
+      },
+      {
+        "file": "tests/e2e/t2/weeklyReflection.spec.js",
+        "bytes": 9741,
+        "sha256": "34467cb0bb182c5109ea12fa5a3f40a33506bc4d95a05d4ceb4a09b6ffa13e24"
+      }
+    ],
+    "unchangedEvidenceDocuments": [
+      {
+        "file": "docs/development/evidence/t7-lint-2026-10-28/README.md",
+        "bytes": 5705,
+        "sha256": "16fe12227ce60fa5e23743b136f640d20a72c1403e25d3c3369372596ae43557"
+      },
+      {
+        "file": "docs/development/evidence/t7-lint-2026-10-28/self-review.md",
+        "bytes": 2309,
+        "sha256": "1f0b93d1b5440d28f2a10d5ab39e295a04037e7e871ed721b4def38d2130ca4e"
+      }
+    ]
+  },
+  "documentDelta": [
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 538427,
+      "sha256": "c8ee5008f3381d8541fb1225851eff0ea02b011b00cfb24c6f7a933ae26bcf74",
+      "frozenSha256": "8e3665b6f139a0f738024a5044fd61378ef3c1c05c2863390c758b9447fd3b0c",
+      "before": {
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/before/gate.md",
+        "bytes": 525353,
+        "sha256": "8e3665b6f139a0f738024a5044fd61378ef3c1c05c2863390c758b9447fd3b0c"
+      }
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 87216,
+      "sha256": "8158d6403e8eea38b4bbd7ed38f7c7d6b9ee09b40923276ed1d3ded07ade8922",
+      "frozenSha256": "6568de4a2ec7f6025f47084ce47f0a728ae3224ed6c938ef31021c51bcf68fc3",
+      "before": {
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/before/plan.md",
+        "bytes": 86982,
+        "sha256": "6568de4a2ec7f6025f47084ce47f0a728ae3224ed6c938ef31021c51bcf68fc3"
+      }
+    }
+  ],
+  "closureSummary": {
+    "file": "docs/development/evidence/t7-lint-2026-10-28/closure.md",
+    "bytes": 3643,
+    "sha256": "c8fe13a31af5fbb3c868199fa0b871aa39c235f94a569d5b19ade6a1ef2d2483"
+  },
+  "independent": {
+    "originalDirectory": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1",
+    "manifest": {
+      "file": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/manifest.json",
+      "bytes": 9661,
+      "sha256": "43b2dc1b25323c230d1ed74ab803418d99c776e00f5e18cda31c5070a8a14830"
+    },
+    "files": [
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/REPORT.md",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/REPORT.md",
+        "bytes": 7539,
+        "sha256": "11208c5064976c9ec0efbcaacdc0b4412d36ed5b2d9616d1af411a46837a9aa7"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/candidate.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/candidate.json",
+        "bytes": 371772,
+        "sha256": "3ea336f3cad5426e0e1654f7bc699f97c97bf66a9cf640be5a4876c12fd799e9"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/developer-README.md",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-README.md",
+        "bytes": 5705,
+        "sha256": "16fe12227ce60fa5e23743b136f640d20a72c1403e25d3c3369372596ae43557"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/developer-candidate.patch",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-candidate.patch",
+        "bytes": 202532,
+        "sha256": "515043584142e9819af05016a57d99eef3812b54ba763a403bb1a302aaa6a310"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/developer-incremental.patch",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-incremental.patch",
+        "bytes": 13710,
+        "sha256": "082876d9f0378ae74806b7e9ea585265f4c0fc0db9fa2d763a2225d68b78089f"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/developer-results-audit.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-results-audit.json",
+        "bytes": 1050,
+        "sha256": "ae9284ae7f2e355436746f1601c9715afcc0870541073c5a2825630c5d79f253"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/developer-self-review.md",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-self-review.md",
+        "bytes": 2309,
+        "sha256": "1f0b93d1b5440d28f2a10d5ab39e295a04037e7e871ed721b4def38d2130ca4e"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/developer-validation.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-validation.json",
+        "bytes": 61101,
+        "sha256": "bb5c954db53fb062b6dfcbd97a9cc2dea6e05412360b0863dd082a1bc0e49bfb"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/diff.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/diff.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/docs.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/docs.log",
+        "bytes": 250,
+        "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/finalize.cjs",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/finalize.cjs",
+        "bytes": 7641,
+        "sha256": "4157bc78bacd2fb672d1ea5154ba0d6e5e2c65a5f70d3942b54681712ffc7a2a"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/formal-http.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/formal-http.json",
+        "bytes": 16807,
+        "sha256": "a2a4ec7bc4670521b2e02a660d754d5d74d3ab4f1318f8880320e5cf83356db3"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/formal-http.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/formal-http.log",
+        "bytes": 1728,
+        "sha256": "e980de709775aae21d844f42f184ccdcb8735276be1388f0a13da5738b071aae"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/freeze.cjs",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/freeze.cjs",
+        "bytes": 5924,
+        "sha256": "2d1b304a13b9bea364369254415a1daf9e5be72406f6ed91efbdf7291bc5ab59"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/independent-probe.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/independent-probe.json",
+        "bytes": 10202,
+        "sha256": "3f2b5b31e8df5dbd6c25eb55aa733b69f63000fb6aa570cc5497081f1e85ccc9"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-controls.cjs",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-controls.cjs",
+        "bytes": 3825,
+        "sha256": "9dfbd2cd9af8c91b805d1861946cdffc9958af29b9f447b19044516e44f65920"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-controls.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-controls.json",
+        "bytes": 7203,
+        "sha256": "3cebcc6e883e63101897da5dfefda67eeba7006f0eb761c018b5bda17ac7ebac"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-ignore-backend.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-ignore-backend.json",
+        "bytes": 17047,
+        "sha256": "dc4c7bb5120882e23d5ede2733315e283db1427f3786ef30a94f4651bb8e0655"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-ignore-backend.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-ignore-backend.log",
+        "bytes": 5204,
+        "sha256": "6225eb8d530e22dfd01e3cb923a187b149cb4aa79c6f22e9b13e01d2d15b4198"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-ignore-frontend.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-ignore-frontend.json",
+        "bytes": 17029,
+        "sha256": "d27033474e2928cb7e739d4514f77ce926ba8c3ab3d1891babf2ba0205170ec2"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-ignore-frontend.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-ignore-frontend.log",
+        "bytes": 5175,
+        "sha256": "391afa81d5d32730aaeaafb8b7ae40b25886f6933b197524ff639cad2d720f30"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-remove-archive.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-archive.json",
+        "bytes": 11629,
+        "sha256": "52cf76d25c864ca68bf456124e2012a29bf41d5980cb2a4e38528195655f8abb"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-remove-archive.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-archive.log",
+        "bytes": 3456,
+        "sha256": "50136025dcf2cfca5b7e62e71490280a73e686d66515a61f9bee5aeaac7d35fc"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-remove-service.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-service.json",
+        "bytes": 9108,
+        "sha256": "2a1888918ae252203484eec72f38f4923f5a9a5d6b4a6b3f1230d214582fc7ad"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-remove-service.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-service.log",
+        "bytes": 2786,
+        "sha256": "38d7b14650106dbc84844336262fa48e08374497325d90082953e851b30dff21"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-remove-test.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-test.json",
+        "bytes": 9102,
+        "sha256": "cdebb562941e8d50f6080f8a526746fe18c35b60c27d82433256f6821d6f40f9"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/negative-remove-test.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-test.log",
+        "bytes": 2783,
+        "sha256": "0639d1bb7b8d1d044681fdb1fdc7f7885a05f786b8f3c56fd999c528ad0a027a"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/original-root-lint.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/original-root-lint.log",
+        "bytes": 36,
+        "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/probe.cjs",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/probe.cjs",
+        "bytes": 2566,
+        "sha256": "f2f3efbdb42d3375e9bce5eaea94376d3683eb75777858f4d4f9dbad4c630a4d"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/quality-doc-gate.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/quality-doc-gate.json",
+        "bytes": 134904,
+        "sha256": "ba152b20ef46b89abc7e23ec5d822d5898f93a32383f45f76a54e8633bd502b1"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/quality-doc-gate.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/quality-doc-gate.log",
+        "bytes": 633,
+        "sha256": "46d5d7cc79d42a7524e1c5042ab4b0f59982a21416b7f497c58d47615b0f7de4"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/results.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/results.json",
+        "bytes": 4755,
+        "sha256": "08acf5ec7aad119b5091f7978118de66a69d9faf09db29fc9e4e54c4ac51d455"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/run.cjs",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/run.cjs",
+        "bytes": 2929,
+        "sha256": "fbc12b7efdd9d21784d079c363b90605a393368d54c6295338fa376998769db9"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/run.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/run.json",
+        "bytes": 4071,
+        "sha256": "3a947c9c5ac1ae37bcaf6240235883275c172a4334143a2f6ac643d012c1faf5"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/snapshot-root-lint.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/snapshot-root-lint.log",
+        "bytes": 36,
+        "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/verification.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/verification.json",
+        "bytes": 3941,
+        "sha256": "f94b040b92266839ac0cc85e419eaff209c3ac59034a4c7457f36dccd3152105"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/weekly-model.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/weekly-model.json",
+        "bytes": 14215,
+        "sha256": "8d5ab05f834d753cc67c81ba5faf389d6d4d03cf641e3a9c77cbad70ce22257e"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/weekly-model.log",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/weekly-model.log",
+        "bytes": 16707,
+        "sha256": "fdae6166e4705da4881fd14c81f8abac5c0eb4177408927ef26b3179189483c9"
+      },
+      {
+        "source": "/Users/REDACTED/.codex/visualizations/2026/06/18/019ed96b-6785-7492-bf22-9f7fd60fbfb5/t7-lint-followup-2026-10-28/r1/manifest.json",
+        "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/manifest.json",
+        "bytes": 9661,
+        "sha256": "43b2dc1b25323c230d1ed74ab803418d99c776e00f5e18cda31c5070a8a14830"
+      }
+    ],
+    "result": {
+      "at": "2026-10-28T05:39:26.878Z",
+      "decision": "INDEPENDENT_REVIEW_PASSED",
+      "issue": "QA-T7-LINT-COVERAGE-001",
+      "issueStatus": "VERIFIED_FIXED / INDEPENDENT_REVIEW_PASSED",
+      "rootLintBlocker": "RESOLVED_FOR_THIS_CANDIDATE_ONLY",
+      "formalGateOrApprovalNotModified": true,
+      "t4": "OPEN",
+      "t7": "OPEN",
+      "device": "DEVICE_PENDING / MANUAL_PENDING",
+      "docker": "INCOMPLETE_FAILED",
+      "nonblocking": [
+        "T5-NB-001 OPEN_NONBLOCKING",
+        "T5-NB-002 OPEN_NONBLOCKING"
+      ],
+      "deferred": "REMAINDER_DEFERRED; advanced recovery and new reclaim remain disabled",
+      "t8t9": "NOT_STARTED",
+      "environment": {
+        "host": "local macOS",
+        "node": "22.15.0",
+        "mongo": "7.0.14 temporary synthetic replica set",
+        "ubuntu": false,
+        "realDevice": false
+      },
+      "candidate": {
+        "base": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+        "incrementalSha256": "082876d9f0378ae74806b7e9ea585265f4c0fc0db9fa2d763a2225d68b78089f",
+        "fullPatchSha256": "515043584142e9819af05016a57d99eef3812b54ba763a403bb1a302aaa6a310",
+        "sourceDigest": "19579f31f643bb40051e54fe6cb6109082a29a43b9330657ab3b87a9ea6a54ea",
+        "incrementalFiles": 6,
+        "currentWorktreeFiles": 34
+      },
+      "positiveResults": [
+        {
+          "file": "quality-doc-gate.json",
+          "rawSha256": "ba152b20ef46b89abc7e23ec5d822d5898f93a32383f45f76a54e8633bd502b1",
+          "archiveSha256": "ba152b20ef46b89abc7e23ec5d822d5898f93a32383f45f76a54e8633bd502b1",
+          "suites": 2,
+          "passed": 280,
+          "failed": 0,
+          "pending": 0,
+          "runtimeErrors": 0,
+          "success": true
+        },
+        {
+          "file": "weekly-model.json",
+          "rawSha256": "8d5ab05f834d753cc67c81ba5faf389d6d4d03cf641e3a9c77cbad70ce22257e",
+          "archiveSha256": "8d5ab05f834d753cc67c81ba5faf389d6d4d03cf641e3a9c77cbad70ce22257e",
+          "suites": 1,
+          "passed": 33,
+          "failed": 0,
+          "pending": 0,
+          "runtimeErrors": 0,
+          "success": true
+        },
+        {
+          "file": "formal-http.json",
+          "rawSha256": "a2a4ec7bc4670521b2e02a660d754d5d74d3ab4f1318f8880320e5cf83356db3",
+          "archiveSha256": "a2a4ec7bc4670521b2e02a660d754d5d74d3ab4f1318f8880320e5cf83356db3",
+          "suites": 6,
+          "passed": 35,
+          "failed": 0,
+          "pending": 0,
+          "runtimeErrors": 0,
+          "success": true
+        }
+      ],
+      "rootLint": [
+        {
+          "name": "snapshot-root-lint",
+          "command": [
+            "/tmp/lms-qa-node22-bin/node",
+            "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+            "run",
+            "lint"
+          ],
+          "cwd": "/private/tmp/lms-t7-lint-independent-20261028-r1/src",
+          "startedAt": "2026-10-28T05:35:09.807Z",
+          "durationMs": 4087,
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "name": "original-root-lint",
+          "command": [
+            "/tmp/lms-qa-node22-bin/node",
+            "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+            "run",
+            "lint"
+          ],
+          "cwd": "/Users/REDACTED/GitHub PRJ/LMS",
+          "startedAt": "2026-10-28T05:35:13.895Z",
+          "durationMs": 3933,
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "negativeControls": [
+        {
+          "name": "remove-archive",
+          "exitCode": 1,
+          "passed": 10,
+          "failed": 2,
+          "pending": 0,
+          "runtimeErrors": 0
+        },
+        {
+          "name": "ignore-backend",
+          "exitCode": 1,
+          "passed": 8,
+          "failed": 4,
+          "pending": 0,
+          "runtimeErrors": 0
+        },
+        {
+          "name": "ignore-frontend",
+          "exitCode": 1,
+          "passed": 8,
+          "failed": 4,
+          "pending": 0,
+          "runtimeErrors": 0
+        },
+        {
+          "name": "remove-service",
+          "exitCode": 1,
+          "passed": 11,
+          "failed": 1,
+          "pending": 0,
+          "runtimeErrors": 0
+        },
+        {
+          "name": "remove-test",
+          "exitCode": 1,
+          "passed": 11,
+          "failed": 1,
+          "pending": 0,
+          "runtimeErrors": 0
+        }
+      ],
+      "ruleProbe": {
+        "formalPaths": 7,
+        "realHistoricalFiles": 44,
+        "weeklyFiles": [
+          {
+            "file": "backend/services/analytics-service/services/weeklyReportService.js",
+            "ignored": false,
+            "effectiveRules": 61,
+            "noUndef": [
+              2,
+              {
+                "typeof": false
+              }
+            ],
+            "badErrors": 1,
+            "badRuleIds": [
+              "no-undef"
+            ],
+            "goodErrors": 0,
+            "goodWarnings": 0
+          },
+          {
+            "file": "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+            "ignored": false,
+            "effectiveRules": 61,
+            "noUndef": [
+              2,
+              {
+                "typeof": false
+              }
+            ],
+            "badErrors": 1,
+            "badRuleIds": [
+              "no-undef"
+            ],
+            "goodErrors": 0,
+            "goodWarnings": 0
+          }
+        ]
+      },
+      "fullReleaseRun": false,
+      "noGitOrDeployment": true
+    },
+    "executionAttribution": "Independent Node22.15.0; original developer Node26 evidence unchanged; no business rerun during this document closure."
+  },
+  "preserved": {
+    "originalRawFiles": 394,
+    "previousClosureArtifacts": 47,
+    "developerLintArtifacts": 63,
+    "oldIndependentFilesIncludingManifest": 120,
+    "newIndependentFilesIncludingManifest": 39,
+    "allHashesMatch": true
+  },
+  "documentValidation": [
+    {
+      "directory": "validation",
+      "commands": [
+        {
+          "name": "docs",
+          "command": [
+            "npm",
+            "run",
+            "docs:family:check"
+          ],
+          "node": "v26.9.0",
+          "exit": 1,
+          "signal": null,
+          "elapsedMs": 718
+        },
+        {
+          "name": "doc-gate",
+          "command": [
+            "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+            "node_modules/jest/bin/jest.js",
+            "--config=backend/jest.config.js",
+            "--coverage=false",
+            "--selectProjects",
+            "family-common",
+            "--runInBand",
+            "--runTestsByPath",
+            "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+            "--json",
+            "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-closure-2026-10-28/validation/doc-gate.json"
+          ],
+          "node": "v26.9.0",
+          "exit": 1,
+          "signal": null,
+          "elapsedMs": 23361
+        },
+        {
+          "name": "diff",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "node": "v26.9.0",
+          "exit": 0,
+          "signal": null,
+          "elapsedMs": 104
+        }
+      ],
+      "passed": 261,
+      "failed": 7,
+      "pending": 0
+    },
+    {
+      "directory": "validation-complete",
+      "commands": [
+        {
+          "name": "docs",
+          "command": [
+            "npm",
+            "run",
+            "docs:family:check"
+          ],
+          "node": "v26.9.0",
+          "exit": 0,
+          "signal": null,
+          "elapsedMs": 637
+        },
+        {
+          "name": "doc-gate",
+          "command": [
+            "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+            "node_modules/jest/bin/jest.js",
+            "--config=backend/jest.config.js",
+            "--coverage=false",
+            "--selectProjects",
+            "family-common",
+            "--runInBand",
+            "--runTestsByPath",
+            "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+            "--json",
+            "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-closure-2026-10-28/validation-complete/doc-gate.json"
+          ],
+          "node": "v26.9.0",
+          "exit": 0,
+          "signal": null,
+          "elapsedMs": 22923
+        },
+        {
+          "name": "diff",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "node": "v26.9.0",
+          "exit": 0,
+          "signal": null,
+          "elapsedMs": 75
+        }
+      ],
+      "passed": 268,
+      "failed": 0,
+      "pending": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/before/gate.md",
+      "bytes": 525353,
+      "sha256": "8e3665b6f139a0f738024a5044fd61378ef3c1c05c2863390c758b9447fd3b0c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/before/plan.md",
+      "bytes": 86982,
+      "sha256": "6568de4a2ec7f6025f47084ce47f0a728ae3224ed6c938ef31021c51bcf68fc3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/REPORT.md",
+      "bytes": 7539,
+      "sha256": "11208c5064976c9ec0efbcaacdc0b4412d36ed5b2d9616d1af411a46837a9aa7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/candidate.json",
+      "bytes": 371772,
+      "sha256": "3ea336f3cad5426e0e1654f7bc699f97c97bf66a9cf640be5a4876c12fd799e9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-README.md",
+      "bytes": 5705,
+      "sha256": "16fe12227ce60fa5e23743b136f640d20a72c1403e25d3c3369372596ae43557"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-candidate.patch",
+      "bytes": 202532,
+      "sha256": "515043584142e9819af05016a57d99eef3812b54ba763a403bb1a302aaa6a310"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-incremental.patch",
+      "bytes": 13710,
+      "sha256": "082876d9f0378ae74806b7e9ea585265f4c0fc0db9fa2d763a2225d68b78089f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-results-audit.json",
+      "bytes": 1050,
+      "sha256": "ae9284ae7f2e355436746f1601c9715afcc0870541073c5a2825630c5d79f253"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-self-review.md",
+      "bytes": 2309,
+      "sha256": "1f0b93d1b5440d28f2a10d5ab39e295a04037e7e871ed721b4def38d2130ca4e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/developer-validation.json",
+      "bytes": 61101,
+      "sha256": "bb5c954db53fb062b6dfcbd97a9cc2dea6e05412360b0863dd082a1bc0e49bfb"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/docs.log",
+      "bytes": 250,
+      "sha256": "57ac1ccffb2fdc0a43285556d5909c3e58f78ad9e643fdbbb233d81aafd0e513"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/finalize.cjs",
+      "bytes": 7641,
+      "sha256": "4157bc78bacd2fb672d1ea5154ba0d6e5e2c65a5f70d3942b54681712ffc7a2a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/formal-http.json",
+      "bytes": 16807,
+      "sha256": "a2a4ec7bc4670521b2e02a660d754d5d74d3ab4f1318f8880320e5cf83356db3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/formal-http.log",
+      "bytes": 1728,
+      "sha256": "e980de709775aae21d844f42f184ccdcb8735276be1388f0a13da5738b071aae"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/freeze.cjs",
+      "bytes": 5924,
+      "sha256": "2d1b304a13b9bea364369254415a1daf9e5be72406f6ed91efbdf7291bc5ab59"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/independent-probe.json",
+      "bytes": 10202,
+      "sha256": "3f2b5b31e8df5dbd6c25eb55aa733b69f63000fb6aa570cc5497081f1e85ccc9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/manifest.json",
+      "bytes": 9661,
+      "sha256": "43b2dc1b25323c230d1ed74ab803418d99c776e00f5e18cda31c5070a8a14830"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-controls.cjs",
+      "bytes": 3825,
+      "sha256": "9dfbd2cd9af8c91b805d1861946cdffc9958af29b9f447b19044516e44f65920"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-controls.json",
+      "bytes": 7203,
+      "sha256": "3cebcc6e883e63101897da5dfefda67eeba7006f0eb761c018b5bda17ac7ebac"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-ignore-backend.json",
+      "bytes": 17047,
+      "sha256": "dc4c7bb5120882e23d5ede2733315e283db1427f3786ef30a94f4651bb8e0655"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-ignore-backend.log",
+      "bytes": 5204,
+      "sha256": "6225eb8d530e22dfd01e3cb923a187b149cb4aa79c6f22e9b13e01d2d15b4198"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-ignore-frontend.json",
+      "bytes": 17029,
+      "sha256": "d27033474e2928cb7e739d4514f77ce926ba8c3ab3d1891babf2ba0205170ec2"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-ignore-frontend.log",
+      "bytes": 5175,
+      "sha256": "391afa81d5d32730aaeaafb8b7ae40b25886f6933b197524ff639cad2d720f30"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-archive.json",
+      "bytes": 11629,
+      "sha256": "52cf76d25c864ca68bf456124e2012a29bf41d5980cb2a4e38528195655f8abb"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-archive.log",
+      "bytes": 3456,
+      "sha256": "50136025dcf2cfca5b7e62e71490280a73e686d66515a61f9bee5aeaac7d35fc"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-service.json",
+      "bytes": 9108,
+      "sha256": "2a1888918ae252203484eec72f38f4923f5a9a5d6b4a6b3f1230d214582fc7ad"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-service.log",
+      "bytes": 2786,
+      "sha256": "38d7b14650106dbc84844336262fa48e08374497325d90082953e851b30dff21"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-test.json",
+      "bytes": 9102,
+      "sha256": "cdebb562941e8d50f6080f8a526746fe18c35b60c27d82433256f6821d6f40f9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/negative-remove-test.log",
+      "bytes": 2783,
+      "sha256": "0639d1bb7b8d1d044681fdb1fdc7f7885a05f786b8f3c56fd999c528ad0a027a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/original-root-lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/probe.cjs",
+      "bytes": 2566,
+      "sha256": "f2f3efbdb42d3375e9bce5eaea94376d3683eb75777858f4d4f9dbad4c630a4d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/quality-doc-gate.json",
+      "bytes": 134904,
+      "sha256": "ba152b20ef46b89abc7e23ec5d822d5898f93a32383f45f76a54e8633bd502b1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/quality-doc-gate.log",
+      "bytes": 633,
+      "sha256": "46d5d7cc79d42a7524e1c5042ab4b0f59982a21416b7f497c58d47615b0f7de4"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/results.json",
+      "bytes": 4755,
+      "sha256": "08acf5ec7aad119b5091f7978118de66a69d9faf09db29fc9e4e54c4ac51d455"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/run.cjs",
+      "bytes": 2929,
+      "sha256": "fbc12b7efdd9d21784d079c363b90605a393368d54c6295338fa376998769db9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/run.json",
+      "bytes": 4071,
+      "sha256": "3a947c9c5ac1ae37bcaf6240235883275c172a4334143a2f6ac643d012c1faf5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/snapshot-root-lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/verification.json",
+      "bytes": 3941,
+      "sha256": "f94b040b92266839ac0cc85e419eaff209c3ac59034a4c7457f36dccd3152105"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/weekly-model.json",
+      "bytes": 14215,
+      "sha256": "8d5ab05f834d753cc67c81ba5faf389d6d4d03cf641e3a9c77cbad70ce22257e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/independent/weekly-model.log",
+      "bytes": 16707,
+      "sha256": "fdae6166e4705da4881fd14c81f8abac5c0eb4177408927ef26b3179189483c9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation-complete/commands.json",
+      "bytes": 984,
+      "sha256": "27999945731cbc0569f1fcbf78d2a459491f395e289c788513c5ef1dd8ccaee7"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation-complete/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation-complete/doc-gate.json",
+      "bytes": 128766,
+      "sha256": "e26b850d74bc5a2ef826cebf19b6cf406dfe97e76c997628e01f451cec57ed44"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation-complete/doc-gate.log",
+      "bytes": 30156,
+      "sha256": "61d4f6cc98eaf3d78ecbfee041fa2609c6d43ff3ce2866f75746784d0bbf70fd"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation-complete/docs.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation/commands.json",
+      "bytes": 976,
+      "sha256": "b7b491d65a194c3f125777cf2af08f8b1e6fc9a47c87442376af015e3051efcd"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation/diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation/doc-gate.json",
+      "bytes": 160564,
+      "sha256": "b6a0a0b673acb485dd1980e570ffd4f939fecba998e1e0cd70aaa0b9bd62fc2c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation/doc-gate.log",
+      "bytes": 38379,
+      "sha256": "ec112b9a4444d0aeebd6a87ef464dd75b463b7c572316c184ed8698bdd33ac9f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-closure-2026-10-28/validation/docs.log",
+      "bytes": 246,
+      "sha256": "33d09af745931db72c4118e67f766fe2c5c3db18aefbd4d2d6cd1fa14be7804b"
+    }
+  ],
+  "excludedSelf": "docs/development/evidence/t7-lint-2026-10-28/closure-evidence.json",
+  "limits": [
+    "Only Gate/plan and new closure summary/index changed.",
+    "Initial missing-index link failure retained; final checks pass after index was assembled.",
+    "No Docker commands, image pulls, release execution, cleanup/restore or remote measurement.",
+    "Original release failure and old frozen pending-review wording are preserved as historical snapshots."
+  ]
+}

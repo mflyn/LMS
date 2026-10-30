@@ -1,0 +1,1104 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-28T05:32:15.247Z",
+  "base": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+  "status": "FIXED_PENDING_INDEPENDENT_REVIEW",
+  "issue": "QA-T7-LINT-COVERAGE-001",
+  "runtime": {
+    "node": "v26.9.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "boundaries": {
+    "t4": "OPEN",
+    "t7": "OPEN",
+    "device": "DEVICE_PENDING",
+    "manual": "MANUAL_PENDING",
+    "docker": "INCOMPLETE_FAILED",
+    "nonblocking": [
+      "T5-NB-001 OPEN_NONBLOCKING",
+      "T5-NB-002 OPEN_NONBLOCKING"
+    ],
+    "deferred": "REMAINDER_DEFERRED",
+    "t8t9": "NOT_STARTED",
+    "gitWrites": false,
+    "deployment": false,
+    "fullReleaseRun": false
+  },
+  "scope": [
+    "eslint.config.js",
+    "backend/common/deployment/__tests__/task5QualityGate.test.js",
+    "backend/services/analytics-service/services/weeklyReportService.js",
+    "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+    "docs/development/family-self-directed-learning-mvp-gate.md",
+    "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md"
+  ],
+  "before": [
+    {
+      "target": "eslint.config.js",
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/eslint.config.js",
+      "bytes": 3248,
+      "sha256": "a8de4df5a6b28ad32644cbf46e295201d9731f687f90423963fddfad8a538c41"
+    },
+    {
+      "target": "backend/common/deployment/__tests__/task5QualityGate.test.js",
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/backend/common/deployment/__tests__/task5QualityGate.test.js",
+      "bytes": 895,
+      "sha256": "6f00e131625ae01c4d4447344ba2834a307092d35773c2639b32472ff87f7f8d"
+    },
+    {
+      "target": "backend/services/analytics-service/services/weeklyReportService.js",
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/backend/services/analytics-service/services/weeklyReportService.js",
+      "bytes": 14844,
+      "sha256": "9f9b038884d51a8a991d15b20f750a038f98a6279ed73c20322e4c8eff3261da"
+    },
+    {
+      "target": "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/backend/services/analytics-service/__tests__/weeklyReports.test.js",
+      "bytes": 28461,
+      "sha256": "3dbe0b639610a58dcde21d2aaf4e288f856d753f089cde8ff28a8e3640d77c3d"
+    },
+    {
+      "target": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 522312,
+      "sha256": "4fbd98f8656310541524be010bd6b9eabcbf76e8682fa887c32a189fafd39a73"
+    },
+    {
+      "target": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 86728,
+      "sha256": "d20b4332a7b35a48594c3304b2c0493ab437f538cf27fb657179a2fd3a306fc3"
+    }
+  ],
+  "candidate": {
+    "files": [
+      {
+        "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+        "bytes": 27917,
+        "sha256": "eed24ef899af75ac733e592269031105f9b08576bf489ac4ba893e4163175c41"
+      },
+      {
+        "file": "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "bytes": 4129,
+        "sha256": "2bd0925abd421f17098b450bd057ec62843c0febc6c0e4e295193ba847ef7fc6"
+      },
+      {
+        "file": "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+        "bytes": 28465,
+        "sha256": "57ca21132537ae1196404605caecf21f452eb547c5dbade2a82f8d7884d6dbd9"
+      },
+      {
+        "file": "backend/services/analytics-service/jest.attachments.config.js",
+        "bytes": 680,
+        "sha256": "6fc4cfb83a6d35b8d6c1641336b79031fd8b19cd16e082121cacdf55322602ec"
+      },
+      {
+        "file": "backend/services/analytics-service/services/weeklyReportService.js",
+        "bytes": 14792,
+        "sha256": "5ea64dd713379c5b8fbf2efc6371e38b06b6840016f5a3edb1cece76d62c3b4b"
+      },
+      {
+        "file": "backend/tests/t2/weeklyReflection.integration.test.js",
+        "bytes": 18217,
+        "sha256": "e3a0b08fc4078b2348c3d9814252966df5f9cb8a277387edf215a0ca18634e92"
+      },
+      {
+        "file": "docs/api/family-learning-tracker-api.md",
+        "bytes": 130570,
+        "sha256": "48544fd2fc55bd430a388d7099d98d211f0578c3f622f5b221d6fd28461df06a"
+      },
+      {
+        "file": "docs/architecture/family-self-directed-learning-system-design.md",
+        "bytes": 111591,
+        "sha256": "95fd2ffd1afa5398c2d39cda1f5ed4968115921354e999104c3dd451fa55f446"
+      },
+      {
+        "file": "docs/development/README.md",
+        "bytes": 10806,
+        "sha256": "9ce40a40cd7997d7d67437cf3de8986eefedfc6f91a10d4fd5122ce7a92ff026"
+      },
+      {
+        "file": "docs/development/family-growth-requirement-traceability.md",
+        "bytes": 29371,
+        "sha256": "8c3f4128d99a88bf0038bfe333b4158a9fe47d10e296585b5c5d7126212887ea"
+      },
+      {
+        "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "bytes": 525353,
+        "sha256": "8e3665b6f139a0f738024a5044fd61378ef3c1c05c2863390c758b9447fd3b0c"
+      },
+      {
+        "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+        "bytes": 86982,
+        "sha256": "6568de4a2ec7f6025f47084ce47f0a728ae3224ed6c938ef31021c51bcf68fc3"
+      },
+      {
+        "file": "docs/user-guide/child-guide.md",
+        "bytes": 7729,
+        "sha256": "431b1484eba93b0725a2d7e9d18dac9e563574dc9b57234db8842473fccdbbcf"
+      },
+      {
+        "file": "docs/user-guide/parent-guide.md",
+        "bytes": 14536,
+        "sha256": "9f2bd9032d54d202344ebef68d529fd20788b937c4e136af00d48b37cf68b690"
+      },
+      {
+        "file": "eslint.config.js",
+        "bytes": 3435,
+        "sha256": "2fdcaf91b3607c6074454bb22c79c577841b70154285840c5a4119e6d80336a5"
+      },
+      {
+        "file": "frontend/web/src/App.js",
+        "bytes": 4506,
+        "sha256": "cebc769a9c37fd64c04ae06ce1b022dcdf85d5bb5a15f323a87a40083a10544b"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/T7AppNavigation.test.js",
+        "bytes": 4324,
+        "sha256": "fc81f8bb6a54afffe2c1d622f95d85ab12d2da995bb6c1632fdf5883ce5e3a9e"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/T7Reports.test.js",
+        "bytes": 8685,
+        "sha256": "8f3867c39bd75a2362d906653fe39b84e03795406e4ad21eb2c748e7b7e65551"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/Task9LogsMistakes.test.js",
+        "bytes": 14296,
+        "sha256": "b58a92fa49957fb159ac5140039dd787e52666e6bcaa09dd035a4258ef69229c"
+      },
+      {
+        "file": "frontend/web/src/__tests__/family/Task9ReportsRemindersRewards.test.js",
+        "bytes": 8032,
+        "sha256": "512eb83f43a39f753c16129fd146849eff75cd41691417437ba3a6e2992abacf"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/ReflectionPanel.test.js",
+        "bytes": 13863,
+        "sha256": "07709d2005d1c9531d5249ef1e26cbe98d1cae42efe079f708ca87f69c94bdd7"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/reflectionApi.test.js",
+        "bytes": 4281,
+        "sha256": "432a7988c005c555cd56dfa25c542e3bd10416ee52f758fbc0d3608d593436d3"
+      },
+      {
+        "file": "frontend/web/src/__tests__/shared/reflectionState.test.js",
+        "bytes": 3975,
+        "sha256": "0dceb59d608b8e58f09e3f4d8033354e2be78ae9800058ce9453de3461d5cbbf"
+      },
+      {
+        "file": "frontend/web/src/components/family/ReflectionPanel.js",
+        "bytes": 11721,
+        "sha256": "d68807dfb81c92cecb277288dcf825b9d55bb08559801ae9f2f59a2effa02219"
+      },
+      {
+        "file": "frontend/web/src/pages/child/ChildReflectionPage.js",
+        "bytes": 3109,
+        "sha256": "13d3f3716c7861c7153c253bab1760b7c4c01e1ac2ba054debe0400f013f281f"
+      },
+      {
+        "file": "frontend/web/src/pages/child/ChildTodayPage.js",
+        "bytes": 5784,
+        "sha256": "271a0cc7189ad548416284b3cf809bb02b9b80819297f6da3396fc3e7a1ed843"
+      },
+      {
+        "file": "frontend/web/src/pages/family/GrowthLogsPage.js",
+        "bytes": 10636,
+        "sha256": "83fa3ff4a0f2d8927693bba066befbff6dd950fd52932f36c5b728e64d5caa14"
+      },
+      {
+        "file": "frontend/web/src/pages/family/ReportsPage.js",
+        "bytes": 10958,
+        "sha256": "9a95def049564763743b31d1c81716b76355df6644f136a98a460888dd07e40b"
+      },
+      {
+        "file": "frontend/web/src/services/childApi.js",
+        "bytes": 7496,
+        "sha256": "0a7a376cdbb6238d6d0ea9e35c09970aaa0cf83a6cc6dc3ca6c673930da28ff0"
+      },
+      {
+        "file": "frontend/web/src/services/familyApi.js",
+        "bytes": 10305,
+        "sha256": "39127ad61d0150ef663ef69aa9c0614e55559a8cc9388a1af3fb880142ec8a97"
+      },
+      {
+        "file": "frontend/web/src/services/reflection.js",
+        "bytes": 3685,
+        "sha256": "638543c5449f6b629da8063e17a91509df99afeb47047268bdcb6e57e6bcc5ac"
+      },
+      {
+        "file": "scripts/check-family-docs.js",
+        "bytes": 169881,
+        "sha256": "38065f97a1d9e944b619f9aed91cf51f224d307721f5bf83be470267594f4037"
+      },
+      {
+        "file": "tests/e2e/t2/weeklyMathLoop.spec.js",
+        "bytes": 12269,
+        "sha256": "bed969ba433c71055f62b2d698923e8932e6d2f0baab5d18d57a4ff63c93e801"
+      },
+      {
+        "file": "tests/e2e/t2/weeklyReflection.spec.js",
+        "bytes": 9741,
+        "sha256": "34467cb0bb182c5109ea12fa5a3f40a33506bc4d95a05d4ceb4a09b6ffa13e24"
+      }
+    ],
+    "patch": {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/candidate.patch",
+      "bytes": 202532,
+      "sha256": "515043584142e9819af05016a57d99eef3812b54ba763a403bb1a302aaa6a310"
+    },
+    "incrementalPatch": {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/incremental.patch",
+      "bytes": 13710,
+      "sha256": "082876d9f0378ae74806b7e9ea585265f4c0fc0db9fa2d763a2225d68b78089f"
+    },
+    "reverseCheck": "PASS_BOTH",
+    "excludedEvidenceDirectories": [
+      "docs/development/evidence/t7-engineering-2026-10-28",
+      "docs/development/evidence/t7-lint-2026-10-28"
+    ]
+  },
+  "documents": [
+    {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/README.md",
+      "bytes": 5705,
+      "sha256": "16fe12227ce60fa5e23743b136f640d20a72c1403e25d3c3369372596ae43557"
+    },
+    {
+      "file": "docs/development/evidence/t7-lint-2026-10-28/self-review.md",
+      "bytes": 2309,
+      "sha256": "1f0b93d1b5440d28f2a10d5ab39e295a04037e7e871ed721b4def38d2130ca4e"
+    }
+  ],
+  "historical": {
+    "originalPatch": {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/candidate.patch",
+      "bytes": 188462,
+      "sha256": "61e4591c8eb4520395d9e27e029cf14b6c8918db333acb614e025f86f3d898f7"
+    },
+    "originalValidation": {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/validation.json",
+      "bytes": 120488,
+      "sha256": "19ab93679c2695373efc5c9de5edffbed8f9f5cbbe1350f007dc698c85b8af8f"
+    },
+    "closureIndex": {
+      "file": "docs/development/evidence/t7-engineering-2026-10-28/p2-closure-evidence.json",
+      "bytes": 25917,
+      "sha256": "234a1f20c33ef476c0927cca7cd8221e4f3268876e5ad68760f3768e32953771"
+    },
+    "originalRawCountVerified": 394,
+    "closureArtifactsVerified": 47,
+    "independentFilesVerified": 120,
+    "independentManifestEntries": 119,
+    "allHistoricalHashesMatch": true
+  },
+  "commands": [
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/configured-root-lint-command.json",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exit": 1,
+      "elapsedMs": 3969
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-diff-command.json",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "environmentOverrides": {},
+      "exit": 0,
+      "signal": null,
+      "elapsedMs": 60
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-docs-command.json",
+      "command": [
+        "npm",
+        "run",
+        "docs:family:check"
+      ],
+      "environmentOverrides": {},
+      "exit": 0,
+      "signal": null,
+      "elapsedMs": 578
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-quality-doc-gate-command.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+        "--json",
+        "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/final-quality-doc-gate.json"
+      ],
+      "environmentOverrides": {},
+      "exit": 0,
+      "signal": null,
+      "elapsedMs": 24605
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-root-lint-command.json",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "environmentOverrides": {},
+      "exit": 0,
+      "signal": null,
+      "elapsedMs": 3745
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-http-command.json",
+      "command": [
+        "npm",
+        "run",
+        "test:t2:integration",
+        "--",
+        "--json",
+        "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-http.json"
+      ],
+      "environmentOverrides": {},
+      "exit": 0,
+      "signal": null,
+      "elapsedMs": 58310
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-root-lint-command.json",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "environmentOverrides": {},
+      "exit": 0,
+      "signal": null,
+      "elapsedMs": 4129
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-weekly-model-command.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/services/analytics-service/jest.attachments.config.js",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+        "--json",
+        "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-weekly-model.json"
+      ],
+      "environmentOverrides": {},
+      "exit": 0,
+      "signal": null,
+      "elapsedMs": 6313
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/green-quality-command.json",
+      "command": [
+        "node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "--json",
+        "--outputFile=release-gate-artifacts/t7-lint-remediation-2026-10-28/green-quality.json"
+      ],
+      "exit": 0,
+      "elapsedMs": 1534
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-backend-command.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "--json",
+        "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-backend.json"
+      ],
+      "environmentOverrides": {
+        "NODE_OPTIONS": " --require=/private/tmp/t7-lint-mutation-preload.cjs",
+        "T7_LINT_ROOT": "/Users/REDACTED/GitHub PRJ/LMS",
+        "T7_LINT_MUTATION": "ignore-backend",
+        "T7_LINT_INJECTIONS": "/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-backend-injections.jsonl"
+      },
+      "exit": 1,
+      "signal": null,
+      "elapsedMs": 1098
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-frontend-command.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "--json",
+        "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-frontend.json"
+      ],
+      "environmentOverrides": {
+        "NODE_OPTIONS": " --require=/private/tmp/t7-lint-mutation-preload.cjs",
+        "T7_LINT_ROOT": "/Users/REDACTED/GitHub PRJ/LMS",
+        "T7_LINT_MUTATION": "ignore-frontend",
+        "T7_LINT_INJECTIONS": "/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-frontend-injections.jsonl"
+      },
+      "exit": 1,
+      "signal": null,
+      "elapsedMs": 1211
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-archive-command.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "--json",
+        "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-archive.json"
+      ],
+      "environmentOverrides": {
+        "NODE_OPTIONS": " --require=/private/tmp/t7-lint-mutation-preload.cjs",
+        "T7_LINT_ROOT": "/Users/REDACTED/GitHub PRJ/LMS",
+        "T7_LINT_MUTATION": "remove-archive",
+        "T7_LINT_INJECTIONS": "/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-archive-injections.jsonl"
+      },
+      "exit": 1,
+      "signal": null,
+      "elapsedMs": 1584
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-service-command.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "--json",
+        "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-service.json"
+      ],
+      "environmentOverrides": {
+        "NODE_OPTIONS": " --require=/private/tmp/t7-lint-mutation-preload.cjs",
+        "T7_LINT_ROOT": "/Users/REDACTED/GitHub PRJ/LMS",
+        "T7_LINT_MUTATION": "remove-service",
+        "T7_LINT_INJECTIONS": "/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-service-injections.jsonl"
+      },
+      "exit": 1,
+      "signal": null,
+      "elapsedMs": 1073
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-test-command.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "--json",
+        "--outputFile=/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-test.json"
+      ],
+      "environmentOverrides": {
+        "NODE_OPTIONS": " --require=/private/tmp/t7-lint-mutation-preload.cjs",
+        "T7_LINT_ROOT": "/Users/REDACTED/GitHub PRJ/LMS",
+        "T7_LINT_MUTATION": "remove-test",
+        "T7_LINT_INJECTIONS": "/Users/REDACTED/GitHub PRJ/LMS/release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-test-injections.jsonl"
+      },
+      "exit": 1,
+      "signal": null,
+      "elapsedMs": 1050
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality-assertions-command.json",
+      "command": [
+        "node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "--json",
+        "--outputFile=release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality-assertions.json"
+      ],
+      "exit": 1,
+      "elapsedMs": 1506
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality-command.json",
+      "command": [
+        "node",
+        "node_modules/jest/bin/jest.js",
+        "--config=backend/jest.config.js",
+        "--coverage=false",
+        "--selectProjects",
+        "family-common",
+        "--runInBand",
+        "--runTestsByPath",
+        "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "--json",
+        "--outputFile=release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality.json"
+      ],
+      "exit": 1,
+      "elapsedMs": 1797
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-root-lint-command.json",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exit": 1,
+      "elapsedMs": 8131
+    }
+  ],
+  "results": [
+    {
+      "name": "red-quality",
+      "passed": 8,
+      "failed": 4,
+      "pending": 0,
+      "passedSuites": 0
+    },
+    {
+      "name": "red-quality-assertions",
+      "passed": 8,
+      "failed": 4,
+      "pending": 0,
+      "passedSuites": 0
+    },
+    {
+      "name": "green-quality",
+      "passed": 12,
+      "failed": 0,
+      "pending": 0,
+      "passedSuites": 1
+    },
+    {
+      "name": "fixed-weekly-model",
+      "passed": 33,
+      "failed": 0,
+      "pending": 0,
+      "passedSuites": 1
+    },
+    {
+      "name": "fixed-http",
+      "passed": 35,
+      "failed": 0,
+      "pending": 0,
+      "passedSuites": 6
+    },
+    {
+      "name": "final-quality-doc-gate",
+      "passed": 280,
+      "failed": 0,
+      "pending": 0,
+      "passedSuites": 2
+    }
+  ],
+  "mutations": {
+    "before": [
+      {
+        "file": "eslint.config.js",
+        "sha256": "2fdcaf91b3607c6074454bb22c79c577841b70154285840c5a4119e6d80336a5"
+      },
+      {
+        "file": "backend/common/deployment/__tests__/task5QualityGate.test.js",
+        "sha256": "2bd0925abd421f17098b450bd057ec62843c0febc6c0e4e295193ba847ef7fc6"
+      }
+    ],
+    "unchanged": true,
+    "results": [
+      {
+        "mode": "remove-archive",
+        "exit": 1,
+        "failed": 2,
+        "passed": 10,
+        "pending": 0,
+        "injections": 1,
+        "failures": [
+          {
+            "name": "stage 5 static quality gate ignores only the root historical archive: release-gate-artifacts/t5/source-snapshot/frontend/web/src/pages/family/TasksPage.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:85:35)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          },
+          {
+            "name": "stage 5 static quality gate ignores only the root historical archive: release-gate-artifacts/t7/preserved/backend/services/analytics-service/services/weeklyReportService.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:85:35)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "ignore-backend",
+        "exit": 1,
+        "failed": 4,
+        "passed": 8,
+        "pending": 0,
+        "injections": 1,
+        "failures": [
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: backend/services/analytics-service/services/weeklyReportService.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:90:28)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          },
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: backend/services/analytics-service/__tests__/weeklyReports.test.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:90:28)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          },
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: backend/tests/t2/weeklyReflection.integration.test.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:90:28)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          },
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: backend/common/deployment/__tests__/task5QualityGate.test.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:90:28)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "ignore-frontend",
+        "exit": 1,
+        "failed": 4,
+        "passed": 8,
+        "pending": 0,
+        "injections": 1,
+        "failures": [
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: frontend/web/src/components/family/ReflectionPanel.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:90:28)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          },
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: frontend/web/src/pages/family/ReportsPage.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:90:28)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          },
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: frontend/web/src/components/family/source-snapshot/Probe.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:90:28)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          },
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: frontend/web/src/components/family/release-gate-artifacts/Probe.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:90:28)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "remove-service",
+        "exit": 1,
+        "failed": 1,
+        "passed": 11,
+        "pending": 0,
+        "injections": 1,
+        "failures": [
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: backend/services/analytics-service/services/weeklyReportService.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: 2\nReceived: undefined\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:91:33)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "remove-test",
+        "exit": 1,
+        "failed": 1,
+        "passed": 11,
+        "pending": 0,
+        "injections": 1,
+        "failures": [
+          {
+            "name": "stage 5 static quality gate keeps real source linted and rejects undefined references: backend/services/analytics-service/__tests__/weeklyReports.test.js",
+            "messages": [
+              "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: 2\nReceived: undefined\n    at toBe (/Users/REDACTED/GitHub PRJ/LMS/backend/common/deployment/__tests__/task5QualityGate.test.js:91:33)\n    at Object.<anonymous> (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-each/build/bind.js:81:13)\n    at Promise.then.completed (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/REDACTED/GitHub PRJ/LMS/node_modules/jest-runner/build/runTest.js:444:34)"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before.json",
+      "bytes": 35528,
+      "sha256": "0d3bb3ba88612b007ced573054d2bf31510c629ce0899d14b84702d9c04ea111"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/backend/common/deployment/__tests__/task5QualityGate.test.js",
+      "bytes": 895,
+      "sha256": "6f00e131625ae01c4d4447344ba2834a307092d35773c2639b32472ff87f7f8d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/backend/services/analytics-service/__tests__/weeklyReports.test.js",
+      "bytes": 28461,
+      "sha256": "3dbe0b639610a58dcde21d2aaf4e288f856d753f089cde8ff28a8e3640d77c3d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/backend/services/analytics-service/services/weeklyReportService.js",
+      "bytes": 14844,
+      "sha256": "9f9b038884d51a8a991d15b20f750a038f98a6279ed73c20322e4c8eff3261da"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 522312,
+      "sha256": "4fbd98f8656310541524be010bd6b9eabcbf76e8682fa887c32a189fafd39a73"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 86728,
+      "sha256": "d20b4332a7b35a48594c3304b2c0493ab437f538cf27fb657179a2fd3a306fc3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/before/eslint.config.js",
+      "bytes": 3248,
+      "sha256": "a8de4df5a6b28ad32644cbf46e295201d9731f687f90423963fddfad8a538c41"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/configured-root-lint-command.json",
+      "bytes": 89,
+      "sha256": "3a231be8dfdcf124807af2498456550ecb217a49b14887d37dea34346a8e6c6c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/configured-root-lint.log",
+      "bytes": 596,
+      "sha256": "cd5ffea0c299f7544594ad7fa803ccbe05298b903ee479a56b5c021e22ddf1c8"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-diff-command.json",
+      "bytes": 140,
+      "sha256": "7bffb15957f0657fff1b20869d674b0f0b675a5732ee6bd226714b573f7fb94a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-docs-command.json",
+      "bytes": 150,
+      "sha256": "9647fa29107d0a3b5890a94cbe614b3d6df196a659286f0676378942d07f18a9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-docs.log",
+      "bytes": 324,
+      "sha256": "3099fdf04674140b48d8d8e6892ac7f8e8f8f6f210455b436a78860841db12f1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-quality-doc-gate-command.json",
+      "bytes": 635,
+      "sha256": "a30b81488064999d264f97f2f5bd376a28783a5db661eceaaaec4bbf09882e7c"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-quality-doc-gate.json",
+      "bytes": 134691,
+      "sha256": "6b8f6da931017abb2a7ab2fe5209f5f3aaae6bde20b5cc397acf0cd38d7fdc17"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-quality-doc-gate.log",
+      "bytes": 614,
+      "sha256": "8474219813f7dd33c3f2c46524bf852d3026f2bc6b0a7bfff44e02e0c8a82045"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-root-lint-command.json",
+      "bytes": 138,
+      "sha256": "f80ef61425e91ff72f086d5e3c58ef88f20e64218ee5f8425d1ccbabae0a6be9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/final-root-lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-http-command.json",
+      "bytes": 302,
+      "sha256": "f4fa5b1c3e1a7aa6fab37b6f6ed84df3bdc5b09e3a7130cc18ed730185b204f6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-http.json",
+      "bytes": 16696,
+      "sha256": "4b045ef9da7031ac84a0083ab144b9ccbf7e7cbc6492621e5f9ff3afa840a355"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-http.log",
+      "bytes": 1889,
+      "sha256": "a1bc1626ff139421f6f6c057579539d3d68bb38c1f04c8b0d960bbb856107456"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-root-lint-command.json",
+      "bytes": 138,
+      "sha256": "525b733a0e0c005f561d8af16c2ee79c10d6543dcd722824e4bfe5533152411a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-root-lint.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-weekly-model-command.json",
+      "bytes": 531,
+      "sha256": "b98015233fbf86a46904d1a75aebb48df9c0dc26e8c66f86f6081b8ca56e3902"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-weekly-model.json",
+      "bytes": 14196,
+      "sha256": "8964be65ed743c219b451e333a2d470790c8915424d7b73dff69ba571bbc7c53"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/fixed-weekly-model.log",
+      "bytes": 16652,
+      "sha256": "87311e51025a7b6da2362d778533fa783fefabe484a1f092e88a6dc040bc444a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/green-quality-command.json",
+      "bytes": 430,
+      "sha256": "7bce80150b7086cf6940435ee17232e5f8601ae6cedc36014491640fd73cdeff"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/green-quality.json",
+      "bytes": 6477,
+      "sha256": "1cbf889311143473dcb83b57ea5e2830b2d038298c4160ef8fc80cba0c74a709"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/green-quality.log",
+      "bytes": 1955,
+      "sha256": "3f7e1ae09b4ca898689292b5fa863016e25fbb1061f8f90a148e23b91011e94f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/minimal-source-review.json",
+      "bytes": 217,
+      "sha256": "736230c924ab1c0ce4f66b5904957cf5f8c50df13dfe5ba20412301e9c0b3c2e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-backend-command.json",
+      "bytes": 895,
+      "sha256": "dc33036521ec21963ea39f84699c112f830558e6191f1aa6055feed3026b434d"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-backend-injections.jsonl",
+      "bytes": 102,
+      "sha256": "e506bf2c8a13a1cb8f23173b51c43f38b72772a25a0c8af841c012e8d1af2a78"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-backend.json",
+      "bytes": 16852,
+      "sha256": "e120cc449b7f100bb5cbc18ddca55dbfcec27d03ee3d1b6520d1c4b444fc6c78"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-backend.log",
+      "bytes": 5167,
+      "sha256": "274819eaca391c5451e883f8154e0cdd585650d2a10ff4a17339ea4663080ad5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-frontend-command.json",
+      "bytes": 898,
+      "sha256": "17e05356ff4c2cd79cab6d1bd12da5323541059c8a087ef74bb3249b613e8695"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-frontend-injections.jsonl",
+      "bytes": 103,
+      "sha256": "367785465eb6810c4b9c0448bf305b19ea88e4dc3bca43ef6712f2886dd060c9"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-frontend.json",
+      "bytes": 16829,
+      "sha256": "85b573708f75230425b91d338494b29ac7f35ae315e0668237a664251407daf6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-ignore-frontend.log",
+      "bytes": 5152,
+      "sha256": "214712ef2007e7e83ef5db68457ffc2d0a0e17d24aae7b5d225066ff888785c5"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-preload.cjs",
+      "bytes": 1213,
+      "sha256": "5ef7f1402d01568301d35839e2247fa4d697eeb0690bbd65fe98b5fdcccc5132"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-archive-command.json",
+      "bytes": 895,
+      "sha256": "342fdd59c8750e88c8fa8f1daeaf06991f993bd63decd51a1ee1abf14fbb447a"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-archive-injections.jsonl",
+      "bytes": 102,
+      "sha256": "c169480fdb4163837478d67bc0022aae591a7cd79e78bae3b7c9e1275eb65d03"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-archive.json",
+      "bytes": 11512,
+      "sha256": "b4b5f1c3f0df37a0ca823d425a1b773bb01f46c57916cbd91e96223a560b3562"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-archive.log",
+      "bytes": 3418,
+      "sha256": "46f17c631568fd0d0140a44b7b025c937fec0c10369732f7354b017e88fc7ace"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-service-command.json",
+      "bytes": 895,
+      "sha256": "d98dad7f2da9bc5fce2acea64123626be19ea3b5ba8376328858662252c791ea"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-service-injections.jsonl",
+      "bytes": 102,
+      "sha256": "6f3f64f8a1c0d1af06e16c81cba516a9b0ab77859ea455d9571a3344cab10762"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-service.json",
+      "bytes": 9030,
+      "sha256": "c47e9fbdb9e736d2d4f06cba9ec6cc8bf4d86ca78ed38d43d831f31a4a921b10"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-service.log",
+      "bytes": 2756,
+      "sha256": "da55f61895a6ff380d2ae1cab0559138623748299fab99c284b48e5ce5d024db"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-test-command.json",
+      "bytes": 886,
+      "sha256": "1a34c7edfc234801509e52f2000cde4d894a3a3c1ca6f29348a7649abf136e14"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-test-injections.jsonl",
+      "bytes": 99,
+      "sha256": "4471ba72188ebeae6f74eeb69724ecf48e84c806b882367aff5e1e53a8dd1d9f"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-test.json",
+      "bytes": 9030,
+      "sha256": "3715f3b8502309b37ddbc99efb5eb5a156250b0a00be92819e61caaf88ca8268"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutation-remove-test.log",
+      "bytes": 2746,
+      "sha256": "e8369df40b4bac90172fb4ce4e87b36566cbfa80d7d330008e42ad04caf94f6e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/mutations-summary.json",
+      "bytes": 23329,
+      "sha256": "2ed3aad2bfa54a8f5f1e5ff5d580e6dde4f89de39afdf909088729a38d91a814"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/pre-result-README.md",
+      "bytes": 2033,
+      "sha256": "a6315801af1fe80221da359ae76cf657cfefc074c5910673cc3f9e95cbb34d9b"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/preflight.json",
+      "bytes": 907,
+      "sha256": "34f735ef32eedd8ba366d53db9679aeeb6fcc75200caa1bb738c9253c7d472a6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality-assertions-command.json",
+      "bytes": 439,
+      "sha256": "6c283de6ea43079ce5f552833f46b12dff02f79addd14b19948a8f1f5f3a90a3"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality-assertions.json",
+      "bytes": 16619,
+      "sha256": "56563713bdf180052c9869dff4f82a92e8b6f272a65d1dc214a1edc01c612ede"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality-assertions.log",
+      "bytes": 4972,
+      "sha256": "5ac455882094d3835a27e497f6069837619de9145b644e0db08e19eb1ce815ca"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality-command.json",
+      "bytes": 428,
+      "sha256": "f6ea3e1aaed6a8f2b5538308caa54c121a1e99e901a3b4f89f8d8b9385d45c1e"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality.json",
+      "bytes": 16109,
+      "sha256": "73282b87019e6f117a564b89b9d8fba40c3dea25e4132bec30604717f5dab6a6"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-quality.log",
+      "bytes": 4844,
+      "sha256": "09781ae03167ecf83a5909c04040e6feb00fd8193c8578cea57567b295c946a1"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-root-lint-command.json",
+      "bytes": 89,
+      "sha256": "a5f1097b95af57313d77704f8e0854e927a39b8ea8c4b72bb51d3161e01b0549"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/red-root-lint.log",
+      "bytes": 9070,
+      "sha256": "b9f29c2e9aa63da3ca8f76289872f6287acf15648a236a43a133a717ea310b11"
+    },
+    {
+      "file": "release-gate-artifacts/t7-lint-remediation-2026-10-28/runner.cjs",
+      "bytes": 3886,
+      "sha256": "04b66b1d13dc736bc371ceb2aa8534e7236679c3a1dff12c123e9ca6cf78d813"
+    }
+  ],
+  "excludedSelf": "docs/development/evidence/t7-lint-2026-10-28/validation.json",
+  "limitations": [
+    "Developer self-review only; independent review pending.",
+    "Node 26 macOS synthetic tests; no Node22/Ubuntu/device/browser rerun claim.",
+    "Root lint passes, but original full release failure and unexecuted later stages remain.",
+    "Raw logs remain ignored local evidence; no commit/push/merge/deployment."
+  ]
+}

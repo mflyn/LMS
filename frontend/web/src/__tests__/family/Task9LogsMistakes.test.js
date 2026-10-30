@@ -135,6 +135,21 @@ describe('Task 9 growth logs', () => {
     expect(await screen.findByText('完成 600 个')).toBeInTheDocument();
   });
 
+  test('shows reflection and dated weekly navigation; ordinary editing does not resend an unchanged reflection', async () => {
+    const user = userEvent.setup();
+    listGrowthLogs.mockResolvedValue({ items: [growthLog({ childReflection: '孩子旧反思', date: '2026-07-11' })], total: 1 });
+    updateGrowthLog.mockResolvedValue({ log: growthLog({ childReflection: '孩子新反思', content: '调整正文' }) });
+    renderPage(<GrowthLogsPage />);
+    expect(await screen.findByText('孩子旧反思')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '查看本周复盘：完成 500 个' })).toHaveAttribute('href', '/app/reports?weekStart=2026-07-06');
+    await user.click(screen.getByRole('button', { name: '编辑 完成 500 个' }));
+    await user.clear(screen.getByLabelText('记录内容'));
+    await user.type(screen.getByLabelText('记录内容'), '调整正文');
+    await user.click(screen.getByRole('button', { name: '保存成长记录' }));
+    await screen.findByText('孩子新反思');
+    expect(updateGrowthLog.mock.calls[0][1]).not.toHaveProperty('childReflection');
+  });
+
   test('distinguishes a retryable error from an empty log list', async () => {
     const user = userEvent.setup();
     listGrowthLogs

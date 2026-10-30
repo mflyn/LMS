@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { createHash } = require('crypto');
 const { execFileSync } = require('child_process');
 const { validate } = require('../../../../scripts/check-family-docs');
 
@@ -10,6 +11,23 @@ function read(relativePath) {
 }
 
 describe('family baseline documentation gate', () => {
+  test('public T7 derivatives match their own hashes without rewriting original evidence', () => {
+    const manifest = JSON.parse(read('docs/development/evidence/t7-public-redaction-2026-10-30/manifest.json'));
+    expect(manifest.scope).toBe('T7_PUBLIC_DERIVATIVES_ONLY');
+    expect(manifest.originalFailureEvidence).toBe('PRESERVED_LOCALLY');
+    expect(manifest.files).toHaveLength(9);
+    expect(new Set(manifest.files.map(item => item.file)).size).toBe(9);
+    for (const item of manifest.files) {
+      expect(item.file).toMatch(/^docs\/development\/evidence\/t7-[\w-]+\/[\w.-]+$/);
+      const content = read(item.file);
+      expect(createHash('sha256').update(content).digest('hex')).toBe(item.publicSha256);
+      expect(item.originalSha256).toMatch(/^[a-f0-9]{64}$/);
+      expect(item.publicSha256).not.toBe(item.originalSha256);
+      expect(content).not.toMatch(/\/(?:Users|home)\/(?!REDACTED(?:\/|['"\s]))[\w.-]+/);
+      expect(content).not.toMatch(/\b[\w-]+@(?:10\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.)/);
+    }
+  });
+
   test('the repeatable documentation audit succeeds', () => {
     expect(() => {
       execFileSync(process.execPath, ['scripts/check-family-docs.js'], {
@@ -211,7 +229,7 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
     ['T2 approval record scope widens', approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY'],
     ['T2 defect reopened', approval, '"T2-P2-JWT": "CLOSED"', '"T2-P2-JWT": "OPEN"', 'T2 approval record must close exactly the three reviewed P2 defects'],
     ['T2 approval record device passed', approval, '"device": "DEVICE_PENDING"', '"device": "PASSED"', 'T2 approval record must preserve pending and deferred boundaries'],
-    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
+    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
     ['T3 closure regresses', gate, '| T3 | CLOSED |', '| T3 | IN_PROGRESS |', 'exactly one CLOSED T3 row'],
     ['T3 missing', gate, '| T3 | CLOSED |', '| removed | CLOSED |', 'exactly one CLOSED T3 row'],
     ['T3 contradictory duplicate', gate, '| T3 | CLOSED |', '| T3 | CLOSED | current |\n|  T3  | OPEN |', 'exactly one CLOSED T3 row'],
@@ -286,10 +304,29 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
         [`${key} contradicts in ${file}`, file, before, `${before}\n${invalid}`, message]
       ];
     })),
-    ...Array.from({ length: 3 }, (_, index) => `T${index + 7}`).map(task => [
+    ['T7 regresses to in progress', gate, '| T7 | CLOSED |', '| T7 | IN_PROGRESS |', 'T7 must have exactly one CLOSED current row'],
+    ['T7 has conflicting current rows', gate, '| T7 | CLOSED |', '| T7 | IN_PROGRESS | invented |\n| T7 | CLOSED |', 'T7 must have exactly one CLOSED current row'],
+    ['T7 plan status regresses', plan, 'T7 合成工程已关闭', 'T7 实施中', 'approved T1 plan status'],
+    ['T7 navigation regresses', navigation, 'T7 合成工程已关闭', 'T7 实施中', 'navigation must reflect T1 backend closure'],
+    ['T7 design status regresses', design, 'T7 合成工程已关闭', 'T7 实施中', 'system design must record T0 complete'],
+    ...[['engineering gate', 'CLOSED'], ['approval', 'APPROVED'], ['scope', 'ENGINEERING_SYNTHETIC_ONLY'],
+      ['candidate', '0bddeb7e18200d3fd9e5879c096dd7229df538a2'],
+      ['Git', 'SANITIZED_REVIEW_PENDING / NO_PUSH / NO_MERGE / NO_DEPLOY'],
+      ['deployment', 'T8_PENDING / NOT_AUTHORIZED'],
+      ['device', 'DEVICE_PENDING'], ['Docker audit', 'INCOMPLETE_FAILED'],
+      ['nonblocking', 'T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING'],
+      ['deferred', 'REMAINDER_DEFERRED'], ['historical failures', 'PRESERVED']].flatMap(([key, value]) => {
+      const marker = `**T7 ${key}:** ${value}`;
+      return [
+        [`T7 ${key} removed`, gate, marker, '', `T7 ${key} must remain uniquely ${value}`],
+        [`T7 ${key} changed`, gate, marker, `**T7 ${key}:** ${value === 'CLOSED' ? 'OPEN' : 'CLOSED'}`, `T7 ${key} must remain uniquely ${value}`],
+        [`T7 ${key} duplicated`, gate, marker, `${marker}\n${marker}`, `T7 ${key} must remain uniquely ${value}`]
+      ];
+    }),
+    ...['T8', 'T9'].map(task => [
       `${task} starts without approval`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | IN_PROGRESS |`, `keep ${task} as NOT_STARTED`
     ]),
-    ...Array.from({ length: 3 }, (_, index) => `T${index + 7}`).map(task => [
+    ...['T8', 'T9'].map(task => [
       `${task} has conflicting current rows`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | CLOSED | invented |\n| ${task} | NOT_STARTED |`, `keep ${task} as NOT_STARTED`
     ]),
     ['plan status regresses', plan, 'T1 后端工程已关闭', 'T1 执行中', 'approved T1 plan status'],

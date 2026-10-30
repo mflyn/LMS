@@ -3,6 +3,8 @@ const path = require('path');
 const yaml = require('js-yaml');
 const { validate } = require('../../../../scripts/check-family-docs');
 const dotenv = require('dotenv');
+const os = require('os');
+const { execFileSync } = require('child_process');
 const root = path.resolve(__dirname, '../../../..');
 const templates = ['backend/.env.example', 'docker-compose.ubuntu.env.example'];
 const defaults = { COMPLETION_PROTOCOL_MODE: 'legacy', COMPLETION_WRITES_PAUSED: 'false', COMPLETION_STORAGE_CONFIRMED: 'false' };
@@ -11,6 +13,35 @@ const environment = service => Object.fromEntries(service.environment.map(item =
   const separator = item.indexOf('=');
   return [item.slice(0, separator), item.slice(separator + 1)];
 }));
+
+const imageDirectories = ['private-media', 'completion-journal'];
+const checkImageDirectorySetup = source => {
+  const command = source.replace(/\\\r?\n\s*/g, ' ').split('\n')
+    .find(line => line.startsWith('RUN mkdir -p /var/lib/family-growth/'))?.slice(4);
+  if (!command) throw Error('Missing image directory preparation');
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'resource-image-directories-'));
+  try {
+    // Keep mutation results independent of the developer or CI process umask.
+    execFileSync('/bin/sh', ['-ec', 'umask 022; ' + command.replaceAll('/var/lib/family-growth', temporary)]);
+    for (const name of imageDirectories) {
+      const stat = fs.statSync(path.join(temporary, name));
+      if (!stat.isDirectory() || (stat.mode & 0o777) !== 0o700 || stat.uid !== process.getuid()) {
+        throw Error('Unsafe image directory: ' + name);
+      }
+    }
+  } finally { fs.rmSync(temporary, { recursive: true, force: true }); }
+};
+
+test('resource image prepares both private empty-volume roots with owner-only permissions', () => {
+  checkImageDirectorySetup(fs.readFileSync(path.join(root, 'backend/services/resource-service/Dockerfile'), 'utf8'));
+});
+
+test.each(imageDirectories)('image preparation gate rejects removing the %s permission assignment', name => {
+  const source = fs.readFileSync(path.join(root, 'backend/services/resource-service/Dockerfile'), 'utf8');
+  const mutation = source.replace(`chmod 0700 /var/lib/family-growth/${name}`, 'true');
+  expect(mutation).not.toBe(source);
+  expect(() => checkImageDirectorySetup(mutation)).toThrow('Unsafe image directory: ' + name);
+});
 
 test.each(['docker-compose.family.yml', 'docker-compose.ubuntu.yml'])('%s keeps completion opt-in with a separate journal', file => {
   const config = read(file);

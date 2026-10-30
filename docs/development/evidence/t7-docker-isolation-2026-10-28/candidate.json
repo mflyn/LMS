@@ -1,0 +1,19 @@
+{
+  "base": "7d519d20b5f4409a4f6fb66a756a8f571e55b68b",
+  "scope": "entry-only delta over dirty T7 baseline; final local ipam fix NOT executed remotely",
+  "files": [
+    {
+      "path": "scripts/release-family-gate.sh",
+      "sha256": "f796521074c2714c28ba50066c28e528503bb0694dd7123964f62647fa4ae0af"
+    },
+    {
+      "path": "scripts/check-release-isolation.js",
+      "sha256": "55d1a5a764bb622ca32f0f2c61fc760b52872b861ddfcaf18df3f6cc78044858"
+    },
+    {
+      "path": "backend/common/deployment/__tests__/releaseIsolation.test.js",
+      "sha256": "a12a262f4a758dafd5ed82f4e5d2c6b29b99680cc0d5ff1974dbd155eb644ccb"
+    }
+  ],
+  "patchSha256": "3aee43e2b95a4a331c42c2ce08a1d86d807559c8072715cf3f5e484603d47e10"
+}

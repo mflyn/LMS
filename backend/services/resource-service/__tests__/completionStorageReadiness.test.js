@@ -13,6 +13,19 @@ beforeEach(async () => {
 });
 afterEach(async () => { jest.restoreAllMocks(); await fs.rm(base, { recursive: true, force: true }); });
 const run = () => assertCompletionStorageReadiness({ env });
+test.each(['PRIVATE_MEDIA_ROOT', 'COMPLETION_DELETION_JOURNAL_ROOT'])('rejects a foreign owner on %s before probing', async key => {
+  const original = fs.lstat;
+  jest.spyOn(fs, 'lstat').mockImplementation(async file => {
+    const stat = await original(file);
+    if (file === env[key]) stat.uid = process.getuid() + 1;
+    return stat;
+  });
+  const open = jest.spyOn(fs, 'open');
+  await expect(run()).rejects.toMatchObject({ code: 'COMPLETION_STORAGE_NOT_READY' });
+  expect(open).not.toHaveBeenCalled();
+  expect(await fs.readdir(env[key])).toEqual([]);
+  expect((await fs.stat(env[key])).mode & 0o777).toBe(0o700);
+});
 test('enabled retention namespaces are checked without provisioning missing directories', async () => {
   env.COMPLETION_PROTOCOL_MODE = 'enabled';
   await run();

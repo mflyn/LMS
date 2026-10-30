@@ -88,7 +88,7 @@
 | T4 | IN_PROGRESS | §24.9 求助投影 P2 已批准关闭；§24.10 固定候选服务器独立合成自动化通过，真机/人工待验收；总门禁 OPEN，关闭需用户批准 |
 | T5 | CLOSED | §25.5 用户已批准限定合成工程；总门禁 CLOSED，仅 ENGINEERING_SYNTHETIC_ONLY；合并后双入口、WebKit 测试导航及异常收尾已批准关闭见 §25.9；DEVICE_PENDING、非阻断补测与后置边界保留 |
 | T6 | CLOSED | §26.6 用户批准限定合成工程关闭；§26.7 仅授权专用分支/PR；DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测和后置责任保留；不合并、不部署 |
-| T7 | NOT_STARTED | SL-01 至 SL-06 纳入集成/E2E 和完整发布 Gate |
+| T7 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY（§27.42）；七项 P2 CLOSED（§27.8）；lint CLOSED（§27.11）；三项修订见 §27.19；0bddeb7e完整01–18含07b/13b及收尾通过、独立证据复核见§27.41；全部历史失败保留；Git脱敏候选待复审见§27.44，不推送/合并/部署 |
 | T8 | NOT_STARTED | 家庭 Ubuntu、iPad、NAS 恢复和回滚有实测证据 |
 | T9 | NOT_STARTED | §14 每孩子及总体价值判定；总体 PASS 才关闭，PARTIAL/FAIL 不冒充完成 |
 
@@ -5196,3 +5196,1417 @@ T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED 和 T7/T8/T9 责任全部保
 既有 CLOSED / ENGINEERING_SYNTHETIC_ONLY 及当前 Git 标记不扩大；本次只做本地文档记录，不新增提交、
 推送、PR 写入、合并或部署。M01–M08 MANUAL_PENDING/DEVICE_PENDING、D01–D04、T4 状态、
 Docker INCOMPLETE_FAILED、两项 OPEN_NONBLOCKING、REMAINDER_DEFERRED 及 T7/T8/T9 责任保持。
+
+## 27. T7 周复盘导航与完整数学闭环
+
+当前权威状态（2026-10-30 用户明确批准，关闭依据见 §27.42；下方日期化过程记录保留当时状态）：
+
+**T7 engineering gate:** CLOSED
+**T7 approval:** APPROVED
+**T7 scope:** ENGINEERING_SYNTHETIC_ONLY
+**T7 candidate:** 0bddeb7e18200d3fd9e5879c096dd7229df538a2
+**T7 Git:** SANITIZED_REVIEW_PENDING / NO_PUSH / NO_MERGE / NO_DEPLOY
+**T7 deployment:** T8_PENDING / NOT_AUTHORIZED
+**T7 device:** DEVICE_PENDING
+**T7 Docker audit:** INCOMPLETE_FAILED
+**T7 nonblocking:** T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING
+**T7 deferred:** REMAINDER_DEFERRED
+**T7 historical failures:** PRESERVED
+
+### 27.1 授权范围与设计（2026-10-28，历史快照）
+
+用户已授权自主推进 T7 实施、自查、独立评审和合成验证；未授权提交、推送、合并或部署，
+T7 总门禁 OPEN。基线为 main `7d519d20`，T6 已随 PR #34 合并；§26 旧 Git 限制保留为历史快照。
+T4 当前仍 IN_PROGRESS / OPEN：已查 §24.9–24.10，仅有缺陷关闭和自动化结果，没有总门禁关闭批准。
+T4 不阻止本轮开发，但必须保留在最终验收剩余项中。所有历史失败、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED 不变。
+
+方案选择：复用 GrowthLog 和 WeeklyReport，而非新建周反思模型或复制家长页面给孩子。
+新增轻量孩子反思路由，Today 提供入口；家长 ReportsPage 同周展示反思、提供代录入口，
+成长记录页展示反思并链接周报。复用一个按角色/家庭/孩子隔离的反思组件，保持现有普通记录功能。
+不新增 API、索引、后端幂等协议、结构化周报、自动评分、AI、回收或恢复装配。
+
+- 日期采用家庭 LocalDate，按周一至周日查询并分页；切换周次不将旧列表或响应展示为新周数据。
+- 优先选择现有成长记录，只 PATCH childReflection（最多 500 字，允许显式清空）；不覆盖记录正文、
+  时长或家长备注。新建要求选择日期并填写非空 content 和 childReflection，dimension 默认 academic，
+  subject 默认数学，可明确选择其他维度；不自动复制时长、不强制每周唯一、不隐藏其他维度记录。
+- 家长请求使用真实家长会话和 childId；孩子 API 从当前会话绑定本人。审计沿用 createdBy/updatedBy；
+  UI 标明家长代录方式，不把家长输入描述为孩子独立完成。周报反馈仍仅由家长填写。
+- 每次写前持久化最小不确定标记（role/actor/family/child、create 或 logId），无正文、token 或图片。
+  标记保存失败则不发送写请求。明确成功/明确业务拒绝才清除；无响应、5xx及无法确定结果继续锁定。
+  同一组件保留原输入，关闭/刷新/重登后保留非正文保护标记，必须显式完整重读并人工核对；
+  读取失败或空列表不会自动解锁，不自动 POST/PATCH。核对后结束旧编辑，重新选择当前记录才能再写，
+  不把未知 PATCH 原正文无条件重放到后来版本。此保护不是服务端幂等或跨设备唯一性承诺。
+- 退出/换身份清除私有视图与内存草稿；角色/会话/孩子/周次作用域和请求代次阻断迟到成功及 finally。
+  当前身份任意 401/403 优先清理私有视图并使其他请求失效；普通网络错误保留当前草稿和锁。
+- ReportsPage 的反馈读写同样绑定实际 reportId、孩子和周次；未知反馈 PATCH 先重新读取/核对再编辑。
+  已结束周统计冻结，反思是可变成长记录，不写入统计快照；新反思可能按既有规则增加当前周记录天数，
+  但不虚构时长、任务完成或奖励。回滚只撤销本轮页面入口和代码，不删除既有记录，无数据迁移。
+
+### 27.2 批次与验证映射
+
+| 批次 | 交付 | 验证和退出材料 |
+| --- | --- | --- |
+| T7-1 | 本设计、最小契约映射、T4/T6 状态核对 | 自查与独立设计评审；状态校验同步真实进度，不关闭门禁 |
+| T7-2 | childApi、孩子反思组件/路由/Today 入口 | API/组件红绿；输入限制、清空、刷新、未知写入、读取失败、拒绝及迟到响应 |
+| T7-3 | 家长同周反思、代录、记录/周报导航 | 共管真实 actor、孩子/周次切换、反馈未知结果、历史统计冻结 |
+| T7-4 | 正式 HTTP 和真实页面全数学链路 | 两家庭/三孩子/两家长；可控日期复习；版本/奖励/权限/媒体保护；全量相关回归、构建和 release Gate |
+
+现有 test:family-flow:* 保留；新增综合场景进入 test:t2:* 的 enabled 正式装配，不新建测试框架。
+SL-01–05 复用既有永久反例并补跨阶段集成；SL-06 覆盖反思、反馈、审计、冻结和分页日期边界。
+设计/实现/测试分别自查并独立复评，缺陷保留红灯及修复后的永久反例；完整 Gate 的 Docker/Git 清洁
+前提不可绕过。真机、T4 批准、T8/T9 和既有后置事项单独列出，SL 状态不因本轮工程通过自动 COVERED。
+
+### 27.3 实施与自查快照（2026-10-28，非验收关闭）
+
+- 工作区：原始项目目录 main `7d519d20`，所有本轮修改仍未提交；旧 worktree 不覆盖。
+- 最小设计独立评审：PASS（评审者 `01a17fcf-f93c-7ea0-a699-0049224cef22`），仅设计通过。
+  已采纳完整分页核对、跨周反馈代次、记录 actor 不等同反思作者、家庭时区建议。
+- 已接入孩子受保护反思入口、共享反思编辑、家长周报同周反思/代录；成长记录展示反思并导航到对应周。
+  普通记录编辑未修改反思时不再回传旧反思。没有新增后端模型、业务接口、幂等或回收协议。
+- 前端 API 红灯：15 项中 12 失败/3 通过；实现后与既有 child/family API 合计 29 通过。
+  真实 App 入口最初 2 项均因入口缺失失败；接入后通过，另补 Honolulu 周日及缺失/无效时区反例。
+- 家长周报红灯：3 项失败，实际复现跨周迟到成功覆盖草稿、旧 finally 解锁及未知反馈未锁定；修后通过。
+  旧 Task 9 统计、反馈断言保留，仅补实际身份/归属/周次夹具和捕获会话参数断言。
+- 第一轮前端完整回归：`npm run test:ci --prefix frontend/web -- --runInBand`，57 suites / 721 tests PASS。
+  这是后续独立复评修订前快照，不能代替最终候选回归。构建先有新增 ref cleanup lint 警告，
+  修正 effect 捕获后再次 build 编译成功；保留既有 Browserslist 数据老化提示，不借机升级依赖。
+- 正式 HTTP：`npm run test:t2:integration -- --runTestsByPath backend/tests/t2/weeklyReflection.integration.test.js`，
+  1 suite / 5 tests PASS。两个家庭，主家庭两个一年级/一个四年级及共管家长；三个孩子均跑完整数学链，
+  含真实上传、完成丢响应原命令重放、版本冲突、奖励幂等、反思丢响应重登发现、冻结与越权拒绝。
+  使用既有 enabled 正式装配/临时副本集，扫描仍为 trusted-local，不能声称验证 ClamAV/真实部署。
+- 独立代码复评发现 `T7-REFLECTION-P2-001`（换周丢失拒绝保护）和 `T7-REFLECTION-P2-002`
+  （全量核对结果误作当前周可编辑列表）。永久反例修前 5 failed / 7 passed，修后 12 passed。
+  家长周报同类跨周拒绝补测修前失败、修后通过；两项均 FIXED_PENDING_INDEPENDENT_REVIEW，未关闭。
+- 文档校验 PASS；`familyDocumentationGate.test.js` 268 tests PASS，包括 T7 不得提前关闭、
+  既有待验状态不得删除/改写/重复、T8/T9 不得擅自启动的永久反例。
+- 剩余：独立修订复评、完整浏览器数学链、最新全量回归/构建/发布 Gate、指南/追踪及完整候选归档。
+  不将上述局部通过写为 T7 全绿；T4 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+  两项 OPEN_NONBLOCKING 与 REMAINDER_DEFERRED 均保持。
+
+### 27.4 页面复评与综合测试补强（2026-10-28，未关闭门禁）
+
+以下接续 §27.3 阶段快照，不覆盖红灯，不构成用户验收批准。
+
+- 独立评审者 `01a17fcf-f93c-7ea0-a699-0049224cef22` 对前两项页面 P2 和新增
+  `T7-REPORT-P2-003`（同周旧 GET 在反馈 PATCH 后回填）复评 PASS；实际执行
+  ReflectionPanel 12、T7Reports 7、T7AppNavigation 5，合计 3 suites / 24 tests，退出码 0，4.238 秒。
+  状态为 INDEPENDENT_REVIEW_PASSED / PENDING_USER_ACCEPTANCE，不自行关闭。
+  同周旧 GET 反例修前 1 failed / 5 passed；写入开始和结束分别失效旧读，当前身份 403 仍优先撤销。
+- 浏览器真实发现预填 textarea 包在 label 内导致精确标签包含正文；改用 useId/htmlFor 独立标签，
+  保留标签永久反例。早期未指定 build、沙箱 Chromium 启动拒绝、标签定位失败均保留，不并入成功计数。
+- 当前页面全链：`weeklyMathLoop.spec.js` 三个孩子分别通过排序/估时、求助、共管处理、重点清单、
+  图片上传、实际查看版本审核、来源错题、订正、复习、反思和周报反馈；另有一年级/四年级反思代录回看
+  及未知创建失败重读/关闭/退出/兄弟姐妹隔离/原 actor 重登核对，共 6 browser tests PASS，46.9 秒。
+  `/tmp/lms-t7-browser-math-loop-role-20261028` 保留报告和截图，768/1024/390 视口不代表真机通过。
+  之前三轮链路编排失败分别为重点项精确名称、保留求助筛选、select 标签含选项；修正真实 UI 操作和
+  精确 role 定位，没有延长超时、删减断言或替换成功响应。
+- 最新已完成全前端：57 suites / 734 tests PASS，37.53 秒，
+  `/tmp/lms-t7-full-frontend-20261028.json`。随后只补五项反思输入/存储测试，单套件 17/17 PASS；
+  不把 734 与五项相加伪称新的全量结果。构建退出码 0，`main.cc6bee40.js`，仅既有 Browserslist 老化提示。
+- 独立集成复评实际运行原 HTTP 5/5 PASS，10.51 秒，但发现三项断言强度缺口：
+  `T7-COVERAGE-P2-004` 非零历史冻结，`005` 当前周应计入的非零结果，`006` 周报跨家庭拒绝后不变性。
+  已补非零历史 25 分钟源记录变更为 90 分钟仍冻结、生成标识/时间不变、当前周两完成任务/一错题/一天记录、
+  反思前后仅记录天数变化、外家庭家长读取/写反馈拒绝及 actor/统计不变、外家庭和兄弟姐妹不同记录内容隔离。
+  仅临时数据库夹具回填历史 createdAt，业务修改及验收读写仍走真实 HTTP，没有给产品新增回填接口。
+  补强首轮 2 failed / 4 passed 是测试错误预期整数 67，按现有两位小数契约改为 66.67；
+  `/tmp/lms-t7-http-strengthened-20261028.json` 保留。修后 6/6 PASS，11.595 秒，
+  `/tmp/lms-t7-http-strengthened-green-20261028.json`。三项仍 FIXED_PENDING_INDEPENDENT_REVIEW。
+- 真实边界：Gateway、用户/作业/资源/进度/分析/通知正式工厂和路由，enabled 与原预检，临时 Mongo 副本集和私有文件。
+  各服务共享一个隔离合成库；统计用既有只读投影，未验证独立数据库部署。trusted-local 扫描不代表 ClamAV；
+  logger 静默，actor 字段验证不扩大为操作日志链验收。高级恢复与新回收保持关闭。
+- 根命令 `npm run lint` 退出码 1：44 项均来自已有 `release-gate-artifacts` 历史备份的 JSX 解析。
+  不删除/改写历史、不放宽规则。新增 reflection 服务及 T7 HTTP/E2E 已纳入既有严格规则；
+  `npx eslint frontend/web/src backend scripts tests eslint.config.js playwright.config.js playwright.t2.config.js test-mock.js`
+  退出码 0，属于代码目录定向结果，不能替代根命令或完整发布 Gate 通过。
+- 家长/孩子指南及 SL-01–06 映射已更新；文档校验通过。家庭全量、最新补强浏览器、完整发布 Gate、
+  最终候选及证据哈希仍待收口。T4 OPEN、T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+  T5-NB-001/002 OPEN_NONBLOCKING 与 REMAINDER_DEFERRED 保持；没有 Git 写入或部署。
+
+### 27.5 最新完整回归与独立补强复验（2026-10-28，未批准关闭）
+
+本节追加到 §27.3–27.4 的历史快照之后，不回写旧失败、旧计数或当时待复评状态。
+最终前端 57 suites / 739 tests PASS；家庭后端 152 suites / 4473 tests PASS；正式 T2--T7 HTTP
+6 suites / 33 tests PASS；Task11 HTTP 4 suites / 6 tests PASS，均无失败或跳过。
+固定构建 Chromium T2--T7 全量 54 passed / 0 failed / 0 flaky / 0 skipped，298.598 秒；
+Task11 Chromium 4 passed，19.1 秒。构建成功，main.cc6bee40.js；浏览器未与构建清空同目录并发。
+
+独立评审 Beauvoir 实际执行最终 T7 HTTP 6/6 PASS，11.025 秒，随后串行执行五项内存变异：
+历史非零冻结、任务/成长记录/错题三个统计投影、反馈目标家庭检查，全部被目标业务断言拦截。
+每轮只选择一个目标用例（1 failed / 5 非目标 skipped），无运行时错误，源码前后哈希一致；
+不能混称基础回归有跳过，也不将 M1 的早期 toMatchObject 失败当作后续 toEqual 的独立保护。
+三项统计/隔离 P2 当前 VERIFIED_FIXED / INDEPENDENT_REVIEW_PASSED，连同前三项代码修订
+提交用户验收，不自行写为用户批准关闭。
+
+原始 JSON、浏览器失败/截图、独立变异命令和哈希清单保留于
+`release-gate-artifacts/t7-engineering-2026-10-28/`。完整候选及证据见
+[T7 工程候选](evidence/t7-engineering-2026-10-28/README.md)和[复评记录](evidence/t7-engineering-2026-10-28/review.md)。
+发布 Gate 已按原脚本实际尝试；首次 npm cache EPERM，独立临时缓存安装成功后在 02-lint
+因既有归档 JSX 44 errors 退出 1，03--18 未执行、Docker 未启动；安装漏洞提示见复评记录。
+不得将独立命令通过等同完整发布 Gate、CI、Ubuntu 或真机通过。
+
+T4 IN_PROGRESS/OPEN、T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、
+T5-NB-001/002 OPEN_NONBLOCKING 与高级恢复/新回收 REMAINDER_DEFERRED 保留。
+没有真实部署或 Git 写入，SL-01–06 不提前整体 COVERED；T8/T9 责任不变。
+
+### 27.6 服务端周报反馈竞争 P2（2026-10-28，修订中）
+
+最终归档独立核对确认原候选 f9c0f7d4 的 29 文件/210 原始证据及固定构建一致，但发现
+`T7-REPORT-P2-007`：统计 GET 先读旧建议，再更新统计时覆盖并发反馈 PATCH。
+当前周、冻结提升及插入唯一键竞争均已由真实 Mongo 反例复现；另补迟到当前周请求返回冻结赢家、
+显式清空/保存旧默认、无人工反馈默认演进及 legacy 自定义兼容。扩展红灯 12 failed / 3 passed，
+18 项非目标未运行；修复后完整周报套件 33/33 PASS。原完整回归是修复前候选证据，不冒称本修订已全量通过。
+
+方案经独立静态审阅：三个更新路径使用同一单阶段 Mongo 更新管道，从更新时旧文档决定是否保留
+nextWeekSuggestion；snapshot 作为 literal 写入且不重写 familyId/childId，保留 ObjectId/Date。
+不写 parentNote 或反馈审计；仍仅更新 frozen:false，迟到当前请求返回已冻结赢家，不返回空报告。
+任一已有 feedbackUpdatedAt/By 表示整份反馈已人工保存，含只改寄语时也保留当前建议；这是既有
+整份反馈审计粒度下的保守行为，不声称精确识别哪个字段被编辑。无审计的旧非空自定义建议保留；
+既无审计又为空/默认值的历史意图无法辨认，不新增修复或历史回填。
+
+周报旧套件被原家庭与 legacy 矩阵同时遗漏，已纳入现有 analytics-attachments 的 Mongo setup，
+不另建框架、不缩减其他套件。新增正式 HTTP 在 GET 真正持久化前暂停，真实共管 PATCH 后释放，
+核验响应及重读的建议、actor、时间和统计。独立复评及修订后回归待完成，T7 OPEN 和全部保留状态不变。
+
+后续独立复评：VERIFIED_FIXED / INDEPENDENT_REVIEW_PASSED，待用户验收。Beauvoir 实际运行
+最终回环 harness 版本周报 33/33、正式 HTTP 8/8，均零失败/跳过；内存逆转 harness 的 import、
+afterEach 及 11 处调用可复原旧测试哈希，断言未减。F1 静态旧读建议变异被模型 8/9 及 HTTP 2/2
+目标用例杀死；F2 忽略审计变异被模型 3/5 及 HTTP 1/2 目标用例杀死，非目标选择与基础回归分列。
+current 的文本/清空有正式 HTTP 并发证据，promotion/duplicate 由真实 Mongo 模型反例覆盖，
+不扩大宣称所有窗口都经过 HTTP。证据原件为 lms-t7-feedback-independent-20261028-Vz2Cb1。
+修订后家庭完整回归已启动；早期 4473/33/54 等记录保留为旧候选，不改写为本修订结果。
+
+### 27.7 修订后完整候选与验收交接（2026-10-28，总门禁 OPEN）
+
+本节接续 §27.6，不覆盖旧候选、失败或当时的待验状态。修订后实际结果：
+
+| 入口 | 本次结果 | 原始证据（T7 原始归档目录内） |
+| --- | --- | --- |
+| test:family-regression | 153 suites / 4506 passed，0 failed / skipped，exit 0 | post-feedback-family.json、post-feedback-family-command.json |
+| test:t2:integration | 6 suites / 35 passed，0 failed / skipped，exit 0；含真实过期 JWT 断言 | post-expiry-http.json、post-expiry-http-command.json |
+| test:family-flow:integration | 4 suites / 6 passed，exit 0 | post-feedback-checks/task11-http.json、commands.json |
+| test:t2:e2e | 54 passed，0 failed / flaky / skipped，294.128 秒，exit 0 | post-feedback-checks/formal-browser.json、commands.json |
+| test:family-flow:e2e | 4 passed，17.3 秒，exit 0 | post-feedback-checks/task11-browser.log、commands.json |
+
+前端生产源码未随服务端 P2 改动，原最终 57 suites / 739 tests、构建 main.cc6bee40.js 证据继续适用；
+固定构建九个本轮实现文件的 source map 与源码一致，不虚构新构建或重跑。家庭新增 33 项来自补入
+原遗漏的周报套件（18 既有 + 15 新增），不是旧计数简单相加，以上 4506 来自实际全量 JSON。
+正式 HTTP 增加两个共管竞争用例；最后一次再补真实 expiresIn:-1 的家长/孩子 JWT，八个拒绝请求
+覆盖记录读取/创建/更新和周报反馈，断言 401 UNAUTHENTICATED、无 data 及列表/记录/周报不变。
+该补测没有增加 test 数量，完整 35 项在补测后重跑通过；此前浏览器结果不冒称执行了这些 HTTP 断言。
+
+独立过期身份复验 8/8 PASS，exit 0；新增块移除可复原前一测试文件哈希，生产源码未变。
+证据原件 lms-t7-expired-http-independent-20261028-cPHa9M，与 §27.6 的两个竞争变异分别归档。
+七项 P2 当前 VERIFIED_FIXED / INDEPENDENT_REVIEW_PASSED，等待用户验收，不自行标记批准关闭。
+
+最终完整发布脚本另保存 release-final-candidate：独立 cache 安装成功后仍在 02-lint 因历史 JSX
+44 errors 退出 1，28.771 秒；03--18 未执行、Docker 未启动，不得将独立入口结果代替脚本全绿。
+文档/状态校验、代码目录 lint、差异检查和最终候选哈希见证据目录 README、review 和 validation。
+T4 IN_PROGRESS/OPEN、T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项非阻断补测、
+历史失败和 REMAINDER_DEFERRED 不变；没有提交、推送、合并、服务器访问或部署。
+
+### 27.8 七项 P2 批准关闭与复验证据绑定（2026-10-28）
+
+批准依据：用户明确要求“复审通过，更新门禁和评审记录，关闭本次七项 P2，绑定冻结候选与本轮复验证据”。
+本次只关闭下列问题，不关闭 T7 工程总门禁，不把 §27.3–27.7 的历史待验状态改写成当时已批准。
+
+| 问题 | 当前状态 | 关闭依据 |
+| --- | --- | --- |
+| T7-REFLECTION-P2-001 | CLOSED | 同身份跨周拒绝优先、旧身份迟到响应隔离的永久反例及本轮前端复验 |
+| T7-REFLECTION-P2-002 | CLOSED | 全量核对结束后重新读取当前周，pending/失败/成功三分支反例 |
+| T7-REPORT-P2-003 | CLOSED | 写入前/中旧 GET 的代次失效、迟到拒绝优先及原反馈不被回填 |
+| T7-COVERAGE-P2-004 | CLOSED | 非零历史冻结反例、正式 HTTP 复验及已归档 M1 变异 |
+| T7-COVERAGE-P2-005 | CLOSED | 当前周非零任务/记录/错题统计、正式 HTTP 复验及三个 M2 变异 |
+| T7-COVERAGE-P2-006 | CLOSED | 外家庭报告 GET/PATCH 拒绝和对象不变性、正式 HTTP 复验及 M3 变异 |
+| T7-REPORT-P2-007 | CLOSED | 三种快照写入窗口的 15 项永久反例、周报 33 项及正式 HTTP 复验，已归档 F1/F2 变异 |
+
+批准绑定的完整补丁 SHA-256 为
+`61e4591c8eb4520395d9e27e029cf14b6c8918db333acb614e025f86f3d898f7`；
+原 validation.json SHA-256 为 `19ab93679c2695373efc5c9de5edffbed8f9f5cbbe1350f007dc698c85b8af8f`。
+原补丁/索引不重生成，33 个候选文件及 394 份原证据保留；本次关闭记录是独立文档增量，
+不是原冻结候选的替换。两份候选内文档（本 Gate 和实施计划）允许追加关闭记录，其他候选文件不变。
+
+本轮复验实际运行前端 7 suites / 79 tests、周报模型 33 tests、正式 HTTP 6 suites / 35 tests、
+文档状态门禁 268 tests，均 exit 0；六条 T7 Chromium 场景首次因 macOS MachPortRendezvous 权限
+在启动阶段失败，获准本机浏览器权限后同候选/原预算/原断言 6 passed、0 failed/flaky/skipped。
+两轮证据分开保留，不称首次通过。复验未重跑全量 4506/739/54 或全部历史变异，只核对原归档。
+
+原件 `/private/tmp/lms-t7-rereview-val9jF` 已逐字节归档至
+`release-gate-artifacts/t7-p2-closure-2026-10-28/rereview`；新增索引和批准摘要见
+[七项 P2 关闭记录](evidence/t7-engineering-2026-10-28/p2-closure.md)及
+[关闭证据索引](evidence/t7-engineering-2026-10-28/p2-closure-evidence.json)。
+此前 review/README/final-review 与 Gate/计划的原文另存 pre-closure-documents，不覆盖历史失败。
+
+### 27.9 剩余验收与 lint 阻断处理提案（待批准，未实施）
+
+当前仍缺：完整 release 脚本通过及 07b/13b 实际执行证据、隔离 Docker 阶段证据、
+18-git-clean 前提和 T7 总门禁明确关闭批准。前端构建与单独回归已具备，不能替代上述条件。
+工作区仍有未提交交付，禁止为了通过 Git clean 擅自提交、清理或跳过检查。
+T4 IN_PROGRESS/OPEN 单列等待批准，不由本轮七项问题关闭代替；真机、T8/T9 责任仍未完成。
+
+lint 根因已核实：`npm run lint` 使用 `eslint .`，ESLint flat config 未自动继承 `.gitignore` 中的
+`release-gate-artifacts/`。历史快照 JSX 不在正式前端 parser 匹配路径内，产生 44 项解析错误。
+另通过 ESLint calculateConfigForFile 核实，weeklyReportService.js 和 weeklyReports.test.js 的
+有效规则数均为 0；不是被忽略，而是没有命中当前 sharedRules。此前代码目录 lint 通过不能代表
+这两份文件执行了推荐规则，后续实施必须补齐这个检查范围缺口。
+
+推荐最小方案（PROPOSED_WAITING_APPROVAL）：
+
+1. 仅在根 flat config 的全局 ignores 精确加入 `release-gate-artifacts/**`；保留所有原件及哈希，
+   不忽略正式 backend/frontend/tests/scripts，也不全局忽略 `**/source-snapshot/**`、JSX 或测试。
+2. 将两份周报服务/测试文件显式纳入既有 Node/Jest sharedRules；不关闭规则、不降低 error，
+   若暴露真实源码 lint 问题则做最小修复，不使用 eslint-disable 掩盖。
+3. 复用 task5QualityGate.test.js 和现有 ESLint API 补永久反例：历史路径被精确忽略，正式前端
+   JSX 和上述后端文件仍受检查；在内存源码注入 no-undef 验证产生 error。移除忽略或扩大到正式
+   源码目录、取消周报规则覆盖都应失败。不新增测试框架或并行发布入口。
+4. 执行质量门禁测试和原 `npm run lint`，保留 44 错误历史；有实现改动才补受影响业务回归。
+   批准后的完整 release 使用新的证据目录和隔离合成边界，逐阶段记录，不承诺 lint 修复就等于
+   Docker/Git clean/总门禁全部通过。需要新增环境或 Git 授权时停止说明，不绕过检查。
+
+备选为将 lint 改为显式目录清单，但容易漏掉未来新增目录，不推荐；为历史副本扩展 JSX parser
+并修订副本既会污染证据，也不能验证现行源码，故不采用。回滚只撤回后续 lint 配置/测试增量，
+无需触碰业务数据、历史归档或已批准七项 P2。此方案尚未实施，等待用户批准。
+
+T7 OPEN、T4 OPEN、历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED 全部保持；不部署或执行 Git 写入。
+
+### 27.10 获批 lint 最小修订与复评交接（2026-10-28）
+
+接续 §27.9：独立评审线程转达用户明确批准按该最小方案实施、方案自查后修复并补永久反例；
+当前状态 FIXED_PENDING_INDEPENDENT_REVIEW。新增质量问题 QA-T7-LINT-COVERAGE-001 尚未关闭，
+不重开或覆盖 §27.8 已批准的七项 P2。§27.9 的待批准表述保留为当时状态，本节为后续进展。
+
+根 ESLint 全局 ignores 仅新增 `release-gate-artifacts/**`，两份周报文件显式纳入现有 Node/Jest
+sharedRules；没有降级规则、增加 eslint-disable 或改动历史副本。复用 task5QualityGate.test.js
+调用真实 ESLint API，检查根归档、正式前后端/脚本及嵌套同名目录；合法 JSX/Node/Jest 为零警告，
+内存未定义调用必须报 no-undef/error。没有新增发布入口或测试框架。
+
+实施前根 lint 44 errors 原样保留；永久反例初版含缺失规则访问的 TypeError，保留该失败后改为
+直接断言，重跑得到 4 failed / 8 passed 的有效红灯。配置后质量 12 passed，但根 lint 新暴露
+三项真实错误：周报测试两处调用换行和服务未使用的 weekEnd。最小修复仅合并调用括号位置及
+删除该未使用局部值；测试 AST 前后一致、服务 diff 只有一行删除，未修改测试断言或业务契约。
+
+本批开发验证（本机 macOS / Node 26.9.0，临时 Mongo 副本集、合成数据）：
+
+| 入口/变异 | 实际结果 |
+| --- | --- |
+| 原 npm run lint | 最小源码修复后 exit 0；44 错误及后续 3 错误的两轮失败单独保存 |
+| task5QualityGate.test.js | 12 passed，0 failed/skipped |
+| weeklyReports.test.js | 33 passed，0 failed/skipped |
+| npm run test:t2:integration | 6 suites / 35 passed，0 failed/skipped，58.310 秒 |
+| 内存撤销根归档排除 | 2 failed / 10 passed；有效断言失败 |
+| 内存误排除正式 backend / frontend | 各 4 failed / 8 passed；有效断言失败 |
+| 内存分别撤销周报服务 / 测试规则 | 各 1 failed / 11 passed；有效断言失败 |
+
+五次变异均通过独立 Node 进程内存加载 config，不改磁盘源码；有逐次注入标记和前后哈希。
+开发自查已核对范围、永久反例、源码最小性及历史证据；这不是独立复评结论。最终文档/质量
+联合校验、精确文件哈希、新增量补丁和原候选关联见
+[lint 修订交接](evidence/t7-lint-2026-10-28/README.md)。
+
+完整 release 未重跑，03--18、07b/13b 实际发布执行、Docker 和 Git clean 前提仍缺；
+不得把本批根 lint 通过替代完整发布通过。现有工作区不清理、不提交以迁就 Git clean。
+原 candidate.patch、validation.json、七项关闭索引及独立复评原件不重写，本批另行冻结增量。
+T4/T7 OPEN、DEVICE_PENDING/MANUAL_PENDING、Docker INCOMPLETE_FAILED、历史失败、两项
+OPEN_NONBLOCKING 和 REMAINDER_DEFERRED 保留，T8/T9 不启动。不访问真实数据、部署或 Git 写入。
+
+### 27.11 lint 独立复评与限定关闭（2026-10-28）
+
+用户经独立评审线程明确授权补齐本轮 lint 关闭记录和测试证据，并要求剩余发布方案先报批。
+QA-T7-LINT-COVERAGE-001 当前 CLOSED / USER_APPROVED；历史归档扫描阻断仅对下述固定候选的
+lint 步骤解除，不将原完整 release 失败改绿，不关闭 T4/T7。§27.9–27.10 的旧状态保留为历史。
+
+基线仍为 `7d519d20b5f4409a4f6fb66a756a8f571e55b68b`，该提交本身不含尚未提交的 T7。
+批准绑定六文件增量 `082876d9f0378ae74806b7e9ea585265f4c0fc0db9fa2d763a2225d68b78089f`、
+完整 34 文件候选 `515043584142e9819af05016a57d99eef3812b54ba763a403bb1a302aaa6a310`。
+本次仅 Gate/计划和新增关闭摘要/索引发生文档增量，不重新生成旧补丁、README、自查或 validation。
+
+独立线程在本机 macOS / Node 22.15.0 / 临时 Mongo 7.0.14 合成副本集实际验证：原目录和加入
+44 份历史错误文件实物夹具的独立快照，原 npm run lint 均 exit 0；质量/文档 280、模型 33、
+正式 HTTP 35 均零失败/跳过。两周报各 61 有效规则、no-undef/error，合法对照零错误/警告。
+独立 QA 副本的五种回退分别 2/4/4/1/1 个目标断言失败，runtimeError/pending 均 0；没有复用
+开发 preload。测试 AST 等价和服务只删未用局部行已独立复核，结论 VERIFIED_FIXED / INDEPENDENT_REVIEW_PASSED。
+这与 §27.10 的开发 Node 26 结果分列，不冒称 Ubuntu、真机或本次文档更新重新执行了业务测试。
+
+独立 manifest SHA-256 为 `43b2dc1b25323c230d1ed74ab803418d99c776e00f5e18cda31c5070a8a14830`，
+38 项清单加 manifest 共 39 份原字节副本见 `release-gate-artifacts/t7-lint-closure-2026-10-28/independent`。
+来源、当前文档增量、实际文档校验及旧证据保护见
+[lint 关闭摘要](evidence/t7-lint-2026-10-28/closure.md)和
+[独立追加关闭索引](evidence/t7-lint-2026-10-28/closure-evidence.json)。
+原 44 错误、配置后 3 错误、初次断言失败、394/47 旧证据及旧独立 119 项清单与 manifest 保留。
+
+### 27.12 剩余发布阶段核对（原脚本，不另建门禁）
+
+唯一完整入口仍是 `scripts/release-family-gate.sh`。下表“原运行”指 §27.7 release-final-candidate；
+后续分项通过不能倒写原运行。未重跑完整脚本，也未执行任何 Docker 检查、拉取、启动或远程测量。
+
+| 阶段 | 原运行 | 当前分项证据及仍缺条件 |
+| --- | --- | --- |
+| 01 root npm ci | 通过 | 原候选安装日志保留；未来新固定候选仍须由原脚本执行 |
+| 02 lint | 44 errors 失败 | 本候选开发/独立原命令通过；原脚本失败记录不改写 |
+| 03 docs | 未执行 | 独立文档检查/268 文档测试通过，本次收口再校验；缺完整脚本执行 |
+| 04 family-regression | 未执行 | 旧 T7 153 suites / 4506 通过；lint 修订后仅受影响模型/HTTP 重跑，非新全量 |
+| 05 Task11 integration | 未执行 | 旧 T7 分项 4 suites / 6 通过；缺当前完整脚本执行 |
+| 06 Task12 integration first | 未执行 | 本轮未补跑，不以既往 Task12 或其他 HTTP 结果替代 |
+| 07 Task12 integration second | 未执行 | 仍欠原入口第二次执行及独立日志，不能复制第一次结果 |
+| 07b self-directed integration | 未执行 | 独立本候选 6 suites / 35 通过；缺在 release 中实际调用证据 |
+| 08 frontend npm ci | 未执行 | 缺本候选在完整入口中的清洁安装日志 |
+| 09 frontend tests | 未执行 | 前端未随 lint 改动，旧 57 suites / 739 保留；缺完整入口证据 |
+| 10 frontend build | 未执行 | 原固定构建/source map 核对保留；缺完整入口新构建/哈希 |
+| 11 Playwright install | 未执行 | 历史浏览器可运行不等于此步骤执行；安装网络/运行时需批准 |
+| 12 Task11 E2E | 未执行 | 旧分项 4 通过；缺完整入口执行及收尾 |
+| 13 Task12 E2E | 未执行 | 本轮没有当前完整入口证据，不以其他浏览器套件替代 |
+| 13b self-directed E2E | 未执行 | 旧完整 54、独立 T7 子集保留；须绑定步骤10产物并由原脚本实际执行 |
+| 14 Compose config | 未执行 | 只有本轮静态阅读；需批准后解析隔离覆盖并核对实际生效配置 |
+| 15 Compose build | 未执行 | 欠镜像摘要、源码/上下文身份、资源预算及真实构建日志 |
+| 16 Compose up / health | 未执行 | 欠隔离授权、全部服务健康和 enabled 启动预检证据 |
+| 17 Compose smoke | 未执行 | 欠真实容器 HTTP；现脚本只测注册/家庭/孩子/材料绑定和私有读取，不替代 T7 周报或07b/13b |
+| 18 git-clean | 未执行且前提不满足 | 当前真实 T7 候选未提交；tracked/untracked 均须诚实检查，不得绕过 |
+
+独立于上述步骤：T4 总门禁仍 OPEN，需用户处理其批准条件；T7 总验收需完整证据和明确批准。
+DEVICE_PENDING/MANUAL_PENDING 仍需真机/人工；T8 的真实 Ubuntu/备份/容量/恢复与 T9 价值验收未启动。
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、高级恢复/新回收 REMAINDER_DEFERRED 不变。
+
+### 27.13 Docker / Git clean 最小方案（自查通过，PROPOSED_WAITING_APPROVAL）
+
+推荐两步，互不偷换验收：先获批做固定候选的 Docker 14–17 分项隔离验证；随后只有另获真实提交
+和干净检出授权，才执行原完整 release 01–18（含07b/13b）。前一步即使全过，也不关闭总门禁。
+备选是等提交授权后再一次性完整运行，少一次环境准备，但更晚暴露容器问题；不推荐旧 HEAD
+worktree、临时 git init/commit、忽略未跟踪文件或自动 stash 来制造 clean。
+
+**A. Docker 隔离方案，以下全部待批准才执行。**
+
+- 主机选本机专用 Linux/amd64 测试 VM，独立 Docker Engine / Compose v2 context，不使用现有
+  默认 daemon、家庭 Ubuntu 或 NAS。总硬限额拟 4 vCPU / 8 GiB RAM / 40 GiB 临时磁盘 / 无 swap；
+  七个 Node 服务各限 512 MiB、Mongo 1536 MiB、一次性 init 256 MiB，构建串行，VM 总额硬封顶。
+  这是预算提案，不是已测容量或 2 CPU/3 GiB 认证；授权后先核对本机余量、VM/Compose 实际版本及
+  架构，不足或需安装/修改共享 VM 则停止报告，不借用原环境。不得调整测试时限来凑通过。
+- 镜像沿既有 `node:22-alpine` 和 `mongo:4.4`，此轮不顺带升级数据库。授权后解析并锁定实际
+  amd64 digest、构建镜像 ID/源码哈希，重放使用相同摘要；目前未拉取，不能虚构 digest。
+  Mongo4.4 与合成 harness Mongo7 不同，兼容/镜像不可用或安全前提不满足应如实阻断，不能降级
+  enabled 协议或跳过预检。网络仅批准安装/镜像依赖下载，服务不对公网开放。
+- 在独立目录生成按 Git 基线+冻结候选构造的 allowlist 源码快照，额外绑定本次文档增量；
+  检查全部文件哈希和 symlink 目标，不复制 `.env`、私钥、原始日志、node_modules、真实数据。
+  现 `.dockerignore` 未覆盖所有环境文件/归档，必须以干净白名单上下文隔离，不能直接把原脏目录
+  作为 build context。临时凭据置于上下文外的 0600 文件，日志只保存脱敏配置/摘要。
+- 静态核对当前 family Compose：无固定 container_name、external volume/network、host network、
+  Docker socket 或宿主数据 bind mount；三个卷 mongo-data/resource-data/completion-journal 和
+  app-network 由项目命名。但两个 ports 缺 host_ip，默认监听所有接口，项目名不能消除该风险。
+  现脚本固定单一 `-f`，不能声称 COMPOSE_FILE 已注入隔离覆盖。拟最小修改既有发布入口，允许
+  显式、受检的隔离 override/env-file，所有 compose 子命令（包括失败 down）使用同一参数；
+  不新增第二套发布脚本或跳过开关。为参数传递、失败收尾及配置拒绝补现有测试后冻结新候选，
+  不声称这项未来修订已包含于本次 lint 冻结补丁。
+- 覆盖配置必须替换而非叠加 ports：只发布 gateway 的 `127.0.0.1:<独立空闲端口>`，Mongo 不发布
+  宿主端口，绝不用原宿主 27017；Mongo 容器内部 27017 仅限新网络。实际 config 校验无重复/遗留
+  通配监听，`FAMILY_GATEWAY_BASE_URL` 仅指该回环端口。另核对匿名/显式命名卷、bind、额外网卡、
+  container_name、真实路径及环境插值，任何非本次资源直接拒绝。只检查端口，不停止占用者。
+- 新 project/network/三个卷均带随机运行标识，启动前要求不存在；显式最小环境不继承用户 `.env`、
+  DOCKER_HOST 或生产 URI。临时 JWT/身份/内部/引用/签名凭据分别生成；retirement 凭据独立且满足
+  既有长度要求。homework/resource 同为 enabled，孤儿回收 false，高级恢复不装配/不调用。
+  writes-paused 声明须有实际无流量/无在途写保证；只在存储属性、挂载和合成持久性核对后设置
+  storage-confirmed，不把布尔值当实际备份证明，更不宣称 T8 已完成。
+- 启动顺序：先新 Mongo/副本集和 init；只在确认全新空库后，由各服务自己的模型按既有合成
+  createCollection/createIndexes 模式显式准备必要索引，不用 syncIndexes/drop 或跨服务改库。
+  原 mongo-init 只准备角色，不能假设已满足所有 enabled 索引。预建两个独立卷目录及可信祖先链
+  权限，分服务执行既有预检和存储探针，再启动正式服务。缺适用准备入口或预检失败就停下定位，
+  不扩展通用迁移/恢复项目、不造 ready 响应。清洁库准备与执行步骤、模型清单和索引哈希均归档。
+- 仅现有 smoke 的合成账号/图片及既有合成夹具；不挂载原数据库、不取真实孩子数据、不运行
+  cleanup/restore。验证配置→串行构建→健康→原 compose smoke，记录每条退出码和镜像/容器归属。
+  此分项路径不运行/冒称18-git-clean，后续完整入口仍必须原样检查全部阶段。
+- 收尾先保存脱敏 ps/log/健康/卷与网络身份，再仅对匹配本次 project 和已记录 ID 的资源 down；
+  既有脚本 down 不带 -v，会保留命名卷，不得以为已完全清理。成功/失败卷均先封存合成证据，
+  经本次隔离资源清理授权逐个定向删除；禁止 global prune、模糊匹配、删除未知卷或干预别的容器。
+  收尾失败保留资源 ID 和失败状态，不报告全绿。前后比对其他容器/卷/网络/端口、仓库和冻结哈希
+  无变化；如有并发任务或归属不确定即暂停，不代其他任务清理。
+
+风险和回滚：镜像兼容、资源不足、fresh 库索引和卷权限可能使启动失败；原预算记录失败，
+不放宽契约。回滚仅停止本次新合成栈并按归属保留/清理其临时资源；正式配置/服务/数据不触碰。
+未来入口的小改动先测试后独立评审，回退只撤回其自身增量，不能覆盖本轮或其他线程修改。
+
+**B. Git clean 前提，当前不执行。**
+
+当前可做文件/补丁哈希、反向 apply --check、文档/分项测试及明确标注 dirty 的合成快照验证；
+`check-git-clean.sh` 对有 T7 修改的当前目录预期失败，这是真实未满足条件。旧 HEAD 的干净目录
+不含 T7，补丁叠加后也不再 clean；临时 init/commit、改忽略、移走文件或省略检查均不接受。
+完整发布前需用户另行授权整理相关修改、真实提交到专用分支，获得固定提交 SHA，并在独立目录
+做真实干净检出（不要求先推送或合并）。提交必须含测试所用源码和必要门禁修订，证据输出用原有
+ignored 目录或仓库外，运行前后执行原 check-git-clean。未获授权时保留18未满足，不能承诺全门禁通过。
+
+**待批最小动作与预期证据。**
+
+建议先批准 A：本机专用 VM/运行时核验和必要隔离入口小改动及测试，依赖镜像下载、一次14–17
+合成验证与仅本次资源的受控收尾；不含完整 release、Git 写入或真实部署。精确 digest/版本与资源
+可用性须先记录，计划外安装/权限/预算变化再报批。证据应含新冻结身份、脱敏生效配置、镜像摘要、
+资源硬限额、索引/存储预检、逐阶段日志、失败及前后不变性。B 的提交/干净检出和完整 release
+另行授权后才执行；不捆绑自动推送/合并。也可选择暂缓 A，待 B 获批再一次性执行完整入口。
+
+方案自查 PASS：使用原阶段和工具、不增测试框架；明确 fixed -f/通配端口/环境泄漏/卷留存/
+fresh 索引五处实际风险，预算、身份、失败收尾和 Git 不满足条件均可核查；未知运行时/摘要没有
+冒充已验证事实。当前只读分析和文档收口完成，全部执行动作 PROPOSED_WAITING_APPROVAL。
+
+### 27.14 Ubuntu Docker 分项首轮：STOPPED_AT_14 / SERVER_RETRY_PENDING
+
+后续用户批准调整后的 Ubuntu 隔离方案：新增测试合计不超过2 CPU/3 GiB，新增磁盘12 GiB，
+阶段15使用已有 legacy Docker builder 受限串行构建。该批准替代§27.13的本机专用VM预算提案，
+不包含安装、原服务修改、完整release、Git clean或Git写入；异常立即停止留证，只收尾本次资源。
+
+入口修订复用原 release-family-gate.sh 和现有 Jest；未增加跳过阶段参数或第二套发布框架。
+source仅定义函数，显式初始化后所有Compose命令使用相同项目/override/env-file；实际配置拒绝
+非独立资源、对外端口、危险挂载和超额限额，完整发布仍保留01–18及07b/13b。
+最终入口增量、失败和自查见 [Docker分项记录](evidence/t7-docker-isolation-2026-10-28/README.md)。
+
+Ubuntu首轮14的config语法检查通过，但隔离校验误拒Compose2.27生成的空ipam对象，退出1；
+本轮已停止，15–17 NOT_RUN，没有创建测试Docker资源、拉取或构建镜像。
+空ipam兼容和永久反例随后仅本地修订；4 suites / 89 tests通过，脱敏真实配置本地验证通过，
+有效限额1.9 CPU/2816 MiB。不能据此将服务器14改写为PASS，更不能关闭Docker或完整发布。
+同时保留首次本机source测试误触发npm ci及终止、归档AppleDouble警告；打包元数据修订只做本地检查。
+
+仅清理本次新目录，前后原11容器身份/启动/挂载/端口及镜像/卷/网络集合一致；真实服务和数据未操作。
+当前 LOCAL_FIX_VERIFIED / SERVER_RETRY_PENDING；后续服务器重试需绑定修订候选并重做14起步，
+阶段15受限构建、16索引/存储预检及健康、17原smoke均仍缺证据。完整发布和Git clean继续另行授权。
+T4/T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、两项非阻断补测与后置范围保留。
+
+### 27.15 Ubuntu Docker 分项 R2：14/15 PASS，16 FAILED_STOPPED
+
+用户进一步批准修订固定候选从14重试。入口三文件哈希与§27.14最终候选一致，构建上下文
+378文件在传输后完整集合/SHA-256一致，无附加文件或符号链接；原业务候选未变。
+实际执行、源码及镜像身份、失败定位、收尾见
+[Docker R2记录](evidence/t7-docker-isolation-r2-2026-10-28/README.md)。
+
+- 14退出0：Compose2.27实际配置通过，1.9 CPU/2816 MiB、回环独立端口、无Mongo宿主端口。
+- 15退出0：七个服务均由既有legacy builder受限串行构建；RUN容器1.8 CPU/2816 MiB且无swap，
+  HostConfig证据匹配。未安装buildx、未改共享daemon，不能把RUN限额冒充daemon全局硬限额。
+- 16退出1：新Mongo副本集/角色/fresh库检查通过，用户服务模型索引准备返回错误85；
+  立即停止本轮Mongo，未继续业务服务启动、索引/存储预检或原smoke。17 NOT_RUN。
+- 优先定位既有FamilyParentInvitation普通/条件唯一同键索引与Mongo4.4兼容问题；
+  原日志仅code85，完整errmsg未记录。最小修订和Mongo4.4永久反例方案待批准，未改真实索引。
+- 105次预算采样最低MemAvailable约4.99 GiB，最大观测磁盘增量约0.49 GiB，无预算触发；
+  不代表完整服务运行容量验收。原11容器及卷/网络/镜像集合前后不变，本轮资源已定向清理。
+
+当前STOPPED_AT_16 / INDEX_COMPATIBILITY_REVIEW_REQUIRED。首轮14失败不覆盖；本轮14/15
+通过不等于完整发布、Git clean或T7总门禁通过。T4/T7 OPEN、DEVICE_PENDING、Docker
+INCOMPLETE_FAILED、历史失败、两项非阻断补测及REMAINDER_DEFERRED保留；无Git写入或真实部署。
+
+### 27.16 索引最小修订与 Ubuntu R3：索引通过，resource 存储预检停止
+
+用户批准最小修订后，先在独立 MongoDB4.4.30 合成库复现完整 `IndexOptionsConflict / 85`，
+确认普通 familyId_1 与 pending 条件唯一同键索引冲突；旧错误及红灯测试不覆盖。
+仅移除普通索引声明，保留 required、pending 条件唯一、tokenDigest 唯一及复合查询索引。
+新增四项永久反例，旧模型2 failed/6 passed；修订后用户服务13 suites/178 tests、
+共管真实服务HTTP 1 suite/2 tests、lint通过。4.4空库建索引/重放和唯一约束反例通过。
+详见[索引修订与自查](evidence/t7-index-compatibility-2026-10-28/README.md)，
+SELF_REVIEW_PASSED / INDEPENDENT_REVIEW_PENDING，无真实索引调整或历史库自动迁移。
+
+新候选378运行文件相对R2仅模型修订，补丁和哈希冻结后从14重跑，完整证据见
+[Docker R3记录](evidence/t7-docker-isolation-r3-2026-10-28/README.md)。14实际配置、15七镜像
+受限串行构建通过；16六组模型索引、存储探针及homework预检通过，但resource组合预检返回
+COMPLETION_STORAGE_NOT_READY，立即停止本轮容器。17 NOT_RUN，正式业务服务未启动。
+已核对失败进程 enabled/storageConfirmed=true/cleanup=false，具体目录或探针根因仍待查，
+不把通用错误码写成已确认权限根因，不绕过检查继续smoke。
+
+171次预算采样无触发，最低可用内存约4.98 GiB、最大观测磁盘增量约0.49 GiB；非九服务容量验收。
+46份远端证据哈希匹配，临时凭据扫描0命中；仅清理本轮容器/卷/网络/镜像及目录，原11容器
+和卷/网络/镜像集合前后相同。当前 STOPPED_AT_16 / RESOURCE_STORAGE_PREFLIGHT_REVIEW_REQUIRED。
+后续先补挂载前后安全元数据与探针步骤诊断，再决定最小修订；本轮未继续执行。
+
+T4/T7 OPEN、Docker INCOMPLETE_FAILED、DEVICE_PENDING、历史失败、两项非阻断补测及
+REMAINDER_DEFERRED保留，Git clean和完整release另行批准；不提交、推送、合并或部署。
+
+### 27.17 空卷权限修订与 R4：16 PASS，17 入口证据无效
+
+用户批准最小处理后，按R3源码构建resource并用新空卷、三个独立容器直接复现：首个容器
+设置0700并通过探针，后两个容器重新挂载媒体空卷时均变回0755并被原预检拒绝，日志目录仍0700。
+仅修订resource Dockerfile，构建期显式建立两个0700根目录；修订镜像连续三容器前后均0700且
+原预检通过，不改挂载、生产预检、UID或真实卷。永久反例及自查见
+[存储修订记录](evidence/t7-storage-compatibility-2026-10-28/README.md)：两套相关测试130项、
+启动/隔离/原smoke测试49项、lint通过；两处chmod删除变异各被拦截，异属主拒绝补强保留。
+状态SELF_REVIEW_PASSED / INDEPENDENT_REVIEW_PENDING，不自动关闭评审项。
+
+冻结R4运行378文件相对R3仅Dockerfile变化；从14重跑，14配置、15七镜像受限串行构建、
+16全部预检及正式Compose健康等待通过。详细证据见
+[R4执行与更正](evidence/t7-docker-isolation-r4-2026-10-28/README.md)。
+
+17原始退出码虽为0，但日志为空；自查确认运行器使用node stdin，未进入原脚本require.main
+保护的CLI，实际smoke未执行。因此17为INVALID_EVIDENCE_ENTRYPOINT_NOT_EXECUTED，不能计PASS。
+保留原始成功标记，另用17-adjudication.json更正，不覆盖历史记录；下一步需修正CLI调用及补齐
+未调用/空日志和失败退出反例后再验证，不改原业务断言。附加健康快照因mongo-init无Health字段
+失败也原样保留，不当作阶段16证据。发现异常后本轮不再重启或重跑。
+
+160次预算采样无触发；59份远端证据哈希复核。仅清理本轮9容器/4卷/1网络/候选镜像/临时目录，
+原11容器及卷/网络/镜像集合一致。当前STAGE_16_PASS / STAGE_17_INVALID_EVIDENCE /
+ENTRYPOINT_REVIEW_REQUIRED；T4/T7 OPEN、Docker INCOMPLETE_FAILED、DEVICE_PENDING、历史失败、
+两项非阻断补测及REMAINDER_DEFERRED保持。完整release/Git clean另行批准，无Git写入或真实部署。
+
+### 27.18 隔离 smoke 执行器修订：本地验证通过，服务器待复验
+
+用户批准只修正执行器，不改存储逻辑和原smoke断言。新增小型stdin接收辅助脚本，验证冻结
+源码SHA-256后以真实文件运行原CLI，原非0退出码原样传播；0退出还需唯一原成功输出，空日志/
+无关输出/未执行不记PASS。隔离runtime候选stage17显式使用该入口，Bootstrap保持node stdin；
+prepare候选增加辅助脚本传输。正式release原本使用文件入口，本轮不改。
+
+复用原smoke测试，旧stdin确实0请求；新入口和真实容器argv形态均在本机HTTP夹具完成7请求。
+注册503、最终图片类型错误、禁用主入口、无关输出、空源码、摘要漂移以及成功标记+非0退出
+反例均有效，临时文件收尾有断言。相关三套测试36项通过；初次8 failed/1 passed红灯保留。
+冻结候选、补丁、自查及验证边界见[执行器修订](evidence/t7-smoke-executor-2026-10-28/README.md)。
+
+当前LOCAL_EXECUTOR_FIX_VERIFIED / SERVER_REVALIDATION_PENDING / INDEPENDENT_REVIEW_PENDING。
+本机合成HTTP不是正式后端；没有重新运行Ubuntu14–17，R4阶段17的INVALID_EVIDENCE不改为PASS。
+原378项运行源码、存储修订、原smoke断言均未改变；历史失败和附加Health快照失败保留。
+T4/T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项非阻断补测、REMAINDER_DEFERRED
+和完整release/Git clean待批边界不变。不提交、推送、合并或部署。
+
+### 27.19 三项修订复审通过与限定收口（2026-10-28）
+
+用户在本线程复审完成后设定 T7 剩余工程目标，授权收口已通过的修订记录并接续原预算的
+Ubuntu14–17隔离复验。索引兼容、镜像目录权限和smoke执行器的代码修订评审项现为
+REVIEW_PASSED / USER_ACCEPTED / CLOSED_REVIEW_ONLY；不表示服务器smoke或完整发布已通过。
+§27.16–27.18中的待评审状态是当时快照，保留不覆盖；本节为当前限定结论。
+
+复审人为本线程“需求分析/设计/开发”的后续只读复审轮次
+（thread `019ed5ee-e8a7-77d1-a482-f09f88decc2b`），与开发自查分列；不是“测试/评审”线程
+新出具的独立报告，也不将历史服务器探针称为本轮重新运行。
+基线HEAD `7d519d20b5f4409a4f6fb66a756a8f571e55b68b`，仍是未提交候选。
+
+| 修订 | 冻结补丁 SHA-256 | 复审核对 |
+| --- | --- | --- |
+| 索引兼容 | `19a30a5f19ca79a5cf290864bb66ea2949e72c0dccce3218ea1e7deb8565cf5f` | pending条件唯一、全局token摘要唯一、历史状态及查询复合索引保留；不迁移历史库 |
+| 存储目录 | `adc279cb6e83b6e1a1fa882d67cdad1d1b6165a71f49a8023b0262d0044994f2` | 镜像构建期两个0700目录，逐处移除chmod被拦截；不改真实卷或正式预检 |
+| smoke执行器 | `a557372bd11bdb90d27850dc78b50b98339eea6f964c663eba79abcbe2f29f58` | 原CLI实际发出7请求；原失败退出、摘要、未执行及临时文件收尾保护有效 |
+
+本线程复审实际执行：本机Node26.9.0，定向6 suites/174 tests、用户服务13/178、
+文档状态2/280全部通过（范围有重叠，不合计唯一用例数）；lint、docs:family:check、shell语法、
+diff检查通过。三份证据索引112项大小/哈希匹配，R4运行源码378项未变，原smoke等同HEAD，
+四份测试原有行按顺序保留；索引/目录冻结补丁等同当前diff，三份补丁反向只读检查通过。
+这些是复审会话实际输出，不补造为独立QA归档。收口再验证日志与旧文档原字节快照见
+[收口证据](evidence/t7-review-closeout-2026-10-28/README.md)。
+
+R4阶段17仍INVALID_EVIDENCE_ENTRYPOINT_NOT_EXECUTED，新候选SERVER_REVALIDATION_PENDING；
+只允许按既有2 CPU/3 GiB、新增12 GiB、受限串行构建方案接续，认证失效则先恢复专用连接。
+完整release01–18及真实提交/干净检出仍需对应授权；不得用分项通过拼成完整门禁通过。
+T4/T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED历史事实、T5-NB-001/002
+OPEN_NONBLOCKING和高级恢复/新回收REMAINDER_DEFERRED保持，不提交、推送、合并或真实部署。
+
+### 27.20 R5 Ubuntu14–17分项复验通过（2026-10-28）
+
+用户恢复专用认证后，本线程按原批准预算运行新项目 `family-growth-isolated-t7-ed4d5611`。
+源码清单SHA-256 `6e2e813c4d68d763c7f8d2688185efa649a128703b3f913131f265429acb2bec`，
+379项运行文件中原R4的378项不变，仅增加已复审的smoke辅助脚本；未提交基线HEAD仍为
+`7d519d20b5f4409a4f6fb66a756a8f571e55b68b`。完整源码、工具和阶段证据见
+[R5证据](evidence/t7-docker-isolation-r5-2026-10-28/README.md)，不将增量补丁当完整运行候选。
+
+| 阶段 | 本轮实际结果 |
+| --- | --- |
+| 14 | 源码379项匹配；实际隔离Compose校验exit0，9服务1.9 CPU/2816 MiB，仅网关回环端口，无Mongo宿主端口 |
+| 15 | 7镜像legacy串行构建全部exit0；RUN限1.8 CPU/2816 MiB，memory-swap=memory；Docker daemon本身未变 |
+| 16 | 新库、各服务索引、存储探针及两服务预检exit0；正式compose up --wait按原240秒成功，8常驻服务健康、init正常退出，enabled/new-cleanup=false |
+| 17 | 真实文件入口运行原smoke，exit0，唯一完成输出为Family media smoke passed (91 bytes)；网关七个业务请求按原顺序完成，5个201及2个200 |
+
+阶段17不是仅看退出码：原smoke源码未改，runtime显式使用sh辅助入口及原源码摘要，
+网关日志证实注册、家庭、孩子、上传、任务绑定、授权地址、私有图片读取，结果归档为
+verified-stage-results.json。正式服务是真实容器，没有mock后端；不替代T7周报或07b/13b回归。
+
+164次预算采样无停止条件，最低可用内存5151821824字节，最大观测磁盘增量528908288字节。
+启动配置连同smoke合计2 CPU/2944 MiB，容器memory-swap=memory且无OOM；不宣称宿主无swap。
+59份远端封存证据的哈希复核一致，专用临时凭据实际值扫描0匹配；新增收尾记录单列。
+仅移除本轮9容器/4卷/1网络/7候选tag/新增基础tag/临时目录；原11容器选定全部元数据及
+卷/网络/镜像清单前后一致，不做prune或真实数据操作。独立证据复评另列，不冒称代理重跑服务器。
+
+当前STAGES_14_17_PASS / FULL_RELEASE_NOT_RUN。R1–R4原失败、R4阶段17的INVALID_EVIDENCE
+及附加Health快照失败不改写。T4/T7 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED历史事实、
+两项OPEN_NONBLOCKING和REMAINDER_DEFERRED保留；本轮没有提交、推送、合并或真实部署。
+
+下一步完整release仍有明确前提：真实提交及干净检出需用户授权；原阶段15直接compose build，
+阶段16直接up，未装配本分项的受限串行构建和新库索引准备；且init拒绝已有项目资源。
+不能预启动同项目或拼接本次分项来伪装完整入口通过。后续需先给出原入口最小接入及执行环境方案，
+覆盖构建预算、新空库准备、失败收尾及Git clean，再按授权实施，不扩大生产部署或业务范围。
+
+独立只读QA代理Mill（`01a18272-8f83-7ed2-bf44-aec1fd7abcd2`，20:23:37 Asia/Shanghai）
+已重算上述冻结/源码/远端哈希、实际请求、预算和收尾，未发现阻断性问题，分项证据
+INDEPENDENT_REVIEW_PASSED；见R5目录independent-review.md。该代理没有重跑服务器，
+其复评不等于完整发布或总门禁批准。后生成的收尾文件由新本地索引覆盖，不混入旧59项统计；
+91字节依据原脚本读响应和日志，未保存图片正文供离线逐字节复核。
+
+### 27.21 完整发布入口接入与本地提交授权（2026-10-28）
+
+用户批准原入口最小接入、本地专用分支提交、干净检出及完整01–18隔离验证；不授权推送、
+创建PR、合并或真实部署。采用本机既有Node22执行本地阶段，临时私有Unix socket连接Ubuntu
+Docker，网关仅回环转发；不新增系统安装、不改原服务，预算继续2 CPU/3 GiB、新增12 GiB。
+原入口的锁定依赖安装和浏览器准备步骤仍实际执行，缺少系统依赖时停止请求授权，不跳步骤。
+
+隔离模式的15改为七镜像legacy受限串行构建，16先验证新合成库、逐服务建立自身索引、
+执行空卷权限与持久化探针、homework/resource预检，再正式健康启动。普通模式保持原路径；
+原smoke、超时和所有断言不变。准备失败不得继续启动；不执行清理/恢复业务或真实数据迁移。
+新增准备脚本不修正已有卷权限，不删除已有数据，失败由原入口收尾并单独记录本轮资源清理。
+
+R5分项与本轮完整入口的候选、执行证据分开。历史R5门禁/计划原字节已存于
+`release-gate-artifacts/t7-full-release-entry-2026-10-28/inputs/`，不重算旧索引来匹配新文档。
+本轮入口测试、独立复评和完整运行结果见
+[完整入口证据](evidence/t7-full-release-entry-2026-10-28/README.md)。
+T4/T7仍OPEN；DEVICE_PENDING、历史失败/Docker INCOMPLETE_FAILED、两项非阻断补测及
+REMAINDER_DEFERRED不变。完整01–18只有同一真实提交的一次连续运行成功后才可记PASS，
+最终T7限定合成总门禁仍需用户另行批准。
+
+### 27.22 完整发布候选及前两轮停止记录（2026-10-28）
+
+按§27.21授权，完整T7的92个相关文件本地提交为
+`6166a3e958ef335cc09ddb82a76dce615d78b8c6`，分支`codex/t7-engineering-release`。
+未推送、创建PR、合并或部署。提交范围无AI/K12增量，凭据模式扫描无命中；
+原始日志和临时凭据不入Git。冻结patch的空上下文行触发diff whitespace提示，保留原字节；
+源码/文档正文检查通过，不将带patch的完整diff检查写成全绿。
+
+| 运行 | 实际结果 | 收尾及后续 |
+| --- | --- | --- |
+| Full R1 | 01–03通过；04为154 passed/1 failed suites，4606 passed/1 failed tests；原Git clean反例报spawnSync git -86，summary保留commit=unknown；05–18未运行 | PATH为选择Node22而命中仅Intel架构的/usr/local/bin/git；换既有native Git后原反例通过，未改测试。取消转发、删除凭据，原四类资源清单一致 |
+| Full R2 | 同一SHA/新干净检出、Node22.15.0/native Git2.55.0；04期间因一次性执行器安全复评受控停止，exit143/monitorFailure=true；不是业务测试通过或失败结论，05–18未运行 | 通过已核实monitor子进程TERM触发release停止；原四类资源清单一致，转发及凭据已收尾 |
+
+原始证据分别保留在`release-gate-artifacts/t7-full-release-r1-2026-10-28/`和
+`release-gate-artifacts/t7-full-release-r2-2026-10-28/`。完整入口新增四项发现已由独立代理复评
+闭环（3 P1/1 P2；真实prepare入口、smoke目的地、fresh资源名、raw job收尾）；见
+[入口评审记录](evidence/t7-full-release-entry-2026-10-28/README.md)。
+一次性看护工具后续发现的信号、采样时效、转发异常、进程组及日志失败问题另行补强和复评，
+不修改业务源码、不新建发布框架，不把后改脚本声称为R2实际执行版本。
+
+根依赖安装原样报告132项审计告警（32 low/49 moderate/43 high/8 critical）；本轮未升级依赖，
+不得据工程回归推断安全发布通过。完整01–18未通过，两项发布清单仍不勾选。
+T4/T7 OPEN、DEVICE_PENDING、历史失败/Docker INCOMPLETE_FAILED、两项非阻断补测及
+REMAINDER_DEFERRED保留；总门禁关闭仍待用户批准。
+
+### 27.23 Full R3 浏览器缓存权限失败（2026-10-28）
+
+同一固定代码`6166a3e958ef335cc09ddb82a76dce615d78b8c6`在新干净检出连续运行原入口：
+01–10及07b通过；04为155 passed suites、4606 passed/1 skipped/4607 total，
+05为4 suites/6 tests、06和07各1 suite/2 tests、07b为6 suites/35 tests，
+09为57 suites/739 tests，10构建通过。11原Playwright安装器重试后报默认缓存
+`__dirlock` mkdir EPERM，exit1；12–18未运行，不构成完整发布通过。
+
+04唯一条件跳过是原`TC-T5-DEPLOY-002`：固定Node22/native Git的PATH没有包含既有kubectl。
+原测试和断言未改，不将该轮写成零跳过；后续显式提供既有kubectl再验证。
+根/前端npm审计分别132/374项（前端116 low/154 moderate/95 high/9 critical），
+本轮不升级依赖，也不将工程结果视为安全发布批准。
+
+原始日志及实际执行工具保留于`release-gate-artifacts/t7-full-release-r3-2026-10-28/`。
+自动收尾exit0，原容器选定元数据、卷、网络、镜像清单均一致；临时转发取消、凭据删除，
+实际临时凭据扫描0匹配。该轮未进入Docker阶段。
+
+后续只调整本机执行环境：复制与锁定Playwright匹配的既有浏览器到独立临时缓存，
+保留原install步骤；固定工具目录提供既有kubectl，native Git/Node22不变。
+Chromium正常启动另需执行器允许Mach IPC，受限沙箱探针失败、沙箱外同一data页面探针通过；
+不新增安装或修改系统配置。新的完整运行仍须从01开始，不拼接R3分项结果。
+T4/T7 OPEN、DEVICE_PENDING、历史失败、两项非阻断补测及后置范围不变。
+
+### 27.24 Full R4 持续换页停止与验收缺口（2026-10-28）
+
+新项目`family-growth-isolated-t7-full-73da62f1`以同一固定SHA6166a3e9重新连续执行：
+01–15及07b/13b通过。家庭后端155 suites/4607 tests、前端57 suites/739 tests，均零跳过；
+Task11 HTTP6及浏览器4、Task12两轮HTTP各2及浏览器1、自主学习HTTP35及浏览器54通过。
+三个孩子的完整数学/周反思、真实共管代录和未知写入恢复确实出现在07b/13b日志中。
+14配置及15七镜像构建通过；16已完成新库、索引、存储及预检，在正式健康等待中触发
+SUSTAINED_SWAP后终止，17–18未运行。完整入口FAILED_STOPPED，不能关闭总门禁。
+
+末尾连续三次主机换页增量3686/1128/1143页满足原>1024页、连续三次停止规则；
+524次采样的最大新增容器限额合计1.8 CPU/2816 MiB、最大磁盘增量526512128字节，
+最低可用内存约4.924 GiB。未超其他预算不代表可忽略换页停止；聚合计数不能归因具体进程。
+没有调整阈值、修改业务、增加超时或盲目重跑。收尾后只读采样稳定不替代故障归因。
+
+原release shell summary及Compose日志/teardown未完整落盘，runner记录SIGTERM而非业务退出码；
+外层自动收尾exit0，原四类资源核对一致，临时转发和凭据清除。全部原始结果、执行工具及
+后续独立审计见[完整发布材料](evidence/t7-full-release-2026-10-28/README.md)。
+当前SERVER_SWAP_DIAGNOSIS_REQUIRED；建议先补只读分项换页/cgroup归因，不改主机设置、
+不影响原服务、不放宽预算，再决定下一次有状态复验。完整发布两项仍未勾选，T4/T7 OPEN；
+历史失败、DEVICE_PENDING、两项非阻断补测和REMAINDER_DEFERRED保留，不推送/PR/合并/部署。
+
+### 27.25 换页诊断中止与外部清理待核实（2026-10-29）
+
+Full R4 后的60秒只读采样未观察到换页，不能追溯解释R4。用户随后批准一次固定代码
+6166a3e9的14–16受控诊断，原2 CPU/3 GiB、新增12 GiB及停止阈值不变，不执行17–18。
+新项目`family-growth-isolated-t7-swap-82c3d609`的14配置和15七镜像串行构建通过；16仅到
+storage准备完成，尚无两项preflight及最终正式健康等待完成证据，监测器命中
+`INSPECTION_FAILED`后退出，runner以`MONITOR_EXIT`停止，exit1。完整发布仍未通过。
+
+73组对齐预算/cgroup观察覆盖00:00:09.287–00:03:58.064（Asia/Shanghai），主机换入7页、
+换出845页，最大单间隔532页，未触发持续换页；最低可用内存5.145 GiB，最大观测新增磁盘
+497.965 MiB，最大观测新运行容器配置限额1.8 CPU/2816 MiB。采样不覆盖停止及清理尾段。
+本次可计算区间的845页换出归于原MongoDB cgroup，不是历史R4根因证明，也不证明没有间接影响。
+7个短命cgroup仅有一份观察，增量未知；祖先与子组计数重叠，不相加或补零。
+
+inspect原始stderr及返回码未留存，不能认定容器自动删除竞争或人工清理是实际原因。
+原teardown含`No such container`，与外层定向清理全部记录exit0分开保留。最终原11容器的
+选定元数据及镜像/网络/卷清单一致；两转发取消、临时凭据清除。上述核对不替代业务延迟或数据审计。
+本地执行器8项、监测6项反例通过，不能覆盖本次实际监测失败；独立代理复核原始数据与冻结哈希，
+修正派生分析CPU回退和单次观察遗漏后确认记录准确，未重跑服务器或批准总门禁。
+
+归档、哈希和复核范围见[诊断记录](evidence/t7-swap-diagnostic-2026-10-29/README.md)。
+本次仅一次授权已使用，没有再次运行。用户随后提出可能误清理Docker并要求核实：本地证据确认
+当时经专用转发访问Ubuntu Linux/amd64 Docker，而非本机Docker Desktop；截至本次记录更新，
+专用SSH认证通道未恢复，故服务器事件和日志尚未核验，人工清理假设未证实。
+
+下一步先恢复认证并只读核对清理对象、时间与服务器事件；无法追溯时明确保留未知，不凭推测
+放宽监测或重写失败。T4/T7 OPEN、DEVICE_PENDING、历史Docker INCOMPLETE_FAILED、
+两项OPEN_NONBLOCKING和REMAINDER_DEFERRED不变；不提交、推送、合并或部署。
+
+后续SSH恢复后已完成有界只读事件、daemon日志和现有资源核对；上述“尚未核验”为此前快照。
+返回的256条近期事件不覆盖原失败窗口，窄窗口TaskDelete及镜像父项警告无法识别操作者；
+用户也无法确认清理地点/时间/方式，人工清理和inspect原始错误继续UNDETERMINED，不归因用户。
+原11容器选定元数据及镜像/网络/卷清单与上轮收尾一致，不替代业务数据审计。本轮未重跑服务器。
+
+仅修订临时监测器的inspect非零/超时留证：记录退出码、时间、受限分类及原始字节长度/哈希后停止，
+未知内容不直出、不自动重试、不放宽预算或换页阈值。独立复核发现文本模式改变CRLF及非法UTF-8
+绕过留证的P2，改为二进制捕获并补真实本地子进程反例；8项新测试和原6项均独立通过，P2复核通过。
+原红灯及缺失stages.sh夹具导致的一次测试错误均保留。此修订未在Ubuntu执行，不声称覆盖ps/启动/解析
+等全部监测故障，也不关闭历史INSPECTION_FAILED或R4。新归档哈希与独立复核范围见上述诊断记录。
+下一次14–16仍需授权，原一次诊断授权已消耗；17–18与完整发布未通过，T4/T7 OPEN及保留范围不变。
+
+### 27.26 新授权14–16诊断通过（2026-10-29）
+
+用户随后明确批准再做一次14–16诊断，固定6166a3e9、2 CPU/3 GiB、新增12 GiB及原停止阈值。
+新项目`family-growth-isolated-t7-inspect-d45d518b`完成14配置、15七镜像串行构建、16全部合成
+准备、两项preflight及8个服务健康启动。runner和shell summary均exit0，monitorFailure=false，
+stopReason=null。17–18 NOT_RUN，NOT_RUN_DIAGNOSTIC_ONLY，不拼接为完整发布通过。
+
+71组预算/cgroup采样覆盖08:07:34.264–08:11:18.390（Asia/Shanghai）；主机换入36页、换出8501页，
+只有一个间隔超过1024页（1658），最长连续次数1，未触发原三间隔停止规则。最低可用内存4.878277 GiB，
+最大观测新增磁盘499.925781 MiB、新运行容器配置限额1.8 CPU/2816 MiB，未观察到新容器OOM。
+8个单次观察cgroup的增量仍未知，祖先和子组不相加。原服务cgroup也有换出，不能称零性能影响，
+更不能倒推Full R4原因或关闭旧inspect未知根因。最后采样后至最终清理快照约6.726秒无连续预算证据。
+
+原shell teardown及外层定向清理exit0；原11容器选定元数据和镜像/卷/网络清单一致；两转发取消、
+临时凭据移除，清理时20文件扫描无凭据匹配。运行前后1855个源码文件和15个冻结工具/日志未变，
+复用原干净固定检出，不称新clone。归档与限制见[诊断记录](evidence/t7-swap-diagnostic-2026-10-29/README.md)。
+本次一次授权已完成，未再运行；完整01–18仍待后续授权与连续执行。T4/T7 OPEN、DEVICE_PENDING、
+历史Docker INCOMPLETE_FAILED、两项OPEN_NONBLOCKING及REMAINDER_DEFERRED均保留，不提交/推送/合并/部署。
+
+独立代理Avicenna仅本地复核原始日志、34组cgroup计数、1855源码哈希及15项冻结文件/两项外部依赖，
+支持本轮有限PASS，无新阻断项，没有重跑SSH/Docker。开发自测8+6+8及分析/语法测试、文档校验和
+268项状态测试通过。独立复核时尚缺的review/最终manifest已随后补齐，54文件归档及哈希见诊断索引；
+最终manifest由主代理生成/校验，不冒称已被独立核对。一次诊断通过不替代完整发布连续运行或总门禁批准。
+
+#### 当前剩余验收清单
+
+以下仅归并既有条件，不新增审批框架，不改变历史通过/失败或关闭范围。
+
+| 条件 | 当前证据 | 下一动作/边界 |
+| --- | --- | --- |
+| T7业务与缺陷修订 | §27.8七项P2已批准关闭；Full R4实际执行后端/前端/正式HTTP和浏览器 | 不重复开发；完整入口仍须覆盖同一候选，历史分项不拼成完整PASS |
+| 07b/13b及完整数学链路 | Full R4实际执行35项HTTP/54项浏览器，原日志保留 | 新完整运行核对这两个步骤仍被实际调用、构建身份一致；不能只凭脚本存在判断 |
+| Docker正式路径 | 历史R5的14–17分项通过；本次新授权14–16通过 | 下一完整运行须真实执行17原smoke，不能拿两轮结果替代同轮完成 |
+| Git clean与完整发布 | 固定6166a3e9检出当前干净；原始工作区仍有本次文档增量 | 干净状态预检不是18阶段证据；待授权从01连续到18，不擅自提交/stash/隐藏文件 |
+| T4依赖与人工条件 | §24.7–24.10工程/服务器自动化证据具备，§24.11允许人工后续安排；T4总门禁仍OPEN | 不阻止已授权合成技术验证；T7关闭申请必须明确列出T4独立待批准及M01–M08 MANUAL_PENDING/DEVICE_PENDING，不能自行豁免或连带关闭 |
+| T7工程总门禁 | OPEN，完整发布未通过 | 完整证据齐备并复核后再请求用户限定范围关闭；目前不称ENGINEERING_READY_FOR_APPROVAL |
+| 真机/真实发布/后置 | DEVICE_PENDING、T8/T9责任、两项OPEN_NONBLOCKING、高级恢复/新回收REMAINDER_DEFERRED | 不当作本轮新增开发或自动关闭项；保留历史Docker失败和依赖安全告警，不据此授权真实部署/公网开放 |
+
+下一实际运行的授权请求已提出：在干净固定6166a3e9上连续执行原release01–18，本机原依赖与浏览器
+准备、Ubuntu原预算/停止规则及定向收尾均保持。当前尚未收到该次授权，不启动新远端任务或17–18。
+
+### 27.27 新授权完整 Full R5 在15停止（2026-10-29）
+
+用户随后批准一次完整01–18隔离验证；上节“尚未收到授权”为历史快照。本次固定代码
+`6166a3e958ef335cc09ddb82a76dce615d78b8c6`，项目`family-growth-isolated-t7-full-55ea888c`，
+本机Node22执行原`bash scripts/release-family-gate.sh`，Ubuntu仍限2 CPU/3 GiB、新增12 GiB。
+原停止阈值、合成数据边界不变；未安装服务器软件，未提交/推送/合并/部署。
+
+01–14（含07b/13b）通过：家庭后端155 suites/4607 tests，前端57 suites/739 tests，
+Task11 HTTP 6项、Task12 HTTP两轮各2项、自主学习HTTP 35项；浏览器分别4/1/54项通过。
+原依赖安装、lint、文档、构建和浏览器准备均实际执行。npm安装仍报告根目录48项、前端73项
+依赖漏洞告警，不能称安全审计通过，也不改写此前不同快照的计数。
+
+15仅完成gateway/user/progress三个镜像，监测器inspect exit1，runner按`MONITOR_EXIT`停止。
+原release summary status143，runner exit1，`FAILED_STOPPED`；16–18全部NOT_RUN，不拼接此前
+14–16或14–17分项为完整通过。完整发布两项继续未勾选，T4/T7 OPEN。
+
+原始诊断为`UNCLASSIFIED`，stderr长度36和SHA-256与
+`error: no such object: c55bd84f78b6\n`精确匹配；同轮构建日志132–133行记录该中间容器
+`Running in`和`Removed intermediate container`。这支持本轮legacy builder正常删除与
+list/inspect竞态归因，不是人工清理证明；派生解释不覆盖原记录，不解释旧inspect未知故障或Full R4换页。
+现有分类只识别大写格式，但仍正确失败关闭，没有忽略缺失对象或自动重试。
+
+427组预算/观察配对，主机换入24页、换出0页，无持续换页阈值命中；最大观测新运行配置限额
+1.8 CPU/2816 MiB、最低可用内存5599834112字节、最大观测新增磁盘289628160字节。
+短命容器可能未被采到，统计不等于生命周期总量；最后采样后失败及收尾尾段不由连续采样覆盖。
+原11容器选定元数据和镜像/网络/卷清单一致，外层定向清理exit0，两转发取消、临时凭据移除。
+清理时36文件未匹配临时凭据；上述核对不替代业务数据或零性能影响审计。
+
+1855源码文件、16冻结工具/日志及两项外部依赖哈希运行前后保持一致，固定检出仍干净；
+执行器9项、监测6项及inspect留证8项本地测试通过，错误SHA夹具的原红灯保留。
+归档及独立复核边界见[Full R5记录](evidence/t7-full-release-r5-2026-10-29/README.md)。
+本次一次完整运行授权已使用，不再自动重跑。下一步须先处理监控的短命构建容器竞态，不能泛化为
+忽略inspect错误、仅凭“非原容器”放行或暂停预算监控；安全策略调整和新服务器运行需明确授权。
+历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项OPEN_NONBLOCKING及REMAINDER_DEFERRED保留。
+
+Full R5运行后独立代理仅本地核验哈希、135份归档副本并重算427组采样及16组cgroup汇总，
+支持上述FAILED_STOPPED和收尾结论，未重跑服务器。小写错误分类遗漏登记监控诊断P2 OPEN；
+原分析夹具不覆盖新`full-analyze.cjs`，本数据集仅以独立重算核实，不冒称夹具覆盖。
+最终归档清单由主代理随后生成/核验；不把归档完成当作发布通过或缺陷关闭。
+
+### 27.28 本地小写错误分类修复（不改变监控停止策略）
+
+在既有最小问题修复范围内另建候选，仅增加精确小写错误格式识别；R5冻结工具、日志和失败记录不变。
+原非零/超时立即停止、无自动重试、字节哈希/脱敏及预算阈值全部保留。该修订不实现缺失容器放行，
+不授权下一次服务器运行。补丁和哈希见[Full R5记录后续节](evidence/t7-full-release-r5-2026-10-29/README.md)。
+新增4项永久反例，红灯3项分类断言失败，修复后12项诊断及原6项监测测试通过；独立代理Avicenna
+实际执行12+6项通过并核验补丁/候选及原冻结哈希。分类修复本地复核通过，不关闭运行时竞态。
+仅本地执行Python模拟监控及真实本地错误子进程，无SSH/Docker运行，不提交/推送/合并/部署。
+T4/T7 OPEN、历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED及全部后置状态保持。
+
+### 27.29 获批本地短命容器竞态处理（服务器未运行）
+
+用户批准只对已证明属于本轮且正常删除的对象处理竞态，其余仍停止。本次另建监控候选，
+使用完整ID/返回集合校验、此前成功且限额合规的同轮inspect缓存、有限只读daemon生命周期查询，
+只允许既有明确prepare或one-off mongo-init角色。核验后最多一次新快照；原容器、预算、swap
+历史及外层看护不放宽。无归属/限额/完整成功生命周期证据的对象仍失败关闭，不信任构建stdout。
+
+独立复核发现两项P1和一项P2，已固化策略2项/截止1项红灯并修订：删除builder推断放行，严格要求
+实际project与create/start/die0/destroy，最终成功输出前检查截止。最终独立执行20+15+12+6共53项
+通过；开发runner9、9个监控保护及1个项目注入变异和原冻结哈希另行核验。补丁/哈希/红灯/复核范围见
+[本地竞态修订](evidence/t7-monitor-race-2026-10-29/README.md)。本地复核通过不关闭运行时故障。
+
+归档首轮runner失败及后续两次夹具失败均保留；最终夹具先安装信号处理再发布ready，原9项断言与
+时限不变。开发及R3独立复跑各9项通过，仅覆盖本地进程控制，不代表原release Bash/Compose收尾通过。
+
+**Full R5未证明的c55bd84f78b6仍会停止**；不以本次局部可证明对象的处理宣称legacy builder竞态
+全面解决。仅本地合成验证，无SSH/Docker远端运行，不提交/推送/合并/部署。下一服务器验证待授权；
+T4/T7 OPEN、历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项OPEN_NONBLOCKING及后置范围保留。
+
+### 27.30 一次获批14–16兼容性复验：15停止（2026-10-29）
+
+使用固定6166a3e9的新干净检出及已复核监控器，唯一项目family-growth-isolated-t7-compat-kwdbg6。
+14通过；15完成五镜像后，未有先前限额观察的builder中间容器在list/inspect间消失，
+MISSING_LIMIT_EVIDENCE触发MONITOR_EXIT，release143/runner1；16–18未运行，完整release未运行。
+未放宽未知归属或限额要求，未重复运行。详见[本轮兼容性证据](evidence/t7-monitor-compat-2026-10-29/README.md)。
+
+44组采样与44组观察，最大限额1.8 CPU/2816 MiB，磁盘增长约283.23 MiB；换入42页、换出1592页，
+未触发持续换页停止条件，不宣称无换页或原服务零性能影响。定向收尾exit0，原11容器及资源清单
+与基线一致，临时凭据/转发已移除。旧目录22项ignored日志未传输，最终新检出1855源码哈希核验。
+本次授权已使用，builder证明缺口仍存在，不以安全停止当通过。T4/T7 OPEN、历史失败、
+DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项非阻断补测与后置范围保持，不提交/推送/合并/部署。
+
+### 27.31 获批本地保留 legacy builder 与精确登记候选（2026-10-29）
+
+用户批准本地实现和独立复核，不授权服务器复验。采用独立输入快照、digest 固定 FROM、首条身份 LABEL、
+显式保留中间容器、实际限额与完整对象登记、关闭登记后的启动核验和监控结束后的精确清理。
+客户端终止不明仍 UNKNOWN，未知对象/限额/预算不放宽，旧监控器不新增 builder 缺失放行规则。
+本地修订与验证记录见[候选证据](evidence/t7-retained-builder-2026-10-29/README.md)。
+本节不覆盖 §27.30 的 FAILED_STOPPED，不声明服务器验证通过；T4/T7 OPEN、历史失败、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、两项 OPEN_NONBLOCKING 及 REMAINDER_DEFERRED 保持，禁止提交/推送/合并/部署。
+
+§27.31 本地最终验证：family-common 48 suites / 1189 tests、lint/文档/语法/diff 通过，13 项变异检出；
+仓库独立 4 suites / 214 tests、外层独立 mock 56 项通过。冻结源码补丁与两份报告由上述候选证据索引绑定。
+仅记 LOCAL_REVIEWED；无获批新固定提交，外层为 NOT_SERVER_READY_PENDING_FIXED_CANDIDATE。
+SSH 子进程退出未替代远端监控终止证明，未运行任何新服务器阶段，未关闭历史运行问题或总门禁。
+
+### 27.32 保留构建候选本地提交与一次14–16复验授权（2026-10-29）
+
+用户批准核清范围后，在当前专用分支创建本地提交和干净固定检出，并执行一次 Ubuntu 14–16 隔离兼容性复验。
+本次范围包括 §27.25–27.31 尚未提交的同轮记录及已复核的保留构建源码/测试，不包含无关业务或 AI/K12。
+原始日志及外层执行工具保留在独立本地归档，不把未审查的运行凭据加入 Git；完整执行候选须重新绑定固定 SHA。
+执行前必须证明远端监控停止方式并检查服务器空闲条件，无法证明则不开始测试。
+仍限合计 2 CPU / 3 GiB、新增磁盘 12 GiB，原停止规则和精确收尾边界不变。
+本节仅记录授权，未声明执行或通过；17–18、完整01–18、不安装/推送/合并/部署均不在此次授权内。
+T4/T7 OPEN、历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项 OPEN_NONBLOCKING 及 REMAINDER_DEFERRED 保持。
+
+### 27.33 固定候选、远端停止证明与基础镜像准备失败（2026-10-29）
+
+§27.32 授权的本地提交为 `e78ef415a4ae5551557c9e3f97a3c0085dad6c27`，干净检出核对 1875 个跟踪文件。
+用户随后批准最小补齐远端监控身份/停止证据，以及在原预算内拉取历史固定 Node digest。
+本地停止证明与准备流程已完成自查、反例和独立复核；运行证据及后续纠正见
+[本轮证据索引](evidence/t7-retained-compat-2026-10-29/README.md)。
+
+实际仅执行一次基础镜像准备：固定 digest 拉取回执为 `SUCCEEDED`，远端监控身份和停止证明匹配；
+准备在 `BASE_TAG_IDENTITY` 失败，原因是实际 `RepoTags` 同时包含 `node:22-alpine` 和同一个固定 digest 引用。
+**14–16 未运行，17–18 与完整 release 均未运行；不得把本地测试或 pull 成功写为阶段通过。**
+两次预算采样未触发阈值，不代表连续峰值证明或原服务零性能影响。
+
+收尾额外出现证据错误：执行器仅请求 `docker image rm --no-prune node:22-alpine`，Docker 实际同时删除
+对应 digest 和镜像实体；执行器先输出的 `DIGEST_AND_REMOTE_RECEIPTS_RETAINED` 不成立，后续精确 inspect
+已确认 digest/Id 均不存在。原始输出、执行脚本和纠正证据全部保留。原普通镜像清单不能证明此前不存在
+digest-only 引用，因此不宣称完成了“保留 digest”的安全收尾；该问题保持未关闭，旧清理入口已本地停用。
+最终已采集的原 11 容器字段、22 条镜像记录、42 卷和 5 网络清单与基线一致；这不能替代隐藏引用归属证明。
+远端本轮回执目录仍保留，未重新拉取、补 tag、运行新阶段或继续删除。
+
+运行后本地最小修订只容许额外的精确固定 digest，仍拒绝其他 tag/digest；13 项准备 mock 通过，
+另有停用入口零操作检查。它们不构成服务器复验，也不证明安全删除已修复。
+下一步先明确完整镜像引用基线及精确收尾方案，再决定是否重新准备和使用尚未开始的 14–16 授权，
+不沿用本轮 `FAILED` 作为准备成功。T4/T7 OPEN、历史失败、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+两项 OPEN_NONBLOCKING 及 REMAINDER_DEFERRED 不变；本次后续修改仅本地，未推送、合并或部署。
+
+### 27.34 完整镜像基线修订与一次14–16：15登记失败（2026-10-29）
+
+用户同意继续完整镜像基线和精确收尾方案，先本地修订/反例/独立复核，再执行固定 `e78ef415` 的一次14–16。
+新项目 `family-growth-isolated-t7-base-o6gdae`，全新干净检出再次核对1875个跟踪文件。
+本地采集器使用 Docker Unix socket v1.44 只读 GET，包含所有 image summary、容器 Id/Image 与两个目标引用
+的精确 inspect，双快照相同才接受。它不是逐个原镜像完整配置或物理内容存储审计。
+旧格式化 Parent 读取失败和逐个 CLI inspect 超时保留；未提高15秒读取超时。
+归属不明保留整个实体，只有完整新实体证明及生命周期条件成立才允许按精确 Id 删除，无 force/prune。
+删除前原容器集合校验遗漏已补反例，独立复核46项本地检查通过；见[本轮证据](evidence/t7-base-baseline-2026-10-29/README.md)。
+
+实际结果：基础镜像准备 `PREPARED`，实体193→194；成功拉取回执及远端监控停止证明齐全。
+14配置通过；15 Gateway 镜像构建成功后，登记校验 `release-build-ledger.js:79` 返回 `UNPROVEN_BUILD_OBJECT`，
+账本 `FAILED`，未继续后续服务构建。新增8个镜像的 legacy `Container` 全为空、`ContainerConfig.Cmd` 无可用值，
+即使已请求API1.44，也无法满足中间容器与镜像提交的双向证明。未放宽断言，未拿标签或stdout代替证明。
+**16、17、18及完整release未执行；14通过和单镜像构建成功不能记为15通过。**
+
+准备4次、阶段运行36次预算采样，最大运行限额1.8 CPU/2816 MiB，采样最大磁盘增量362217472 bytes；
+换入增加1页、换出0页，无监控停止原因。这是采样证据，不宣称连续峰值或原服务零性能影响。
+监控已取得真实停止证明，临时凭据删除成功、1485文件凭据扫描零匹配、两条临时转发取消成功。
+原11容器已采集字段、193个原镜像summary、42卷及5网络与准备前一致。
+因账本未CLOSED，既有收尾拒绝；基础镜像收尾也以缺少生命周期证据拒绝，未删除对象。
+本轮保留6个非运行中间容器及9个镜像实体（含基础镜像），末次磁盘增量352276480 bytes，
+远端回执保留，清理状态仍 `INCOMPLETE`，不得称工作区或服务器资源已恢复原样。
+
+本次一次14–16授权已使用，不盲目重跑。下一步先核验实际daemon可提供的构建来源证据并提出最小兼容方案；
+不移除双向证明、不按标签批量清理、不安装/切换daemon或扩大预算。T4/T7 OPEN、历史失败、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、两项 OPEN_NONBLOCKING 及 REMAINDER_DEFERRED 保持。未新增提交、推送、合并或部署。
+
+后续只读分析：对应上游 Docker29.1.3 的 containerd 镜像 inspect 不填写所需旧来源字段，legacy
+CommitBuildStep 也不发送 container commit 事件；普通 events 监听不是已证明等价的修复。
+发行版实际缺失仍以归档快照为准，不把上游源码当作现场二进制验证。见上述证据索引的来源兼容性分析。
+建议先评审独立兼容构建环境，保留现有校验和预算；不更改原 daemon、不扩大清理范围，未再重跑服务器。
+环境与新运行尚待批准，6个容器/9个镜像继续保留，当前失败及所有未关闭状态不变。
+
+### 27.35 后续独立 rootless 探针与预检失败（2026-10-29）
+
+接续 §27.34 的历史待批准状态：用户随后批准只读可行性核验、精确五包依赖安装及一次独立探针。
+依赖安装已由用户在终端完成；旧 shim 的待维护告警经限定只读归因后由用户批准单独保留，未重启原服务。
+用户另行确认 DeepTutor 更新已结束，批准只读核实后仅调整相应原服务基线；累计磁盘预算起点不重置。
+
+第一次入口因隐式 slice 误判在资源创建前停止。修订通过13项本地测试及独立复核后，用户批准一次
+slice-fix 探针；launcher SHA256 `6be837738861e62f9168b9c04b5ae3d7dddcd84e660daa7881f463a28fcc7425`。
+该次入口通过 slice 检查，但受限 worker 在预检阶段退出1，运行641ms，未启动 daemon、拉取或构建。
+没有运行14–18；不能据此证明 rootless 来源字段或容器限额兼容，更不能关闭完整 release。
+
+只读核对发现 SSH 有 Docker 组，而既有 systemd 用户管理器没有；原 socket 为对应组0660。
+这强烈支持凭据上下文问题，但原执行器未保留失败命令 stderr，不能声称已捕获具体权限错误或精确定位
+唯一失败子命令。用户已批准下一步仅本地最小修订与复核，不授权远端进程或再次探针。
+
+限定收尾 helper 的 Python assert 优化风险在执行前修正；4项测试/22个合成场景及独立复核通过后，
+仅停止已核实身份的自有空 slice，退出0，实际 cgroup 消失。17个原容器、镜像清单及原服务身份在
+收尾前后均与批准基线一致。远端约38KB审计文件、失败 worker 记录及3个 runtime drop-in 保留，
+不是完整清理，也不是可直接复用的新目录。§27.34 的6个容器/9个镜像未处理。
+
+本地原始证据位于既有 `release-gate-artifacts/t7-rootless-probe-e8rrqx-2026-10-29/`：
+`SLICE-FIX-ATTEMPT.md`、`slice-fix-attempt-sha256.txt` 绑定13个文件，包含原失败、只读核对及停止回执。
+它们尚未作为可移交的 Git 证据包提交，不声明仅凭仓库检出即可复验全部原始日志。
+T4/T7 OPEN、历史失败、Docker INCOMPLETE_FAILED、DEVICE_PENDING、两项 OPEN_NONBLOCKING、
+REMAINDER_DEFERRED 保持；本段不改变既有真实部署、推送或合并限制。
+
+后续获批的本地最小修订已完成，候选位于同一证据目录的 `credential-fix/`，未传输或执行到服务器。
+固定原服务只读查询使用已有组成员身份的局部 sg 子进程，保留 UID/GID、socket、cgroup 和完整 ID
+集合校验；不改组成员、socket 权限、原服务或整个 worker/daemon 的组身份。首次监控诊断、内层超时
+及不确定后代处理的3项 P2 已在本地修复并通过独立复评；28/28测试、bootstrap语法通过，使用 Node26.9.0，
+不作为 Node22 或 Linux 运行证据。不确定读进程仅触发本 worker 退出并要求 supervisor 收尾核验，不称清理完成。
+独立记录 `credential-fix/INDEPENDENT-REVIEW.md` 绑定源码；launcher
+`6dcfa4ce66bc1e390291470a702f7576845ca5ddf4d8ca400aa7ff0006fa9215`、bootstrap
+`e1ec915e85d380c3c985cb23a04478d6014ac7663e78e973c691a1eef436a24e`。
+实际 sg/PAM、权限与最终 unit/cgroup 收尾仍需单独批准的探针验证；本次没有任何新的远端命令或 Git 操作。
+
+### 27.36 凭据修订探针：快照排列差异停止（2026-10-29）
+
+用户随后批准一次固定 credential-fix 探针，先核对既定基线、空闲条件和累计预算。17个原容器、镜像
+清单及原服务身份一致；新目录不存在，服务器 Node22.22.1，累计磁盘预算起点仍45669158912字节。
+另一个线程的 DeepTutor 只读检查结束后才执行。33秒前置观测换入14页、换出0页，不称零换页。
+
+本次 worker 退出1，运行13.743秒，峰值62.5MiB。正常 sg 路径实际证明 worker 保持 UID/GID1000，
+固定读取子进程保持 UID1000、取得 GID110且仍在确切 worker cgroup，原服务快照成功读取。
+首次 sample 因 containersHash 不一致而 `FAILED_STOP`；startAttempted=false，未启动 daemon、
+拉取或构建，未运行14–18。finally 再次匹配初始原始摘要不抹去中间失败，不构成通过。
+
+五次只读诊断复现失败中的两个精确原始摘要；仅一个原容器的有序 Mounts 摘要变化，完整挂载多重集合
+及其他采集字段摘要一致。原始路径和值未输出，仅归档摘要。独立复核确认这一限定诊断及自有空 slice
+停止边界。停止执行退出0，cgroup消失；原服务既定字段再次一致，失败记录、运行时配置和审计文件保留。
+证据：同一本地目录的 `CREDENTIAL-ATTEMPT.md`、`credential-reconciliation.json`、
+`credential-order-diagnostic.json`、`credential-owned-stop.json`、`credential-after-stop.json`。
+
+依照本任务允许的已定位最小本地修复，另建 `order-fix/` 候选：仅对完整 Mounts 条目作确定性排序、
+规范 JSON 对象键序，保留全部值/重复数量和其他数组顺序，不移除字段或绕过状态变化。既有28项保留；
+红灯30通过/2失败，修订后32通过，Node26.9.0。新候选尚待独立复核及再次远端授权，不将本地通过当服务器通过。
+T4/T7 OPEN、历史失败、Docker INCOMPLETE_FAILED、DEVICE_PENDING、两项 OPEN_NONBLOCKING、
+REMAINDER_DEFERRED 保留；无提交、推送、合并、部署或旧对象清理。
+
+后续 order-fix 本地独立复核已通过：复核方重新运行32项测试和生成 bootstrap 语法检查，确认只改变
+完整 Mounts 排列的摘要表示及新 namespace，全部值/数量/其他数组顺序仍受保护。记录见
+`order-fix/INDEPENDENT-REVIEW.md`；launcher `6128cc66b19f2c7183eb6bd06b3ffc57045f6b5eb0aa131b9fe192f4317bfd65`，
+bootstrap `8d87a41aa80059652c6c957cf30d1935be267e09255cf3a89d200f3e58747576`。
+本地修复通过不回写本轮 FAILED_STOP；新候选的服务器执行仍待用户单独批准。
+
+### 27.37 order-fix 一次探针：独立 daemon 启动，镜像拉取超时（2026-10-29）
+
+用户随后批准一次 order-fix 探针；13个冻结文件哈希在执行前后均一致。先只读核对17个原容器、镜像
+清单、原服务身份及空闲条件，累计磁盘起点仍45669158912字节，2CPU/3GiB、12GiB及原停止规则不变。
+该次授权已使用，没有重试、网络调整或新增安装。
+
+worker运行39.567秒后退出1；独立 daemon 已启动，实际为 rootless、overlay2、systemd/cgroup v2，
+使用独立数据目录和不同 daemon ID。固定基础镜像 pull 请求在 Docker Hub 等待响应头超时；pull.log
+和 daemon.log 均记录该失败。仅能定位失败操作，不能据此断言 DNS、路由或代理的具体根因。
+结果为 FAILED_STOP：buildExecuted=false、ledgerValidated=false、storedObjectsRemoved=false。
+没有执行 RUN/COPY、构建来源字段验证或14–18；本次未复现 Mounts 排列误报，不等于整个兼容探针通过。
+
+观测 aggregate cgroup峰值177926144字节，swap为0、OOM计数为0，CPU/内存限制保持；运行采样的主机
+swap总量增加6页，低于原停止阈值，不称整个运行主机零换页。最低记录磁盘空闲40955305984字节，
+未重置预算。原服务受检字段一致不等于全部业务健康或零性能影响的证明。
+
+独立复核确认失败归因、既定原服务字段一致及精确空 slice 停止边界，未授权重跑或扩大清理。
+本地证据在既有目录 `release-gate-artifacts/t7-rootless-probe-e8rrqx-2026-10-29/`：
+`ORDER-ATTEMPT.md`、`order-baseline-read.json`、`order-reconciliation.json`、
+`order-owned-stop.json` 与后续 `order-after-stop.json`。本轮 daemon 已停止；只处理本轮精确空 slice，
+不重启 daemon 清理数据目录，不删除审计文件、failed worker/runtime drop-in，也不处理旧保留对象。
+证据尚未作为 Git 移交包提交。T4/T7 OPEN、历史失败、Docker INCOMPLETE_FAILED、DEVICE_PENDING、
+两项 OPEN_NONBLOCKING 和 REMAINDER_DEFERRED 不变；下一步应先评审有界只读网络前置诊断，不盲目重跑。
+
+限定停止随后执行退出0：`order-owned-stop.json` 记录两次即时身份/空 cgroup 校验，
+`order-after-stop.json` 确认 slice inactive/dead、cgroup实际消失、worker PID0、daemon和socket不存在。
+17个原容器受检字段、镜像清单及原服务身份再次一致；磁盘目录和历史残留继续保留，不记为完整清理。
+
+用户随后批准一次最多60秒的只读网络前置诊断，实际约8.17秒、SSH退出0。仅对固定 registry 进行
+DNS/HTTPS，并读取原 Docker 代理/镜像源是否配置的布尔值：DNS可解析，IPv4请求8秒超时，IPv6
+ENETUNREACH；原 daemon 无HTTP/HTTPS代理、有镜像源，前后身份及布尔值一致。未输出地址或凭据。
+证据为同目录 `ORDER-NETWORK-READ.md`、`order-network-read.cjs`、`order-network-read.json`。
+READ_COMPLETE_NOT_CONNECTIVITY_PASS 不表示连通成功；只能说明本次主机直连路径也失败，不证明
+唯一根因或镜像源可用。冻结候选 env-i/独立配置未继承原 daemon 镜像源；不因此自动复制配置、
+关闭TLS或放宽网络隔离。下一步先批准限定镜像源只读核验及最小方案，另行批准后才可执行新探针。
+
+该只读证据经独立本地复核，见 `ORDER-NETWORK-REVIEW.md`：固定目标和脱敏有效；8.173秒为远端
+实际完成间隔，不是所有失败路径的硬截止证明。同步子进程可能阻塞Node watchdog，后续复用前须
+补明确远端终止机制及不确定结果核验，不靠SSH本地超时声称远端已停。只测试一次IPv6-family请求，
+不能推广到全部8个地址；布尔值一致不代表完整配置一致。本次无超时失控证据，既有失败状态不变。
+
+后续用户批准限定既有镜像源只读核验。先用独立Python监督补齐超时/输出超限终止及进程组消失核验，
+10项本地永久反例与独立复核通过，正常退出不向已回收身份发信号，不确定结果仍拒绝。一次实际执行
+客户端463ms、SSH退出0、childExit0、groupAbsent=true：仅1个既有镜像源，HTTPS/无凭据/公网目标
+约束通过，TLS有效，`/v2/` 返回401，不跟随重定向；配置完整列表前后相同，仅输出摘要而非URL。
+证据见同目录 `MIRROR-READ-AND-PROPOSAL.md`、`mirror-read-result.json` 和绑定源码/测试。
+这是端点响应证据，不是匿名认证、manifest/blob拉取、rootless网络或来源账本通过；旧失败不改写。
+最小建议为新候选仅向独立daemon接入经指纹绑定的现有镜像源，保持TLS、host-loopback、固定digest、
+预算及原断言；先批准本地实施并复核，再单独批准新探针。尚未接入、启动或拉取，T4/T7仍OPEN。
+
+### 27.38 限时本地调整：候选镜像验收与缓存清理分离（2026-10-30）
+
+用户批准最多2小时的一轮本地最小实现及相关验证，取代继续扩展 rootless/镜像源工具的方向。
+此前本地增量、候选和失败记录全部保留；本轮没有服务器操作、安装、daemon启动、镜像拉取、
+提交、推送、合并或部署。环境不支持的验证登记缺口后推进其余可执行工作，不记为通过。
+
+既有 release 隔离入口的阶段15/16改用 `candidate-build.json`：七个服务全部完成受限串行构建，
+绑定原输入快照摘要、构建nonce、固定基础digest、平台和最终镜像ID后，才标记 `VERIFIED`。
+中间镜像的旧 `Container/Parent/ContainerConfig` 字段不再作为候选镜像验收前置；新记录没有
+`owned` 删除授权，显式 `cacheCleanup=RETAINED_NOT_AUTHORIZED`，不生成旧 `CLOSED` 清理账本。
+旧账本严格校验和清理入口保留，不能用新候选记录自动清理。中间对象保留且继续计入原累计12GiB
+磁盘预算，不重置起点、不运行prune；预算监控仍由既有外层隔离执行器负责，本轮没有改写监控器。
+
+保留输入每次构建前及启动前复核、七镜像完整集合、构建未知终止拒绝、原资源变化拒绝、未知运行
+容器拒绝和实际容器限额检查。构建仍使用原1.8CPU/2816MiB、无swap、保留中间容器参数，整体测试
+2CPU/3GiB上限不变。阶段16的准备任务与正式Compose均使用验收镜像ID并禁止拉取；新增覆盖文件只
+含镜像ID和pull_policy，不改环境/网络/卷/预检。已有覆盖文件漂移或symlink拒绝，不覆盖未知文件。
+业务实现、原smoke和原测试断言均未改，未增加测试入口或框架。
+
+本地开发自查及验证：既有6个deployment套件265项通过，四个修改JS文件定向ESLint通过；涵盖
+无旧来源字段的七镜像验收、未知/越限容器、输入和镜像漂移、原资源变化、不完整记录、清理拒绝、
+准备/正式启动固定ID及失败停止。Node26.9.0；本机Compose5.0.2仅检查合成image-ID/pull_policy
+配置语法，没有运行Docker引擎或Ubuntu。这不是独立复评、Node22或真实七服务启动证据。
+验证日志及本地增量补丁保存在 `release-gate-artifacts/t7-candidate-acceptance-2026-10-30/`；
+该补丁仅是本地调整交接，不冒充完整服务器候选或新提交。
+
+剩余验收：新完整候选冻结、Ubuntu14–17及连续01–18仍未完成。旧外层执行器若仍要求来源清理账本
+或自动删除缓存，不可直接复用；下一次获批执行前须确认只消费候选验收结果并保留预算/未知资源拒绝，
+不再为缓存来源兼容新建平台。当前未获本轮服务器/Git授权，不执行这些步骤。原§27.20的分项通过和
+§27.27完整运行失败各自保留，不能拼接通过。T4人工M01–M08及总门禁仍OPEN，不能因T7业务已实现
+代为关闭；T7总门禁OPEN、Docker INCOMPLETE_FAILED、DEVICE_PENDING、两项OPEN_NONBLOCKING、
+REMAINDER_DEFERRED及T8/T9边界不变。待有效发布证据具备后再申请限定工程验收关闭。
+
+本地交接继续核对：§27.19三项代码复审已收口，不重复关闭；T4的§24.11明确允许人工后续安排，
+所以M01–M08待验不阻止已获授权的合成工程工作，但T7关闭材料必须保留该依赖，不能连带关闭T4。
+使用既有`release-build-input`冻结完整受控源码（不是只打四文件补丁），单独记录文件清单、摘要和
+历史固定基础digest；不读取daemon、不传输、不生成临时凭据。源码冻结与可运行的服务器候选分开：
+外层执行器兼容核对、新授权执行、连续01–18及最终批准仍待完成。本轮快照不含未跟踪历史证据，
+它们继续原地保留，不冒称已纳入完整Git提交；环境缺口保持NOT_VERIFIED，不通过扩大工具链消除。
+
+### 27.39 限定接线授权后的前置核对（2026-10-30）
+
+用户批准既有执行器限定接线、验证后一次14–17；仍不安装、不自动清理缓存、不操作原服务，
+不提交/推送/合并/部署，合计2CPU/3GiB、累计12GiB及原停止规则不变。该授权取代§27.38当时
+没有服务器执行授权的快照，但不扩大Git权限。
+
+本轮只读确认SSH控制连接可用；对历史固定Node digest的单次、12秒有界image inspect退出0，
+返回该digest对应ID。仅证明该引用可查询，不证明node:22-alpine标签、平台、全部基础镜像、空闲
+条件或累计预算已验收。没有创建远端资源、启动daemon、拉取、构建或清理；14–17均NOT_RUN，
+一次阶段执行机会尚未使用。旧临时执行目录已不存在，历史归档仍可读取，未覆盖原归档。
+
+兼容核对有两项实质差异：旧candidate.js和run.js要求真实固定提交与干净检出；当前HEAD仍为
+`e78ef415a4ae5551557c9e3f97a3c0085dad6c27`，四个本轮源码/测试文件尚未提交。
+既有build-input也要求真实Git根目录，因此无Git的源码快照不能直接作为原runner checkout。
+旧cleanup.js另外要求schema1 CLOSED账本并调用镜像清理，不能不经接线直接用于新候选记录。
+本轮未删除固定候选/Git clean断言、未新建替代候选框架、未执行旧清理入口。
+
+最低额外决策为是否允许仅本地提交本轮完整相关内容并建立干净检出，再继续已批准的小范围接线
+及尚未使用的一次14–17；不需要推送或部署授权。当前先停在Git授权边界，不临时init/commit、
+stash或隐藏修改。本机Node22位置尚未确认（常见Homebrew/NVM和旧临时位置未找到；依赖定位工具
+无handler），不据此宣称整个机器没有Node22，也不新增安装。后续找到既有运行时才能继续原Node22
+执行要求；无法满足则记录环境阻断，不以Node26替代。T4/T7 OPEN及所有历史/真机/后置状态保持。
+
+后续仅本地核对已消除Node22定位缺口：原独立记录指向`/usr/local/bin/node`，实际执行确认
+v22.15.0/arm64；默认PATH中的Node26与它不是同一运行时，无需安装。使用该绝对路径重跑本轮
+6个deployment套件，265项通过、退出0，日志为§27.38归档目录的`node22-tests.log`。
+这是本轮开发方的真实Node22本机验证，不冒称独立复评或Ubuntu结果；剩余固定提交授权缺口不变，
+本次14–17仍未开始，未创建服务器资源。
+
+用户随后批准仅本地提交及干净检出，继续已授权限定接线与一次14–17；此前Git待批准为历史快照。
+提交范围为本轮四文件修订、门禁/计划及相关脱敏证据索引，不包含原始日志、临时凭据或其他项目修改。
+固定提交后另行绑定执行工具，不推送/创建PR/合并/部署；缓存继续保留并计入原累计磁盘预算。
+
+本次已完成仅本地提交 `5d8c0fafa0143059b4f69f62f66782329e5cceeb`（9个相关文件）及干净检出，
+1878个受控文件和13个执行文件分别冻结。限定接线保留固定提交、原监控预算和未知运行资源拒绝；
+仅VERIFIED候选允许既有resources-only收尾，不再调用缓存删除。阶段17必须调用原smoke且有有效
+完成输出，空输出/非零退出均拒绝。本地candidate12、runner20、remote-monitor18组、acceptance21
+及语法检查通过；runner初次测试的错误预期失败日志保留。独立复核重跑candidate、
+remote-monitor及acceptance，检查runner20日志但未重跑；未发现当时限定接线的阻断问题。
+
+已使用获批的一次14–17执行机会，退出1、FAILED_STOPPED：14通过；15的Gateway真实构建成功，
+随后观察校验失败，16/17 NOT_RUN（runner的17为NOT_PROVEN），18/完整01–18未执行。冻结账本
+FAILED且接受候选数为0，不写成七镜像验收通过。现有记录离线复现`BUILD_OBJECT_CHANGED`：
+唯一原对象差异是一项容器Mounts的两元素顺序交换；仅排序脱离原记录的副本后观察校验通过。
+该诊断不是修复或服务器通过，原记录/源码未改，未重跑。
+
+31个监控样本没有停止原因；采样最大活动限额1.8CPU/2816MiB、最小主机可用4945252352字节，
+累计磁盘最大5088055296字节，起点仍45669158912。远端监控组消失、两条转发取消、临时凭据删除
+已留证，1483个文件对本轮生成密钥的扫描无匹配。自动资源清理因FAILED账本拒绝并退出1，保留
+cleanup-incomplete，不冒称完整清理。现有退出后审计确认17个原容器受检字段（挂载顺序无关比较）
+未变，原镜像/卷条目保留、网络未变；6个新增builder已停止但保留，另有1个新增镜像清单条目、
+无新增卷。缓存仍不授权删除并继续计费，不把清单条目数当作完整中间层归属证明。
+
+证据：`release-gate-artifacts/t7-candidate-run-sfsrip-2026-10-30/RESULT.md`、冻结清单、实际阶段
+日志、失败账本、停止/收尾与离线诊断。下一步建议仅在既有安全投影规范化Mounts排序并补永久
+反例，保持字段/数量/真实变化拒绝；后续服务器执行需新授权。本轮不扩建工具、不推送/PR/合并/
+部署；T4/T7 OPEN、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、两项非阻断及后置不变。
+
+后续依据持续目标完成本地最小修复与独立复核：既有`release-build-ledger.js`在安全投影后确定性
+排序Mounts，不删字段、不去重、不修改原数组，底层same、限额及清理条件未变。新增10项永久用例，
+覆盖顺序交换、四字段真实变化、增删/重复/同数量替换拒绝及重复数量保留。修复前红灯1项；将重复
+fixture由回文反转加强为旋转后红灯2项，日志均保留；修复后Node22的6套件275项及定向lint通过。
+独立复核Boyle核对两文件/冻结副本/补丁哈希一致，并实际运行ledger与retainedBuild两套件88项通过，
+未发现阻断问题；没有把开发方6套件或lint写成独立重跑。fixture不变性断言经JSON隔离，内部不变性
+另由map后sort的源码结构核对。旧未排序账本不自动迁移，可能继续在清理写入/删除前失败关闭；
+该跨版本边界为代码审查，不宣称已新增专项测试或旧账本无缝兼容。
+
+冻结两文件增量补丁`70bc65b1a4abc0fab2f2c174f4be42f2ba624776c0f74281f576df4042d9d09a`，
+基于`5d8c0fafa0143059b4f69f62f66782329e5cceeb`，详见
+`release-gate-artifacts/t7-mount-order-2026-10-30/RESULT.md`及`freeze.json`。这不是新固定服务器
+候选；本轮没有新提交或服务器操作。上一轮15失败及清理不完整不改写，下一次本地提交/干净检出及
+服务器复验待授权；完整01–18及总门禁仍未通过，不为缓存治理扩建工具。
+
+用户随后明确批准仅本地提交及一次14–17复验。已提交上述5个审查文件至专用本地分支，固定SHA
+`0bddeb7e18200d3fd9e5879c096dd7229df538a2`；1878个受控文件的干净检出及9个执行描述/源码哈希
+另行冻结。旧执行器仅替换本轮项目/路径，不修改行为、不重跑未变历史用例。执行前SSH、现有固定
+基础镜像、空闲与预算检查通过；原23个容器包含上一轮保留的6个停止builder，不重置磁盘起点。
+
+本次唯一授权执行退出0：14配置通过；15七个受限串行构建及固定ID集合VERIFIED；16新合成库、索引、
+存储、homework/resource预检及正式健康启动通过；17以原文件入口执行真实HTTP，输出
+`Family media smoke passed (91 bytes)`。注册、家庭/孩子、上传、任务绑定、授权及图片读取原断言
+均保留。18及完整01–18未执行；不能与历史01–13/07b/13b拼接完整发布通过。旧Mounts误报失败记录
+保留，新成功只绑定本次候选。执行后干净检出和冻结哈希未变。
+
+156个监控样本无停止原因，采样最大活动1.8CPU/2816MiB、最小主机可用4561010688字节，累计磁盘
+最大5751144448字节，原起点45669158912及12GiB上限不变。远端监控组已消失，限定收尾退出0，
+原容器/卷/网络/镜像检查通过；本轮运行资源已移除。新增26个停止builder、2个匿名卷和7个镜像
+清单条目按批准保留并继续计费，不宣称完整缓存归属或全清。1491文件对本轮密钥扫描无匹配，
+凭据删除、两条转发取消及socket最终不存在均留证；credential-cleanup较早记录的socket存在不等于
+最终转发未关闭。未安装、推送、PR、合并、真实部署或处理旧残留。
+
+证据为`release-gate-artifacts/t7-mount-run-gr4xby-2026-10-30/RESULT.md`及对应冻结、阶段日志、
+候选账本和收尾文件。下一步申请现有完整release入口01–18的固定候选验证，包含07b/13b；通过后
+才准备最终工程验收批准。T4人工M01–M08、T4/T7 OPEN、DEVICE_PENDING、历史Docker失败、两项
+非阻断及后置范围保留；本轮成功不关闭总门禁。新增结果文档仅本地、尚未提交。
+
+本次结果经Boyle限定本地证据核对：9项执行哈希、1878项源码哈希、干净检出及原smoke字节一致，
+七镜像/阶段/预算/保留缓存及限定收尾记录无矛盾；未重跑测试或访问服务器，不冒称第二轮独立运行。
+
+### 27.40 固定0bddeb7e完整运行在本机浏览器启动失败（2026-10-30）
+
+用户批准同一固定提交的一次原预算、原停止规则完整01–18（含07b/13b），不授权Git写入或部署。
+新干净检出1878文件匹配，外层仅切回原完整入口及结果标签；监控、候选校验和清理源码未变。
+本地20项进程控制和5项入口检查通过；初次扫描未识别缩进的11分支导致19/21断言失败，修正扫描
+后通过，失败记录保留。独立接线复核未发现跳阶段；最终成功必须联合进程退出及收尾证据，不能仅
+读取先于外层清理写出的result.json。基础镜像已存在，原服务未变，原磁盘起点未重置。
+
+实际执行`/usr/local/bin/node run.js`，Node22.15.0/npm11.19.1，最终退出1，FAILED_STOPPED：
+01安装、02lint、03文档检查通过；04为158套件通过、4805项通过/1项既有跳过；05为4套件6项，
+06/07各1套件2项；07b为6套件35项；08安装、09前端57套件739项、10构建、11Chromium准备通过。
+12的4项均在Chromium启动时失败，明确错误为MachPortRendezvous的bootstrap_check_in
+`Permission denied (1100)`，随后SIGTRAP/kill EPERM；未完成页面业务断言。证据指向本机执行权限
+边界，未进行放宽执行沙箱后的启动对照，不宣称已验证修复。13、13b、14–18均NOT_RUN；没有修改
+断言/超时/跳过配置，没有重跑，也未将§27.39分项通过拼接为本次完整通过。
+
+独立结果复核补充：同一12日志还包含Watchpack `EMFILE: too many open files, watch`，不能将环境
+异常描述为仅MachPort权限问题。该信息不改变四项直接失败于浏览器启动的事实，需在下一次完整
+运行前一并限定核实；本次没有扩大文件限额、修改监听方式或再跑浏览器。
+
+343个监控样本无停止原因，无新增服务器容器；最小可用内存4948672512字节，最大累计磁盘增量
+5462220800字节，原起点45669158912字节及12GiB限额不变。远端监控组停止有证据，凭据文件删除、
+两条转发取消、socket最终不存在；24文件密钥扫描无匹配。自动清理退出1/SCOPED_CLEANUP_INCOMPLETE
+保留：未到15，缺少candidate-build记录，既有helper失败关闭，没有重试清理。另做最终只读核对，
+原容器、卷、网络、镜像全部一致；旧缓存未删除。本次没有服务器安装、构建、部署或真实数据操作。
+
+证据：`release-gate-artifacts/t7-full-run-ww9pzk-2026-10-30/RESULT.md`、执行/源码冻结、阶段日志、
+浏览器失败上下文和最终只读收尾结果。执行后12项冻结哈希、1878项源码及干净检出未变。
+本次授权已使用；下一步先核清本机Chromium启动权限，再另获一次完整运行授权，不改业务逻辑、
+不扩建工具。T4/T7 OPEN、DEVICE_PENDING、历史Docker INCOMPLETE_FAILED、两项OPEN_NONBLOCKING
+及REMAINDER_DEFERRED保留；本轮记录仅本地，不提交、推送、合并或部署。
+
+Boyle仅本地独立解析本轮证据，确认阶段/计数、49个原容器及卷网络镜像、监控身份与停止证明、
+凭据和转发结果一致，保留自动清理退出1及采样证明边界；未执行测试或访问服务器。
+
+后续限定本机只读归因：同一Node22.15.0在当前受限执行上下文仅对固定候选的一个现有src目录调用
+`fs.watch`，已返回EMFILE/watch；没有启动产品或浏览器。`ulimit -n`为1048575，读取内核文件限额
+的sysctl被拒绝。不能据此判定系统真实资源耗尽或权限问题已修复，也没有提高限额、改轮询、静态
+替换Task11/12开发服务器或重跑完整入口。当前候选Task11/12均沿用原startFamilyApp启动器。
+
+#### 本轮后的剩余验收材料
+
+| 条件 | 当前结论 | 尚需内容 |
+| --- | --- | --- |
+| 已批准业务/七项P2及索引、存储、smoke修订 | 原关闭与复审记录保留 | 不重复实现或扩建工具 |
+| 固定候选与Ubuntu分项 | 0bddeb7e完整源码冻结；§27.39的14–17有效通过 | 不以分项代替连续完整运行 |
+| 最新本机工程验证 | 01–11/07b通过；12启动失败 | 先验证本机浏览器及单目录监听的执行权限；不能绕过原断言 |
+| 完整发布与18 | FAILED_STOPPED；13/13b/14–18未执行 | 环境可用且获得新一次授权后连续运行；干净检出不冒充18通过 |
+| T4依赖 | §24.11已允许人工后续；不阻止合成技术验收 | T4 OPEN、M01–M08 MANUAL_PENDING/DEVICE_PENDING独立保留 |
+| T7关闭材料 | 已具备范围、候选、分项和失败证据；尚不满足关闭条件 | 完整证据通过及最终用户批准；现在不称工程证据齐备 |
+| Git与真实交付 | 当前仅四份文档增量未提交；HEAD未变 | 提交/推送/PR/合并/部署均无本轮授权 |
+
+按目标中“环境不支持先记录并推进其他任务”的约束，本轮不继续扩建环境治理工具；可完成的材料
+核对已推进。环境阻断和完整发布缺口不转换为PASS。DEVICE_PENDING、历史Docker INCOMPLETE_FAILED、
+两项非阻断补测、T8/T9及高级恢复/新回收后置状态仍保留。
+
+后续用户批准一次最长30秒的限定本机权限对照。使用同一Node22.15.0、同一固定候选src目录及
+本轮已下载的Chromium，在工具受控非沙箱执行上下文中仅检查fs.watch和about:blank：退出0、耗时
+1724ms，监听REGISTERED、页面readyState=complete；监听器及浏览器正常关闭，进程组不存在，
+stderr为空。未修改系统权限/文件限额/产品代码，未访问业务页面或服务器，未安装或重跑release。
+与原受限上下文的单目录EMFILE和浏览器MachPort拒绝相比，证据支持执行上下文为这两个最小操作
+失败的原因；不将单目录/空白页成功推广为完整开发服务器或产品浏览器回归已通过。
+证据为`release-gate-artifacts/t7-full-run-ww9pzk-2026-10-30/local-permission-comparison/`，包含
+一次性检查源码、实际结果及SHA256SUMS；原失败归档和主清单不覆盖。下一步仅需另获一次原预算
+完整运行授权，在已验证的本机执行上下文使用新干净目录运行同一0bddeb7e候选，不扩建工具或改
+产品/断言。当前完整release仍FAILED_STOPPED、T4/T7仍OPEN，所有历史/真机/后置边界不变。
+
+### 27.41 固定0bddeb7e完整发布验证通过与关闭申请材料（2026-10-30）
+
+用户批准在已验证可用的受控本机执行上下文执行新一次原完整01–18（含07b/13b），不授权提交、
+推送、合并或部署。新项目`family-growth-isolated-t7-full-native-trhe5i`、新干净检出，固定SHA
+`0bddeb7e18200d3fd9e5879c096dd7229df538a2`；1878文件源码及11项执行绑定冻结。外层执行器只替换
+目录/项目身份，完整入口、产品源码、测试断言、监控/清理边界均未变。前置核对原49容器不变，
+测试/评审线程无在途执行，固定基础镜像已有，预算及空闲满足原规则。
+
+实际`/usr/local/bin/node run.js`调用原`bash scripts/release-family-gate.sh`，一次连续运行且最终
+退出0；原release summary为status=0，外层自动清理退出0。阶段证据如下，不拼接历史分项：
+
+| 阶段 | 本轮实际结果 |
+| --- | --- |
+| 01–03 | 原安装、lint、文档状态检查通过 |
+| 04 | 158套件通过，4805项通过/1项既有跳过，781.576秒 |
+| 05、06、07 | Task11正式HTTP 4套件6项；Task12两轮各1套件2项通过 |
+| 07b | 自主学习正式HTTP 6套件35项通过，含weeklyReflection |
+| 08–10 | 前端安装、57套件739项、构建成功 |
+| 11–13 | Chromium准备、Task11浏览器4项/Task12浏览器1项通过 |
+| 13b | 54项浏览器通过，含三孩子数学闭环、分龄反思、真实共管代录、周报反馈及未知结果/账号隔离 |
+| 14–16 | 实际配置9服务1.9CPU/2816MiB；七个受限串行候选镜像VERIFIED；全新合成副本集、索引/存储/服务预检及正式健康启动 |
+| 17 | 原smoke真实HTTP完成，`Family media smoke passed (91 bytes)` |
+| 18 | `PASS: working tree is clean` |
+
+Task11/12沿原开发服务器入口；13b显式使用本轮新构建的绝对路径，静态服务实现及8个构建文件哈希
+已绑定，不用历史产物或mock成功替代。执行后1878源码/11执行哈希及干净检出不变，七个镜像ID均
+唯一并用于本轮启动。本轮浏览器未复现EMFILE/MachPort拒绝；§27.40旧失败及清理退出1不覆盖。
+
+587个监控样本无停止原因；采样活动配置最大1.8CPU/2816MiB，最小主机可用4599750656字节，最大
+累计磁盘增量6121328640字节。原起点45669158912字节、累计12GiB及全部停止规则不变，不将采样
+概括为任意时刻证明。远端监控组停止已证明；原容器/卷/网络/镜像检查全部通过，本轮Compose运行
+资源已移除。新增26个停止builder、2匿名卷和7镜像清单条目按批准保留继续计费，不自动清缓存。
+1507文件生成密钥扫描无匹配，凭据删除、两条转发取消及socket最终不存在均留证。
+
+证据：`release-gate-artifacts/t7-full-native-trhe5i-2026-10-30/RESULT.md`、完整阶段日志、源码/
+执行冻结、构建文件摘要、候选镜像记录、预算/停止/收尾及合成浏览器产物。独立复核结论单独记录，
+不将主执行方的一次真实运行描述为独立第二次服务器运行。
+
+独立复核（Boyle，2026-10-30）通过：核对20个实际阶段连续性、07b/13b实际业务断言、
+11项执行/1878源码/8项构建哈希、1459项构建上下文、七镜像身份，以及587个样本和限定收尾，
+未发现本轮证据范围内阻断项或通过误称。仅本地证据读取与复算，没有第二次服务器执行。
+04中1项既有跳过为受kubectlAvailable控制的TC-T5-DEPLOY-002，不计为通过；最终外层退出0
+来自主执行会话终态及final-summary，不以收尾前result替代。详见同目录REVIEW-RESULT.md。
+
+#### 限定合成工程关闭申请
+
+| 条件 | 结论与边界 |
+| --- | --- |
+| T7业务、七项P2及相关修订 | 既有批准关闭有效；本轮完整回归覆盖，没有新业务改动 |
+| 固定候选、14–17及完整发布 | §27.39分项、§27.41连续完整运行及收尾具备；两项计划验收可标记完成 |
+| T4依赖 | §24.11允许人工后续，不阻止限定合成技术验收；T4仍OPEN，M01–M08人工及DEVICE_PENDING不连带关闭 |
+| 依赖风险 | 原npm安装报告根48项（24 high/2 critical）、前端73项（37 high/4 critical）；未独立做可利用性判定，不表示安全发布许可 |
+| 历史与后置 | 历史Docker INCOMPLETE_FAILED及所有失败保留；T5-NB-001/002 OPEN_NONBLOCKING、T8/T9及高级恢复/新回收REMAINDER_DEFERRED不变 |
+| T7总门禁 | OPEN；证据复核后由用户明确批准，不能因完整脚本通过自动关闭 |
+| Git/部署 | HEAD不变，四份文档增量未提交；无推送、PR、合并或真实部署授权 |
+
+本轮没有服务器软件安装、原服务变更、真实数据/NAS访问或配置放宽；真机与真实部署仍需另行参与。
+
+### 27.42 T7 限定合成工程总门禁批准关闭（2026-10-30）
+
+用户明确批准：“T7 限定合成范围工程总门禁关闭”。当前总表及 §27 当前权威声明同步为
+APPROVED / CLOSED / ENGINEERING_SYNTHETIC_ONLY。本次不是再次执行 release，也不产生 Git 或部署授权。
+
+关闭对象为固定候选 `0bddeb7e18200d3fd9e5879c096dd7229df538a2` 的孩子反思、真实家长代录、
+周报反馈、未知写入恢复及账号隔离工程交付，以及原完整01–18（含07b/13b）限定合成验收。
+实现与七项P2复评见 §27.8，后续修订及连续完整运行和独立证据复核见 §27.11、§27.19、§27.41。
+最终执行/收尾退出0；后端4805通过/1既有跳过，不把跳过写成通过。
+
+绑定证据归档 `release-gate-artifacts/t7-full-native-trhe5i-2026-10-30/`：RESULT.md、
+REVIEW-RESULT.md、阶段原日志和 SHA256SUMS（1607文件）；清单本身SHA-256为
+`8cd954959daa2cfdf382f5cb1b3c89ccab452bc927185a7a8496aa446b0884c9`。
+归档中的OPEN/待批准是运行和复核当时快照，不改写原归档或其哈希；本节记录后续用户关闭决定。
+
+- T4 保持 IN_PROGRESS / OPEN，M01–M08人工验收及 DEVICE_PENDING 不连带关闭。
+- 历史失败、Docker INCOMPLETE_FAILED、依赖安全告警及既有跳过事实保留，不宣称历史全绿或公开发布安全。
+- T5-NB-001/002 OPEN_NONBLOCKING、高级恢复与新回收 REMAINDER_DEFERRED 保留。
+- T8/T9仍NOT_STARTED；真实启用、备份恢复、四周价值验收未完成，本次不启动后续任务。
+- 缓存仍RETAINED_NOT_AUTHORIZED并计入原磁盘预算；本次不执行清理或任何服务器操作。
+- 不提交、推送、PR、合并或部署。工作区内关闭记录与状态校验增量待后续单独授权提交。
+
+状态校验沿用现有check-family-docs及familyDocumentationGate测试，保护当前关闭状态唯一、
+批准/合成范围/候选绑定，以及真机、历史失败、非阻断、后置和Git/部署限制；旧过程快照不作当前状态。
+
+本次关闭增量验证与评审：
+
+- 先更新T7反例但尚未更新当前声明/校验时，定向T7测试退出1：23失败、15通过、248项因名称过滤未执行；
+  原因是新批准的关闭标记尚不存在，属于本轮红灯，不是产品完整回归失败，不覆盖§27.41运行证据。
+- `/usr/local/bin/node scripts/check-family-docs.js`退出0，388契约fixture及38需求检查通过。
+- `/usr/local/bin/node node_modules/jest/bin/jest.js --config=backend/jest.family-common.config.js --runInBand --coverage=false --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js`
+  退出0：1套件、286项全部通过，无跳过，34.004秒。
+- `/usr/local/bin/node node_modules/eslint/bin/eslint.js scripts/check-family-docs.js backend/common/deployment/__tests__/familyDocumentationGate.test.js`
+  退出0；`git diff --check`退出0。原1607文件归档及清单摘要重新核对一致，没有重写旧证据。
+- 自查确认仅6份文档及状态校验/测试共8文件增量，业务代码、release入口和产品断言未变。
+- Boyle独立只读复核通过：当前状态、批准/候选绑定、T4及保留边界一致，反例替换有效且仍要求抛错，
+  未发现实质问题；该复核不冒充独立测试重跑。本次没有服务器执行或Git写操作。
+
+### 27.43 T7 Git 交付授权（2026-10-30）
+
+用户随后明确要求“合并提交推送 github”。授权在完成范围、敏感信息和证据检查后，将T7提交
+推送专用分支，创建PR并核对最新SHA的CI，通过后以merge commit合入main，再核对合并后CI。
+当前Git声明更新为MERGE_AUTHORIZED / NO_DEPLOY；§27.42及旧记录中的未授权是历史快照。
+本授权不允许部署、删除分支、改写历史、清理缓存或关闭T4/真机/后置事项。T7限定合成关闭不变。
+合并完成状态以PR和Git提交记录为准，本授权记录不预先声称CI或合并成功。
+
+提交前范围核对：origin/main是本分支祖先，领先5个已验证T7本地提交；本轮另有8文件关闭/
+授权状态增量。115个变更文件没有新增AI/K12文件、工作流部署修改或受版本控制的原始
+release-gate-artifacts。常见私钥/GitHub凭据/AWS凭据/JWT/带密码连接串扫描未发现匹配；
+这只是限定扫描，不宣称全面安全审计。原始日志和媒体保持本地忽略归档，不强制加入提交。
+全分支`git diff --check origin/main`报告165条格式提示，全部来自9个已冻结的历史.patch文件
+（包括补丁空白上下文前缀），不为消除格式提示改写补丁或哈希；当前关闭/授权增量检查通过。
+
+### 27.44 T7 公开交付脱敏候选（2026-10-30，待复审）
+
+PR #35推送后独立复核发现证据内的环境身份信息。未发现真实凭据或孩子数据；用户选择
+“先脱敏交付历史，再评审合并”。当前Git状态因此收紧为SANITIZED_REVIEW_PENDING，
+不沿用§27.43自动继续推送/合并。原分支、未提交修订和完整原件仅本地保留，不强推或删除远端。
+
+从main `7d519d20`重建完整交付，不继承原六个T7提交。仅九个证据文件替换本机/服务器home标识
+及服务器登录目标；原件与公开副本的摘要映射、适用边界见
+[公开脱敏说明](evidence/t7-public-redaction-2026-10-30/README.md)。旧JSON中的哈希仍指原件，
+公开patch是脱敏表示，不声称其能复现原字节身份；原始失败与成功证据不改写。
+T7限定合成工程关闭、T4 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项非阻断及后置不变。
+既有main历史路径未被本轮清除；旧公开分支/PR及GitHub缓存也尚未移除，需要另行明确处理。
+
+本地验证：文档状态检查、287项现有文档门禁测试及全仓lint通过；九组原件/副本摘要与115文件
+原始快照一致，业务源码/产品断言/运行配置/发布入口未变。独立只读复核通过，发现的临时依赖
+符号链接在提交前已移除且未暂存；未修改原依赖或忽略规则。详见公开脱敏说明的验证记录。
+本地候选只包含main基线加一个完整脱敏交付提交，供用户复审；本节不预先声明新SHA的CI通过。

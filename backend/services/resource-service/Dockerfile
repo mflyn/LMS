@@ -4,7 +4,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY backend ./backend
-RUN mkdir -p /var/lib/family-growth/private-media
+# Empty named volumes inherit these permissions on every container creation.
+RUN mkdir -p /var/lib/family-growth/private-media /var/lib/family-growth/completion-journal \
+    && chmod 0700 /var/lib/family-growth/private-media \
+    && chmod 0700 /var/lib/family-growth/completion-journal
 
 WORKDIR /app/backend/services/resource-service
 EXPOSE 3005
