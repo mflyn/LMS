@@ -1,0 +1,237 @@
+diff --git a/DeepTutor/tests/services/ai1/test_operation_provider.py b/DeepTutor/tests/services/ai1/test_operation_provider.py
+index 2ac5e94..27515ce 100644
+--- a/DeepTutor/tests/services/ai1/test_operation_provider.py
++++ b/DeepTutor/tests/services/ai1/test_operation_provider.py
+@@ -231,6 +231,39 @@ def test_provider_error_after_durable_claim_remains_unknown_on_replay(setup, tmp
+     assert len(calls) == 1
+ 
+ 
++def test_rotated_credentials_cannot_resend_durable_unknown(setup, tmp_path):
++    _, body, profile, clock, _, _, _, _, counter = setup
++    calls, keys = [], []
++    credential = ["synthetic-old-token"]
++    async def handler(request):
++        calls.append(request.headers["authorization"])
++        return httpx.Response(401, json={"error": "synthetic expired credential"})
++    def key():
++        keys.append(credential[0])
++        return credential[0]
++    path = tmp_path / "rotation.sqlite"
++    def make(initialize=False):
++        provider = provider_type()(profile=profile, counter=counter, clock=lambda: clock[0],
++                                   key_loader=key, transport_factory=lambda: httpx.MockTransport(handler))
++        return OperationService(store=OperationStore(path, initialize=initialize), provider=provider,
++                                profile=profile, mode="enabled", continuous=True, clock=lambda: clock[0])
++    operation_id = "11111111-1111-4111-8111-111111111111"
++    raw = json.dumps(body).encode()
++    first = make(True)
++    first.receive(operation_id, raw)
++    asyncio.run(first.dispatch(operation_id))
++    terminal = first.get(operation_id)
++    assert terminal["status"] == "unknown" and terminal["sendClaimed"]
++    before = path.read_bytes()
++    credential[0] = "synthetic-replacement-token"
++    restarted = make()
++    assert restarted.receive(operation_id, raw) == (terminal, False)
++    asyncio.run(restarted.dispatch(operation_id))
++    assert restarted.get(operation_id) == terminal
++    assert calls == ["Bearer synthetic-old-token"] and keys == ["synthetic-old-token"]
++    assert path.read_bytes() == before
++
++
+ def test_prepared_snapshot_is_detached_and_tampered_wire_cannot_send(setup):
+     make, body, _, _, calls, _, keys, _, _ = setup
+     provider = make()
+diff --git a/DeepTutor/tests/services/ai1/test_operation_service.py b/DeepTutor/tests/services/ai1/test_operation_service.py
+index ce39776..9dbd59e 100644
+--- a/DeepTutor/tests/services/ai1/test_operation_service.py
++++ b/DeepTutor/tests/services/ai1/test_operation_service.py
+@@ -152,6 +152,29 @@ def test_receive_and_claim_expiry_persist_not_sent(setup):
+     assert provider.calls == []
+ 
+ 
++@pytest.mark.parametrize("change", ["revoked", "increased"])
++def test_accepted_profile_change_rejects_before_claim_and_replays_exactly(setup, change):
++    make, store, body, provider, clock = setup
++    assert put(make(), body)[0]["status"] == "accepted"
++    profile = copy.deepcopy(PROFILE)
++    if change == "revoked":
++        profile["pricingProfileVersion"] = "revoked-price"
++    else:
++        profile["inputPriceMicrosPerMillion"] *= 2
++    service = service_type()(store=store, provider=provider, profile=profile,
++                             mode="enabled", continuous=True, clock=lambda: clock[0])
++    asyncio.run(service.dispatch(ID))
++    rejected = service.get(ID)
++    assert rejected["status"] == "failed_not_sent" and rejected["sendClaimed"] is False
++    assert rejected["usage"] is None and rejected["result"] is None
++    assert rejected["error"] in {"PREVIEW_STALE", "PROFILE_UNAVAILABLE"}
++    before = store.path.read_bytes()
++    assert put(make(), body) == (rejected, False)
++    asyncio.run(make().dispatch(ID))
++    assert make().get(ID) == rejected and store.path.read_bytes() == before
++    assert provider.calls == []
++
++
+ def test_expiry_after_claim_before_transport_is_unknown_no_call(setup):
+     make, store, body, provider, clock = setup
+     service = make()
+diff --git a/LMS/backend/common/deployment/__tests__/familyDocumentationGate.test.js b/LMS/backend/common/deployment/__tests__/familyDocumentationGate.test.js
+index 98ef17c..00eca30 100644
+--- a/LMS/backend/common/deployment/__tests__/familyDocumentationGate.test.js
++++ b/LMS/backend/common/deployment/__tests__/familyDocumentationGate.test.js
+@@ -14,7 +14,7 @@ describe('family baseline documentation gate', () => {
+   test('AI-1 cross-layer progress accounts for all 35 requirements without closing external acceptance', () => {
+     const plan = read('docs/development/family-ai1-test-plan.md');
+     const requirements = [...plan.split('## 2. ')[1].split('## 3. ')[0].matchAll(/^\| (AI1-[A-Z]+-\d+) \|/gm)].map(m => m[1]);
+-    const progress = plan.split('## 11. ')[1];
++    const progress = plan.split('## 11. ')[1]?.split('## 12. ')[0];
+     expect(progress).toBeDefined();
+     const rows = [...progress.matchAll(/^\| (AI1-[A-Z]+-\d+) \|/gm)].map(m => m[1]);
+     expect(rows).toHaveLength(35); expect(new Set(rows)).toEqual(new Set(requirements));
+@@ -22,6 +22,19 @@ describe('family baseline documentation gate', () => {
+     expect(progress).toContain('EXTERNAL_IMPLEMENTATION_PENDING');
+     expect(progress).toContain('DEVICE_PENDING');
+   });
++  test('AI-1 current matrix retains all 35 requirements and separates engineering from external acceptance', () => {
++    const plan = read('docs/development/family-ai1-test-plan.md');
++    const requirements = [...plan.split('## 2. ')[1].split('## 3. ')[0].matchAll(/^\| (AI1-[A-Z]+-\d+) \|/gm)].map(m => m[1]);
++    const current = plan.split('## 17. ')[1];
++    expect(current).toBeDefined();
++    const rows = [...current.matchAll(/^\| (AI1-[A-Z]+-\d+) \| (LOCAL_PASS|PARTIAL) \| ([^\n]+) \|$/gm)];
++    expect(rows).toHaveLength(35);
++    expect(new Set(rows.map(row => row[1]))).toEqual(new Set(requirements));
++    for (const row of rows) expect(row[3]).toMatch(/Service|Contract|Production|Browser|Provider|Store|Runtime|HTTP|Client/);
++    for (const marker of ['B/D/AI-1 OPEN', 'QUALIFIED_COUNTER_PENDING', 'CURRENT_PRICE_AND_BUDGET_PENDING',
++      'HUMAN_VALUE_PENDING', 'DEVICE_PENDING', '161/2', '4980/2', 'REMAINDER_DEFERRED']) expect(current).toContain(marker);
++    expect(current).toContain('LOCAL_PASS不是总验收关闭');
++  });
+   test('AI-1 D2 local runtime evidence cannot authorize external activation or close total acceptance', () => {
+     const gate = read('docs/development/family-self-directed-learning-mvp-gate.md').split('### 29.9 ')[1];
+     expect(gate).toBeDefined();
+diff --git a/LMS/backend/services/homework-service/__tests__/services/ai1Service.test.js b/LMS/backend/services/homework-service/__tests__/services/ai1Service.test.js
+index f919fe6..9d1990a 100644
+--- a/LMS/backend/services/homework-service/__tests__/services/ai1Service.test.js
++++ b/LMS/backend/services/homework-service/__tests__/services/ai1Service.test.js
+@@ -349,6 +349,121 @@ describe('batch B persistent recovery and terminal accounting', () => {
+   const restart = () => createAi1Service({ now: () => clock, getProfile: () => profile, getLimits: () => limits,
+     getRuntime: () => config, sourceReader: { require: reader }, operationClient: client });
+   beforeEach(() => { client = { put: jest.fn(async j => remoteResult(j)), get: jest.fn(async j => remoteResult(j)) }; service = restart(); });
++  const afterCommit = hook => createAi1Service({ now: () => clock, getProfile: () => profile,
++    getLimits: () => limits, getRuntime: () => config, sourceReader: { require: reader }, operationClient: client,
++    transactionRunner: async work => {
++      const result = await runMongoTransaction({ mongooseInstance: mongoose, work });
++      await hook(result); return result;
++    } });
++  const accountsAre = async (outstandingMicros, settledMicros) => {
++    const rows = await M.Account.find().lean();
++    expect(rows.map(row => row._id).sort()).toEqual([String(family._id), 'experiment'].sort());
++    for (const row of rows) expect(row).toMatchObject({ outstandingMicros, settledMicros });
++  };
++  test('AI1-AUTH-02 revocation after durable claim and before PUT preserves the unknown charge', async () => {
++    const c = await create(), g = await generate(c);
++    let revoked = false;
++    service = afterCommit(async result => {
++      if (result?.claimed === true) {
++        revoked = true;
++        await Family.updateOne({ _id: family._id }, { $set: { ownerParentId: coparent.id, memberParentIds: [coparent.id] } });
++      }
++    });
++    await expect(service.recover({ identity: parent, jobId: g.job.id, body: command() })).rejects.toMatchObject({ statusCode: 403 });
++    expect(revoked).toBe(true);
++    expect(client.put).not.toHaveBeenCalled(); expect(client.get).not.toHaveBeenCalled();
++    const job = await M.Job.findById(g.job.id).lean();
++    expect(job.status).toBe('dispatching'); expect(job.owner).toBeTruthy();
++    expect(String((await M.Slot.findById('global')).jobId)).toBe(g.job.id);
++    expect((await M.Reservation.findById(job.reservationId)).state).toBe('reserved');
++    await accountsAre(184320, 0);
++  });
++  test('AI1-RECOVER-02 committed settlement acknowledgement loss never duplicates artifact or charge', async () => {
++    const c = await create(), g = await generate(c); let lost = false;
++    service = afterCommit(async result => {
++      if (!lost && result?.artifact) { lost = true; throw new Error('synthetic settlement acknowledgement loss'); }
++    });
++    await expect(service.recover({ identity: parent, jobId: g.job.id, body: command() })).rejects.toMatchObject({ code: 'AI_REMOTE_UNAVAILABLE' });
++    expect(lost).toBe(true);
++    const persisted = await M.Job.findById(g.job.id).lean();
++    const before = JSON.stringify(await Promise.all([M.Job, M.Artifact, M.Account, M.Reservation, M.Slot]
++      .map(model => model.find().sort({ _id: 1 }).lean())));
++    service = restart();
++    expect((await service.recover({ identity: parent, jobId: g.job.id, body: command() })).job.status).toBe('succeeded');
++    expect(JSON.stringify(await Promise.all([M.Job, M.Artifact, M.Account, M.Reservation, M.Slot]
++      .map(model => model.find().sort({ _id: 1 }).lean())))).toBe(before);
++    expect(await M.Artifact.countDocuments()).toBe(1);
++    expect((await M.Job.findById(g.job.id)).remoteOperationId).toBe(persisted.remoteOperationId);
++    expect(client.put).toHaveBeenCalledTimes(1); expect(client.get).not.toHaveBeenCalled();
++    await accountsAre(0, 2250);
++  });
++  test.each([true, false])('AI1-BUDGET-07 deadline transaction acknowledgement loss: dispatch=%s', async dispatch => {
++    const c = await create(), g = await generate(c);
++    clock = Date.parse(c.preview.sendNotAfter) - (dispatch ? 1 : 0);
++    let lost = false;
++    service = afterCommit(async result => {
++      if (!lost && typeof result?.claimed === 'boolean') {
++        lost = true; throw new Error('synthetic claim acknowledgement loss');
++      }
++    });
++    await expect(service.claim({ identity: parent, jobId: g.job.id })).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
++    expect(lost).toBe(true); clock += 1000;
++    const persisted = await M.Job.findById(g.job.id).lean();
++    const terminal = remoteResult(persisted, { status: 'sending', result: null, usage: null });
++    client.get.mockResolvedValue(terminal);
++    service = restart();
++    const recovered = await service.recover({ identity: parent, jobId: g.job.id, body: command() });
++    expect(recovered.job.status).toBe(dispatch ? 'unknown' : 'failed');
++    expect(client.put).not.toHaveBeenCalled(); expect(client.get).toHaveBeenCalledTimes(dispatch ? 1 : 0);
++    expect((await M.Job.findById(g.job.id)).remoteOperationId).toBe(persisted.remoteOperationId);
++    expect((await M.Reservation.findById(persisted.reservationId)).state).toBe(dispatch ? 'reserved_unknown' : 'released');
++    expect((await M.Slot.findById('global'))?.jobId?.toString() || null).toBe(dispatch ? g.job.id : null);
++    await accountsAre(dispatch ? 184320 : 0, 0);
++  });
++  test.each(['expired', 'replaced'])('AI1-BUDGET-09 original quote settles once after current quote is %s', async change => {
++    const c = await create(), g = await generate(c); await service.claim({ identity: parent, jobId: g.job.id });
++    const original = await M.Job.findById(g.job.id).lean(), terminal = remoteResult(original);
++    client.get.mockResolvedValue(terminal);
++    if (change === 'expired') clock = Date.parse(profile.expiresAt) + 1;
++    else profile = { ...profile, pricingProfileVersion: 'replacement', inputPriceMicrosPerMillion: 90000000, outputPriceMicrosPerMillion: 270000000 };
++    service = restart();
++    const rb = command();
++    for (let i = 0; i < 2; i++) expect((await service.recover({ identity: parent, jobId: g.job.id, body: rb })).job.status).toBe('succeeded');
++    expect(client.put).not.toHaveBeenCalled(); expect(client.get).toHaveBeenCalledTimes(1);
++    expect(await M.Artifact.countDocuments()).toBe(1); await accountsAre(0, 2250);
++    expect((await M.Reservation.findById(original.reservationId)).settledMicros).toBe(2250);
++    expect((await M.Job.findById(g.job.id)).preview.pricingProfileVersion).toBe(original.preview.pricingProfileVersion);
++  });
++  test.each(['task', 'mistake'])('AI1-SCOPE-03 %s subject drift after preview releases once without remote calls', async type => {
++    const request = body(); request.source.type = type;
++    const c = await create(parent, request), g = await generate(c);
++    expect(await M.Cycle.findById(c.cycle.id).lean()).toMatchObject({ sourceType: type,
++      sourceSubject: '\u6570\u5b66', subjectAliasVersion: 'ai1-subject-alias-v1' });
++    reader.mockImplementation(async q => ({ id: q.sourceTaskId || q.sourceMistakeId,
++      familyId: String(family._id), childId: child, subject: 'mathematics' }));
++    const rb = command();
++    for (let i = 0; i < 2; i++) expect((await service.recover({ identity: parent, jobId: g.job.id, body: rb })).job)
++      .toMatchObject({ status: 'failed', failureCode: 'AI_SOURCE_SUBJECT_UNSUPPORTED', budget: { state: 'released' } });
++    expect(client.put).not.toHaveBeenCalled(); expect(client.get).not.toHaveBeenCalled();
++    expect(await M.Artifact.countDocuments()).toBe(0); await accountsAre(0, 0);
++    expect((await M.Cycle.findById(c.cycle.id)).sourceSubject).toBe('\u6570\u5b66');
++  });
++  test('AI1-BUDGET-08 lost reliable rejection response releases only after original mapping GET', async () => {
++    const c = await create(), g = await generate(c); let rejected;
++    client.put.mockImplementation(async j => {
++      rejected = remoteResult(j, { status: 'failed_not_sent', result: null, usage: null, sendClaimed: false, error: 'PREVIEW_STALE' });
++      throw new Error('synthetic rejected response lost');
++    });
++    await expect(service.recover({ identity: parent, jobId: g.job.id, body: command() })).rejects.toMatchObject({ code: 'AI_REMOTE_UNAVAILABLE' });
++    expect(rejected).toBeDefined(); await accountsAre(184320, 0);
++    client.get.mockResolvedValue(rejected); service = restart();
++    const rb = command();
++    for (let i = 0; i < 2; i++) expect((await service.recover({ identity: parent, jobId: g.job.id, body: rb })).job)
++      .toMatchObject({ status: 'failed', failureCode: 'AI_PREVIEW_STALE', budget: { state: 'released' } });
++    expect(client.put).toHaveBeenCalledTimes(1); expect(client.get).toHaveBeenCalledTimes(1);
++    expect(client.get.mock.calls[0][0].remoteOperationId).toBe(rejected.remoteOperationId);
++    expect(await M.Artifact.countDocuments()).toBe(0); await accountsAre(0, 0);
++  });
+   test('lost PUT response then restart queries persisted mapping only and settles once', async () => {
+     const c = await create(), b = genBody(c);
+     client.put.mockRejectedValueOnce(new Error('synthetic transport loss'));

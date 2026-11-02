@@ -73,6 +73,12 @@ T2-1 基线修复与门禁 P2、T2-R 公开恢复后端及 owner/pending P2 已�
 AI-0 可提前做单章节能力验证；AI-1～AI-3 和 K12-1 按基础闭环、家庭需求及独立授权启动。
 T1～T9 不因此增加 AI 验收；本次只有路线文档，没有已执行的验证或接入。正式使用仍满足 T8，默认 T9 后启动。
 
+上述为路线建立时的历史状态。2026-10-31：AI-0 单 Provider 小样本经家长确认，人工核验并修订后
+有条件可作备课候选；完整 Agent/页面及 K12 未验证。2026-11-01 AI-1 已获设计批准及 A 批本地实现授权：
+[最小设计](../superpowers/specs/2026-10-31-family-ai1-minimal-design.md)、
+[API 契约](../api/family-ai1-api.md)、[测试方案](family-ai1-test-plan.md) 均 APPROVED，
+仅本地无模型实现，不开放孩子使用、不沿用 AI-0 预算，未注册接口；AI-1 总门禁 OPEN。当前状态见主线 Gate §29；其他门禁不变。
+
 [家庭 AI 学习平台设计](../architecture/family-ai-learning-platform-design.md)是后续
 DeepTutor、K12-KGraph 和家长人工审核教学闭环的设计草案。
 它不属于 Task 1～12 或当前 38 项需求；其中路由、模型和 feature flag 只有在新增

@@ -2,6 +2,7 @@ export const PARENT_SESSION_KEY = 'family-growth.parent-session.v1';
 export const CHILD_SESSION_KEY = 'family-growth.child-session.v1';
 export const PARENT_SESSION_EXPIRED_EVENT = 'family-growth:parent-session-expired';
 export const CHILD_SESSION_EXPIRED_EVENT = 'family-growth:child-session-expired';
+export const TUTOR_COMMAND_PREFIX = 'family-growth.ai1-command.v1:';
 
 const toParentSession = (value) => {
   if (!value || typeof value.token !== 'string' || !value.token.trim()) return null;
@@ -62,6 +63,13 @@ const clearCommands = (role, actorId) => {
     const remove = [];
     for (let index = 0; index < sessionStorage.length; index += 1) {
       const key = sessionStorage.key(index);
+      if (role === 'parent' && key?.startsWith(TUTOR_COMMAND_PREFIX)) {
+        const suffix = key.slice(TUTOR_COMMAND_PREFIX.length), parts = parse(suffix);
+        if (Array.isArray(parts) && parts.length === 3 && JSON.stringify(parts) === suffix
+          && parts.every(value => typeof value === 'string' && /^[0-9a-f]{24}$/.test(value))
+          && parts[0] === actorId) remove.push(key);
+        continue;
+      }
       if (!key?.startsWith(COMMAND_PREFIX)) continue;
       const suffix = key.slice(COMMAND_PREFIX.length), parts = parse(suffix);
       // Canonical keys own their entries, even if the body is damaged or claims another actor.

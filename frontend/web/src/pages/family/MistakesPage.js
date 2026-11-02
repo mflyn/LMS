@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import TutorSourceLink from '../../components/family/TutorSourceLink';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
 import PrivateMediaCollectionField from '../../components/family/PrivateMediaCollectionField';
@@ -222,7 +223,8 @@ const ScopedMistakesPage = ({ session }) => {
     <section className="family-page family-page-wide" aria-labelledby="mistakes-page-title">
       <div className="family-page-heading">
         <div>{!blocked && <p className="family-eyebrow">{selectedChild.name}的学习复盘</p>}<h1 id="mistakes-page-title">错题</h1><p>错题仅用于智育学习复盘</p></div>
-        <button type="button" className="family-button primary" disabled={busy || blocked || resource.state === 'loading'} onClick={() => openEditor(null)}>记录错题</button>
+        <div className="family-inline-actions"><Link className="family-button secondary" to="/app/tutor">讲解记录</Link>
+          <button type="button" className="family-button primary" disabled={busy || blocked || resource.state === 'loading'} onClick={() => openEditor(null)}>记录错题</button></div>
       </div>
       <div className="family-filter-bar" aria-label="错题筛选">
         <label>学科筛选<input value={filters.subject} onChange={(event) => setFilters((value) => ({ ...value, subject: event.target.value }))} /></label>
@@ -245,7 +247,8 @@ const ScopedMistakesPage = ({ session }) => {
               <p>{REASONS.find(([value]) => value === item.reason)?.[1] || item.reason}{item.reviewReminderDate ? ` · ${item.reviewReminderDate} 复习` : ''}</p>
               <p>题目附件 {normalizedMediaIds(item, 'questionMediaIds', 'questionMediaId').length} · 答案附件 {normalizedMediaIds(item, 'childAnswerMediaIds', 'childAnswerMediaId').length}</p>
             </div>
-            <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`复盘 ${item.knowledgePointName || item.subject}`} onClick={() => openEditor(item)}>复盘</button>
+            <div className="family-inline-actions"><TutorSourceLink type="mistake" id={item.mistakeId} childId={selectedChildId} subject={item.subject} />
+              <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`复盘 ${item.knowledgePointName || item.subject}`} onClick={() => openEditor(item)}>复盘</button></div>
           </article>
         ))}
       </div>

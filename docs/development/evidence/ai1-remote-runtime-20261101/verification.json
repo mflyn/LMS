@@ -1,0 +1,136 @@
+{
+  "status": "LOCAL_RUNTIME_REVIEWED_NOT_BATCH_ACCEPTANCE",
+  "author": {
+    "passed": 163,
+    "warnings": 3,
+    "seconds": 9.49,
+    "exit": 0
+  },
+  "independent": {
+    "passed": 163,
+    "warnings": 3,
+    "seconds": 9.43,
+    "exit": 0,
+    "sourceHashesUnchanged": true
+  },
+  "logs": [
+    {
+      "name": "author-red",
+      "kind": "author",
+      "exit": 1,
+      "sha256": "1b36049ebca2bfb3a9ba2932edc3970655566f737fccb75fa12772ecda2ac384",
+      "summary": "20 failed, 1 warning in 0.46s"
+    },
+    {
+      "name": "author-first-green",
+      "kind": "author",
+      "exit": 0,
+      "sha256": "b4392fb6cbc64e13437295e7dfd8f616d87b27647db0e78f0ec3db115c4e2c7c",
+      "summary": "20 passed, 1 warning in 0.39s"
+    },
+    {
+      "name": "author-store-regression-red",
+      "kind": "author",
+      "exit": 1,
+      "sha256": "5dfe6858430c2404a716833faee012121bed40b9efd1c51d3e6ae6f8fc5c6b83",
+      "summary": "2 failed, 14 passed, 1 warning in 0.21s"
+    },
+    {
+      "name": "author-store-regression-green",
+      "kind": "author",
+      "exit": 0,
+      "sha256": "2e1f390eabfdd7a02b8f7ca79de9ed1c401b0218230a01422c8108b8fa402184",
+      "summary": "36 passed, 1 warning in 0.58s"
+    },
+    {
+      "name": "author-main-first",
+      "kind": "author",
+      "exit": 1,
+      "sha256": "7f0556d4e2db053f1d1a2592f81fe55576669d8273de0ce9028cda508f80b616",
+      "summary": "1 failed, 1 passed, 20 deselected, 1 warning in 3.49s"
+    },
+    {
+      "name": "author-main-green",
+      "kind": "author",
+      "exit": 0,
+      "sha256": "fa51760320ea322d458c0f1cfa769dc4afcb495dbd1901956059800e7dd97b8a",
+      "summary": "22 passed, 1 warning in 3.33s"
+    },
+    {
+      "name": "author-formal-main",
+      "kind": "author",
+      "exit": 1,
+      "sha256": "23ebf882eee2dbbd4b5cb836853564855cf8d6d7eb83ca9a22728935652c83d9",
+      "summary": "1 failed, 22 passed, 1 warning in 4.93s"
+    },
+    {
+      "name": "author-formal-main-green",
+      "kind": "author",
+      "exit": 1,
+      "sha256": "a07c8ee70188d0a5a172925492128ef1a47381735843dcbf92e53829fdf5bbcc",
+      "summary": "1 failed, 22 passed, 1 warning in 5.44s"
+    },
+    {
+      "name": "author-formal-process-green",
+      "kind": "author",
+      "exit": 0,
+      "sha256": "8b32d8654b654343ce971faf9bfe9c3ce7665e0c7d3d48e714983ddabd21298a",
+      "summary": "23 passed, 1 warning in 7.00s"
+    },
+    {
+      "name": "author-fifo-red",
+      "kind": "author",
+      "exit": 1,
+      "sha256": "06ac46c07599c5c69223eed7b516a84264fd5e17ffe8d7fbc46969a9dbb67454",
+      "summary": "2 failed, 1 passed, 23 deselected, 1 warning in 4.66s"
+    },
+    {
+      "name": "author-fifo-all-red",
+      "kind": "author",
+      "exit": 1,
+      "sha256": "81ee0c79ea370d64e302fd08bc2c7998a8d4032f0887115d20c16ebffc64e9c3",
+      "summary": "3 failed, 23 deselected, 1 warning in 6.41s"
+    },
+    {
+      "name": "author-fifo-green",
+      "kind": "author",
+      "exit": 0,
+      "sha256": "eb4ff7c70c1d4d837e65ac8faeff1e4375f7c34ee1b572a09c4805d724d452bd",
+      "summary": "26 passed, 1 warning in 7.60s"
+    },
+    {
+      "name": "author-author-final",
+      "kind": "author",
+      "exit": 0,
+      "sha256": "b80bbce1f6fb18b6e86ba5915b4f9a66cb662e627f7dc1eb8bd9e6ac972285e6",
+      "summary": "======================= 163 passed, 3 warnings in 9.49s ========================"
+    },
+    {
+      "name": "independent-final",
+      "kind": "independent",
+      "exit": 0,
+      "sha256": "586aa7c1697326298325c5f26e950e170a5e9fe5526d8d424531984568012b8b"
+    },
+    {
+      "name": "independent-original-probe",
+      "kind": "independent",
+      "exit": null,
+      "sha256": "b26e891ebaaafa45d5279d7884f80bf46d10faf0ec9bf42f5ef383aa6916b68f"
+    }
+  ],
+  "independentBeforeSha256": "73f659b188377e292c02757b9959c031db84dd58bb08f754ce901d5941103002",
+  "independentAfterSha256": "73f659b188377e292c02757b9959c031db84dd58bb08f754ce901d5941103002",
+  "observations": [
+    "Missing-unique-index counterexample also removes PK/NOT NULL; branch-isolated coverage pending"
+  ],
+  "boundaries": [
+    "B_OPEN",
+    "D_OPEN",
+    "AI1_OPEN",
+    "SYNTHETIC_COUNTER",
+    "SYNTHETIC_PROVIDER_NETWORK",
+    "ACTUAL_LMS_TCP_PENDING",
+    "FULL_DEEPTUTOR_NOT_VERIFIED",
+    "HISTORICAL_FAMILY_FAILURE_PRESERVED"
+  ]
+}

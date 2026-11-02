@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import TutorSourceLink from '../../components/family/TutorSourceLink';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
@@ -391,7 +392,8 @@ const ScopedTasksPage = () => {
     <section className="family-page family-page-wide" aria-labelledby="tasks-page-title">
       <div className="family-page-heading">
         <div>{!accessBlocked && <p className="family-eyebrow">{selectedChild.name}的成长安排</p>}<h1 id="tasks-page-title">任务</h1></div>
-        <button type="button" className="family-button primary" disabled={accessBlocked || resource.state === 'loading'} onClick={openCreate}>新建任务</button>
+        <div className="family-inline-actions"><Link className="family-button secondary" to="/app/tutor">讲解记录</Link>
+          <button type="button" className="family-button primary" disabled={accessBlocked || resource.state === 'loading'} onClick={openCreate}>新建任务</button></div>
       </div>
 
       <div className="family-filter-bar" aria-label="任务筛选">
@@ -422,6 +424,7 @@ const ScopedTasksPage = () => {
               {item.helpRequest && <p>{item.helpRequest.status === 'pending' ? '待处理求助' : '求助已处理'} · {HELP_LABELS[item.helpRequest.helpType]}</p>}
             </div>
             <div className="family-inline-actions">
+              <TutorSourceLink type="task" id={item.taskId} childId={selectedChildId} subject={item.subject} />
               <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`查看 ${item.title}`} onClick={event => openAction('review', item, event.currentTarget)}>查看作品</button>
               <button type="button" className="family-button secondary" aria-label={`求助 ${item.title}`} onClick={event => { event.currentTarget.focus(); setHelpTask(item.taskId); }}>求助</button>
               {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.title}`} onClick={() => openEdit(item)}>编辑</button>}

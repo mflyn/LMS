@@ -1,0 +1,49 @@
+{
+  "scope": "D2_LOCAL_CANDIDATE_ONLY",
+  "candidate": {
+    "patchSha256": "4cc261637ba6f14b2336e16dc234c70e7875caf72dc522f469d04fa65642279d",
+    "manifestSha256": "5bb681355c48b4a554c09a64f9b6d80312a5b82e332ab8c1672eb72d3c9d017d",
+    "verificationSha256": "77d3450130a07789c5cb2e8ef487f456a3cf6a197a69d1a4ff1fc1d6417c9a71",
+    "fileHashesMatched": 53,
+    "privateLogHashesMatched": 27,
+    "patchReconstruction": "PASS",
+    "parentD1Unchanged": true
+  },
+  "documentCheck": {
+    "command": "node scripts/check-family-docs.js",
+    "exitCode": 0,
+    "log": "ai1-d2-doc-check-frozen.log",
+    "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+  },
+  "documentGate": {
+    "command": "jest --config backend/jest.family-common.config.js --runInBand --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+    "exitCode": 0,
+    "suites": 1,
+    "tests": 311,
+    "seconds": 37.493,
+    "log": "ai1-d2-doc-gate-frozen.log",
+    "sha256": "2645bdb8db3194429c970232226bf012478fd9c9847430128b618cdc6a62462e"
+  },
+  "affectedLint": {
+    "exitCode": 0,
+    "log": "ai1-d2-lint-frozen.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "diffCheck": { "command": "git diff --check", "exitCode": 0 },
+  "archiveChecks": {
+    "knownPrivatePathsAndHostMarkers": "NO_MATCH",
+    "privateKeyAndProviderKeyPatterns": "NO_MATCH",
+    "scope": "D2 evidence directory only; not a full repository security audit"
+  },
+  "localExecutionFailure": {
+    "step": "first mechanical archive write",
+    "exitCode": 1,
+    "reason": "EPERM writing worktree candidate.patch under restricted execution context",
+    "action": "controlled local execution; same generator succeeded without Git commit or external writes"
+  },
+  "totalGate": "OPEN",
+  "actualRemote": "EXTERNAL_IMPLEMENTATION_PENDING",
+  "device": "DEVICE_PENDING",
+  "historicalFailures": "PRESERVED",
+  "deferred": "REMAINDER_DEFERRED"
+}

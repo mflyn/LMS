@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "ai1-delivery-verification-v1",
+  "scope": "Synthetic local checks only; no real model; not complete release",
+  "backend": {
+    "command": "npm run test:family-regression -- --json --outputFile=<private-report>",
+    "exitCode": 0,
+    "seconds": 827.866,
+    "summary": {
+      "numPassedTestSuites": 168,
+      "numFailedTestSuites": 0,
+      "numPassedTests": 5135,
+      "numFailedTests": 0,
+      "numPendingTests": 1,
+      "success": true
+    },
+    "sourceUnchanged": true,
+    "dependencyLinkRemoved": true,
+    "pending": [
+      {
+        "suite": "backend/common/deployment/__tests__/task5Deployment.test.js",
+        "name": "Task 5 deployment contracts TC-T5-DEPLOY-002 Secret dry-run validates without exposing credentials"
+      }
+    ],
+    "logSha256": "891335a85c9fd25f94eb5f70101344d57a0907e99f584c1b92548affd0800a92",
+    "reportSha256": "796d2ef72bf751978e4cd59692364da79a2b7474a8719aecdde1b77d85176e24"
+  },
+  "additional": [
+    {
+      "name": "deep-ai1",
+      "code": 0,
+      "signal": null,
+      "error": null,
+      "seconds": 15.634,
+      "logSha256": "2cf25e1e992a1fd08cc266dbc4956792216da104ffcff8fc5839492d7cbbe027",
+      "scope": "166 passed; 3 warnings; original root fixtures; synthetic provider"
+    },
+    {
+      "name": "frontend-tests",
+      "code": 0,
+      "signal": null,
+      "error": null,
+      "seconds": 51.285,
+      "logSha256": "cc4dfeaab17ab95469f02b0d8301fff894410e6969290227edddff7bcdfca5df",
+      "scope": "59 suites; 788 tests; existing non-Legacy scope"
+    },
+    {
+      "name": "frontend-build",
+      "code": 0,
+      "signal": null,
+      "error": null,
+      "seconds": 17.193,
+      "logSha256": "2e51d2e096c651068192c418e89a697bfc3447eb051bfc87f3c6a3b7c4036c79",
+      "scope": "Compiled successfully; Browserslist outdated-data warning retained"
+    }
+  ],
+  "frontendReport": {
+    "suites": 59,
+    "tests": 788,
+    "failed": 0,
+    "pending": 0,
+    "sha256": "90e10eba18e5b039525b813d3234813292180afe868a57c4e3a77d7ad62f6e85"
+  },
+  "deepJUnitSha256": "ab9ec16689402510619bc39205a20602a5852a92296c2018dbfccfabf72fd31f",
+  "scripts": {
+    "familyRunnerSha256": "062bda4d5b2f842e07565b3b324b65dc53b81efe3fbf5ee5d30ec88b87b5ec02",
+    "localChecksSha256": "02b100c04c9adb1d895905321820e65ab14bc844144c5929ec5e483a2a24beae"
+  },
+  "initialAttempt": {
+    "exitCode": 1,
+    "outcome": "Sandbox EPERM creating temporary dependency symlink; tests not started; tool transcript retained"
+  },
+  "independentReview": {
+    "scope": "Static candidate scope, changed-content and embedded-patch sensitive information, frozen references",
+    "sourceFingerprints": 68,
+    "fixtures": 6,
+    "findings": "No new blocking P1/P2; does not audit all history or rerun business tests"
+  },
+  "gates": {
+    "ai1": "OPEN",
+    "qualifiedCounter": "PENDING",
+    "realSendingAuthorized": false,
+    "device": "DEVICE_PENDING",
+    "historicalFailures": "RETAINED",
+    "advancedRecoveryAndNewCollection": "REMAINDER_DEFERRED"
+  }
+}

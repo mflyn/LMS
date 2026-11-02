@@ -1,0 +1,52 @@
+{
+  "schemaId": "https://lms.family.local/schemas/ai1-min-v1.json#/$defs/create",
+  "base": {
+    "schemaVersion": "ai1-min-v1",
+    "operationId": "11111111-1111-4111-8111-111111111111",
+    "childId": "aaaaaaaaaaaaaaaaaaaaaaaa",
+    "source": {
+      "type": "task",
+      "id": "bbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "input": {
+      "questionText": "124 * 23",
+      "answerText": null,
+      "parentContext": ""
+    },
+    "chapter": {
+      "provenance": "parent_declared",
+      "subject": "math",
+      "grade": 4,
+      "term": "upper",
+      "textbookLabel": "Synthetic",
+      "chapterLabel": "多位数乘两位数"
+    },
+    "deidentifiedConfirmed": true
+  },
+  "valid": [
+    {
+      "name": "valid-create",
+      "set": {}
+    }
+  ],
+  "invalid": [
+    {
+      "name": "unknown-identity",
+      "set": {
+        "actorId": "attacker"
+      }
+    },
+    {
+      "name": "legacy-version",
+      "set": {
+        "schemaVersion": "tutor-v1"
+      }
+    },
+    {
+      "name": "non-v4-operation",
+      "set": {
+        "operationId": "11111111-1111-1111-8111-111111111111"
+      }
+    }
+  ]
+}

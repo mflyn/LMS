@@ -1,0 +1,30 @@
+{
+  "candidatePatchSha256": "fdd6b9bbf3f7de1760bfabc3258782f84b3711193dbbdb4acde95b5c00472045",
+  "manifestSha256": "a70c1c3f6b2ff6c9baa47e7fc2db35676ad0118aead832d9ed4ba479fa93da7b",
+  "verificationSha256": "7229508a8a6ace5f3c19c9755998e8d6a3c5772ffbf260ff3425d248ee34810b",
+  "reconstruction": "PASS",
+  "sourceHashes": "MATCH",
+  "documentation": {
+    "command": "node scripts/check-family-docs.js (existing NODE_PATH)",
+    "exit": 0,
+    "logSha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+  },
+  "gateInitial": {
+    "exit": 1,
+    "passed": 306,
+    "failed": 6,
+    "reason": "Evidence README was not yet created when test snapshot was read; link target now exists",
+    "logSha256": "ce9430e1a470f776a2b0411cafb31b2953c366a7c79adb4b79bc70a8c7911c75"
+  },
+  "gateFinal": {
+    "exit": 0,
+    "passed": 312,
+    "failed": 0,
+    "logSha256": "dfd21e34fb9b4cbd8355172a32cb0e6de1425b8abec12b79071024c857f12a26"
+  },
+  "diffCheck": {
+    "LMS": 0,
+    "DeepTutor": 0
+  },
+  "acceptance": "LOCAL_STORE_ONLY_B_AND_AI1_OPEN"
+}

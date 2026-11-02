@@ -5,6 +5,20 @@ describe('T2 formal runtime lifecycle', () => {
   let runtime;
   afterEach(async () => { await runtime?.stop(); runtime = null; });
 
+  test('synthetic environment does not inherit operator AI activation and restores the prior mode', async () => {
+    const prior = process.env.AI1_MODE;
+    process.env.AI1_MODE = 'enabled';
+    try {
+      runtime = await createT2Runtime();
+      expect(process.env.AI1_MODE).toBe('off');
+      await runtime.stop();
+      expect(process.env.AI1_MODE).toBe('enabled');
+    } finally {
+      await runtime?.stop();
+      if (prior === undefined) delete process.env.AI1_MODE; else process.env.AI1_MODE = prior;
+    }
+  });
+
   test('uses official enabled startups, native indexes, private storage and loopback; stop is idempotent', async () => {
     runtime = await createT2Runtime();
     expect(runtime.mode).toBe('enabled');

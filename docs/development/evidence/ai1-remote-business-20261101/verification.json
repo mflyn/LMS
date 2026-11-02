@@ -1,0 +1,174 @@
+{
+  "status": "ACTUAL_BUSINESS_BROWSER_LOCAL_REVIEWED",
+  "manifestSha256": "f619e87be0cd8950d7b5269e125155fd5afdb4354d42ab543aaf675953cc2329",
+  "author": {
+    "passed": 182,
+    "warnings": 3,
+    "seconds": 148.89,
+    "exit": 0,
+    "scope": "Six operation suites and three explicit acceptance files; synthetic Provider transport/counter, actual formal services and browsers"
+  },
+  "commands": [
+    "python -m pytest tests/services/ai1/test_operation_{contract,http,provider,runtime,service,store}.py tests/services/ai1/lms_acceptance.py tests/services/ai1/lms_business_acceptance.py tests/services/ai1/lms_browser_acceptance.py -xv --tb=short --basetemp=$PRIVATE_EVIDENCE/final-expanded",
+    "CI=true BUILD_PATH=$PRIVATE_EVIDENCE/frontend-build GENERATE_SOURCEMAP=false node node_modules/react-scripts/scripts/build.js",
+    "NODE_PATH=$LMS_NODE_MODULES node scripts/check-family-docs.js",
+    "git diff --check"
+  ],
+  "requiredEnvironment": [
+    "AI1_LMS_ROOT",
+    "AI1_NODE",
+    "AI1_NODE_PATH",
+    "AI1_MONGO_BINARY",
+    "T2_WEB_BUILD",
+    "PYTHONPATH=.",
+    "HOME with existing browser cache"
+  ],
+  "versions": {
+    "node": "22.15.0",
+    "python": "3.13.0",
+    "openai": "2.6.1",
+    "httpx": "0.28.1",
+    "httpcore": "1.0.9",
+    "fastapi": "0.135.1",
+    "starlette": "0.52.1",
+    "uvicorn": "0.42.0",
+    "rfc8785": "0.1.4",
+    "pytest": "9.0.2",
+    "psutil": "7.2.2",
+    "anyio": "4.12.1"
+  },
+  "logs": [
+    {
+      "name": "dependency-restore.log",
+      "sha256": "c660b34c7a35ca87e20561c98543c9f385d69da74caeb88cfea75f2c9413d677"
+    },
+    {
+      "name": "serial-regression.log",
+      "sha256": "83bcc23c8d5623b3b1daa8e36c9cccbdaf1abb1494596a353937e0c126b0e3e5"
+    },
+    {
+      "name": "business-p2.log",
+      "sha256": "039f9ab43990a2b4b2e4c7a4ece2d03dc43a5b899709c57781a5453efac41124"
+    },
+    {
+      "name": "business-p2-v2.log",
+      "sha256": "128a9f4a5755c4ee134c06977a03b7548fc2647a4baad80b1fa0490488c7ca09"
+    },
+    {
+      "name": "business-p2-final.log",
+      "sha256": "0dea000ba15542a4e660fd39bb97b6bcd717894c50a1a53aa973f2c7437bd245"
+    },
+    {
+      "name": "browser-author.log",
+      "sha256": "810940ae677d7750d00c7099181a09a54af62d7eac3cbfed640811789df12ab9"
+    },
+    {
+      "name": "browser-navigation.log",
+      "sha256": "0f0d7b6fb997f62a7f19f7cd18abc7f3b63ad4bb93e82b5a7cea0067eb34d618"
+    },
+    {
+      "name": "final-expanded.log",
+      "sha256": "a6c91fef4b48f6931677d22670bf91330873b4b40279aa43ef3cdb7e997dbafa"
+    },
+    {
+      "name": "cas-mutation.log",
+      "sha256": "d08bf747d6825258c6d8474864026cbb23cced81a2583b7aa1ffbbf19475889c"
+    },
+    {
+      "name": "frontend-build.log",
+      "sha256": "62c7c24636bed7ad2e604e547928e1a03706a0098ce7e9ce7feb57fecc32e3be"
+    },
+    {
+      "name": "documentation-gate.log",
+      "sha256": "611c632815f6b4f4e882e0a0130040f04c4740c2d65539ddd19215c6e23fd808"
+    }
+  ],
+  "mutation": {
+    "name": "remove both cycle version predicates in isolated copy",
+    "exit": 1,
+    "reason": "Expected 409 received 200 at single-field rejection",
+    "sourceCandidateUnchanged": true
+  },
+  "preservedFailures": [
+    "Historical family 161 passed / 2 failed suites; 4980 passed / 2 failed tests",
+    "Old expanded run: 7 failure markers then 240-second SIGTERM, no pytest summary; raw temporary logs subsequently unavailable",
+    "business-p2-v2: transient Darwin cleanup EPERM",
+    "browser-author: Chromium 3 pass, WebKit navigation pageerror failure",
+    "First reconstruction parent Git discovery skipped paths; not a product failure",
+    "Documentation command without NODE_PATH failed before successful explicit dependency-path run",
+    "Independent supervisor exit 1 due to separately attributed author documentation-check processes; pytest exit 0 and final empty process audits are distinct"
+  ],
+  "boundaries": [
+    "B_OPEN",
+    "D_OPEN",
+    "AI1_OPEN",
+    "AI0_HUMAN_REVIEW_REQUIRED",
+    "DEVICE_PENDING",
+    "T4_OPEN",
+    "T8_OPEN",
+    "T9_NOT_STARTED",
+    "DOCKER_INCOMPLETE_FAILED",
+    "T5_NB_001_002_OPEN_NONBLOCKING",
+    "ADVANCED_RECOVERY_AND_NEW_CLEANUP_REMAINDER_DEFERRED",
+    "NO_REAL_MODEL_OR_DEPLOYMENT_OR_GIT_PUBLICATION"
+  ],
+  "independent": {
+    "passed": 14,
+    "warnings": 1,
+    "seconds": 112.49,
+    "exit": 0,
+    "sourceFiles": 65,
+    "unchanged": true,
+    "scope": "Business 6 and browser/native-cleanup 8; not a re-execution of earlier core suites",
+    "trackedSurvivors": 0,
+    "finalMatchingProcesses": 0,
+    "forcedCleanup": [],
+    "staticReview": "Eight scoped P2 responses accepted; independent actual execution passed within stated scope",
+    "supervisorExit": 1,
+    "supervisorAttribution": "Two author documentation-gate Node processes matched broad scan; exact identities/commands proved not independent-owned. Original supervisor exit 1 preserved; no termination. Final audits empty."
+  },
+  "independentLogs": [
+    {
+      "name": "pytest.log",
+      "sha256": "472d6e6fe2b8c9d1b7cb18a38580ea61ea459c2896644c3b08d9c6596076e6b8"
+    },
+    {
+      "name": "junit.xml",
+      "sha256": "d2e3b5eb5cced54bab136a0ad3e22374a859e87d4eee442cb82eabc1217fd5aa"
+    },
+    {
+      "name": "result.json",
+      "sha256": "216d289a31f7fb973e7112a7cc59a6f18d20c537e5868f7acd20f246a0b53ff8"
+    },
+    {
+      "name": "hashes-before.json",
+      "sha256": "b30a837d4e5bd998d479584df6d131273325201cd1dd6bc7ca8880cf8fd4f493"
+    },
+    {
+      "name": "hashes-after.json",
+      "sha256": "b30a837d4e5bd998d479584df6d131273325201cd1dd6bc7ca8880cf8fd4f493"
+    },
+    {
+      "name": "processes-final-audit.json",
+      "sha256": "1a549af672560893ce7bd44aa9382db13e33eef277f1354c37b518295ff8ce00"
+    },
+    {
+      "name": "process-attribution.md",
+      "sha256": "27feaca0999b1ce82d80e4d70aa1d94ecb26289295ea06a9024426859f8af48a"
+    },
+    {
+      "name": "supervise.py",
+      "sha256": "4a4f7cfef1ed9c17d6babc17aec9e757f9634806ba106ef7b24371b6fd8f9401"
+    },
+    {
+      "name": "command.json",
+      "sha256": "62a7092c0419066627c70dad00b43eccda45cb78ddee6409a565c1f93cd5d148"
+    }
+  ],
+  "documentationGate": {
+    "suites": 1,
+    "passed": 312,
+    "seconds": 39.715,
+    "exit": 0
+  }
+}

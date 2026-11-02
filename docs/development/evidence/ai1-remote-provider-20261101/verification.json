@@ -1,0 +1,169 @@
+{
+  "status": "LOCAL_SDK_REVIEWED_NOT_BATCH_ACCEPTANCE",
+  "runtime": {
+    "python": "3.13.0",
+    "openai": "2.6.1",
+    "httpx": "0.28.1",
+    "httpcore": "1.0.9",
+    "pytest": "9.0.2",
+    "fastapi": "0.135.1",
+    "uvicorn": "0.42.0",
+    "rfc8785": "0.1.4"
+  },
+  "logs": [
+    {
+      "name": "module-red",
+      "exit": 1,
+      "kind": "author-missing-module",
+      "errors": 34,
+      "sha256": "6182782be177d84bee6deae5ce6855e3e73c410ced84cb6786924ab5bc2fd19b"
+    },
+    {
+      "name": "logging-red",
+      "exit": 1,
+      "kind": "author-counterexample",
+      "failed": 2,
+      "sha256": "7e8ab6c376bcefbf250f0bf8acce08789bfe340e4889411b6f72224800c50fa1"
+    },
+    {
+      "name": "wire-deadline-red",
+      "exit": 1,
+      "kind": "author-counterexample",
+      "failed": 4,
+      "sha256": "eb47db0782e523776278bbc527cc006caf34ed4f5feff645aa5e6ec70b1e74be"
+    },
+    {
+      "name": "independent-original-deadline",
+      "exit": null,
+      "kind": "independent-defect-probe",
+      "finding": "P1",
+      "sha256": "65816bafc9497dc7ee7b5dc3cb3dbe3a766b989eca48788079719bd9853ddc3e",
+      "exitEvidence": "Probe log contains result, not an embedded process exit code; do not infer it from a PASS marker.",
+      "result": "REPRODUCED"
+    },
+    {
+      "name": "independent-original-wire",
+      "exit": null,
+      "kind": "independent-defect-probe",
+      "finding": "P2",
+      "sha256": "6f2a665242e65a23b52e7257fa23af3185012e9f514a8c377686408807f3a4f2",
+      "exitEvidence": "Probe log contains result, not an embedded process exit code; do not infer it from a PASS marker.",
+      "result": "REPRODUCED"
+    },
+    {
+      "name": "final-author",
+      "exit": 0,
+      "kind": "author",
+      "passed": 137,
+      "warnings": 1,
+      "sha256": "0677e6491f49d8733c7250b91e9e68c8edaf6eb5933dab54540ce939c0257794"
+    },
+    {
+      "name": "final-independent",
+      "exit": 0,
+      "kind": "independent",
+      "passed": 137,
+      "warnings": 1,
+      "sha256": "ffb2807e73ae4dd465642caea6bab31ce33a2483430b64efb046225d837d35cf"
+    },
+    {
+      "name": "independent-fixed-wire-deadline",
+      "exit": null,
+      "kind": "independent-probe",
+      "sha256": "4a10310a7ae60a89929304a98bd40d0c995d3ceb84fa6b7344327b40f25815ef",
+      "exitEvidence": "Probe log contains result, not an embedded process exit code; do not infer it from a PASS marker.",
+      "result": "PASS_REPORTED"
+    },
+    {
+      "name": "independent-logging-context",
+      "exit": null,
+      "kind": "independent-probe",
+      "sha256": "b66f7a5769f7b384f956926c49f7395af395a7e37ca7ca431e66cef7a879e318",
+      "exitEvidence": "Probe log contains result, not an embedded process exit code; do not infer it from a PASS marker.",
+      "result": "PASS_REPORTED"
+    },
+    {
+      "name": "docs",
+      "exit": 0,
+      "kind": "author",
+      "sha256": "131c07ed92022c6abe87b9d8734ba8cff1bcb87fed8afa871b5f59a975261e05"
+    },
+    {
+      "name": "doc-gate",
+      "exit": 0,
+      "kind": "author",
+      "passed": 312,
+      "sha256": "c34a0a5afaa9200c2f828f4b1c2de8764d5b3b2e00a0501051259197d08e80e9"
+    }
+  ],
+  "mutations": [
+    {
+      "name": "input-bound",
+      "kind": "author-expected-mutation-failure",
+      "exit": 1,
+      "summary": "1 failed, 4 passed, 45 deselected in 0.10s",
+      "sourceSha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9",
+      "sha256": "28bc85da0f299acb0ca96a1d64e887f70dda559583c5fe1b94808a10514cac00"
+    },
+    {
+      "name": "wire-drift",
+      "kind": "author-expected-mutation-failure",
+      "exit": 1,
+      "summary": "2 failed, 2 passed, 46 deselected in 0.13s",
+      "sourceSha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9",
+      "sha256": "5b8e610880d0bdf007f2038d37231c15c8b9228b85492687302099fd6f992102"
+    },
+    {
+      "name": "private-log",
+      "kind": "author-expected-mutation-failure",
+      "exit": 1,
+      "summary": "2 failed, 48 deselected in 0.58s",
+      "sourceSha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9",
+      "sha256": "f6f2b8835db87938213eac2df0ee88b8589817533eee04872c8193ff953cdad8"
+    },
+    {
+      "name": "attempt",
+      "kind": "author-expected-mutation-failure",
+      "exit": 1,
+      "summary": "1 failed, 49 deselected in 0.10s",
+      "sourceSha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9",
+      "sha256": "bd5ba1fadca3ccd67ee8bc0aabb5e37966e70467aa73b501475c2da6162a6ddd"
+    },
+    {
+      "name": "wire-bytes",
+      "kind": "author-expected-mutation-failure",
+      "exit": 1,
+      "summary": "1 failed, 49 deselected in 0.49s",
+      "sourceSha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9",
+      "sha256": "90e14d130edfcde570945ff9a7cecb27545f87b9b796ef4d90592db025062a98"
+    },
+    {
+      "name": "headers-deadline",
+      "kind": "author-expected-mutation-failure",
+      "exit": 1,
+      "summary": "2 failed, 48 deselected in 0.52s",
+      "sourceSha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9",
+      "sha256": "3692d8d8e97a6d8ff1aeadd345d9d33037df70c49748cb4e9c4f60dfeced113b"
+    },
+    {
+      "name": "body-deadline",
+      "kind": "author-expected-mutation-failure",
+      "exit": 1,
+      "summary": "1 failed, 49 deselected in 0.48s",
+      "sourceSha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9",
+      "sha256": "72bbd1a5056e2c03be40a622a2a2a18761d75f2ec463cc843767f61f5da2185c"
+    }
+  ],
+  "independentBeforeSha256": "99912020d783243e9036c32eab9dadde6ba8167339d3b8deab9c202e8166f6bc",
+  "independentAfterSha256": "99912020d783243e9036c32eab9dadde6ba8167339d3b8deab9c202e8166f6bc",
+  "boundaries": [
+    "SYNTHETIC_COUNTER",
+    "SYNTHETIC_NETWORK_AND_MODEL_RESPONSE",
+    "FORMAL_MAIN_NOT_MOUNTED",
+    "HTTP11_VERIFIED_NOT_HTTP2",
+    "B_OPEN",
+    "AI1_OPEN",
+    "FULL_DEEPTUTOR_NOT_VERIFIED",
+    "HISTORICAL_FAMILY_FAILURE_PRESERVED"
+  ]
+}

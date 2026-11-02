@@ -1,0 +1,77 @@
+{
+  "status": "LOCAL_CLIENT_TCP_REVIEWED_NOT_BATCH_ACCEPTANCE",
+  "author": {
+    "passed": 168,
+    "warnings": 3,
+    "seconds": 31.98,
+    "exit": 0
+  },
+  "independent": {
+    "passed": 5,
+    "warnings": 1,
+    "seconds": 24.06,
+    "exit": 0,
+    "fingerprints": 41,
+    "unchanged": true,
+    "scope": "Only the five new acceptance tests; prior runtime source verified by hash, not rerun"
+  },
+  "logs": [
+    {
+      "name": "author-first",
+      "exit": 0,
+      "sha256": "5c571fae73dd38c7282d6ea7f314f566eb2da6098432aa1ede17e374565e1651"
+    },
+    {
+      "name": "author-final",
+      "exit": 0,
+      "sha256": "98ca0664ae1f1abfae509171eaebc8522cee10c7e061fecdec0c433cd9918ea6"
+    },
+    {
+      "name": "independent",
+      "exit": 0,
+      "sha256": "c5987c8e60c25ea8dc1d9cb7fea03df448eeed54daf131dc473fb7bceaa9f19e"
+    }
+  ],
+  "mutations": [
+    {
+      "name": "get-dispatch",
+      "exit": 1,
+      "signal": null,
+      "sha256": "30a4c0f9c571092ee08934b995568176ccded079cad742e9ca9cdbbe221972d5",
+      "summary": "1 failed, 4 deselected, 1 warning in 3.88s",
+      "kind": "author-expected-failure"
+    },
+    {
+      "name": "accepted-no-resume",
+      "exit": 1,
+      "signal": null,
+      "sha256": "caf11b60d3dff3b3a0fe6c5efbe0fa3ef743a31aa8dcd5a6e5a5e74ddcb9c209",
+      "summary": "1 failed, 4 deselected, 1 warning in 5.59s",
+      "kind": "author-expected-failure"
+    },
+    {
+      "name": "sending-reclaim",
+      "exit": 1,
+      "signal": null,
+      "sha256": "5172b44764afa6954e06e2f9ff43a8421c382907d886872511ff253e1968b79c",
+      "summary": "2 failed, 3 deselected, 1 warning in 8.22s",
+      "kind": "author-expected-failure"
+    }
+  ],
+  "mutationPreparationFailure": "First mutation setup refused a nonunique replacement anchor before tests; no product mutation result inferred",
+  "independentPreparationFailures": "Two fingerprint-wrapper path resolutions failed before pytest; corrected without changing source/dependencies",
+  "independentBeforeSha256": "13ffe6fb8ee16202fc817774e58c6f78df1948b9d8e18967448193bcfaa27fc7",
+  "independentAfterSha256": "13ffe6fb8ee16202fc817774e58c6f78df1948b9d8e18967448193bcfaa27fc7",
+  "boundaries": [
+    "B_OPEN",
+    "D_OPEN",
+    "AI1_OPEN",
+    "SYNTHETIC_COUNTER_AND_PROVIDER",
+    "LMS_SERVICE_LEDGER_PENDING",
+    "ACTUAL_REMOTE_BROWSER_PENDING",
+    "REAL_FEE_AND_HUMAN_PENDING"
+  ],
+  "observations": [
+    "Nonblocking: fixture bounds cleanup but does not classify ordinary server exit codes; intentional SIGTERM and expected 73 must not be treated as unexpected failure"
+  ]
+}

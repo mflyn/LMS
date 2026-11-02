@@ -1,0 +1,237 @@
+{
+  "scope": "AI1_D2_LOCAL_RUNTIME_FORMAL_HTTP_PARTIAL",
+  "baseline": "1d49abb11580172fa86a7e282cb31588bf682027",
+  "parentFrozen": {
+    "candidate.patch": "5d7852778fff176e1cc2705d54343ab9d99542b53d3169c9f0f06f03b7629aab",
+    "manifest.json": "96281efa36fd997b43a6a086eb797d8f50bea2b520cb0fa03ebe659577ddc52b",
+    "verification.json": "2fd83892e7f3efdb5cf294319f701f2170f3898131026d9319c30c4851be67b1"
+  },
+  "patchSha256": "4cc261637ba6f14b2336e16dc234c70e7875caf72dc522f469d04fa65642279d",
+  "reconstruction": "PASS",
+  "files": [
+    {
+      "file": "backend/common/contracts/ai1-min.schema.json",
+      "sha256": "5b18f95600c450fd58c7a487a667c190ab0ff122d818797359e86e29668820ee"
+    },
+    {
+      "file": "backend/common/createBaseApp.js",
+      "sha256": "6fd3e24a83343d7370c87b0fb1a952a8c955b4a58fd2dd4c1a3d1be6229e1ae5"
+    },
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "sha256": "ff08c1e628939672ebf072bcb6b57e61652f65a4208428da136027dd24bd4dd4"
+    },
+    {
+      "file": "backend/gateway/__tests__/ai1Routes.test.js",
+      "sha256": "1600f1dbfb93a8e8ffcebc698be0f77dc40d36410d5dc1b9d16755ae1df1d78e"
+    },
+    {
+      "file": "backend/gateway/ai1ProxyInput.js",
+      "sha256": "ec4e9fe0088e91056061bbca76af31b25222bf70c1c9261423fa2088b2f711cc"
+    },
+    {
+      "file": "backend/gateway/identityMiddleware.js",
+      "sha256": "ef5d2953cc348a3dfdf6214a17d8a3378d06aaed3f4f4bf071dec06f4436620f"
+    },
+    {
+      "file": "backend/gateway/server.js",
+      "sha256": "7b8d13f2bb148e525b21388000dbe6ccd312614b52d3b05da376a7e7109f1a03"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Contract.test.js",
+      "sha256": "7e2a1f12def7a295e2e8d3671bfaf7f83941b2abc7b1cdbb3112e40bd05a1a99"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Http.test.js",
+      "sha256": "d104bbc567eef3833e3652c5b3c354a15662ba3c643e60c8237a4b64aeb09bb6"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Operation.test.js",
+      "sha256": "f85716df9191bc987e52e83746e4d9c3171f7660ec2e81189f4a96c53fa4e0be"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Production.test.js",
+      "sha256": "63bb56c6ad0c3fb9c61b009b7655625bf63e47995eda5d65a36034e7427ed2db"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Runtime.test.js",
+      "sha256": "8a05a046b6485a2817dad625938307fae222e5b23828b4f76b46c2e27e212e28"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Service.test.js",
+      "sha256": "49c976e25120877cfd13b2072887cc13426b8f337d925d9ba25cb2a8e52d7de7"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/setup.js",
+      "sha256": "04290986f92750705b2c9f30d8dc36bb8cab36ae79f65c3bafe8d66acf6bc470"
+    },
+    {
+      "file": "backend/services/homework-service/models/Ai1.js",
+      "sha256": "24195d2928e98ec1b1f975483019f31954a8e503b2707324ba7ffc88a5fb5e0c"
+    },
+    {
+      "file": "backend/services/homework-service/routes/ai1.js",
+      "sha256": "cd1bc21284786f41d4d9fbf10cb2b379d034a5c43a5212aa1b5b84c1cdd1d155"
+    },
+    {
+      "file": "backend/services/homework-service/server.js",
+      "sha256": "a324072b5d2aa2ef2aaa67b7188ae36ba1fc761904fc4c1839b8ff0c55835c58"
+    },
+    {
+      "file": "backend/services/homework-service/services/ai1Contract.js",
+      "sha256": "f4b00611a71ce3b4bc3572564bfa71f2bc848d65020d6faec8b1a9503d399ab2"
+    },
+    {
+      "file": "backend/services/homework-service/services/ai1Operation.js",
+      "sha256": "ec29b41e2647a8262de40a662218d5d3be05cb743329598535406b6afd3c27aa"
+    },
+    {
+      "file": "backend/services/homework-service/services/ai1Readiness.js",
+      "sha256": "c6532fd8beaf88a31791b22d8e84f0c14d0e55af9c304549cb75ec7e2f2917e2"
+    },
+    {
+      "file": "backend/services/homework-service/services/ai1Runtime.js",
+      "sha256": "14d1e19cf2c507337e0456082ade8cdae42ac8b77aea868a937a56b67cfebbca"
+    },
+    {
+      "file": "backend/services/homework-service/services/ai1Service.js",
+      "sha256": "3b96d02b9eeb73adf601348bc2430c3d9a8dff8aa7ab66c7f2f52ac43660fb13"
+    },
+    {
+      "file": "docs/README.md",
+      "sha256": "b526dce4febeba494653e12633dcb0fbd78cfd88fa239e2f87b6d1feec98d86b"
+    },
+    {
+      "file": "docs/api/family-ai1-api.md",
+      "sha256": "7ab2f432fba7e32bd78a4b75607e5358d7b24411402c8fad0b93025725eff475"
+    },
+    {
+      "file": "docs/api/family-learning-tracker-api.md",
+      "sha256": "78b5d151be63f53b0762bb1d98cd365700c207708af226e41c3f1a184e952456"
+    },
+    {
+      "file": "docs/architecture/family-ai-learning-platform-design.md",
+      "sha256": "8432f79187c0b6bd981eedb3ce56467296ae9779a816be12fda43c4e24e1c218"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-close.cases.json",
+      "sha256": "2878439e8bbf57a34af2d9232b6ec4669916ad34e25855d2bc27217dad46a320"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-create.cases.json",
+      "sha256": "e6deec330f87a27916734fdb9ba2777f418283743932d74d0b275e1b58348a58"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-generate.cases.json",
+      "sha256": "eaf8dde8d414ad197b8dc93289a3f2a38e470b88e2bdcc8198be87b7ffd4530b"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-recover.cases.json",
+      "sha256": "a7c165d89a9218613099537a2c4a8acc4e555f4f285ab622b3bea9610f872e3a"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-review.cases.json",
+      "sha256": "8038174c8345944478a2dc61ebda16b1b341df97bd101465730f9b30f155d334"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-revise.cases.json",
+      "sha256": "fefbbf3623cf473b78afe814e46ffcd7b04a794bc4599ee3c42aff7d329eb76f"
+    },
+    {
+      "file": "docs/development/README.md",
+      "sha256": "838273e4b693e7b5a707eb97f489d3a031f6e499b95222dbdb06355f7d16db52"
+    },
+    {
+      "file": "docs/development/family-ai1-test-plan.md",
+      "sha256": "f58fa4db5b8f6188767a89243dbd3160710ad4adc5c45ea5f324545ed1e0c0a6"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "f9d645ca4b50ca61945d8c39f19d9e2d3a318cfb27467fc6b762c3b7e92219b3"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "e8a6f6c4ddf9e1f83b8394d65af707415a17e446d8f2dd4da466b793292ee25b"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md",
+      "sha256": "b90239262fdd5a947a6bc31acbd1c77e5147f4ea3ad8eca514a7fad54ed76d9c"
+    },
+    {
+      "file": "frontend/web/src/App.js",
+      "sha256": "88eb40a2fdf28df5fb973e16202f7bf08ae02c370df07c2ad1fc7e54aa1d9faa"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TutorPage.test.js",
+      "sha256": "6ae2fb4ef14ef0b1476370b658a3313dd8acc88e762708109f4caf9bdce8a18b"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/ai1Client.test.js",
+      "sha256": "f67544ce40dbf82bcf1d00a5233635768d1f9bdb222595a8b9e33456eaab4ea0"
+    },
+    {
+      "file": "frontend/web/src/components/family/TutorSourceLink.js",
+      "sha256": "397da0155357a5a54ab040cd7029c820b28864c211036601d2c14a0444bdcd9b"
+    },
+    {
+      "file": "frontend/web/src/family-shell.css",
+      "sha256": "96570bd143dfa997f19382c5ce986ba1f161eccb16ca3f3122167ebf39ab65a9"
+    },
+    {
+      "file": "frontend/web/src/pages/family/MistakesPage.js",
+      "sha256": "fe8e0ca11223710e9af0deddb002f6ffc296acc3a8c86c114074d4e77641ad7b"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TasksPage.js",
+      "sha256": "76a37a0bce8cc19b46de62b8bdd4d2c7eff53cbfdc2027fb21e3c38750a1c368"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TutorPage.js",
+      "sha256": "b7cc4009ab2d7ef02af49a954664a344fa234998352402126548e2ba93cb60de"
+    },
+    {
+      "file": "frontend/web/src/services/familySession.js",
+      "sha256": "76df948b66e4243897cb5ffcfdb612e025da02b4caab6351804324f310c36f14"
+    },
+    {
+      "file": "frontend/web/src/services/tutorApi.js",
+      "sha256": "fef871dd49f5d76415452941a5907a29c9645fc8aeed3419409403cf13fb3dad"
+    },
+    {
+      "file": "frontend/web/src/services/tutorCommands.js",
+      "sha256": "adc3e460b5ab213ad98f7a5f5408fc2d8747a77767da93e989a8136125d34cd1"
+    },
+    {
+      "file": "frontend/web/src/services/tutorResponse.js",
+      "sha256": "b5e850933835a7a65b244cd72da0fa6e15277f2873178886944282cc58f4f9cd"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "9880c08a472da57fb1ed9f68677c08e0d3996d4f7638ee6ddbfa975fb36bb0a6"
+    },
+    {
+      "file": "package.json",
+      "sha256": "a8a732b23fc49e8b0132f3d8f32a80d5d62f8d7d429f89875b59e7de5cce317f"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "sha256": "aff25677ba6665e0213440ac118ed02238d81a16ece70c6cdc1f2fbccd2ab484"
+    },
+    {
+      "file": "tests/e2e/t2/ai1ParentPage.spec.js",
+      "sha256": "fe853b05909b0d59d991d1375162689a692c60aa874eef4b9f855dbcca0b0caa"
+    }
+  ],
+  "boundaries": {
+    "batchGate": "OPEN",
+    "totalGate": "OPEN",
+    "defaultMode": "off",
+    "actualRemote": "EXTERNAL_IMPLEMENTATION_PENDING",
+    "activation": "EXTERNAL_ACTIVATION_PENDING",
+    "modelCalls": 0,
+    "commits": 0,
+    "pushes": 0,
+    "deployments": 0,
+    "device": "DEVICE_PENDING"
+  }
+}
