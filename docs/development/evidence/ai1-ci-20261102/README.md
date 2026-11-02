@@ -35,3 +35,31 @@ T4/T8 OPEN、Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING及REMAIND
 并检查Playwright transform cache的sourcesContent：红灯与b898b513测试源码一致，绿灯与修订源码一致。
 node --check、diff检查及新增文档链接检查通过；独立复评没有重跑E2E或冒充新的全量结果。
 讲解记录仅验证入口及目标地址，不把此用例当作讲解业务完整验收。允许提交新SHA进行CI重验，未关闭总门禁。
+
+## 后续固定提交复验
+
+DeepTutor修订`372a36842d945083993e9bfb8bb40a659a384426`经独立复评后推送，
+[Tests 41456742312](https://github.com/mflyn/DeepTutor/actions/runs/41456742312)、
+[Modular installation 41456742254](https://github.com/mflyn/DeepTutor/actions/runs/41456742254)、
+[Repository Hygiene 41456742262](https://github.com/mflyn/DeepTutor/actions/runs/41456742262)均success。
+四工作进程浏览器验收因既有外部fixture未配置而skipped，不能写成所有作业均执行。
+本轮两个macOS作业已实际通过。Ruff、format、依赖/架构检查及四Python版本均由原矩阵验证。
+本地170项包括原166项及四个fixture注册反例；17个原Python文件AST规范等价、363个原assert保留，
+独立复评核对14份证据摘要、18份当前文件及24份base摘要。具体证据见DeepTutor测试README的CI correction段。
+
+LMS `00055ba3`的[运行41455926786](https://github.com/mflyn/LMS/actions/runs/41455926786)
+已通过原Task 11，但后续T2浏览器1 failed / 70 passed：AI1 C丢响应恢复用例结尾console预期1条503却为0。
+原命令重放、单次生成及其他业务断言均通过。该新增失败保留，不替换第一次失败证据。
+本地原用例重复10次通过，未稳定复现；不能声称已证明浏览器事件丢失的确切原因。
+
+确定的同步缺口是：TutorPage在请求完成前设置pending，重试按钮此时可见但禁用；旧用例只等可见就reload。
+最小修订先注册精确同源目标POST响应，要求状态503，再等重试按钮可用及恰好一条503控制台记录后reload。
+结尾原断言、原命令路径及请求体结构和值相等、单次生成断言及所有超时保持；不伪造console、不允许零条或额外错误。
+这是在原永久失败用例中补齐同步保护，不新增测试框架，也不修改产品逻辑。
+本地`playwright test --config=playwright.t2.config.js ai1ParentPage.spec.js --repeat-each=10`
+三条原case共30次通过，24.2秒，exit0；只证明合成API的页面行为，不冒充真实Provider。
+新SHA完整CI仍须通过才可判定LMS CI收口；总门禁及全部未关闭状态保持。
+
+本次同步修订经独立只读复评通过，无测试阻断项；指出的P3证据措辞已从“字节相等”更正为
+实际postDataJSON/toEqual可证明的路径和JSON结构/值一致。独立检查源码、旧CI失败日志及本地passed标记；
+30次运行数量与耗时来源为主线程工具结果，未冒称独立重跑。原断言及默认关闭边界不变。

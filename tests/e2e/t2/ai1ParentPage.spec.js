@@ -129,8 +129,16 @@ for (const entry of ['tasks', 'mistakes']) test(`AI1 C synthetic API: ${entry} e
 });
 
 test('AI1 C synthetic API: committed generation with lost response survives real reload and only retries original command', async ({ page }) => {
-  const state = await fixture(page, { loseGenerationResponse: true }); await enter(page, 'tasks');
+  const state = await fixture(page, { loseGenerationResponse: true });
+  const failedGeneration = page.waitForResponse(response => response.request().method() === 'POST'
+    && response.url() === `${base}/api/tutor-cycles/${cycleId}/explanation-jobs`);
+  await enter(page, 'tasks');
+  expect((await failedGeneration).status()).toBe(503);
   await expect(page.getByRole('button', { name: '重试原命令' })).toBeVisible();
+  // Visibility precedes request completion; do not navigate away before observing the failure.
+  await expect(page.getByRole('button', { name: '重试原命令' })).toBeEnabled();
+  await expect.poll(() => state.consoleErrors).toHaveLength(1);
+  expect(state.consoleErrors[0]).toContain('503');
   const original = state.writes[1]; await page.reload();
   await expect(page.getByRole('button', { name: '重试原命令' })).toBeVisible();
   expect(state.writes).toHaveLength(2);
