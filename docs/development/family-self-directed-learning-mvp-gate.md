@@ -7616,3 +7616,11 @@ T9 NOT_STARTED、Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING及REM
 新增保存交付索引见[evidence/ai1-delivery-20261102](evidence/ai1-delivery-20261102/README.md)，不覆盖旧manifest和失败记录。
 T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
 T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持。
+
+### 29.33 双仓 CI 收口授权与失败保留（2026-11-02）
+
+用户批准定位、最小修复、永久反例、自查及独立复评后推送原分支重验；不合并部署或调用模型。
+LMS旧运行41446657081的Task 11链接冲突及DeepTutor旧运行41447420768的Ruff失败、
+macOS runner容量取消和下游未执行分别保留，不能以本机定向通过宣称双仓CI已通过。
+修复与证据见[evidence/ai1-ci-20261102](evidence/ai1-ci-20261102/README.md)。
+默认关闭、QUALIFIED_COUNTER_PENDING、B/D/AI-1 OPEN及§29.32全部历史/后置状态保持。

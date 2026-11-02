@@ -221,7 +221,15 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   await expect(page.getByRole('heading', { name: '跳绳 500 个' }).locator('xpath=ancestor::article'))
     .toContainText('已确认');
 
-  await page.getByRole('link', { name: '记录' }).click();
+  const tutorHistoryLink = page.getByRole('main').getByRole('link', { name: '讲解记录', exact: true });
+  await expect(tutorHistoryLink).toHaveCount(1);
+  await expect(tutorHistoryLink).toHaveAttribute('href', '/app/tutor');
+  const growthLogLink = page.getByRole('navigation', { name: '家长导航', exact: true })
+    .getByRole('link', { name: '记录', exact: true });
+  await expect(growthLogLink).toHaveCount(1);
+  await expect(growthLogLink).toHaveAttribute('href', '/app/logs');
+  await growthLogLink.click();
+  await expect(page).toHaveURL(/\/app\/logs$/);
   await page.getByRole('button', { name: '记录成长' }).click();
   const logDialog = page.getByRole('dialog', { name: '记录成长' });
   await logDialog.getByLabel('日期').fill(localDateInShanghai());
