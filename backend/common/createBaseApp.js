@@ -101,6 +101,7 @@ function createBaseApp(options = {}) {
   app.use(cors(options.corsOptions || defaultCorsOptions));
 
   // Body parsers (限制大小)
+  if (options.beforeJsonBody) app.use(options.beforeJsonBody);
   app.use(express.json({ limit: options.requestBodyLimit || '10kb' }));
   app.use(express.urlencoded({ extended: true, limit: options.requestBodyLimit || '10kb' }));
 

@@ -7,6 +7,7 @@ const { errorHandler } = require('../common/middleware/errorHandler');
 const { createAuthenticateToken, stripClientIdentity } = require('./identityMiddleware');
 const { resolveGatewayPort } = require('./port');
 const { normalizeDailyLearningPlanInput } = require('../common/utils/dailyLearningPlanInput');
+const { AI1_PATH, createAi1ProxyInput, checkAi1ProxyInput, ai1ProxyOptions } = require('./ai1ProxyInput');
 
 const logger = createLogger('api-gateway');
 const DAILY_PLAN_PATH = /^\/api\/children\/[^/]+\/daily-learning-plans\/[^/]+\/?$/;
@@ -48,6 +49,7 @@ const createApp = ({
     serviceName: 'api-gateway',
     enableSessions: false,
     rateLimitOptions,
+    beforeJsonBody: serviceHosts.homework ? createAi1ProxyInput() : undefined,
     beforeSanitize: serviceHosts.homework ? (req, res, next) => {
       if (req.method === 'PUT' && DAILY_PLAN_PATH.test(req.path)) {
         try { normalizeDailyLearningPlanInput(req.body); } catch (cause) {
@@ -68,6 +70,8 @@ const createApp = ({
   }));
 
   if (serviceHosts.homework) {
+    app.use(AI1_PATH, authenticateToken, checkAi1ProxyInput,
+      proxy(serviceHosts.homework, ai1ProxyOptions));
     app.use(DAILY_PLAN_PATH, authenticateToken,
       (req, res, next) => next(req[DAILY_PLAN_INPUT_ERROR]),
       proxy(serviceHosts.homework, { proxyReqPathResolver: req => req.originalUrl }));

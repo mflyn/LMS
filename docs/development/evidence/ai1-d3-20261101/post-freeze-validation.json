@@ -1,0 +1,47 @@
+{
+  "scope": "D3_LOCAL_FORMAL_LMS_BROWSER_ONLY",
+  "candidate": {
+    "patchSha256": "5db5c0fe209be743429b6f75895c594796342fb216ca82f1a4819c7d6e3b0102",
+    "manifestSha256": "85a9a95746eac35dec22ff9eb7b5a1430da333db0f4986167932118be04456d3",
+    "verificationSha256": "f943ddbbff840eed97b6eeb1de0a43160bd85287b4263135ef97813e71608927",
+    "fileHashesMatched": 57,
+    "privateLogHashesMatched": 16,
+    "buildFileHashesRecorded": 8,
+    "screenshotHashesRecorded": 6,
+    "patchReconstruction": "PASS",
+    "parentD2Unchanged": true
+  },
+  "documentCheck": {
+    "command": "node scripts/check-family-docs.js",
+    "exitCode": 0,
+    "log": "ai1-d3-doc-check-frozen.log",
+    "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+  },
+  "documentGate": {
+    "command": "jest --config backend/jest.family-common.config.js --runInBand --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+    "exitCode": 0,
+    "suites": 1,
+    "tests": 312,
+    "seconds": 34.347,
+    "log": "ai1-d3-doc-gate-frozen.log",
+    "sha256": "ce1032cbada3cac5765e4181136bb4d03676e53d96675c025ea7634d6b4f87db"
+  },
+  "affectedLint": {
+    "exitCode": 0,
+    "log": "ai1-d3-lint-frozen.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "diffCheck": { "command": "git diff --check", "exitCode": 0 },
+  "archiveChecks": { "knownPrivatePathHostAndKeyPatterns": "NO_MATCH", "scope": "D3 evidence directory, not full security audit" },
+  "independentReporterClarification": {
+    "version": "Playwright 1.61.1 locally inspected by independent reviewer",
+    "sourceMutation": "max-failures=1 early-stop notification is emitted via reporter.onError and counted in the outside-test summary",
+    "evidence": "exact source assertion failure; exit 1, signal null, no timeout; no other independent exception stack observed",
+    "limits": "no separate reporter event stream; no rerun; not a claim that unlogged errors are impossible"
+  },
+  "totalGate": "OPEN",
+  "actualRemote": "EXTERNAL_IMPLEMENTATION_PENDING",
+  "device": "DEVICE_PENDING",
+  "historicalFailures": "PRESERVED",
+  "deferred": "REMAINDER_DEFERRED"
+}

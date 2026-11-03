@@ -1,0 +1,267 @@
+{
+  "scope": "PARTIAL_D_NOT_FULL_ACCEPTANCE",
+  "singleRunFullGreen": false,
+  "author": {
+    "gateway": {
+      "suites": 13,
+      "tests": 82,
+      "exitCode": 0,
+      "seconds": 3.334
+    },
+    "homework": {
+      "suites": 8,
+      "tests": 170,
+      "exitCode": 0,
+      "seconds": 34.779
+    },
+    "common": {
+      "suites": 2,
+      "tests": 6,
+      "exitCode": 0
+    }
+  },
+  "independentReview": {
+    "scope": "TRANSPORT_AND_DEFAULT_OFF_ONLY",
+    "result": "TWO_P2_FIXES_REREVIEW_PASSED",
+    "issues": [
+      "chunked duplicate framing headers",
+      "non-UTF8/invalid UTF8 original-command handling"
+    ],
+    "gatewayTests": 32,
+    "privateHttpTests": 6,
+    "formalFactoryTests": 4,
+    "separateRuns": true,
+    "mutations": {
+      "groups": 5,
+      "expectedExitCode": 1,
+      "failuresPerGroup": 1,
+      "sourceFilesModified": false
+    },
+    "subsequentTestOnlyChange": "Five already-probed boundary cases made permanent; author 82-test gateway rerun"
+  },
+  "actualComponents": [
+    "Gateway",
+    "signed homework AI router",
+    "formal homework factory",
+    "AI service",
+    "temporary Mongo replica set",
+    "loopback HTTP"
+  ],
+  "substitutes": [
+    "business service only in gateway transport tests",
+    "local history fixture in default-off test"
+  ],
+  "notExecuted": [
+    "actual DeepTutor",
+    "real Provider",
+    "enabled formal browser loop",
+    "paid/human value acceptance",
+    "real device"
+  ],
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "commands": {
+    "gateway": "jest --config backend/gateway/jest.config.js --runInBand",
+    "homework": "jest --config backend/services/homework-service/jest.config.js --runInBand --runTestsByPath <eight paths listed in raw log>",
+    "common": "jest --config backend/jest.family-common.config.js --runInBand --runTestsByPath backend/common/__tests__/createBaseApp.test.js backend/common/middleware/__tests__/gatewayIdentity.test.js",
+    "docs": "node scripts/check-family-docs.js; existing familyDocumentationGate.test.js",
+    "independent": "Node22 jest --runInBand --no-cache --runTestsByPath with appropriate gateway/homework config; log sink redirected only in test process"
+  },
+  "privateLogs": [
+    {
+      "name": "ai1-d-gateway-red.log",
+      "sha256": "73331f90308aae94eeab063ec89bc2091966fa06873fb9688bb8c9f1cd9305b1",
+      "exitCode": 1,
+      "result": "author initial missing routes: 16 failed / 2 passed"
+    },
+    {
+      "name": "ai1-d-gateway-green.log",
+      "sha256": "31b1983cc33a68a1a002be668d4dad994893fbd632d161e07bf3df4a5cb7e1eb",
+      "exitCode": 1,
+      "result": "author first implementation: 4 subpath failures"
+    },
+    {
+      "name": "ai1-d-gateway-path-green.log",
+      "sha256": "974290eb274bc3db77482a3f00bd96ef7def53ac0f1fdb0764c180c63b57becb",
+      "exitCode": 0,
+      "result": "author 18 passed"
+    },
+    {
+      "name": "ai1-d-gateway-full.log",
+      "sha256": "cf5027b40a69c4033e76ebcbb7300fb9179f0257516539150c4fbdddd123e6ac",
+      "exitCode": 0,
+      "result": "author 13 suites / 73 passed before independent findings"
+    },
+    {
+      "name": "ai1-d-production-red.log",
+      "sha256": "4c3020aafff1cb64152038e56346b7e268afa5272272b2de8213ae2395f9f1f0",
+      "exitCode": 1,
+      "result": "author formal factory: 3 failed / 1 passed"
+    },
+    {
+      "name": "ai1-d-production-green.log",
+      "sha256": "147a768faee2cdc05c2d2a50cb9c16cce2923b9eced06d5c9e4b45ce6ffeb1d0",
+      "exitCode": 1,
+      "result": "author incorrect cycle.input assertion: 1 failed / 3 passed"
+    },
+    {
+      "name": "ai1-d-homework-regression.log",
+      "sha256": "8300ff216af4d5b1bc2c66acfe0efb7057473d4d6dff749d94cd8b55f6c98b4e",
+      "exitCode": 0,
+      "result": "author corrected exact preview assertion: 8 suites / 168 passed"
+    },
+    {
+      "name": "ai1-d-common-regression.log",
+      "sha256": "f004e0fd0242cfb6d88443ebe947880c4e2791450c5627462aa680dc0f5afa20",
+      "exitCode": 0,
+      "result": "author 2 suites / 6 passed"
+    },
+    {
+      "name": "ai1-d-doc-red.log",
+      "sha256": "5c5882f1928cb27a79d776d6a7dd4ee690733a1d84d521eb8697e8a2d7741aa5",
+      "exitCode": 1,
+      "result": "author 2 selected document state assertions failed"
+    },
+    {
+      "name": "ai1-d-doc-gate.log",
+      "sha256": "ca20482770f00cc63b93600aee411bcf7a29d05ee614e63ec7fcb2e5a13f1c07",
+      "exitCode": 0,
+      "result": "author 310 passed before final evidence update"
+    },
+    {
+      "name": "ai1-d-framing-encoding-red.log",
+      "sha256": "b3839713f712010dbe1f06e24b2c9dd1d25ae3f5c88e8a9280cde314eed1a108",
+      "exitCode": 1,
+      "result": "author permanent P2 red: 3 failed / 29 passed"
+    },
+    {
+      "name": "ai1-d-private-encoding-red.log",
+      "sha256": "c943e37eb770623dadb6a9ee7296166d86df382a72e6f175862be1d93a64808a",
+      "exitCode": 1,
+      "result": "author 2 selected valid-business-command encoding cases failed"
+    },
+    {
+      "name": "ai1-d-gateway-reviewed.log",
+      "sha256": "c0af5773f3db2b9eb110b3cebd24949ca383f59bc14502d366257852dc2f2598",
+      "exitCode": 0,
+      "result": "author 13 suites / 77 passed"
+    },
+    {
+      "name": "ai1-d-homework-reviewed.log",
+      "sha256": "35b1b68ced3d3152cb3120638dbc56c0efcf08db94fecd166432f15fdb054a8f",
+      "exitCode": 0,
+      "result": "author 8 suites / 170 passed"
+    },
+    {
+      "name": "ai1-d-gateway-final.log",
+      "sha256": "5bf4b7f36872db9c8c158fe4dcadc8f02608d389b5c34ccc476f3190b0ee5381",
+      "exitCode": 0,
+      "result": "author 13 suites / 82 passed after five probe cases became permanent"
+    },
+    {
+      "name": "ai1-d-independent-gateway-targeted.log",
+      "sha256": "2d82771b7cb883aa9c36bc11028c513db505e969769d0f9c69252ea70b2ce7d5",
+      "exitCode": 0,
+      "result": "independent initial related 4 suites / 52 passed; later probes exposed gaps"
+    },
+    {
+      "name": "ai1-d-independent-production-targeted.log",
+      "sha256": "3d940dd0b8fbc484bd842603418f0ec0e72fc6f5c1bf2d60c0a0841b6539e11e",
+      "exitCode": 0,
+      "result": "independent formal factory 4 passed"
+    },
+    {
+      "name": "ai1-d-independent-encoding-red-check.log",
+      "sha256": "f306092cc1b0d8bdbe3e709b31fc15b8dce9fa4f8b047f20d8905cc2959d5003",
+      "exitCode": 1,
+      "result": "independent red run also had log-directory EPERM; not green evidence"
+    },
+    {
+      "name": "ai1-d-independent-encoding-red-check-clean.log",
+      "sha256": "d864783ad720aaa412769161fd6bca9492ecb66412a80997b276b078bbadfd46",
+      "exitCode": 1,
+      "result": "independent 2 selected encoding red cases"
+    },
+    {
+      "name": "ai1-d-independent-gateway-boundary-red.log",
+      "sha256": "5e0964eee8c7ae8b030e51c74f63f456e77b01e4cd3185f885fd8677d94e0870",
+      "exitCode": 1,
+      "result": "independent 3 selected red cases / 1 passed"
+    },
+    {
+      "name": "ai1-d-independent-gateway-green.log",
+      "sha256": "5a82be5210950fd4e7c625caa8686bf8164c4dfc3730008582902fb10c92d67d",
+      "exitCode": 0,
+      "result": "independent 32 passed"
+    },
+    {
+      "name": "ai1-d-independent-private-green.log",
+      "sha256": "5f65cdbdd21beacc65236ae2b8c537aa44731483d5cf27e17ae1e9d716107014",
+      "exitCode": 0,
+      "result": "independent 6 passed"
+    },
+    {
+      "name": "ai1-d-independent-input-probes-fixed.log",
+      "sha256": "71933abdf42200c6f80406b7ec3121724c9a3c4ca3727770d2bfebb0e9dbf1ed",
+      "exitCode": 0,
+      "result": "independent original raw-byte probes passed"
+    },
+    {
+      "name": "ai1-d-independent-gateway-chunked-mutation.log",
+      "sha256": "ff2864ba2b91ef35e6e688cbc541584d84b7e133c3202092ff422eb337f0fce0",
+      "exitCode": 1,
+      "result": "independent in-memory removal: one permanent test failed as expected"
+    },
+    {
+      "name": "ai1-d-independent-gateway-charset-mutation.log",
+      "sha256": "27a44023d1a345fa1eb6735e8d2cea5a8ee09c5bf7a47102a024dc0964318ae1",
+      "exitCode": 1,
+      "result": "independent in-memory removal: one permanent test failed as expected"
+    },
+    {
+      "name": "ai1-d-independent-gateway-fatal-mutation.log",
+      "sha256": "5653b7f51545fe63ad8b3c6da5223c039d5254737f994c53aaa3aede9eec37b1",
+      "exitCode": 1,
+      "result": "independent in-memory removal: one permanent test failed as expected"
+    },
+    {
+      "name": "ai1-d-independent-private-charset-mutation.log",
+      "sha256": "58cf6dddb8d3065e9379ce61ccca8d1adc2b0afd18e35be0df086916dd800d4a",
+      "exitCode": 1,
+      "result": "independent in-memory removal: one permanent test failed as expected"
+    },
+    {
+      "name": "ai1-d-independent-private-fatal-mutation.log",
+      "sha256": "dacc6292ee8c1dc9ab743eda77543a6a57254b07dc9ae502aa9ff6764a15d291",
+      "exitCode": 1,
+      "result": "independent in-memory removal: one permanent test failed as expected"
+    }
+  ],
+  "diagnosticObservations": [
+    {
+      "name": "ai1-d-independent-input-probes.log",
+      "sha256": "1bcc1d7a66690b9d4f19135e00db80f4c81cb7617cb00ced1938f3911b6688ce",
+      "result": "pre-fix defect observed; not a passing assertion run"
+    },
+    {
+      "name": "ai1-d-independent-chunked-framing.log",
+      "sha256": "7b09e983bec9d40dfb38dbdce0ab2cc3ea65bf29ca27a30303af3decff9e650c",
+      "result": "pre-fix defect observed; not a passing assertion run"
+    }
+  ],
+  "preserved": [
+    "AI0 human review required; budget not transferred",
+    "B/AI1 OPEN",
+    "T4/T8 OPEN",
+    "T9 NOT_STARTED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "T5-NB-001/002 OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED"
+  ]
+}

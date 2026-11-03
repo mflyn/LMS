@@ -21,6 +21,7 @@ import TasksPage from './pages/family/TasksPage';
 import GrowthLogsPage from './pages/family/GrowthLogsPage';
 import KnowledgePointsPage from './pages/family/KnowledgePointsPage';
 import MistakesPage from './pages/family/MistakesPage';
+import TutorPage from './pages/family/TutorPage';
 import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
 import RewardsPage from './pages/family/RewardsPage';
@@ -56,6 +57,7 @@ const AppRoutes = () => (
           <Route path="logs" element={<GrowthLogsPage />} />
           <Route path="points" element={<KnowledgePointsPage />} />
           <Route path="mistakes" element={<MistakesPage />} />
+          <Route path="tutor" element={<TutorPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="reminders" element={<RemindersPage />} />
           <Route path="rewards" element={<RewardsPage />} />

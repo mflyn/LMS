@@ -6727,3 +6727,900 @@ CI 以 PR 最新 SHA 的实际结果为准，本节不预先声明通过，也�
 `d9a2cc5129adc92b554026380173f63865ea94be208cc525a3034df1add979c6`。
 全仓 ESLint、文档状态与 diff 校验通过。授权状态增量独立只读复核未发现新增 P1/P2；
 该复核不冒充真实恢复重跑，历史实例证据与原候选继续保留。
+
+## 29. AI-1 最小接入设计候选（2026-10-31）
+
+本节及§29.1保留当时状态；2026-11-01复审归档与当前任务盘点见§29.2。
+
+用户同意三项方向：受限单 Provider、同孩子任务/错题的家长确认纯文字、保留原文的人工修订新版本。
+本轮只授权设计/API/测试稿和自查后提交评审，不授权业务编码、模型调用、Git 提交推送或部署。
+[设计](../superpowers/specs/2026-10-31-family-ai1-minimal-design.md)、[API](../api/family-ai1-api.md)、
+[测试方案](family-ai1-test-plan.md) 共同构成 AI1-MIN-1 候选。
+
+| 项目 | 当前状态 |
+| --- | --- |
+| AI-0 Provider 结论 | CONDITIONAL_CONTINUE_PROVIDER_SCOPE；家长确认人工修订后可备课，不代表完整页面/Agent/K12 |
+| AI-1 方向选择 | 用户已确认；只授权设计落文 |
+| AI-1 详细设计 / API / 测试设计 | READY_FOR_REVIEW |
+| AI-1 实现与永久用例执行 | NOT_STARTED / NOT_EXECUTED |
+| AI-1 独立评审 / 总门禁 | PENDING / OPEN |
+| AI-1 付费验证 / 外部部署 | NOT_AUTHORIZED；AI-0 预算不转移 |
+
+费用预留、共享家庭额度及跨期未知占用、实时权限、原 actor/映射恢复、人工修订新版本和精确审核 CAS
+均有待实施永久反例；现有 Tutor v1 schema 保留，不伪造最小 profile 机器校验已完成。
+AI-0 原始错误/修订及用量证据保留本地；本节不是重新执行或独立复验。
+作者自查已补齐三个契约歧义：全局发送槽跨 worker/租约仍受 unknown 约束；每个 Cycle 仅一个 Job、
+终态失败不可换 key 原地重开；远端 status/result/usage/sendClaimed 必须满足闭合组合。
+相关场景已写入测试方案，28 项均为 PLANNED / NOT_EXECUTED，不冒充永久反例已经运行。
+
+本地文档验证：首次 `npm run docs:family:check` 因本 worktree 缺少 dotenv 退出 1；
+通过 `NODE_PATH` 指向原项目已有 node_modules 后，原命令退出 0（Node v26.9.0，仅静态文档校验，
+不是规定 Node22 产品运行验收），未安装依赖/修改 lockfile。输出为 23 基线文档、4 自主学习文档、
+16 契约探针、35 价值门禁探针、8 旧 AI 文档、22 旧 AI 契约、388 fixture cases、38 需求通过。
+旧校验器没有验证新的 ai1-min-v1 字段/状态语义；新三稿以作者一致性自查和本次评审为依据。
+另对本批 9 份 Markdown 进行路径、代码围栏、JSON 示例、尾空格及测试 ID 重复检查：
+356 个本地文件/目录目标、68 个 JSON 示例、28 个唯一测试 ID 通过；路径检查不等于所有锚点验证。
+`git diff --check` 通过。未运行业务测试/浏览器/外部 Provider；未产生独立评审通过或门禁关闭结论。
+
+T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING、高级恢复/新回收 REMAINDER_DEFERRED 全部保留。
+不因本次设计关闭其他门禁，不自动启动 AI-2/3/K12-1，不将后置能力记为完成。
+
+### 29.1 首轮三项契约缺口修订与文档复审（2026-10-31）
+
+用户授权修订首轮复审的1项P1、2项P2，补测试设计后复审；仍仅本地文档工作。
+本次只修改设计/API/测试方案及本节，不改业务、机器schema或旧fixture，不执行模型、Git写入或部署。
+
+| 问题 | 修订及对应待实施用例 | 本轮结论 |
+| --- | --- | --- |
+| AI1-R1 / P1：恢复旧accepted可再次claim | 恢复隔离优先于accepted/sending/旧终态及空库；PUT/GET拒绝提供可发送/可结算依据，worker准入前阻断；不只限制退款；AI1-RECOVER-06/07/08 | 文档缺口已修正；未证明运行时行为 |
+| AI1-R2 / P2：预留后延迟发送未重新核价 | 固定sendNotAfter和原授权上界，本地发送/恢复、远端claim及transport前复核；未发送CAS胜出才释放，已claim/未知不退款；AI1-BUDGET-07/08/09 | 文档缺口已修正；未实施计费验证 |
+| AI1-R3 / P2：math与现有自由文本学科不兼容 | ai1-subject-alias-v1精确映射数学/math，保留来源原值，拒绝未知/模糊值，不信任客户端覆盖；AI1-SCOPE-03 | 文档缺口已修正；未实施来源集成 |
+
+本轮作者修订后文档复审：上述三项在设计、API状态/错误/持久字段和测试方案之间一致；
+未发现新的阻断性契约矛盾。另核对未发送拒绝与claim竞争、恢复隔离与旧终态重放优先级、
+正常连续重启/报价过期后历史成功读取/中文数学来源正向对照，未靠全部拒绝代替恢复或兼容。
+对任意未声明存储回滚的自动识别不作能力承诺；已恢复或连续性无法证明时保持禁发，
+解除恢复隔离/灾备重启仍不在AI-1本期范围，不扩建高级恢复工具。
+
+验证：复用原项目已有node_modules，原 `npm run docs:family:check` 退出0，
+旧22份AI契约和388个fixtures继续通过；`git diff --check`退出0。
+三份候选的9个本地引用目标、1个JSON示例、代码围栏/尾空格及35个唯一测试ID检查通过。
+测试数量由28增至35，只增加测试设计；全部PLANNED / NOT_EXECUTED，未做业务、HTTP、浏览器或变异执行。
+此前dotenv失败和原28项检查结果保留为历史，不改写成当前35项已运行。
+
+此为修订后的作者文档复审，不冒充独立运行复验或用户批准。AI-1仍READY_FOR_REVIEW / DESIGN_REVIEW_PENDING，
+独立评审PENDING、总门禁OPEN；AI-0人工审核限制、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、历史失败、T5-NB-001/002 OPEN_NONBLOCKING及REMAINDER_DEFERRED均不变。
+
+### 29.2 三项修订复审结论归档与任务盘点（2026-11-01）
+
+用户要求“记下来任务盘点一下”。本次将上一轮只读文档复审结论归档，不把该要求解释为
+详细设计批准、编码、模型费用、服务器操作或Git提交推送授权。
+
+**归档结论：DOCUMENT_REVIEW_PASS。** AI1-R1（旧accepted恢复后重复发送）、AI1-R2（延迟发送报价）、
+AI1-R3（数学学科别名）三项修订在设计/API/测试方案中闭环；复审未发现新增阻断性契约问题或范围扩大。
+该结论只解决文档审查意见，不是运行缺陷修复证据。35项用例仍PLANNED / NOT_EXECUTED，
+实现NOT_STARTED；用户设计批准/编码授权待取得，AI-1总门禁OPEN。
+上一轮实际执行原文档检查及diff检查通过，三稿9个本地目标/1个JSON示例/35个唯一用例ID检查通过；
+这些静态检查不替代新契约行为验证，也不冒充独立HTTP/浏览器/模型复验。
+
+| 当前轨道 | 已有结论 | 剩余任务及进入条件 |
+| --- | --- | --- |
+| AI-0 | 单Provider三组小样本，家长确认人工修订后可备课，有条件继续 | 保留原文/错误/人工修订；AI-1工程验收前核对并归档脱敏摘要；不追加调用，不宣称Agent/K12或教学效果验收 |
+| AI-1 设计 | 三项方向已确认，三项契约修订文档复审通过 | 用户批准详细设计/API/测试方案并明确编码授权；不要求每个内部小步骤重新审批 |
+| AI-1 A批 | 未开始 | 版本化闭合schema/fixtures、最小本地模型、实时权限、费用预留事务、人工修订/审核CAS及模拟闭环；补对应永久反例，不调用模型 |
+| AI-1 B批 | 未开始 | 受限持久operation HTTP、发送/报价/恢复隔离、未知结果收敛与故障注入；替身结果标明，外部服务改动/部署单独授权 |
+| AI-1 C批 | 未开始 | 家长任务/错题双入口、完整输入和费用预览、候选修订/审核、原actor重登恢复及账号隔离；不做孩子学习包 |
+| AI-1 D批 | 未开始 | 正式HTTP/浏览器合成闭环、受影响回归、自查/聚焦评审及证据归档；真实DeepTutor/付费Provider与替身分开验收，付费需重新核价限费并单独授权 |
+| T4 | 工程/服务器合成证据已归档，整体OPEN | M01–M08人工/真机、负责人确认及总门禁验收批准；不因后续任务完成自动关闭 |
+| T8 | 本地准备及限定合成恢复已验收，总门禁OPEN | NAS暂缓；真实采集/上传失败传播、目标Ubuntu兼容、登录/浏览器/真机、隔离恢复及回滚、RPO/RTO待验；删除前备份恢复受v1证据不足阻断，报告阻断不扩展高级恢复 |
+| T9 | NOT_STARTED | T8前提满足后，按原规程准备无干预基线及四周家庭验证；AI辅助与基础观察分开，不补造基线 |
+| AI-2 / AI-3 / K12-1 | 未启动 | 分别按原路线及实际家庭价值另行选择/授权；不是本轮AI-1任务 |
+
+本盘点依据本地计划及Gate，不重新核验远端PR/CI/服务器状态。T8此前专用分支交付授权见§28.4，
+不以计划中较早“尚无Git授权”的文字覆盖后来的授权；也不据此声明当前PR已合并或CI通过。
+当前AI-1文档增量仍在本地工作区，未提交或推送。Git交付不代替业务/设备验收。
+
+建议下一步先批准AI-1设计并授权A批本地无模型实现；A/B/C/D沿用同一设计和既有测试工具，
+各批完成自查、聚焦评审及必要修复，不增加审批或测试框架。本次盘点不自动启动任何批次。
+实现时分别统计内部HTTP和Provider请求数，避免一层校验缺失被下一层拦截掩盖；
+正常重启、有效历史终态和中文数学来源必须保留正向对照。
+
+AI-0人工审核限制、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持不变。
+本轮文档状态脚本及git diff --check通过；仅验证发送回读和文档，不冒称新增业务测试或独立复评。
+
+### 29.3 AI-1 设计批准与 A 批本地无模型实现（2026-11-01）
+
+用户已明确批准 AI1-MIN-1 详细设计、API 契约、测试方案，并授权 A 批本地实现、永久反例、
+测试、自查及独立评审。该批准替代§29.2中“设计待批准/A批未开始”的当时状态，历史记录不改写。
+本批状态 A_ACCEPTANCE_PENDING，AI-1总门禁OPEN；不包含B/C/D启动、模型调用、Git提交推送或部署。
+
+交付范围：
+
+- 新增独立 `ai1-min-v1` 闭合schema及六组fixture，接入既有文档校验；旧Tutor v1原样保留。
+- homework本地Cycle/Job/Artifact/Command/Reservation/共享Account及发送槽；不新建常驻服务。
+- 先实时家长及家庭/孩子授权，再幂等重放；task/mistake窄来源读取边界与精确数学别名。
+- 冻结输入/外发预览和价格上界；同事务预留家庭与实验额度、Job/remoteOperationId、Cycle和幂等结果。
+- 日期/月/时区变动不清除未知占用；按实际结算期计费；事务失败不留孤立Job/预留。
+- 本地模拟候选→人工修订→共管按所见版本审核；原文/hash/派生链及首次审核保留。
+- 内部claim/unknown/outcome领域端口仅用于本地模拟组合，无路由、worker、Provider或模型凭据装配。
+  `applyOutcome`不是公开/远端协议验证器；B批仍须验证远端凭据、闭合envelope、claim证据和持久恢复。
+
+**验证边界：**真实Mongo临时副本集；来源reader和结果为明确合成替身。没有真实HTTP/浏览器或DeepTutor验收。
+Provider完整请求token计数、实际发送、未发送终态释放、报价跨截止点远端竞争、原actor恢复/列表及生产装配仍属B/C/D，
+不能以内部模拟端口通过宣称这些能力完成。AI-0原有10元预算不转移；合成价格仅供整数算例。
+
+自查修订：禁用时不先访问来源；同key重放在实时鉴权后直接读原持久结果，来源删除/关闭生成不妨碍历史读取；
+Job重放读取当前状态，不返回陈旧reserved快照。补齐缺唯一索引拒绝、共享额度原子性及跨期账本保护。
+独立首评提出URL非`://`形式绕过的P2及两项测试保护缺口（首次同命令竞争、无孤立版本断言）。
+已补五个URL永久反例，先红灯5失败/15通过，再修复；数学比例/冒号/除法正向样例保留。
+两项保护缺口已补首次空记录竞争及按胜者核对版本数、指针、原文hash、状态/首次审核。
+第二轮独立复核继续发现中文冒号/方括号紧邻`//`的绕过，新增两项永久反例先红灯2失败/21通过，
+再移除网络路径检测的前缀字符限制。最终独立复核判定该P2已修复、未发现新增A批阻断问题；
+独立执行契约套件23项通过（Node24.22.1），并以独立规范JSON重算固定JCS摘要一致。
+两项测试保护缺口经独立源码复查通过，开发者在Node22.15.0执行最终两个定向套件48项全部通过。
+不把独立契约23项、开发48项与跨A/B/C/D矩阵35项混为同一计数。
+精确学科别名两项内存变异（只接受math、改为子串匹配）均被反例拦截，仓库源码未改写。
+
+历史失败保留：最初新模块未实现的缺模块红灯、合成User夹具缺username导致15失败、
+禁用分支错误优先级导致1失败/14通过、上述URL5项红灯；均未删除或跳过对应测试。
+全量首次因worktree日志写入EPERM停止，第二次因旧测试相对node_modules依赖未接通停止；
+使用受控本地执行与已有依赖链接后运行原命令，未下载安装、未放宽断言或增加超时。
+Node24的早期本地结果仅作开发记录，正式本轮验证使用已有Node22.15.0及Mongo7.0.14。
+独立契约复核的Node24与开发Node22分别列明；未声称独立评审运行了全部家庭后端回归。
+本批复用已有Ajv，将它及锁文件中相同版本的传递依赖标为生产依赖，不引入第二套验证框架。
+
+最终验证与交付（不覆盖上述历史失败）：
+
+| 验证 | 实际结果 | 结论边界 |
+| --- | --- | --- |
+| A批两个定向Jest套件，Node22.15.0 | 48 passed，退出0 | 本地领域/契约，不是HTTP或模型验收 |
+| 原 `npm run test:family-regression` | 161 passed / 2 failed suites；4980 passed / 2 failed tests；退出1 | 单轮全量不是全绿，原失败记录保留 |
+| 两项全量失败归因 | releaseBuildInput/checkGitClean均为PATH命中旧x86 Git，spawn error -86 | 环境问题；不改产品、断言或超时 |
+| Node22专用PATH + 本机ARM Git，对两项失败、文档门禁及AI-1重新验证 | 5 suites / 461 tests passed，退出0 | 修正环境后的定向复验，不冒充重跑全量 |
+| 独立复核 | 最终契约23项通过；URL P2修复确认；两项测试保护缺口源码复查通过 | 独立Node24与开发Node22证据分别保留 |
+| 既有 `docs:family:check` | 23份AI契约/412个fixture及其余基线通过，退出0 | 新三稿链接、结构及APPROVED状态已纳入 |
+| 受影响ESLint、`git diff --check`、新文件格式/JSON及依赖锁闭包 | 通过 | Ajv版本未升级；没有安装新依赖 |
+
+候选与证据索引见[本地A批归档](evidence/ai1-a-20261101/README.md)，绑定基线、完整候选补丁和文件SHA-256。
+原始运行日志保留本机私有归档，仓库只保存脱敏结果、日志hash、独立评审摘要和源码补丁。
+临时依赖链接仅用于验证，收尾移除，不修改原项目依赖目录。
+作者最终自查与独立复核未发现新增A范围阻断缺陷；URL P2为FIXED_REVIEW_PASS，批次仍A_ACCEPTANCE_PENDING。
+本批不具备“单次全量退出0”证据；不把环境修正后的局部复验合成为历史全量全绿。
+尚未执行的B/C/D、真实HTTP/browser、实际Providertoken计数/付费限额及外部持久operation仍待后续授权和验收。
+
+AI-0人工审核/已知错误修订后才可使用、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、历史失败及REMAINDER_DEFERRED全部保留。
+
+### 29.4 A 批验收与 B 批启动（2026-11-01）
+
+用户复审通过并批准 A 批验收；A_ACCEPTED。URL P2、首次同命令竞争及无孤立版本断言两项保护缺口 CLOSED。
+本条替代 §29.3 的当时待验收状态，不改写冻结候选、历史失败或其验证摘要。
+冻结基线 `1d49abb11580172fa86a7e282cb31588bf682027`；候选补丁 SHA-256
+`9af97f1648340a6938597e7f79c950a1f6fce5dbbe89536303afae2fc36d214d`，27 文件及10份历史日志哈希匹配，反向补丁检查通过。
+本轮独立复验 Node22.15.0/Mongo7.0.14：A 两套件48项通过；包含两项历史失败、文档门禁和A的五套件461项通过；两者重叠，不相加。
+独立原始日志仅存本机：`ai1-a-independent-review-20261101.log`，SHA-256
+`3a2c6d3089983b1ff4aef025e24636ccb886bed92143f4627a70ef66f5458951`；
+`ai1-a-independent-five-suites-20261101.log`，SHA-256
+`a6700ec3524d94c264d44de9c44bb36d361a789fea8ff906ca9c0582d42dff51`。
+文档门禁和diff检查通过。历史全量161通过/2失败套件、4980通过/2失败用例、退出1不变；定向通过不是全量全绿。
+后续修改文档或代码属于B候选，不要求当前文件继续等于历史A清单；A以原补丁及清单重建核验。
+
+B_IMPLEMENTING：LMS受限operation client、原命令恢复、可靠终态费用处理及本地真实HTTP故障注入。
+复用既有Jest/临时副本集和回环HTTP；来源及Provider只用合成替身。DeepTutor外部服务修改/部署另授权，
+本轮不得以operation替身通过宣称正式DeepTutor接入完成。AI-1总门禁OPEN，C/D尚未启动。
+AI-0人工审核限制、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持不变；不调用真实模型、不提交推送或部署。
+
+### 29.5 B 批 LMS 本地候选、自查与独立首评（2026-11-01）
+
+B_LOCAL_REVIEW_PENDING / EXTERNAL_IMPLEMENTATION_PENDING；B批和AI-1总门禁均未关闭。
+已完成LMS侧受限HTTP client、持久请求摘要、原actor恢复/发现、可靠失败终态费用处理、
+原始32 KiB解析入口和独立签名身份路由工厂；生产server/Gateway没有装配AI-1。
+client不继承代理、不重定向/重试；真实模型调用0。临时Mongo副本集和回环HTTP为真实，
+来源、远端operation与Provider为合成替身；Mongo协议替身不是DeepTutor实现。
+重建LMS/远端HTTP工厂仅证明本地持久映射与查询，不宣称实际进程崩溃/远端worker验收。
+
+作者自查：稳定错误需适配现有AppError；孩子HTTP夹具补完整签名字段；重复unknown不重写费用行。
+两条新增红灯暴露halt后旧reserved仍可claim、持久摘要发送后才比较，已修复并保留2失败/58通过的红灯。
+新增未知恢复/月底费用/发送前过期等测试与既有A测试共同运行，不删除或跳过A断言。
+列表正文保护曾使用短数字子串，随机ObjectId命中造成1失败/84通过；改为精确字段集合和完整正文断言，保留该失败。
+
+独立首评发现P1：已观察远端sendClaimed=true后，后续矛盾failed_not_sent可退款；
+以及P2：重新序列化大小不能覆盖原始空白/转义JSON。另指出详情读模型及截止点竞争测试缺口。
+修复后持久remoteClaimObserved且在退款事务内检查；重启和并发迟到退款反例保留原预留/槽并暂停新发送。
+raw parser须先于通用parser，未验证原字节的写请求拒绝；有空白/Unicode转义超限与错误装配永久反例。
+Cycle详情以同一只读快照返回版本链/Job，新增断言；截止点测试用提交前屏障分别强制dispatch/释放胜出。
+独立评审发现项已本地修复并复验，状态FIXED_LOCAL_REVERIFY，等待下一轮独立复审，不写成独立复审已通过。
+独立评审自行运行领域/client两套件60项通过；其HTTP复验因日志EPERM未获干净结果，单独保留。
+开发受控执行使用既有依赖解决日志写入上下文，没有修改日志/权限/测试断言来隐藏失败。
+HTTP超限测试又暴露Axios会规范化JSON字符串；固定transformRequest并显式发送原字节后验证，保留1失败/90通过历史。
+针对性内存变异验证：移除退款事务的remoteClaimObserved检查，两条P1反例均失败；移除raw parser字节限制，
+P2原始JSON超限反例失败（实际201对预期413）。两组均退出1，未选中的用例不计覆盖；未修改源码、未跳过正式回归。
+变异后31个候选文件哈希不变，正常8套件回归仍以未变异源码的540通过证据为准。
+
+最终相关回归：Node22.15.0/Mongo7.0.14/ARM Git，8 suites / 540 tests passed，退出0，58.721秒。
+范围为AI-1四套件、文档门禁、releaseBuildInput、checkGitClean、learningSource；不是全仓或家庭后端全量。
+A历史全量161通过/2失败套件、4980通过/2失败用例、退出1仍保留；不以本批定向通过改写。
+受影响ESLint、docs:family:check和diff检查通过；冻结候选与脱敏证据见
+[B批本地候选](evidence/ai1-b-20261101/README.md)。
+
+后续阻断：尚未取得DeepTutor现有本地源码及外部服务修改授权，不能实现/验证真实持久operation和worker。
+仍缺远端报价/claim/transport截止点、完整Provider请求token上界及重试关闭、存储连续性准入、
+专用凭据启用及正式装配；不可用替身的硬编码隔离/计数顶替。已向用户询问本机源码与限定授权，不访问/修改外部服务。
+AI-0人工审核限制、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED不变，不提交推送或部署。
+
+### 29.6 B 批本地复审通过及问题关闭（2026-11-01）
+
+用户复审通过并授权本次本地收口：B_LOCAL_REVIEW_PASSED / EXTERNAL_IMPLEMENTATION_PENDING。
+远端 claim 矛盾退款 P1、原始 JSON 大小 P2 CLOSED。B批整体和AI-1总门禁仍OPEN；不自动启动C/D。
+本条替代§29.5的当时待复审状态，不改写历史失败、原冻结补丁/manifest/verification。
+原补丁 SHA-256 `1c7d7707777ef0ee4cf67c9991c5c7d1e416bfda01bf2f8ef4472632c9c25fc9`；
+31文件/16历史日志匹配，反向补丁检查通过。独立复验与用户批准绑定见
+[关闭记录](evidence/ai1-b-20261101/closure.json)。原始日志本机私有保存，仅归档文件名和哈希。
+
+独立复验：8 suites / 540 tests passed，65.74秒，范围与§29.5相关回归相同，不是家庭全量。
+移除claim退款检查，两条永久反例失败；移除raw字节限制，一条HTTP永久反例失败；两组退出1为预期变异结果。
+三版本详情额外探针通过，已按本次授权迁入现有ai1Service永久套件，并加强拒绝读取后的AI集合零写入断言。
+本次收口增量自查：相同8套件542项通过，退出0，59.725秒；新增详情用例及本地关闭状态保护各1项。
+倒置详情版本排序的内存变异触发永久用例失败（退出1），受影响ESLint、文档和diff校验通过。
+增量哈希/命令/日志见[收口验证](evidence/ai1-b-20261101/closure-validation.json)，不冒充独立复审或家庭全量。
+只新增测试/记录，不改业务实现；原冻结包仍代表复审时的候选，本次增量另记验证，不能要求新文件继续等于旧清单。
+真实部分为临时Mongo副本集、Express签名身份路由和Axios回环HTTP；远端operation/Provider仍为合成替身，非DeepTutor。
+历史家庭全量161通过/2失败套件、4980通过/2失败用例、退出1不变，不以定向通过写成全量全绿。
+
+#### B 剩余任务与前置条件
+
+1. 先取得DeepTutor 1.7.0本机源码检出路径、固定版本/依赖信息，以及仅本地修改外部服务并用Provider替身验证的明确授权。
+   当前没有该授权与可核验源码，不操作现有独立运行环境；不得临时替换为LMS直连模型。
+2. 在既有服务内实现/核验受限持久operation：存储事务、唯一remoteOperationId、持久单次claim、终态一致性，
+   覆盖真实进程重启/故障窗口，旧accepted恢复须拒绝再次发送；不能只重建替身工厂。
+3. 核验现有Provider完整序列化输入计数、输出上限、关闭思考、全部底层重试与重定向；
+   接收/claim/transport边界复核报价和sendNotAfter。先无模型测试，无法证明费用上界则保持停用。
+4. 完成专用非管理员凭据/路径限制、固定目标与TLS、两端存储连续性和默认关闭准入的合成验证；
+   本地可使用合成凭据，不读取或改动真实密钥。真实凭据配置、环境修改、部署或付费调用另行授权。
+5. 使用真实LMS client与上述实际远端实现（Provider仍可替身）做HTTP丢响应/重启/终态冲突/隔离及费用验收，
+   明确实际与替身范围后再提交B批验收。正式应用/浏览器整体装配属D批，不以本地B记录代替。
+
+AI-0必须人工审核、错误修订后使用，原10元授权不转为AI-1预算；T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、高级恢复/新回收REMAINDER_DEFERRED保持。
+本次无真实模型调用、无Git提交推送、无部署；只关闭上述本地缺陷，不关闭B或AI-1总门禁。
+
+### 29.7 AI-1 C 批本地页面与聚焦修订（2026-11-01）
+
+用户持续目标已明确授权LMS本地B/C/D开发与合成测试，替代§29.6当时的C/D启动限制。
+C_IMPLEMENTING / C_LOCAL_VERIFYING；B真实远端仍EXTERNAL_IMPLEMENTATION_PENDING，D正式装配未完成，AI-1总门禁OPEN。
+用户说明Ubuntu存在DeepTutor源码；尚缺固定源码版本及外部本地修改的明确授权，没有访问服务器或复制运行数据。
+
+本地页面新增任务/错题双入口、手工脱敏输入与完整外发预览、显式费用确认、原命令保存/重试、
+本人未完成任务发现、人工修订/批准/拒绝/关闭、版本链回看。无孩子AI入口，不读媒体/OCR，不写源任务或奖励。
+原命令按parent/family/child隔离；登出/切换清理损坏暂存，失效重登仅显式续接。响应须验证信封和动作对应关联后才能清命令。
+组件测试的API为mock；新增Playwright三用例使用真实构建页面及全部API合成替身，不能当作正式HTTP/DeepTutor验收。
+
+首轮独立评审提出StrictMode存活P1、未核验成功响应误清命令P2、同身份focus丢草稿P2。
+三项本地修订先有6条红灯，再通过定向复验；强化所有6类动作关联、真正切换到第二孩子及closed只读场景。
+自查补齐已持久修订原因的只读投影与显示（DB及UI分别先红）；结构化错误之外的400/404/409/413不再误清命令（4条先红）。
+针对性变异中曾发现迟到成功夹具因字段不完整被响应校验拦截，代次变异未被测试发现；
+保留该幸存记录，改用完整合法成功夹具后，移除代次检查会触发永久反例失败。不可仅以退出码代替缺陷断言。
+
+第二轮独立复评还发现非字符串error.code查表可误清命令，以及切孩子用例未断言迟到回调零收尾/零读取。
+前者补字符串类型校验及三条先红后绿；后者补finishTutorCommand零调用和detail/cycles/jobs各仅初始一次，
+合法迟到结果下将current恒真后测试准确失败。两轮幸存变异和失败均保留，不冒充首次即有完整保护。
+最终独立复验2 suites / 49 tests通过（3.484秒）；独立移除类型检查3项失败、current恒真1项失败，均退出1为预期。
+上述本地问题修订及聚焦复评通过，不等于C/B批或总门禁验收。
+
+最终开发验证：标准前端test:ci 59 suites / 788 tests通过（46.491秒）；定向2套件49项通过（2.643秒）。
+后端四个AI-1套件92项通过（17.743秒）；CI=true前端构建通过；浏览器两入口与丢响应真实刷新三项通过（3.1秒）。
+页面在1280/768/390宽度检查无横向溢出；768布局不是iPad真机验收，DEVICE_PENDING保持。
+另保留一次误用CRA裸入口导致旧学校版测试失败，以及后端HTTP套件日志目录EPERM失败；
+更正为原package.json的test:ci入口和受控本机合成测试上下文后验证，不修改legacy隔离规则或业务断言。
+后端定向通过不是家庭全量通过；历史161/2套件、4980/2用例失败快照继续保留。
+
+当前候选与脱敏证据见[C批本地页面快照](evidence/ai1-c-20261101/README.md)，原B冻结包保持不变。
+C_LOCAL_UI_REVIEW_PASSED仅覆盖本地页面及聚焦缺陷；正式API装配、真实HTTP/远端、完整35项跨层矩阵、
+付费和人工价值验收仍未齐备，不提前关闭C批、B批或AI-1总门禁。
+AI-0必须人工审核、错误修订后使用，原10元不转为AI-1预算；T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持。
+没有真实模型调用、Git提交推送合并或部署；正式服务装配/外部operation、付费与人工价值验收仍待完成或授权。
+
+### 29.8 AI-1 D 批传输与默认关闭装配（2026-11-01）
+
+D_IMPLEMENTING / SEND_ACTIVATION_PENDING；B仍EXTERNAL_IMPLEMENTATION_PENDING，AI-1总门禁OPEN。
+本批接入正式 Gateway 与 homework 工厂的公开 AI 路径，不启用发送，不改真实环境配置。
+Gateway 原始 JSON 上限32 KiB（解压后），不因清洗数学文本/未知键改变原命令；保留普通鉴权/限流，
+不代理内部 operation，剥离调用者专用凭据。homework 正式服务默认 disabled/未证明连续性，
+授权记录可读，新建/生成拒绝；普通任务签名不重复消费。只查询收敛/发送启用仍待后续实现，不能冒充回滚完整验收。
+
+作者红灯：Gateway未接入时18项中16失败/2通过；第一次接线4条子路径404，修正边界匹配后18项通过。
+扩大压缩/格式/路径和全部命令后，Gateway全13套件73项通过（3.345秒）；共享基础应用/身份2套件6项通过（0.777秒）。
+正式工厂测试首次3失败/1通过；实现后发现夹具错误地断言cycle.input，按已批准详情投影改为精确比较preview，
+保留两轮失败。最后AI1五套件及启动/计划/生命周期共8套件168项通过（32.691秒），受影响ESLint通过。
+Gateway传输测试的业务service为替身；正式工厂测试使用真实Gateway/homework/AI service/临时Mongo，仅历史数据由fixture准备，
+没有实际DeepTutor或Provider。不能替代正式全流程浏览器、真实远端或35项跨层矩阵验收。
+独立复审复现两项P2：合法分块请求向上游同时携带Transfer-Encoding和Content-Length导致400；
+UTF-16可使原文本UTF-8超限但wire未超限，非法UTF-8还可被替换字符静默接受。
+永久红灯Gateway3失败/29通过、私有homework合法create编码用例2失败；修复两端严格UTF-8/fatal解码，
+转发移除旧编码/分块头并重算长度。作者复验Gateway13套件77项、homework8套件170项通过（3.181/34.779秒）。
+独立复验Gateway32项、私有HTTP6项、正式工厂4项通过（1.781/4.546/4.983秒，分别运行），
+原探针逐字节比对原文、精确32768/32769、gzip+chunked、真实U+FFFD及401/429顺序均通过。
+分别移除分块头清理、两端charset校验和fatal解码的五组进程内变异，各被永久反例捕获退出1，未改源码。
+独立复评确认两项修订通过；仅本地问题修复，不等于D/B/AI-1验收。首次独立测试混入日志目录权限错误的证据保留，不计通过。
+随后将精确大小/压缩分块及编码拒绝顺序探针固化为5个永久用例，最终Gateway13套件82项通过。
+本地候选另记于[本批证据](evidence/ai1-d1-20261101/README.md)，B/C原冻结包不改写。
+
+历史161/2套件、4980/2用例的家庭全量失败保留，不以本批定向通过写为全绿。
+AI-0人工审核及费用授权不转移；T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持。不提交推送合并或部署。
+
+### 29.9 AI-1 D2 运行态、启动准入与查询回滚（2026-11-01）
+
+D_IMPLEMENTING / EXTERNAL_ACTIVATION_PENDING；B仍EXTERNAL_IMPLEMENTATION_PENDING，AI-1总门禁OPEN。
+本批在既有正式homework工厂加入off/query-only/enabled/store-isolated配置；缺省off，无默认模型或预算。
+专用凭据与已有服务凭据分离，固定HTTPS目标；回环HTTP仅测试显式允许。运行配置固定于工厂，不提供公开热切换接口。
+active工厂必须验证同一正式模型连接、可写副本集及已有唯一索引后才可写入；startServer在队列/监听前检查。
+失败不创建索引，关闭本次新建DB连接、保留借用连接，错误脱敏；active不接受替代app/factory绕过预检。
+连续性/profile配置是操作员前置声明，不是远端存储或Provider正确性的自动证明，不能替代真实启用验收。
+
+正式Gateway/homework/AI service/临时Mongo及HTTP为真实实现；远端仅协议替身，无实际DeepTutor或Provider。
+已验证完整预览与实际messages一致、任务数学别名、一次生成原命令重放、共管修订和旧版审核冲突、
+按新版批准及首次审核重放、重建后双版本回看、孩子拒绝、原Task全快照不变。
+丢PUT响应后unknown保留映射及费用；重建query-only后仅原actor显式GET收敛，不再PUT、不新增Artifact或重复结算。
+query-only保留授权读取，但reserved无法从recover/原generate重放/新UUID启动发送；三入口财务及归属快照不变。
+store-isolated禁止远端查询和结算，保留未知锁及费用；不宣称所有人工修订/审核/关闭接口都变成只读。
+
+作者初始runtime缺模块红灯、正式装配缺就绪钩子红灯、启动夹具漏加载completion模型两项失败均保留。
+修复夹具后验证；primary hello有界命令反例先红后绿，不修改生产索引要求。
+作者扩大回归9 suites / 220 tests通过（38.541秒），包含AI六套件及原完成启动、学习计划、服务生命周期。
+此前2 suites / 54 tests通过（10.383秒），属于独立探针固化后的作者运行，不混称独立证据。
+独立复验原候选2 suites / 49 tests通过；另有4项准入探针通过，三组readiness/启动预检/查询改PUT变异各准确失败。
+随后探针固化复核指出两项P2测试保护缺口：旧completion门禁可代替AI工厂拒绝，以及批准状态缺少明确断言。
+已补AI专属legacy-completion组合、首次及重建后明确批准状态/决定/approvedArtifactId；仅用于隔离被测门禁，不将业务验收退回legacy。
+两项补强作者2套件54项通过（8.508秒）；独立定向2套件3项通过、51项未选中，不冒充完整54项独立重跑。
+移除AI专属factory检查时两项准确失败；批准误写rejected时一项在明确parent_approved断言失败，均退出1为预期。
+独立复评确认两项P2保护缺口修订通过，未发现新业务缺陷；仅本地测试补强，不代表B/D/总门禁关闭。
+ESLint首次因本机依赖搜索路径缺失退出2，补NODE_PATH复用已有依赖后通过；未安装或放宽规则。
+
+正式页面与实际后端的浏览器闭环、35项矩阵逐项核对、实际DeepTutor、真实Provider/付费及人工价值验收仍未完成。
+本批冻结见[D2证据](evidence/ai1-d2-20261101/README.md)，不覆盖B/C/D1包。历史161/2套件、4980/2用例全量失败保留，本批定向通过不等于全量全绿。
+AI-0人工审核及费用授权不转移；T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED不变。不提交推送合并或部署。
+
+### 29.10 AI-1 D3 正式LMS页面闭环与矩阵核对（2026-11-01）
+
+D_IMPLEMENTING / FORMAL_LMS_BROWSER_VERIFIED / EXTERNAL_IMPLEMENTATION_PENDING；B/D及AI-1总门禁OPEN。
+复用现有T2正式运行器及beforeStart钩子，Web包装仅透传钩子；默认AI1_MODE=off，测试不继承操作员启用状态。
+新浏览器夹具使用真实Gateway、user/homework/resource/progress正式工厂及原analytics/notification应用，
+全部服务回环监听，临时Mongo副本集和私有存储；启用原完成协议、保留上传保护/日志/索引及启动预检，新清理保持关闭。
+远端是显式带专用合成凭据的内存operation协议替身，没有DeepTutor/Provider；不声称验证外部持久重启/claim。
+浏览器仅拒绝外部网络，不拦截LMS API为合成成功；真实用户注册、登录、邀请共管和孩子档案由现有seed创建。
+
+作者6项通过（41.6秒）：任务及真实图片-only错题双入口、完整messages/费用确认、生成/刷新/修订、
+共管按新版批准、干净会话重新登录回看；公开响应丢失后显式重试完整原命令；
+远端丢响应后unknown保费用、实际登出清暂存、共管不能恢复、原actor重登仅GET原映射收敛；
+旧版审核409清详情，显式刷新并重新勾选后才能批准新版；另含一项异常收尾用例，不计作业务闭环。
+核对准确source.type/id/child，人工题目初始空白；未输入不得创建预览，无媒体读取/上传/OCR。
+AI原文含script仅作文本、未执行；原文/hash/派生/审核者及明确批准状态保留。源业务模型及文件快照不变，不宣称AI集合零写。
+1280/768/390布局无横向溢出，截图已本地查看；这些是Chromium布局验证，DEVICE_PENDING不变。
+
+保留红灯：beforeStart未透传导致首例失败；费用文案未限定范围导致双例严格定位失败；
+故障用例在写入完成前仅等重试按钮出现而过早读DB，两项失败。分别修正接线、限定预览费用行、等待按钮可操作（请求已结束），
+不提高超时、不改业务状态断言、不重试掩盖失败。故障用例修订后2项通过（14.2秒），后续六项完整执行。
+独立静态复核提出来源未精确断言及remote close失败跳过环境恢复两项P2；已补来源请求/响应/持久详情、
+嵌套finally及真实关闭后报告错误的永久反例；重登新context的console/外部请求也补明确断言。
+独立复验6项通过（41.6秒，与作者是不同运行）；合法同孩子任务替换错题来源时POST source断言准确失败，
+撤掉内层finally时环境恢复断言准确失败，两组各1项、退出1为预期。close反例确认实际listener已关闭，环境及引用全部恢复。
+来源变异原日志另有max-failures早停及一条outside-test错误摘要，保留该摘要，不仅凭退出1认定捕获；精确失败栈为source不匹配。
+独立初次受限上下文中Chromium被MachPort权限阻断，页面未执行；保留原失败，不计有效变异，随后受控本机执行复验。
+两项P2本地修订复评通过，不代表B/D或总门禁验收。
+运行器6项通过（26.81秒），包含默认off及停止后恢复原AI模式；受影响ESLint和diff检查通过。
+本轮前端构建通过；8个产物与浏览器所用C构建逐字节一致，12个前端候选源码文件与C冻结哈希一致。
+未为未改动的前端重新运行全部59套件；C原全回归/构建证据不写作本轮执行。
+
+35项逐行状态见[测试方案§11](family-ai1-test-plan.md#11-35项矩阵的当前证据与剩余条件2026-11-01)。
+LOCAL_PASS只指该行的本地工程证据，不关闭B/D/总门禁；实际外部实现、正式浏览器身份失效/晚响应、
+拒绝/关闭/审核丢响应、全部版本孩子/普通API正文隔离，以及付费和人工价值验收仍列待验。
+历史161/2套件、4980/2用例全量失败、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持。
+本轮没有真实模型、服务器访问、Git提交推送合并或部署。
+固定候选、完整补丁和独立/作者证据分列于[D3证据](evidence/ai1-d3-20261101/README.md)，原D2包不覆盖。
+
+### 29.11 AI-1 D4 正式页面权限及审核恢复补验（2026-11-01）
+
+D_IMPLEMENTING / LOCAL_BROWSER_EXTENSION；B/D及AI-1总门禁仍OPEN。
+本批仅扩展现有ai1FormalPage.spec.js及证据/状态记录，没有修改产品实现、增加框架或改变认证/限流。
+作者完整10项通过（运行器显示1.2m），包含原六项及四项新用例；一项为夹具异常收尾而不是业务闭环。
+实际服务、临时库/存储、enabled准入及外部operation协议替身边界与D3相同，无真实DeepTutor/Provider。
+
+- 拒绝必须有原因；拒绝提交成功后丢响应，刷新不自动POST，显式重试完整原body；
+  GET详情与首次拒绝结果精确相等，关闭后artifacts及job精确不变，源业务模型/文件快照不变。
+- 通过真实家庭成员删除接口撤销共管权限；当前列表403清详情和未提交修订，先前已从服务端读取的200详情被延迟。
+  浏览器明确记录该请求net::ERR_ABORTED，释放所持真实响应后不回显私有内容。
+- 采用当前合成登录token的claims，仅将exp置为过去并由合成JWT密钥重新签名；真实Gateway返回401。
+  过期不是主动登出，原命令仍保留；真实表单重登后显式重试原命令，只GET原operation，一份Artifact、一次2250微元结算。
+- 同浏览器context两个标签真实登出/登录外家庭家长；旧标签清私有草稿，保持同一document标记且不主动goto/reload，
+  原请求明确取消；释放旧200响应后新actor身份仍在、无私有内容和AI命令暂存。
+  既有登录页不因另一标签登录自动跳today，本批不增加此行为。
+- 原文、修订、批准、拒绝、关闭各阶段附带真实HTTP权限矩阵：child/sibling/foreignChild访问Cycle/Job/各Artifact为403，
+  外家庭家长为404；父子普通Task/Mistake详情及列表成功返回但无AI正文/内部版本引用。
+  此矩阵由真实登录API客户端执行，不写成四类身份浏览器各自走过页面。
+
+浏览器取消不是“成功送达后回调丢弃”的证据；后者仍由既有UI永久反例直接证明。
+本轮组件定向2套件49项通过（3.536秒）；未重新运行或宣称前端全量/家庭后端全量通过。
+先前C/D3前端源码和构建未改，本轮复用D3构建；冻结时核验源码及构建hash。
+保留失败：错误页面标题定位1失败；误期望跨标签登录自动跳转1失败；重复PIN登录触发真实限流的扩展运行3失败/7通过。
+修正测试为准确页面行为及每fixture复用真实登录客户端，不增加超时、不跳测试、不放宽限流。
+首次组件命令引用错误依赖路径，MODULE_NOT_FOUND未执行测试；改用已有前端node_modules后通过，未新增安装。
+
+独立复验10项通过（1.1m，退出0，无超时），5个测试/运行器配置文件前后hash不变；
+限定审查未发现新P1/P2。两处取消事件按详情路径匹配，不声称Request对象等值关联或旧回调实际执行。
+本批没有产品修复或新变异验证；新反例是既有实现的正式链路测试补强，不虚构产品红绿修复。
+候选和命令/退出码见[D4证据](evidence/ai1-d4-20261101/README.md)，D3原包保持不变。
+剩余本地组合：切孩子/迟到401、普通网络刷新失败原命令保留的正式浏览器证据。
+外部源码及修改授权未具备，不访问Ubuntu或拉取源码；B真实持久claim/重启/Provider仍EXTERNAL_IMPLEMENTATION_PENDING。
+AI-0人工审核及独立费用授权、历史161/2套件4980/2用例全量失败、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、REMAINDER_DEFERRED均保持。
+本批无真实模型、服务器访问、Git提交推送合并或部署。
+
+### 29.12 AI-1 D5 会话剩余组合与批准丢响应（2026-11-01）
+
+D_IMPLEMENTING / LOCAL_SESSION_BROWSER_EXTENSION；B/D/AI-1总门禁OPEN。
+沿用D3/D4运行器，只扩展测试及本节/矩阵，不修改业务源码或构建。外部仍为内存operation协议替身，
+真实LMS工厂、Gateway、临时副本集、合成注册/登录和浏览器范围不变，不含实际DeepTutor/Provider。
+
+- 普通详情GET被明确中断一次，观察net::ERR_FAILED；原命令sessionStorage逐字不变，Job仍unknown、详情/费用不变，
+  不自动POST或GET远端。恢复正常详情GET仍保留命令；显式重试相同body后只查询原operation，单一Artifact/费用收敛。
+- unknown时选择兄弟姐妹，旧详情请求net::ERR_ABORTED、私有详情和本地命令清空，服务端原Job不变；
+  切回原孩子只发现原Job，不自动恢复、不显示新生成或关闭入口。显式recover使用原Job路径/remote ID，PUT仍仅一次。
+- 真实合成登录claims重新签发10秒JWT，reload成功读取后按Gateway真实时钟等到exp，取得真实401并持有响应。
+  另一标签真实登录外家庭家长，旧请求明确取消；释放旧401后新session完整不变、same-document标记保留，
+  新token通过正式`/api/families/me`返回正确外家庭。没有模型/服务器访问或伪造401响应正文。
+- 将原拒绝丢响应用例扩为approve/reject两个分支，满足AI1-REV-04明确的批准丢响应要求；
+  批准前人工检查、approvedArtifactId/parent_approved、刷新后只读、原body重放、首次详情精确不变、关闭后审计/Job保留均断言。
+
+浏览器证明旧响应对应请求取消；应用实际收到晚成功/401后的丢弃由既有共享会话组件反例证明，两个层次不混写。
+组件定向3套件79项通过（3.114秒），含TutorPage、ai1Client及sessionApi.t2；既有全部调用方回归仍引用源码未变的C证据。
+初次三项2通过/1失败，原因是最后新token验证使用不存在的`/api/families/current`而返回404；
+改为既有`/api/families/me`并进一步检查familyId，随后13项通过（1.6m）。原错误路径失败保留，不认定为产品缺陷。
+最终固定候选作者14项通过（1.8m），独立14项通过（1.7m），均退出0；各含一项夹具异常收尾。
+独立运行5个测试/运行器文件前后hash一致，spec为`e8965578cafabf6d0083984e1452207d6e7f285e0b99774702c5442cf7b51c50`。
+限定复评未发现新增可复现P1/P2，明确确认批准成功丢响应缺口已补齐；不以中间13项替代最终候选。
+完整候选、日志hash和最终校验见[D5证据](evidence/ai1-d5-20261101/README.md)，D4原冻结包不修改。
+
+静态评审两项非阻断测试健壮性观察保留：短JWT窗口包含准备加载，极慢环境可能在准备阶段过期；
+持有响应的fetched Promise未单设错误分支，route.fetch异常可能等到用例超时，现有finally/页面收尾不等于已验证该失败路径。
+没有已证实产品泄漏或本批业务修复，不虚构新的产品红绿/变异结果。
+35项矩阵只将已有本地层次证据的AUTH-01/SESSION-01/02列LOCAL_PASS，不宣称外部发送权限或整个D批通过。
+实际DeepTutor源码和修改授权、持久claim/重启/旧备份隔离、Provider参数/完整输入计费及另行费用/人工价值验收仍待具备。
+历史161/2套件4980/2用例全量失败、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING与高级恢复/新回收REMAINDER_DEFERRED均保留。
+本批不访问服务器、不调用模型、不安装、不提交推送合并或部署。
+
+### 29.13 B 真实远端本地基线与持久层首批（2026-11-01）
+
+用户批准 DeepTutor v1.7.1 固定提交 `f7aed0744c36c5afef16a4261c31ebee1208cac2` 的本地实现与 Provider 替身验证。
+这替代后续开发对 1.7.0 源码的要求，不改 AI-0 历史证据或现有 B/C/D 冻结包；不包含服务器操作、真实模型、Git 发布或部署。
+B/D/AI-1总门禁OPEN，状态为 EXTERNAL_STORE_IMPLEMENTING / ROUTE_NOT_MOUNTED。
+
+首批仅在 DeepTutor 增加 `deeptutor/services/ai1_store.py` 与 `tests/services/ai1/test_operation_store.py`。
+独立 SQLite 保存已验证请求的完整快照、单次 owner claim、终态与更新时间；短事务 BEGIN IMMEDIATE，FULL 同步提交。
+已 claim 记录没有租约重置/重新发送入口；相同请求重放原记录，异快照或异摘要拒绝；owner/阶段 CAS 保留首次终态。
+GET 使用只读连接；不加载聊天应用、Provider 或 worker。请求闭合/JCS/profile、服务凭据、连续性准入及 HTTP 装配仍待实现，
+不得在这些边界未具备时直接对外暴露该存储层。数据库可打开不是连续性证明；旧备份隔离尚待后续实际运行态验证。
+
+初次 pytest 收集因 fixture 使用保留名 request 失败，改名后根入口又因公共夹具缺少 markdown_it 而失败；
+这些属于测试准备失败，不作为功能红灯。隔离纯存储单测后，8项因模块未实现明确失败，随后实现转绿。
+首轮作者定向14项通过，含16请求竞争、真实子进程提交claim后退出、提交成功但确认丢失、等待写锁后再检查截止点、
+异快照拒绝、owner拒绝、终态竞争及首次审计、SQL状态约束和只读字节不变。
+三项临时副本变异（允许sending重领、移除owner校验、允许覆盖终态）各被永久反例拦截，预期退出1。
+命令使用 pytest `--confcutdir=tests/services/ai1`，明确仅纯存储层，不加载根应用夹具，不跳过任何选定用例。
+原完整夹具入口最新仍14项 setup error（缺markdown_it），另有 asyncio 配置warning；不能写成完整 DeepTutor 测试全绿。
+独立评审指出直接父目录权限只在构造时核对，运行中改变后仍可claim；永久反例先出现 DID NOT RAISE，
+随后每次连接前复检直接父目录类型和权限，拒绝后完整operation不变。最终作者15项通过（0.18秒），
+独立15项通过（0.24秒），均退出0且保留1项配置warning；独立运行源码及测试前后hash一致。
+限定复评未发现新问题，仅关闭这项运行时复检观察，不宣称完整文件系统安全、掉电或备份恢复验证。
+终态测试的结果是合成值，只证明CAS/持久化；结果正文/hash/usage校验仍须service接线后验证。
+本节是持久层局部验证，不是B批或总门禁验收；候选与证据见[首批记录](evidence/ai1-remote-store-20261101/README.md)。
+
+保留历史家庭161/2套件、4980/2用例全量失败，AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING与高级恢复/新回收REMAINDER_DEFERRED。
+
+### 29.14 B 远端契约、编排与独立 HTTP（2026-11-01）
+
+接续同一已批准DeepTutor v1.7.1基线；REMOTE_WIRE_IMPLEMENTING / FORMAL_MAIN_NOT_MOUNTED，B/D/AI-1总门禁OPEN。
+新增闭合32KiB UTF-8 JSON、重复键/非有限值拒绝、RFC8785摘要、固定请求选项、整数费用上界、profile和截止点校验。
+接收/事务claim/准备结束/transport前分别复核；当前Provider prepare/send为可计数替身，不能据此宣称真实token计数和限费通过。
+历史终态重放不依赖现价；query-only拒绝发送；STORE_ISOLATED或缺连续性声明拒绝读写/发送，包含旧accepted/终态/空库。
+状态声明来自构造配置，不来自可回滚库；备份测试显式指定隔离，不声称自动发现任意未声明回滚。
+
+独立FastAPI app只提供PUT/GET相对operation路径，专用合成token、无管理/文档路由、无重定向、no-store及脱敏错误。
+真实回环uvicorn验证成功落盘后响应体丢失，客户端RemoteProtocolError后GET和原PUT重放保持单一终态与单次Provider计数；
+query-only重建保持accepted不消费。未接DeepTutor正式main或真实Provider，不把该app当已部署新服务。
+
+自查prepare跨截止点的永久反例先红，修复准备结束后时钟重采；claim前拒绝failed_not_sent，claim后到期unknown。
+独立首评发现取消未落unknown、纯BOM空白与LMS不一致两项P2；修订为原owner CAS unknown并传播取消、采用ECMAScript空白集。
+作者反例先5失败/54通过，再全选87通过（1.14秒）、1项配置warning；新增在途Event并发、reject/claim竞争和LMS实际JS生成中文JCS向量。
+原67项独立通过及后续单项时钟复验与当前全选区分；最终独立87通过（1.13秒）、1项warning、退出0，12文件前后hash一致。
+限定复评确认两P2和时钟修复闭环，未发现新增P1/P2；独立实际Node22全Unicode空白集合与LMS golden重建均一致。
+三项作者变异（取消不落unknown、Python strip、移除准备后时钟检查）均预期失败，单独记录而非独立变异证据。
+首批store冻结包不改；新候选和证据见[本批记录](evidence/ai1-remote-wire-20261101/README.md)。
+
+根pytest应用夹具缺markdown_it的历史失败保留，定向confcutdir不代表完整DeepTutor回归。
+只增加RFC8785依赖声明并用既有生成器同步requirements，未安装软件、调用模型、访问服务器或Git发布/部署。
+保留历史家庭161/2套件4980/2用例失败、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING和高级恢复/新回收REMAINDER_DEFERRED。
+
+### 29.15 B 受限 SDK 请求与发送边界（2026-11-01）
+
+REMOTE_SDK_LOCAL_REVIEWED / FORMAL_MAIN_NOT_MOUNTED，B/D/AI-1总门禁OPEN。
+在已批准v1.7.1源码新增受限SDK模块及测试，不进入通用chat的换key/兼容回退，不修改既有Agent能力。
+本机临时虚拟环境安装OpenAI 2.6.1及其必要依赖；未安装服务器软件或变更全局Python环境。
+本轮实际SDK/HTTPX 0.28.1/httpcore 1.0.9参与请求构造，网络/响应与输入计数器为合成替身；原operation HTTP测试仍用真实回环监听。
+
+固定官方HTTPS目标、TLS校验、禁用代理继承/重定向/SDK和transport重试；完整wire包含两条messages及固定生成选项。
+实际body采用计数器见过的同一不可变规范字节，重算Content-Length；初次transport及HTTP请求头/正文写出前复核profile和截止点。
+最大输出4096、关闭思考/工具；原始响应64KiB有界，usage拒绝字符串/布尔转换与超限，缺usage不补零。
+错误/取消不重试；claim后失败保留unknown、占用及原映射。无已核验计数器或profile不匹配时failed_not_sent，不获取凭据或创建发送claim。
+计数器接口只有合成实现，尚无真实v4完整模板token上界证据；不能以字节绑定或声明当作真实硬限费，启用前置不关闭。
+
+首轮模块缺失红灯后34项转绿，补guard/取消/整次超时反例。自查SDK DEBUG可泄露完整正文：两项永久反例先红，
+随后以ContextVar限定过滤三个SDK logger，finally恢复，不改其他请求日志level/handler。
+独立初评指出连接/TLS等待跨发送截止点P1、计数字节与外发字节不一致P2；四项永久反例先红，分别补HTTP写出前复核与规范正文绑定。
+真实httpcore使用合成NetworkBackend复现connect/TLS完成时到期零写、headers后到期零正文；不是仅mock服务时钟。
+本轮只验证默认HTTP/1.1，HTTP/2 trace分支未作运行态证明。
+
+最终作者137项通过（1.67秒），独立137项通过（1.72秒），均退出0、保留1项pytest配置warning；14个源码/测试/依赖文件前后hash一致。
+独立复评确认上述P1/P2及SDK日志观察修复，未发现新增可复现P1/P2；额外探针验证阻断后unknown/原claim/零重发，
+以及两个并发AI-1调用不干扰普通SDK日志和成功/异常/取消/超时上下文恢复。额外探针不冒充永久测试。
+七项最终候选作者变异（输入上限、正文漂移、日志、第二次尝试、计数字节、headers截止、body截止）均被拦截，预期退出1。
+全部失败和中间通过保留，首批store/wire包不覆盖；候选与证据见[受限SDK记录](evidence/ai1-remote-provider-20261101/README.md)。
+
+正式main装配、实际LMS→DeepTutor组合、真实计数/价格与费用授权、人工端到端价值验收仍待完成。
+根pytest夹具缺markdown_it的旧失败和历史家庭161/2套件4980/2用例失败保留；不将定向137项写为两仓全量通过。
+保留AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING和高级恢复/新回收REMAINDER_DEFERRED；不调用模型、不操作服务器、不提交推送合并或部署。
+
+### 29.16 B 正式 main 装配与生命周期（2026-11-01）
+
+FORMAL_MAIN_LOCAL_REVIEWED / ACTUAL_LMS_COMBINATION_PENDING；B/D/AI-1总门禁OPEN。
+既有DeepTutor main挂载窄内部operation路径，缺配置默认关闭；私有配置不复用聊天key管理或管理员凭据。
+query-only不依赖当前报价/Provider key，store-isolated不打开旧库；enabled要求既有schema/唯一id索引、写事务探测、
+明确连续性声明、独立凭据及可用完整输入计数器。没有已核验实际v4计数器时仍拒绝启动，合成注入不构成真实启用授权。
+外层lifespan包住整个应用启动和退出，其他模块启动失败也清除AI-1 runtime/ready，不删除operation或释放claim。
+
+正式main测试运行临时HOME、core/server及既有认证；API专用token不能访问管理设置，Bearer不能代替服务凭据。
+首进程真实ASGI HTTP终态作为固定基准，第二个真实新进程query-only完整重放；读/拒绝PUT/关闭后库字节不变。
+模型网络/响应和token计数器为替身；正式main探针禁止网络connect，既有独立HTTP套件仍用回环监听。
+本机临时venv补齐仓库core/server依赖并固定SDK版本，不改全局Python、服务器或原运行环境。
+
+保留全部中间失败：模块缺失、初次store检查误置造成2项回归、其他模块启动失败残留、管理测试路径错误、
+用已关闭容器模拟重启的fixture错误。修订后真实两进程取代同app重复启动，不修改通用容器重启语义。
+独立复评发现私有FIFO在类型检查前阻塞P2；config/serviceTokenFile/providerKeyFile三反例固定时钟后均先超时失败，
+补O_NONBLOCK后由普通文件检查拒绝，finally关闭descriptor，原权限/大小/链接检查保留。
+先前provider FIFO被报价提前拦截的一次通过不算有效保护。FIFO P2及启动失败收尾局部复评通过，未发现新增可复现P1/P2。
+独立全选6套163项通过（9.43秒）、3 warnings、exit0，17文件运行前后hash一致，不拼接旧结果。
+保留非阻断测试观察：缺唯一索引反例同时移除PK/NOT NULL，尚未单独覆盖索引拒绝分支，未发现实际准入绕过。
+原冻结包不变；本批完整候选、开发自测和独立证据见[正式装配记录](evidence/ai1-remote-runtime-20261101/README.md)。
+
+实际LMS→正式DeepTutor TCP组合、真实计数/计价与费用授权、人工端到端价值验收仍待完成。
+旧根pytest缺markdown_it失败保留为历史，本轮补依赖后未重新执行根夹具全仓；定向通过不等于两仓全量全绿。
+保留历史家庭161/2套件4980/2用例失败、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING和高级恢复/新回收REMAINDER_DEFERRED。
+本批不调用模型、不操作服务器、不提交推送合并或部署。
+
+### 29.17 B 实际 LMS client 与正式 main TCP 组合（2026-11-01）
+
+ACTUAL_CLIENT_TCP_LOCAL_REVIEWED；B/D/AI-1总门禁OPEN。
+本批只新增显式跨仓pytest用例，不改§29.16冻结的17个产品/测试/依赖文件，不新建框架或放宽原断言。
+用例要求显式提供LMS检出、Node及依赖路径，缺少条件直接失败而非skip；不作为不含LMS仓库的DeepTutor默认发现范围。
+实际LMS `createOperationClient/buildRequest/validateOperation` 通过真实回环TCP访问实际DeepTutor main、
+现有认证、受限SDK和持久SQLite。仅模型网络/响应、计数器、时钟为合成；故障注入只在测试子进程。
+无Gateway、LMS业务数据库/账本或浏览器参与，不能代替这些层的组合验收。
+
+5项包括成功/同正文重放/异正文拒绝/错误凭据、query-only重启、store-isolated读写拒绝、
+成功落盘后丢响应，以及accepted/claim/Provider返回三个节点的真实进程退出。
+重启后的GET不发送；连续性声明保持且报价有效的accepted仅在显式原PUT后唯一发送；
+sending跨进程保留原记录、sendClaimed及Provider计数，重放不重领。这里不是旧备份恢复准入测试。
+作者首轮5项通过（24.27秒）、1 warning；最终7套一次性168项通过（31.98秒）、3 warnings，退出0。
+临时副本变异GET调用dispatch、旧accepted不接续、sending重新claim分别1/1/2项失败，预期退出1，原候选未改。
+首次变异脚本因定位字符串非唯一在运行测试前拒绝，修正定位后执行；不将准备失败算测试拦截。
+独立5项通过（24.06秒）、1 warning、exit0，无新增可复现P1/P2；两端源码及关键依赖41项指纹前后相同。
+独立运行仅执行一次pytest；此前两次指纹包装器路径解析失败发生在pytest启动前，原日志保留，不算业务红灯。
+独立未重跑作者变异，不混称证据。另保留非阻断收尾观察：fixture有界terminate/wait/kill但未区分普通服务
+异常退出码；后续应区分预期73、主动SIGTERM及其他错误，不能机械要求Uvicorn优雅退出为0。本轮未发现遗留进程。
+候选与独立证据见[组合记录](evidence/ai1-remote-combination-20261101/README.md)。
+
+保留实际服务/费用及浏览器跨仓组合、真实v4上界与预算授权、人工价值验收待办；不关闭B/D/AI-1。
+保留历史家庭全量失败、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED。不调用模型、不操作服务器、不提交推送合并或部署。
+
+### 29.18 B 实际业务链路增量与环境中断（2026-11-01）
+
+IMPLEMENTING_EVIDENCE_INTERRUPTED；B/D/AI-1总门禁OPEN。当前仅新增测试，产品逻辑不变。
+实际Gateway/服务/临时Mongo副本集连接实际DeepTutor main/SQLite，模型网络与计数器仍为替身。
+新断言覆盖任务/媒体错题、原actor重登恢复、一次结算、人工版本与共管审核、来源隔离和原业务零变更。
+此前工具输出报告作者3场景通过（29.47秒），但后续扩大回归在7个失败标记后外层240秒SIGTERM，未取得pytest汇总。
+环境接续时临时venv、构建及原始日志均已缺失，旧独立代理not_found；不能把3项通过当作扩大回归或独立验收。
+现存源码和历史冻结包保持；本批记录明确区分会话工具输出与可用原始日志，见[中断记录](evidence/ai1-remote-business-20261101/README.md)。
+高主机负载仅为随后观测，尚不足以归因；不增加超时、不盲重跑。恢复本机依赖和私有持久日志后继续定位及复验。
+历史全量失败、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+两项非阻断补测及高级恢复/新回收后置不变；不调用真实模型、不访问服务器、不提交推送合并或部署。
+
+### 29.19 B/D 实际业务与浏览器跨仓候选（2026-11-01）
+
+ACTUAL_BUSINESS_BROWSER_LOCAL_REVIEWED；B/D/AI-1总门禁OPEN。
+以已批准DeepTutor v1.7.1为基线，仅新增验收代码；D5的42个非文档LMS文件哈希未变。
+双仓23文件及补丁冻结于[业务组合证据](evidence/ai1-remote-business-20261101/README.md)，
+DeepTutor完整补丁、LMS两文件增量均已隔离重建核对；LMS增量依赖保留的D5完整候选。
+首次重建因父Git目录发现导致路径跳过，校验报缺文件；显式隔离后才记PASS，不将准备失败算业务红灯。
+
+真实Gateway/七服务/临时Mongo与DeepTutor main/SQLite/SDK参与，Provider网络/响应与计数器仍是替身。
+静态复评补齐五项业务测试P2：生命周期、两层费用账本与Reservation、GET恢复轨迹、逐字段CAS及同键异正文。
+补齐三项浏览器测试P2：保留Playwright原生进程组、全局与外层截止分离、child/source/cycle精确绑定。
+静态结论与独立执行分开记录；最终局部复评确认上述8项保护已补齐，未发现本增量内新增阻断问题。
+作者业务6项通过（47.17秒），cycle版本双处删除的隔离变异被新增反例捕获（实际200/预期409，exit1）。
+首轮浏览器Chromium3通过，WebKit因强制整页导航中断今日计划请求而失败；改用既有真实导航和讲解记录后，
+两引擎6场景通过（82.27秒），零pageerror与业务断言保留。该结果不替代后续执行器/绑定补强后的最终候选验收。
+
+最终作者一次性执行6个operation套件和3个跨仓验收文件：182 passed、3 warnings、148.89秒、exit0。
+独立仅复验新增两文件14项：业务/收尾6项、浏览器/原生收尾8项（其中6个页面场景），
+14 passed、1 warning、112.49秒、exit0，65个源码指纹前后一致。没有重复独立执行全部182项或作者变异。
+独立监督器原exit1保留：中间匹配到作者文档校验的两个Node进程，后按创建时间/父子关系/完整命令确定归属，
+不属于本轮测试且未被终止。最终所属进程和相关进程检查均为空、无强制收尾；不得将监督器exit1改写为0。
+文档门禁312项通过（39.715秒）、状态脚本及diff检查通过。独立书面结论和监督器归属说明绑定于证据索引。
+
+保留§29.18临时证据丢失及7F中断、Darwin EPERM收尾失败、浏览器导航失败，不推断旧失败原因或改写为全绿。
+新原始日志存于本机私有Git忽略目录；构建通过但保留Browserslist数据过期警告。
+真实v4计数上界、实际报价/费用授权及人工价值验收未完成；没有计数器的enabled启动仍拒绝，AI-0预算不转移。
+历史家庭161/2套件4980/2用例、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING和高级恢复/新回收REMAINDER_DEFERRED不变。
+不调用真实模型、不操作服务器、不提交推送合并或部署。
+
+### 29.20 B/D 旧快照隔离反例增量（2026-11-01）
+
+ACTUAL_SNAPSHOT_ISOLATION_LOCAL_REVIEWED；B/D/AI-1总门禁OPEN。
+仅补三份测试文件，产品实现不变；[恢复隔离证据](evidence/ai1-remote-recovery-20261101/README.md)
+绑定增量补丁、66项源码指纹和历史候选依赖，补丁重建通过。旧冻结包不改写。
+实际DeepTutor main/SQLite/SDK与LMS client验证：发送后恢复旧accepted、恢复sending/成功/明确未发送/空库，
+显式隔离后原ID和新ID的GET/PUT均拒绝，库字节及Provider替身调用计数不变。
+报价过期只读历史成功精确重放；缺少连续性声明的enabled/query-only启动不能就绪。
+作者8项通过（40.85秒），1 warning，exit0；隔离副本移除连续性检查后，两项启动反例预期失败（6.24秒、exit1）。
+LMS正式Gateway/homework与临时副本集补reserved/unknown的BSON快照回滚反例，恢复前先真实推进至成功并结算，
+恢复后隔离应用禁止原/新生成及恢复，账本、预留、原映射、槽和所有AI记录不变，权限读取保留。
+明确正费用预留和unknown占槽基线；最终正式套件11项通过（6.576秒、exit0）。
+该LMS套件远端是协议替身；不将分层证据冒充双服务同时恢复或生产演练，不自动升级35行矩阵。
+初版独立8项远端（35.71秒）及11项LMS（5.884秒）分别通过、exit0，源码未变且无所属进程残留。
+独立指出三项测试保护P2：历史成功前置状态、启动拒绝原因与正对照、连续性字段缺失。
+修订仅加强测试：成功正文/usage/持久记录精确检查，脱敏错误日志及同模式同库正对照，
+enabled/query-only各覆盖false与字段缺失；不为测试暴露内部原因。
+P2增量单独冻结，初版候选保留；作者10项通过（46.59秒、1 warning、exit0），静态复评确认三项缺口已补齐。
+移除连续性检查/字段缺失默认允许两类隔离变异分别4项/2项预期失败（9.95/5.15秒、exit1），非准备错误。
+最终独立10项通过（46.76秒、1 warning、exit0），66项指纹前后一致、无超时/强制收尾/所属进程残留。
+44项LMS指纹与先前独立执行一致，保留该11项证据而未重跑；独立未重复作者变异。
+三项测试保护P2完成限定复评，未发现本增量新问题；不将初版8项冒充修订后执行，不关闭整个RECOVER-06/07。
+历史家庭全量失败、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持。
+不调用真实模型、不操作服务器、不提交推送合并或部署。
+
+### 29.21 B/D 实际双端合成快照恢复（2026-11-01）
+
+ACTUAL_DUAL_RESTORE_LOCAL_REVIEWED；B/D/AI-1总门禁OPEN。
+仅三份测试增量；[双端恢复证据](evidence/ai1-dual-restore-20261101/README.md)冻结68项指纹及可重建补丁。
+实际Gateway/七服务/临时Mongo与DeepTutor main/SQLite/受限SDK参与，Provider网络、计数器、报价时钟为替身。
+accepted/sending/成功/可靠未发送/空库五种远端旧快照对应持久LMS映射，恢复前先推进真实状态并核对
+两层账本/Reservation精确结算，恢复后两端显式隔离，原命令/新命令不能发送、结算、退款或解锁。
+保留未知占槽，原/新远端GET/PUT拒绝，库字节/调用计数/AI集合/学习业务及私有文件均不变。
+局部预留准备走真实事务服务及实际来源读取，非公开生成；其余恢复为正式HTTP，不用协议替身替代远端。
+
+首轮2通过/1失败（33.47秒）：新用例误将非终态恢复预期写为200，按原API修为精确202，业务不改。
+中间6项通过（75.62秒）；独立静态复评提出两项P2，已补恢复前双账户/Reservation精确金额与callback返回后截止复核。
+callback首次沙箱PermissionError保留但不算红灯；既有权限上下文复现DID NOT RAISE（0.64秒、exit1），再修复。
+最终作者新7项加既有业务6项一次执行13 passed、1 warning、107.76秒、exit0。
+隔离副本将store-isolated降为query-only后，真实accepted场景捕获错误GET成功（15.58秒、exit1）；原源码不改。
+两项P2静态复评及独立新7项通过（74.69秒、1 warning、exit0），68项指纹一致，无超时/强制收尾/所属进程残留。
+独立未重跑旧业务6项或作者变异；不将作者13项混称独立13项。
+按测试方案§2核对，RECOVER-06/07的本地合成自动化组合证据已具备；记录为LOCAL_PASS而非验收CLOSED，
+既有§11矩阵保留D5时点快照，当前增量见测试方案§16。不据本批关闭B/D/AI-1或声明生产恢复完成。
+历史全量161/2套件4980/2用例、AI-0人工审核、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING和高级恢复/新回收REMAINDER_DEFERRED保持。
+不调用真实模型、不操作服务器、不提交推送合并或部署。
+
+### 29.22 B/C/D 当前35项归并与七项证据补强（2026-11-01）
+
+LOCAL_MATRIX_REVIEWED / ENGINEERING_REVIEW_READY；B/D/AI-1 OPEN。
+独立逐项审计区分历史§11与当前实际远端证据，识别七项具体保护缺口，而不是要求重复所有端到端排列。
+本轮仅在既有三个业务测试文件及一个文档门禁文件补证，产品实现没有变化。
+[矩阵证据包](evidence/ai1-matrix-20261101/README.md)绑定4文件增量、68项指纹及重建PASS。
+
+- AUTH-02：真实Mongo claim提交后撤权，PUT前拒绝，保留dispatching/reserved、owner、槽与正占用。
+- RECOVER-02 / BUDGET-07：结算、截止claim及释放持久提交后的确认丢失，重建只读原结果，费用/Artifact各一次，不再PUT。
+- BUDGET-04：实际SDK旧合成凭据401后持久unknown，轮换凭据并重建仍不读新凭据、不重新发送。
+- BUDGET-08：实际SQLite accepted后profile撤销/增价可靠拒绝；LMS协议替身拒绝丢响应后按原ID GET，只释放一次。
+- BUDGET-09 / SCOPE-03：当前报价过期/替换后精确按冻结价结算；两类来源预览后学科变化零发送释放，保留原学科与映射版本。
+
+作者LMS完整相关50项通过（9.539秒、exit0）；DeepTutor两套76项通过（1.64秒、2 warnings、exit0）。
+这是分层组合证据，不冒充新增真实HTTP或浏览器运行；既有实际组合/浏览器由未改产品哈希支持复用。
+静态独立复评确认故障注入与断言有效，未发现本增量新P1/P2；独立串行LMS50项（9.327秒）、
+DeepTutor76项（1.16秒、1 warning）均exit0，68项指纹前后完全一致，无超时/强制收尾/所属存活进程。
+独立未重复全部历史HTTP/browser、变异或两仓全量；旧证据按未改源码复用。
+文档新增当前35项表与永久漏项检查，保留D5历史表和原失败；不按测试数量计算需求覆盖。
+首次文档8失败/305通过：历史§11改名导致旧锚点失效，恢复原锚点；第二次1失败/312通过：
+Restore行未标明HTTP层，补明确说明而不放宽断言；两轮失败日志保留。
+最终文档整套313项通过（38.541秒、exit0），状态脚本及两仓diff检查通过；不将此数量计入业务验收数。
+
+测试方案§17为当前工程/外部待验入口；真实qualified计数、当前价格与本轮费用授权、人工价值验收仍未完成。
+真实enabled在缺计数器时拒绝，不移用AI-0预算，不自动关闭B/D/AI-1。
+历史家庭161/2套件4980/2用例及DeepTutor根pytest失败、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持。
+无模型、服务器、Git提交推送合并或部署操作。
+
+### 29.23 真实启用前置的官方资料只读核验（2026-11-01）
+
+READ_ONLY_REVIEWED / QUALIFIED_COUNTER_PENDING；B/D/AI-1 OPEN。
+[只读记录](evidence/ai1-enable-readonly-20261101/README.md)记录官方当前模型/人民币价格、API参数及tokenizer差异。
+已核实公开页面的deepseek-v4-pro/0813和高峰9/27元价格，未授权费用或启用真实发送。
+官方V4离线包已下载并静态检查，未运行其demo；只编码Hello的示例不证明完整messages计费上界。
+ZIP带Jinja配置与公开模型专用encoding说明存在差异；这不是文件错误的判定，但不能直接认证托管0813计数资格。
+固定提交词表下载30秒超时保留，未完成词表比较；仍运行时读取缺文件是准备顺序错误，不算产品红灯。
+独立只读复核同意资格仍未证明，不根据类名/长度差异断言词表不同；当前68项工程指纹一致，
+文档状态及diff检查通过，没有把本轮公开资料核验计为新的业务或模型验收。
+没有合格counter则正式enabled继续拒绝，不新增估算余量、不移用AI-0预算、不修改业务或冻结工程候选。
+历史失败、DEVICE_PENDING及所有未关闭/后置状态不变；真实模型、费用及人工验收仍待完成。
+
+后续限定独立工程复审核对68项源码指纹、冻结补丁/manifest一致，35项需求集合无遗漏或重复。
+20项原始证据hash另由主执行线程按verification.json逐项核验一致，不计为本轮独立执行或独立原始证据校验。
+未发现本候选新增P1/P2；复用既有独立LMS50项/DeepTutor76项结果，不冒称本轮重跑业务测试。
+复审指出测试方案§17.1把已核实的公开模型/报价仍写为未核验，现已区分公开资料核验与计数资格、费用授权、真实启用。
+该文档澄清不改变原冻结包、待验状态或总门禁；工程候选仍待用户验收，不能据此认定真实限费或人工价值已通过。
+
+### 29.24 用户批准限定合成工程候选验收（2026-11-01）
+
+ENGINEERING_SYNTHETIC_ACCEPTED；B/D/AI-1 OPEN。用户明确批准AI-1限定合成范围工程候选验收，明确不关闭AI-1总门禁。
+本条承接§29.22～§29.23及测试方案§17的35项本地合成要求，不追改历史待评审快照或冻结包。
+绑定ai1-matrix-20261101的manifest SHA256 `7d67a6c535b0c85014bc4e6b36c30ffebff6aee1588248b6f10d8fa2b68b0fa2`、
+增量补丁SHA256 `aefea19d6aaba833b2b8f693cdc32071fcc6d9e2ea57c36a80b9326a0319e855`及其既有完整依赖链、68项源码指纹。
+独立复验仍为LMS50项/DeepTutor76项；20项原始证据hash为主执行线程核验，不冒充新独立执行或全量通过。
+本次批准不包括真实计数资格、费用/人工价值验收、真机或发布；真实发送继续缺资格拒绝、默认关闭。
+完整输入计数补缺方案见[只读记录的待评审方案](evidence/ai1-enable-readonly-20261101/README.md#最小补缺方案待评审)，尚未授权实施或外部询问。
+历史家庭全量161/2套件、4980/2用例及DeepTutor根测试失败保留；T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING和高级恢复/新回收REMAINDER_DEFERRED不变。
+本次仅同步本地文档，不调用模型、不读取真实密钥、不提交推送合并或部署。
+文档状态脚本及diff检查通过，既有AI-1历史/当前矩阵定向测试2项通过、311项未选，不冒称313项全量重跑。
+独立文档复核确认验收边界、冻结身份和待评审方案准确，未发现新P1/P2；按其措辞建议明确后续真实模型验收需另行费用与调用授权。
+
+### 29.25 计数依据步骤1限定只读核对（2026-11-02）
+
+STEP1_READ_ONLY_COMPLETE / QUALIFIED_COUNTER_PENDING；ENGINEERING_SYNTHETIC_ACCEPTED保持，B/D/AI-1 OPEN。
+用户批准仅步骤1、最多2小时资料核对，不包括counter实现、下载代码执行、模型调用或外部联系。
+[核对结果](evidence/ai1-enable-readonly-20261101/step1-20261102.md)区分上轮Preview参考与本轮正式0813仓库，
+静态查看正式版发布提交`3c6b30435c8590933c489be0c5200691559e0576`的编码差异；不把模型同名或本地编码等同托管计费保证。
+四个固定版本文件各一次下载均curl exit7，保留失败记录、不重试、不伪造文件hash或词表比较；官方commit diff仍可读。
+完整托管计费输入的对应关系与额外开销边界仍不足，按批准范围提供[未发送询问草稿](evidence/ai1-enable-readonly-20261101/support-inquiry-draft-20261102.md)。
+停止于步骤1，不开启步骤2，不移用AI-0费用授权；原冻结候选及历史失败、DEVICE_PENDING和全部未关闭/后置状态不变。
+没有模型调用、真实密钥读取、依赖安装、服务器/Git提交推送合并或部署操作。
+本轮主执行线程文档状态、diff及新增相对链接检查通过，68项工程指纹及原manifest/patch不变；未运行业务测试。
+独立文档复核确认结果与询问草稿无新增P1/P2，未独立重验网络下载或原始记录hash；资料核对在2小时上限内完成，资格仍待官方依据。
+
+### 29.26 用户批准官方问询并发送（2026-11-02）
+
+SENT_AWAITING_REPLY / QUALIFIED_COUNTER_PENDING；ENGINEERING_SYNTHETIC_ACCEPTED保持，B/D/AI-1 OPEN。
+用户另行批准向官方问询；§29.24～§29.25的未授权/未发送描述保留为当时历史状态。
+核实官方Token说明页列出的API支持地址后，于10:38:37（Asia/Shanghai）将
+[已审核正文](evidence/ai1-enable-readonly-20261101/support-inquiry-draft-20261102.md)发送至 `api-service@deepseek.com`。
+发送前同收件人/主题的已发送搜索无结果；发送后回读确认SENT、收件人、主题及正文完全一致，且无附件、抄送或密送。
+这只证明邮箱已发送，不证明官方已接收、阅读、回复或认可计数上界。
+正文SHA256 `c1f933ed2bad54bb2966d0e8da84ed2699ab608de1b0148d6d473d93b90f72fd`；
+私有回执保存在既有Git忽略的原始证据目录，不将发件身份及邮箱消息标识写入仓库。
+本地回执首次生成发生shell引号错误，已保留该失败记录并更正生成；不影响已发送正文，未重复发送邮件。
+本轮不实现counter、不调用模型、不读取模型密钥、不提交推送合并或部署，不移用AI-0预算。
+AI-0人工审核限制、历史失败、T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持不变。
+
+### 29.27 不依赖官方回复的回归收尾（2026-11-02）
+
+REGRESSION_EVIDENCE_REVIEWED；作者执行与独立证据复核分开，不是独立测试重跑。B/D/AI-1 OPEN。
+用户授权继续不依赖回复的工作，执行[原家庭全量和历史根夹具补验](evidence/ai1-regression-20261102/README.md)，不改产品/测试断言。
+原npm八项目全量exit0：168套件通过，5135项通过、0失败、1条件跳过，Jest耗时828.388秒。
+Node22和ARM Git下，历史两个Git错误套件在全量内均通过；PATH漏含已有kubectl导致Secret dry-run条件跳过。
+核实已有工具并补PATH后，整个部署契约套件18项通过、0跳过；保留全量跳过事实，不将两次运行拼成一次全绿。
+DeepTutor现有依赖加载原根夹具的持久层16项通过、1 warning，未用confcutdir；不等于DeepTutor整仓回归通过。
+全仓ESLint及diff检查通过，68项源码指纹一致，临时依赖链接移除，已知npm/Jest进程退出；未扩大收尾审计范围。
+独立执行器复核指出预设providerCalls:0不是实测，本轮归档明确该证据边界并保留原记录；未据此宣称零网络调用审计。
+最终独立证据复核：12份原始文件、3份执行脚本hash、68项当前源码指纹及JSON/XML/日志计数一致，未发现新P1/P2。
+两处证据措辞更正有效；进程退出为主执行线程核验，独立ps受限，ESLint未独立重验。文档状态、diff、相对链接检查通过；
+修订后矩阵定向测试2项通过、311项未选，未重复文档全套313项。本条收口回归证据，不关闭批次或总门禁。
+历史失败、AI-0人工审核、DEVICE_PENDING和既有未关闭/后置状态不变；不安装、不调用模型、不提交推送合并部署。
+
+### 29.28 等待计数依据期间的最小交付整理（2026-11-02）
+
+用户批准本地交付盘点、真实验收清单准备和当前状态入口整理；不授权counter实现或真实发送。
+ENGINEERING_SYNTHETIC_ACCEPTED / QUALIFIED_COUNTER_PENDING保持，B/D/AI-1 OPEN。
+当前入口为测试方案§17，新增§17.2～§17.3记录双仓交付范围和未授权的小批验收清单；计划§9增加当前入口，旧记录保留。
+本轮重新核对LMS45项、DeepTutor23项源码指纹，68项全部一致；6项契约fixtures匹配A批hash。
+37个manifest/patch文件中的33项补丁/父摘要引用及4条明确父manifest路径/hash匹配，原矩阵manifest及补丁未改。
+未重新应用全部补丁或重跑原始业务验证；两仓未提交实现均在当前源码清单内，本地依赖软链接排除未来交付且不删除。
+三组AI-0原始输入本轮尚未定位到可直接引用的原文，标记为执行准备待核对，不用自行新拟内容冒充已批准输入。
+真实验收建议最多3组单次串行，费用额度/完整请求/计数资格待落实及另行批准；未知即停、保留原映射和占用。
+人工记录输入准备、等待、审核修改及可比人工基线，保留原文错误和修订版本；AI-0的15/5分钟及10元不转移。
+§29.27的全量0失败/1条件跳过、单独18项补验、DeepTutor局部16项/1 warning与历史失败分开保留，不新增全绿结论。
+本轮仅文档整理，不关闭总门禁、不提交推送部署、不访问服务器或模型密钥。
+验证记录：首次直接 `node scripts/check-family-docs.js` 使用默认Node26且缺dotenv解析路径，exit1；
+随后以已有Node22、NODE_PATH指向既有依赖执行同一脚本，exit0；未安装依赖或修改校验代码。
+同一环境执行既有familyDocumentationGate的AI-1历史/当前矩阵定向用例，2 passed、311未选、exit0，未宣称313项全跑。
+`git diff --check`、三份文档200个相对文件链接与代码围栏检查通过，68项源码指纹复查一致。
+命令结果在本轮工具记录中，未另存完整原始日志；不将本轮检查冒充独立业务复验或历史证据重新冻结。
+限定独立文档复核未发现新增P1/P2或范围扩张；独立核对68项源码、6项fixtures、37份manifest/patch、
+33项摘要引用及4条父路径/hash、双仓HEAD与本地依赖排除项一致。未独立重跑测试或全部补丁重建。
+确认计数/费用资格、三组原文、人工价值及发布仍待验；本记录为准备工作复核通过，不是B/D/AI-1关闭批准。
+T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING及REMAINDER_DEFERRED保持。
+
+### 29.29 最小收尾用户复审通过及原创输入只读核对（2026-11-02）
+
+用户确认§29.28最小收尾复审通过，批准更新评审记录及只读查找三组已批准原创输入；不授权替换输入、模型调用或关闭AI-1。
+复审确认双仓68项指纹、6项fixtures、37份manifest/patch、33项摘要引用及4条父路径/hash匹配；
+文档状态、相对文件链接及diff通过，既有矩阵定向2 passed/311未选，不改写为业务全量复验。
+该批准仅收口交付盘点及验收准备；ENGINEERING_SYNTHETIC_ACCEPTED及B/D/AI-1 OPEN保持。
+
+本轮通过原对话分页读取找到完整草案、用户批准、历史inputs.json全文创建记录及执行前hash；
+详见测试方案§17.4。批准原文与历史压缩封装不是逐字相同，已逐组列出省略条件，不用封装替代原文。
+内存重算历史inputs.json匹配 `1df9c3764429b287c347e9448a8419cafca9cd57b1c96239d6ae8161149ce7d6`；
+原临时目录已不存在，未重新创建原证据文件、运行旧脚本或连接服务器。
+原文已定位，但AI-1适配/完整请求冻结与确认仍待完成；历史计数和调用授权不转移。
+查找时旧动态线程工具不可用、超出分页/输出参数限制及一次临时目录扫描权限拒绝均未计为成功查找；
+改用现有线程工具有界分页后取得原文。首次摘要命令的shell双引号触发Markdown反引号替换，
+该次草案摘要无效；修正为单引号安全传参后重新计算，不采用错误摘要，不执行历史代码。
+本轮修订后以现有Node22/依赖执行文档状态校验及diff检查通过；AI-1矩阵定向2 passed、311未选，exit0；
+68项源码指纹再次匹配。上述为本轮主线程验证，不冒称独立业务重跑或计数资格验收。
+本轮不调用模型、不读取密钥、不提交推送合并部署；计数资格、历史失败、DEVICE_PENDING及既有后置范围不变。
+
+### 29.30 三组已批准AI-1文本冻结候选（2026-11-02）
+
+用户批准当前三组适配system/user及整理冻结，不授权实际发送或AI-1门禁关闭。
+候选入口为测试方案§17.5及[evidence/ai1-inputs-20261102](evidence/ai1-inputs-20261102/README.md)。
+输入文件SHA256为b466c648208fdd67f256d98de700ecc729e0d4669884cc9f9cd08fe64a92af44，
+完整Provider正文归档SHA256为016075d9d3a36563d903e4727e6e8c1659e8a337eca50b48a1a53786d8e39ffb。
+manifest登记每组system/user/messages/body hash；来源消息及历史封装摘要分开记录，准确差异明确列出。
+文本批准已取得，归档仍FROZEN_PENDING_REVIEW_NOT_AUTHORIZED；本记录为主线程自查及提交复审，不冒称独立通过。
+三组均匹配对话批准内容，现有normalize/buildPreview未改变文字；规范正文和各层摘要一致，68项源码指纹一致。
+正文候选不含运行时权限、profile、counter、报价、费用预留或截止时间；不冒充完整operation或生产requestHash。
+文档状态校验exit0；既有矩阵定向2 passed/311未选，非完整回归，不改变历史失败与已有通过证据的区分。
+QUALIFIED_COUNTER_PENDING、人工修订后方可使用、未知结果原命令及占用保护保持；B/D/AI-1 OPEN。
+历史失败、DEVICE_PENDING、T4/T8 OPEN、T9 NOT_STARTED、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED不变。
+未调用模型、读取密钥、访问服务器、提交推送或部署；真实发送仍须资格/费用/执行另行批准。
+
+### 29.31 输入候选复审证据归并（2026-11-02）
+
+§29.30冻结候选主线程复审通过，随后限定独立复核未发现新增P1/P2。
+原5文件及manifest SHA256 5205bcee316e319d8bae60e3cd55960b22764cb2e14558b8581ef67067fd9a43保持不变；
+不倒改冻结状态、不冒称用户已批准归档验收。当前说明见测试方案§17.6。
+主线程核对批准system/user、原草案消息hash；独立复核只背书当前文件/正文/源码一致性，未读原会话。
+独立以已有Node22执行归档JS、字段与角色白名单、标准答案排除、BOM/换行和68项指纹检查通过，
+现有文档状态校验exit0；未重跑Jest、完整业务测试或真实Provider。主线程定向2 passed/311未选不冒充独立结果。
+全部实际正文无2852/7004/1872等人工答案及旧变式题生成要求；README人工答案不是外发材料。
+2026-11-02北京时间19:55只读检查原官方询问会话、全部邮件域名/主题及退信范围，无相关回复/退信；
+未对外发送、未修改邮件或定时任务。QUALIFIED_COUNTER_PENDING及费用/人工价值/发布待验不变。
+这次仅补充有依据的评审记录，不关闭B/D/AI-1；历史失败、DEVICE_PENDING、T4/T8 OPEN、
+T9 NOT_STARTED、Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING及REMAINDER_DEFERRED保持。
+未调用模型、读取密钥、提交推送合并部署或扩大后置范围。
+
+### 29.32 双仓保存交付授权（2026-11-02）
+
+用户授权将已完成AI-1限定合成工程整理提交/推送专用分支并创建PR。
+技术计数依据仅暂缓，QUALIFIED_COUNTER_PENDING、费用及人工价值待验不变；真实发送保持关闭。
+本轮不合并、不部署、不调用模型，不将Git交付或CI通过视为B/D/AI-1门禁关闭。
+双仓范围、公开材料检查及基线限制见测试方案§17.7；现有原始失败和冻结候选保留。
+用户随后明确批准创建mflyn/DeepTutor公开fork并仅向自己的main提Draft PR；原上游origin保持不变。
+新增保存交付索引见[evidence/ai1-delivery-20261102](evidence/ai1-delivery-20261102/README.md)，不覆盖旧manifest和失败记录。
+T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING及高级恢复/新回收REMAINDER_DEFERRED保持。
+
+### 29.33 双仓 CI 收口授权与失败保留（2026-11-02）
+
+用户批准定位、最小修复、永久反例、自查及独立复评后推送原分支重验；不合并部署或调用模型。
+LMS旧运行41446657081的Task 11链接冲突及DeepTutor旧运行41447420768的Ruff失败、
+macOS runner容量取消和下游未执行分别保留，不能以本机定向通过宣称双仓CI已通过。
+修复与证据见[evidence/ai1-ci-20261102](evidence/ai1-ci-20261102/README.md)。
+默认关闭、QUALIFIED_COUNTER_PENDING、B/D/AI-1 OPEN及§29.32全部历史/后置状态保持。

@@ -1,0 +1,37 @@
+{
+  "status": "LOCAL_REVIEW_RECORDED_TOTAL_GATES_OPEN",
+  "manifestSha256": "f619e87be0cd8950d7b5269e125155fd5afdb4354d42ab543aaf675953cc2329",
+  "sourceFingerprints": 65,
+  "sourceUnchanged": true,
+  "documentationCheck": "PASS: 412 fixtures, 38 requirements",
+  "diffCheck": {
+    "LMS": 0,
+    "DeepTutor": 0
+  },
+  "documents": [
+    {
+      "file": "docs/api/family-ai1-api.md",
+      "sha256": "37e3446e87ae28c37a3c45fee9104291d4a06bc2793549e99e92f28ad0d6993e"
+    },
+    {
+      "file": "docs/development/family-ai1-test-plan.md",
+      "sha256": "234f7e631763bdaf41336171f2d40544b85f54542147f08a585e329ff0775a97"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "ea894889222e4bc812b6315c38aaccd9d85b181249175fb24c9ac031e5a2bea3"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "edb9774c5adaaef042ec3cb76571c5f333707f922ee8ae84aa994178075bc051"
+    },
+    {
+      "file": "docs/development/evidence/ai1-remote-business-20261101/README.md",
+      "sha256": "8709522cbb13d6901f6b099526b47b73211ac58a7b5be38468e9456051404295"
+    },
+    {
+      "file": "docs/development/evidence/ai1-remote-business-20261101/verification.json",
+      "sha256": "da458ec8c0628dbb823568602177f31ffe53b995a585dfa288a9de790c0e3ccf"
+    }
+  ]
+}

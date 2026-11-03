@@ -1,0 +1,20 @@
+{
+  "state": "LOCAL_REVIEW_VERIFIED_NOT_GATE_CLOSURE",
+  "patchSha256": "de7db800dc8d8ac8ceb86f3c5ef249e507a80aa60324b7402cb6e2c17de375e7",
+  "manifestSha256": "459ce23edcf1072007d9995f7f0b22513411ca72a143d026b1f6a0562844ea8d",
+  "verificationSha256": "a6049b38368d5c4bb7ed2f1d36259cbdcb4223b332fdaf885ece039eb86090a4",
+  "hashCheck": { "exitCode": 0, "candidateFiles": 57, "privateLogs": 13, "buildFiles": 8, "patchReconstruction": "PASS", "previousD3Unchanged": true },
+  "independentSourceBinding": { "files": 5, "unchanged": true, "specSha256": "495f2f9d87b1afa48dd0059519d47fe544b57dcbf8722d3f7983aa674baef9ed" },
+  "finalDocumentationGate": { "suites": 1, "tests": 312, "seconds": 34.259, "exitCode": 0, "privateLogName": "ai1-d4-doc-gate-final.log", "sha256": "ad83b2fafeab366aa7bcacaa4f92089968ac650e6a404556846a3486bebaebd3" },
+  "finalDocumentationCheck": { "exitCode": 0, "privateLogName": "ai1-d4-doc-check-final.log", "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22" },
+  "lintExitCode": 0,
+  "diffCheckExitCode": 0,
+  "bGate": "OPEN",
+  "dGate": "OPEN",
+  "ai1Gate": "OPEN",
+  "remainingLocalBrowser": ["child switch", "late old 401", "ordinary network refresh preserves original command"],
+  "externalImplementation": "PENDING_SOURCE_AND_AUTHORIZATION",
+  "device": "DEVICE_PENDING",
+  "historicalFamilyFull": "161 passed / 2 failed suites; 4980 passed / 2 failed tests; exit 1",
+  "gitAndDeployment": "NO_COMMIT_PUSH_MERGE_OR_DEPLOYMENT"
+}

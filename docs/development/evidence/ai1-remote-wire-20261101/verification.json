@@ -1,0 +1,96 @@
+{
+  "status": "LOCAL_WIRE_REVIEWED_NOT_BATCH_ACCEPTANCE",
+  "logs": [
+    {
+      "name": "contract-red",
+      "exit": 1,
+      "kind": "author-red",
+      "sha256": "a69c7ebae650c4222320ad8fa3c58cf99b8e8174e26af268a264de3fb6147df8"
+    },
+    {
+      "name": "service-red",
+      "exit": 1,
+      "kind": "author-red",
+      "sha256": "69cfc8421ac7d5d353e09594c32975e54a36fe53b5e342e203beac0ac3fd3a1d"
+    },
+    {
+      "name": "http-red",
+      "exit": 1,
+      "kind": "author-red",
+      "sha256": "2ecf7bb55a7e8631526654dd2657a8f2ea42bda010a12b91e44c2115e2714130"
+    },
+    {
+      "name": "prepare-clock-red",
+      "exit": 1,
+      "kind": "author-red",
+      "sha256": "9ac790f43afcf6d816787dd805bda5971156f11a6dbbde5a81ce77f08ee6c8e9"
+    },
+    {
+      "name": "review-p2-red",
+      "exit": 1,
+      "kind": "author-red",
+      "failed": 5,
+      "passed": 54,
+      "sha256": "d0f20a71259736db8480de3322ec7c36555a1f9e347f8e70c59f361e249ec9f8"
+    },
+    {
+      "name": "final-author",
+      "exit": 0,
+      "kind": "author",
+      "passed": 87,
+      "sha256": "0f7dcc79cc1abdc627f6e9e3f9d398e16b5b75aae998f735af64c4d7dccd6854"
+    },
+    {
+      "name": "final-independent",
+      "exit": 0,
+      "kind": "independent",
+      "passed": 87,
+      "sha256": "6e8b64d69b23f38642b7a1bfd1355eab31a4f7c673de6ee3d5098f81e85cb43b"
+    },
+    {
+      "name": "independent-cross-language",
+      "exit": 0,
+      "kind": "independent-probe",
+      "sha256": "e4304da0bd6d498dc78f855daf4a8492795b328f07c22ab092667917b44cf0be"
+    },
+    {
+      "name": "docs",
+      "exit": 0,
+      "kind": "author",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "dependencies",
+      "exit": 0,
+      "kind": "author",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "cancel-not-recorded",
+      "exit": 1,
+      "kind": "author-expected-mutation-failure",
+      "sha256": "2d2923e50651e4942697766eb8fcfef8809ba786dddf5c68724dd10592573c5e"
+    },
+    {
+      "name": "python-whitespace",
+      "exit": 1,
+      "kind": "author-expected-mutation-failure",
+      "sha256": "06b9020d05cf298473db33cbb0c2e644e6dc40fb168304e3f9a30cc1e40786c4"
+    },
+    {
+      "name": "no-post-prepare-clock",
+      "exit": 1,
+      "kind": "author-expected-mutation-failure",
+      "sha256": "56dd11a2f8442e9e7e74172d974a539ee9f2940202c5ec4ffe84c8c0b5dc48ea"
+    }
+  ],
+  "independentBeforeSha256": "438a140fa83786c86e4a6511d5fe431d02f66253b17c7b4230cee7b468af153a",
+  "independentAfterSha256": "438a140fa83786c86e4a6511d5fe431d02f66253b17c7b4230cee7b468af153a",
+  "boundaries": [
+    "FORMAL_MAIN_NOT_MOUNTED",
+    "PROVIDER_DOUBLE",
+    "B_OPEN",
+    "AI1_OPEN",
+    "FULL_DEEPTUTOR_NOT_VERIFIED"
+  ]
+}

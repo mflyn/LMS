@@ -1,0 +1,333 @@
+diff --git a/DeepTutor/tests/services/ai1/lms_business_acceptance.py b/DeepTutor/tests/services/ai1/lms_business_acceptance.py
+index 88ddc7e..9ac2152 100644
+--- a/DeepTutor/tests/services/ai1/lms_business_acceptance.py
++++ b/DeepTutor/tests/services/ai1/lms_business_acceptance.py
+@@ -16,7 +16,7 @@ import psutil
+ from tests.services.ai1.lms_acceptance import PROFILE, calls, local, serve
+ 
+ 
+-def run_lms(args, *, cwd, env, log_path, timeout=120):
++def run_lms(args, *, cwd, env, log_path, timeout=120, on_poll=None):
+     """Keep partial output; contain Node helpers and reap the runner's private group."""
+     observed = {}
+     process = None
+@@ -41,6 +41,11 @@ def run_lms(args, *, cwd, env, log_path, timeout=120):
+                 if time.monotonic() >= deadline:
+                     timed_out = True
+                     break
++                if on_poll is not None:
++                    on_poll()
++                    if time.monotonic() >= deadline:
++                        timed_out = True
++                        break
+                 time.sleep(0.05)
+         finally:
+             if process is not None:
+diff --git a/b/DeepTutor/tests/services/ai1/lms_dual_restore_acceptance.py b/DeepTutor/tests/services/ai1/lms_dual_restore_acceptance.py
+new file mode 100644
+index 0000000..e84ddff
+--- /dev/null
++++ b/DeepTutor/tests/services/ai1/lms_dual_restore_acceptance.py
+@@ -0,0 +1,149 @@
++"""Actual two-store synthetic rollback; never a production recovery procedure."""
++import copy
++from datetime import datetime, timezone
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++import time
++from uuid import uuid4
++
++import pytest
++import psutil
++
++from tests.services.ai1.lms_acceptance import PROFILE, calls, client, local, serve
++from tests.services.ai1.lms_business_acceptance import run_lms
++
++
++def test_restore_driver_failure_preserves_error_and_reaps_child(tmp_path):
++    def failed():
++        raise RuntimeError("SYNTHETIC_CONTROL_FAILURE")
++    log = tmp_path / "control-failure.log"
++    with pytest.raises(RuntimeError, match="SYNTHETIC_CONTROL_FAILURE"):
++        run_lms([sys.executable, "-c", "import time; time.sleep(60)"], cwd=tmp_path,
++                env={"PATH": os.defpath}, log_path=log, on_poll=failed)
++    assert "SURVIVORS=0" in log.read_text()
++
++
++def test_control_callback_crossing_deadline_cannot_report_normal_child_exit(tmp_path):
++    ready, release = tmp_path / "ready", tmp_path / "release"
++    script = ("import os,time; from pathlib import Path; "
++              f"Path({str(ready)!r}).write_text(str(os.getpid())); "
++              f"p=Path({str(release)!r})\nwhile not p.exists(): time.sleep(0.005)\n")
++    completed = []
++    def crossed():
++        deadline = time.monotonic() + 2
++        while not ready.exists():
++            assert time.monotonic() < deadline
++            time.sleep(0.005)
++        process = psutil.Process(int(ready.read_text()))
++        release.touch()
++        completed.append(process.wait(timeout=2))
++        time.sleep(0.06)
++    log = tmp_path / "control-deadline.log"
++    with pytest.raises(subprocess.TimeoutExpired):
++        run_lms([sys.executable, "-c", script], cwd=tmp_path, env={"PATH": os.defpath},
++                log_path=log, timeout=0.05, on_poll=crossed)
++    assert completed == [0]
++    assert "TIMEOUT=True SURVIVORS=0" in log.read_text()
++
++
++@pytest.mark.parametrize("historical", ["accepted", "sending", "succeeded", "failed_not_sent", "empty"])
++def test_actual_dual_store_rollback_retains_mapping_reservation_and_slot(local, historical):
++    root, store = local
++    mongo = Path(os.environ["AI1_MONGO_BINARY"])
++    assert mongo.is_absolute() and mongo.is_file()
++    lms, modules = Path(os.environ["AI1_LMS_ROOT"]), Path(os.environ["AI1_NODE_PATH"])
++    now = time.time_ns() // 1000000
++    iso = lambda ms: datetime.fromtimestamp(ms / 1000, timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
++    profile = copy.deepcopy(PROFILE)
++    profile.update({"checkedAt": iso(now - 60000), "expiresAt": iso(now + 3600000)})
++    current = None
++    state = {}
++
++    def stop():
++        nonlocal current
++        if current is not None:
++            owned, current = current, None
++            owned.__exit__(None, None, None)
++
++    def start(mode):
++        nonlocal current
++        manager = serve(root, mode=mode, profile=profile, now=now)
++        origin, _ = manager.__enter__()
++        current = manager
++        return origin
++
++    def reply(phase, origin):
++        temporary = root / (phase + ".response.tmp")
++        temporary.write_text(json.dumps({"origin": origin}))
++        temporary.chmod(0o600)
++        temporary.rename(root / (phase + ".response.json"))
++
++    def poll():
++        prepare = root / "prepare.request.json"
++        restore = root / "restore.request.json"
++        if "id" not in state and prepare.exists():
++            request = json.loads(prepare.read_text())
++            operation_id, payload = request["id"], request["payload"]
++            state.update({"id": operation_id, "payload": payload})
++            seed_profile = copy.deepcopy(profile)
++            if historical == "failed_not_sent":
++                seed_profile["pricingProfileVersion"] += "-revoked"
++            if historical != "empty":
++                fault = {"accepted": "after-accept", "sending": "after-provider"}.get(historical, "none")
++                with serve(root, fault=fault, profile=seed_profile, now=now) as (origin, process):
++                    result = client(origin, payload=payload, operation_id=operation_id)
++                    if fault != "none":
++                        assert result["error"] == "AI_REMOTE_UNAVAILABLE"
++                        assert process.wait(timeout=3) == 73
++                    else:
++                        assert result["operation"]["status"] == historical
++                assert store.get(operation_id)["status"] == historical
++                assert store.get(operation_id)["requestHash"] == payload["requestHash"]
++            else:
++                assert store.get(operation_id) is None
++            state["row"] = store.get(operation_id)
++            state["snapshot"] = store.path.read_bytes()
++            # Advance the actual remote store after the snapshot, without a model call.
++            advance_id = operation_id if historical in {"accepted", "empty"} else str(uuid4())
++            with serve(root, profile=profile, now=now) as (origin, _):
++                assert client(origin, payload=payload, operation_id=advance_id)["operation"]["status"] == "succeeded"
++            state["attempts"] = 2 if historical in {"sending", "succeeded"} else 1
++            assert len(calls(root)) == state["attempts"]
++            reply("prepare", start("query-only"))
++        if "restored" not in state and restore.exists():
++            assert json.loads(restore.read_text()) == {"id": state["id"]}
++            stop()
++            store.path.write_bytes(state["snapshot"])
++            assert store.get(state["id"]) == state["row"]
++            state["request_count"] = len((root / "requests.jsonl").read_text().splitlines())
++            state["restored"] = True
++            reply("restore", start("store-isolated"))
++
++    env = {"PATH": os.defpath, "HOME": str(root / "home"), "NODE_ENV": "test", "NODE_PATH": str(modules),
++           "MONGOMS_SYSTEM_BINARY": str(mongo), "MONGOMS_RUNTIME_DOWNLOAD": "false",
++           "AI1_RESTORE_CONTROL": str(root), "AI1_RESTORE_HISTORICAL": historical,
++           "AI1_ACTUAL_REMOTE_PROFILE": json.dumps(profile)}
++    try:
++        code = run_lms([os.environ["AI1_NODE"], str(modules / "jest/bin/jest.js"),
++            "--config=backend/tests/t2/jest.config.js", "--runInBand", "--coverage=false",
++            "--testMatch=**/ai1RestoreRemote.acceptance.js", "--runTestsByPath",
++            "backend/tests/t2/ai1RestoreRemote.acceptance.js"], cwd=lms, env=env,
++            log_path=root / "lms-jest.log", on_poll=poll)
++        assert code == 0, (root / "lms-jest.log").read_text()
++        assert state["restored"] is True
++        report = json.loads((root / "result.json").read_text())
++        assert report == {"id": state["id"], "hash": state["payload"]["requestHash"],
++                          "historical": historical, "noLocalChange": True}
++        assert store.path.read_bytes() == state["snapshot"]
++        assert store.get(state["id"]) == state["row"]
++        assert len(calls(root)) == state["attempts"]
++        requests = [json.loads(line) for line in (root / "requests.jsonl").read_text().splitlines()]
++        isolated = requests[state["request_count"]:]
++        assert [r["method"] for r in isolated] == ["GET", "PUT", "GET", "PUT"]
++        assert isolated[0]["id"] == isolated[1]["id"] == state["id"]
++        assert isolated[2]["id"] == isolated[3]["id"] != state["id"]
++    finally:
++        stop()
+diff --git a/b/LMS/backend/tests/t2/ai1RestoreRemote.acceptance.js b/LMS/backend/tests/t2/ai1RestoreRemote.acceptance.js
+new file mode 100644
+index 0000000..594040f
+--- /dev/null
++++ b/LMS/backend/tests/t2/ai1RestoreRemote.acceptance.js
+@@ -0,0 +1,147 @@
++// Synthetic dual-store restore only. The Python driver owns actual DeepTutor processes.
++const fs = require('fs/promises');
++const path = require('path');
++const { randomUUID } = require('crypto');
++const { createT2Runtime } = require('./serviceRuntime');
++const { expectData } = require('./syntheticSeed');
++const cmd = () => ({ schemaVersion: 'ai1-min-v1', operationId: randomUUID() });
++let runtime, previous;
++afterEach(async () => {
++  try { await runtime?.stop(); } finally {
++    for (const [key, value] of Object.entries(previous || {})) {
++      if (value === undefined) delete process.env[key]; else process.env[key] = value;
++    }
++    runtime = null; previous = null;
++  }
++});
++
++test('actual dual-store restoration cannot resend, settle, refund or unlock an old job', async () => {
++  const directory = process.env.AI1_RESTORE_CONTROL;
++  const historical = process.env.AI1_RESTORE_HISTORICAL;
++  expect(['accepted', 'sending', 'succeeded', 'failed_not_sent', 'empty']).toContain(historical);
++  const exchange = async (phase, data) => {
++    const temporary = path.join(directory, phase + '.tmp');
++    await fs.writeFile(temporary, JSON.stringify(data), { flag: 'wx', mode: 0o600 });
++    await fs.rename(temporary, path.join(directory, phase + '.request.json'));
++    const deadline = Date.now() + 30000;
++    while (Date.now() < deadline) {
++      try { return JSON.parse(await fs.readFile(path.join(directory, phase + '.response.json'), 'utf8')); }
++      catch (error) { if (error.code !== 'ENOENT') throw error; }
++      await new Promise(resolve => setTimeout(resolve, 25));
++    }
++    throw new Error('Synthetic restore handshake timed out: ' + phase);
++  };
++  const profile = JSON.parse(process.env.AI1_ACTUAL_REMOTE_PROFILE);
++  const settings = { AI1_MODE: 'enabled', AI1_ALLOW_LOOPBACK: 'true', AI1_LOCAL_STORE_CONTINUOUS: 'true',
++    AI1_REMOTE_STORE_CONTINUOUS: 'true', AI1_PROVIDER_PROFILE_CONFIRMED: 'true',
++    AI1_OPERATION_URL: 'http://127.0.0.1:1', AI1_OPERATION_TOKEN: 'synthetic-service-credential-00000001',
++    AI1_MODEL_PROFILE: JSON.stringify(profile), AI1_BUDGET_LIMITS: JSON.stringify({
++      singleMicros: 16384, dayMicros: 163840, monthMicros: 163840, experimentMicros: 163840 }) };
++  previous = Object.fromEntries(Object.keys(settings).map(key => [key, process.env[key]]));
++  runtime = await createT2Runtime({ beforeStart: () => Object.assign(process.env, settings) });
++  const seed = await runtime.seed(), parent = await runtime.login('parent'), outsider = await runtime.login('outsider');
++  expectData(await parent.patch(`/api/growth-tasks/${seed.tasks.child.taskId}`, { subject: 'math' }));
++  const learningBaseline = await runtime.snapshot();
++  const source = { type: 'task', id: seed.tasks.child.taskId };
++  const original = { ...cmd(), childId: seed.actors.child.childId, source,
++    input: { questionText: '206 * 30', answerText: null, parentContext: '' },
++    chapter: { provenance: 'parent_declared', subject: 'math', grade: 4, term: 'upper',
++      textbookLabel: 'Synthetic', chapterLabel: '\u591a\u4f4d\u6570\u4e58\u4e24\u4f4d\u6570' }, deidentifiedConfirmed: true };
++  const created = expectData(await parent.post('/api/tutor-cycles', original), 201);
++  const M = require('../../services/homework-service/models/Ai1');
++  const Task = require('../../services/homework-service/models/GrowthTask');
++  const { createAi1Service } = require('../../services/homework-service/services/ai1Service');
++  const { buildRequest, createOperationClient } = require('../../services/homework-service/services/ai1Operation');
++  const identity = { id: seed.actors.parent.userId, role: 'parent' };
++  // Reserve without dispatch via the real transactional service, reading the actual synthetic task.
++  const setup = createAi1Service({ getRuntime: () => ({ enabled: true, continuousStore: true }),
++    getProfile: () => profile, getLimits: () => JSON.parse(settings.AI1_BUDGET_LIMITS),
++    sourceReader: { require: async scope => {
++      const task = await Task.findOne({ _id: scope.sourceTaskId, familyId: scope.familyId, childId: scope.childId }).lean();
++      return task && { id: String(task._id), familyId: String(task.familyId), childId: String(task.childId), subject: task.subject };
++    } } });
++  const generation = { ...cmd(), expectedCycleStateVersion: created.cycle.stateVersion,
++    generationInputHash: created.preview.generationInputHash, modelProfileVersion: created.preview.modelProfileVersion,
++    pricingProfileVersion: created.preview.pricingProfileVersion, maxAuthorizedCostMicros: 16384, externalSendConfirmed: true };
++  const { job } = await setup.generate({ identity, cycleId: created.cycle.id, body: generation });
++  const snapshot = async () => JSON.stringify(await Promise.all(Object.values(M).map(m => m.find().sort({ _id: 1 }).lean())));
++  const capture = async () => Promise.all(Object.values(M).map(async model => ({ model,
++    bytes: Task.db.base.mongo.BSON.serialize({ rows: await model.collection.find({}).sort({ _id: 1 }).toArray() }) })));
++  let saved = await capture(), baseline = await snapshot();
++  const claim = await setup.claim({ identity, jobId: job.id });
++  expect(claim.claimed).toBe(true);
++  await setup.markUnknown({ jobId: job.id, owner: claim.owner });
++  if (historical === 'accepted') { saved = await capture(); baseline = await snapshot(); }
++  const persisted = await M.Job.findById(job.id).lean();
++  const recoveryPath = `/api/tutor-jobs/${job.id}/recover`, cyclePath = `/api/tutor-cycles/${created.cycle.id}`;
++  const home = runtime.servers.find(row => row.name === 'homework-service');
++  const closeHome = async () => {
++    if (!home.server.listening) return;
++    const stopped = new Promise((resolve, reject) => home.server.close(error => error ? reject(error) : resolve()));
++    home.server.closeAllConnections(); await stopped;
++  };
++  const startHome = async (origin, isolated) => {
++    const target = new URL(origin); expect(target.protocol).toBe('http:'); expect(target.hostname).toBe('127.0.0.1');
++    home.server = await require('../../services/homework-service/server').startServer({ host: '127.0.0.1',
++      port: Number(new URL(home.url).port), connection: Task.db,
++      env: { ...process.env, ...settings, AI1_OPERATION_URL: origin,
++        AI1_MODE: isolated ? 'store-isolated' : 'query-only',
++        AI1_LOCAL_STORE_CONTINUOUS: isolated ? 'false' : 'true', AI1_REMOTE_STORE_CONTINUOUS: isolated ? 'false' : 'true',
++        RESOURCE_SERVICE_URL: runtime.urls['resource-service'], PROGRESS_SERVICE_URL: runtime.urls['progress-service'] } });
++  };
++  const prepared = await exchange('prepare', { id: persisted.remoteOperationId, payload: buildRequest(persisted) });
++  await closeHome(); await startHome(prepared.origin, false);
++  const outcome = expectData(await parent.post(recoveryPath, cmd()), historical === 'sending' ? 202 : 200);
++  expect(outcome.job.status).toBe(historical === 'sending' ? 'unknown' : historical === 'failed_not_sent' ? 'failed' : 'succeeded');
++  const pending = historical === 'sending', failed = historical === 'failed_not_sent';
++  const advancedAccounts = await M.Account.find().lean();
++  expect(advancedAccounts.map(a => a._id).sort()).toEqual(['experiment', String(persisted.familyId)].sort());
++  for (const account of advancedAccounts) expect(account).toMatchObject({
++    outstandingMicros: pending ? 16384 : 0, settledMicros: pending || failed ? 0 : 200
++  });
++  expect(await M.Reservation.findById(persisted.reservationId).lean()).toMatchObject({
++    reservedMicros: 16384, settledMicros: pending ? null : failed ? 0 : 200,
++    state: pending ? 'reserved_unknown' : failed ? 'released' : 'settled'
++  });
++  await closeHome();
++  const isolated = await exchange('restore', { id: persisted.remoteOperationId });
++  for (const { model, bytes } of saved) {
++    await model.collection.deleteMany({});
++    const { rows } = Task.db.base.mongo.BSON.deserialize(bytes);
++    if (rows.length) await model.collection.insertMany(rows);
++  }
++  expect(await snapshot()).toBe(baseline);
++  await startHome(isolated.origin, true);
++  for (const [url, body, code] of [
++    [recoveryPath, cmd(), 'AI_STORE_ISOLATED'],
++    [cyclePath + '/explanation-jobs', generation, 'AI_STORE_ISOLATED'],
++    [cyclePath + '/explanation-jobs', { ...generation, operationId: randomUUID() }, 'AI_DISABLED']
++  ]) {
++    const response = await parent.post(url, body);
++    expect(response.status).toBe(503); expect(response.data.error.code).toBe(code);
++    expect(await snapshot()).toBe(baseline);
++  }
++  const detail = expectData(await parent.get(cyclePath));
++  expect(detail.job).toMatchObject({ id: job.id, status: historical === 'accepted' ? 'unknown' : 'reserved', canRecover: false });
++  expect(detail.artifacts).toEqual([]);
++  expect((await outsider.get(cyclePath)).status).toBe(404);
++  const remote = createOperationClient({ baseUrl: isolated.origin, token: settings.AI1_OPERATION_TOKEN, allowLoopback: true });
++  for (const record of [persisted, { ...persisted, remoteOperationId: randomUUID() }]) {
++    for (const method of ['get', 'put']) await expect(remote[method](record)).rejects.toMatchObject({
++      code: 'AI_STORE_ISOLATED', statusCode: 503 });
++  }
++  expect(await snapshot()).toBe(baseline);
++  const restored = await M.Job.findById(job.id).lean(), reservation = await M.Reservation.findById(restored.reservationId).lean();
++  expect(restored.remoteOperationId).toBe(persisted.remoteOperationId);
++  expect(restored.remoteRequestHash).toBe(persisted.remoteRequestHash);
++  expect(reservation).toMatchObject({ reservedMicros: 16384, settledMicros: null,
++    state: historical === 'accepted' ? 'reserved_unknown' : 'reserved' });
++  const accounts = await M.Account.find().lean(); expect(accounts).toHaveLength(2);
++  for (const account of accounts) expect(account).toMatchObject({ outstandingMicros: 16384, settledMicros: 0 });
++  const slot = await M.Slot.findById('global').lean();
++  if (historical === 'accepted') expect(String(slot.jobId)).toBe(job.id);
++  else expect(slot?.jobId || null).toBeNull();
++  expect(await runtime.snapshot()).toEqual(learningBaseline);
++  await fs.writeFile(path.join(directory, 'result.json'), JSON.stringify({ id: restored.remoteOperationId,
++    hash: restored.remoteRequestHash, historical, noLocalChange: true }), { mode: 0o600 });
++});

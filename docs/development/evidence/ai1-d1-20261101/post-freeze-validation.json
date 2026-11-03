@@ -1,0 +1,44 @@
+{
+  "scope": "D1_POST_FREEZE_LOCAL_VALIDATION",
+  "candidate": {
+    "candidate.patch": "5d7852778fff176e1cc2705d54343ab9d99542b53d3169c9f0f06f03b7629aab",
+    "manifest.json": "96281efa36fd997b43a6a086eb797d8f50bea2b520cb0fa03ebe659577ddc52b",
+    "verification.json": "2fd83892e7f3efdb5cf294319f701f2170f3898131026d9319c30c4851be67b1"
+  },
+  "checks": [
+    {
+      "command": "node scripts/check-family-docs.js",
+      "exitCode": 0,
+      "log": "ai1-d-docs-frozen.log",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "command": "jest --config backend/jest.family-common.config.js --runInBand --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "exitCode": 0,
+      "testsPassed": 310,
+      "seconds": 37.731,
+      "log": "ai1-d-doc-gate-frozen.log",
+      "sha256": "8bf78f3a9e1a35f71b139e356152480b7078fe238f4bfe5cf441412dbf4f9baf"
+    },
+    {
+      "command": "eslint <ten affected source/test files>",
+      "exitCode": 0,
+      "log": "ai1-d-lint-frozen.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "diffCheck": {
+    "command": "git diff --check",
+    "exitCode": 0
+  },
+  "candidateValidation": {
+    "files": 51,
+    "logs": 30,
+    "result": "MATCHED",
+    "patchReconstruction": "PASS"
+  },
+  "targetedSensitiveScan": "NO_MATCH_NOT_EXHAUSTIVE",
+  "batchGate": "OPEN",
+  "totalGate": "OPEN",
+  "device": "DEVICE_PENDING"
+}

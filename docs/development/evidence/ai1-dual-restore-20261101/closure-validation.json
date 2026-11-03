@@ -1,0 +1,58 @@
+{
+  "status": "LOCAL_REVIEW_COMPLETE_NOT_GATE_APPROVAL",
+  "sourceFingerprints": 68,
+  "files": [
+    {
+      "path": "docs/development/evidence/ai1-dual-restore-20261101/README.md",
+      "sha256": "87cb8cbb5d00df61de3f405e2de443f2e7c2dd3f6492215d15164d8f8e384d3c"
+    },
+    {
+      "path": "docs/development/evidence/ai1-dual-restore-20261101/verification.json",
+      "sha256": "c440f5ccf1818f473f6096b424b34bb39b19cc3dba5979be36d4e19b10122d16"
+    },
+    {
+      "path": "docs/development/evidence/ai1-dual-restore-20261101/manifest.json",
+      "sha256": "64c988c34a76969dfc2cba5efc196a40b42195d75c3aeff6adeae48cda90411b"
+    },
+    {
+      "path": "docs/development/evidence/ai1-dual-restore-20261101/candidate.patch",
+      "sha256": "0b54b73deb7a3fd0fac7fe67b09b327dc2aa80b4e844c75bd3c1425e36a89c8d"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "55287a84a344911e0f0937a16d840f950ffb4a49f51ad7d65efbfe35a77e5441"
+    },
+    {
+      "path": "docs/development/family-ai1-test-plan.md",
+      "sha256": "f96d08ad1eeee93185a07c8bd0f440a1cfd64d5cc07bf5211e1f99d783a92897"
+    },
+    {
+      "path": "docs/api/family-ai1-api.md",
+      "sha256": "838fd77591233c9a5e76ff01cecb7914371cc13913b3bd234385594f85ab1b77"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "5cebd50145baa4247b3ba79560a629cb09ca55e5b2172cd4a4d1fa66d49af67a"
+    }
+  ],
+  "checks": [
+    {
+      "name": "documentation",
+      "status": 0,
+      "log": "dual-final-documentation.log",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "lms-diff",
+      "status": 0,
+      "log": "dual-final-lms-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "deeptutor-diff",
+      "status": 0,
+      "log": "dual-final-deeptutor-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

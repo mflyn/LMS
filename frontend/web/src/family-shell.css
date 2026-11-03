@@ -230,3 +230,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .task-checklist-editor-row input:not([type="checkbox"]) { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; border: 1px solid #a5b5ad; border-radius: 6px; }
 .task-checklist-priority { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .task-checklist-priority input { width: 20px; height: 20px; }
+.tutor-page > section, .tutor-page > form { padding-block: 20px; border-bottom: 1px solid #dce4df; }
+.tutor-page h2 { font-size: 20px; }
+.tutor-page h3 { font-size: 16px; }
+.tutor-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.65; max-width: 100%; }
+.tutor-versions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; margin-block: 20px; }
+.tutor-versions .family-record { display: block; min-width: 0; }
+.tutor-versions p { overflow-wrap: anywhere; }
+.tutor-page fieldset { margin-block: 16px; display: grid; gap: 12px; }
+.tutor-page fieldset > label { display: grid; gap: 8px; }
+.tutor-page input:not([type="checkbox"]), .tutor-page textarea { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; color: inherit; background: #fff; border: 1px solid #a5b5ad; border-radius: 6px; }
+.tutor-page textarea { min-height: 112px; resize: vertical; }
+.tutor-page fieldset > button { justify-self: start; }
+.tutor-page label:has(input[type="checkbox"]) { min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.tutor-page input[type="checkbox"] { width: 20px; height: 20px; flex: 0 0 20px; }

@@ -1,0 +1,88 @@
+{
+  "status": "LOCAL_STORE_REVIEWED_NOT_BATCH_ACCEPTANCE",
+  "author": {
+    "passed": 15,
+    "warnings": 1
+  },
+  "independent": {
+    "passed": 15,
+    "warnings": 1
+  },
+  "fullDeepTutor": "NOT_PASSED_MISSING_DEPENDENCIES",
+  "logs": [
+    {
+      "name": "initial-missing-module",
+      "exit": 1,
+      "kind": "author-red",
+      "sha256": "b05e628b5c88c86491127054e7946e2bf8481dd7d72798abb45c600562bc470b"
+    },
+    {
+      "name": "directory-check",
+      "exit": 1,
+      "kind": "author-red",
+      "sha256": "b860e2fd7e90e547d78ae1623f961d8d96f11abfcaeec18f3e2fc2d5dd77263d"
+    },
+    {
+      "name": "final-15",
+      "exit": 0,
+      "kind": "author",
+      "sha256": "9245a45e5c08b8cded7af34bd97d44bb772e45afedb52804a4c5e423e1b73935"
+    },
+    {
+      "name": "independent-15",
+      "exit": 0,
+      "kind": "independent",
+      "sha256": "1e53e18244c43b33ce22fd40141ee240c9aa74a0808485b4dd3d1fb380244536"
+    },
+    {
+      "name": "independent-probes",
+      "exit": 0,
+      "kind": "independent-probes",
+      "sha256": "4c2b65bb7d3f0de97509b7ff6dcf406a0733a56957eba06a0fe447e39233bcc5"
+    },
+    {
+      "name": "root-fixtures-missing-dependency",
+      "exit": 1,
+      "kind": "environment-failure",
+      "sha256": "4685f3f68e05f08f4c6810c71addbf02201d674b781c25d1de688b4fa0ab8d3d"
+    },
+    {
+      "name": "docs-initial-missing-node-path",
+      "exit": 1,
+      "kind": "invocation-failure",
+      "sha256": "092c7f947671bb52e1286a7115c32c0a0f3e0398497092c8e0fa78c066add564"
+    },
+    {
+      "name": "docs-final",
+      "exit": 0,
+      "kind": "author",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "reclaim-sending",
+      "exit": 1,
+      "kind": "author-expected-mutation-failure",
+      "sha256": "46003dd24b261ef5776288f0060224bf7b72a58bb0d86ad4c1ce01974514b8df"
+    },
+    {
+      "name": "remove-owner-cas",
+      "exit": 1,
+      "kind": "author-expected-mutation-failure",
+      "sha256": "e5d067416333437223eb90c82b45a9d32e297e0982eae3733fd5e15f6ac0ee55"
+    },
+    {
+      "name": "overwrite-terminal",
+      "exit": 1,
+      "kind": "author-expected-mutation-failure",
+      "sha256": "ef2cbf5fc7edece8e10e08f7516ff12b0c77cca86efc51b3f2be8754d0fd1a45"
+    }
+  ],
+  "boundaries": [
+    "ROUTE_NOT_MOUNTED",
+    "PROVIDER_NOT_INVOKED",
+    "B_OPEN",
+    "AI1_OPEN",
+    "DEVICE_PENDING",
+    "REMAINDER_DEFERRED"
+  ]
+}

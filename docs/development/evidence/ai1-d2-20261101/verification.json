@@ -1,0 +1,260 @@
+{
+  "scope": "AI1_D2_LOCAL_RUNTIME_FORMAL_HTTP_PARTIAL",
+  "singleRunFullGreen": false,
+  "author": {
+    "relatedRegression": {
+      "suites": 9,
+      "tests": 220,
+      "exitCode": 0,
+      "seconds": 38.541,
+      "beforeLastTestOnlyRefinements": true
+    },
+    "finalRefinedTests": {
+      "suites": 2,
+      "tests": 54,
+      "exitCode": 0,
+      "seconds": 8.508
+    },
+    "lint": {
+      "exitCode": 0,
+      "dependencyResolutionFailurePreserved": true
+    }
+  },
+  "independent": {
+    "earlierRuntime": {
+      "suites": 2,
+      "tests": 49,
+      "exitCode": 0
+    },
+    "admissionProbes": {
+      "tests": 4,
+      "exitCode": 0
+    },
+    "finalFocusedReview": {
+      "suites": 2,
+      "tests": 3,
+      "unselected": 51,
+      "exitCode": 0
+    },
+    "result": "TWO_TEST_PROTECTION_GAPS_FIXED_AND_REREVIEW_PASSED",
+    "mutations": {
+      "groups": 5,
+      "failedTestsPerGroup": [
+        1,
+        1,
+        1,
+        2,
+        1
+      ],
+      "expectedExitCode": 1,
+      "sourceFilesModified": false
+    }
+  },
+  "commands": {
+    "relatedRegression": "node node_modules/jest/bin/jest.js --config backend/services/homework-service/jest.config.js --runInBand --runTestsByPath backend/services/homework-service/__tests__/services/ai1Runtime.test.js backend/services/homework-service/__tests__/services/ai1Production.test.js backend/services/homework-service/__tests__/services/ai1Service.test.js backend/services/homework-service/__tests__/services/ai1Operation.test.js backend/services/homework-service/__tests__/services/ai1Http.test.js backend/services/homework-service/__tests__/services/ai1Contract.test.js backend/services/homework-service/__tests__/services/growthTaskCompletionProductionStartup.test.js backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js backend/services/homework-service/__tests__/serverLifecycle.test.js",
+    "finalRefinedTests": "same homework Jest config, runInBand, runTestsByPath ai1Runtime.test.js and ai1Production.test.js",
+    "docs": "node scripts/check-family-docs.js; jest --config backend/jest.family-common.config.js --runInBand --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+    "lint": "eslint backend/services/homework-service/server.js backend/services/homework-service/services/ai1Runtime.js backend/services/homework-service/__tests__/services/ai1Runtime.test.js backend/services/homework-service/__tests__/services/ai1Production.test.js backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+    "independent": "Node22 Jest --runInBand --no-cache --runTestsByPath with synthetic Mongo and test-name filter; parameters in private logs"
+  },
+  "actualComponents": [
+    "Gateway",
+    "homework production factory",
+    "AI service",
+    "temporary Mongo replica set",
+    "loopback HTTP"
+  ],
+  "substitutes": [
+    "remote operation protocol double",
+    "historical cycle fixture"
+  ],
+  "notExecuted": [
+    "actual DeepTutor",
+    "real Provider",
+    "formal browser integration",
+    "complete 35-row acceptance",
+    "paid/human value acceptance",
+    "real device"
+  ],
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "preserved": [
+    "AI0 human review required; budget not transferred",
+    "B/D/AI1 OPEN",
+    "T4/T8 OPEN",
+    "T9 NOT_STARTED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "T5-NB-001/002 OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED"
+  ],
+  "privateLogs": [
+    {
+      "name": "ai1-d2-runtime-red.log",
+      "exitCode": 1,
+      "result": "initial missing module",
+      "sha256": "658087e452d3047f9df2eb59d67dce3b58136386be3df494ae1ba103de8d55de"
+    },
+    {
+      "name": "ai1-d2-runtime-green.log",
+      "exitCode": 0,
+      "result": "author initial 38 tests",
+      "sha256": "eb10e2a689b4b8a5061578bd9db4cbb438410d17e78c98d620ed5275ca011b35"
+    },
+    {
+      "name": "ai1-d2-assembly-red.log",
+      "exitCode": 1,
+      "result": "missing readiness hook: 2 failed / 4 passed",
+      "sha256": "bf9eef00f9042a03252300764ed75d5ed25a5631c2916522dd0840f9a180541b"
+    },
+    {
+      "name": "ai1-d2-assembly-green.log",
+      "exitCode": 0,
+      "result": "author 4 suites / 61 tests",
+      "sha256": "71a7e8367198b043d9cc386eb1c5fd33dd9a07cc1b3a986875d1ed5f59c4b085"
+    },
+    {
+      "name": "ai1-d2-startup.log",
+      "exitCode": 1,
+      "result": "incomplete completion fixture: 2 failed / 40 passed",
+      "sha256": "69111cea5acc115230f7255aebbb90f8d604b67da6c7e752fed9a2f48f4682c5"
+    },
+    {
+      "name": "ai1-d2-startup-complete-fixture.log",
+      "exitCode": 0,
+      "result": "author fixture corrected: 2 suites / 48 tests",
+      "sha256": "6b8ddb54f3075c21260176f42fa87ce0b420c73fbd7f5271108a343e66eedc33"
+    },
+    {
+      "name": "ai1-d2-hello-red.log",
+      "exitCode": 1,
+      "result": "bounded primary hello selected negative test",
+      "sha256": "b2a6382ae1b58f3327e81f2ee2be72070528eac21c5ceb0a7e3708e5f6c9f7a0"
+    },
+    {
+      "name": "ai1-d2-regression.log",
+      "exitCode": 0,
+      "result": "author earlier 9 suites / 215 tests",
+      "sha256": "3d4f6f2fbda223cacb1cb74d03d6b723c48bd0c4a9c537a5833646a9bbde9d53"
+    },
+    {
+      "name": "ai1-d2-formal-loop.log",
+      "exitCode": 0,
+      "result": "author 8 formal HTTP tests before admission probes",
+      "sha256": "08245beb5f0ef7b3798f836352db13dfe9a9e7d33798f87c3caa127c4c555125"
+    },
+    {
+      "name": "ai1-d2-permanent-admission.log",
+      "exitCode": 0,
+      "result": "author 2 suites / 54 tests before final review",
+      "sha256": "06c65fbfe5d794a72a7ed01954393766be88d31dd2ca789ad52b44fa026abc52"
+    },
+    {
+      "name": "ai1-d2-final-regression.log",
+      "exitCode": 0,
+      "result": "author 9 suites / 220 tests before final two assertion refinements",
+      "sha256": "791489c0908c572cbbbced4d6a15cdf27d6ef42ad596a5f147811052795c6ee9"
+    },
+    {
+      "name": "ai1-d2-p2-permanent-green.log",
+      "exitCode": 0,
+      "result": "author refined 2 suites / 54 tests",
+      "sha256": "9bc2346d5ef92838744f723d471c4b353e7d0c706b5019216822648cff4d5bfb"
+    },
+    {
+      "name": "ai1-d2-final-lint.log",
+      "exitCode": 2,
+      "result": "local dependency search path missing",
+      "sha256": "7f3f228c8b7b569b782682dc1c278bb236bd90dcac35d59865aa4f4f407dd564"
+    },
+    {
+      "name": "ai1-d2-final-lint-resolved.log",
+      "exitCode": 0,
+      "result": "existing dependency path supplied",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ai1-d2-doc-red.log",
+      "exitCode": 1,
+      "result": "new D2 status guard: 1 failed / 310 unselected",
+      "sha256": "84944c6566340da28ba762c8b109eee92dba2e1b15c64d849865747b2f5e07e9"
+    },
+    {
+      "name": "ai1-d2-doc-check.log",
+      "exitCode": 0,
+      "result": "document checker before final evidence update",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "ai1-d2-doc-gate.log",
+      "exitCode": 0,
+      "result": "document gate before final evidence update",
+      "sha256": "faf7740627b57c80a42711288c9c714e050bdc6e992e8ecf63fcf6a186ab42a7"
+    },
+    {
+      "name": "ai1-d2-independent-targeted.log",
+      "exitCode": 1,
+      "result": "initial fixture failure: 2 failed / 59 passed",
+      "sha256": "f1bc4a357c0ec1e0beedcb1f41d4d017ddab1a3c8235765a90194d045f6773b4"
+    },
+    {
+      "name": "ai1-d2-independent-targeted-current.log",
+      "exitCode": 0,
+      "result": "earlier independent 3 suites / 61 tests",
+      "sha256": "5f6c4fdf050a149dad024f262415af5a73effbf24504ce6e3adf7517cfb4c7fd"
+    },
+    {
+      "name": "ai1-d2-independent-final-targeted.log",
+      "exitCode": 0,
+      "result": "independent 2 suites / 49 tests",
+      "sha256": "90901639173f4907e128de112a0ca15db16beafaa948cf6e5f8b8a1f83b4b2d9"
+    },
+    {
+      "name": "ai1-d2-independent-admission-probes.log",
+      "exitCode": 0,
+      "result": "independent 4 selected probes / 48 unselected",
+      "sha256": "e1a1a34a1189cfd400db3b479f84e0fec74f7fe8797b1afc72ed24b5c3d39609"
+    },
+    {
+      "name": "ai1-d2-independent-mutation-readiness-latch.log",
+      "exitCode": 1,
+      "result": "expected readiness mutation failure",
+      "sha256": "12aa09cfefe943ab3c17fcf5663c647e8e41f51d40028762096b78752b4ce934"
+    },
+    {
+      "name": "ai1-d2-independent-mutation-startup-precheck.log",
+      "exitCode": 1,
+      "result": "expected startup mutation failure",
+      "sha256": "91a91eb455b8db66b22670c1f32a5d7acf770c7475d831ecb55917a3d8a96b62"
+    },
+    {
+      "name": "ai1-d2-independent-mutation-query-put-selection.log",
+      "exitCode": 1,
+      "result": "expected query-only mutation failure",
+      "sha256": "9e9cefacd2d50db70f8ea5b99fb6af60ea9a702eaf7d39c3d9be6a5e320c6b5d"
+    },
+    {
+      "name": "ai1-d2-independent-review2-baseline.log",
+      "exitCode": 0,
+      "result": "independent final 3 selected / 51 unselected",
+      "sha256": "efff96b85aa04fb6057efc490f4d6801d1d42471c2d21cc92df6a2524222c108"
+    },
+    {
+      "name": "ai1-d2-independent-review2-factory-mutation.log",
+      "exitCode": 1,
+      "result": "expected 2 factory guard failures",
+      "sha256": "5d05ed59d3d299c80f085a05ea2ef75d1023001f127deaf80de553aa46d34b05"
+    },
+    {
+      "name": "ai1-d2-independent-review2-approval-mutation.log",
+      "exitCode": 1,
+      "result": "expected 1 explicit approval state failure",
+      "sha256": "372ced6c736a383ff296135ffc09a07b1bfb68985ed4ee67ce51a42fd0a789ce"
+    }
+  ]
+}

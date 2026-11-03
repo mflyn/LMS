@@ -11,6 +11,99 @@ function read(relativePath) {
 }
 
 describe('family baseline documentation gate', () => {
+  test('AI-1 cross-layer progress accounts for all 35 requirements without closing external acceptance', () => {
+    const plan = read('docs/development/family-ai1-test-plan.md');
+    const requirements = [...plan.split('## 2. ')[1].split('## 3. ')[0].matchAll(/^\| (AI1-[A-Z]+-\d+) \|/gm)].map(m => m[1]);
+    const progress = plan.split('## 11. ')[1]?.split('## 12. ')[0];
+    expect(progress).toBeDefined();
+    const rows = [...progress.matchAll(/^\| (AI1-[A-Z]+-\d+) \|/gm)].map(m => m[1]);
+    expect(rows).toHaveLength(35); expect(new Set(rows)).toEqual(new Set(requirements));
+    expect(progress).toContain('LOCAL_PASS不是总验收关闭');
+    expect(progress).toContain('EXTERNAL_IMPLEMENTATION_PENDING');
+    expect(progress).toContain('DEVICE_PENDING');
+  });
+  test('AI-1 current matrix retains all 35 requirements and separates engineering from external acceptance', () => {
+    const plan = read('docs/development/family-ai1-test-plan.md');
+    const requirements = [...plan.split('## 2. ')[1].split('## 3. ')[0].matchAll(/^\| (AI1-[A-Z]+-\d+) \|/gm)].map(m => m[1]);
+    const current = plan.split('## 17. ')[1];
+    expect(current).toBeDefined();
+    const rows = [...current.matchAll(/^\| (AI1-[A-Z]+-\d+) \| (LOCAL_PASS|PARTIAL) \| ([^\n]+) \|$/gm)];
+    expect(rows).toHaveLength(35);
+    expect(new Set(rows.map(row => row[1]))).toEqual(new Set(requirements));
+    for (const row of rows) expect(row[3]).toMatch(/Service|Contract|Production|Browser|Provider|Store|Runtime|HTTP|Client/);
+    for (const marker of ['B/D/AI-1 OPEN', 'QUALIFIED_COUNTER_PENDING', 'CURRENT_PRICE_AND_BUDGET_PENDING',
+      'HUMAN_VALUE_PENDING', 'DEVICE_PENDING', '161/2', '4980/2', 'REMAINDER_DEFERRED']) expect(current).toContain(marker);
+    expect(current).toContain('LOCAL_PASS不是总验收关闭');
+  });
+  test('AI-1 D2 local runtime evidence cannot authorize external activation or close total acceptance', () => {
+    const gate = read('docs/development/family-self-directed-learning-mvp-gate.md').split('### 29.9 ')[1];
+    expect(gate).toBeDefined();
+    for (const marker of ['EXTERNAL_ACTIVATION_PENDING', 'AI-1总门禁OPEN', '协议替身',
+      '历史161/2套件、4980/2用例', 'DEVICE_PENDING', 'REMAINDER_DEFERRED']) expect(gate).toContain(marker);
+    const api = read('docs/api/family-ai1-api.md');
+    for (const mode of ['off', 'query-only', 'enabled', 'store-isolated']) expect(api).toContain(mode);
+    expect(api).toContain('声明不是测试证据');
+    expect(read('docs/development/family-ai1-test-plan.md')).toContain('D2_LOCAL_RUNTIME_REVIEW_PASSED');
+  });
+  test('AI-1 C page evidence cannot close remote implementation or synthetic-only acceptance boundaries', () => {
+    const plan = read('docs/development/family-ai1-test-plan.md');
+    expect(plan).toContain('C_LOCAL_VERIFYING');
+    expect(plan).toContain('cross-layer B/D INCOMPLETE');
+    expect(plan).toContain('所有API拦截为合成响应');
+    const gate = read('docs/development/family-self-directed-learning-mvp-gate.md').split('### 29.7 ')[1];
+    expect(gate).toContain('AI-1总门禁OPEN');
+    expect(gate).toContain('EXTERNAL_IMPLEMENTATION_PENDING');
+    expect(gate).toContain('DEVICE_PENDING');
+    expect(gate).toContain('T4/T8 OPEN');
+    expect(gate).toContain('历史161/2套件、4980/2用例');
+    expect(gate).toContain('REMAINDER_DEFERRED');
+  });
+  test('AI-1 B local issue closure binds the reviewed snapshot without closing external or total gates', () => {
+    const base = 'docs/development/evidence/ai1-b-20261101/';
+    const closure = JSON.parse(read(`${base}closure.json`));
+    expect(closure.scope).toBe('AI1_B_LOCAL_ISSUE_CLOSURE_ONLY');
+    expect(closure.localReview).toBe('PASSED');
+    expect(closure.issues).toEqual({ remoteClaimContradictoryRefundP1: 'CLOSED', rawJsonByteLimitP2: 'CLOSED' });
+    expect(closure.batchGate).toBe('OPEN');
+    expect(closure.totalGate).toBe('OPEN');
+    expect(closure.external).toBe('IMPLEMENTATION_PENDING');
+    expect(closure.singleRunFullGreen).toBe(false);
+    expect(closure.historicalFamilyFull).toEqual({ suitesPassed: 161, suitesFailed: 2,
+      testsPassed: 4980, testsFailed: 2, exitCode: 1 });
+    expect(closure.realModelCalls).toBe(0);
+    expect(closure.ai0HumanReview).toBe('REQUIRED');
+    for (const [file, field] of [['candidate.patch', 'patchSha256'], ['manifest.json', 'manifestSha256'],
+      ['verification.json', 'verificationSha256']]) {
+      expect(createHash('sha256').update(read(`${base}${file}`)).digest('hex')).toBe(closure.reviewedCandidate[field]);
+    }
+    expect(read('docs/development/family-self-directed-learning-mvp-gate.md')).toContain('B_LOCAL_REVIEW_PASSED / EXTERNAL_IMPLEMENTATION_PENDING');
+  });
+  test('AI-1 approved local batch keeps its new contract and all six fixture suites registered', () => {
+    const checker = read('scripts/check-family-docs.js');
+    expect(checker).toContain('backend/common/contracts/ai1-min.schema.json');
+    for (const action of ['create', 'generate', 'recover', 'revise', 'review', 'close']) {
+      expect(checker).toContain(`ai1-${action}.cases.json`);
+    }
+    for (const file of ['docs/api/family-ai1-api.md', 'docs/development/family-ai1-test-plan.md',
+      'docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md']) {
+      expect(read(file)).toContain('**Document status:** APPROVED / A_');
+    }
+    expect(read('docs/development/family-ai1-test-plan.md')).toContain('**Gate:** OPEN');
+    const api = read('docs/api/family-ai1-api.md');
+    expect(api).toContain('FORMAL_ROUTES_DEFAULT_OFF');
+    expect(api).toContain('SEND_ACTIVATION_PENDING');
+    expect(api).toContain('PRODUCTION_ROUTES_NOT_MOUNTED'); // Historical B snapshot remains explicit.
+  });
+  test('AI-1 D transport and default-off assembly cannot close enabled or remote acceptance', () => {
+    const gate = read('docs/development/family-self-directed-learning-mvp-gate.md').split('### 29.8 ')[1];
+    expect(gate).toContain('D_IMPLEMENTING');
+    expect(gate).toContain('SEND_ACTIVATION_PENDING');
+    expect(gate).toContain('EXTERNAL_IMPLEMENTATION_PENDING');
+    expect(gate).toContain('AI-1总门禁OPEN');
+    expect(gate).toContain('历史161/2套件、4980/2用例');
+    expect(gate).toContain('DEVICE_PENDING');
+    expect(gate).toContain('REMAINDER_DEFERRED');
+  });
   test('public T7 derivatives match their own hashes without rewriting original evidence', () => {
     const manifest = JSON.parse(read('docs/development/evidence/t7-public-redaction-2026-10-30/manifest.json'));
     expect(manifest.scope).toBe('T7_PUBLIC_DERIVATIVES_ONLY');

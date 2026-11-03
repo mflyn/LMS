@@ -10,6 +10,7 @@ const {
 const stripClientIdentity = (req, res, next) => {
   stripClientIdentityHeaders(req.headers);
   delete req.headers['x-service-token'];
+  delete req.headers['x-ai1-service-token'];
   next();
 };
 

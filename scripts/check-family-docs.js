@@ -56,6 +56,7 @@ const proposedSelfDirectedDocuments = [
 const selfDirectedContractProbes = 16;
 
 const proposedAiContracts = [
+  'backend/common/contracts/ai1-min.schema.json',
   'docs/contracts/curriculum-ref.schema.json',
   'docs/contracts/curriculum-ref-snapshot.schema.json',
   'docs/contracts/error-classification.schema.json',
@@ -2446,6 +2447,12 @@ function validateContractFixtures(ajv, errors) {
     .filter(fileName => fileName.endsWith('.cases.json'))
     .sort();
   for (const requiredFixture of [
+    'ai1-create.cases.json',
+    'ai1-generate.cases.json',
+    'ai1-recover.cases.json',
+    'ai1-revise.cases.json',
+    'ai1-review.cases.json',
+    'ai1-close.cases.json',
     'tutor-finalization-batch.cases.json',
     'tutor-artifact-review-cas.cases.json',
     'tutor-artifact-review-request.cases.json',
@@ -2650,6 +2657,17 @@ function validate() {
       `${relativePath}: unresolved placeholder marker`,
       errors
     );
+  }
+
+  for (const relativePath of [
+    'docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md',
+    'docs/api/family-ai1-api.md',
+    'docs/development/family-ai1-test-plan.md'
+  ]) {
+    const markdown = read(relativePath);
+    checkLocalLinks(relativePath, markdown, errors);
+    checkMarkdownStructure(relativePath, markdown, errors);
+    assert(markdown.includes('**Document status:** APPROVED / A_'), `${relativePath}: AI-1 approved batch status missing`, errors);
   }
 
   for (const relativePath of proposedSelfDirectedDocuments) {

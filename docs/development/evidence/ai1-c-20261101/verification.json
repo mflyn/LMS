@@ -1,0 +1,330 @@
+{
+  "scope": "C_LOCAL_UI_NOT_D_ACCEPTANCE",
+  "status": "FOCUSED_UI_REVIEW_PASSED",
+  "singleRunFullGreen": false,
+  "commands": {
+    "frontend": "npm run test:ci --prefix frontend/web -- --runInBand",
+    "build": "CI=true BUILD_PATH=<temporary-absolute-path> npm run build --prefix frontend/web",
+    "targetedFrontend": "react-scripts test --watchAll=false --runInBand --runTestsByPath src/__tests__/family/TutorPage.test.js src/__tests__/family/ai1Client.test.js",
+    "backend": "jest --config backend/services/homework-service/jest.config.js --runInBand --runTestsByPath backend/services/homework-service/__tests__/services/ai1Contract.test.js backend/services/homework-service/__tests__/services/ai1Service.test.js backend/services/homework-service/__tests__/services/ai1Operation.test.js backend/services/homework-service/__tests__/services/ai1Http.test.js",
+    "browser": "T2_WEB_BUILD=<absolute-build> playwright test --config=playwright.t2.config.js tests/e2e/t2/ai1ParentPage.spec.js",
+    "docs": "node scripts/check-family-docs.js; familyDocumentationGate.test.js; git diff --check"
+  },
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "fullFrontend": {
+    "suites": 59,
+    "tests": 788,
+    "exitCode": 0,
+    "seconds": 46.491
+  },
+  "finalTargetedFrontend": {
+    "suites": 2,
+    "tests": 49,
+    "exitCode": 0,
+    "seconds": 2.643
+  },
+  "targetedBackend": {
+    "suites": 4,
+    "tests": 92,
+    "exitCode": 0,
+    "seconds": 17.743
+  },
+  "browser": {
+    "tests": 3,
+    "exitCode": 0,
+    "seconds": 3.1,
+    "api": "ALL_SYNTHETIC",
+    "actualDeepTutor": false,
+    "actualModel": false,
+    "actualDevice": false,
+    "viewports": [
+      "1280x900",
+      "768x1024",
+      "390x844"
+    ]
+  },
+  "independentReview": {
+    "status": "FOCUSED_REREVIEW_PASSED",
+    "suites": 2,
+    "tests": 49,
+    "exitCode": 0,
+    "seconds": 3.484,
+    "initial": [
+      "P1 StrictMode lifecycle",
+      "P2 unverified success command loss",
+      "P2 same-session focus draft loss"
+    ],
+    "additional": [
+      "P2 non-string error code",
+      "P2 child late-callback test gap"
+    ],
+    "mutationResults": [
+      {
+        "name": "remove error code type guard",
+        "failed": 3,
+        "exitCode": 1
+      },
+      {
+        "name": "current always true",
+        "failed": 1,
+        "exitCode": 1
+      }
+    ]
+  },
+  "mutationMethod": "In-memory Jest transform; original source untouched; survived run retained and fixture strengthened",
+  "rawLogs": {
+    "storage": "LOCAL_PRIVATE_ONLY",
+    "files": [
+      {
+        "name": "ai1-c-review-red.log",
+        "sha256": "669c8018ab402aa9e52febd4d987051cef547ca8900f23971c045b3161188b34",
+        "exitCode": 1,
+        "result": "6 failed / 8 passed; independent findings permanent red"
+      },
+      {
+        "name": "ai1-c-review-green-first.log",
+        "sha256": "7a92063f5971cf7236844f782cb648179922ce7d64c6f2b5c55d5b75e47047b1",
+        "exitCode": 0,
+        "result": "2 suites / 28 passed"
+      },
+      {
+        "name": "ai1-c-review-expanded.log",
+        "sha256": "6bdd7aadc45baf10265feed93615871bb6eb344d18119a13da3c098f8e8d5eb2",
+        "exitCode": 0,
+        "result": "2 suites / 41 passed"
+      },
+      {
+        "name": "ai1-c-review-build.log",
+        "sha256": "ed5be4f4940513ec99b95e5879f84881001950d6d81e58239f0e12ff2045d933",
+        "exitCode": 1,
+        "result": "CRA cleanup ref lint failed; no rule suppressed"
+      },
+      {
+        "name": "ai1-c-review-build-second.log",
+        "sha256": "9bb47c7fa6d67e2efd3c81505a42695e4e27dbc56638d5e25b57ddc62e3cdd2b",
+        "exitCode": 0,
+        "result": "CI production build"
+      },
+      {
+        "name": "ai1-c-reason-red.log",
+        "sha256": "b63448559de3cea04331aa37366c6d9089eccc88629ceb6bd3a678f2735fe711",
+        "exitCode": 1,
+        "result": "1 selected DB test failed; unselected tests not counted"
+      },
+      {
+        "name": "ai1-c-reason-ui-red.log",
+        "sha256": "c4e6cfc9dec3d22962d780493bc498b3ff065e87c539961edab4aa77c5edf829",
+        "exitCode": 1,
+        "result": "1 selected UI test failed; unselected tests not counted"
+      },
+      {
+        "name": "ai1-c-error-envelope-red.log",
+        "sha256": "3741965ee45cb814d79b11f0071ba3f40ba262a5f2dae78197f57fa4b15c7067",
+        "exitCode": 1,
+        "result": "4 selected rejection tests failed"
+      },
+      {
+        "name": "ai1-c-frontend-full-final.log",
+        "sha256": "33dd2222e0c2da95210866de7af32cea37e5edd5e754a336023e51b44f060ad7",
+        "exitCode": 1,
+        "result": "Incorrect raw CRA command included quarantined legacy suites and terminated"
+      },
+      {
+        "name": "ai1-c-backend-targeted.log",
+        "sha256": "86cf5b48c1af5e472a2387d37a6daca9e17986e9d222178f45cd73fbafe8204c",
+        "exitCode": 1,
+        "result": "3 suites passed / 1 failed due to sandbox log writes; 92 test assertions passed"
+      },
+      {
+        "name": "ai1-c-backend-targeted-permitted.log",
+        "sha256": "9cf4fe781c707987c066a97789f2c0536ecebc574bc0541caeae25947d3231ea",
+        "exitCode": 0,
+        "result": "4 suites / 92 tests passed; actual Mongo and independent HTTP, remote double"
+      },
+      {
+        "name": "ai1-c-frontend-ci-final.log",
+        "sha256": "4f7caeb024779cd491dfdb6718a34c663b913648302ba0e1bb352c3d25bb97a7",
+        "exitCode": 0,
+        "result": "Configured test:ci scope: 59 suites / 781 tests passed"
+      },
+      {
+        "name": "ai1-c-frontend-ci-reviewed.log",
+        "sha256": "a0088e18cc7e583f4322ab3802b70e556137b0ee3850f47313de4c02d29abc0f",
+        "exitCode": 0,
+        "result": "Configured test:ci scope: 59 suites / 785 tests passed"
+      },
+      {
+        "name": "ai1-c-build-reviewed.log",
+        "sha256": "eed5b83a723dc65dc7ba2510e9bcf299b84ca388ad63a4cb462c92374a081ae4",
+        "exitCode": 0,
+        "result": "CI production build"
+      },
+      {
+        "name": "ai1-c-review-final-targeted.log",
+        "sha256": "b575748f8e769df706e3ac1c8af8da523779d562f8ec4b5b10d7bc5d05354a1b",
+        "exitCode": 0,
+        "result": "Final strengthened fixtures: 2 suites / 46 tests passed"
+      },
+      {
+        "name": "ai1-c-playwright-first.log",
+        "sha256": "c3a7e8629ef37cfa343ac4a295fc5b7342dec6c5298210902a82a914c2bb8058",
+        "exitCode": 0,
+        "result": "3 UI tests; all API responses synthetic"
+      },
+      {
+        "name": "ai1-c-playwright-reviewed.log",
+        "sha256": "20dd5dc1e993f7884dae5d1705179975aedc7f17642758b43fc582b3b0d85b52",
+        "exitCode": 0,
+        "result": "3 UI tests with latest production build; all API responses synthetic"
+      },
+      {
+        "name": "ai1-c-mutation-response.log",
+        "sha256": "0250a4185ac88e8cce989508ac744bca14c3afdc379b7006cffdb27decc3b0c2",
+        "exitCode": 1,
+        "result": "3 expected failures without result validation"
+      },
+      {
+        "name": "ai1-c-mutation-strict.log",
+        "sha256": "8f376bdd075e2c113402ffa672e5b0e7a1b57d6b0ff9fde0efc36a25b8d46edb",
+        "exitCode": 1,
+        "result": "1 expected failure without live setup"
+      },
+      {
+        "name": "ai1-c-mutation-focus.log",
+        "sha256": "1fc6927a0e83c712d99f0d8480ba151e075efd435f0810061cb534a21f7916f8",
+        "exitCode": 1,
+        "result": "Original mutation run also had asynchronous act warning; retained"
+      },
+      {
+        "name": "ai1-c-mutation-focus-settled.log",
+        "sha256": "7cba0e6d3d1d00a8d5f4fccb489e30279f0cf4bb1a0c089aefe6e1ff52c96276",
+        "exitCode": 1,
+        "result": "2 expected failures without identical-session guard"
+      },
+      {
+        "name": "ai1-c-mutation-error.log",
+        "sha256": "7ed21ca0520a6b5b6022856118737477a2e20bc0a4024a8fcac36165970f21f5",
+        "exitCode": 1,
+        "result": "4 expected failures without structured rejection validation"
+      },
+      {
+        "name": "ai1-c-mutation-denial.log",
+        "sha256": "0e8364b38f592a3d6659fdfafd0abae1bd797f33c341a0f9c4ed00e2024bf468",
+        "exitCode": 0,
+        "result": "SURVIVED: invalid late-result fixture masked missing epoch guard"
+      },
+      {
+        "name": "ai1-c-mutation-denial-strengthened.log",
+        "sha256": "b753ef6825c9b353a8376be57e727801526415b8bb95756dbefba99b9aa967e7",
+        "exitCode": 1,
+        "result": "1 expected failure with valid late result and missing epoch guard"
+      },
+      {
+        "name": "ai1-c-docs-first.log",
+        "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22",
+        "exitCode": 0,
+        "result": "Existing documentation validator"
+      },
+      {
+        "name": "ai1-c-doc-gate.log",
+        "sha256": "ca5e17f4290084357d4a2ebb25faec099e488dcc67c8719a4dfc4442f54be846",
+        "exitCode": 0,
+        "result": "Existing documentation gate: 309 tests passed"
+      },
+      {
+        "name": "ai1-c-error-type-red.log",
+        "sha256": "ddaa1eb243f124cd698b9d8583c666844964ce014a5a0bb8ea09fb1d783112bd",
+        "exitCode": 1,
+        "result": "3 selected array error code tests failed"
+      },
+      {
+        "name": "ai1-c-mutation-child-strengthened.log",
+        "sha256": "cce4daf1bb60b6ea2c67933690913f9fa283e9235faaf3523e9e981bb3f6ea1e",
+        "exitCode": 1,
+        "result": "1 expected failure without current-scope guard"
+      },
+      {
+        "name": "ai1-c-review-second-green.log",
+        "sha256": "0289882ea35d5a9740bb4215964c18a5b7c330525411a18e03b2469bb26a64b1",
+        "exitCode": 0,
+        "result": "Final author targeted: 2 suites / 49 tests passed"
+      },
+      {
+        "name": "ai1-c-frontend-ci-second-reviewed.log",
+        "sha256": "a121862ae89ddbdc376fda84c3bc37d18b3efbda02d8fc902208dc1a59be494d",
+        "exitCode": 0,
+        "result": "Final test:ci: 59 suites / 788 tests passed"
+      },
+      {
+        "name": "ai1-c-build-second-reviewed.log",
+        "sha256": "48c0b71657e155beb81a2c53cc474961daf77603a7403b65205073c962ec6a91",
+        "exitCode": 0,
+        "result": "Final CI production build"
+      },
+      {
+        "name": "ai1-c-playwright-second-reviewed.log",
+        "sha256": "52f89f6ae31cf7be36019f25c78b507c3480fdc6134464dff2bcc860efbce1ea",
+        "exitCode": 0,
+        "result": "Final synthetic API browser: 3 passed"
+      },
+      {
+        "name": "ai1-c-independent-final-error-code.log",
+        "sha256": "fe1652febd3e82bc8279f1041bf242d82c3bbb8c193d4e30d235f270acdb35ce",
+        "exitCode": 0,
+        "result": "Independent reproduction of array error code defect before fix"
+      },
+      {
+        "name": "ai1-c-independent-final-child-mutation.log",
+        "sha256": "0b207d4802f4b5b1222c2d73305f42b3338dee5956171f21e3935fc6bfdb935a",
+        "exitCode": 0,
+        "result": "Independent current=true mutation SURVIVED before callback assertions"
+      },
+      {
+        "name": "ai1-c-independent-final-targeted.log",
+        "sha256": "a053069b438b9c76385bb0ce485e4db9136305dbc00d9852a20910cd257cf28c",
+        "exitCode": 0,
+        "result": "Prior independent 2 suites / 46 tests passed with two open findings"
+      },
+      {
+        "name": "ai1-c-independent-closeout-targeted.log",
+        "sha256": "2ff7f0bb4ee2ba79ef45b570586e5800ded8b193e0212315084b6c30f9b5de09",
+        "exitCode": 0,
+        "result": "Final independent 2 suites / 49 tests passed"
+      },
+      {
+        "name": "ai1-c-independent-closeout-error-type-mutation.log",
+        "sha256": "1b3e842057de0a3d047ce4d68f63c6b5c225d2f9f48e80088c651a731a7cb5d7",
+        "exitCode": 1,
+        "result": "Independent type guard removal: 3 expected failures"
+      },
+      {
+        "name": "ai1-c-independent-closeout-child-mutation.log",
+        "sha256": "600d1b9017d193e5b3647fd68bbc8375fb757c92e43ea72f9539100c09403ef3",
+        "exitCode": 1,
+        "result": "Independent current=true: 1 expected failure"
+      },
+      {
+        "name": "ai1-c-lint.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exitCode": 0,
+        "result": "Affected backend, browser and documentation-test ESLint"
+      }
+    ]
+  },
+  "preserved": [
+    "AI0 human review required",
+    "T4/T8 OPEN",
+    "T9 NOT_STARTED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "T5-NB-001/002 OPEN_NONBLOCKING",
+    "Advanced recovery/new cleanup REMAINDER_DEFERRED",
+    "B/AI1 gates OPEN"
+  ]
+}

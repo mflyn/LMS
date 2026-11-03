@@ -18,6 +18,9 @@ const { createGrowthTaskRouter } = growthTaskRoutes;
 const GrowthTask = require('./models/GrowthTask');
 const { createLearningSourceReader, createLearningSourceRouter } = require('../../common/services/learningSource');
 const { createDailyLearningPlanRouter } = require('./routes/dailyLearningPlans');
+const { createAi1Router, createAi1JsonParser } = require('./routes/ai1');
+const { createAi1Service } = require('./services/ai1Service');
+const { createAi1Runtime } = require('./services/ai1Runtime');
 const { createGrowthTaskAttachmentMediaService } = require('./services/growthTaskAttachmentMediaService');
 const { validateClientConfig } = require('./services/starAwardClient');
 const { resolveCompletionMode, assertCompletionAssemblyAvailable, withCompletionMode,
@@ -52,6 +55,7 @@ const createApp = ({
   growthTaskRouter = growthTaskRoutes,
   homeworkRouter = homeworkRoutes,
   retirementRouter,
+  tutorRouter,
   learningSourceRouter = createLearningSourceRouter({ kind: 'tasks', Model: GrowthTask,
     serviceToken: process.env.INTERNAL_SERVICE_TOKEN }),
   appLogger = logger
@@ -62,9 +66,16 @@ const createApp = ({
   app.locals.mq = null;
 
   app.use(cors());
-  app.use(express.json());
   app.use(requestTracker);
   app.use(requestTimeout());
+  if (tutorRouter) {
+    const parseTutor = createAi1JsonParser();
+    app.use('/api', (req, res, next) => {
+      if (!/^\/tutor-(?:cycles|jobs|artifacts)(?=\/|$)/i.test(req.path)) return next();
+      return parseTutor(req, res, cause => cause ? next(cause) : tutorRouter(req, res, next));
+    });
+  }
+  app.use(express.json());
   app.use('/api/homework', homeworkRouter);
   app.use('/api/growth-tasks', growthTaskRouter);
   app.use('/api/children', createDailyLearningPlanRouter());
@@ -90,6 +101,7 @@ const createProductionApp = ({
     throw Object.assign(new Error('COMPLETION_ASSEMBLY_NOT_READY'), { code: 'COMPLETION_ASSEMBLY_NOT_READY' });
   }
   assertCompletionConnection(connection, mongoose.connection);
+  const ai1Runtime = createAi1Runtime({ env, connection });
   const { attachmentMediaService } = (createMediaDependencies || createTask6MediaDependencies)({
     env, appLogger, completionIsolation: mode === 'enabled' });
   const sourceReader = createLearningSourceReader({ TaskModel: GrowthTask,
@@ -120,12 +132,15 @@ const createProductionApp = ({
   } else {
     growthTaskRouter = (growthTaskRouterFactory || createGrowthTaskRouter)({ attachmentMediaService, sourceReader });
   }
-  return withCompletionMode(createApp({
+  const app = createApp({
     growthTaskRouter,
     retirementRouter,
+    tutorRouter: createAi1Router({ service: createAi1Service({ sourceReader, ...ai1Runtime.dependencies }) }),
     learningSourceRouter: createLearningSourceRouter({ kind: 'tasks', Model: GrowthTask, serviceToken: env.INTERNAL_SERVICE_TOKEN }),
     appLogger
-  }), { mode, service: 'homework', env });
+  });
+  app.locals.assertAi1Ready = ai1Runtime.assertReady;
+  return withCompletionMode(app, { mode, service: 'homework', env });
 };
 
 const connectDatabase = async ({
@@ -189,6 +204,7 @@ const starAwardConfig = (env = process.env) => ({
 const validateStarAwardEnvironment = (env = process.env) => validateClientConfig(starAwardConfig(env));
 
 const validateStartupEnvironment = env => {
+  createAi1Runtime({ env });
   validateStarAwardEnvironment(env);
   validateMediaReferenceClientConfig({ resourceServiceUrl: env.RESOURCE_SERVICE_URL,
     serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN, timeout: Number(env.MEDIA_REFERENCE_TIMEOUT_MS || 3000) });
@@ -212,6 +228,9 @@ const startServer = async ({
   return startCompletionService({ service: 'homework', env, connection, app, port, host, appLogger,
     connect: () => connect({ mongoURI: env.MONGO_URI, connection }), createRuntimeApp,
     validateEnvironment: runtimeEnv => {
+      if (['enabled', 'query-only'].includes(runtimeEnv.AI1_MODE) && (app || createRuntimeApp !== createProductionApp)) {
+        throw Object.assign(new Error('AI_PROFILE_UNAVAILABLE'), { code: 'AI_PROFILE_UNAVAILABLE' });
+      }
       if (runtimeEnv.COMPLETION_PROTOCOL_MODE === 'enabled' && createRuntimeApp !== createProductionApp) {
         throw Object.assign(new Error('COMPLETION_ASSEMBLY_NOT_READY'), { code: 'COMPLETION_ASSEMBLY_NOT_READY' });
       }
@@ -222,9 +241,12 @@ const startServer = async ({
       await require('./services/growthTaskCompletionReadiness').assertGrowthTaskCompletionReadiness(options);
       await require('./services/completionMediaGuardReadiness').assertCompletionMediaGuardReadiness(options);
     },
-    initializeRuntime: ({ app: runtimeApp }) => initializeQueue({ app: runtimeApp,
-      enableRabbitMQ: env.ENABLE_RABBITMQ !== 'false' && env.NODE_ENV !== 'test',
-      connect: () => connectRabbitMQ({ rabbitUrl: env.RABBITMQ_URL, appLogger }) }) });
+    initializeRuntime: async ({ app: runtimeApp }) => {
+      if (runtimeApp.locals.assertAi1Ready) await runtimeApp.locals.assertAi1Ready();
+      return initializeQueue({ app: runtimeApp,
+        enableRabbitMQ: env.ENABLE_RABBITMQ !== 'false' && env.NODE_ENV !== 'test',
+        connect: () => connectRabbitMQ({ rabbitUrl: env.RABBITMQ_URL, appLogger }) });
+    } });
 };
 
 const app = createApp();

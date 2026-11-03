@@ -1,0 +1,188 @@
+diff --git a/DeepTutor/tests/services/ai1/lms_acceptance.py b/DeepTutor/tests/services/ai1/lms_acceptance.py
+index 219a2b3..95211e5 100644
+--- a/DeepTutor/tests/services/ai1/lms_acceptance.py
++++ b/DeepTutor/tests/services/ai1/lms_acceptance.py
+@@ -93,8 +93,8 @@ def client(origin, method="put", *, payload=PAYLOAD, token=TOKEN, operation_id=I
+ 
+ 
+ @contextmanager
+-def serve(root, *, mode="enabled", fault="none", profile=PROFILE, now=NOW):
+-    config = {"mode": mode, "storeContinuous": True, "storePath": str(root / "operations.sqlite"),
++def serve(root, *, mode="enabled", fault="none", profile=PROFILE, now=NOW, store_continuous=True):
++    config = {"mode": mode, "storeContinuous": store_continuous, "storePath": str(root / "operations.sqlite"),
+               "serviceTokenFile": str(root / "service-token")}
+     if mode == "enabled":
+         config.update({"providerKeyFile": str(root / "provider-token"), "profile": profile})
+diff --git a/b/DeepTutor/tests/services/ai1/lms_recovery_acceptance.py b/DeepTutor/tests/services/ai1/lms_recovery_acceptance.py
+new file mode 100644
+index 0000000..85d590c
+--- /dev/null
++++ b/DeepTutor/tests/services/ai1/lms_recovery_acceptance.py
+@@ -0,0 +1,97 @@
++"""Explicit synthetic backup-isolation acceptance against the actual main/client.
++
++Only this test's private SQLite bytes are restored, with both old processes
++stopped. The external isolation decision is explicit, never inferred from rows.
++"""
++import copy
++from uuid import uuid4
++
++import pytest
++
++from deeptutor.services.ai1_contract import request_hash
++from tests.services.ai1.lms_acceptance import ID, NOW, PAYLOAD, calls, client, local, serve
++
++
++def assert_isolated(root, store, saved, expected_calls):
++    before = store.get(ID)
++    with serve(root, mode="store-isolated") as (origin, _):
++        for method, operation_id in [("get", ID), ("put", ID), ("get", str(uuid4())), ("put", str(uuid4()))]:
++            assert client(origin, method, operation_id=operation_id) == {"error": "AI_STORE_ISOLATED", "status": 503}
++        assert store.path.read_bytes() == saved
++        assert store.get(ID) == before
++        assert len(calls(root)) == expected_calls
++    assert store.path.read_bytes() == saved and len(calls(root)) == expected_calls
++
++
++def test_old_accepted_backup_after_real_send_cannot_consume_again(local):
++    root, store = local
++    with serve(root, fault="after-accept") as (origin, process):
++        assert client(origin)["error"] == "AI_REMOTE_UNAVAILABLE"
++        assert process.wait(timeout=3) == 73
++    accepted = store.get(ID)
++    assert accepted["status"] == "accepted" and accepted["sendClaimed"] is False
++    saved = store.path.read_bytes()
++    with serve(root) as (origin, _):
++        assert client(origin, "get")["operation"] == accepted and calls(root) == []
++        assert client(origin)["operation"]["status"] == "succeeded"
++    assert len(calls(root)) == 1 and store.get(ID)["sendClaimed"] is True
++    store.path.write_bytes(saved)
++    assert store.get(ID) == accepted
++    assert_isolated(root, store, saved, 1)
++
++
++@pytest.mark.parametrize("historical", ["sending", "succeeded", "failed_not_sent", "empty"])
++def test_restored_old_terminal_or_empty_store_never_proves_continuity(local, historical):
++    root, store = local
++    expected_calls = 0
++    if historical == "sending":
++        with serve(root, fault="after-provider") as (origin, process):
++            assert client(origin)["error"] == "AI_REMOTE_UNAVAILABLE"
++            assert process.wait(timeout=3) == 73
++        assert store.get(ID)["status"] == "sending" and store.get(ID)["sendClaimed"] is True
++        expected_calls = 1
++    elif historical == "succeeded":
++        with serve(root) as (origin, _):
++            assert client(origin)["operation"]["status"] == "succeeded"
++        expected_calls = 1
++    elif historical == "failed_not_sent":
++        stale = copy.deepcopy(PAYLOAD)
++        stale["sendNotAfter"] = "2030-01-01T00:00:00.000Z"
++        stale["requestHash"] = request_hash(stale)
++        with serve(root) as (origin, _):
++            result = client(origin, payload=stale)["operation"]
++            assert result["status"] == "failed_not_sent" and result["sendClaimed"] is False
++    else:
++        assert store.get(ID) is None
++    saved = store.path.read_bytes()
++    # A distinct real operation after the snapshot proves the restored file is old.
++    with serve(root) as (origin, _):
++        assert client(origin, operation_id=str(uuid4()))["operation"]["status"] == "succeeded"
++    expected_calls += 1
++    assert len(calls(root)) == expected_calls
++    store.path.write_bytes(saved)
++    assert_isolated(root, store, saved, expected_calls)
++
++
++def test_historical_success_query_after_quote_expiry_is_exact_and_never_sends(local):
++    root, store = local
++    with serve(root) as (origin, _):
++        original = client(origin)["operation"]
++    before = store.path.read_bytes()
++    with serve(root, mode="query-only", now=NOW + 7200000) as (origin, _):
++        assert client(origin, "get")["operation"] == original
++        assert client(origin)["error"] == "AI_REMOTE_UNAVAILABLE"
++    assert store.path.read_bytes() == before and len(calls(root)) == 1
++
++
++@pytest.mark.parametrize("mode", ["enabled", "query-only"])
++def test_formal_start_without_external_continuity_cannot_open_ready_endpoint(local, mode):
++    root, store = local
++    with serve(root, fault="after-accept") as (origin, process):
++        assert client(origin)["error"] == "AI_REMOTE_UNAVAILABLE"
++        assert process.wait(timeout=3) == 73
++    before = store.path.read_bytes()
++    with pytest.raises(AssertionError, match="Formal main exited before readiness"):
++        with serve(root, mode=mode, store_continuous=False):
++            pytest.fail("Unknown continuity must fail actual main startup")
++    assert store.path.read_bytes() == before and calls(root) == []
+diff --git a/LMS/backend/services/homework-service/__tests__/services/ai1Production.test.js b/LMS/backend/services/homework-service/__tests__/services/ai1Production.test.js
+index d2f9557..4b8c0b0 100644
+--- a/LMS/backend/services/homework-service/__tests__/services/ai1Production.test.js
++++ b/LMS/backend/services/homework-service/__tests__/services/ai1Production.test.js
+@@ -173,6 +173,65 @@ test('formal storage isolation after send loss preserves pending mapping and fee
+   expect(await snapshot()).toBe(before); expect(state.puts).toBe(1); expect(state.gets).toBe(0);
+   expect((await call('get', `/api/tutor-cycles/${cycle.cycle.id}`)).status).toBe(200);
+ });
++test.each(['reserved', 'unknown'])('restored BSON %s snapshot cannot resume or release financial ownership', async historical => {
++  const { state, config } = await remote(), command = generation();
++  const reserved = await fixture.generate({ identity: parent, cycleId: cycle.cycle.id, body: command });
++  app = await formalApp(config);
++  const recoveryPath = `/api/tutor-jobs/${reserved.job.id}/recover`;
++  if (historical === 'unknown') {
++    expect((await call('post', recoveryPath, cmd())).status).toBe(503);
++  }
++  const originalJob = await M.Job.findById(reserved.job.id).lean();
++  expect(originalJob.status).toBe(historical);
++  const ceiling = cycle.preview.reservedCeilingMicros;
++  expect(ceiling).toBeGreaterThan(0);
++  expect(await M.Reservation.findById(originalJob.reservationId).lean()).toMatchObject({
++    reservedMicros: ceiling, settledMicros: null, state: historical === 'unknown' ? 'reserved_unknown' : 'reserved'
++  });
++  for (const key of [String(family._id), 'experiment']) {
++    expect(await M.Account.findById(key).lean()).toMatchObject({ outstandingMicros: ceiling, settledMicros: 0 });
++  }
++  const slot = await M.Slot.findById('global').lean();
++  if (historical === 'unknown') expect(String(slot.jobId)).toBe(reserved.job.id);
++  else expect(slot?.jobId || null).toBeNull();
++  const bson = mongoose.mongo.BSON;
++  const saved = await Promise.all(Object.values(M).map(async model => ({ model,
++    bytes: bson.serialize({ rows: await model.collection.find({}).sort({ _id: 1 }).toArray() }) })));
++  const before = await snapshot();
++  // Advance the actual local transaction/HTTP path before restoring only this test database.
++  state.drop = false;
++  expect((await call('post', recoveryPath, cmd())).status).toBe(200);
++  expect((await M.Job.findById(reserved.job.id)).status).toBe('succeeded');
++  expect((await M.Account.findById('experiment')).settledMicros).toBeGreaterThan(0);
++  expect(await M.Artifact.countDocuments()).toBe(1);
++  const io = { puts: state.puts, gets: state.gets };
++  for (const { model, bytes } of saved) {
++    await model.collection.deleteMany({});
++    const { rows } = bson.deserialize(bytes);
++    if (rows.length) await model.collection.insertMany(rows);
++  }
++  expect(await snapshot()).toBe(before);
++  app = await formalApp({ ...config, AI1_MODE: 'store-isolated',
++    AI1_LOCAL_STORE_CONTINUOUS: 'false', AI1_REMOTE_STORE_CONTINUOUS: 'false' });
++  for (const [path, body, code] of [
++    [recoveryPath, cmd(), 'AI_STORE_ISOLATED'],
++    [`/api/tutor-cycles/${cycle.cycle.id}/explanation-jobs`, command, 'AI_STORE_ISOLATED'],
++    [`/api/tutor-cycles/${cycle.cycle.id}/explanation-jobs`, { ...command, operationId: randomUUID() }, 'AI_DISABLED']
++  ]) {
++    const result = await call('post', path, body);
++    expect(result.status).toBe(503);
++    expect(result.body.error.code).toBe(code);
++    expect(await snapshot()).toBe(before);
++  }
++  const detail = await call('get', `/api/tutor-cycles/${cycle.cycle.id}`);
++  expect(detail.status).toBe(200);
++  expect(detail.body.data.job.id).toBe(reserved.job.id);
++  expect(detail.body.data.job.status).toBe(historical);
++  expect(detail.body.data.artifacts).toEqual([]);
++  expect((await call('get', `/api/tutor-cycles/${cycle.cycle.id}`, undefined, outsider)).status).toBe(403);
++  expect(await snapshot()).toBe(before);
++  expect({ puts: state.puts, gets: state.gets }).toEqual(io);
++});
+ test('query-only reserved job cannot send through recovery, original replay or a new command', async () => {
+   const { state, config } = await remote(), command = generation();
+   const reserved = await fixture.generate({ identity: parent, cycleId: cycle.cycle.id, body: command });

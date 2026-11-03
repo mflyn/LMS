@@ -1,0 +1,60 @@
+{
+  "scope": "AI1_B_LOCAL_ISSUE_CLOSURE_ONLY",
+  "approvedBy": "USER",
+  "approvedAt": "2026-11-01",
+  "localReview": "PASSED",
+  "issues": {
+    "remoteClaimContradictoryRefundP1": "CLOSED",
+    "rawJsonByteLimitP2": "CLOSED"
+  },
+  "batchGate": "OPEN",
+  "totalGate": "OPEN",
+  "external": "IMPLEMENTATION_PENDING",
+  "reviewedCandidate": {
+    "baseline": "1d49abb11580172fa86a7e282cb31588bf682027",
+    "patchSha256": "1c7d7707777ef0ee4cf67c9991c5c7d1e416bfda01bf2f8ef4472632c9c25fc9",
+    "manifestSha256": "774533c94391b94e922e1d4c59afbb5050e0dc7a4bcb7de40932d8b95de651fa",
+    "verificationSha256": "bc9c300e8a0100c70dbb6957e252f8837543bdb3f96cdc43ce0d8c43f733b4f3",
+    "matchedFiles": 31,
+    "matchedHistoricalLogs": 16
+  },
+  "independentEvidence": [
+    {
+      "file": "ai1-b-independent-rereview-regression.log",
+      "sha256": "4b885b1c15a0d31ebe5159745f276b5ce88fdf91c6672f7c6ae9fb20878b872a",
+      "result": "8 suites / 540 tests passed; 65.74 seconds; related regression only"
+    },
+    {
+      "file": "ai1-b-independent-detail-probe.log",
+      "sha256": "b7892f4194747304cc1b78a98b9c8cbf4597283955baa35d375ebc9c59a47516",
+      "result": "1 supplemental three-version probe passed; not additive coverage"
+    },
+    {
+      "file": "ai1-b-independent-claim-mutation.log",
+      "sha256": "ae8e10a125acb96827237ae976a226d15df9da43e1974f91c7ecda9d03131030",
+      "result": "2 selected counterexamples failed as expected; exit 1"
+    },
+    {
+      "file": "ai1-b-independent-raw-mutation.log",
+      "sha256": "2a355ad5dfaff54d634351266acf767ca1bdf0384c97f247838fca4534d7a9bb",
+      "result": "1 selected counterexample failed as expected; exit 1"
+    }
+  ],
+  "evidenceStorage": "RAW_LOGS_LOCAL_PRIVATE_ONLY",
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "singleRunFullGreen": false,
+  "remote": "MONGO_PROTOCOL_DOUBLE_NOT_DEEPTUTOR",
+  "routes": "INDEPENDENT_FACTORY_ONLY",
+  "realModelCalls": 0,
+  "ai0HumanReview": "REQUIRED",
+  "retained": [
+    "T4/T8 OPEN", "T9 NOT_STARTED", "DEVICE_PENDING", "Docker INCOMPLETE_FAILED",
+    "T5-NB-001/002 OPEN_NONBLOCKING", "advanced recovery/new cleanup REMAINDER_DEFERRED"
+  ]
+}
