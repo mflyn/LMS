@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-30",
+  "baseCommit": "ff56e251cd0384feb26ed9cde158c2790ac7345f",
+  "scope": "LOCAL_PREPARATION_AND_SYNTHETIC_EVIDENCE_ONLY",
+  "acceptance": "LOCAL_TECHNICAL_ACCEPTANCE_PASS",
+  "t8Gate": "OPEN",
+  "git": "BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY",
+  "serverExecution": "NOT_AUTHORIZED",
+  "deletionRestoreBlocker": "LEGACY_USER_DELETION_EVIDENCE_INSUFFICIENT",
+  "preserve": [
+    "T4_OPEN",
+    "DEVICE_PENDING",
+    "HISTORICAL_FAILURES",
+    "Docker_INCOMPLETE_FAILED",
+    "T5-NB-001_OPEN_NONBLOCKING",
+    "T5-NB-002_OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED",
+    "T9_NOT_STARTED"
+  ],
+  "manifestExcludedFromOwnFileList": true,
+  "files": [
+    {
+      "path": "backend/common/deployment/__tests__/familyBackupPreflight.test.js",
+      "change": "new",
+      "bytes": 18590,
+      "sha256": "1bcae05a42f6ea8cbfae3a2542f6b2a59812a8afc45991269e77c753a0f88639"
+    },
+    {
+      "path": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "change": "modified",
+      "bytes": 30750,
+      "sha256": "c66085665596afad817a9646b059441687d4c63ea302fa9f6b0a254a25b430da"
+    },
+    {
+      "path": "backend/common/deployment/__tests__/localBackupDrillLifecycle.test.js",
+      "change": "new",
+      "bytes": 4111,
+      "sha256": "29e1277d7216d2e2062fd70573a8d2c2a0ce659f84ffcd143f15eecbcc5b512f"
+    },
+    {
+      "path": "backend/common/deployment/__tests__/localProductRestoreSupport.test.js",
+      "change": "new",
+      "bytes": 4037,
+      "sha256": "3ca74f544f0e30f048b7b2b2473591c622da47d26e0cfcddc5d360fc154b765b"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/familyLocalBackup.drill.js",
+      "change": "new",
+      "bytes": 10577,
+      "sha256": "29cc09237539af552ef1e0908b139d2d9b9aec4c24711011ecbfa1301408181f"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/familyProductRestore.drill.js",
+      "change": "new",
+      "bytes": 24561,
+      "sha256": "fcf58d0d1372c7fe11e3b5b0a8749afbb931d612c16c522cceb1a56f04e1fe02"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/localBackupDrillLifecycle.js",
+      "change": "new",
+      "bytes": 1577,
+      "sha256": "a81e15a33e2d0b41606cb5d84cbc8d31ca8933584fcf098f1038f8cd5d3690e6"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/localProductRestoreSupport.js",
+      "change": "new",
+      "bytes": 1723,
+      "sha256": "e24a4ba8cf1ea2c58ec22a860b4a5090f318550ae6933a7a2fd31931fea43d75"
+    },
+    {
+      "path": "docs/architecture/family-self-directed-learning-system-design.md",
+      "change": "modified",
+      "bytes": 112014,
+      "sha256": "0f5723a4f9a832546f8ec4d4a3cf0786c28037801efdf4277d30687d30ff7849"
+    },
+    {
+      "path": "docs/deployment/local-ubuntu-deployment.md",
+      "change": "modified",
+      "bytes": 40630,
+      "sha256": "642cd7f8efb581ad559f48d9f70637a729c547315c644b0832e7dec4518dff35"
+    },
+    {
+      "path": "docs/development/README.md",
+      "change": "modified",
+      "bytes": 11339,
+      "sha256": "dd6df6b9a769a50015010cf9aeb36718b4d2d1c024bc9050407b9ab16f4925e6"
+    },
+    {
+      "path": "docs/development/evidence/t8-local-preparation-2026-10-30/README.md",
+      "change": "new",
+      "bytes": 29467,
+      "sha256": "b9aedbdacdff456525f2e0c0abd98c7700d2ccf217ef8696adf39da73a9c1d62"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "change": "modified",
+      "bytes": 637721,
+      "sha256": "4c8ed1751477a0ae01589a777abdf05a67887921fb54d77f5ac6c690f2910a2f"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "change": "modified",
+      "bytes": 107822,
+      "sha256": "e7985cc32593b9fa3d0ec1436a098a1336b0f6492814803c554de86f56dbc01c"
+    },
+    {
+      "path": "scripts/check-family-backup.js",
+      "change": "new",
+      "bytes": 11486,
+      "sha256": "7db8f149f59be898d3681e44dd547153a468248a3c1c6385089a2af4cec316b6"
+    },
+    {
+      "path": "scripts/check-family-docs.js",
+      "change": "modified",
+      "bytes": 170851,
+      "sha256": "4c16473a6d970bda33ec7440830e4017356ee9fe21619f902d539332714a2337"
+    }
+  ],
+  "localEvidence": {
+    "gitIgnoredDirectory": "release-gate-artifacts/t8-local-acceptance-20261030",
+    "index": "archive-index.json",
+    "indexSha256": "eec05a6193e1860f7a82c1ea2eba2f421106f4c4acda47916604a69f36aa5097",
+    "copiedFiles": 29,
+    "copiedBytes": 2625598,
+    "originalsRetained": true,
+    "offsiteBackup": false
+  },
+  "verification": {
+    "freshRelatedRegression": {
+      "suites": 4,
+      "passed": 395,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 36.259,
+      "sha256": "9dd90f6259d28e3c29bca4b129e8ad2f2381a563651725ccde582d29f3e60fe9"
+    },
+    "historicalRealDrillsReexecuted": false,
+    "historicalSourceAndResultHashesMatched": 33,
+    "independentReview": "READ_ONLY_DOCUMENT_SCOPE_REVIEW; prior implementation reviews retained",
+    "independentRawOutputFileAvailable": false,
+    "fullReleaseRun": false,
+    "prePushRegression": {
+      "suites": 4,
+      "passed": 395,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 34.067,
+      "sha256": "d9a2cc5129adc92b554026380173f63865ea94be208cc525a3034df1add979c6"
+    },
+    "prePushFullRepositoryLint": "PASS",
+    "authorizationDeltaIndependentReview": "PASS_READ_ONLY_NO_NEW_P1_P2"
+  },
+  "localAcceptanceBaseCommit": "9593d2890147c41eb3e4e87d07db16196ec760c0",
+  "previousAcceptanceManifestSha256": "e33209c785c853837dbac8b99dce878ed9e460a72c66029b496302a7e3792ffa"
+}

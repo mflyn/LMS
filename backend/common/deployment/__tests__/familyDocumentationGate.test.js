@@ -229,7 +229,7 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
     ['T2 approval record scope widens', approval, '"scope": "ENGINEERING_SYNTHETIC_ONLY"', '"scope": "PRODUCTION"', 'T2 approval record must retain ENGINEERING_SYNTHETIC_ONLY'],
     ['T2 defect reopened', approval, '"T2-P2-JWT": "CLOSED"', '"T2-P2-JWT": "OPEN"', 'T2 approval record must close exactly the three reviewed P2 defects'],
     ['T2 approval record device passed', approval, '"device": "DEVICE_PENDING"', '"device": "PASSED"', 'T2 approval record must preserve pending and deferred boundaries'],
-    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8–T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
+    ['T2 design status regresses', design, 'T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行', 'T2 已批准设计并启动 T2-1 基线修复，T3–T9 待执行', 'system design must record T0 complete, T1 closed and T2 closed in section 15'],
     ['T3 closure regresses', gate, '| T3 | CLOSED |', '| T3 | IN_PROGRESS |', 'exactly one CLOSED T3 row'],
     ['T3 missing', gate, '| T3 | CLOSED |', '| removed | CLOSED |', 'exactly one CLOSED T3 row'],
     ['T3 contradictory duplicate', gate, '| T3 | CLOSED |', '| T3 | CLOSED | current |\n|  T3  | OPEN |', 'exactly one CLOSED T3 row'],
@@ -311,7 +311,7 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
     ['T7 design status regresses', design, 'T7 合成工程已关闭', 'T7 实施中', 'system design must record T0 complete'],
     ...[['engineering gate', 'CLOSED'], ['approval', 'APPROVED'], ['scope', 'ENGINEERING_SYNTHETIC_ONLY'],
       ['candidate', '0bddeb7e18200d3fd9e5879c096dd7229df538a2'],
-      ['Git', 'SANITIZED_REVIEW_PENDING / NO_PUSH / NO_MERGE / NO_DEPLOY'],
+      ['Git', 'MERGED / NO_DEPLOY'],
       ['deployment', 'T8_PENDING / NOT_AUTHORIZED'],
       ['device', 'DEVICE_PENDING'], ['Docker audit', 'INCOMPLETE_FAILED'],
       ['nonblocking', 'T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING'],
@@ -323,10 +323,23 @@ describe('approved T1 and bounded T2/T3 closure boundaries', () => {
         [`T7 ${key} duplicated`, gate, marker, `${marker}\n${marker}`, `T7 ${key} must remain uniquely ${value}`]
       ];
     }),
-    ...['T8', 'T9'].map(task => [
+    ['T8 local preparation regresses', gate, '| T8 | IN_PROGRESS |', '| T8 | NOT_STARTED |', 'keep T8 as IN_PROGRESS'],
+    ['T8 closes without acceptance', gate, '| T8 | IN_PROGRESS |', '| T8 | CLOSED |', 'keep T8 as IN_PROGRESS'],
+    ['T8 has conflicting current rows', gate, '| T8 | IN_PROGRESS |', '| T8 | CLOSED | invented |\n| T8 | IN_PROGRESS |', 'keep T8 as IN_PROGRESS'],
+    ...[['scope', 'LOCAL_PREPARATION_ONLY'], ['gate', 'OPEN'], ['approval', 'LOCAL_IMPLEMENTATION_APPROVED'],
+      ['server execution', 'NOT_AUTHORIZED'], ['Git', 'BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY'],
+      ['independent review', 'LOCAL_PASS']].flatMap(([key, value]) => {
+      const marker = `**T8 ${key}:** ${value}`;
+      return [
+        [`T8 ${key} removed`, gate, marker, '', `T8 ${key} must remain uniquely ${value}`],
+        [`T8 ${key} changed`, gate, marker, `**T8 ${key}:** CLOSED`, `T8 ${key} must remain uniquely ${value}`],
+        [`T8 ${key} duplicated`, gate, marker, `${marker}\n${marker}`, `T8 ${key} must remain uniquely ${value}`]
+      ];
+    }),
+    ...['T9'].map(task => [
       `${task} starts without approval`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | IN_PROGRESS |`, `keep ${task} as NOT_STARTED`
     ]),
-    ...['T8', 'T9'].map(task => [
+    ...['T9'].map(task => [
       `${task} has conflicting current rows`, gate, `| ${task} | NOT_STARTED |`, `| ${task} | CLOSED | invented |\n| ${task} | NOT_STARTED |`, `keep ${task} as NOT_STARTED`
     ]),
     ['plan status regresses', plan, 'T1 后端工程已关闭', 'T1 执行中', 'approved T1 plan status'],

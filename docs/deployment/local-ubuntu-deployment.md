@@ -653,6 +653,10 @@ docker compose -f docker-compose.ubuntu.yml ps
 
 ### 7.4 数据备份
 
+> T8 本地准备：以下是待执行的运维方案，不表示服务器已经完成备份、恢复或部署验收。
+> 安装、NAS 挂载、停止服务、真实备份及恢复均需对应授权。本地前置检查不授予这些权限。
+> 当前不启用自动调度或快照清理；高级恢复与新回收继续 REMAINDER_DEFERRED。
+
 不需要在 Ubuntu Server 安装极空间图形客户端。服务器通过 NAS 的标准文件共享协议写入备份；本文主方案使用 **SMB 共享 + Restic 客户端加密**。NFS 也可以使用，但 SMB 对家庭 NAS 的兼容性通常更好；仅在 NAS 已明确提供 SSH/SFTP 时才考虑 rsync over SSH。
 
 #### 7.4.1 备份范围
@@ -661,10 +665,14 @@ docker compose -f docker-compose.ubuntu.yml ps
 |------|------|------|
 | MongoDB 逻辑备份 | 家庭、账号、任务、成长记录、错题、周报、奖励 | `mongodump --oplog --archive` |
 | `resource-data` 媒体卷 | 题目图片/PDF、孩子答案、任务附件 | 归档整个 Docker 卷 |
+| 独立 `completion-journal` 卷 | 删除日志不可随旧数据库快照回退，否则可能恢复已删除内容 | 归档实际挂载在 `/var/lib/family-growth/completion-journal` 的完整卷，并保护最新日志副本 |
 | `.env` 与 Ubuntu Compose | 密钥、端口和服务配置；丢失后无法完整恢复 | 暂存后由 Restic 加密 |
-| Git 提交版本 | 恢复时确认数据对应的代码版本 | 写入纯文本清单 |
+| 版本与完整性清单 | 源码目录版本不一定等于运行镜像版本 | 记录 `backupId`、时间窗口、源码 SHA、实际 image ID/digest、Compose 摘要、工具版本、每项归档字节数和 SHA-256 |
 
 不要直接复制运行中的 `mongo-data` Docker 卷，也不需要备份 Docker 镜像、`node_modules` 或可由 Git 重新取得的源码构建产物。
+
+Mongo 备份必须保留命令持久映射、终态、媒体引用、删除凭证及上传保护记录；不要只挑选任务集合。
+Git/镜像身份不一致时如实记录，不用 Git HEAD 代替镜像来源证明。备份完整性不等于恢复已通过。
 
 #### 7.4.2 NAS 端准备
 
@@ -739,127 +747,103 @@ sudo env \
   restic init
 ```
 
-#### 7.4.5 创建每日备份脚本
+#### 7.4.5 只读前置检查与一致性窗口
 
-创建脚本并将 `PROJECT_DIR` 改成实际 LMS 路径：
+`COMPLETION_WRITES_PAUSED=true` 不是全站停写：账号、成长记录、反思等仍可能写入。
+在另行批准的维护窗口中，先阻断 LMS 新请求，确认在途操作已结束，再停止全部 LMS 应用写入者及
+相关调度任务；Mongo 保持运行。不停止 DeepTutor 或其他无关服务。不能证明外部写入者已排除时停止。
+不得用强杀成功冒充正常收尾；未决命令保留原映射，不能删除或新建 UUID 绕过恢复。
+
+复用仓库只读入口 [check-family-backup.js](../../scripts/check-family-backup.js)。它不会停服、挂载、
+执行 dump、上传、恢复、拉取镜像或清理。它针对当前 Ubuntu Compose 的十个服务检查，不接受
+缺失、重复或未知服务，不把完成写入开关当停服证据。此工具需要 Linux、Node 22、findmnt、Docker
+只读访问权限；不要为运行它擅自安装或提升权限。它固定使用本机 `/var/run/docker.sock`，
+不使用远端 context/DOCKER_HOST 或 rootless daemon；否则本机挂载与容器观察不属于同一主机。
+
+配置保存在仓库外、当前执行用户拥有的普通文件中，权限 `0600`，不使用符号链接。示例：
+
+```json
+{
+  "project": "lms",
+  "nasMount": "/mnt/nas-lms-backup",
+  "nasSource": "//192.0.2.20/lms-backup",
+  "stagingRoot": "/var/backups/lms",
+  "minimumFreeBytes": 12884901888
+}
+```
+
+示例容量只是检查阈值，不是已批准的新增磁盘预算。按全量备份、加密上传及隔离恢复所需空间重新
+评估，保留安全余量；历史预算起点不能重置。暂存根目录必须预先存在、当前用户拥有且权限 `0700`，
+不与 NAS 路径嵌套；不会自动创建。NAS 必须已经挂载到精确目标、来源匹配且为 rw 的 CIFS/NFS，
+不能是 autofs 占位或普通本地目录。只读检查不试写，不保证 NAS 配额、实际写权限或网络稳定性。
 
 ```bash
-sudo nano /usr/local/sbin/lms-backup
+node scripts/check-family-backup.js --config /etc/lms-backup/preflight.json
 ```
 
-```bash
-#!/usr/bin/env bash
-set -Eeuo pipefail
-umask 077
+检查 Mongo 数据卷、私有媒体卷和独立删除日志卷的身份与归属，拒绝仍有其他运行容器使用这些卷
+（包括能识别的 bind 别名）。不读取媒体、凭据或业务数据。只输出状态和固定错误码，不输出 NAS
+地址、容器环境或命令原始 stderr。退出非零即停止；当前运行中的服务器正常会因应用尚未停服而拒绝。
 
-PROJECT_DIR=/home/你的用户名/LMS
-COMPOSE=(docker compose -f "$PROJECT_DIR/docker-compose.ubuntu.yml")
-NAS_MOUNT=/mnt/nas-lms-backup
-STAGING_DIR=/var/backups/lms/$(date +%F)
+成功输出是 `OBSERVED_PRECONDITIONS_PASS`，同时明确 `backupCreated:false`、`restoreVerified:false`。
+这是两次观察之间的条件检查，不是锁：检查之后仍必须保持维护窗口并再次确认来源未变。
+外部进程、未知调度器和路径别名不能仅靠 Docker 检查完全排除，不宣称全站无写入已被自动证明。
 
-export RESTIC_REPOSITORY="$NAS_MOUNT/restic-repository"
-export RESTIC_PASSWORD_FILE=/etc/lms-backup/restic-password
+#### 7.4.6 受控采集、上传与失败保留
 
-mount "$NAS_MOUNT"
-mountpoint -q "$NAS_MOUNT" || { echo "NAS 未挂载：$NAS_MOUNT" >&2; exit 1; }
-rm -rf "$STAGING_DIR"
-mkdir -p "$STAGING_DIR"
-trap 'rm -rf "$STAGING_DIR"' EXIT
+旧的“按日期覆盖目录、退出时删除、上传后自动 prune”脚本已撤下。初轮不安装 timer，不开启自动
+调度或清理。本节是执行清单，不是可无审批运行的一键脚本：
 
-MONGO_ID=$("${COMPOSE[@]}" ps -q mongo)
-test -n "$MONGO_ID" || { echo '未找到运行中的 MongoDB 容器' >&2; exit 1; }
-docker exec "$MONGO_ID" mongodump --oplog --archive=/tmp/lms-mongo.archive
-docker cp "$MONGO_ID":/tmp/lms-mongo.archive "$STAGING_DIR/mongo.archive"
-docker exec "$MONGO_ID" rm -f /tmp/lms-mongo.archive
+1. 固定批准的候选、Compose 项目、实际容器与镜像 ID、三类源卷和维护窗口。使用独占新 `backupId`
+   与 `0700` 暂存子目录；已有同名目录立即拒绝，不能复用或清空。目录及文件清单只保存在私有位置。
+2. 在持续停写状态运行 Mongo 逻辑备份，使用现有容器内工具，检查实际退出码与非空归档；不能仅看
+   文件存在。不要把带密码的 URI 放进命令行或输出；如认证配置尚未准备则停止，不降级鉴权。
+3. 分别归档整个私有媒体卷及整个 `completion-journal` 卷。记录精确来源与退出码，不因其当前为空
+   而省略日志卷。归档工具若需要额外镜像/安装/容器，先审批；不隐式拉取 `alpine:latest`。
+4. 同一批加入受保护 `.env`、Compose、源码/镜像/工具身份及归档清单。配置副本权限 `0600`，仅进入
+   私有暂存与加密备份，不能进入仓库或公开日志。记录全部归档字节数与 SHA-256，完成前后复核源身份。
+5. 再次核对 NAS 精确挂载、容量和维护窗口，使用受保护密码文件执行 Restic 上传。必须同时检查
+   退出码、返回的精确 snapshot ID 与本次 `backupId`/路径/文件集合，不用 `latest` 或“存在一个快照”
+   判定本批成功；校验失败不记成功、不覆盖上次有效备份。
+6. 数据库、媒体、日志捕获全部完成且证据确认后，才由操作者按批准窗口恢复原服务；脚本不能在异常
+   时自动开放。上传尚未成功就恢复服务时，本批只能记为本地捕获，不能记为异机备份完成。
+7. dump、媒体/日志归档或上传失败，保留固定错误码和必要的受限暂存，禁止退出 trap 自动删除。
+   后续只能经确认处理本次清单内对象，路径/归属不明时拒绝清理；不影响旧快照、原卷或其他服务。
 
-RESOURCE_ID=$("${COMPOSE[@]}" ps -q resource-service)
-test -n "$RESOURCE_ID" || { echo '未找到运行中的 resource-service 容器' >&2; exit 1; }
-MEDIA_VOLUME=$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/family-growth/private-media"}}{{.Name}}{{end}}{{end}}' "$RESOURCE_ID")
-test -n "$MEDIA_VOLUME" || { echo '未找到 resource-data 卷' >&2; exit 1; }
-docker run --rm \
-  -v "$MEDIA_VOLUME":/source:ro \
-  -v "$STAGING_DIR":/backup \
-  alpine tar czf /backup/media.tar.gz -C /source .
+首次不执行 `forget`/`prune`。保留策略仍待批准与实际容量验证；旧文档的 7 日/4 周/12 月只是示例，
+不表示已部署。最新受保护删除日志的留存必须独立于旧备份快照；30 天在线清理不等于备份内容已删除。
 
-install -m 600 "$PROJECT_DIR/.env" "$STAGING_DIR/environment.env"
-install -m 600 "$PROJECT_DIR/docker-compose.ubuntu.yml" "$STAGING_DIR/docker-compose.ubuntu.yml"
-git -C "$PROJECT_DIR" rev-parse HEAD > "$STAGING_DIR/git-revision.txt"
+#### 7.4.7 隔离恢复与验收
 
-restic backup --tag lms --tag daily "$STAGING_DIR"
-restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune
-restic snapshots --latest 1
-```
+NAS 暂未准备时，可先显式执行仓库中的 `familyLocalBackup.drill.js` 本机合成归档预演，
+命令及边界见 [T8 本地记录](../development/evidence/t8-local-preparation-2026-10-30/README.md#本机合成归档预演)。
+它不运行 NAS 前置检查、不上传、不是生产恢复入口，不能据此勾选本节 NAS 或业务恢复验收。
 
-设置脚本权限并手工执行第一次备份：
+后续本机 `familyProductRestore.drill.js` 已将真实恢复的产品数据接入正式 Gateway/homework/resource/progress
+工厂和既有预检，验证原命令恢复、作品读取、权限、版本与账本幂等，见
+[正式应用恢复记录](../development/evidence/t8-local-preparation-2026-10-30/README.md#本机正式应用恢复验收)。
+它不是 Ubuntu/NAS/登录或浏览器验收。正式删除仍产出 v1 日志，严格恢复检查的
+`LEGACY_USER_DELETION_EVIDENCE_INSUFFICIENT` 是明确阻断；不能因正常 enabled 启动兼容 v1 就开放
+删除前备份。高级恢复继续后置，步骤 4 尚未通过。
 
-```bash
-sudo chmod 700 /usr/local/sbin/lms-backup
-sudo /usr/local/sbin/lms-backup
-```
+先用合成数据演练，再另行批准真实备份/隔离恢复。选择记录中的**精确 snapshot ID**，恢复到全新、
+独占的测试目录和数据库，不使用 `latest`，不覆盖原库/原卷，不对外开放入口。恢复环境使用受限
+合成凭据，不能直接启动备份中的真实 `.env`；禁止连接原家庭数据库或通知外部用户。
 
-首次运行会拉取一个很小的 `alpine` 镜像，用于只读归档媒体卷。以后运行不会重复下载。
+1. 先核对完整清单、所有归档摘要、字节数、工具和版本身份；缺少数据库、媒体或删除日志即失败。
+2. 恢复数据库和媒体时保持停读写隔离；针对 `--oplog --archive` 产生的备份在隔离库验证
+   `mongorestore --archive=... --oplogReplay`，不能只凭工具版本认定兼容。
+3. 按既有预检验证原命令/remoteOperationId 映射、索引、终态、上传保护和完整媒体引用。
+   验证重试不重复发布或发星、账号隔离、私有读取；不为通过预检删除未决命令或回填 UUID。
+4. TC-SL-PRIVACY-005：恢复删除前快照时合并**最新受保护删除日志**，按已实现的路径完成禁读/释放，
+   旧签名不可读出正文。证据缺失、冲突或所需恢复能力仍后置时，保持隔离并报告阻断，不跳过检查。
+   不以本节名义扩展 D2b/D3/D4/E 或新孤儿回收，也不把 REMAINDER_DEFERRED 写成已通过。
+5. 记录实际备份点、操作时间、结果及 RPO/RTO，不用模拟值冒充真机或真实环境指标。
+   失败演练保留证据；测试资源的删除仍需精确归属和相应授权。
 
-#### 7.4.6 用 systemd 定时执行
-
-使用 systemd timer 比 cron 更适合家用服务器：如果机器在计划时间关机，`Persistent=true` 会在下次启动后补跑。
-
-```bash
-sudo nano /etc/systemd/system/lms-backup.service
-```
-
-```ini
-[Unit]
-Description=Encrypted LMS backup to family NAS
-Wants=network-online.target
-After=network-online.target docker.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/lms-backup
-```
-
-```bash
-sudo nano /etc/systemd/system/lms-backup.timer
-```
-
-```ini
-[Unit]
-Description=Run LMS backup every day
-
-[Timer]
-OnCalendar=*-*-* 02:30:00
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-```
-
-启用、检查和查看日志：
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now lms-backup.timer
-systemctl list-timers lms-backup.timer
-sudo journalctl -u lms-backup.service --since today
-```
-
-#### 7.4.7 恢复演练
-
-每月至少一次，只恢复到临时目录或空的测试 MongoDB 容器，绝不直接覆盖正在使用的家庭数据：
-
-```bash
-sudo env \
-  RESTIC_REPOSITORY=/mnt/nas-lms-backup/restic-repository \
-  RESTIC_PASSWORD_FILE=/etc/lms-backup/restic-password \
-  restic snapshots
-
-sudo env \
-  RESTIC_REPOSITORY=/mnt/nas-lms-backup/restic-repository \
-  RESTIC_PASSWORD_FILE=/etc/lms-backup/restic-password \
-  restic restore latest --target /var/tmp/lms-restore-test
-```
-
-恢复目录中应有 `mongo.archive`、`media.tar.gz`、`environment.env`、Compose 文件和 Git 提交号。将 `mongo.archive` 恢复到空的测试 MongoDB 容器时，使用 `mongorestore --archive=... --oplogReplay`；验证数据和媒体均可读取后再删除测试目录。
+发布前无新写入时，回滚仅使用已验证的匹配镜像和快照。新版本接收写入后须先停写、保护新状态，
+优先修复前进；不能仅切旧镜像继续写。回退到旧数据需列出丢失时间窗口并单独批准。
+T4 OPEN、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED 与两项非阻断补测不因本节更新而关闭。
 
 ### 7.5 教育 AI 扩展运行档位（拟议，尚未实现）
 

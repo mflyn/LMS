@@ -88,8 +88,8 @@
 | T4 | IN_PROGRESS | §24.9 求助投影 P2 已批准关闭；§24.10 固定候选服务器独立合成自动化通过，真机/人工待验收；总门禁 OPEN，关闭需用户批准 |
 | T5 | CLOSED | §25.5 用户已批准限定合成工程；总门禁 CLOSED，仅 ENGINEERING_SYNTHETIC_ONLY；合并后双入口、WebKit 测试导航及异常收尾已批准关闭见 §25.9；DEVICE_PENDING、非阻断补测与后置边界保留 |
 | T6 | CLOSED | §26.6 用户批准限定合成工程关闭；§26.7 仅授权专用分支/PR；DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测和后置责任保留；不合并、不部署 |
-| T7 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY（§27.42）；七项 P2 CLOSED（§27.8）；lint CLOSED（§27.11）；三项修订见 §27.19；0bddeb7e完整01–18含07b/13b及收尾通过、独立证据复核见§27.41；全部历史失败保留；Git脱敏候选待复审见§27.44，不推送/合并/部署 |
-| T8 | NOT_STARTED | 家庭 Ubuntu、iPad、NAS 恢复和回滚有实测证据 |
+| T7 | CLOSED | APPROVED / ENGINEERING_SYNTHETIC_ONLY（§27.42）；历史失败保留；脱敏交付已按授权合并 PR #35，main CI 通过见 §27.45；未部署 |
+| T8 | IN_PROGRESS | §28 仅批准本地准备；前置检查与说明待独立复评；总门禁 OPEN，服务器备份/恢复/部署未授权，真机仍待验收 |
 | T9 | NOT_STARTED | §14 每孩子及总体价值判定；总体 PASS 才关闭，PARTIAL/FAIL 不冒充完成 |
 
 T1 关闭索引见[验收清单归并](./family-self-directed-learning-t1-acceptance-reconciliation.md)。
@@ -5205,7 +5205,7 @@ Docker INCOMPLETE_FAILED、两项 OPEN_NONBLOCKING、REMAINDER_DEFERRED 及 T7/T
 **T7 approval:** APPROVED
 **T7 scope:** ENGINEERING_SYNTHETIC_ONLY
 **T7 candidate:** 0bddeb7e18200d3fd9e5879c096dd7229df538a2
-**T7 Git:** SANITIZED_REVIEW_PENDING / NO_PUSH / NO_MERGE / NO_DEPLOY
+**T7 Git:** MERGED / NO_DEPLOY
 **T7 deployment:** T8_PENDING / NOT_AUTHORIZED
 **T7 device:** DEVICE_PENDING
 **T7 Docker audit:** INCOMPLETE_FAILED
@@ -6610,3 +6610,120 @@ T7限定合成工程关闭、T4 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED
 原始快照一致，业务源码/产品断言/运行配置/发布入口未变。独立只读复核通过，发现的临时依赖
 符号链接在提交前已移除且未暂存；未修改原依赖或忽略规则。详见公开脱敏说明的验证记录。
 本地候选只包含main基线加一个完整脱敏交付提交，供用户复审；本节不预先声明新SHA的CI通过。
+
+### 27.45 PR #35 合并交付（2026-10-30）
+
+用户后续明确批准先评审并合并 PR #35，再启动 T8-1 只读盘点。§27.44 保留原授权时点，不覆盖原件。
+脱敏头提交 9593d2890147c41eb3e4e87d07db16196ec760c0，经核对九组原件/公开副本哈希及新 SHA CI，
+转 Ready 后用 merge commit 合并为 ff56e251cd0384feb26ed9cde158c2790ac7345f。
+[main CI](https://github.com/mflyn/LMS/actions/runs/40988085277) 的 Family Regression 通过（14m50s）：
+后端 158 suites/4825 tests、前端 57/739、07b 6/35、浏览器 4+1+54、原媒体 smoke 91 bytes；
+完整发布门禁及证据上传成功。性能/安全/镜像发布/部署条件任务 SKIPPED，不作为专项通过。
+源分支和本地原始历史保留，未部署；不声称 GitHub 历史引用/缓存已彻底清除。
+
+## 28. T8 本地备份准备（2026-10-30）
+
+**T8 scope:** LOCAL_PREPARATION_ONLY
+**T8 gate:** OPEN
+**T8 approval:** LOCAL_IMPLEMENTATION_APPROVED
+**T8 server execution:** NOT_AUTHORIZED
+**T8 Git:** BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY
+**T8 independent review:** LOCAL_PASS
+
+用户已批准只读盘点及最小方案后的本地修订/验证，不包含安装、挂载、停止服务、真实备份、恢复或部署。
+T8-1 元数据观察已进行：事务拓扑、核心索引、目录权限与运行源码抽样可核对；不等同于业务数据预检、
+一致性备份、持久化或真实恢复验收。真实主机身份/地址、凭据及业务内容不进入公开证据。
+
+本批复用现有 Jest/文档门禁，新增只读 `scripts/check-family-backup.js` 和永久反例；
+修订 [Ubuntu 指南 §7.4](../deployment/local-ubuntu-deployment.md#74-数据备份)，补独立删除日志、
+全站停写、精确 NAS 来源、完整清单、失败保留及固定快照恢复。撤下自动覆盖暂存、退出删除和 prune 示例。
+前置检查仅表示两次观察通过，不能证明外部写入者已排除，也不产生任何备份或恢复成功证据。
+本批没有备份采集/上传/恢复执行器；这些真实流程的失败传播仍需后续合成演练，不能用前置单测冒充。
+验证、自查与剩余边界见 [本地准备记录](evidence/t8-local-preparation-2026-10-30/README.md)。
+
+本地独立复核发现保护根子挂载遗漏和最终 Mongo 状态未复验两项 P2，修复后 14 项永久反例由红转绿。
+独立复验 2 suites/381 tests 通过，并补查 19 项内存断言；两项缺陷已关闭，未发现新增可复现 P1/P2。
+公共回归 49 suites/1330 tests 通过；最初沙箱写日志失败与各轮红灯证据保留，不冒充一轮全绿。
+LOCAL_PASS 只表示本地修订复核通过，不是 Linux/NAS 集成、备份恢复验收或服务器执行授权。
+
+T4 OPEN、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、
+高级恢复/新回收 REMAINDER_DEFERRED 保留；T9 NOT_STARTED。本批待用户验收，T8 总门禁仍 OPEN。
+
+### 28.1 NAS 暂缓后的本机合成归档预演（2026-10-30）
+
+用户确认 NAS 尚未准备，要求先不做 NAS、推进下一步。本次仅本机合成数据的真实工具往返，
+不将该指令解释为服务器执行、安装、挂载、真实备份、提交或部署授权。
+新增显式运行的 `backend/common/deployment/fixtures/familyLocalBackup.drill.js`，不加入默认 CI，
+不添加生产备份/恢复框架。前置检查仍要求真实 NAS，不增加本地目录冒充 NAS 的绕过选项。
+
+现有本机 MongoDB 8.0.10、Database Tools 100.12.1 和 tar 完成全库 `--oplog --archive` 导出、
+新临时副本集 `--oplogReplay` 恢复及两类文件归档往返。合成 BSON、索引定义和唯一约束、文件字节
+经过验证；缺少日志归档、等长字节损坏、真实损坏归档和 dump 输出失败被拒绝。当前 5 项通过。
+首轮错误故障注入 3 passed/1 failed、第二轮索引枚举顺序误报 1 passed/3 failed 保留，修正及
+排序保护反例没有削弱复合键顺序或唯一性检查。详情及独立复核状态见本地准备记录的本机预演节。
+独立审查另发现停止 false 返回被忽略、异步启动晚续两项收尾 P2；修复后 7 项永久反例及
+独立重跑通过，两项代码缺陷关闭。修复后真实工具用例再次 5/5 通过，不改原失败断言或增加超时。
+
+此为传输层合成样本，不是产品模型、正式权限、原命令恢复/发星或有效删除证据重放验收。
+与 Ubuntu MongoDB 6.0.28 的兼容性未验证；未运行 Restic 或 NAS 上传。RPO/RTO、异机恢复、
+真实部署、DEVICE_PENDING 与 T4/T8 OPEN 均不因此关闭。所有本轮实例已停止，合成证据保留。
+
+### 28.2 本机恢复后的正式 HTTP 业务验收（2026-10-30）
+
+用户授权将本机恢复结果接入既有正式应用验收路径；删除恢复依赖后置能力时只报告阻断。
+新增显式 `familyProductRestore.drill.js`，复用原 common Jest、正式 Gateway/homework/resource/progress
+工厂及原启动预检，enabled、cleanup=false；未改业务代码、正式配置或恢复装配。
+使用新生成的合成家庭、三张不同图片和临时库，真实 dump/oplog、文件归档恢复到另一空副本集。
+目标库不执行 createIndexes/修复；恢复前后 canonical BSON、复合索引 key 顺序及 options 均比较。
+
+当前修订后 6/6 通过：已确认作品/反馈及图片恢复可读、已确认不可修改；原 actor 恢复丢 commit 响应的
+持久命令，同 UUID 的另一 actor 历史终态不串用；完整引用/绑定代次正确，重复发布及发星不重复；
+旧审核版本被拒绝、首次共管审核不改写；未登录/过期身份/兄弟姐妹/跨家庭和恢复后的实时撤权仍拒绝。
+正常隐私删除后旧链接不可读，教学与奖励状态不变。无新 UUID、无伪造成功响应、未降级 legacy。
+
+独立审查发现工具结果晚于最终报告、并发 HTTP 关闭早报、索引对象比较漏掉复合 key 顺序三项夹具 P2。
+7 项永久反例由 6 failed/1 passed 到 7 passed，修复后真实演练再次 6/6 通过；独立复核及摘要见
+[本批证据](evidence/t8-local-preparation-2026-10-30/README.md#本机正式应用恢复验收)。保留各轮失败，不冒充一轮全绿。
+独立复核重跑 7 项及文档门禁通过，并核对当前候选/结果摘要；三项夹具 P2 关闭，未发现新增可复现
+P1/P2。相关最终回归 4 suites/395 tests 通过。独立复核只审阅真实演练证据，没有另跑真实实例。
+
+**删除前备份安全恢复仍阻断：**正式删除写 v1 日志；独立只读严格恢复检查返回
+`LEGACY_USER_DELETION_EVIDENCE_INSUFFICIENT`。正常 enabled 的历史 v1 兼容不是严格恢复许可。
+未执行 v2 恢复写入或把删除前快照开放给用户，未接入后置 D2b/D3/D4/E；维护工厂拒绝读取为 503。
+这不是自动恢复隔离编排的证明，也不关闭 TC-SL-PRIVACY-005。
+
+四个服务使用真实 HTTP、同一临时 Mongo 连接；身份由测试签发真实 JWT，没有启动 user-service 或测试
+登录/PIN。显式调用预检后使用工厂，不是 OS 服务启动/重启、浏览器或实际家庭环境验收。
+NAS、Restic 上传失败传播、目标 Ubuntu MongoDB 兼容和 RPO/RTO 均待验证；T8 OPEN、T4 OPEN、
+DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、两项非阻断补测及 REMAINDER_DEFERRED 保留。
+没有服务器操作、安装、真实数据、Git 提交/推送/合并或部署。
+
+### 28.3 本地交付验收与整理（2026-10-30）
+
+用户要求先验收并整理当前 T8 本地交付。本轮结论为 LOCAL_TECHNICAL_ACCEPTANCE_PASS，
+只接受 §28–§28.2 已实现的本地准备与合成验证，不关闭 T8 总门禁、不新增服务器或 Git 授权。
+完整 16 文件范围及配套 manifest、33 项摘要核对、29 份私有原始证据副本见
+[本地交付清单](evidence/t8-local-preparation-2026-10-30/README.md#本地交付验收与范围清单)。
+本轮修正两处当前 T7 导航仍称待合并的陈旧文字；业务、检查入口与演练源码未修改。
+定向 4 suites/395 tests、lint、文档状态及链接/diff 校验通过；独立文档轻量复核通过。
+没有重跑真实恢复实例或全量发布，原演练成功/失败结果分别核验并保留。
+
+删除恢复 `LEGACY_USER_DELETION_EVIDENCE_INSUFFICIENT`、NAS 暂缓、Ubuntu/登录/浏览器/真机、
+RPO/RTO 和回滚验收未完成。T4/T8 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、
+两项非阻断补测、REMAINDER_DEFERRED 与 T9 NOT_STARTED 保持。本地证据副本不等于异机备份。
+
+### 28.4 T8 专用分支交付授权（2026-10-30）
+
+用户明确授权将本批提交推送至 GitHub 专用分支、创建 PR 并检查 CI。使用 `codex/t8-local-delivery`，
+基于当次核实的 `origin/main`；不合并、不部署、不执行服务器操作。§28–§28.3 的禁止 Git 文字为
+此前授权时点，原验收证据不改写。T8 OPEN、删除恢复 blocker、真机和所有后置义务不因 Git 交付关闭。
+
+原 17 文件冻结候选及 manifest（SHA-256 `e33209c785c853837dbac8b99dce878ed9e460a72c66029b496302a7e3792ffa`）
+已精确保留在私有忽略目录。公开候选只同步本次授权状态、对应文档反例及清单哈希，不修改备份检查或
+真实演练逻辑。原始结果、日志、数据库、媒体、配置和私有来源清单不提交；公开仓库只接收源码与脱敏摘要。
+CI 以 PR 最新 SHA 的实际结果为准，本节不预先声明通过，也不将条件跳过任务计为专项验收。
+
+提交前复验：定向 4 suites/395 tests 通过，0 failed/0 skipped；结果 JSON SHA-256 为
+`d9a2cc5129adc92b554026380173f63865ea94be208cc525a3034df1add979c6`。
+全仓 ESLint、文档状态与 diff 校验通过。授权状态增量独立只读复核未发现新增 P1/P2；
+该复核不冒充真实恢复重跑，历史实例证据与原候选继续保留。
