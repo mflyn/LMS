@@ -36,7 +36,7 @@ const createMediaCapabilityService = ({
     throw new Error('Media capability basePath must be an absolute path without a trailing slash');
   }
 
-  const pathFor = (mediaId) => `${basePath}/${mediaId}/content`;
+  const pathFor = (mediaId, requiresAuthorization = false) => `${basePath}/${mediaId}/${requiresAuthorization ? 'authenticated-content' : 'content'}`;
   const canonicalPayload = ({ path, mediaId, expires, nonce }) => [
     'GET',
     path,
@@ -46,27 +46,28 @@ const createMediaCapabilityService = ({
   ].join('\n');
   const sign = (payload) => crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
-  const issue = (mediaId) => {
+  const issue = (mediaId, { requiresAuthorization = false } = {}) => {
     assertMediaId(mediaId);
     const nonce = randomUUID();
     if (typeof nonce !== 'string' || !NONCE_PATTERN.test(nonce)) {
       throw new Error('Media capability nonce generator must return a UUID');
     }
     const expires = Math.floor(Number(now()) / 1000) + maxAgeSeconds;
-    const path = pathFor(mediaId);
+    const path = pathFor(mediaId, requiresAuthorization);
     const signature = sign(canonicalPayload({ path, mediaId, expires, nonce }));
     const query = new URLSearchParams({ expires: String(expires), nonce, signature });
 
     return {
       url: `${path}?${query.toString()}`,
-      expiresAt: new Date(expires * 1000).toISOString()
+      expiresAt: new Date(expires * 1000).toISOString(),
+      ...(requiresAuthorization ? { requiresAuthorization: true } : {})
     };
   };
 
-  const verify = ({ path, mediaId, expires, nonce, signature } = {}) => {
+  const verify = ({ path, mediaId, expires, nonce, signature, requiresAuthorization = false } = {}) => {
     assertMediaId(mediaId);
     const numericExpires = Number(expires);
-    if (path !== pathFor(mediaId)
+    if (path !== pathFor(mediaId, requiresAuthorization)
       || !Number.isSafeInteger(numericExpires)
       || String(numericExpires) !== String(expires)
       || typeof nonce !== 'string'

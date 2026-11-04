@@ -53,7 +53,8 @@ const createPrivateMediaUpload = ({
   });
   const parseSingle = multer({
     storage,
-    limits: { fileSize: MAX_MEDIA_BYTES, files: 1, fields: 2 }
+    // Busboy treats reaching fileSize as truncated; allow exactly MAX_MEDIA_BYTES.
+    limits: { fileSize: MAX_MEDIA_BYTES + 1, files: 1, fields: 2 }
   }).single('file');
 
   const singleImage = (req, res, next) => {
@@ -63,6 +64,9 @@ const createPrivateMediaUpload = ({
         return next(validationError('Invalid media upload'));
       }
       if (!req.file) return next(validationError('Media file is required'));
+      if (req.file.size > MAX_MEDIA_BYTES) {
+        return removeTemporary(req.file.path).then(() => next(mediaTooLarge()), next);
+      }
       req.file.originalname = normalizeUploadFilename(req.file.originalname);
       return next();
     });

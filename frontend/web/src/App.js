@@ -22,6 +22,7 @@ import GrowthLogsPage from './pages/family/GrowthLogsPage';
 import KnowledgePointsPage from './pages/family/KnowledgePointsPage';
 import MistakesPage from './pages/family/MistakesPage';
 import TutorPage from './pages/family/TutorPage';
+import FamilyLearningPage, { ChildLearningPage } from './pages/family/Ai2LearningPage';
 import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
 import RewardsPage from './pages/family/RewardsPage';
@@ -58,6 +59,7 @@ const AppRoutes = () => (
           <Route path="points" element={<KnowledgePointsPage />} />
           <Route path="mistakes" element={<MistakesPage />} />
           <Route path="tutor" element={<TutorPage />} />
+          <Route path="learning" element={<FamilyLearningPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="reminders" element={<RemindersPage />} />
           <Route path="rewards" element={<RewardsPage />} />
@@ -73,6 +75,7 @@ const AppRoutes = () => (
         <Route path="today" element={<ChildTodayPage />} />
         <Route path="tasks/:taskId" element={<ChildTaskPage />} />
         <Route path="mistakes" element={<ChildMistakesPage />} />
+        <Route path="learning" element={<ChildLearningPage />} />
         <Route path="achievements" element={<ChildAchievementsPage />} />
         <Route path="me" element={<ChildProfilePage />} />
         <Route path="reflection" element={<ChildReflectionPage />} />

@@ -3588,6 +3588,45 @@ function validate() {
     assert(lines.length === 1 && lines[0] === `${prefix} ${value}`, `T8 ${key} must remain uniquely ${value}`, errors);
   }
 
+  // Current closure declarations are separate from retained historical OPEN snapshots.
+  const ai2ClosureStates = [
+    ['AI2-5 status', 'CLOSED'],
+    ['AI-2 gate', 'CLOSED'],
+    ['AI-2 approval', 'USER_APPROVED'],
+    ['AI-2 scope', 'ENGINEERING_SYNTHETIC_ONLY'],
+    ['AI-2 device', 'DEVICE_PENDING'],
+    ['AI-2 retained gates', 'T4 OPEN / T8 OPEN / AI-1 OPEN'],
+    ['AI-2 Docker audit', 'INCOMPLETE_FAILED'],
+    ['AI-2 nonblocking', 'AI2-VIEW-NB-001 OPEN_NONBLOCKING / T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING'],
+    ['AI-2 historical failures', 'PRESERVED'],
+    ['AI-2 deferred', 'REMAINDER_DEFERRED'],
+    ['AI-2 real model', 'NOT_AUTHORIZED / QUALIFIED_COUNTER_PENDING'],
+    ['AI-2 Git', 'BRANCH_PR_ONLY / NO_MERGE'],
+    ['AI-2 deployment', 'NOT_AUTHORIZED']
+  ];
+  const hasAi2ClosureStates = source => ai2ClosureStates.every(([key, value]) => {
+    const prefix = `**${key}:**`;
+    const lines = source.split('\n').map(line => line.trim()).filter(line => line.startsWith(prefix));
+    return lines.length === 1 && lines[0] === `${prefix} ${value}`;
+  });
+  const ai2Closure = read('docs/development/evidence/ai2-5-20261103/closure-readiness.md');
+  for (const [name, source] of [['Gate', selfDirectedGate], ['closure', ai2Closure]]) {
+    assert(hasAi2ClosureStates(source), `${name}: AI-2 closure must retain unique approved synthetic scope and pending boundaries`, errors);
+  }
+  const ai2StateFixture = ai2ClosureStates.map(([key, value]) => `**${key}:** ${value}`).join('\n');
+  assert(hasAi2ClosureStates(ai2StateFixture), 'AI-2 state checker must accept the approved bounded closure', errors);
+  for (const [key, value] of ai2ClosureStates) {
+    const line = `**${key}:** ${value}`;
+    for (const [kind, source] of [
+      ['missing', ai2StateFixture.replace(line, '')],
+      ['changed', ai2StateFixture.replace(line, `**${key}:** INVALID`)],
+      ['duplicate', `${ai2StateFixture}\n${line}`]
+    ]) {
+      assert(!hasAi2ClosureStates(source), `AI-2 state checker must reject ${kind} ${key}`, errors);
+    }
+  }
+  const ai2ClosureProbes = 3 + ai2ClosureStates.length * 3;
+
   for (const [name, markdown, marker] of [
     ['research', selfDirectedResearch, '状态：拟议方案'],
     ['design', selfDirectedDesign, '状态：拟议设计'],
@@ -4470,6 +4509,7 @@ function validate() {
     proposedAiDocuments: aiDocuments.size,
     proposedSelfDirectedDocuments: selfDirectedDocuments.size,
     selfDirectedContractProbes,
+    ai2ClosureProbes,
     valueGateContractProbes: valueGateTextRules.length + valueGateExamples.length + valueGateStructuralMutants.length,
     proposedAiContracts: proposedAiContracts.length,
     contractFixtureCases,
@@ -4484,6 +4524,7 @@ if (require.main === module) {
       `Family documentation gate passed: ${result.documents} baseline documents, ` +
         `${result.proposedSelfDirectedDocuments} proposed self-directed-learning documents, ` +
         `${result.selfDirectedContractProbes} self-directed contract probes, ` +
+        `${result.ai2ClosureProbes} AI-2 closure probes, ` +
         `${result.valueGateContractProbes} value-gate text probes, ` +
         `${result.proposedAiDocuments} proposed AI documents, ` +
         `${result.proposedAiContracts} AI contracts, ` +

@@ -21,6 +21,13 @@ const { createDailyLearningPlanRouter } = require('./routes/dailyLearningPlans')
 const { createAi1Router, createAi1JsonParser } = require('./routes/ai1');
 const { createAi1Service } = require('./services/ai1Service');
 const { createAi1Runtime } = require('./services/ai1Runtime');
+const { createAi2Router, createAi2JsonParser } = require('./routes/ai2');
+const { createAi2MediaAccessRouter, checkAi2MediaAccess } = require('./routes/ai2MediaAccess');
+const { createAi2Service } = require('./services/ai2Service');
+const { createAi2Runtime } = require('./services/ai2Runtime');
+const { createAi2MediaInspectClient } = require('./services/ai2MediaInspectClient');
+const { validateAi2Environment } = require('../../common/services/ai2Activation');
+const { error: ai2Error } = require('./services/ai2Contract');
 const { createGrowthTaskAttachmentMediaService } = require('./services/growthTaskAttachmentMediaService');
 const { validateClientConfig } = require('./services/starAwardClient');
 const { resolveCompletionMode, assertCompletionAssemblyAvailable, withCompletionMode,
@@ -56,6 +63,8 @@ const createApp = ({
   homeworkRouter = homeworkRoutes,
   retirementRouter,
   tutorRouter,
+  ai2Router,
+  ai2MediaAccessRouter,
   learningSourceRouter = createLearningSourceRouter({ kind: 'tasks', Model: GrowthTask,
     serviceToken: process.env.INTERNAL_SERVICE_TOKEN }),
   appLogger = logger
@@ -75,12 +84,14 @@ const createApp = ({
       return parseTutor(req, res, cause => cause ? next(cause) : tutorRouter(req, res, next));
     });
   }
+  if (ai2Router) app.use('/api/ai2', createAi2JsonParser(), ai2Router);
   app.use(express.json());
   app.use('/api/homework', homeworkRouter);
   app.use('/api/growth-tasks', growthTaskRouter);
   app.use('/api/children', createDailyLearningPlanRouter());
   app.use('/api/internal/learning-sources', learningSourceRouter);
   if (retirementRouter) app.use('/api/internal/completion-media-retirements', retirementRouter);
+  if (ai2MediaAccessRouter) app.use('/api/internal/ai2', ai2MediaAccessRouter);
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', service: 'homework-service' });
   });
@@ -101,12 +112,14 @@ const createProductionApp = ({
     throw Object.assign(new Error('COMPLETION_ASSEMBLY_NOT_READY'), { code: 'COMPLETION_ASSEMBLY_NOT_READY' });
   }
   assertCompletionConnection(connection, mongoose.connection);
+  const ai2Config = validateAi2Environment(env);
   const ai1Runtime = createAi1Runtime({ env, connection });
+  const ai2Runtime = createAi2Runtime({ env, connection });
   const { attachmentMediaService } = (createMediaDependencies || createTask6MediaDependencies)({
     env, appLogger, completionIsolation: mode === 'enabled' });
   const sourceReader = createLearningSourceReader({ TaskModel: GrowthTask,
     mistakeUrl: env.ANALYTICS_SERVICE_URL, serviceToken: env.INTERNAL_SERVICE_TOKEN });
-  let growthTaskRouter, retirementRouter;
+  let growthTaskRouter, retirementRouter, mediaReferenceClient, mediaReader;
   if (mode === 'enabled') {
     const { runMongoTransaction } = require('../../common/services/mongoTransaction');
     const { createCompletionMediaReferenceClient } = require('../../common/services/completionMediaReferenceClient');
@@ -119,7 +132,9 @@ const createProductionApp = ({
     const { createCompletionMediaRetirementService } = require('./services/completionMediaRetirementService');
     const { createCompletionMediaRetirementRouter } = require('./routes/completionMediaRetirements');
     const transactionRunner = work => runMongoTransaction({ mongooseInstance: connection, work });
-    const mediaReferenceClient = createCompletionMediaReferenceClient({ resourceServiceUrl: env.RESOURCE_SERVICE_URL,
+    mediaReferenceClient = createCompletionMediaReferenceClient({ resourceServiceUrl: env.RESOURCE_SERVICE_URL,
+      serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN, timeout: Number(env.MEDIA_REFERENCE_TIMEOUT_MS || 3000) });
+    if (ai2Config.continuousStore) mediaReader = createAi2MediaInspectClient({ resourceServiceUrl: env.RESOURCE_SERVICE_URL,
       serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN, timeout: Number(env.MEDIA_REFERENCE_TIMEOUT_MS || 3000) });
     const { awardTaskStar } = createStarAwardClient(starAwardConfig(env));
     growthTaskRouter = createGrowthTaskCompletionProductionRouter({ transactionRunner, attachmentMediaService, sourceReader,
@@ -132,14 +147,34 @@ const createProductionApp = ({
   } else {
     growthTaskRouter = (growthTaskRouterFactory || createGrowthTaskRouter)({ attachmentMediaService, sourceReader });
   }
+  // Service reads also need continuity: their factory is usable independently of production activation.
+  const requireAi2Store = () => {
+    if (!ai2Runtime.dependencies.getRuntime().continuousStore) throw ai2Error(503, 'AI2_STORE_ISOLATED');
+  };
+  const ai2Service = createAi2Service({ sourceReader, mediaReader, mediaReferenceClient, ...ai2Runtime.dependencies });
+  const guardedAi2Service = Object.fromEntries(Object.entries(ai2Service).map(([name, action]) => [name, async input => {
+    requireAi2Store();
+    const result = await action(input);
+    requireAi2Store();
+    return result;
+  }]));
   const app = createApp({
     growthTaskRouter,
     retirementRouter,
     tutorRouter: createAi1Router({ service: createAi1Service({ sourceReader, ...ai1Runtime.dependencies }) }),
+    ai2Router: createAi2Router({ service: guardedAi2Service }),
+    ai2MediaAccessRouter: ai2Config.continuousStore ? createAi2MediaAccessRouter({ serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN,
+      check: async body => {
+        requireAi2Store();
+        const result = await checkAi2MediaAccess(body);
+        requireAi2Store();
+        return result;
+      } }) : undefined,
     learningSourceRouter: createLearningSourceRouter({ kind: 'tasks', Model: GrowthTask, serviceToken: env.INTERNAL_SERVICE_TOKEN }),
     appLogger
   });
   app.locals.assertAi1Ready = ai1Runtime.assertReady;
+  app.locals.assertAi2Ready = ai2Runtime.assertReady;
   return withCompletionMode(app, { mode, service: 'homework', env });
 };
 
@@ -204,6 +239,7 @@ const starAwardConfig = (env = process.env) => ({
 const validateStarAwardEnvironment = (env = process.env) => validateClientConfig(starAwardConfig(env));
 
 const validateStartupEnvironment = env => {
+  validateAi2Environment(env);
   createAi1Runtime({ env });
   validateStarAwardEnvironment(env);
   validateMediaReferenceClientConfig({ resourceServiceUrl: env.RESOURCE_SERVICE_URL,
@@ -228,6 +264,9 @@ const startServer = async ({
   return startCompletionService({ service: 'homework', env, connection, app, port, host, appLogger,
     connect: () => connect({ mongoURI: env.MONGO_URI, connection }), createRuntimeApp,
     validateEnvironment: runtimeEnv => {
+      const ai2 = validateAi2Environment(runtimeEnv);
+      if (ai2.continuousStore && (app || createRuntimeApp !== createProductionApp)) throw ai2Error(503, 'AI2_NOT_READY');
+      if (ai2.continuousStore && validateEnvironment !== validateStartupEnvironment) validateStartupEnvironment(runtimeEnv);
       if (['enabled', 'query-only'].includes(runtimeEnv.AI1_MODE) && (app || createRuntimeApp !== createProductionApp)) {
         throw Object.assign(new Error('AI_PROFILE_UNAVAILABLE'), { code: 'AI_PROFILE_UNAVAILABLE' });
       }
@@ -243,6 +282,7 @@ const startServer = async ({
     },
     initializeRuntime: async ({ app: runtimeApp }) => {
       if (runtimeApp.locals.assertAi1Ready) await runtimeApp.locals.assertAi1Ready();
+      if (runtimeApp.locals.assertAi2Ready) await runtimeApp.locals.assertAi2Ready();
       return initializeQueue({ app: runtimeApp,
         enableRabbitMQ: env.ENABLE_RABBITMQ !== 'false' && env.NODE_ENV !== 'test',
         connect: () => connectRabbitMQ({ rabbitUrl: env.RABBITMQ_URL, appLogger }) });

@@ -13,6 +13,9 @@ const pending = () => error(503, 'MEDIA_UPLOAD_PENDING');
 
 const authorize = async (record, session) => {
   const { identity, metadata: m } = record;
+  if (m.purpose === 'ai2_correction' && (identity.role !== 'student' || identity.id !== m.childId || identity.id !== m.uploadedBy)) {
+    throw error(403, 'CHILD_ACCESS_DENIED');
+  }
   const actor = await User.findOne({ _id: identity.id, role: identity.role }).session(session).lean();
   const child = await User.findOne({ _id: m.childId, familyId: m.familyId, role: 'student' }).session(session).lean();
   const query = { _id: m.familyId, childIds: m.childId };
@@ -21,9 +24,13 @@ const authorize = async (record, session) => {
   if (!actor || !child || !await Family.exists(query).session(session)) throw error(403, 'CHILD_ACCESS_DENIED');
 };
 
-const createCompletionUploadService = ({ transactionRunner, mediaStore, journal, now = Date.now } = {}) => {
+const createCompletionUploadService = ({ transactionRunner, mediaStore, journal, now = Date.now,
+  ai2Mode = () => 'off' } = {}) => {
   if (typeof transactionRunner !== 'function' || typeof journal?.persist !== 'function'
-    || typeof mediaStore?.read !== 'function' || typeof mediaStore?.remove !== 'function') throw new TypeError('Upload dependencies required');
+    || typeof ai2Mode !== 'function' || typeof mediaStore?.read !== 'function' || typeof mediaStore?.remove !== 'function') throw new TypeError('Upload dependencies required');
+  const assertAi2Enabled = purpose => {
+    if (purpose === 'ai2_correction' && ai2Mode() !== 'enabled') throw error(503, 'AI2_DISABLED');
+  };
   const readState = async (record, session) => {
     if (!session?.inTransaction()) throw pending();
     await authorize(record, session);
@@ -46,7 +53,9 @@ const createCompletionUploadService = ({ transactionRunner, mediaStore, journal,
       || ['DELETED', 'PURGED'].includes(retirement?.state)) throw error(404, 'RESOURCE_NOT_FOUND');
     if (retirement && !asset) throw pending();
     if (guard && !asset) throw pending();
-    if (asset && (!guard || asset.retentionPolicyVersion !== 1 || !(asset.orphanEligibleAt instanceof Date))) throw pending();
+    if (asset && (!guard || (asset.purpose === 'task_completion'
+      ? asset.retentionPolicyVersion !== 1 || !(asset.orphanEligibleAt instanceof Date)
+      : asset.retentionPolicyVersion != null || asset.orphanEligibleAt != null || retirement))) throw pending();
     return { asset, guard, identity };
   };
   const resume = async record => {
@@ -60,6 +69,7 @@ const createCompletionUploadService = ({ transactionRunner, mediaStore, journal,
             const bytes = await mediaStore.read(record.metadata.storageKey);
             if (bytes.length !== record.metadata.sizeBytes) throw pending();
             if (asset) return asset;
+            assertAi2Enabled(record.metadata.purpose);
             const registered = await Guard.findOneAndUpdate({ mediaId: record.mediaId },
               { $setOnInsert: { ...identity, state: 'REGISTERED' }, $inc: { revision: 1 } },
               { session, upsert: true, new: true, runValidators: true });
@@ -68,7 +78,8 @@ const createCompletionUploadService = ({ transactionRunner, mediaStore, journal,
             const createdAt = new Date(Number(now())), orphanEligibleAt = new Date(createdAt.getTime() + 86400000);
             if (!Number.isFinite(orphanEligibleAt.getTime())) throw pending();
             const [created] = await Asset.create([{ _id: record.mediaId, ...record.metadata,
-              status: 'active', retentionPolicyVersion: 1, orphanEligibleAt, createdAt }], { session });
+              status: 'active', createdAt,
+              ...(record.metadata.purpose === 'task_completion' ? { retentionPolicyVersion: 1, orphanEligibleAt } : {}) }], { session });
             return created.toObject();
           });
           // A delayed successful create acknowledgement is not a fresh active-asset fact.
@@ -84,7 +95,7 @@ const createCompletionUploadService = ({ transactionRunner, mediaStore, journal,
       }
       throw pending();
     } catch (cause) {
-      if (cause instanceof AppError && cause.statusCode < 500) throw cause;
+      if (cause instanceof AppError && (cause.statusCode < 500 || cause.code === 'AI2_DISABLED')) throw cause;
       throw pending();
     }
   };
@@ -97,10 +108,12 @@ const createCompletionUploadService = ({ transactionRunner, mediaStore, journal,
           ...(identity.role === 'student' ? { tokenVersion: identity.tokenVersion } : {}) },
         metadata: canonical, metadataHash: hash(canonical) };
       await validateRecord(record);
+      assertAi2Enabled(record.metadata.purpose);
       await journal.persist(record);
-    } catch (_cause) {
+    } catch (cause) {
       // No metadata attempt was dispatched; only this pre-write failure permits compensation.
       try { await mediaStore.remove(metadata.storageKey); } catch (_cleanup) { /* Quarantined for operator inspection. */ }
+      if (cause?.code === 'AI2_DISABLED') throw cause;
       throw pending();
     }
     return resume(record);
