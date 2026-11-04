@@ -1,6 +1,7 @@
 // Dedicated process-local synthetic credentials; never use an operator's environment.
 const values = {
   NODE_ENV: 'test', LOG_LEVEL: 'error', ENABLE_RABBITMQ: 'false', AI1_MODE: 'off',
+  AI2_MODE: 'off', AI2_STORE_CONTINUOUS: 'false',
   JWT_SECRET: 't2-synthetic-jwt-secret-at-least-32-characters',
   GATEWAY_IDENTITY_SECRET: 't2-synthetic-gateway-secret-at-least-32-characters',
   INTERNAL_SERVICE_TOKEN: 't2-synthetic-stars-token-at-least-32-characters',

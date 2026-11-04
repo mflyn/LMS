@@ -6,6 +6,7 @@ const MEDIA_PURPOSES = Object.freeze([
   'avatar',
   'task_attachment',
   'task_completion',
+  'ai2_correction',
   'mistake_question',
   'mistake_answer',
   'growth_evidence'

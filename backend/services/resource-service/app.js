@@ -41,6 +41,7 @@ const createLegacyUpload = () => multer({
 });
 
 const createApp = ({
+  ai2MediaInspectRouter = null,
   internalMediaRouter = null,
   logger = createLogger('resource-service'),
   mediaSecurity = { profile: 'trusted-local', scanner: null },
@@ -65,6 +66,7 @@ const createApp = ({
   });
 
   app.use(cors());
+  if (ai2MediaInspectRouter) app.use('/api/internal/media/ai2', ai2MediaInspectRouter);
   app.use(express.json());
   app.use(requestTracker);
   app.use(requestTimeout());

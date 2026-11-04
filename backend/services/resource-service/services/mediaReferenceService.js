@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { AppError } = require('../../../common/middleware/errorTypes');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
+const { protocolFields } = require('../../../common/services/completionMediaProtocol');
 
 const PURPOSE_BY_FIELD = Object.freeze({
   'child.avatarMediaId': 'avatar',
@@ -59,7 +60,7 @@ const normalizeCommand = (command = {}, action) => {
     const field = reference && reference.field;
     if (!validObjectId(mediaId)
       || typeof field !== 'string'
-      || field === 'completionMediaIds'
+      || protocolFields.includes(field)
       || !MediaReference.MEDIA_RESOURCE_FIELDS[resourceType].includes(field)) {
       throw validationError('Invalid media reference identity');
     }
@@ -251,14 +252,14 @@ const createMediaReferenceService = ({
     }
     const current = new Date(Number(now()));
     const expired = await MediaReferenceModel.find({
-      field: { $ne: 'completionMediaIds' },
+      field: { $nin: protocolFields },
       state: 'prepared',
       leaseExpiresAt: { $lte: current }
     }).sort({ leaseExpiresAt: 1, _id: 1 }).limit(limit).select('_id').lean();
     if (expired.length === 0) return { reclaimed: 0 };
 
     const result = await MediaReferenceModel.deleteMany({
-      field: { $ne: 'completionMediaIds' },
+      field: { $nin: protocolFields },
       _id: { $in: expired.map((reference) => reference._id) },
       state: 'prepared',
       leaseExpiresAt: { $lte: current }
@@ -268,7 +269,7 @@ const createMediaReferenceService = ({
 
   const releasePreparedForDeletedMedia = async ({ mediaId, releasedAt, session }) => {
     const query = MediaReferenceModel.updateMany(
-      { mediaId, state: 'prepared', field: { $ne: 'completionMediaIds' } },
+      { mediaId, state: 'prepared', field: { $nin: protocolFields } },
       {
         $set: {
           state: 'released',

@@ -1,6 +1,7 @@
 const { createHash } = require('crypto');
 const { isDeepStrictEqual } = require('util');
 const { assertCompletionPrivacyReadiness } = require('./completionPrivacyReadiness');
+const { protocolPurposes } = require('../../../common/services/completionMediaProtocol');
 const { oid, uuid, storageKey, hash, date, sameId, sameDate, revision, sameScope,
   fail, scan, one, assertPrerequisites } = require('../../../common/services/completionRetentionReadinessHelpers');
 
@@ -54,7 +55,8 @@ const validRetirement = row => row && [row._id, row.mediaId, row.familyId, row.c
   && (row.state === 'PURGED' ? date(row.purgedAt) && row.purgedAt >= row.deletedAt : row.purgedAt == null);
 const metadataHash = asset => {
   if (![asset._id, asset.familyId, asset.childId, asset.uploadedBy].every(oid)
-    || asset.purpose !== 'task_completion' || !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)
+    || !protocolPurposes.includes(asset.purpose) || !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)
+    || (asset.purpose === 'ai2_correction' && (!sameId(asset.uploadedBy, asset.childId) || !Number.isSafeInteger(asset.sizeBytes)))
     || !Number.isFinite(asset.sizeBytes) || asset.sizeBytes < 1 || asset.sizeBytes > 10 * 1024 * 1024
     || asset.pageCount != null || !storageKey(asset.storageKey)
     || !['legacy_unscanned', 'skipped_trusted_local', 'clean'].includes(asset.malwareScanStatus)
@@ -65,6 +67,7 @@ const metadataHash = asset => {
     malwareScannedAt: asset.malwareScannedAt == null ? null : asset.malwareScannedAt.toISOString() });
 };
 const matchingAsset = (asset, record) => asset && sameId(asset._id, record.mediaId) && sameScope(asset, record)
+  && asset.purpose === 'task_completion'
   && (asset.orphanLastCheckedAt == null || date(asset.orphanLastCheckedAt))
   && asset.storageKey === record.storageKey && metadataHash(asset) === record.uploadMetadataHash
   && asset.retentionPolicyVersion === 1 && sameDate(asset.orphanEligibleAt, record.orphanEligibleAt);
@@ -216,7 +219,8 @@ const assertCompletionRetentionReadiness = async ({ connection, writesPaused, jo
         const system = validRetirement(record) && ['DELETED', 'PURGED'].includes(record.state) && sameScope(record, guard)
           && record.storageKey === guard.storageKey && record.uploadMetadataHash === guard.metadataHash;
         const user = tombstone && oid(tombstone._id) && sameId(tombstone.mediaId, guard.mediaId) && sameScope(tombstone, guard)
-          && tombstone.purpose === 'task_completion' && tombstone.reason === 'user_requested' && date(tombstone.deletedAt);
+          && protocolPurposes.includes(tombstone.purpose) && (!asset || asset.purpose === tombstone.purpose)
+          && tombstone.reason === 'user_requested' && date(tombstone.deletedAt);
         if (!system && !user) issues.add('UPLOAD_GUARD_INVALID');
       }
     });
@@ -253,8 +257,19 @@ const assertCompletionRetentionReadiness = async ({ connection, writesPaused, jo
         if (record.state === 'FENCED') { await inspectReferences(db, record); await assertStatus(record, retirementClient); }
       }
     });
-    await visit(db, 'mediaassets', { $or: [{ purpose: 'task_completion' }, { orphanRetirementId: { $exists: true } }] }, async asset => {
+    await visit(db, 'mediaassets', { $or: [{ purpose: { $in: protocolPurposes } }, { orphanRetirementId: { $exists: true } }] }, async asset => {
       if (![asset._id, asset.familyId, asset.childId].every(oid)) { issues.add('ASSET_RETENTION_INVALID'); return; }
+      if (asset.purpose === 'ai2_correction') {
+        const guard = await read(db, 'completionuploadguards', { mediaId: asset._id });
+        if (!validUploadGuard(guard) || !sameScope(asset, guard) || asset.storageKey !== guard.storageKey
+          || metadataHash(asset) !== guard.metadataHash || !['active', 'deleted'].includes(asset.status)
+          || (asset.status === 'deleted') !== (guard.state === 'RETIRED')) issues.add('UPLOAD_GUARD_INVALID');
+        // This profile introduces no AI2 orphan enrollment or retirement writer.
+        if (asset.retentionPolicyVersion != null || asset.orphanEligibleAt != null || asset.orphanLastCheckedAt != null
+          || asset.orphanRetirementId != null || await read(db, 'mediaorphanretirements', { mediaId: asset._id })) {
+          issues.add('ASSET_RETENTION_INVALID');
+        }
+      }
       if (asset.orphanLastCheckedAt != null && !date(asset.orphanLastCheckedAt)) issues.add('ASSET_RETENTION_INVALID');
       if (asset.orphanRetirementId != null) {
         if (asset.status !== 'deleted') { issues.add('SYSTEM_EVIDENCE_INVALID'); return; }

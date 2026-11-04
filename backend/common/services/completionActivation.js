@@ -29,9 +29,11 @@ const assertLegacyCompletionState = async ({ connection, service }) => {
     { completionMediaReferenceState: 'pending_recovery' }
   ] };
   const queries = service === 'homework'
-    ? [['growthtaskcompletionoperations', {}], ['growthtasks', taskState], ['completionmediaguards', {}]]
+    ? [['growthtaskcompletionoperations', {}], ['growthtasks', taskState], ['completionmediaguards', {}],
+      ['ai2packages', {}], ['ai2attempts', {}], ['ai2commands', {}]]
     : [['mediareferenceoperations', {}], ['mediadeletiontombstones', {}], ['mediadeletionreceipts', {}],
-      ['mediareferences', { field: 'completionMediaIds' }], ['completionuploadguards', {}], ['mediaorphanretirements', {}]];
+      ['mediareferences', { field: { $in: ['completionMediaIds', 'correctionMediaIds'] } }],
+      ['completionuploadguards', {}], ['mediaorphanretirements', {}], ['mediaassets', { purpose: 'ai2_correction' }]];
   try {
     for (const [name, query] of queries) {
       if (await connection.db.collection(name).findOne(query, {
@@ -57,10 +59,19 @@ const withCompletionMode = (app, { mode, service, env }) => {
   guarded.use(requestTracker);
   const unavailable = (req, res) => res.status(503).json({ success: false,
     error: { code: 'COMPLETION_MAINTENANCE', message: 'COMPLETION_MAINTENANCE', details: [] } });
-  if (service === 'homework') guarded.use('/api/growth-tasks', authenticateGateway, unavailable);
-  else {
-    const { createMediaReferenceCredential } = require('../../services/resource-service/middleware/mediaReferenceCredential');
+  const { createMediaReferenceCredential } = require('../../services/resource-service/middleware/mediaReferenceCredential');
+  if (service === 'homework') {
+    guarded.use(['/api/growth-tasks', '/api/ai2'], authenticateGateway, unavailable);
+    // Older maintenance installations have no AI2 credential. Deny the route
+    // without making unrelated maintenance health/read endpoints unstartable.
+    const credential = typeof env.MEDIA_REFERENCE_SERVICE_TOKEN === 'string' && env.MEDIA_REFERENCE_SERVICE_TOKEN.length >= 32
+      ? createMediaReferenceCredential(env.MEDIA_REFERENCE_SERVICE_TOKEN)
+      : (_req, res) => res.status(401).json({ success: false,
+        error: { code: 'INVALID_SERVICE_CREDENTIAL', message: 'INVALID_SERVICE_CREDENTIAL', details: [] } });
+    guarded.use('/api/internal/ai2', credential, unavailable);
+  } else {
     guarded.use('/api/internal/media/references', createMediaReferenceCredential(env.MEDIA_REFERENCE_SERVICE_TOKEN), unavailable);
+    guarded.use('/api/internal/media/ai2', createMediaReferenceCredential(env.MEDIA_REFERENCE_SERVICE_TOKEN), unavailable);
     // Content uses signed capabilities, not gateway identity; deny without reading any bytes.
     guarded.use('/api/media/:mediaId/content', unavailable);
     guarded.use('/api/media', authenticateGateway, unavailable);

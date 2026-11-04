@@ -1,12 +1,38 @@
 const fs = require('fs/promises');
 const path = require('path');
 const { randomUUID } = require('crypto');
+const { validAi2MediaMetadata } = require('../../../common/services/completionMediaProtocol');
+
+const exact = (value, keys) => value != null && typeof value === 'object' && !Array.isArray(value)
+  && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
+const id = value => typeof value === 'string' && /^[0-9a-f]{24}(?![\s\S])/.test(value);
+const uuid = value => typeof value === 'string'
+  && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?![\s\S])/.test(value);
+const timestamp = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
+const validAi2Evidence = evidence => {
+  const tombstone = evidence.tombstone;
+  return exact(evidence, ['tombstone', 'receipts'])
+    && tombstone.purpose === 'ai2_correction'
+    && exact(tombstone, ['mediaId', 'familyId', 'childId', 'actorId', 'role', 'purpose', 'reason', 'deletedAt', 'mimeType', 'sizeBytes'])
+    && [tombstone.mediaId, tombstone.familyId, tombstone.childId, tombstone.actorId].every(id)
+    && ['parent', 'student'].includes(tombstone.role) && (tombstone.role !== 'student' || tombstone.actorId === tombstone.childId)
+    && tombstone.reason === 'user_requested' && timestamp(tombstone.deletedAt) && validAi2MediaMetadata(tombstone)
+    && Array.isArray(evidence.receipts) && Array.from(evidence.receipts).every(receipt =>
+      exact(receipt, ['mediaId', 'familyId', 'childId', 'resourceType', 'resourceId', 'field', 'bindingOperationId', 'releasedAt'])
+      && ['mediaId', 'familyId', 'childId'].every(key => receipt[key] === tombstone[key])
+      && receipt.resourceType === 'ai2_attempt' && receipt.field === 'correctionMediaIds' && id(receipt.resourceId)
+      && uuid(receipt.bindingOperationId) && timestamp(receipt.releasedAt));
+};
 
 const createMediaDeletionJournal = ({ root } = {}) => {
   if (typeof root !== 'string' || !path.isAbsolute(root)) throw new Error('An absolute protected deletion journal root is required');
   const persist = async evidence => {
     const mediaId = evidence?.tombstone?.mediaId;
     if (typeof mediaId !== 'string' || !/^[0-9a-f]{24}$/.test(mediaId)) throw new Error('Invalid deletion journal identity');
+    const typed = evidence.tombstone.purpose === 'ai2_correction' || Object.hasOwn(evidence.tombstone, 'mimeType')
+      || Object.hasOwn(evidence.tombstone, 'sizeBytes')
+      || Array.isArray(evidence.receipts) && evidence.receipts.some(receipt => receipt?.resourceType === 'ai2_attempt' || receipt?.field === 'correctionMediaIds');
+    if (typed && !validAi2Evidence(evidence)) throw new Error('Invalid AI2 deletion evidence');
     const content = `${JSON.stringify(evidence)}\n`;
     // The operator supplies an existing protected parent (for example a backup mount).
     try { await fs.mkdir(root, { mode: 0o700 }); } catch (err) { if (err.code !== 'EEXIST') throw err; }

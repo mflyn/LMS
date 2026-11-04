@@ -64,6 +64,7 @@ const ChildTodayContent = ({ session, child }) => {
           <h1 id="child-today-title">今天</h1>
         </div>
         <Link className="child-back-link" to="/child/reflection">本周反思</Link>
+        <Link className="child-back-link" to="/child/learning">我的学习包</Link>
       </div>
 
       <DailyLearningPlanPanel role="student" childId={child.childId} familyId={child.familyId} grade={child.grade} />

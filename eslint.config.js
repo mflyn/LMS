@@ -47,13 +47,16 @@ module.exports = [
       'backend/common/services/**/*{media,Media,mongoTransaction}*.js',
       'backend/common/utils/**/*{family,Family,dailyLearningPlan}*.js',
       'backend/gateway/**/*.js',
+      'backend/services/homework-service/{models,services,routes,__tests__/services}/[Aa]i2*.js',
       'backend/services/**/*{family,Family,growth,Growth,media,Media,child,Child,notification,Notification,reminder,Reminder,dailyLearningPlan,DailyLearningPlan}*.js',
       'backend/tests/t2/dailyLearningPlan.integration.test.js',
       'backend/tests/t2/weeklyReflection.integration.test.js',
+      'backend/tests/t2/{testEnvironment,runtime.integration.test}.js',
       'backend/services/analytics-service/services/weeklyReportService.js',
       'backend/services/analytics-service/__tests__/weeklyReports.test.js',
       'tests/e2e/t2/dailyLearningPlan.spec.js',
       'tests/e2e/t2/weekly{Reflection,MathLoop}.spec.js',
+      'tests/e2e/t2/ai2*.js',
       'backend/services/{user,homework,resource}-service/{app,server}.js',
       'scripts/**/*.js',
       'eslint.config.js',
@@ -66,6 +69,10 @@ module.exports = [
       globals: cleanGlobals(globals.node, globals.jest)
     },
     rules: sharedRules
+  },
+  {
+    files: ['tests/e2e/t2/ai2*.js'],
+    languageOptions: { globals: cleanGlobals(globals.browser) }
   },
   {
     files: [

@@ -38,6 +38,7 @@ describe('Task 6 media models', () => {
       'avatar',
       'task_attachment',
       'task_completion',
+      'ai2_correction',
       'mistake_question',
       'mistake_answer',
       'growth_evidence'

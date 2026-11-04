@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LeftOutlined, ReloadOutlined, RightOutlined } from '@ant-design/icons';
 import { useFamily } from '../../contexts/FamilyContext';
 import { captureSession, isSessionCurrent, subscribeSessionChanges } from '../../services/familySession';
@@ -157,6 +157,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
       </fieldset></form>}
     {oid(selectedId) && <button type="button" className="family-button secondary" aria-label="刷新详情" onClick={() => refresh('detail')}><ReloadOutlined /> 刷新详情</button>}
     {!blocked && detail && <section aria-label="讲解详情">
+      {detail.cycle.status === 'approved' && <Link to={`/app/learning?childId=${scope.childId}&cycleId=${detail.cycle.id}`}>预览孩子可见内容</Link>}
       <h2>{statuses[detail.cycle.status] || detail.cycle.status}</h2>
       {detail.job && <p>生成任务：{statuses[detail.job.status]} · 预留 {money(detail.job.budget?.reservedMicros)} · 已结算 {money(detail.job.budget?.settledMicros)}
         {detail.job.failureCode && ` · ${detail.job.failureCode}`}</p>}

@@ -1,5 +1,6 @@
 const { createHash } = require('crypto');
 const Asset = require('../models/MediaAsset');
+const { protocolPurposes } = require('../../../common/services/completionMediaProtocol');
 const { AppError } = require('../../../common/middleware/errorTypes');
 const keys = ['familyId', 'childId', 'uploadedBy', 'purpose', 'mimeType', 'displayName', 'sizeBytes',
   'pageCount', 'storageKey', 'malwareScanStatus', 'malwareScannedAt'];
@@ -19,11 +20,13 @@ const validateRecord = async record => {
     || keys.some(key => record.metadata[key] === undefined)) throw fail();
   const metadata = canonicalMetadata(record.metadata);
   if (JSON.stringify(metadata) !== JSON.stringify(record.metadata) || hash(metadata) !== record.metadataHash
-    || metadata.purpose !== 'task_completion' || !['image/jpeg', 'image/png', 'image/webp'].includes(metadata.mimeType)) throw fail();
+    || !protocolPurposes.includes(metadata.purpose) || !['image/jpeg', 'image/png', 'image/webp'].includes(metadata.mimeType)) throw fail();
   const identity = record.identity;
   if (!identity || !['parent', 'student'].includes(identity.role) || identity.id !== metadata.uploadedBy
     || Object.keys(identity).some(key => !['id', 'role', 'tokenVersion'].includes(key))
     || identity.role === 'student' && (!Number.isSafeInteger(identity.tokenVersion) || identity.tokenVersion < 0)) throw fail();
+  if (metadata.purpose === 'ai2_correction' && (identity.role !== 'student' || identity.id !== metadata.childId
+    || !Number.isSafeInteger(metadata.sizeBytes) || metadata.sizeBytes < 1 || metadata.sizeBytes > 10 * 1024 * 1024)) throw fail();
   await new Asset({ _id: record.mediaId, ...metadata }).validate();
   return record;
 };

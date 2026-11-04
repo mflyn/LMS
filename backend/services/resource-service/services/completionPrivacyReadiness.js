@@ -1,7 +1,7 @@
 const { assertMediaReferenceOperationReadiness } = require('./mediaReferenceOperationReadiness');
+const { validPair, purposeFor, protocolPurposes, protocolFields, validAi2MediaMetadata } = require('../../../common/services/completionMediaProtocol');
 
 // Native reads only. Model imports could create indexes before the preflight checks them.
-const FIELD = 'completionMediaIds';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?![\s\S])/;
 const READ = { maxTimeMS: 5000, readPreference: 'primary' };
 const oid = value => value?._bsontype === 'ObjectId' && typeof value.toHexString === 'function'
@@ -15,11 +15,11 @@ const sameKey = (a, b) => a && Object.keys(a).length === Object.keys(b).length
 const SCOPE = { familyId: 1, childId: 1, resourceType: 1, resourceId: 1, field: 1 };
 const SPECS = {
   ASSET: { name: 'mediaassets', key: { familyId: 1, storageKey: 1 },
-    projection: { _id: 1, familyId: 1, childId: 1, purpose: 1, status: 1, deletedAt: 1, privacyDeletionRecorded: 1 } },
+    projection: { _id: 1, familyId: 1, childId: 1, purpose: 1, status: 1, deletedAt: 1, privacyDeletionRecorded: 1, mimeType: 1, sizeBytes: 1 } },
   REFERENCE: { name: 'mediareferences', key: { familyId: 1, mediaId: 1, resourceType: 1, resourceId: 1, field: 1 },
     projection: { _id: 1, ...SCOPE, mediaId: 1, operationId: 1, state: 1, leaseExpiresAt: 1, releasedAt: 1, releaseOperationId: 1 } },
   TOMBSTONE: { name: 'mediadeletiontombstones', key: { mediaId: 1 },
-    projection: { _id: 1, mediaId: 1, familyId: 1, childId: 1, actorId: 1, role: 1, purpose: 1, reason: 1, deletedAt: 1 } },
+    projection: { _id: 1, mediaId: 1, familyId: 1, childId: 1, actorId: 1, role: 1, purpose: 1, reason: 1, deletedAt: 1, mimeType: 1, sizeBytes: 1 } },
   RECEIPT: { name: 'mediadeletionreceipts', key: { familyId: 1, childId: 1, mediaId: 1,
     resourceType: 1, resourceId: 1, field: 1, bindingOperationId: 1 },
   projection: { _id: 1, ...SCOPE, mediaId: 1, bindingOperationId: 1, releasedAt: 1 } }
@@ -33,7 +33,7 @@ const consume = async (cursor, visitor) => {
 };
 const scope = row => Object.fromEntries(Object.keys(SCOPE).map(key => [key, row[key]]));
 const validScope = row => [row._id, row.familyId, row.childId, row.mediaId, row.resourceId].every(oid)
-  && row.resourceType === 'growth_task' && row.field === FIELD;
+  && validPair(row.resourceType, row.field);
 
 const assertCompletionPrivacyReadiness = async ({ connection, writesPaused } = {}) => {
   if (writesPaused !== true) fail(['WRITES_NOT_PAUSED']);
@@ -71,23 +71,27 @@ const assertCompletionPrivacyReadiness = async ({ connection, writesPaused } = {
       operationId: row.bindingOperationId || row.operationId }, {
       ...READ, projection: { _id: 0, state: 1, references: 1 }
     });
-    const includesMedia = (operation, row) => operation?.references.some(ref => sameId(ref.mediaId, row.mediaId) && ref.field === FIELD);
+    const includesMedia = (operation, row) => operation?.references.some(ref => sameId(ref.mediaId, row.mediaId) && ref.field === row.field);
     const matchesAsset = (asset, tombstone) => sameId(asset._id, tombstone.mediaId)
       && sameId(asset.familyId, tombstone.familyId) && sameId(asset.childId, tombstone.childId)
-      && asset.purpose === 'task_completion' && asset.status === 'deleted' && asset.privacyDeletionRecorded === true
+      && asset.purpose === tombstone.purpose && protocolPurposes.includes(asset.purpose) && asset.status === 'deleted' && asset.privacyDeletionRecorded === true
+      && (tombstone.purpose !== 'ai2_correction' || validAi2MediaMetadata(tombstone)
+        && asset.mimeType === tombstone.mimeType && asset.sizeBytes === tombstone.sizeBytes)
       && sameTime(asset.deletedAt, tombstone.deletedAt);
 
     await scan('TOMBSTONE', {}, async tombstone => {
       if (![tombstone._id, tombstone.mediaId, tombstone.familyId, tombstone.childId, tombstone.actorId].every(oid)
-        || !['parent', 'student'].includes(tombstone.role) || tombstone.purpose !== 'task_completion'
+        || !['parent', 'student'].includes(tombstone.role) || !protocolPurposes.includes(tombstone.purpose)
         || tombstone.reason !== 'user_requested' || !date(tombstone.deletedAt)
+        || (tombstone.purpose === 'ai2_correction' ? !validAi2MediaMetadata(tombstone)
+          : tombstone.mimeType !== undefined || tombstone.sizeBytes !== undefined)
         || (tombstone.role === 'student' && !sameId(tombstone.actorId, tombstone.childId))) {
         issues.add('TOMBSTONE_INVALID'); return;
       }
       const asset = await one('ASSET', { _id: tombstone.mediaId });
       if (asset && !matchesAsset(asset, tombstone)) issues.add('DELETED_ASSET_INVALID');
       await scan('REFERENCE', { mediaId: tombstone.mediaId }, async reference => {
-        if (!asset || !validScope(reference) || !sameId(reference.familyId, tombstone.familyId)
+        if (!asset || !validScope(reference) || purposeFor(reference.resourceType) !== tombstone.purpose || !sameId(reference.familyId, tombstone.familyId)
           || !sameId(reference.childId, tombstone.childId) || reference.state !== 'released'
           || reference.leaseExpiresAt != null || !date(reference.releasedAt) || !uuid(reference.operationId)
           || (reference.releaseOperationId != null && !uuid(reference.releaseOperationId))) {
@@ -118,7 +122,7 @@ const assertCompletionPrivacyReadiness = async ({ connection, writesPaused } = {
       if (conflicting) issues.add('RECEIPT_GENERATION_CONFLICT');
       const tombstone = await one('TOMBSTONE', { mediaId: receipt.mediaId });
       const operation = await operationFor(receipt);
-      if (!tombstone || !sameId(tombstone.familyId, receipt.familyId) || !sameId(tombstone.childId, receipt.childId)
+      if (!tombstone || purposeFor(receipt.resourceType) !== tombstone.purpose || !sameId(tombstone.familyId, receipt.familyId) || !sameId(tombstone.childId, receipt.childId)
         || operation?.state !== 'COMMITTED' || !includesMedia(operation, receipt)) issues.add('RECEIPT_LINK_INVALID');
       const asset = await one('ASSET', { _id: receipt.mediaId });
       const reference = await one('REFERENCE', { ...scope(receipt), mediaId: receipt.mediaId });
@@ -132,7 +136,7 @@ const assertCompletionPrivacyReadiness = async ({ connection, writesPaused } = {
       if (!oid(asset._id) || !tombstone || !matchesAsset(asset, tombstone)) issues.add('DELETED_ASSET_INVALID');
     });
     // Lost tombstones/markers must not hide a surviving privacy-release signature.
-    await scan('REFERENCE', { field: FIELD, state: 'released', releaseOperationId: null }, async reference => {
+    await scan('REFERENCE', { field: { $in: protocolFields }, state: 'released', releaseOperationId: null }, async reference => {
       if (!validScope(reference) || !uuid(reference.operationId)) { issues.add('DELETED_REFERENCE_INVALID'); return; }
       const tombstone = await one('TOMBSTONE', { mediaId: reference.mediaId });
       const receipt = await one('RECEIPT', { ...scope(reference), mediaId: reference.mediaId, bindingOperationId: reference.operationId });

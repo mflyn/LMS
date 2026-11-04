@@ -4,15 +4,17 @@ const Tombstone = require('../models/MediaDeletionTombstone');
 const Retirement = require('../models/MediaOrphanRetirement');
 const Family = require('../../../common/models/Family');
 const User = require('../models/FamilyUser');
+const { protocolPurposes } = require('../../../common/services/completionMediaProtocol');
 
 const error = (status, code) => new AppError(code, status, code, true, []);
 const objectId = value => typeof value === 'string' && /^[0-9a-f]{24}$/i.test(value);
 
 // Classify only inside the caller's live scope; the selected writer authorizes again.
-const createMediaDeletionDispatcher = ({ mediaService, privacyService, retirementService } = {}) => {
+const createMediaDeletionDispatcher = ({ mediaService, privacyService, retirementService, assertAi2Continuous = () => {} } = {}) => {
   if (typeof mediaService?.deleteMedia !== 'function' || typeof privacyService?.deleteMedia !== 'function') {
     throw new TypeError('Both media deletion services are required');
   }
+  if (typeof assertAi2Continuous !== 'function') throw new TypeError('AI2 continuity assertion is required');
   const dispatch = async ({ identity, mediaId } = {}, reclassified = false) => {
     try {
       if (!identity || !objectId(identity.id) || !['parent', 'student'].includes(identity.role)) {
@@ -35,8 +37,9 @@ const createMediaDeletionDispatcher = ({ mediaService, privacyService, retiremen
       }
       if (!family) throw error(403, 'CHILD_ACCESS_DENIED');
       scope.familyId = family._id;
+      const tombstone = await Tombstone.findOne({ mediaId, ...scope }).select('_id purpose').lean();
       const asset = await Asset.findOne({ _id: mediaId, ...scope }).select('purpose').lean();
-      const tombstone = await Tombstone.findOne({ mediaId, ...scope }).select('_id').lean();
+      if (tombstone?.purpose === 'ai2_correction' || asset?.purpose === 'ai2_correction') await assertAi2Continuous();
       const retirement = await Retirement.findOne({ mediaId, ...scope }).select('state').lean();
       if (retirement?.state === 'INCONSISTENT'
         || tombstone && retirement && ['DELETED', 'PURGED'].includes(retirement.state)) throw error(409, 'MEDIA_RETIREMENT_INCONSISTENT');
@@ -46,7 +49,7 @@ const createMediaDeletionDispatcher = ({ mediaService, privacyService, retiremen
       }
       if (!asset && !tombstone) throw error(404, 'RESOURCE_NOT_FOUND');
       // Tombstones win even after cleanup or when surviving metadata is inconsistent.
-      if (tombstone || asset.purpose === 'task_completion') {
+      if (tombstone || protocolPurposes.includes(asset.purpose)) {
         try { return await privacyService.deleteMedia({ identity, mediaId }); }
         catch (cause) {
           if (!reclassified && cause?.code === 'MEDIA_OPERATION_INCONSISTENT') {

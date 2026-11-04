@@ -7,15 +7,23 @@ describe('T2 formal runtime lifecycle', () => {
 
   test('synthetic environment does not inherit operator AI activation and restores the prior mode', async () => {
     const prior = process.env.AI1_MODE;
+    const priorAi2 = process.env.AI2_MODE, priorContinuous = process.env.AI2_STORE_CONTINUOUS;
     process.env.AI1_MODE = 'enabled';
+    process.env.AI2_MODE = 'enabled'; process.env.AI2_STORE_CONTINUOUS = 'true';
     try {
       runtime = await createT2Runtime();
       expect(process.env.AI1_MODE).toBe('off');
+      expect(process.env.AI2_MODE).toBe('off');
+      expect(process.env.AI2_STORE_CONTINUOUS).toBe('false');
       await runtime.stop();
       expect(process.env.AI1_MODE).toBe('enabled');
+      expect(process.env.AI2_MODE).toBe('enabled');
+      expect(process.env.AI2_STORE_CONTINUOUS).toBe('true');
     } finally {
       await runtime?.stop();
       if (prior === undefined) delete process.env.AI1_MODE; else process.env.AI1_MODE = prior;
+      if (priorAi2 === undefined) delete process.env.AI2_MODE; else process.env.AI2_MODE = priorAi2;
+      if (priorContinuous === undefined) delete process.env.AI2_STORE_CONTINUOUS; else process.env.AI2_STORE_CONTINUOUS = priorContinuous;
     }
   });
 

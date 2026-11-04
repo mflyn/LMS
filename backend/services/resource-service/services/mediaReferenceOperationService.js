@@ -1,4 +1,4 @@
-const { createHash } = require('crypto');
+const { fieldFor, purposeFor, validPair, typedScope, referenceSetHash } = require('../../../common/services/completionMediaProtocol');
 const { AppError } = require('../../../common/middleware/errorTypes');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
@@ -7,7 +7,6 @@ const Tombstone = require('../models/MediaDeletionTombstone');
 const Receipt = require('../models/MediaDeletionReceipt');
 const { OPERATION_ID_PATTERN } = require('./mediaReferenceService');
 
-const FIELD = 'completionMediaIds';
 const error = (status, code) => new AppError(code, status, code, true, []);
 const invalid = () => error(400, 'VALIDATION_ERROR');
 const inconsistent = () => error(409, 'MEDIA_OPERATION_INCONSISTENT');
@@ -16,6 +15,7 @@ const objectId = (value) => typeof value === 'string' && /^[0-9a-f]{24}$/i.test(
 const exactKeys = (value, keys) => plain(value) && Object.keys(value).every((key) => keys.includes(key));
 
 const normalize = (input, action) => {
+  const field = fieldFor(input?.resourceType);
   const referenceMode = action === 'status' && input?.mode === 'references';
   const unbind = action === 'unbind';
   const keys = ['familyId', 'childId', 'resourceType', 'resourceId', 'references'];
@@ -23,43 +23,44 @@ const normalize = (input, action) => {
   if (!referenceMode && !unbind) keys.push('commandHash');
   if (action === 'status') keys.push('mode');
   if (!exactKeys(input, keys) || ![input.familyId, input.childId, input.resourceId].every(objectId)
-    || input.resourceType !== 'growth_task'
+    || !field
     || (action === 'status' && !['operation', 'references'].includes(input.mode))
     || !Array.isArray(input.references) || input.references.length < 1 || input.references.length > 10
     || (!referenceMode && (typeof input.operationId !== 'string' || !OPERATION_ID_PATTERN.test(input.operationId)
       || (!unbind && (typeof input.commandHash !== 'string' || !/^[0-9a-f]{64}$/.test(input.commandHash)))))) throw invalid();
   const references = Array.from(input.references, (ref) => {
     if (!exactKeys(ref, unbind ? ['mediaId', 'field', 'bindingOperationId'] : ['mediaId', 'field'])
-      || !objectId(ref.mediaId) || ref.field !== FIELD
+      || !objectId(ref.mediaId) || ref.field !== field
       || (unbind && (typeof ref.bindingOperationId !== 'string' || !OPERATION_ID_PATTERN.test(ref.bindingOperationId)))) throw invalid();
-    return { mediaId: ref.mediaId.toLowerCase(), field: FIELD,
+    return { mediaId: ref.mediaId.toLowerCase(), field,
       ...(unbind ? { bindingOperationId: ref.bindingOperationId.toLowerCase() } : {}) };
   }).sort((a, b) => a.mediaId.localeCompare(b.mediaId));
   if (new Set(references.map((ref) => ref.mediaId)).size !== references.length) throw invalid();
   return {
-    familyId: input.familyId.toLowerCase(), childId: input.childId.toLowerCase(), resourceType: 'growth_task',
-    resourceId: input.resourceId.toLowerCase(), field: FIELD, references,
+    familyId: input.familyId.toLowerCase(), childId: input.childId.toLowerCase(), resourceType: input.resourceType,
+    resourceId: input.resourceId.toLowerCase(), field, references,
     ...(referenceMode ? {} : { operationId: input.operationId.toLowerCase() }),
     ...(referenceMode || unbind ? {} : { commandHash: input.commandHash,
-      referenceSetHash: createHash('sha256').update(JSON.stringify(references)).digest('hex') })
+      referenceSetHash: referenceSetHash({ resourceType: input.resourceType, resourceId: input.resourceId.toLowerCase(), references }) })
   };
 };
 
 const operationKey = (command) => ({
   familyId: command.familyId, childId: command.childId, resourceType: command.resourceType,
-  resourceId: command.resourceId, field: FIELD, operationId: command.operationId
+  resourceId: command.resourceId, field: command.field, operationId: command.operationId
 });
 const referenceKey = (command, reference) => ({
   familyId: command.familyId, childId: command.childId, resourceType: command.resourceType,
-  resourceId: command.resourceId, field: FIELD, mediaId: reference.mediaId
+  resourceId: command.resourceId, field: command.field, mediaId: reference.mediaId
 });
 
 const createMediaReferenceOperationService = ({
   MediaAssetModel = MediaAsset, MediaReferenceModel = MediaReference,
-  OperationModel = MediaReferenceOperation, transactionRunner, now = Date.now, leaseSeconds = 900
+  OperationModel = MediaReferenceOperation, transactionRunner, now = Date.now, leaseSeconds = 900,
+  ai2Mode = () => 'off'
 } = {}) => {
   if (typeof transactionRunner !== 'function') throw new Error('transactionRunner is required');
-  if (typeof now !== 'function' || !Number.isInteger(leaseSeconds) || leaseSeconds < 1 || leaseSeconds > 3600) {
+  if (typeof now !== 'function' || typeof ai2Mode !== 'function' || !Number.isInteger(leaseSeconds) || leaseSeconds < 1 || leaseSeconds > 3600) {
     throw new Error('Invalid operation clock or lease duration');
   }
 
@@ -77,11 +78,11 @@ const createMediaReferenceOperationService = ({
   };
   const readProofs = async (command, rows, session) => {
     const receipts = await Receipt.find({ familyId: command.familyId, childId: command.childId,
-      resourceType: command.resourceType, resourceId: command.resourceId, field: FIELD,
+      resourceType: command.resourceType, resourceId: command.resourceId, field: command.field,
       mediaId: { $in: command.references.map(ref => ref.mediaId) },
       ...(command.operationId ? { bindingOperationId: command.operationId } : {}) }).session(session).lean();
     const tombstones = await Tombstone.find({ familyId: command.familyId, childId: command.childId,
-      mediaId: { $in: receipts.map(r => r.mediaId) }, purpose: 'task_completion', reason: 'user_requested' }).session(session).lean();
+      mediaId: { $in: receipts.map(r => r.mediaId) }, purpose: purposeFor(command.resourceType), reason: 'user_requested' }).session(session).lean();
     return command.references.map((ref, index) => {
       const binding = ref.bindingOperationId || command.operationId || rows[index]?.operationId;
       const matches = receipts.filter(r => String(r.mediaId) === ref.mediaId
@@ -97,12 +98,14 @@ const createMediaReferenceOperationService = ({
   };
   const response = (command, operation, rows, time, proofs) => ({
     operation: command.operationId ? {
+      ...typedScope(command), ...(command.resourceType === 'ai2_attempt' ? { referenceSetHash: operation?.referenceSetHash || null } : {}),
       operationId: command.operationId, state: operation?.state || 'ABSENT', commandHash: operation?.commandHash || null,
       leaseExpiresAt: operation?.state === 'PREPARED' ? operation.leaseExpiresAt.toISOString() : null,
       leaseExpired: operation?.state === 'PREPARED' ? time >= operation.leaseExpiresAt : null,
       failureCode: operation?.state === 'ABORTED' ? operation.failureCode : null
     } : null,
     references: command.references.map((ref, index) => ({
+      ...typedScope(command),
       mediaId: ref.mediaId, field: ref.field, state: rows[index]?.state || 'absent', privacyDeletion: proofs[index],
       ...(rows[index] ? { bindingOperationId: rows[index].operationId } : {})
     }))
@@ -125,7 +128,9 @@ const createMediaReferenceOperationService = ({
       const asset = byId.get(ref.mediaId);
       if (!asset || asset.status !== 'active') return 'RESOURCE_NOT_FOUND';
       if (String(asset.familyId) !== command.familyId || String(asset.childId) !== command.childId) return 'CHILD_ACCESS_DENIED';
-      if (asset.purpose !== 'task_completion' || !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)) {
+      if (asset.purpose !== purposeFor(command.resourceType) || !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)
+        || command.resourceType === 'ai2_attempt' && (String(asset.uploadedBy) !== command.childId
+          || !Number.isSafeInteger(asset.sizeBytes) || asset.sizeBytes < 1 || asset.sizeBytes > 10 * 1024 * 1024)) {
         return 'MEDIA_PURPOSE_MISMATCH';
       }
     }
@@ -135,7 +140,7 @@ const createMediaReferenceOperationService = ({
     // A real write (not only a snapshot read) conflicts with a concurrent asset deletion.
     const result = await MediaAssetModel.updateMany({
       _id: { $in: command.references.map((ref) => ref.mediaId) }, familyId: command.familyId,
-      childId: command.childId, status: 'active', purpose: 'task_completion'
+      childId: command.childId, status: 'active', purpose: purposeFor(command.resourceType)
     }, { $inc: { __v: 1 } }, { session });
     if (result.matchedCount !== command.references.length) throw inconsistent();
   };
@@ -194,7 +199,7 @@ const createMediaReferenceOperationService = ({
     const targets = await MediaReferenceModel.find({ mediaId: asset._id }).session(session).lean();
     for (const target of targets) {
       if (String(target.familyId) !== String(asset.familyId) || String(target.childId) !== String(asset.childId)
-        || target.resourceType !== 'growth_task' || target.field !== FIELD) throw inconsistent();
+        || !validPair(target.resourceType, target.field) || purposeFor(target.resourceType) !== asset.purpose) throw inconsistent();
       const operation = await OperationModel.findOne(operationKey(target)).session(session).lean();
       if (!operation) throw inconsistent();
       const command = normalize({ familyId: String(operation.familyId), childId: String(operation.childId),
@@ -215,7 +220,7 @@ const createMediaReferenceOperationService = ({
         if (changed.matchedCount !== 1) throw inconsistent();
         const releasedAt = currentTime();
         await Receipt.create([{ familyId: asset.familyId, childId: asset.childId, mediaId: asset._id,
-          resourceType: target.resourceType, resourceId: target.resourceId, field: FIELD,
+          resourceType: target.resourceType, resourceId: target.resourceId, field: target.field,
           bindingOperationId: target.operationId, releasedAt }], { session });
         const patch = { state: 'released', leaseExpiresAt: null, releasedAt, releaseOperationId: null };
         await MediaReferenceModel.hydrate({ ...target, ...patch }).validate();
@@ -229,6 +234,9 @@ const createMediaReferenceOperationService = ({
   const execute = async (input, action) => {
     const command = normalize(input, action);
     return transact(async (session) => {
+      if (command.resourceType === 'ai2_attempt' && ['prepare', 'commit'].includes(action) && ai2Mode() !== 'enabled') {
+        throw error(503, 'AI2_DISABLED');
+      }
       let operation = await OperationModel.findOne(operationKey(command)).session(session).lean();
       let rows = await readReferences(command, session);
       if (operation) {

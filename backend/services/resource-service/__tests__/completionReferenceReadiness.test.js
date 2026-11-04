@@ -244,7 +244,7 @@ test.each(['reference read', 'reference close', 'operation read', 'operation clo
   const target = open(name), find = target.find.bind(target);
   const close = kind.endsWith('close') ? jest.fn().mockRejectedValue(Error('mongodb://private-error')) : jest.fn().mockResolvedValue();
   jest.spyOn(target, 'find').mockImplementation((filter, options) => {
-    const ownScan = name === 'mediareferences' ? Object.keys(filter).length === 1 && filter.field === FIELD : Boolean(filter.state?.$in);
+    const ownScan = name === 'mediareferences' ? filter.$or?.some(part => part.resourceType === 'ai2_attempt') : Boolean(filter.state?.$in);
     return ownScan ? { close, async *[Symbol.asyncIterator]() { if (kind.endsWith('read')) throw Error('mongodb://private-error'); } }
       : find(filter, options);
   });

@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
+const { validPair, protocolFields } = require('../../../common/services/completionMediaProtocol');
 
 const { Schema } = mongoose;
 const STATES = Object.freeze(['PREPARED', 'COMMITTED', 'ABORTED']);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const objectId = () => ({ type: Schema.Types.ObjectId, required: true, immutable: true });
 const digest = () => ({ type: String, required: true, immutable: true, match: /^[0-9a-f]{64}$/ });
-const completionField = () => ({ type: String, enum: ['completionMediaIds'], required: true, immutable: true });
+const completionField = () => ({ type: String, enum: protocolFields, required: true, immutable: true });
 const referenceSchema = new Schema({
   mediaId: objectId(), field: completionField()
 }, { _id: false, strict: 'throw' });
@@ -14,7 +15,7 @@ const referenceSchema = new Schema({
 // deleting them would allow a delayed prepare to resurrect an aborted operation.
 const schema = new Schema({
   familyId: objectId(), childId: objectId(), resourceId: objectId(),
-  resourceType: { type: String, enum: ['growth_task'], required: true, immutable: true },
+  resourceType: { type: String, enum: ['growth_task', 'ai2_attempt'], required: true, immutable: true },
   field: completionField(),
   operationId: { type: String, required: true, immutable: true, lowercase: true, match: UUID },
   commandHash: digest(),
@@ -37,6 +38,9 @@ const schema = new Schema({
 }, { timestamps: true, strict: 'throw' });
 
 schema.pre('validate', function validateStateEvidence() {
+  if (!validPair(this.resourceType, this.field) || this.references?.some(ref => ref.field !== this.field)) {
+    this.invalidate('field', 'Invalid completion protocol type/field pair');
+  }
   const prepared = this.state === 'PREPARED';
   if (prepared !== (this.leaseExpiresAt != null)) {
     this.invalidate('leaseExpiresAt', 'Only PREPARED requires a lease');
