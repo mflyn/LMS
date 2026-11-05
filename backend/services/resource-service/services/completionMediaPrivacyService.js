@@ -7,7 +7,7 @@ const { createMediaReferenceOperationService } = require('./mediaReferenceOperat
 const { loadDeletionEvidence, assertRecoveryProtocolAvailable } = require('./mediaDeletionEvidence');
 const { retireUploadGuard } = require('./completionUploadGuardService');
 const { randomUUID } = require('crypto');
-const { protocolPurposes, validAi2MediaMetadata } = require('../../../common/services/completionMediaProtocol');
+const { protocolPurposes, validAi2MediaMetadata, isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 
 const error = (status, code) => new AppError(code, status, code, true, []);
 const objectId = value => typeof value === 'string' && /^[0-9a-f]{24}$/i.test(value);
@@ -27,8 +27,10 @@ const authorizeDeletion = async (identity, asset, session) => {
     || !Number.isInteger(identity.tokenVersion) || user.childProfile?.tokenVersion !== identity.tokenVersion)) throw denied();
 };
 
-const createCompletionMediaPrivacyService = ({ transactionRunner, journal, recoveryJournal, now = Date.now } = {}) => {
-  if (typeof transactionRunner !== 'function' || typeof journal?.persist !== 'function' || typeof now !== 'function') {
+const createCompletionMediaPrivacyService = ({ transactionRunner, journal, recoveryJournal, now = Date.now,
+  assertAi3Continuous = () => { throw error(503, 'AI3_NOT_READY'); } } = {}) => {
+  if (typeof transactionRunner !== 'function' || typeof journal?.persist !== 'function' || typeof now !== 'function'
+    || typeof assertAi3Continuous !== 'function') {
     throw new Error('Transaction runner, durable deletion journal and clock are required');
   }
   if (recoveryJournal !== undefined && (typeof recoveryJournal?.persist !== 'function'
@@ -56,15 +58,16 @@ const createCompletionMediaPrivacyService = ({ transactionRunner, journal, recov
             const tombstone = await Tombstone.findOne({ mediaId }).session(session).lean();
             if (!asset && !tombstone) throw error(404, 'RESOURCE_NOT_FOUND');
             await authorizeDeletion(identity, tombstone || asset, session);
-            if (asset?.purpose === 'ai2_correction' && identity.role === 'student'
+            if ((tombstone || asset).purpose === 'ai3_practice') await assertAi3Continuous();
+            if (isAttemptPurpose(asset?.purpose) && identity.role === 'student'
               && String(asset.uploadedBy) !== identity.id.toLowerCase()) throw denied();
-            // AI2 uses the existing deletion journal, not the optional recovery writer.
-            if (recovery && (tombstone || asset).purpose === 'ai2_correction') throw error(503, 'MEDIA_REFERENCE_PENDING');
+            // Attempt media uses the existing deletion journal, not the optional recovery writer.
+            if (recovery && isAttemptPurpose((tombstone || asset).purpose)) throw error(503, 'MEDIA_REFERENCE_PENDING');
             if (externalError) throw externalError;
             await assertRecoveryProtocolAvailable(mediaId, session, Boolean(recovery));
             if (external && !tombstone) throw Error('Missing user deletion recovery evidence');
             if (tombstone) {
-              if (tombstone.purpose === 'ai2_correction' && (!validAi2MediaMetadata(tombstone)
+              if (isAttemptPurpose(tombstone.purpose) && (!validAi2MediaMetadata(tombstone)
                 || asset && (asset.mimeType !== tombstone.mimeType || asset.sizeBytes !== tombstone.sizeBytes))) throw inconsistent();
               if (asset && (asset.status !== 'deleted' || asset.purpose !== tombstone.purpose || !protocolPurposes.includes(asset.purpose) || asset.privacyDeletionRecorded !== true
                 || String(asset.familyId) !== String(tombstone.familyId) || String(asset.childId) !== String(tombstone.childId)
@@ -76,7 +79,7 @@ const createCompletionMediaPrivacyService = ({ transactionRunner, journal, recov
             }
             if (!protocolPurposes.includes(asset.purpose)) throw error(400, 'MEDIA_PURPOSE_MISMATCH');
             if (asset.status !== 'active') throw inconsistent();
-            if (asset.purpose === 'ai2_correction' && !validAi2MediaMetadata(asset)) throw inconsistent();
+            if (isAttemptPurpose(asset.purpose) && !validAi2MediaMetadata(asset)) throw inconsistent();
             const before = recovery ? await recovery.readUserDeletionSnapshot({ asset, session }) : null;
             await retireUploadGuard(asset, session);
             const deletedAt = new Date(Number(now()));
@@ -88,7 +91,7 @@ const createCompletionMediaPrivacyService = ({ transactionRunner, journal, recov
             if (changed.matchedCount !== 1) throw inconsistent();
             await Tombstone.create([{ mediaId, familyId: asset.familyId, childId: asset.childId, actorId: identity.id,
               role: identity.role, purpose: asset.purpose, reason: 'user_requested', deletedAt,
-              ...(asset.purpose === 'ai2_correction' ? { mimeType: asset.mimeType, sizeBytes: asset.sizeBytes } : {}) }], { session });
+              ...(isAttemptPurpose(asset.purpose) ? { mimeType: asset.mimeType, sizeBytes: asset.sizeBytes } : {}) }], { session });
             await operations.releaseForPrivacyDeletion({ asset, session });
             const frozen = recovery ? await recovery.captureUserDeletionEvidence({ asset, ...before, session,
               evidenceId, evidenceCreatedAt: new Date(Number(now())) }) : null;

@@ -384,6 +384,100 @@ describe('Task 6 weekly reports service', () => {
     expect(report.statistics.reviewKnowledgePoints).toEqual(['分数计算', '诗词背诵']);
   });
 
+  test('AI3-EVIDENCE-05 Sunday review applied on Monday cannot backfill a first-generated prior-week report', async () => {
+    const { randomUUID } = require('crypto');
+    const E = require('../../../common/services/ai3ReviewEvidence');
+    const { runMongoTransaction } = require('../../../common/services/mongoTransaction');
+    const { createFamilyReadRepository } = require('../../../common/repositories/familyReadRepository');
+    const Mistake = require('../models/FamilyMistake');
+    const MistakeEvent = require('../models/FamilyMistakeStateEvent');
+    const MistakeReceipt = require('../models/Ai3ReviewEffectReceipt');
+    const Point = require('../../progress-service/models/KnowledgePoint');
+    const MasteryEvent = require('../../progress-service/models/KnowledgePointMasteryEvent');
+    const MasteryReceipt = require('../../progress-service/models/Ai3MasteryEffectReceipt');
+    const { createAi3MistakeEffectService } = require('../services/ai3MistakeEffectService');
+    const { createAi3MasteryEffectService } = require('../../progress-service/services/ai3MasteryEffectService');
+    for (const model of [Mistake, MistakeEvent, MistakeReceipt, Point, MasteryEvent, MasteryReceipt]) await model.init();
+    await seedFamilies();
+    const scope = { familyId: String(FAMILY_A_ID), childId: String(CHILD_A1_ID) };
+    const actorId = String(PARENT_A_ID), id = () => String(new Mistake.db.base.Types.ObjectId());
+    const createdAt = date('2026-06-23T00:00:00.000Z');
+    const reviewedAt = '2026-06-28T15:59:59.000Z';
+    const appliedAt = date('2026-06-28T16:00:00.000Z');
+    const point = await Point.create({ ...scope, dimension: 'academic', subject: 'math', name: 'Mastery review point',
+      masteryLevel: 'needs_review', createdByParentId: actorId, updatedByParentId: actorId, createdAt });
+    const target = await Mistake.create({ ...scope, subject: 'math', reason: 'calculation',
+      knowledgePointId: point._id, knowledgePointName: 'Mistake review point', reviewReminderDate: WEEK_END,
+      mastered: false, reviewed: false, createdBy: actorId, updatedBy: actorId, createdAt });
+    await MistakeEvent.create({ ...scope, mistakeId: target._id, reviewed: false, mastered: false,
+      reviewReminderDate: WEEK_END, effectiveAt: createdAt, operationId: 'synthetic-initial-mistake' });
+    await MasteryEvent.create({ ...scope, knowledgePointId: point._id, dimension: 'academic', subject: 'math',
+      name: point.name, masteryLevel: 'needs_review', effectiveAt: createdAt, operationId: 'synthetic-initial-mastery' });
+    const snapshot = { schemaVersion: 'ai3-final-review-v1', id: id(), ...scope,
+      roundId: id(), sourcePackageId: id(), sourceAttemptId: id(), sourceAttemptVersion: 1,
+      sourceAttemptPayloadHash: 'a'.repeat(64), sourceReviewHash: 'b'.repeat(64), source: { type: 'mistake', id: String(target._id) },
+      contentId: id(), contentVersion: 1, contentHash: 'c'.repeat(64), childSnapshotHash: 'd'.repeat(64),
+      attemptId: id(), attemptVersion: 1, attemptPayloadHash: 'e'.repeat(64), reviewedByParentId: actorId,
+      reviewedAt, evidenceSummary: 'Synthetic checked work', comment: '', masteryConfirmed: true, reviewReminderDate: null,
+      targets: { mistake: { id: String(target._id), stateRevision: 0, knowledgePointId: String(point._id), effectId: randomUUID() },
+        knowledgePoint: { id: String(point._id), stateRevision: 0, effectId: randomUUID() } } };
+    E.validateFinalReview(snapshot);
+    const requests = [], receipts = [];
+    let clock = appliedAt.getTime();
+    // Only proof retrieval is a fixture; both consumers, transactions, events and report reads are real.
+    const services = ['mistake', 'mastery'].map(kind => {
+      const binding = snapshot.targets[kind === 'mistake' ? 'mistake' : 'knowledgePoint'];
+      const body = { schemaVersion: 'ai3-review-effect-v1', ...scope, effectId: binding.effectId,
+        finalReviewId: snapshot.id, finalReviewHash: E.hash(snapshot), reviewedByParentId: actorId,
+        targetId: binding.id, expectedStateRevision: binding.stateRevision };
+      requests.push(body);
+      const proofClient = { getFinalReview: jest.fn(async input => {
+        expect(input).toEqual({ ...scope, effectId: body.effectId, finalReviewId: snapshot.id });
+        return { finalReview: snapshot, finalReviewHash: body.finalReviewHash,
+          effect: { kind, effectId: binding.effectId, targetId: binding.id, expectedStateRevision: binding.stateRevision } };
+      }) };
+      const model = kind === 'mistake' ? Mistake : Point;
+      const options = { proofClient, now: () => clock,
+        transactionRunner: work => runMongoTransaction({ mongooseInstance: model.db, work }) };
+      return kind === 'mistake' ? createAi3MistakeEffectService(options) : createAi3MasteryEffectService(options);
+    });
+    for (const [index, consumer] of services.entries()) {
+      clock = appliedAt.getTime() + index * 1000;
+      const receipt = await consumer.apply({ body: requests[index] });
+      expect(receipt).toMatchObject({ status: 'applied', reviewedAt,
+        appliedAt: new Date(clock).toISOString(), decidedAt: new Date(clock).toISOString() });
+      const event = await (index ? MasteryEvent : MistakeEvent).findById(receipt.eventId).lean();
+      expect(event.effectiveAt.toISOString()).toBe(receipt.appliedAt);
+      expect((index ? event.reviewedAt : event.ai3Evidence.reviewedAt).toISOString()).toBe(reviewedAt);
+      receipts.push(receipt);
+    }
+    expect((await Mistake.findById(target._id)).mastered).toBe(true);
+    expect((await Point.findById(point._id)).masteryLevel).toBe('skilled');
+    const repository = createFamilyReadRepository({ connection: Mistake.db });
+    const service = makeService({ repository });
+    // No pre-existing frozen report may hide an incorrect historical projection.
+    expect(await WeeklyReport.countDocuments({ ...scope, weekStart: WEEK_START })).toBe(0);
+    const historical = await readReport(service);
+    expect(historical.sourceCutoffAt).toEqual(appliedAt);
+    expect(historical.frozen).toBe(true);
+    expect(historical.statistics.reviewKnowledgePoints).toEqual(['Mastery review point', 'Mistake review point']);
+    expect(historical.generatedSuggestion).toBe('保持数学错题复习，增加 2 次户外运动，固定周三和周六做劳动任务。');
+    const current = await readReport(service, { weekStart: '2026-06-29' });
+    expect(current.statistics.reviewKnowledgePoints).toEqual([]);
+    expect(current.generatedSuggestion).toBe('增加 2 次户外运动，固定周三和周六做劳动任务。');
+    const persisted = async () => Promise.all([MistakeEvent, MasteryEvent, MistakeReceipt, MasteryReceipt]
+      .map(model => model.find(scope).sort({ _id: 1 }).lean()));
+    const beforeReplay = await persisted();
+    clock += 86400000;
+    for (const [index, consumer] of services.entries()) {
+      expect(await consumer.apply({ body: requests[index] })).toEqual(receipts[index]);
+    }
+    expect(await persisted()).toEqual(beforeReplay);
+    const reread = await readReport(service);
+    expect(reread.statistics).toEqual(historical.statistics);
+    expect(reread.generatedSuggestion).toBe(historical.generatedSuggestion);
+  });
+
   test('TC-T6-REPORT-010 generates approved suggestions in math, physical, labor order', async () => {
     const repository = makeRepository({
       tasks: [

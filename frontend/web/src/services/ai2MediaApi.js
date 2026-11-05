@@ -7,6 +7,14 @@ const record = value => value !== null && typeof value === 'object' && !Array.is
 const closed = (value, keys) => record(value) && Object.keys(value).every(key => keys.includes(key));
 const validSize = size => Number.isSafeInteger(size) && size > 0 && size <= MAX_FILE_SIZE;
 const assertId = id => { if (!isAi2MediaId(id)) throw invalid(); };
+const profiles = Object.freeze({
+  ai2: Object.freeze({ purpose: 'ai2_correction', label: '订正图片', history: '订正' }),
+  ai3: Object.freeze({ purpose: 'ai3_practice', label: '练习图片', history: '练习' })
+});
+export const resolvePracticeMediaProfile = (profile = 'ai2') => {
+  if (profile !== 'ai2' && profile !== 'ai3') throw new TypeError('Unsupported practice media profile');
+  return profiles[profile];
+};
 
 export const validateAi2MediaFile = file => {
   if (!(file instanceof Blob) || !IMAGE_MIME_TYPES.includes(file.type)) return '仅支持 JPEG、PNG 或 WebP 图片';
@@ -14,12 +22,13 @@ export const validateAi2MediaFile = file => {
   return null;
 };
 
-export const assertAi2MediaEntry = (entry, { statusRequired = false } = {}) => {
+export const assertAi2MediaEntry = (entry, { statusRequired = false, profile = 'ai2' } = {}) => {
+  const { purpose } = resolvePracticeMediaProfile(profile);
   if (!closed(entry, ['mediaId', 'mimeType', 'sizeBytes', 'status', 'displayName', 'purpose'])
     || !isAi2MediaId(entry.mediaId) || !IMAGE_MIME_TYPES.includes(entry.mimeType) || !validSize(entry.sizeBytes)
     || (entry.status !== undefined && !['available', 'deleted'].includes(entry.status))
     || (statusRequired && entry.status === undefined)
-    || (entry.purpose !== undefined && entry.purpose !== 'ai2_correction')
+    || (entry.purpose !== undefined && entry.purpose !== purpose)
     || (entry.displayName !== undefined && typeof entry.displayName !== 'string')) throw invalid();
   return entry;
 };
@@ -45,7 +54,9 @@ const capabilityUrl = (access, mediaId) => {
   return access.url;
 };
 
-export const createAi2MediaApi = role => {
+export const createAi2MediaApi = (role, profile = 'ai2') => {
+  const { purpose } = resolvePracticeMediaProfile(profile);
+  const assertEntry = entry => assertAi2MediaEntry(entry, { profile });
   if (!['parent', 'student'].includes(role)) throw new TypeError('AI2 role must be parent or student');
   const request = (path, method, options, consume, body, beforeRequest) => requestWithSession(role, async (config, session) => {
     beforeRequest?.(session);
@@ -73,17 +84,17 @@ export const createAi2MediaApi = role => {
     async upload({ childId, file }, options) {
       assertId(childId);
       if (role !== 'student' || validateAi2MediaFile(file)) throw invalid();
-      const body = new FormData(); body.append('file', file); body.append('purpose', 'ai2_correction'); body.append('childId', childId);
+      const body = new FormData(); body.append('file', file); body.append('purpose', purpose); body.append('childId', childId);
       return request('/api/media', 'POST', options, async response => {
-        const data = await json(response), media = assertAi2MediaEntry(data.media);
-        if (media.purpose !== 'ai2_correction' || media.status === 'deleted') throw invalid();
+        const data = await json(response), media = assertEntry(data.media);
+        if (media.purpose !== purpose || media.status === 'deleted') throw invalid();
         return { media };
       }, body, session => { if (session.actorId !== childId) throw invalid(); });
     },
     async access(mediaId, options) {
       assertId(mediaId);
       return request(`/api/media/${mediaId}/access`, 'GET', options, async response => {
-        const data = await json(response), media = assertAi2MediaEntry(data.media);
+        const data = await json(response), media = assertEntry(data.media);
         if (media.mediaId !== mediaId || media.status === 'deleted') throw invalid();
         capabilityUrl(data.access, mediaId);
         return { access: data.access, media };

@@ -4,6 +4,7 @@ const M = require('../models/Ai1');
 const { createOperationClient } = require('./ai1Operation');
 const { assertAi1Indexes } = require('./ai1Readiness');
 const { assertTransactionCapability } = require('../../../common/services/mongoTransaction');
+const { assertAiBudgetOwners } = require('./aiGenerationBudget');
 
 const unavailable = () => C.error(503, 'AI_PROFILE_UNAVAILABLE');
 const PROFILE_KEYS = ['model', 'modelProfileVersion', 'pricingProfileVersion', 'checkedAt', 'expiresAt',
@@ -54,6 +55,7 @@ function createAi1Runtime({ env = process.env, connection = mongoose.connection 
           command: query => connection.db.admin().command(query, { maxTimeMS: 5000, readPreference: 'primary' })
         }) } }, 'AI1');
         await assertAi1Indexes();
+        await assertAiBudgetOwners();
         if (profile) validateProfile(profile);
         ready = true;
       } catch { throw unavailable(); }

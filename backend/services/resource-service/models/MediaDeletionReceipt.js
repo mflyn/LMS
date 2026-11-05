@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const identity = () => ({ type: Schema.Types.ObjectId, required: true, immutable: true });
 const schema = new Schema({
   mediaId: identity(), familyId: identity(), childId: identity(), resourceId: identity(),
-  resourceType: { type: String, enum: ['growth_task', 'ai2_attempt'], required: true, immutable: true },
+  resourceType: { type: String, enum: ['growth_task', 'ai2_attempt', 'ai3_attempt'], required: true, immutable: true },
   field: { type: String, enum: protocolFields, required: true, immutable: true },
   bindingOperationId: { type: String, required: true, immutable: true, lowercase: true,
     match: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i },

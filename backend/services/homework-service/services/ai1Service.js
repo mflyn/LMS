@@ -4,11 +4,11 @@ const M = require('../models/Ai1');
 const Family = require('../../../common/models/Family');
 const User = require('../../../common/models/User');
 const { resolveChildAccess } = require('../../../common/utils/familyAccess');
-const { formatLocalDate } = require('../../../common/utils/familyDate');
 const { runMongoTransaction } = require('../../../common/services/mongoTransaction');
 const C = require('./ai1Contract');
 const { assertAi1Indexes } = require('./ai1Readiness');
 const { buildRequest, validateOperation } = require('./ai1Operation');
+const { createAiGenerationBudget } = require('./aiGenerationBudget');
 const objectId = () => new mongoose.Types.ObjectId();
 const id = value => typeof value === 'string' && /^[a-f0-9]{24}$/.test(value);
 const same = (a, b) => String(a) === String(b);
@@ -28,6 +28,8 @@ const artifactView = a => ({ id: String(a._id), cycleId: String(a.cycleId), vers
 function createAi1Service({ now = Date.now, getProfile = () => null, getLimits = () => null,
   getRuntime = () => ({ enabled: false, continuousStore: false }), sourceReader, operationClient,
   transactionRunner = work => runMongoTransaction({ mongooseInstance: mongoose, work }) } = {}) {
+  const budget = createAiGenerationBudget({ now, getLimits });
+  const { account, adjust, budgetState, reserve } = budget;
   const continuity = () => { if (getRuntime()?.continuousStore !== true) throw C.error(503, 'AI_STORE_ISOLATED'); };
   const enabled = () => { if (getRuntime()?.enabled !== true) throw C.error(503, 'AI_DISABLED'); continuity(); };
   const parentScope = async (identity, session = null) => {
@@ -92,7 +94,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
     return snapshot;
   });
   const jobView = async (j, identity, session = null) => {
-    const r = await M.Reservation.findById(j.reservationId).session(session).lean();
+    const r = await budget.reservation('ai1', j, session);
     return { id: String(j._id), cycleId: String(j.cycleId), operationId: j.operationId, createdBy: String(j.createdBy),
       status: j.status, recoveryStatus: j.status === 'unknown' ? 'uncertain_manual_reconcile' : j.status === 'dispatching' ? 'query_pending' : 'none',
       canRecover: same(j.createdBy, identity?.id) && ['reserved', 'dispatching', 'unknown'].includes(j.status)
@@ -114,42 +116,6 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
   const previewCheck = cycle => {
     const current = C.buildPreview(cycle, getProfile(), Number(now()));
     if (C.hash(current) !== C.hash(cycle.preview)) throw C.error(409, 'AI_PREVIEW_STALE');
-  };
-  const account = async (key, session) => M.Account.findOneAndUpdate({ _id: key }, { $setOnInsert: {
-    outstandingMicros: 0, settledMicros: 0, revision: 0, halted: false } }, { upsert: true, new: true, session }).lean();
-  const adjust = async (a, outstandingDelta, settledDelta, session) => {
-    if (![a.outstandingMicros + outstandingDelta, a.settledMicros + settledDelta].every(C.integer)) throw C.error(503, 'AI_STORE_ISOLATED');
-    const r = await M.Account.updateOne({ _id: a._id, revision: a.revision },
-      { $inc: { outstandingMicros: outstandingDelta, settledMicros: settledDelta, revision: 1 } }, { session });
-    if (r.matchedCount !== 1) throw conflict();
-  };
-  const budgetState = async (access, amount, session, singleAmount = amount) => {
-    const limits = getLimits();
-    if (!limits || !['singleMicros', 'dayMicros', 'monthMicros', 'experimentMicros'].every(k => C.integer(limits[k]))) throw C.error(503, 'AI_PROFILE_UNAVAILABLE');
-    const a = await account(String(access.familyId), session), experiment = await account('experiment', session);
-    if (a.halted || experiment.halted) throw C.error(503, 'AI_STORE_ISOLATED');
-    const date = new Date(Number(now())), timezone = access.family.timezone;
-    const day = formatLocalDate(date, timezone), month = day.slice(0, 7);
-    // Re-bucket dated settlements in the CURRENT timezone; changing timezone cannot erase charges.
-    const settled = await M.Reservation.find({ familyId: access.familyId, state: 'settled' }).session(session).lean();
-    let daily = 0n, monthly = 0n;
-    for (const r of settled) {
-      const d = formatLocalDate(r.settledAt, timezone);
-      if (d === day) daily += BigInt(r.settledMicros);
-      if (d.slice(0, 7) === month) monthly += BigInt(r.settledMicros);
-    }
-    const pending = BigInt(a.outstandingMicros) + BigInt(amount);
-    if (singleAmount > limits.singleMicros || daily + pending > BigInt(limits.dayMicros) || monthly + pending > BigInt(limits.monthMicros)
-      || BigInt(experiment.settledMicros) + BigInt(experiment.outstandingMicros) + BigInt(amount) > BigInt(limits.experimentMicros)) {
-      throw C.error(409, 'AI_BUDGET_EXCEEDED');
-    }
-    return { a, experiment, day, month, timezone };
-  };
-  const reserve = async (access, childId, jobId, reservationId, amount, session) => {
-    const { a, experiment, day, month, timezone } = await budgetState(access, amount, session);
-    await adjust(a, amount, 0, session); await adjust(experiment, amount, 0, session);
-    await M.Reservation.create([{ _id: reservationId, familyId: access.familyId, childId, jobId, reservedMicros: amount,
-      state: 'reserved', reservedDay: day, reservedMonth: month, reservedTimezone: timezone }], { session });
   };
   const create = async ({ identity, body }) => {
     const access = await authorize(identity, body?.childId), command = C.normalize('create', body);
@@ -225,18 +191,17 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
         return { claimed: false, job: await jobView(await M.Job.findById(j._id).session(session).lean(), identity, session) };
       }
       await budgetState(await authorize(identity, String(j.childId), session), 0, session, j.preview.reservedCeilingMicros);
-      const slot = await M.Slot.findOneAndUpdate({ _id: 'global' }, { $setOnInsert: { jobId: null } }, { upsert: true, new: true, session }).lean();
-      if (slot.jobId) throw unresolved();
+      await budget.claimSlot('ai1', j, session);
       const claimed = await M.Job.findOneAndUpdate({ _id: j._id, status: 'reserved' },
         { $set: { status: 'dispatching', owner: randomUUID(), leaseExpiresAt: new Date(Number(now()) + 30000) } }, { new: true, session }).lean();
       if (!claimed) throw unresolved();
-      await M.Slot.updateOne({ _id: 'global', jobId: null }, { $set: { jobId: j._id } }, { session });
       return { claimed: true, owner: claimed.owner, job: await jobView(claimed, identity, session) };
     });
   };
   const markUnknown = async ({ jobId, owner }) => transact(async session => {
     continuity(); const j = await M.Job.findOne({ _id: jobId, ...(owner ? { owner } : {}), status: { $in: ['dispatching', 'unknown'] } }).session(session).lean();
     if (!j || j.status === 'unknown') return;
+    await budget.reservation('ai1', j, session);
     await M.Job.updateOne({ _id: j._id, status: j.status }, { $set: { status: 'unknown' } }, { session });
     await M.Reservation.updateOne({ _id: j.reservationId }, { $set: { state: 'reserved_unknown' } }, { session });
   });
@@ -256,6 +221,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
       return { artifact: artifactView(a), cycleStateVersion: j.evidence.cycleStateVersion };
     }
     if (!['dispatching', 'unknown'].includes(j.status)) throw invalid();
+    const reservation = await budget.reservation('ai1', j, session);
     let charge = null;
     if (evidence.usage !== null) {
       if (!evidence.usage || Object.keys(evidence.usage).sort().join(',') !== 'inputTokens,outputTokens') throw invalid();
@@ -269,7 +235,6 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
       text, contentHash: C.sha(text), createdBy: j.createdBy, origin: 'ai_generation', status: 'candidate', reviewVersion: 1,
       generation: { jobId: String(j._id), modelProfileVersion: j.preview.modelProfileVersion, generationInputHash: j.preview.generationInputHash } }], { session });
     if (charge !== null) {
-      const reservation = await M.Reservation.findById(j.reservationId).session(session).lean();
       if (!['reserved', 'reserved_unknown'].includes(reservation.state)) throw invalid();
       await adjust(await account(String(j.familyId), session), -reservation.reservedMicros, charge, session);
       await adjust(await account('experiment', session), -reservation.reservedMicros, charge, session);
@@ -279,7 +244,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
       { $set: { status: 'candidate', currentArtifactId: a._id }, $inc: { stateVersion: 1 } }, { session });
     await M.Job.updateOne({ _id: j._id, status: j.status }, { $set: { status: 'succeeded', artifactId: a._id, outcomeHash: digest,
       evidence: { digest, cycleStateVersion: c.stateVersion + 1 } } }, { session });
-    await M.Slot.updateOne({ _id: 'global', jobId: j._id }, { $set: { jobId: null } }, { session });
+    await budget.releaseSlot('ai1', j, session);
     return { artifact: artifactView(a), cycleStateVersion: c.stateVersion + 1 };
   });
   const edit = action => async ({ identity, cycleId, body }) => {
@@ -333,7 +298,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
   };
 
   const failJob = async (j, { release, charge, failureCode, digest }, session) => {
-    const r = await M.Reservation.findById(j.reservationId).session(session).lean();
+    const r = await budget.reservation('ai1', j, session);
     if (!r || !['reserved', 'reserved_unknown'].includes(r.state)) throw C.error(503, 'AI_STORE_ISOLATED');
     if (release || charge !== null) {
       await adjust(await account(String(j.familyId), session), -r.reservedMicros, charge || 0, session);
@@ -347,7 +312,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
     const job = await M.Job.updateOne({ _id: j._id, status: j.status },
       { $set: { status: 'failed', failureCode, outcomeHash: digest } }, { session });
     if (cycle.matchedCount !== 1 || job.matchedCount !== 1) throw conflict();
-    await M.Slot.updateOne({ _id: 'global', jobId: j._id }, { $set: { jobId: null } }, { session });
+    await budget.releaseSlot('ai1', j, session);
   };
   const halt = async jobId => transact(async session => {
     continuity(); const j = await M.Job.findById(jobId).session(session).lean();

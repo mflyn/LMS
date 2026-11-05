@@ -1,0 +1,64 @@
+{
+  "status": "FIXED_AND_INDEPENDENTLY_REVIEWED / USER_REVIEW_PENDING",
+  "scope": "AI3-D complete request 32KiB pre-reservation and pre-claim check; local synthetic only",
+  "parent": {
+    "manifest": "../ai3-d-20261104/candidate.json",
+    "sha256": "0b6cfaf8a33550c3a47a08dc3d91f3f345689559940fca87a7a11404f62e6554",
+    "lmsPatchSha256": "8d59ea59bc5d6b3f5c1d37b2ccdaab2c82ba8c2cf6bc0c19603dc2223289f05e",
+    "deepTutorPatchSha256": "685075d998702babacf9e68b038ec39dfbcde4aefc80a9007c9cecf35f4b22cf"
+  },
+  "files": [
+    {
+      "path": "backend/services/homework-service/services/ai3Operation.js",
+      "beforeSha256": "cbeae06436fbaed3d6eaa3070b9174fd1ef3aa8fdc4ad1a29deb04a282f5bcca",
+      "sha256": "e3833e86ca96870188a677dda0a2c4c5fc3099a20e2ce3e17626dac27d1ee3e0"
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Service.js",
+      "beforeSha256": "a174a502472305e13c7960f2fc30cac74d9ef6200ec64de6b3ab41a70d11102a",
+      "sha256": "8f5a1c0550c2423d48e748a9a63b3c26a6d6fec0c9f8f4cc6f0897d2e88cab7a"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3Operation.test.js",
+      "beforeSha256": "22a6d575211820a9505e1db6ce2c836117ab2cee7eb53d15e02b92f428eef00c",
+      "sha256": "4224ef7379e36d03fdabf6215d4eb266cf202aa322fdb080b4a2c596102f4f35"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3Service.test.js",
+      "beforeSha256": "64f3d3362aa31c5b3af79370e40fe1261de57d4c8cd7f44e75800e285d1ab04d",
+      "sha256": "b56c68d59ffcc928c9ebc6cdf418d05459402712d2fb2bd3b8e840d029530b15"
+    },
+    {
+      "path": "docs/api/family-ai3-api.md",
+      "beforeSha256": "db6b3b77df092df57583e0a9b472238288fe5468257daa020aa7494e28d5b60c",
+      "sha256": "53a7d85acbadbab41aa383c861b361bf8d8a1efb6e459dc0df1cc78131df32bf"
+    },
+    {
+      "path": "docs/development/family-ai3-test-plan.md",
+      "beforeSha256": "3e597ca2297aaba036989bcef2aa2cd8f4a2f21d2f041e297d04d0ba21926381",
+      "sha256": "c54dddeee8e87318c50dd9c442ed194802baf06b41be66fb74f575ec3c61eec4"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "beforeSha256": "3c5b018776c69affb8094162506b2b834950523a96a3dd74c422636418476b41",
+      "sha256": "93f0f56ad50760e39b98f24caa63640eb0afaa0f21e2b6501448fbe295e3725b"
+    }
+  ],
+  "patch": "candidate.patch",
+  "patchSha256": "63992a837860554da5358a4d09a5c6fb0f7be7384ec6187e96a0b2e33888f2c1",
+  "preservedEntries": 54,
+  "reviewRecord": {
+    "path": "README.md",
+    "sha256": "9948f2adb70163e922ce29883cbfe3cca9143981b19d55541702644f8ea7a57b"
+  },
+  "boundaries": [
+    "AI3-D USER_REVIEW_PENDING",
+    "AI-3 OPEN",
+    "T4/T8/AI-1 OPEN",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "QUALIFIED_COUNTER_PENDING",
+    "REMAINDER_DEFERRED",
+    "nonblocking tests retained"
+  ]
+}

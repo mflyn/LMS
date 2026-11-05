@@ -14,6 +14,10 @@ const { createMediaCapabilityService } = require('./services/mediaCapability');
 const { createMediaReferenceService } = require('./services/mediaReferenceService');
 const { createMediaService } = require('./services/mediaService');
 const { createAi2Runtime } = require('./services/ai2Runtime');
+const { createAi3Runtime } = require('./services/ai3Runtime');
+const { createAi3StoreRuntime } = require('../../common/services/ai3Runtime');
+const { validateAi3Environment } = require('../../common/services/ai3Activation');
+const { createAi3MediaInspectRouter } = require('./routes/ai3MediaInspect');
 const { createAi2MediaInspectRouter } = require('./routes/ai2MediaInspect');
 const { validateAi2Environment } = require('../../common/services/ai2Activation');
 const { createClamAvScanner } = require('./services/clamAvScanner');
@@ -25,6 +29,9 @@ const { resolveCompletionMode, assertCompletionAssemblyAvailable, withCompletion
 
 const logger = createLogger('resource-service');
 const createApp = appModule.createApp;
+const ai3Models = () => [MediaAsset, MediaReference, Family, FamilyUser,
+  ...['MediaReferenceOperation', 'CompletionUploadGuard', 'MediaDeletionReceipt', 'MediaDeletionTombstone',
+    'MediaUserDeletionRecovery', 'MediaOrphanRetirement'].map(name => require('./models/' + name))];
 
 const assembleMediaDependencies = ({
   createScanner = createClamAvScanner,
@@ -33,13 +40,18 @@ const assembleMediaDependencies = ({
   completionProtocol = false
 } = {}, isReady = () => false) => {
   const { mode: ai2Mode } = validateAi2Environment(env);
-  if (ai2Mode === 'enabled') {
+  const ai3Config = validateAi3Environment(env);
+  if (ai2Mode === 'enabled' || ai3Config.continuousStore) {
     if (createScanner !== createClamAvScanner) {
       throw Object.assign(new Error('AI2_ASSEMBLY_NOT_READY'), { code: 'AI2_ASSEMBLY_NOT_READY' });
     }
     assertCompletionConnection(connection, mongoose.connection);
   }
   const ai2 = createAi2Runtime({ env, completionProtocol, isReady });
+  const ai3Store = ai3Config.continuousStore ? createAi3StoreRuntime({ env, connection, models: ai3Models() }) : null;
+  const ai3 = createAi3Runtime({ env, completionProtocol, isReady: () => {
+    if (!ai3Store) return false; ai3Store.assertContinuous(); return isReady();
+  } });
   const security = resolveMediaSecurity(env);
   const scanner = security.profile === 'secure-production'
     ? createScanner(security.scannerConfig)
@@ -61,7 +73,7 @@ const assembleMediaDependencies = ({
     const { journal, uploadJournal, retirementClient } = createRetentionDependencies(env);
     // Safe upload and deletion replay remain required even when new orphan cleanup is disabled.
     completionUploadService = createCompletionUploadService({ transactionRunner, mediaStore, journal: uploadJournal,
-      ai2Mode: ai2.getAi2Mode });
+      ai2Mode: ai2.getAi2Mode, ai3Mode: ai3.getAi3Mode });
     retirementService = createOrphanRetirementService({ transactionRunner, mediaStore, journal, retirementClient });
   }
   const mediaService = createMediaService({
@@ -77,6 +89,9 @@ const assembleMediaDependencies = ({
     getAi2Mode: ai2.getAi2Mode,
     assertAi2Continuous: ai2.assertAi2Continuous,
     ai2MediaAccessClient: ai2.ai2MediaAccessClient,
+    getAi3Mode: ai3.getAi3Mode,
+    assertAi3Continuous: ai3.assertAi3Continuous,
+    ai3MediaAccessClient: ai3.ai3MediaAccessClient,
     completionUploadService
   });
 
@@ -89,18 +104,22 @@ const assembleMediaDependencies = ({
     const { createMediaDeletionJournal } = require('./services/mediaDeletionJournal');
     const { createMediaDeletionDispatcher } = require('./services/mediaDeletionDispatcher');
     const { createMediaReferenceProtocolRouter } = require('./routes/mediaReferenceProtocolRouter');
-    const operationService = createMediaReferenceOperationService({ transactionRunner, ai2Mode: ai2.getAi2Mode });
-    const privacyService = createCompletionMediaPrivacyService({ transactionRunner,
+    const operationService = createMediaReferenceOperationService({ transactionRunner,
+      ai2Mode: ai2.getAi2Mode, ai3Mode: ai3.getAi3Mode });
+    const privacyService = createCompletionMediaPrivacyService({ transactionRunner, assertAi3Continuous: ai3.assertAi3Continuous,
       journal: createMediaDeletionJournal({ root: env.COMPLETION_DELETION_JOURNAL_ROOT }) });
     deletionService = { ...mediaService, deleteMedia: createMediaDeletionDispatcher({ mediaService, privacyService, retirementService,
-      assertAi2Continuous: ai2.assertAi2Continuous }) };
+      assertAi2Continuous: ai2.assertAi2Continuous, assertAi3Continuous: ai3.assertAi3Continuous }) };
     internalMediaRouter = createMediaReferenceProtocolRouter({ credential, referenceService, operationService,
-      assertAi2Continuous: ai2.assertAi2Continuous });
+      assertAi2Continuous: ai2.assertAi2Continuous, assertAi3Continuous: ai3.assertAi3Continuous });
   } else {
     internalMediaRouter = createInternalMediaReferencesRouter({ credential, referenceService });
   }
 
   return {
+    assertAi3Ready: ai3Store?.assertReady,
+    ai3MediaInspectRouter: ai3Config.continuousStore ? createAi3MediaInspectRouter({ serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN,
+      mediaService, assertAi3Continuous: ai3.assertAi3Continuous }) : undefined,
     ai2MediaInspectRouter: createAi2MediaInspectRouter({ serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN,
       mediaService, assertAi2Continuous: ai2.assertAi2Continuous }),
     mediaSecurity: Object.freeze({ profile: security.profile, scanner }),
@@ -121,9 +140,10 @@ const assembleProductionApp = ({
   createMediaDependencies
 } = {}, isReady = () => false) => {
   validateAi2Environment(env);
+  const ai3Config = validateAi3Environment(env);
   const mode = resolveCompletionMode(env);
   assertCompletionAssemblyAvailable(mode, 'resource');
-  if (mode === 'enabled' && createMediaDependencies) {
+  if ((mode === 'enabled' || ai3Config.continuousStore) && createMediaDependencies) {
     throw Object.assign(new Error('COMPLETION_ASSEMBLY_NOT_READY'), { code: 'COMPLETION_ASSEMBLY_NOT_READY' });
   }
   assertCompletionConnection(connection, mongoose.connection);
@@ -149,6 +169,7 @@ const connectDatabase = async ({
 
 const validateMediaEnvironment = env => {
   createAi2Runtime({ env, completionProtocol: env.COMPLETION_PROTOCOL_MODE === 'enabled' });
+  createAi3Runtime({ env, completionProtocol: env.COMPLETION_PROTOCOL_MODE === 'enabled' });
   resolveMediaSecurity(env);
   createMediaReferenceCredential(env.MEDIA_REFERENCE_SERVICE_TOKEN);
   createMediaCapabilityService({ secret: env.MEDIA_SIGNING_SECRET });
@@ -172,6 +193,9 @@ const startServer = async ({
     createRuntimeApp: options => createRuntimeApp === createProductionApp
       ? assembleProductionApp(options, () => ready && connection.readyState === 1) : createRuntimeApp(options),
     validateEnvironment: runtimeEnv => {
+      const ai3Config = validateAi3Environment(runtimeEnv);
+      if (ai3Config.continuousStore && (app || connect !== connectDatabase || validateEnvironment !== validateMediaEnvironment
+        || createRuntimeApp !== createProductionApp)) throw Object.assign(new Error('AI3_NOT_READY'), { code: 'AI3_NOT_READY' });
       const { mode: ai2Mode } = validateAi2Environment(runtimeEnv);
       if (ai2Mode === 'enabled' && (app || connect !== connectDatabase || validateEnvironment !== validateMediaEnvironment
         || createRuntimeApp !== createProductionApp)) {
@@ -192,6 +216,7 @@ const startServer = async ({
       return result;
     },
     initializeRuntime: async ({ app: runtimeApp }) => {
+      if (runtimeApp.locals?.assertAi3Ready) await runtimeApp.locals.assertAi3Ready();
       const security = runtimeApp.locals?.mediaSecurity;
       if (security?.profile === 'secure-production') await security.scanner.ping();
       ready = prechecked;

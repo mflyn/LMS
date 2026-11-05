@@ -23,6 +23,7 @@ import KnowledgePointsPage from './pages/family/KnowledgePointsPage';
 import MistakesPage from './pages/family/MistakesPage';
 import TutorPage from './pages/family/TutorPage';
 import FamilyLearningPage, { ChildLearningPage } from './pages/family/Ai2LearningPage';
+import FamilyPracticePage, { ChildPracticePage } from './pages/family/Ai3PracticePage';
 import ReportsPage from './pages/family/ReportsPage';
 import RemindersPage from './pages/family/RemindersPage';
 import RewardsPage from './pages/family/RewardsPage';
@@ -60,6 +61,7 @@ const AppRoutes = () => (
           <Route path="mistakes" element={<MistakesPage />} />
           <Route path="tutor" element={<TutorPage />} />
           <Route path="learning" element={<FamilyLearningPage />} />
+          <Route path="practice" element={<FamilyPracticePage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="reminders" element={<RemindersPage />} />
           <Route path="rewards" element={<RewardsPage />} />
@@ -76,6 +78,7 @@ const AppRoutes = () => (
         <Route path="tasks/:taskId" element={<ChildTaskPage />} />
         <Route path="mistakes" element={<ChildMistakesPage />} />
         <Route path="learning" element={<ChildLearningPage />} />
+        <Route path="practice" element={<ChildPracticePage />} />
         <Route path="achievements" element={<ChildAchievementsPage />} />
         <Route path="me" element={<ChildProfilePage />} />
         <Route path="reflection" element={<ChildReflectionPage />} />

@@ -11,6 +11,29 @@ function read(relativePath) {
 }
 
 describe('family baseline documentation gate', () => {
+  test('AI3 current engineering remains bounded and its state probes are registered', () => {
+    expect(validate().ai3EngineeringProbes).toBe(36);
+    for (const file of ['docs/development/family-self-directed-learning-mvp-gate.md',
+      'docs/development/evidence/ai3-integration-20261105/engineering-readiness.md']) {
+      expect(read(file)).toContain('**AI-3 gate:** CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY');
+      expect(read(file)).toContain('**AI3-E acceptance:** ACCEPTED / USER_APPROVED');
+    }
+  });
+  test.each(['reopened', 'qualified', 'duplicate'])('AI3 rejects %s state drift without changing historical records', kind => {
+    const original = fs.readFileSync;
+    const relative = 'docs/development/evidence/ai3-integration-20261105/engineering-readiness.md';
+    const marker = '**AI-3 gate:** CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY';
+    const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((file, ...args) => {
+      const result = original.call(fs, file, ...args);
+      if (String(file) !== path.join(repositoryRoot, relative)) return result;
+      const content = String(result);
+      return kind === 'reopened' ? content.replace(marker, '**AI-3 gate:** OPEN')
+        : kind === 'qualified' ? content.replace('QUALIFIED_COUNTER_PENDING', 'QUALIFIED')
+          : content + '\n' + marker + '\n';
+    });
+    try { expect(() => validate()).toThrow(/AI-3 engineering states/); }
+    finally { spy.mockRestore(); }
+  });
   test('AI-1 cross-layer progress accounts for all 35 requirements without closing external acceptance', () => {
     const plan = read('docs/development/family-ai1-test-plan.md');
     const requirements = [...plan.split('## 2. ')[1].split('## 3. ')[0].matchAll(/^\| (AI1-[A-Z]+-\d+) \|/gm)].map(m => m[1]);

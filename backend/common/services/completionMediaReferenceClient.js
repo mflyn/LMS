@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { validateMediaReferenceClientConfig } = require('./mediaReferenceClient');
 
-const { fieldFor, typedScope, referenceSetHash } = require('./completionMediaProtocol');
+const { fieldFor, typedScope, referenceSetHash, isAttemptType } = require('./completionMediaProtocol');
 const ID = /^[0-9a-f]{24}$/i;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const HASH = /^[0-9a-f]{64}$/;
@@ -49,7 +49,7 @@ const normalizeCommand = (input, action) => {
 
 const parseOperation = (value, command, action) => {
   if (command.mode === 'references' || action === 'unbind') { requireResponse(value === null); return null; }
-  const scope = typedScope(command), typed = command.resourceType === 'ai2_attempt';
+  const scope = typedScope(command), typed = isAttemptType(command.resourceType);
   requireResponse(shape(value, ['operationId', 'state', 'commandHash', 'leaseExpiresAt', 'leaseExpired', 'failureCode',
     ...Object.keys(scope), ...(typed ? ['referenceSetHash'] : [])]));
   requireResponse(Object.entries(scope).every(([key, expected]) => value[key] === expected));

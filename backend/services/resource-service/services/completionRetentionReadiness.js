@@ -1,7 +1,7 @@
 const { createHash } = require('crypto');
 const { isDeepStrictEqual } = require('util');
 const { assertCompletionPrivacyReadiness } = require('./completionPrivacyReadiness');
-const { protocolPurposes } = require('../../../common/services/completionMediaProtocol');
+const { protocolPurposes, isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 const { oid, uuid, storageKey, hash, date, sameId, sameDate, revision, sameScope,
   fail, scan, one, assertPrerequisites } = require('../../../common/services/completionRetentionReadinessHelpers');
 
@@ -56,7 +56,7 @@ const validRetirement = row => row && [row._id, row.mediaId, row.familyId, row.c
 const metadataHash = asset => {
   if (![asset._id, asset.familyId, asset.childId, asset.uploadedBy].every(oid)
     || !protocolPurposes.includes(asset.purpose) || !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)
-    || (asset.purpose === 'ai2_correction' && (!sameId(asset.uploadedBy, asset.childId) || !Number.isSafeInteger(asset.sizeBytes)))
+    || (isAttemptPurpose(asset.purpose) && (!sameId(asset.uploadedBy, asset.childId) || !Number.isSafeInteger(asset.sizeBytes)))
     || !Number.isFinite(asset.sizeBytes) || asset.sizeBytes < 1 || asset.sizeBytes > 10 * 1024 * 1024
     || asset.pageCount != null || !storageKey(asset.storageKey)
     || !['legacy_unscanned', 'skipped_trusted_local', 'clean'].includes(asset.malwareScanStatus)
@@ -259,12 +259,12 @@ const assertCompletionRetentionReadiness = async ({ connection, writesPaused, jo
     });
     await visit(db, 'mediaassets', { $or: [{ purpose: { $in: protocolPurposes } }, { orphanRetirementId: { $exists: true } }] }, async asset => {
       if (![asset._id, asset.familyId, asset.childId].every(oid)) { issues.add('ASSET_RETENTION_INVALID'); return; }
-      if (asset.purpose === 'ai2_correction') {
+      if (isAttemptPurpose(asset.purpose)) {
         const guard = await read(db, 'completionuploadguards', { mediaId: asset._id });
         if (!validUploadGuard(guard) || !sameScope(asset, guard) || asset.storageKey !== guard.storageKey
           || metadataHash(asset) !== guard.metadataHash || !['active', 'deleted'].includes(asset.status)
           || (asset.status === 'deleted') !== (guard.state === 'RETIRED')) issues.add('UPLOAD_GUARD_INVALID');
-        // This profile introduces no AI2 orphan enrollment or retirement writer.
+        // This profile introduces no attempt media orphan enrollment or retirement writer.
         if (asset.retentionPolicyVersion != null || asset.orphanEligibleAt != null || asset.orphanLastCheckedAt != null
           || asset.orphanRetirementId != null || await read(db, 'mediaorphanretirements', { mediaId: asset._id })) {
           issues.add('ASSET_RETENTION_INVALID');

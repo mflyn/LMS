@@ -4,13 +4,15 @@ const Reference = require('../models/MediaReference');
 const Receipt = require('../models/MediaDeletionReceipt');
 const Retirement = require('../models/MediaOrphanRetirement');
 const { loadDeletionEvidence, assertRecoveryProtocolAvailable } = require('./mediaDeletionEvidence');
-const { protocolPurposes, validPair, purposeFor } = require('../../../common/services/completionMediaProtocol');
+const { protocolPurposes, validPair, purposeFor, isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 const DAY_MS = 86400000;
 const inconsistent = () => new AppError('MEDIA_OPERATION_INCONSISTENT', 409, 'MEDIA_OPERATION_INCONSISTENT', true, []);
 
-const createCompletionMediaCleanupService = ({ transactionRunner, journal, recoveryJournal, mediaStore, now = Date.now } = {}) => {
+const createCompletionMediaCleanupService = ({ transactionRunner, journal, recoveryJournal, mediaStore, now = Date.now,
+  assertAi3Continuous = () => { throw new AppError('AI3_NOT_READY', 503, 'AI3_NOT_READY', true, []); } } = {}) => {
   if (typeof transactionRunner !== 'function' || typeof journal?.persist !== 'function'
-    || typeof mediaStore?.remove !== 'function' || typeof now !== 'function') throw new Error('Cleanup dependencies are required');
+    || typeof mediaStore?.remove !== 'function' || typeof now !== 'function'
+    || typeof assertAi3Continuous !== 'function') throw new Error('Cleanup dependencies are required');
   if (recoveryJournal !== undefined && (typeof recoveryJournal?.persist !== 'function'
     || typeof recoveryJournal?.read !== 'function')) throw Error('Recovery journal is required');
   if (recoveryJournal !== undefined && typeof mediaStore.syncDirectory !== 'function') {
@@ -24,14 +26,15 @@ const createCompletionMediaCleanupService = ({ transactionRunner, journal, recov
     const asset = await Asset.findOne({ _id: mediaId, purpose: { $in: protocolPurposes }, status: 'deleted',
       privacyDeletionRecorded: true }).session(session).lean();
     if (!asset || !asset.deletedAt || asset.deletedAt > cutoff) return null;
-    if (recovery && asset.purpose === 'ai2_correction') throw inconsistent();
+    if (asset.purpose === 'ai3_practice') await assertAi3Continuous();
+    if (recovery && isAttemptPurpose(asset.purpose)) throw inconsistent();
     await assertRecoveryProtocolAvailable(mediaId, session, Boolean(recovery));
     const retirement = await Retirement.findOne({ mediaId }).session(session).lean();
     if (asset.orphanRetirementId || retirement && retirement.state !== 'SUPERSEDED') throw inconsistent();
     const evidence = await loadDeletionEvidence(mediaId, session);
     if (!evidence || evidence.tombstone.familyId !== String(asset.familyId) || evidence.tombstone.childId !== String(asset.childId)
       || evidence.tombstone.purpose !== asset.purpose || evidence.tombstone.deletedAt !== asset.deletedAt.toISOString()) throw inconsistent();
-    if (asset.purpose === 'ai2_correction' && (evidence.tombstone.mimeType !== asset.mimeType
+    if (isAttemptPurpose(asset.purpose) && (evidence.tombstone.mimeType !== asset.mimeType
       || evidence.tombstone.sizeBytes !== asset.sizeBytes)) throw inconsistent();
     const references = await Reference.find({ mediaId }).session(session).lean();
     if (references.some(r => r.state === 'prepared' || r.state === 'bound')) return null;

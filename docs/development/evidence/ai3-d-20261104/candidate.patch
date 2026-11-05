@@ -1,0 +1,635 @@
+diff --git a/backend/services/homework-service/services/ai3Service.js b/backend/services/homework-service/services/ai3Service.js
+--- a/backend/services/homework-service/services/ai3Service.js
++++ b/backend/services/homework-service/services/ai3Service.js
+@@ -14,6 +14,8 @@
+ const { createAiGenerationBudget } = require('./aiGenerationBudget');
+ const { assertAi1Indexes } = require('./ai1Readiness');
+ const { buildGenerationPreview } = require('./ai3GenerationPreview');
++const { buildRequest, validateMapping, validateOperation } = require('./ai3Operation');
++const { costCeiling } = require('./ai1Contract');
+ const same = (a, b) => String(a) === String(b);
+ const plain = v => JSON.parse(JSON.stringify(v));
+ const conflict = (code = 'AI3_VERSION_CONFLICT') => C.error(409, code);
+@@ -22,7 +24,7 @@
+ 
+ // Deliberately unmounted. No Provider, media-write or evidence-write capability in this batch.
+ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStore: false }), now = Date.now,
+-  sourceReader, knowledgePointReader, getProfile = () => null, getLimits = () => null,
++  sourceReader, knowledgePointReader, getProfile = () => null, getLimits = () => null, operationClient = null,
+   transactionRunner = work => runMongoTransaction({ mongooseInstance: mongoose, work }) } = {}) {
+   const continuous = () => { if (getRuntime()?.continuousStore !== true) throw C.error(503, 'AI3_STORE_ISOLATED'); };
+   const enabled = () => { if (getRuntime()?.enabled !== true) throw C.error(503, 'AI3_NOT_ENABLED'); };
+@@ -304,7 +306,8 @@
+             || b.pricingProfileVersion !== preview.pricingProfileVersion || b.maxAuthorizedCostMicros < preview.reservedCeilingMicros) throw conflict('AI_PREVIEW_STALE');
+           const [made] = await M.Command.create([{ ...key, _id: commandId, roundId: r._id, childId: r.childId, payload: b,
+             requestHash: C.requestHash('generate', path, b), phase: 'RESERVED', resultReference: ref(r),
+-            generation: { reservationId, remoteOperationId, preview, sendNotAfter: preview.sendNotAfter,
++            generation: { reservationId, remoteOperationId, remoteRequestHash: buildRequest({ preview }).requestHash,
++              preview, sendNotAfter: preview.sendNotAfter,
+               reservedCeilingMicros: preview.reservedCeilingMicros, maxAuthorizedCostMicros: b.maxAuthorizedCostMicros } }], { session });
+           await budget.reserve(await authorize(identity, String(r.childId), session), r.childId, commandId, reservationId,
+             preview.reservedCeilingMicros, session, 'ai3');
+@@ -397,9 +400,115 @@
+   async function recover({ identity, commandId, body }) {
+     const result = await getCommand({ identity, commandId });
+     if (C.normalize('recover', body).operationId !== result.command.operationId) throw conflict('IDEMPOTENCY_CONFLICT');
++    if (operationClient && result.command.endpointOperation === 'ai3.generate' && ['DISPATCHING', 'UNKNOWN'].includes(result.command.phase)) {
++      return runGeneration({ identity, commandId, queryOnly: true });
++    }
+     return result;
+   }
+-  return { create, getRound, publicationPreview, generationPreview, generate, claimGeneration, listCommands, getCommand, recover,
++  const remoteInvalid = () => C.error(503, 'AI_REMOTE_CONTRACT_INVALID');
++  async function markGenerationUnknown(commandId) {
++    await transact(async session => {
++      const c = await M.Command.findById(commandId).session(session).lean();
++      if (!c || !['DISPATCHING', 'UNKNOWN'].includes(c.phase)) return;
++      const reservation = await budget.reservation('ai3', c, session);
++      if (!['reserved', 'reserved_unknown'].includes(reservation.state)) throw remoteInvalid();
++      if (c.phase === 'UNKNOWN') return;
++      await M.Command.updateOne({ _id: c._id, phase: c.phase }, { $set: { phase: 'UNKNOWN' } }, { session });
++      await Budget.Reservation.updateOne({ _id: reservation._id, state: reservation.state }, { $set: { state: 'reserved_unknown' } }, { session });
++    });
++  }
++  async function haltGeneration(c) {
++    await transact(async session => {
++      for (const key of [String(c.familyId), 'experiment']) {
++        await budget.account(key, session);
++        await Budget.Account.updateOne({ _id: key }, { $set: { halted: true } }, { session });
++      }
++    });
++  }
++  async function acceptGeneration(identity, initial, raw) {
++    const o = validateOperation(initial, raw);
++    // Remember remote claim separately: an outcome transaction failure must not erase send evidence.
++    await transact(async session => {
++      const c = await originalGeneration(identity, String(initial._id), session);
++      if ((o.status === 'failed_not_sent' && c.remoteClaimObserved)
++        || (o.sendClaimed && c.phase === 'FAILED' && !c.remoteClaimObserved)) throw remoteInvalid();
++      if (o.sendClaimed && !c.remoteClaimObserved) await M.Command.updateOne({ _id: c._id, remoteClaimObserved: false },
++        { $set: { remoteClaimObserved: true } }, { session });
++    });
++    if (!['succeeded', 'failed_sent', 'failed_not_sent'].includes(o.status)) {
++      await markGenerationUnknown(initial._id); return;
++    }
++    const { updatedAt: _updatedAt, ...terminal } = o, digest = C.hash(terminal);
++    await transact(async session => {
++      const c = await originalGeneration(identity, String(initial._id), session);
++      if (c.outcomeHash) { if (c.outcomeHash !== digest) throw remoteInvalid(); return; }
++      if (!['DISPATCHING', 'UNKNOWN'].includes(c.phase) || (o.status === 'failed_not_sent' && c.remoteClaimObserved)) throw remoteInvalid();
++      const r = await resource(M.Round, identity, String(c.roundId), session);
++      if (!same(r.activeCommandId, c._id) || !same(r.generationCommandId, c._id) || r.preparation !== 'generating'
++        || r.visibility !== 'draft' || r.currentContentId || r.cancelledAt) throw C.error(503, 'AI3_NOT_READY');
++      const reservation = await budget.reservation('ai3', c, session);
++      if (!['reserved', 'reserved_unknown'].includes(reservation.state)) throw remoteInvalid();
++      const release = o.status === 'failed_not_sent';
++      const charge = o.usage === null ? null : costCeiling(o.usage.inputTokens, o.usage.outputTokens, c.generation.preview.pricing);
++      let content = null, saved = null;
++      if (o.status === 'succeeded') {
++        try { content = C.generatedContent(o.result.text, r.exerciseCount); }
++        catch (e) { if (![400, 413].includes(e.statusCode)) throw e; }
++      }
++      if (content) {
++        const childSnapshot = C.childSnapshot(content);
++        [saved] = await M.Content.create([{ familyId: c.familyId, childId: c.childId, roundId: r._id, version: 1,
++          content, contentHash: C.hash(content), childSnapshot, childSnapshotHash: C.hash(childSnapshot),
++          createdBy: c.actorId, origin: 'ai_generation', reason: 'Generated candidate; parent review required' }], { session });
++      }
++      if (release || charge !== null) {
++        await budget.adjust(await budget.account(String(c.familyId), session), -reservation.reservedMicros, charge || 0, session);
++        await budget.adjust(await budget.account('experiment', session), -reservation.reservedMicros, charge || 0, session);
++      }
++      const settled = await Budget.Reservation.updateOne({ _id: reservation._id, state: reservation.state }, { $set: {
++        state: release ? 'released' : charge !== null ? 'settled' : 'reserved_unknown', settledMicros: release ? 0 : charge,
++        ...(charge !== null ? { settledAt: new Date(now()) } : {}) } }, { session });
++      if (settled.matchedCount !== 1) throw remoteInvalid();
++      await budget.releaseSlot('ai3', c, session);
++      await change(r, { activeCommandId: null, preparation: saved ? 'candidate' : 'ready',
++        ...(saved ? { currentContentId: saved._id, currentContentVersion: saved.version, currentContentHash: saved.contentHash } : {}) }, session);
++      const ended = await M.Command.updateOne({ _id: c._id, phase: c.phase, outcomeHash: { $exists: false } }, { $set: {
++        phase: saved ? 'SUCCEEDED' : 'FAILED', outcomeHash: digest, remoteEvidence: o,
++        resultReference: ref(r, saved ? { contentId: String(saved._id), contentVersion: saved.version, contentHash: saved.contentHash } : {}),
++        failureCode: saved ? null : o.status === 'succeeded' ? 'AI3_OUTPUT_INVALID' : 'AI_PROVIDER_FAILED' } }, { session });
++      if (ended.matchedCount !== 1) throw remoteInvalid();
++    });
++  }
++  async function runGeneration({ identity, commandId, queryOnly = false }) {
++    let c = await originalGeneration(identity, commandId); continuous();
++    if (['SUCCEEDED', 'FAILED'].includes(c.phase) || (queryOnly && c.phase === 'RESERVED')) return getCommand({ identity, commandId });
++    if (!operationClient) throw C.error(503, 'AI_PROFILE_UNAVAILABLE');
++    let claimed = false;
++    if (c.phase === 'RESERVED') {
++      ({ claimed } = await claimGeneration({ identity, commandId }));
++      c = await originalGeneration(identity, commandId);
++      if (c.phase === 'FAILED') return getCommand({ identity, commandId });
++    }
++    try {
++      validateMapping(c);
++      if (claimed) {
++        const r = await resource(M.Round, identity, String(c.roundId));
++        const p = await ancestor(identity, r);
++        continuous(); enabled();
++        if (C.hash(buildGenerationPreview(r, p, getProfile(), Number(now()))) !== C.hash(c.generation.preview)
++          || Number(now()) >= new Date(c.generation.sendNotAfter).getTime()) throw conflict('AI_PREVIEW_STALE');
++      }
++      const raw = await operationClient[claimed ? 'put' : 'get'](c);
++      await acceptGeneration(identity, c, raw);
++    } catch (e) {
++      if (e.code === 'AI_REMOTE_CONTRACT_INVALID') await haltGeneration(c);
++      await markGenerationUnknown(commandId);
++      if (e.statusCode) throw e;
++      throw C.error(503, 'AI_REMOTE_UNAVAILABLE');
++    }
++    return getCommand({ identity, commandId });
++  }
++  return { create, getRound, publicationPreview, generationPreview, generate, claimGeneration, runGeneration, listCommands, getCommand, recover,
+     reviseContent: q => edit('revise_content', q.identity, q.roundId, q.body), rejectContent: q => edit('reject_content', q.identity, q.roundId, q.body),
+     publish: q => edit('publish', q.identity, q.roundId, q.body), cancel: q => edit('cancel', q.identity, q.roundId, q.body),
+     withdraw: q => edit('withdraw', q.identity, q.roundId, q.body) };
+diff --git a/backend/services/homework-service/services/ai3Contract.js b/backend/services/homework-service/services/ai3Contract.js
+--- a/backend/services/homework-service/services/ai3Contract.js
++++ b/backend/services/homework-service/services/ai3Contract.js
+@@ -30,6 +30,10 @@
+   withdraw: { expectedRoundVersion: version, reason: text(500) }, recover: {}
+ };
+ const ajv = new Ajv({ strict: true });
++const generatedText = { type: 'string' };
++const validGeneratedContent = ajv.compile(object({ instructions: generatedText, exercises: {
++  type: 'array', minItems: 2, maxItems: 3, items: object({ exerciseId: generatedText, questionText: generatedText,
++    answerForParent: generatedText, rubricForParent: generatedText }) } }));
+ const validators = Object.fromEntries(Object.entries(shapes).map(([action, fields]) => [action, ajv.compile(object({ ...common, ...fields }))]));
+ function clean(value) {
+   if (Array.isArray(value)) {
+@@ -67,6 +71,16 @@
+   return value;
+ }
+ const childSnapshot = c => ({ instructions: c.instructions, exercises: c.exercises.map(q => ({ exerciseId: q.exerciseId, questionText: q.questionText })) });
+-module.exports = { error, hash, normalize, parseRaw, childSnapshot,
++function generatedContent(raw, exerciseCount) {
++  const c = parseRaw(Buffer.from(raw, 'utf8'));
++  // Reject arbitrary JSON nesting before recursive normalization of the fixed Content shape.
++  if (!validGeneratedContent(c)) throw error(400, 'VALIDATION_ERROR');
++  const normalized = normalize('revise_content', { schemaVersion: 'ai3-min-v1', operationId: '00000000-0000-4000-8000-000000000000',
++    expectedRoundVersion: 1, expectedContentId: null, expectedContentVersion: null, expectedContentHash: null,
++    content: c, reason: 'Validate generated content' }).content;
++  if (normalized.exercises.length !== exerciseCount) throw error(400, 'VALIDATION_ERROR');
++  return normalized;
++}
++module.exports = { error, hash, normalize, parseRaw, childSnapshot, generatedContent,
+   isId: v => typeof v === 'string' && /^[a-f0-9]{24}$/.test(v),
+   requestHash: (action, path, body) => hash({ method: 'POST', path, endpointOperation: `ai3.${action}`, body }) };
+diff --git a/backend/services/homework-service/services/ai3Operation.js b/backend/services/homework-service/services/ai3Operation.js
+new file mode 100644
+--- /dev/null
++++ b/backend/services/homework-service/services/ai3Operation.js
+@@ -0,0 +1,94 @@
++const axios = require('axios');
++const C = require('./ai1Contract');
++const exact = (o, keys) => o && typeof o === 'object' && !Array.isArray(o)
++  && Object.keys(o).length === keys.length && keys.every(k => Object.hasOwn(o, k));
++const iso = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
++const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
++const invalid = () => C.error(503, 'AI_REMOTE_CONTRACT_INVALID');
++function buildRequest(job) {
++  const p = job.preview;
++  if (p.providerProfile !== 'ai3-practice-v1' || p.promptVersion !== 'ai3-practice-prompt-v1'
++    || p.outputSchemaVersion !== 'ai3-practice-content-v1') throw invalid();
++  const body = JSON.parse(JSON.stringify({ schemaVersion: 'ai3-provider-operation-v1', providerProfile: p.providerProfile,
++    promptVersion: p.promptVersion, outputSchemaVersion: p.outputSchemaVersion, modelProfileVersion: p.modelProfileVersion,
++    pricingProfileVersion: p.pricingProfileVersion, messages: p.messages, requestOptions: p.requestOptions,
++    reservedCeilingMicros: p.reservedCeilingMicros, sendNotAfter: p.sendNotAfter }));
++  return { ...body, requestHash: C.hash(body) };
++}
++function validateMapping(command) {
++  const job = command.generation || command;
++  if (!job || !uuid(job.remoteOperationId) || !job.preview || !iso(job.preview.sendNotAfter)
++    || job.remoteRequestHash !== buildRequest(job).requestHash
++    || (job.sendNotAfter && new Date(job.sendNotAfter).toISOString() !== job.preview.sendNotAfter)) throw invalid();
++  return job;
++}
++function validateOperation(command, o) {
++  const job = validateMapping(command);
++  const request = buildRequest(job);
++  if (!exact(o, ['providerProfile', 'remoteOperationId', 'requestHash', 'modelProfileVersion', 'pricingProfileVersion', 'sendNotAfter',
++    'status', 'result', 'error', 'usage', 'sendClaimed', 'updatedAt']) || !iso(o.updatedAt)
++    || o.providerProfile !== 'ai3-practice-v1' || o.remoteOperationId !== job.remoteOperationId || o.requestHash !== request.requestHash
++    || (job.remoteRequestHash && job.remoteRequestHash !== request.requestHash)
++    || o.modelProfileVersion !== request.modelProfileVersion || o.pricingProfileVersion !== request.pricingProfileVersion
++    || o.sendNotAfter !== request.sendNotAfter || typeof o.sendClaimed !== 'boolean') throw invalid();
++  if (o.usage !== null) {
++    if (!exact(o.usage, ['inputTokens', 'outputTokens'])) throw invalid();
++    try { if (C.costCeiling(o.usage.inputTokens, o.usage.outputTokens, job.preview.pricing) > request.reservedCeilingMicros) throw invalid(); }
++    catch { throw invalid(); }
++  }
++  if (o.status === 'succeeded') {
++    if (!o.sendClaimed || o.error !== null || !exact(o.result, ['text', 'contentHash'])
++      || typeof o.result.text !== 'string' || !o.result.text.trim() || [...o.result.text].length > 12000
++      || /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(o.result.text)
++      || o.result.text.includes('\r\n') || C.sha(o.result.text) !== o.result.contentHash) throw invalid();
++  } else {
++    if (o.result !== null) throw invalid();
++    if (['accepted', 'sending'].includes(o.status)) {
++      if (o.error !== null || o.usage !== null || o.sendClaimed !== (o.status === 'sending')) throw invalid();
++    } else if (o.status === 'failed_not_sent') {
++      if (o.sendClaimed || o.usage !== null || !['VALIDATION_ERROR', 'PROFILE_UNAVAILABLE', 'PREVIEW_STALE'].includes(o.error)) throw invalid();
++    } else if (o.status === 'failed_sent') {
++      if (!o.sendClaimed || o.error !== 'PROVIDER_FAILED') throw invalid();
++    } else if (o.status === 'unknown') {
++      if (!o.sendClaimed || o.error !== 'RESULT_UNKNOWN' || o.usage !== null) throw invalid();
++    } else throw invalid();
++  }
++  return JSON.parse(JSON.stringify(o));
++}
++function createOperationClient({ baseUrl, token, allowLoopback = false, timeout = 5000 } = {}) {
++  let base;
++  try { base = new URL(baseUrl); } catch { throw C.error(503, 'AI_PROFILE_UNAVAILABLE'); }
++  if (base.username || base.password || base.search || base.hash || base.pathname !== '/'
++    || !(base.protocol === 'https:' || (allowLoopback && base.protocol === 'http:' && ['127.0.0.1', '[::1]'].includes(base.hostname)))
++    || typeof token !== 'string' || !/^[\x21-\x7e]{32,256}$/.test(token)
++    || !Number.isInteger(timeout) || timeout < 1 || timeout > 10000) throw C.error(503, 'AI_PROFILE_UNAVAILABLE');
++  // Private Axios instance: no application interceptors, proxy inheritance, redirects or retries.
++  const transport = axios.create({ timeout, maxRedirects: 0, proxy: false, maxContentLength: 65536, maxBodyLength: 65536,
++    responseType: 'text', validateStatus: () => true });
++  const send = async (method, command) => {
++    const job = validateMapping(command);
++    if (!uuid(job.remoteOperationId)) throw invalid();
++    const request = buildRequest(job);
++    if ((job.remoteRequestHash && job.remoteRequestHash !== request.requestHash)
++      || (job.sendNotAfter && new Date(job.sendNotAfter).toISOString() !== request.sendNotAfter)) throw invalid();
++    let response;
++    try {
++      response = await transport.request({ method, url: new URL(`/internal/deeptutor/ai3/operations/${job.remoteOperationId}`, base).href,
++        headers: { 'x-ai1-service-token': token }, ...(method === 'PUT' ? { data: request } : {}) });
++    } catch { throw C.error(503, 'AI_REMOTE_UNAVAILABLE'); }
++    let body;
++    try { body = JSON.parse(response.data); } catch { throw C.error(503, 'AI_REMOTE_UNAVAILABLE'); }
++    if ([200, ...(method === 'PUT' ? [201] : [])].includes(response.status)) {
++      if (!exact(body, ['success', 'data']) || body.success !== true || !exact(body.data, ['operation'])) throw invalid();
++      return validateOperation(job, body.data.operation);
++    }
++    if (response.status === 503 && exact(body, ['success', 'error']) && body.success === false
++      && exact(body.error, ['code', 'message', 'details']) && body.error.code === 'AI_STORE_ISOLATED'
++      && body.error.message === 'AI_STORE_ISOLATED' && Array.isArray(body.error.details) && !body.error.details.length) {
++      throw C.error(503, 'AI_STORE_ISOLATED');
++    }
++    throw C.error(503, 'AI_REMOTE_UNAVAILABLE');
++  };
++  return { put: job => send('PUT', job), get: job => send('GET', job) };
++}
++module.exports = { buildRequest, validateMapping, validateOperation, createOperationClient };
+diff --git a/backend/services/homework-service/models/Ai3.js b/backend/services/homework-service/models/Ai3.js
+--- a/backend/services/homework-service/models/Ai3.js
++++ b/backend/services/homework-service/models/Ai3.js
+@@ -26,18 +26,23 @@
+ }, [[{ familyId: 1, childId: 1, sourcePackageId: 1 }, { unique: true, name: 'ai3_active_round', partialFilterExpression: { active: true } }]]);
+ const Content = model('Ai3Content', { ...scope, roundId: oid, version, content: snapshot, contentHash: { ...digest, immutable: true },
+   childSnapshot: snapshot, childSnapshotHash: { ...digest, immutable: true }, createdBy: oid,
+-  origin: { type: String, enum: ['parent_manual', 'parent_revision'], required: true },
++  origin: { type: String, enum: ['parent_manual', 'parent_revision', 'ai_generation'], required: true },
+   derivedFromContentId: { type: Schema.Types.ObjectId, default: null }, reason: { type: String, required: true, immutable: true }
+ }, [[{ roundId: 1, version: 1 }, { unique: true, name: 'ai3_content_version' }]]);
+ const Command = model('Ai3Command', { ...scope, roundId: oid, actorId: oid,
+   endpointOperation: { type: String, enum: ['ai3.create', 'ai3.revise_content', 'ai3.reject_content', 'ai3.publish', 'ai3.cancel', 'ai3.withdraw', 'ai3.generate'], required: true },
+   operationId: { type: String, required: true }, requestHash: digest, payload: snapshot,
+-  phase: { type: String, enum: ['RESERVED', 'DISPATCHING', 'UNKNOWN', 'SUCCEEDED', 'FAILED'], required: true }, resultReference: snapshot,
++  phase: { type: String, enum: ['RESERVED', 'DISPATCHING', 'UNKNOWN', 'SUCCEEDED', 'FAILED'], required: true },
++  resultReference: { type: Schema.Types.Mixed, required: true },
++  remoteClaimObserved: { type: Boolean, default: false }, outcomeHash: String, remoteEvidence: Schema.Types.Mixed,
++  failureCode: String,
+   generation: { type: new Schema({ reservationId: oid,
+     reservedCeilingMicros: { type: Number, required: true, min: 0, validate: Number.isSafeInteger },
+-    remoteOperationId: String, preview: Schema.Types.Mixed, sendNotAfter: Date,
++    remoteOperationId: String, remoteRequestHash: String, preview: Schema.Types.Mixed, sendNotAfter: Date,
+     maxAuthorizedCostMicros: { type: Number, min: 0, validate: Number.isSafeInteger }
+   }, { _id: false, strict: 'throw' }), immutable: true }
+ }, [[{ familyId: 1, actorId: 1, endpointOperation: 1, operationId: 1 }, { unique: true, name: 'ai3_actor_command' }],
+-  [{ familyId: 1, childId: 1, actorId: 1, phase: 1, createdAt: 1 }, { name: 'ai3_actor_discovery' }]]);
++  [{ familyId: 1, childId: 1, actorId: 1, phase: 1, createdAt: 1 }, { name: 'ai3_actor_discovery' }],
++  [{ 'generation.remoteOperationId': 1 }, { unique: true, name: 'ai3_remote_operation',
++    partialFilterExpression: { 'generation.remoteOperationId': { $type: 'string' } } }]]);
+ module.exports = { Round, Content, Command };
+diff --git a/backend/services/homework-service/__tests__/services/ai3Service.test.js b/backend/services/homework-service/__tests__/services/ai3Service.test.js
+--- a/backend/services/homework-service/__tests__/services/ai3Service.test.js
++++ b/backend/services/homework-service/__tests__/services/ai3Service.test.js
+@@ -82,6 +82,187 @@
+   const send = (x, s = service, identity = parent) => s.generate({ identity, roundId: x.round.id, body: x.body });
+   const state = async () => JSON.stringify(await Promise.all([M.Round, M.Command, Budget.Account, Budget.Reservation, Budget.Slot]
+     .map(m => m.find().sort({ _id: 1 }).lean())));
++  describe('AI3-D remote settlement with a synthetic operation port', () => {
++    let remote, client;
++    const outcome = (c, overrides = {}) => ({ remoteOperationId: c.generation.remoteOperationId,
++      requestHash: c.generation.remoteRequestHash, providerProfile: 'ai3-practice-v1',
++      modelProfileVersion: c.generation.preview.modelProfileVersion, pricingProfileVersion: c.generation.preview.pricingProfileVersion,
++      sendNotAfter: c.generation.preview.sendNotAfter, status: 'succeeded',
++      result: { text: JSON.stringify(text()), contentHash: require('../../services/ai1Contract').sha(JSON.stringify(text())) },
++      usage: { inputTokens: 100, outputTokens: 100 }, sendClaimed: true, error: null,
++      updatedAt: new Date(clock).toISOString(), ...overrides });
++    beforeEach(() => {
++      remote = null;
++      client = { put: jest.fn(async c => { remote = outcome(c); return remote; }), get: jest.fn(async () => remote) };
++      service = generation({ operationClient: client });
++    });
++    async function prepare() {
++      const x = await ready(), ack = await send(x);
++      return { ...x, commandId: ack.command.id };
++    }
++    const recoverRemote = (x, s = service, identity = parent) => s.recover({ identity, commandId: x.commandId,
++      body: { schemaVersion: 'ai3-min-v1', operationId: x.body.operationId } });
++    test('lost PUT response recovers only original mapping; one settlement and unpublished immutable candidate', async () => {
++      const x = await prepare();
++      client.put.mockImplementation(async c => { remote = outcome(c); throw Error('lost response'); });
++      await expect(service.runGeneration({ identity: parent, commandId: x.commandId })).rejects.toMatchObject({ code: 'AI_REMOTE_UNAVAILABLE' });
++      const pending = await M.Command.findById(x.commandId).lean();
++      expect(pending.phase).toBe('UNKNOWN'); expect(pending.generation.remoteRequestHash).toMatch(/^[a-f0-9]{64}$/);
++      const before = await state(); await service.getCommand({ identity: parent, commandId: x.commandId }); expect(await state()).toBe(before);
++      config.enabled = false; profile = null;
++      const restarted = generation({ operationClient: client });
++      expect((await recoverRemote(x, restarted)).command.phase).toBe('SUCCEEDED');
++      expect(client.put).toHaveBeenCalledTimes(1); expect(client.get).toHaveBeenCalledTimes(1);
++      expect(client.get.mock.calls[0][0].generation).toEqual(pending.generation);
++      const r = await M.Round.findById(x.round.id).lean(), c = await M.Content.findById(r.currentContentId).lean();
++      expect((await M.Command.findById(x.commandId).lean()).resultReference).toEqual({ roundId: x.round.id,
++        stateVersion: r.stateVersion, contentId: String(c._id), contentVersion: c.version, contentHash: c.contentHash });
++      expect(r).toMatchObject({ preparation: 'candidate', visibility: 'draft', activeCommandId: null });
++      expect(c).toMatchObject({ origin: 'ai_generation', content: text(), createdBy: new mongoose.Types.ObjectId(parent.id) });
++      expect(await Budget.Reservation.findOne({ jobId: x.commandId }).lean()).toMatchObject({ state: 'settled', settledMicros: 3600 });
++      const settled = await state(); await recoverRemote(x, restarted); expect(await state()).toBe(settled);
++      expect(client.get).toHaveBeenCalledTimes(1); expect(await M.Content.countDocuments()).toBe(1);
++      await expect(service.getRound({ identity: child, roundId: x.round.id })).rejects.toMatchObject({ statusCode: 404 });
++    });
++    test('old accepted and remote not-found never resend or release an unknown fee', async () => {
++      const x = await prepare();
++      client.put.mockImplementation(async c => { remote = outcome(c, { status: 'accepted', result: null, usage: null, sendClaimed: false }); return remote; });
++      expect((await service.runGeneration({ identity: parent, commandId: x.commandId })).command.phase).toBe('UNKNOWN');
++      clock += 10 * 86400000; config.enabled = false;
++      client.get.mockRejectedValue(Object.assign(Error('missing'), { code: 'AI_REMOTE_UNAVAILABLE', statusCode: 503 }));
++      await expect(recoverRemote(x)).rejects.toMatchObject({ code: 'AI_REMOTE_UNAVAILABLE' });
++      expect(client.put).toHaveBeenCalledTimes(1);
++      expect(await Budget.Reservation.findOne({ jobId: x.commandId }).lean()).toMatchObject({ state: 'reserved_unknown', reservedMicros: 184320 });
++      expect((await Budget.Slot.findById('global').lean()).jobId.toString()).toBe(x.commandId);
++    });
++    test('persisted remote claim forbids later contradictory no-send refund after service reconstruction', async () => {
++      const x = await prepare();
++      client.put.mockImplementation(async c => { remote = outcome(c, { status: 'sending', result: null, usage: null }); return remote; });
++      await service.runGeneration({ identity: parent, commandId: x.commandId });
++      expect((await M.Command.findById(x.commandId).lean()).remoteClaimObserved).toBe(true);
++      remote = { ...remote, status: 'failed_not_sent', sendClaimed: false, error: 'PREVIEW_STALE' };
++      await expect(recoverRemote(x, generation({ operationClient: client }))).rejects.toMatchObject({ code: 'AI_REMOTE_CONTRACT_INVALID' });
++      expect(await Budget.Account.findById('experiment').lean()).toMatchObject({ outstandingMicros: 184320, halted: true });
++      expect(await M.Content.countDocuments()).toBe(0);
++    });
++    test('credible never-sent terminal releases exactly once', async () => {
++      const x = await prepare();
++      client.put.mockImplementation(async c => outcome(c, { status: 'failed_not_sent', result: null, usage: null, sendClaimed: false, error: 'PREVIEW_STALE' }));
++      expect((await service.runGeneration({ identity: parent, commandId: x.commandId })).command.phase).toBe('FAILED');
++      expect(await Budget.Reservation.findOne({ jobId: x.commandId }).lean()).toMatchObject({ state: 'released', settledMicros: 0 });
++      const before = await state(); await recoverRemote(x); expect(await state()).toBe(before);
++    });
++    test.each(['not-json', JSON.stringify({ ...text(), extra: true }), JSON.stringify({ ...text(), exercises: text().exercises.slice(0, 1) }),
++      '['.repeat(3000) + '0' + ']'.repeat(3000)])('charged invalid output fails without candidate: %#', async output => {
++      const x = await prepare(); client.put.mockImplementation(async c => outcome(c, {
++        result: { text: output, contentHash: require('../../services/ai1Contract').sha(output) } }));
++      expect((await service.runGeneration({ identity: parent, commandId: x.commandId })).command.phase).toBe('FAILED');
++      expect(await M.Content.countDocuments()).toBe(0);
++      expect(await Budget.Reservation.findOne({ jobId: x.commandId }).lean()).toMatchObject({ state: 'settled', settledMicros: 3600 });
++      expect((await M.Command.findById(x.commandId).lean()).remoteEvidence.result.text).toBe(output);
++      expect(await Budget.Slot.findById('global').lean()).toMatchObject({ jobId: null });
++    });
++    test('ancestor withdrawal does not refund sent work and cannot publish returned candidate', async () => {
++      const x = await prepare(); client.put.mockImplementation(async c => { remote = outcome(c); throw Error('lost'); });
++      await expect(service.runGeneration({ identity: parent, commandId: x.commandId })).rejects.toMatchObject({ statusCode: 503 });
++      await A.Package.updateOne({ _id: pkg._id }, { $set: { visibility: 'withdrawn' } });
++      await recoverRemote(x);
++      expect(await Budget.Reservation.findOne({ jobId: x.commandId }).lean()).toMatchObject({ state: 'settled' });
++      await expect(service.publicationPreview({ identity: parent, roundId: x.round.id })).rejects.toMatchObject({ statusCode: 409 });
++    });
++    test('recover is original actor only and denied after live family revocation; zero remote calls', async () => {
++      const x = await prepare(); await service.claimGeneration({ identity: parent, commandId: x.commandId });
++      await expect(recoverRemote(x, service, coparent)).rejects.toMatchObject({ statusCode: 404 });
++      await expect(recoverRemote(x, service, outsider)).rejects.toMatchObject({ statusCode: 404 });
++      await Family.updateOne({ _id: family._id }, { $set: { ownerParentId: coparent.id, memberParentIds: [coparent.id] } });
++      await expect(recoverRemote(x)).rejects.toMatchObject({ statusCode: 403 });
++      expect(client.get).not.toHaveBeenCalled(); expect(client.put).not.toHaveBeenCalled();
++    });
++    test('success without usage retains outstanding cost but releases only its send slot', async () => {
++      const x = await prepare(); client.put.mockImplementation(async c => outcome(c, { usage: null }));
++      await service.runGeneration({ identity: parent, commandId: x.commandId });
++      expect(await Budget.Reservation.findOne({ jobId: x.commandId }).lean()).toMatchObject({ state: 'reserved_unknown', settledMicros: null });
++      expect(await Budget.Account.findById('experiment').lean()).toMatchObject({ outstandingMicros: 184320, settledMicros: 0 });
++      expect(await Budget.Slot.findById('global').lean()).toMatchObject({ jobId: null });
++      expect(await M.Content.countDocuments()).toBe(1);
++    });
++    test.each([null, { inputTokens: 100, outputTokens: 100 }])('failed_sent settles only known usage %j', async usage => {
++      const x = await prepare(); client.put.mockImplementation(async c => outcome(c, { status: 'failed_sent', usage, result: null, error: 'PROVIDER_FAILED' }));
++      expect((await service.runGeneration({ identity: parent, commandId: x.commandId })).command.phase).toBe('FAILED');
++      expect(await Budget.Reservation.findOne({ jobId: x.commandId }).lean()).toMatchObject({ state: usage ? 'settled' : 'reserved_unknown', settledMicros: usage ? 3600 : null });
++      expect(await Budget.Account.findById('experiment').lean()).toMatchObject({ outstandingMicros: usage ? 0 : 184320, settledMicros: usage ? 3600 : 0 });
++      expect(await Budget.Slot.findById('global').lean()).toMatchObject({ jobId: null });
++      expect(await M.Content.countDocuments()).toBe(0);
++    });
++    test('terminal transaction rollback retains durable remote claim, then concurrent original GET settles once', async () => {
++      const x = await prepare();
++      const original = M.Content.create.bind(M.Content);
++      const fail = jest.spyOn(M.Content, 'create').mockImplementationOnce(async (...args) => { await original(...args); throw Error('rollback'); });
++      try { await expect(service.runGeneration({ identity: parent, commandId: x.commandId })).rejects.toMatchObject({ statusCode: 503 }); }
++      finally { fail.mockRestore(); }
++      expect(await M.Content.countDocuments()).toBe(0);
++      expect(await Budget.Account.findById('experiment').lean()).toMatchObject({ outstandingMicros: 184320, settledMicros: 0 });
++      expect((await M.Command.findById(x.commandId).lean()).remoteClaimObserved).toBe(true);
++      await Promise.all([recoverRemote(x), recoverRemote(x)]);
++      expect(await M.Content.countDocuments()).toBe(1);
++      expect(await Budget.Account.findById('experiment').lean()).toMatchObject({ outstandingMicros: 0, settledMicros: 3600 });
++      expect(client.put).toHaveBeenCalledTimes(1);
++    });
++    test('settlement commit acknowledgement lost is recovered locally without another remote query or charge', async () => {
++      const x = await prepare(); let lost = false;
++      const runner = async work => {
++        const value = await runMongoTransaction({ mongooseInstance: mongoose, work });
++        if (!lost && await M.Content.exists({ roundId: x.round.id })) { lost = true; throw Error('committed ack lost'); }
++        return value;
++      };
++      await expect(generation({ operationClient: client, transactionRunner: runner }).runGeneration({ identity: parent, commandId: x.commandId })).rejects.toMatchObject({ statusCode: 503 });
++      expect(lost).toBe(true);
++      expect((await recoverRemote(x)).command.phase).toBe('SUCCEEDED');
++      expect(client.get).not.toHaveBeenCalled(); expect(client.put).toHaveBeenCalledTimes(1);
++      expect(await M.Content.countDocuments()).toBe(1);
++    });
++    test.each(['remoteOperationId', 'requestHash', 'providerProfile'])('wrong response %s halts accounts and retains fees', async field => {
++      const x = await prepare(); client.put.mockImplementation(async c => outcome(c, { [field]: 'wrong' }));
++      await expect(service.runGeneration({ identity: parent, commandId: x.commandId })).rejects.toMatchObject({ code: 'AI_REMOTE_CONTRACT_INVALID' });
++      expect(await M.Content.countDocuments()).toBe(0);
++      expect(await Budget.Account.findById('experiment').lean()).toMatchObject({ outstandingMicros: 184320, halted: true });
++    });
++    test('missing persisted request digest blocks recovery before any remote call', async () => {
++      const x = await prepare(); await service.claimGeneration({ identity: parent, commandId: x.commandId });
++      await M.Command.collection.updateOne({ _id: new mongoose.Types.ObjectId(x.commandId) }, { $unset: { 'generation.remoteRequestHash': '' } });
++      await expect(recoverRemote(x)).rejects.toMatchObject({ code: 'AI_REMOTE_CONTRACT_INVALID' });
++      expect(client.get).not.toHaveBeenCalled(); expect(client.put).not.toHaveBeenCalled();
++    });
++    test('late accepted query cannot downgrade settled terminal or halt budget', async () => {
++      const x = await prepare(); await service.claimGeneration({ identity: parent, commandId: x.commandId });
++      const c = await M.Command.findById(x.commandId).lean();
++      let release, entered;
++      const started = new Promise(resolve => { entered = resolve; });
++      client.get.mockImplementationOnce(() => new Promise(resolve => {
++        release = () => resolve(outcome(c, { status: 'accepted', result: null, usage: null, sendClaimed: false })); entered();
++      })).mockResolvedValue(outcome(c));
++      const late = recoverRemote(x); let failure;
++      const joined = late.catch(e => { failure = e; });
++      try {
++        await started; await recoverRemote(x);
++      } finally { release?.(); await joined; }
++      expect(failure).toBeUndefined();
++      expect((await M.Command.findById(x.commandId).lean()).phase).toBe('SUCCEEDED');
++      expect(await Budget.Account.findById('experiment').lean()).toMatchObject({ halted: false, settledMicros: 3600, outstandingMicros: 0 });
++      expect(await M.Content.countDocuments()).toBe(1);
++    });
++    test('generated content uses the same normalized CRLF length limits as manual revisions', async () => {
++      const x = await prepare(), content = text(); content.instructions = 'a'.repeat(499) + '\r\n';
++      for (const q of content.exercises) for (const key of ['questionText', 'answerForParent', 'rubricForParent']) q[key] = 'b'.repeat(999) + '\r\n';
++      const raw = JSON.stringify(content);
++      client.put.mockImplementation(async c => outcome(c, { result: { text: raw, contentHash: require('../../services/ai1Contract').sha(raw) } }));
++      expect((await service.runGeneration({ identity: parent, commandId: x.commandId })).command.phase).toBe('SUCCEEDED');
++      const saved = await M.Content.findOne({ roundId: x.round.id }).lean();
++      expect(saved.content.instructions).toBe('a'.repeat(499) + '\n');
++      for (const q of saved.content.exercises) for (const key of ['questionText', 'answerForParent', 'rubricForParent']) expect(q[key]).toBe('b'.repeat(999) + '\n');
++      expect((await M.Command.findById(x.commandId).lean()).remoteEvidence.result.text).toBe(raw);
++    });
++  });
+   test('preview is zero-write, complete and excludes private source fields; original accepted command survives lost response and off', async () => {
+     const x = await ready(), before = await state();
+     expect(x.preview.messages.map(m => m.role)).toEqual(['system', 'user']);
+diff --git a/backend/services/homework-service/__tests__/services/ai3Operation.test.js b/backend/services/homework-service/__tests__/services/ai3Operation.test.js
+new file mode 100644
+--- /dev/null
++++ b/backend/services/homework-service/__tests__/services/ai3Operation.test.js
+@@ -0,0 +1,77 @@
++const http = require('http');
++const C = require('../../services/ai1Contract');
++const { buildRequest, validateOperation, createOperationClient } = require('../../services/ai3Operation');
++const preview = () => C.buildPreview({ input: { questionText: '124 * 23', answerText: null, parentContext: '' },
++  chapter: { subject: 'math' } }, { model: 'synthetic', modelProfileVersion: 'model-1', pricingProfileVersion: 'price-1',
++  checkedAt: '2026-11-01T00:00:00.000Z', expiresAt: '2026-11-02T00:00:00.000Z', callWindowMs: 60000,
++  clockMarginMs: 5000, inputPriceMicrosPerMillion: 9000000, outputPriceMicrosPerMillion: 27000000 }, Date.parse('2026-11-01T01:00:00Z'));
++const job = () => {
++  const j = { remoteOperationId: '11111111-1111-4111-8111-111111111111', preview: { ...preview(),
++    providerProfile: 'ai3-practice-v1', promptVersion: 'ai3-practice-prompt-v1', outputSchemaVersion: 'ai3-practice-content-v1' } };
++  j.remoteRequestHash = buildRequest(j).requestHash; return j;
++};
++const operation = (j, patch = {}) => ({ providerProfile: 'ai3-practice-v1', remoteOperationId: j.remoteOperationId, requestHash: buildRequest(j).requestHash,
++  modelProfileVersion: j.preview.modelProfileVersion, pricingProfileVersion: j.preview.pricingProfileVersion,
++  sendNotAfter: j.preview.sendNotAfter, status: 'accepted', result: null, error: null, usage: null,
++  sendClaimed: false, updatedAt: '2026-11-01T01:00:00.000Z', ...patch });
++test('wire projection is closed, stable and has no local identities', () => {
++  const j = { ...job(), familyId: 'private', createdBy: 'private' }, r = buildRequest(j);
++  const { requestHash, ...body } = r;
++  expect(requestHash).toBe(C.hash(body)); expect(JSON.stringify(r)).not.toContain('private');
++  expect(r.messages).toEqual(j.preview.messages);
++  r.messages[0].content = 'changed'; expect(buildRequest(j).requestHash).toBe(requestHash);
++});
++test.each([
++  { status: 'accepted' }, { status: 'sending', sendClaimed: true },
++  { status: 'succeeded', sendClaimed: true, result: { text: 'draft', contentHash: C.sha('draft') } },
++  { status: 'failed_not_sent', error: 'PREVIEW_STALE' },
++  { status: 'failed_sent', sendClaimed: true, error: 'PROVIDER_FAILED' },
++  { status: 'unknown', sendClaimed: true, error: 'RESULT_UNKNOWN' }
++])('accepts closed state $status', patch => {
++  const j = job(); expect(validateOperation(j, operation(j, patch)).status).toBe(patch.status);
++});
++test.each([
++  { providerProfile: 'ai1' }, { sendClaimed: true }, { result: { text: 'bad', contentHash: C.sha('bad') } }, { error: 'PROVIDER_FAILED' },
++  { usage: { inputTokens: 0, outputTokens: 0 } }, { extra: true }, { remoteOperationId: 'wrong' },
++  { requestHash: '0'.repeat(64) }, { sendNotAfter: '2026-11-03T00:00:00.000Z' },
++  { pricingProfileVersion: 'wrong' }, { modelProfileVersion: 'wrong' }, { updatedAt: 'yesterday' },
++  { status: 'failed_not_sent', sendClaimed: true, error: 'PREVIEW_STALE' },
++  { status: 'unknown', sendClaimed: false, error: 'RESULT_UNKNOWN' },
++  { status: 'succeeded', sendClaimed: true, result: { text: 'draft', contentHash: '0'.repeat(64) } },
++  { status: 'succeeded', sendClaimed: true, result: { text: '\ud800', contentHash: C.sha('\ud800') } },
++  { status: 'succeeded', sendClaimed: true, result: { text: 'draft', contentHash: C.sha('draft') }, usage: { inputTokens: 8193, outputTokens: 1 } }
++])('rejects inconsistent envelope %j', patch => {
++  const j = job(); expect(() => validateOperation(j, operation(j, patch))).toThrow('AI_REMOTE_CONTRACT_INVALID');
++});
++test('real HTTP: credential, exact path, no redirect/retry, malformed response and bounded body', async () => {
++  const j = job(), calls = []; let mode = 'ok';
++  const server = http.createServer((req, res) => {
++    const entry = { method: req.method, url: req.url, token: req.headers['x-ai1-service-token'], body: '' };
++    calls.push(entry);
++    req.on('data', chunk => { entry.body += chunk; });
++    req.on('end', () => {
++    if (mode === 'lost') { req.socket.destroy(); return; }
++    if (mode === 'redirect') { res.writeHead(302, { Location: '/forbidden' }); res.end(); return; }
++    res.setHeader('Content-Type', 'application/json');
++    if (mode === 'isolate') { res.statusCode = 503; res.end(JSON.stringify({ success: false, error: { code: 'AI_STORE_ISOLATED', message: 'AI_STORE_ISOLATED', details: [] } })); return; }
++    res.end(mode === 'huge' ? 'x'.repeat(65537) : JSON.stringify(mode === 'bad' ? { success: true } : { success: true, data: { operation: operation(j) } }));
++    });
++  });
++  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
++  try {
++    const baseUrl = `http://127.0.0.1:${server.address().port}`, token = 'synthetic-ai1-credential-'.repeat(2);
++    expect(() => createOperationClient({ baseUrl, token })).toThrow();
++    const client = createOperationClient({ baseUrl, token, allowLoopback: true });
++    await expect(client.put({ ...j, remoteRequestHash: '0'.repeat(64) })).rejects.toMatchObject({ code: 'AI_REMOTE_CONTRACT_INVALID' });
++    expect(calls).toHaveLength(0);
++    expect((await client.put(j)).status).toBe('accepted');
++    expect(calls[0]).toMatchObject({ method: 'PUT', url: `/internal/deeptutor/ai3/operations/${j.remoteOperationId}`, token });
++    expect(JSON.parse(calls[0].body)).toEqual(buildRequest(j));
++    expect((await client.get(j)).status).toBe('accepted'); expect(calls[1].body).toBe('');
++    for (mode of ['lost', 'redirect', 'bad', 'huge', 'isolate']) {
++      const before = calls.length;
++      await expect(client.get(j)).rejects.toMatchObject({ code: mode === 'isolate' ? 'AI_STORE_ISOLATED' : mode === 'bad' ? 'AI_REMOTE_CONTRACT_INVALID' : 'AI_REMOTE_UNAVAILABLE' });
++      expect(calls).toHaveLength(before + 1);
++    }
++  } finally { await new Promise(resolve => server.close(resolve)); }
++});
+diff --git a/docs/api/family-ai3-api.md b/docs/api/family-ai3-api.md
+--- a/docs/api/family-ai3-api.md
++++ b/docs/api/family-ai3-api.md
+@@ -2,11 +2,11 @@
+ 
+ **Document status:** APPROVED (2026-11-04)
+ **Profile:** AI3-MIN-1 (`ai3-min-v1`)
+-**Implementation:** LOCAL_GENERATION_PREPARATION_IN_PROGRESS / NO_REAL_SEND_AUTHORIZATION
++**Implementation:** LOCAL_REMOTE_GENERATION_CANDIDATE / NO_REAL_SEND_AUTHORIZATION
+ 配套：[设计](../superpowers/specs/2026-11-04-family-ai3-minimal-design.md)、[测试](../development/family-ai3-test-plan.md)。
+ 本稿不原地修改AI1/AI2或旧Tutor v1契约；以下全部是拟新增接口，不代表当前服务器已支持。
+-已批准手工候选与共享预算基础；当前实现未装配的本地生成预览、预留及内部单次claim，未开放任何AI3 HTTP端点。
+-远端生成发送/查询/终态收敛、孩子图片提交、最终审核/效果、列表页面与正式装配仍待后批；不得据服务单测宣称完整API已交付。
++已批准手工候选、共享预算与本地生成准备；当前补齐受限远端operation/原映射查询/终态结算，仍待本批验收，未开放AI3公共HTTP端点。
++孩子图片提交、最终审核/效果、列表页面与正式装配仍待后批；不得据服务单测宣称完整API已交付。
+ 
+ ## 1. 公共规则
+ 
+@@ -92,6 +92,11 @@
+ schema/格式不符不能降级为自由文本；只有符合题量/边界的输出才产生candidate。原始响应留父母受控审计，不向孩子泄漏。
+ DeepTutor新增闭合`ai3-provider-operation-v1`端点，原AI1请求继续只认旧schema；同一remote ID跨profile冲突拒绝，
+ namespace/摘要/持久claim含profile。LMS与远端必须共同支持后方可启用；未授权真实发出、不可用计数或过期报价零发送。
++内部AI3路径为`PUT/GET /internal/deeptutor/ai3/operations/:remoteOperationId`，继续使用专用`x-ai1-service-token`凭据；
++AI1旧路径/旧schema不变。AI3请求在AI1闭合字段外增加固定providerProfile/promptVersion/outputSchemaVersion，
++schemaVersion为`ai3-provider-operation-v1`，requestHash覆盖除自身外的完整JCS正文；响应在AI1闭合operation字段外增加providerProfile。
++LMS首次预留持久化remoteRequestHash，不对缺失/冲突映射自动补算后出站；终态结果引用绑定实际Content与Round版本。
++迟到accepted/sending不倒退已收敛终态；持久remoteClaimObserved禁止后续failed_not_sent退款。仅可信未发送证明可安全释放。
+ 祖先撤回不退款已claim调用：保留查询/结算，输出仅家长审计候选；不可借成功生成绕过发布时的祖先校验。
+ 
+ 孩子Round DTO白名单：`id,sourcePackageId,source{type,id},chapter,exerciseCount,visibility,learningState,stateVersion,
+@@ -199,4 +204,5 @@
+ | AI3_EFFECT_CONFLICT | 409，仅内部同effect异正文或证据冲突；不伪装已应用 |
+ 
+ 503/断网写结果未知时保留原命令；身份失效先清本地私有数据但服务端证据不清除。状态/命令响应的字段也须角色白名单。
+-没有变式题生成成功、真实成本、完整恢复或AI3工程验收证据；所有本稿新增路由目前均NOT_IMPLEMENTED。
++AI3-1设计批准时快照：没有变式题生成成功、真实成本、完整恢复或AI3工程验收证据；当时全部新增路由NOT_IMPLEMENTED。
++当前仅有本地合成候选及受限内部HTTP工厂验证；公共AI3路由/页面尚未装配，无真实模型成本或AI-3总门禁通过证据。
+diff --git a/docs/development/family-ai3-test-plan.md b/docs/development/family-ai3-test-plan.md
+--- a/docs/development/family-ai3-test-plan.md
++++ b/docs/development/family-ai3-test-plan.md
+@@ -123,3 +123,11 @@
+ 本地原命令恢复只读，不代表远端GET/终态编排已完成；原GEN/RECOVER整行仍待远端、正式HTTP和页面验收。
+ 首批不产生真实模型/远端媒体调用，不迁移真实数据；回退只需保持模块未装配，无生产数据回滚。
+ 批次证据与独立评审见[首批记录](evidence/ai3-a-20261104/README.md)。总门禁保持OPEN，不提前将完整28行标为通过。
++
++## AI3-D 远端与结算补验
++
++见[D批记录](evidence/ai3-d-20261104/README.md)。新增闭合profile/摘要/凭据及有限响应HTTP测试，Provider仍是替身。
++永久反例覆盖PUT丢响应后原GET、旧accepted/not-found不重发或退款、持久claim与矛盾退款、无usage跨期保留、
++非法已计费输出不生成Content、事务回滚/提交未知、并发结算一次、祖先撤回后审计候选、实时撤权与原actor拒绝。
++补强缺失持久摘要零出站、成功结果引用实际Content版本、迟到accepted不倒退终态；各对应独立变异。
++无公开页面/孩子提交/人工效果验收，不将此服务批次算作GEN/RECOVER全链路或AI-3总门禁通过。

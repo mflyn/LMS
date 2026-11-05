@@ -33,6 +33,17 @@ const candidate = async () => {
   const job = await M.Job.findById(g.job.id).lean();
   return { c, g, result: await service.applyOutcome({ jobId: g.job.id, evidence: outcome(job) }) };
 };
+test.each(['ai3', 'future', null])('shared owner %s cannot be settled through an AI1 job', async ownerProfile => {
+  const c = await create(), g = await generate(c);
+  await service.claim({ identity: parent, jobId: g.job.id });
+  const job = await M.Job.findById(g.job.id).lean();
+  await M.Reservation.collection.updateOne({ _id: job.reservationId }, { $set: { ownerProfile } });
+  const snapshot = async () => JSON.stringify(await Promise.all([M.Job, M.Cycle, M.Artifact, M.Account, M.Reservation, M.Slot]
+    .map(m => m.find().sort({ _id: 1 }).lean())));
+  const before = await snapshot();
+  await expect(service.applyOutcome({ jobId: g.job.id, evidence: outcome(job) })).rejects.toMatchObject({ statusCode: 503, code: 'AI_STORE_ISOLATED' });
+  expect(await snapshot()).toBe(before);
+});
 beforeAll(async () => { for (const model of [...Object.values(M), Family, User]) await model.init(); });
 beforeEach(async () => {
   clock = Date.parse('2026-11-01T01:00:00.000Z');

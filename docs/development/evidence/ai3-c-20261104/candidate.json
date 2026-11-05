@@ -1,0 +1,82 @@
+{
+  "base": "a4f051e26f3514da051910a3495e11b149a32c45",
+  "scope": "AI3-C local generation preparation only, incremental on accepted AI3-A + AI3-B; not full remote recovery or real-send acceptance",
+  "parentCandidates": [
+    {
+      "path": "../ai3-a-20261104/candidate.patch",
+      "sha256": "63b488422575bdc4a63b66c475184040b8e58bf34bdb1a93ce1d43e649d7a0ae"
+    },
+    {
+      "path": "../ai3-b-20261104/candidate.patch",
+      "sha256": "83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8"
+    }
+  ],
+  "files": [
+    {
+      "path": "backend/services/homework-service/services/ai3Service.js",
+      "sha256": "d18d5ee6e288fb16a33316faabebb33763562a3f5ce2fa74c9e187f55524155e",
+      "priorSha256": "67302dc845af286059d674150a9f9543eb26fd5a520a56645bbc3becd3139ac1"
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3GenerationPreview.js",
+      "sha256": "dbd93ca8c5866f6242a2f8ece6a240af46804bc67d1286a2a7f720bfed39f74d",
+      "priorSha256": null
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Contract.js",
+      "sha256": "ab5978a5f91ff472f65ebaa019c8b690644a77a4bac842a0bcc12c8dae027cea",
+      "priorSha256": "98a0b3d4230f67b585ff3d418a2d8b7804c9734fb7d603731e2a24fdbad4e04c"
+    },
+    {
+      "path": "backend/services/homework-service/models/Ai3.js",
+      "sha256": "c706b70c102231ee5d14a82e025af2ad2e1ebb9b7b52162213f0aa83ee57960c",
+      "priorSha256": "61eabfc07bb6c255df72e5ea4a677ed77961c291a4d9a7ba680baa8193a894bf"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3Service.test.js",
+      "sha256": "8e57cc7c060b3e69d0c8ea235d699f5f38e1d68e16f6bb42a193cd88609bdef3",
+      "priorSha256": "4e56ff70c63bb0ca85f81cd587d48091f5a3b42d8bf3ff12530b0201807c6e7e"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3GenerationPreview.test.js",
+      "sha256": "35258d1979b5cc0ecc76d64d2eb99d4d2d24524e68b01f41308f290f7cafaa83",
+      "priorSha256": null
+    },
+    {
+      "path": "docs/api/family-ai3-api.md",
+      "sha256": "98482de2f2633c9d4e96052c80e1126ec202ccc834ab762cf5d05465b5e35b4f",
+      "priorSha256": "2122279d6cfcf9833500663341a04948e8efbe9fc0a3ad86b7b23cf4e06fde93"
+    },
+    {
+      "path": "docs/development/family-ai3-test-plan.md",
+      "sha256": "cd6efb900e2fcbd966125d2df3f5c6b74ae456198fa6e90a3d8d46e4035e0281",
+      "priorSha256": "5c8e8f4a5a54da3e336549b102cba604476d8792c0be1c2098be695d101c252d"
+    },
+    {
+      "path": "docs/development/evidence/ai3-c-20261104/synthetic-preview.json",
+      "sha256": "5f8c776adabab3f15be8f2fe22ff6cf9c8d3e09806cb4e124826f722ab48350a",
+      "priorSha256": null
+    }
+  ],
+  "patch": {
+    "path": "candidate.patch",
+    "sha256": "48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89"
+  },
+  "metadata": "Approval records and verification/README kept separately; existing T8 and other status increments not included",
+  "approvalRecords": {
+    "path": "approval-records.patch",
+    "sha256": "2ebf862a0d08c1fd4edbc4ba101721e3bce27caedfdb3144dfc6b061cc795371",
+    "files": [
+      {
+        "path": "docs/development/evidence/ai3-b-20261104/README.md",
+        "sha256": "cbcf40b85bd6c28920508456f63b94cd7beb42d5bff2d04a62be621066ad0e6b",
+        "priorSha256": "3977a33122ace1af4d578fdccb25775b55abc7d4ba300139fd8dd3969934af16"
+      },
+      {
+        "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "sha256": "83272a4c25590f33b0b969bcb4d2525d01ff593547d4f3a45f64b6714d86d196",
+        "priorSha256": "b5d73762087b033d47b84457a114e36111ae1e1625014458b9ad73b9daef70fd"
+      }
+    ]
+  }
+}

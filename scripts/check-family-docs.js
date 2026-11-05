@@ -3627,6 +3627,39 @@ function validate() {
   }
   const ai2ClosureProbes = 3 + ai2ClosureStates.length * 3;
 
+  const ai3EngineeringStates = [
+    ['AI-3 gate', 'CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY'],
+    ['AI3-E acceptance', 'ACCEPTED / USER_APPROVED'],
+    ['AI-3 scope', 'LOCAL_SYNTHETIC_ONLY'],
+    ['AI-3 real model', 'NOT_AUTHORIZED / QUALIFIED_COUNTER_PENDING'],
+    ['AI-3 device', 'DEVICE_PENDING'],
+    ['AI-3 retained gates', 'T4 OPEN / T8 OPEN / AI-1 OPEN'],
+    ['AI-3 Docker audit', 'INCOMPLETE_FAILED'],
+    ['AI-3 historical failures', 'PRESERVED'],
+    ['AI-3 nonblocking', 'PRESERVED'],
+    ['AI-3 deferred', 'REMAINDER_DEFERRED'],
+    ['AI-3 delivery', 'NOT_AUTHORIZED / NO_GIT / NO_DEPLOY']
+  ];
+  const hasAi3EngineeringStates = source => ai3EngineeringStates.every(([key, value]) => {
+    const prefix = `**${key}:**`;
+    const lines = source.split('\n').map(line => line.trim()).filter(line => line.startsWith(prefix));
+    return lines.length === 1 && lines[0] === `${prefix} ${value}`;
+  });
+  for (const [name, source] of [['Gate', selfDirectedGate], ['readiness',
+    read('docs/development/evidence/ai3-integration-20261105/engineering-readiness.md')]]) {
+    assert(hasAi3EngineeringStates(source), `${name}: AI-3 engineering states must retain unique approved closure and synthetic-only boundaries`, errors);
+  }
+  const ai3StateFixture = ai3EngineeringStates.map(([key, value]) => `**${key}:** ${value}`).join('\n');
+  assert(hasAi3EngineeringStates(ai3StateFixture), 'AI-3 engineering states must accept the current bounded scope', errors);
+  for (const [key, value] of ai3EngineeringStates) {
+    const line = `**${key}:** ${value}`;
+    for (const [kind, source] of [['missing', ai3StateFixture.replace(line, '')],
+      ['changed', ai3StateFixture.replace(line, `**${key}:** INVALID`)], ['duplicate', `${ai3StateFixture}\n${line}`]]) {
+      assert(!hasAi3EngineeringStates(source), `AI-3 engineering states must reject ${kind} ${key}`, errors);
+    }
+  }
+  const ai3EngineeringProbes = 3 + ai3EngineeringStates.length * 3;
+
   for (const [name, markdown, marker] of [
     ['research', selfDirectedResearch, '状态：拟议方案'],
     ['design', selfDirectedDesign, '状态：拟议设计'],
@@ -4510,6 +4543,7 @@ function validate() {
     proposedSelfDirectedDocuments: selfDirectedDocuments.size,
     selfDirectedContractProbes,
     ai2ClosureProbes,
+    ai3EngineeringProbes,
     valueGateContractProbes: valueGateTextRules.length + valueGateExamples.length + valueGateStructuralMutants.length,
     proposedAiContracts: proposedAiContracts.length,
     contractFixtureCases,
@@ -4525,6 +4559,7 @@ if (require.main === module) {
         `${result.proposedSelfDirectedDocuments} proposed self-directed-learning documents, ` +
         `${result.selfDirectedContractProbes} self-directed contract probes, ` +
         `${result.ai2ClosureProbes} AI-2 closure probes, ` +
+        `${result.ai3EngineeringProbes} AI-3 engineering-state probes, ` +
         `${result.valueGateContractProbes} value-gate text probes, ` +
         `${result.proposedAiDocuments} proposed AI documents, ` +
         `${result.proposedAiContracts} AI contracts, ` +

@@ -12,6 +12,13 @@ const isValidLocalDate = (value) => {
 };
 
 const familyMistakeStateEventSchema = new Schema({
+  ai3Evidence: { type: new Schema({
+    effectId: { type: String, required: true },
+    finalReviewId: { type: Schema.Types.ObjectId, required: true },
+    finalReviewHash: { type: String, required: true, match: /^[a-f0-9]{64}$/ },
+    reviewedByParentId: { type: Schema.Types.ObjectId, required: true },
+    reviewedAt: { type: Date, required: true }
+  }, { _id: false, strict: 'throw' }), immutable: true },
   familyId: {
     type: Schema.Types.ObjectId,
     required: true,

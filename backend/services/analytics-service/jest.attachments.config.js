@@ -6,7 +6,10 @@ module.exports = {
     '<rootDir>/__tests__/familyMistakes.test.js',
     '<rootDir>/__tests__/familyMistakeMediaSaga.test.js',
     '<rootDir>/__tests__/familyMistakeSources.test.js',
-    '<rootDir>/__tests__/weeklyReports.test.js'
+    '<rootDir>/__tests__/weeklyReports.test.js',
+    '<rootDir>/__tests__/ai3MistakeEffects.test.js',
+    '<rootDir>/__tests__/ai3MistakeRevision.test.js',
+    '<rootDir>/__tests__/startupCleanup.test.js'
   ],
   moduleNameMapper: {
     '^axios$': '<rootDir>/../../../node_modules/axios/dist/node/axios.cjs',

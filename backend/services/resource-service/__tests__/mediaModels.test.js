@@ -39,6 +39,7 @@ describe('Task 6 media models', () => {
       'task_attachment',
       'task_completion',
       'ai2_correction',
+      'ai3_practice',
       'mistake_question',
       'mistake_answer',
       'growth_evidence'
@@ -51,6 +52,15 @@ describe('Task 6 media models', () => {
       .resolves.toBeUndefined();
     await expect(new MediaAsset(validAsset({ purpose: 'growth_evidence', childId: null })).validate())
       .rejects.toThrow('childId is required');
+  });
+
+  test('AI3 practice requires a child and image without widening the closed purpose set', async () => {
+    loadModels();
+    await expect(new MediaAsset(validAsset({ purpose: 'ai3_practice', childId: null })).validate())
+      .rejects.toThrow('childId is required');
+    await expect(new MediaAsset(validAsset({ purpose: 'ai3_practice', mimeType: 'application/pdf', pageCount: 1 })).validate())
+      .rejects.toThrow('PDF is not allowed');
+    await expect(new MediaAsset(validAsset({ purpose: 'ai3_unknown' })).validate()).rejects.toThrow();
   });
 
   test('TC-T6-MEDIA-001 validates MIME, size, storage key, and deletion state', async () => {

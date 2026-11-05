@@ -1,6 +1,6 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CloseOutlined, DeleteOutlined, EyeOutlined, MinusCircleOutlined, ReloadOutlined } from '@ant-design/icons';
-import { assertAi2MediaEntry, createAi2MediaApi, isAi2MediaId, validateAi2MediaFile } from '../../services/ai2MediaApi';
+import { assertAi2MediaEntry, createAi2MediaApi, isAi2MediaId, validateAi2MediaFile, resolvePracticeMediaProfile } from '../../services/ai2MediaApi';
 import { captureSession, isSessionCurrent, subscribeSessionChanges } from '../../services/familySession';
 import { IMAGE_MIME_TYPES } from './privateMediaRules';
 
@@ -8,7 +8,7 @@ const controlStyle = { minWidth: 44, minHeight: 44 };
 const Action = ({ label, children, ...rest }) => <button type="button" className="family-button secondary"
   style={controlStyle} title={label} aria-label={label} {...rest}>{children}</button>;
 const denied = error => [401, 403, 404, 410].includes(error?.response?.status || error?.status);
-const selection = values => {
+const selection = (values, profile) => {
   try {
     if (!Array.isArray(values) || values.length > 10) throw new Error();
     const entries = Array.from(values, value => {
@@ -16,7 +16,7 @@ const selection = values => {
         if (!isAi2MediaId(value)) throw new Error();
         return { mediaId: value, status: 'available' };
       }
-      return assertAi2MediaEntry(value, { statusRequired: true });
+      return assertAi2MediaEntry(value, { statusRequired: true, profile });
     });
     if (new Set(entries.map(entry => entry.mediaId)).size !== entries.length) throw new Error();
     return { entries, invalid: false };
@@ -24,9 +24,10 @@ const selection = values => {
 };
 
 const ScopedAi2Media = ({ role, session, childId, scopeKey, values = [], onChange, readOnly = false,
-  disabled = false, onBusyChange, onBlockedChange, onDenied, onViewed, onDeleted }) => {
-  const api = useMemo(() => createAi2MediaApi(role), [role]);
-  const selected = useMemo(() => selection(values), [values]), entries = selected.entries;
+  disabled = false, onBusyChange, onBlockedChange, onDenied, onViewed, onDeleted, profile = 'ai2' }) => {
+  const mediaProfile = resolvePracticeMediaProfile(profile);
+  const api = useMemo(() => createAi2MediaApi(role, profile), [role, profile]);
+  const selected = useMemo(() => selection(values, profile), [values, profile]), entries = selected.entries;
   const signature = JSON.stringify(entries);
   const [previews, setPreviews] = useState({}), [errors, setErrors] = useState({});
   const [failures, setFailures] = useState([]), [deletions, setDeletions] = useState({});
@@ -108,8 +109,12 @@ const ScopedAi2Media = ({ role, session, childId, scopeKey, values = [], onChang
       finish(job);
     }
     current.upload = null;
+    if (profile === 'ai3' && current.unavailable) {
+      current.failures = [];
+      if (current.alive) { setFailures([]); setErrors({}); }
+    }
     if (current.alive) { setUploading(false); setDeletions({ ...current.deletions }); setConfirm(null); }
-  }, [clearPreviews, finish, cancelUpload]);
+  }, [clearPreviews, finish, cancelUpload, profile]);
 
   useLayoutEffect(() => {
     const current = state.current; current.alive = true;
@@ -198,16 +203,16 @@ const ScopedAi2Media = ({ role, session, childId, scopeKey, values = [], onChang
         seen.add(fingerprint);
         const invalidFile = validateAi2MediaFile(file);
         if (invalidFile) { addFailure(file, invalidFile); continue; }
-        if (current.entries.length >= 10) { addFailure(file, '订正图片不能超过 10 张'); continue; }
+        if (current.entries.length >= 10) { addFailure(file, `${mediaProfile.label}不能超过 10 张`); continue; }
         try {
           const result = await api.upload({ childId, file }, options(job));
           if (!live(job)) break;
-          const media = assertAi2MediaEntry(result?.media);
+          const media = assertAi2MediaEntry(result?.media, { profile });
           if (media.status === 'deleted') throw new Error('Deleted upload');
           if (current.entries.some(entry => entry.mediaId === media.mediaId)) {
             addFailure(file, '上传返回重复图片，请确认后忽略此项'); continue;
           }
-          if (current.entries.length >= 10) { addFailure(file, '订正图片不能超过 10 张'); continue; }
+          if (current.entries.length >= 10) { addFailure(file, `${mediaProfile.label}不能超过 10 张`); continue; }
           current.entries = [...current.entries, { ...media, status: 'available' }];
           callbacks.current.onChange?.(current.entries.map(entry => entry.mediaId));
         } catch (error) {
@@ -248,7 +253,7 @@ const ScopedAi2Media = ({ role, session, childId, scopeKey, values = [], onChang
   };
 
   return <div className="family-media-field" style={{ minWidth: 0 }}>
-    {!readOnly && role === 'student' ? <label htmlFor={inputId}>添加订正图片</label> : <span className="family-media-label">订正图片</span>}
+    {!readOnly && role === 'student' ? <label htmlFor={inputId}>{`添加${mediaProfile.label}`}</label> : <span className="family-media-label">{mediaProfile.label}</span>}
     <p className="family-media-count" aria-live="polite">已添加 {entries.length}/10</p>
     {!readOnly && role === 'student' && <input id={inputId} type="file" multiple accept={IMAGE_MIME_TYPES.join(',')}
       style={{ minHeight: 44, maxWidth: '100%' }} disabled={gated || uploading || entries.length >= 10}
@@ -256,7 +261,7 @@ const ScopedAi2Media = ({ role, session, childId, scopeKey, values = [], onChang
     {selected.invalid && <p role="alert" className="family-form-error">图片列表无效：需要最多 10 个唯一的有效图片记录。</p>}
     {unavailable && <p role="alert" className="family-form-error">图片不可访问，请重新确认当前账号与内容权限。</p>}
     {entries.map((entry, index) => {
-      const mediaId = entry.mediaId, label = `订正图片 ${index + 1}`;
+      const mediaId = entry.mediaId, label = `${mediaProfile.label} ${index + 1}`;
       const deletion = entry.status === 'deleted' ? 'deleted' : deletions[mediaId];
       const preview = !gated && !deletion ? previews[mediaId] : null;
       return <div key={mediaId} className="family-media-item" aria-label={label}>
@@ -295,7 +300,7 @@ const ScopedAi2Media = ({ role, session, childId, scopeKey, values = [], onChang
       if (event.key === 'Escape') { event.stopPropagation(); closeDialog(); }
     }}>
       <strong id={dialogId}>{`隐私删除${confirm.label}`}</strong>
-      <p>确认删除此图片资产？删除后无法查看，历史订正保留已删除占位。</p>
+      <p>{`确认删除此图片资产？删除后无法查看，历史${mediaProfile.history}保留已删除占位。`}</p>
       <div className="family-inline-actions">
         <button type="button" className="family-button secondary" style={controlStyle} ref={cancelButton} onClick={closeDialog}>取消</button>
         <button type="button" className="family-button" style={controlStyle} onClick={() => erase(confirm.mediaId)}>确认隐私删除</button>
@@ -306,6 +311,6 @@ const ScopedAi2Media = ({ role, session, childId, scopeKey, values = [], onChang
 
 // A scope or session revision gets a new instance before any private child can render.
 const Ai2Media = props => <ScopedAi2Media key={JSON.stringify([props.role, props.session?.actorId,
-  props.session?.revision, props.session?.token, props.childId, props.scopeKey])} {...props} />;
+  props.session?.revision, props.session?.token, props.childId, props.scopeKey, props.profile || 'ai2'])} {...props} />;
 
 export default Ai2Media;

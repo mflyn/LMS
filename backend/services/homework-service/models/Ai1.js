@@ -38,12 +38,13 @@ const Command = model('Ai1Command', { ...scope, actorId: oid, endpointOperation:
   operationId: { type: String, required: true }, requestHash: { type: String, required: true },
   result: { type: Schema.Types.Mixed, required: true }
 }, [[{ familyId: 1, actorId: 1, endpointOperation: 1, operationId: 1 }, { unique: true }]]);
-const Reservation = model('Ai1Reservation', { ...scope, jobId: oid, reservedMicros: amount, settledMicros: { type: Number, default: null },
+const Reservation = model('Ai1Reservation', { ...scope, jobId: oid,
+  ownerProfile: { type: String, enum: ['ai1', 'ai3'] }, reservedMicros: amount, settledMicros: { type: Number, default: null },
   state: { type: String, enum: ['reserved', 'reserved_unknown', 'settled', 'released'], required: true },
   reservedDay: { type: String, required: true }, reservedMonth: { type: String, required: true },
   reservedTimezone: { type: String, required: true }, settledAt: Date
 }, [[{ jobId: 1 }, { unique: true }]]);
 const Account = model('Ai1Account', { _id: String, outstandingMicros: { ...amount, default: 0 },
   settledMicros: { ...amount, default: 0 }, revision: { ...amount, default: 0 }, halted: { type: Boolean, default: false } });
-const Slot = model('Ai1SendSlot', { _id: String, jobId: Schema.Types.ObjectId });
+const Slot = model('Ai1SendSlot', { _id: String, jobId: Schema.Types.ObjectId, ownerProfile: { type: String, enum: ['ai1', 'ai3'] } });
 module.exports = { Cycle, Job, Artifact, Command, Reservation, Account, Slot };

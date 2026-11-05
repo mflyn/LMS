@@ -1,6 +1,6 @@
 const Tombstone = require('../models/MediaDeletionTombstone');
 const Receipt = require('../models/MediaDeletionReceipt');
-const { validAi2MediaMetadata } = require('../../../common/services/completionMediaProtocol');
+const { validAi2MediaMetadata, isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 
 const assertRecoveryProtocolAvailable = async (mediaId, session, enabled) => {
   if (enabled) return;
@@ -14,7 +14,7 @@ const assertRecoveryProtocolAvailable = async (mediaId, session, enabled) => {
 const loadDeletionEvidence = async (mediaId, session) => {
   const tombstone = await Tombstone.findOne({ mediaId }).session(session || null).lean();
   if (!tombstone) return null;
-  if (tombstone.purpose === 'ai2_correction' && !validAi2MediaMetadata(tombstone)) throw Error('Invalid AI2 deletion metadata');
+  if (isAttemptPurpose(tombstone.purpose) && !validAi2MediaMetadata(tombstone)) throw Error('Invalid attempt deletion metadata');
   const receipts = await Receipt.find({ mediaId, familyId: tombstone.familyId, childId: tombstone.childId })
     .session(session || null).sort({ resourceType: 1, resourceId: 1, field: 1, bindingOperationId: 1 }).lean();
   return {
@@ -22,7 +22,7 @@ const loadDeletionEvidence = async (mediaId, session) => {
       mediaId: String(tombstone.mediaId), familyId: String(tombstone.familyId), childId: String(tombstone.childId),
       actorId: String(tombstone.actorId), role: tombstone.role, purpose: tombstone.purpose,
       reason: tombstone.reason, deletedAt: tombstone.deletedAt.toISOString(),
-      ...(tombstone.purpose === 'ai2_correction' ? { mimeType: tombstone.mimeType, sizeBytes: tombstone.sizeBytes } : {})
+      ...(isAttemptPurpose(tombstone.purpose) ? { mimeType: tombstone.mimeType, sizeBytes: tombstone.sizeBytes } : {})
     },
     receipts: receipts.map(r => ({ mediaId: String(r.mediaId), familyId: String(r.familyId), childId: String(r.childId),
       resourceType: r.resourceType, resourceId: String(r.resourceId), field: r.field,

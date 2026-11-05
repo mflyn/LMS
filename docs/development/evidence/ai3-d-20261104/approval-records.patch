@@ -1,0 +1,51 @@
+diff --git a/docs/development/evidence/ai3-c-20261104/README.md b/docs/development/evidence/ai3-c-20261104/README.md
+--- a/docs/development/evidence/ai3-c-20261104/README.md
++++ b/docs/development/evidence/ai3-c-20261104/README.md
+@@ -1,11 +1,20 @@
+ # AI3-C 本地生成预览与原命令准备
+ 
+-**Status:** IMPLEMENTED / USER_REVIEW_PENDING
++**Status:** ACCEPTED / USER_APPROVED
+ **AI3-B:** ACCEPTED / USER_APPROVED
+ **AI-3:** OPEN
+ 
+ ## 范围与边界
+ 
++## 当前批准（2026-11-04）
++
++用户批准AI3-C限定合成批次验收及最终claim开关/报价/截止点P2关闭。
++绑定原九文件补丁`48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89`，不改写原candidate/verification快照。
++本轮复审核对28个哈希、两份补丁反向校验及九文件重建一致；原23条测试正文未削弱。
++独立重跑两套46项通过（10.74秒，退出0）；独立移除末端重检及禁用冷初始化重试，分别3条反例失败（4.199/4.198秒，退出1）。
++这与开发完整52套1799项（258.17秒）分开，复审未重跑开发全量。docs:family:check与diff check通过。
++以下待审文字是冻结当时的历史记录，当前批次和P2以本节用户批准为准；AI-3总门禁仍OPEN。
++
+ 本批接续[AI3-B](../ai3-b-20261104/README.md)，依据[API§3/4](../../../api/family-ai3-api.md#3-内容生成和角色-dto)。
+ 仅未装配的homework本地服务：完整messages预览、生成正文校验、共享账本预留、原actor持久命令/独立远端UUID、
+ 一次本地claim、未claim时安全过期释放、只读发现/重放。恢复当前仅返回原命令状态，不调用远端。
+diff --git a/docs/development/family-self-directed-learning-mvp-gate.md b/docs/development/family-self-directed-learning-mvp-gate.md
+--- a/docs/development/family-self-directed-learning-mvp-gate.md
++++ b/docs/development/family-self-directed-learning-mvp-gate.md
+@@ -8134,3 +8134,22 @@
+ 最终冻结后原homework完整52套1799项通过，258.17秒、退出0，独立46项与开发全量分开；旧红灯及中途修改候选的早轮回归保持。
+ T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、两项非阻断补测、计数资格待验及后置范围不变。
+ 仅本地合成，无真实模型、Git提交推送、合并或部署。
++
++### AI3-C 限定合成验收批准（2026-11-04）
++
++AI3-C ACCEPTED / USER_APPROVED，末端claim开关/报价/截止点P2 CLOSED / USER_APPROVED。
++绑定[原冻结与本轮复审](evidence/ai3-c-20261104/README.md#当前批准2026-11-04)及补丁
++`48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89`。
++本轮独立46项通过、两项变异各3条拦截；开发52/1799仅核对原始日志，不冒充独立全量。
++继续下一批远端受限operation、原映射查询、终态结算与家长生成候选，仅合成替身验证。
++AI-3及T4/T8/AI-1 OPEN，DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、非阻断补测和后置范围保持。
++
++### AI3-D 受限远端与生成候选待验收（2026-11-04）
++
++AI3-D IMPLEMENTED / USER_REVIEW_PENDING，见[本批冻结与证据](evidence/ai3-d-20261104/README.md)。
++双仓局部实现完整profile摘要、单次发送claim、原映射GET、持久远端claim、事务结算与未发布家长候选。
++自查映射/结果引用/迟到accepted问题已补反例；独立发现深度输出和CRLF长度语义两项P2，修订后FIXED_AND_INDEPENDENTLY_REVIEWED，待用户批准关闭。
++独立LMS86项、DeepTutor236项加单独六项跨HTTP通过；开发全量、变异和历史失败另列，不互相替代。
++公共路由/页面与孩子作答/审核/复习效果未交付；本批真实HTTP只到受限内部工厂，Provider为替身。
++T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数资格待验和后置范围不变。
++无真实模型、提交推送、合并或部署；AI-3总门禁OPEN。

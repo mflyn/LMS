@@ -30,10 +30,12 @@ const assertLegacyCompletionState = async ({ connection, service }) => {
   ] };
   const queries = service === 'homework'
     ? [['growthtaskcompletionoperations', {}], ['growthtasks', taskState], ['completionmediaguards', {}],
-      ['ai2packages', {}], ['ai2attempts', {}], ['ai2commands', {}]]
+      ['ai2packages', {}], ['ai2attempts', {}], ['ai2commands', {}],
+      ['ai3rounds', {}], ['ai3contents', {}], ['ai3attempts', {}], ['ai3commands', {}]]
     : [['mediareferenceoperations', {}], ['mediadeletiontombstones', {}], ['mediadeletionreceipts', {}],
-      ['mediareferences', { field: { $in: ['completionMediaIds', 'correctionMediaIds'] } }],
-      ['completionuploadguards', {}], ['mediaorphanretirements', {}], ['mediaassets', { purpose: 'ai2_correction' }]];
+      ['mediareferences', { field: { $in: ['completionMediaIds', 'correctionMediaIds', 'practiceMediaIds'] } }],
+      ['completionuploadguards', {}], ['mediaorphanretirements', {}], ['mediaassets', { purpose: 'ai2_correction' }],
+      ['mediaassets', { purpose: 'ai3_practice' }]];
   try {
     for (const [name, query] of queries) {
       if (await connection.db.collection(name).findOne(query, {

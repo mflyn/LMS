@@ -1289,3 +1289,45 @@ AI-1 的已批准最小 profile 明确替代旧完整平台中与本轮不兼容
 AI/K12 不可用时保留手工讲解、选题和审核，不拖垮任务服务。已有数据不得因关闭扩展而删除。
 任务状态区分未启动、验证中、可行/有限可行/不继续、工程完成、真实使用验证；
 某项完成不自动启动下一项，也不修改 T1～T9 原验收结论。
+
+### 9.5 AI3 当前批次进度（2026-11-04）
+
+当前状态以§9.5.3的2026-11-05用户批准为准；本节及§9.5.1/§9.5.2保留各批次历史。
+
+AI3-D 限定合成批次及完整请求32KiB P2/历史UNKNOWN P3已获批准，
+见[独立冻结与验收绑定](../../development/evidence/ai3-d-size-20261104/acceptance.md)。
+AI3-E 继续既定孩子作答与私有媒体：持久原命令、所见发布内容绑定、精确媒体代次、
+实时认证读取、撤回竞争与删除后占位；当前为本地工程候选，待本批用户验收。
+本批无公开路由或页面装配，不将服务调用与内部真实HTTP组合测试称为正式浏览器验收。
+后续仍需家长最终审核、复习效果写回、前端和正式应用组合验收，不扩大高级恢复或回收。
+AI-3、T4/T8/AI-1 OPEN；DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、
+非阻断补测、计数资格待验及后置范围不变。无真实模型、提交推送、合并或部署授权。
+
+#### 9.5.1 后续集成进展（2026-11-05）
+
+以上9.5保留E候选当时的装配边界。当前后续代码已接入最终人工审核、analytics/progress效果、
+家长/孩子页面及LMS正式应用；[当前进展与验证分层](../../development/evidence/ai3-integration-20261105/README.md)
+记录真实AI1→AI2→AI3四组浏览器闭环、原命令恢复、历史失败及修订后完整回归。
+当前家庭210套6331项、前端71套1163项、正式HTTP入口50应用/HTTP加57断言项和最后四组浏览器通过；
+双仓145+14源码累计补丁已重建验证，28项覆盖与独立复评见[验收准备](../../development/evidence/ai3-integration-20261105/engineering-readiness.md)。
+这不是E用户批准，也不是AI-3总门禁关闭；AI-3保持OPEN / ENGINEERING_VERIFIED / USER_ACCEPTANCE_PENDING，其他既有未关闭状态不变。
+
+#### 9.5.2 完整候选复审修订（2026-11-05）
+
+先修复历史超限预留退款、pending草稿生命周期和分页未决锁三处问题，并将遗漏的analytics测试
+接入现有家庭回归；永久反例、复验和新冻结身份见[修订记录](../../development/evidence/ai3-integration-20261105/review-fixes.md)。
+上述9.5.1数量与补丁保留为原候选快照；本次修订后再评审AI3-E和总门禁，不提前关闭。
+本轮修订限定复核已通过；新累计源码147+14文件。家庭全量6406过/2项Git启动失败、exit 1；
+系统Git优先原两套定向106项通过，仍保留全量失败与JSON导出失败，不能合称全绿。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、历史失败、非阻断补测及后置范围保持，不扩展高级恢复或新回收。
+
+#### 9.5.3 AI3-E及限定合成工程总门禁批准关闭（2026-11-05）
+
+- [x] 三项行为修订、遗漏analytics回归接入及永久反例验收通过。
+- [x] 系统Git优先，原家庭入口213套6408项一次通过、exit0，旧失败原样保留。
+- [x] AI3-E及后续工程ACCEPTED / USER_APPROVED；AI-3 CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY。
+
+见[关闭批准与证据](../../development/evidence/ai3-integration-20261105/closure-review.md)。
+这是当前已批准合成范围的工程关闭，不是新一轮真实模型、真机、Git交付或部署授权。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、
+QUALIFIED_COUNTER_PENDING与REMAINDER_DEFERRED保持；无关T8和AI1/AI2文档增量继续分组。

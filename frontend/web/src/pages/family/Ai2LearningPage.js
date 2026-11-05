@@ -245,6 +245,7 @@ export function Ai2Workspace({scope,session,packageId,cycleId,currentScope}) {
     {id(packageId)&&<IconButton label="刷新学习包详情" disabled={blocked} onClick={()=>refresh('detail')}><ReloadOutlined />重新查看详情</IconButton>}
     {parent&&id(cycleId)&&<IconButton label="重新预览孩子内容" disabled={blocked} onClick={()=>refresh('preview')}><ReloadOutlined />重新预览</IconButton>}
     {error&&<p role="alert" className="family-form-error">{error}</p>}{notice&&<p role="status" className="ai2-text">{notice}</p>}
+    {!blocked&&<Link to={`${parent?'/app':'/child'}/practice?childId=${scope.childId}`}>查看变式练习</Link>}
     {!blocked&&resultPackage&&<Link to={`${base}?childId=${scope.childId}&packageId=${resultPackage}`}
       onClick={()=>{if(resultPackage===packageId)refresh('detail');}}>查看学习包</Link>}
     {!blocked&&pending&&<section aria-label="未确认原命令"><p>{pending.corrupt?'本地命令损坏，不能再次发送，请查询原提交记录或退出重登。':'原命令尚未确认，新操作已暂停。'}</p>
@@ -258,6 +259,8 @@ export function Ai2Workspace({scope,session,packageId,cycleId,currentScope}) {
       <Snapshot value={detail.childSnapshot} />{detail.sourceAvailability!=='available'&&<p role="status">{detail.sourceAvailability==='missing'?'原来源已不可用，保留发布时内容。':'来源暂时无法读取，保留发布时内容。'}</p>}
       {detail.pending&&<p role="status">有待处理提交，请原提交者查询并恢复。</p>}
       {attempt&&showAttempt(attempt)}
+      {parent&&detail.visibility==='published'&&detail.learningState==='approved'&&!detail.pending&&<Link
+        to={`/app/practice?childId=${scope.childId}&packageId=${detail.id}`}>准备变式练习</Link>}
       {!parent&&<fieldset disabled={locked||!canSubmit||mediaBusy} className="task-editor-fields">
         <label className="family-field-wide">订正说明<textarea maxLength={1000} value={note} onChange={e=>setNote(normalize(e.target.value))} /></label>
         <Ai2Media {...mediaProps} values={mediaIds} onChange={setMediaIds} disabled={locked||!canSubmit} onBusyChange={setMediaBusy} onBlockedChange={setMediaBlocked} />

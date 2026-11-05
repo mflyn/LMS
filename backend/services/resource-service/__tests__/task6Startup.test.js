@@ -247,4 +247,49 @@ describe('resource-service Task 6 startup contract', () => {
 
     expect(order).toEqual(['connect', 'media-app', 'listen:3005']);
   });
+
+  test('an installed AI3 readiness hook finishes before listening', async () => {
+    const serverModule = require('../server'), order = [];
+    let entered, release;
+    const ready = new Promise(resolve => { entered = resolve; });
+    const barrier = new Promise(resolve => { release = resolve; });
+    const app = { locals: { assertAi3Ready: jest.fn(async () => {
+      order.push('precheck'); entered(); await barrier; order.push('ready');
+    }) }, listen: jest.fn((port, callback) => {
+      order.push('listen'); callback(); return listener(port);
+    }) };
+    const outcome = serverModule.startServer({ app, connection: startupConnection(),
+      validateEnvironment() {}, connect: async () => order.push('connect') })
+      .then(server => ({ server }), error => ({ error }));
+    try {
+      await Promise.race([ready, outcome.then(() => { throw Error('Startup exited before readiness'); })]);
+      expect(app.listen).not.toHaveBeenCalled();
+      expect(order).toEqual(['connect', 'precheck']);
+    } finally { release(); await outcome; }
+    expect((await outcome).error).toBeUndefined();
+    expect(order).toEqual(['connect', 'precheck', 'ready', 'listen']);
+    expect(app.locals.assertAi3Ready).toHaveBeenCalledTimes(1);
+  });
+
+  test('a rejected readiness hook cannot listen or close a caller-owned connection', async () => {
+    const serverModule = require('../server'), connection = startupConnection();
+    const app = { locals: { assertAi3Ready: jest.fn().mockRejectedValue(Error('synthetic private readiness detail')) },
+      listen: jest.fn() };
+    await expect(serverModule.startServer({ app, connection, validateEnvironment() {}, connect: async () => {} }))
+      .rejects.toMatchObject({ code: 'COMPLETION_STARTUP_FAILED', message: 'COMPLETION_STARTUP_FAILED' });
+    expect(app.locals.assertAi3Ready).toHaveBeenCalledTimes(1);
+    expect(app.listen).not.toHaveBeenCalled(); expect(connection.close).not.toHaveBeenCalled();
+  });
+
+  test.each(['off', 'enabled'])('AI3 %s continuous storage rejects injected runtime before connecting', async mode => {
+    const serverModule = require('../server'), connect = jest.fn(), validateEnvironment = jest.fn();
+    const app = { listen: jest.fn() };
+    const env = { AI3_MODE: mode, AI3_STORE_CONTINUOUS: 'true', AI2_STORE_CONTINUOUS: 'true',
+      AI3_EVIDENCE_TOKEN: 'synthetic-ai3-readiness-distinct-token-32',
+      COMPLETION_PROTOCOL_MODE: 'enabled', COMPLETION_WRITES_PAUSED: 'true', MONGO_URI: 'mongodb://127.0.0.1:1/unused' };
+    await expect(serverModule.startServer({ env, app, connection: startupConnection(), connect, validateEnvironment }))
+      .rejects.toMatchObject({ code: 'COMPLETION_STARTUP_FAILED' });
+    expect(connect).not.toHaveBeenCalled(); expect(validateEnvironment).not.toHaveBeenCalled();
+    expect(app.listen).not.toHaveBeenCalled();
+  });
 });

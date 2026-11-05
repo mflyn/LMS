@@ -33,6 +33,7 @@ const createMediaCleanupService = ({
     }
     const cutoff = new Date(Number(now()) - retentionDays * DAY_MS);
     const candidates = await MediaAssetModel.find({
+      purpose: { $ne: 'ai3_practice' },
       privacyDeletionRecorded: { $ne: true },
       orphanRetirementId: { $exists: false },
       status: 'deleted',
@@ -57,6 +58,7 @@ const createMediaCleanupService = ({
       await mediaStore.remove(asset.storageKey);
       const removed = await MediaAssetModel.deleteOne({
         _id: asset._id,
+        purpose: { $ne: 'ai3_practice' },
         privacyDeletionRecorded: { $ne: true },
         orphanRetirementId: { $exists: false },
         status: 'deleted',
