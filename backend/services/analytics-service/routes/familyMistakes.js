@@ -344,22 +344,31 @@ const createFamilyMistakesRouter = ({
       }
 
       const changedState = stateChangedBy(mistakePatch);
-      let updatedMistake = mistake;
-      if (changedState) {
-        updatedMistake = await runTransaction(async (session) => {
-          const transactionalMistake = await MistakeModel.findById(mistake._id).session(session);
-          if (!transactionalMistake) {
-            const error = new Error('Mistake not found');
-            error.status = 404;
-            error.code = 'RESOURCE_NOT_FOUND';
-            throw error;
-          }
-          Object.keys(mistakePatch).forEach((field) => {
-            transactionalMistake[field] = mistakePatch[field];
-          });
-          transactionalMistake.updatedBy = req.user.id;
-          await transactionalMistake.validate({ validateModifiedOnly: true });
-          await transactionalMistake.save({ validateModifiedOnly: true, session });
+      const updatedMistake = await runTransaction(async (session) => {
+        const transactionalMistake = await MistakeModel.findById(mistake._id)
+          .select('+mediaReferenceState').session(session);
+        if (!transactionalMistake) {
+          const error = new Error('Mistake not found');
+          error.status = 404;
+          error.code = 'RESOURCE_NOT_FOUND';
+          throw error;
+        }
+        if (transactionalMistake.mediaReferenceState === 'pending') {
+          throw Object.assign(new Error('Media update is pending'), { status: 409, code: 'MEDIA_REFERENCE_PENDING' });
+        }
+        const revision = transactionalMistake.stateRevision === undefined ? 0 : transactionalMistake.stateRevision;
+        if (!Number.isSafeInteger(revision) || revision < 0 || revision >= Number.MAX_SAFE_INTEGER) {
+          throw Object.assign(new Error('Invalid state revision'), { status: 503, code: 'STATE_EVENT_UNAVAILABLE' });
+        }
+        Object.keys(mistakePatch).forEach((field) => {
+          transactionalMistake[field] = mistakePatch[field];
+        });
+        transactionalMistake.updatedBy = req.user.id;
+        transactionalMistake.stateRevision = revision + 1;
+        transactionalMistake.increment();
+        await transactionalMistake.validate({ validateModifiedOnly: true });
+        await transactionalMistake.save({ validateModifiedOnly: true, session });
+        if (changedState) {
           try {
             await StateEventModel.create([{
               familyId: transactionalMistake.familyId,
@@ -374,16 +383,9 @@ const createFamilyMistakesRouter = ({
           } catch (error) {
             throw stateEventUnavailable();
           }
-          return transactionalMistake;
-        });
-      } else {
-        Object.keys(mistakePatch).forEach((field) => {
-          mistake[field] = mistakePatch[field];
-        });
-        mistake.updatedBy = req.user.id;
-        await mistake.validate({ validateModifiedOnly: true });
-        await mistake.save({ validateModifiedOnly: true });
-      }
+        }
+        return transactionalMistake;
+      });
 
       return res.json({ success: true, data: { mistake: mistakeView(updatedMistake) } });
     } catch (error) {

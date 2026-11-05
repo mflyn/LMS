@@ -283,7 +283,13 @@ const createSnapshotBuilder = ({ repository }) => async ({
     weekEnd,
     timezone,
     statistics,
-    generatedSuggestion: buildGeneratedSuggestion({ weeklyMistakes, dimensionStats: dimensionTaskStats }),
+    generatedSuggestion: buildGeneratedSuggestion({
+      weeklyMistakes: weeklyMistakes.map((row) => {
+        const event = lastMistakeEvents.get(String(row.mistakeId));
+        return event ? { ...row, mastered: event.mastered } : row;
+      }),
+      dimensionStats: dimensionTaskStats
+    }),
     sourceCutoffAt: cutoff,
     generatedAt
   };

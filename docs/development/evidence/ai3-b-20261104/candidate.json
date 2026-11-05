@@ -1,0 +1,71 @@
+{
+  "base": "a4f051e26f3514da051910a3495e11b149a32c45",
+  "parentCandidate": {
+    "path": "../ai3-a-20261104/candidate.patch",
+    "sha256": "63b488422575bdc4a63b66c475184040b8e58bf34bdb1a93ce1d43e649d7a0ae"
+  },
+  "scope": "AI3-B shared ledger foundation only; delta on AI3-A, not a whole-workspace or real-send acceptance",
+  "files": [
+    {
+      "path": "backend/services/homework-service/models/Ai1.js",
+      "sha256": "6d055ec781f100bc2778e7979cbebde1d3e3c273307f0d3139fc02bae2e79ec3",
+      "priorSha256": "24195d2928e98ec1b1f975483019f31954a8e503b2707324ba7ffc88a5fb5e0c"
+    },
+    {
+      "path": "backend/services/homework-service/models/Ai3.js",
+      "sha256": "61eabfc07bb6c255df72e5ea4a677ed77961c291a4d9a7ba680baa8193a894bf",
+      "priorSha256": "ca7ea9c9136874d4b6a55a5106ba1d5296804eeeb6df1dc472df5cac6cb5dd91"
+    },
+    {
+      "path": "backend/services/homework-service/services/aiGenerationBudget.js",
+      "sha256": "bb08f26e11b6bf251e08b41952793c2296176d8a9e153997bd0c3cd8316c2e37",
+      "priorSha256": null
+    },
+    {
+      "path": "backend/services/homework-service/services/ai1Service.js",
+      "sha256": "76851038d2253522d218ce85f991883443c712f76624b31c9a79ce9478cf122a",
+      "priorSha256": "3b96d02b9eeb73adf601348bc2430c3d9a8dff8aa7ab66c7f2f52ac43660fb13"
+    },
+    {
+      "path": "backend/services/homework-service/services/ai1Runtime.js",
+      "sha256": "b19ec1c7dad9a2f39a5cb5f7671e3491bd265990a625620d00828c0b965692a3",
+      "priorSha256": "14d1e19cf2c507337e0456082ade8cdae42ac8b77aea868a937a56b67cfebbca"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3Budget.test.js",
+      "sha256": "fa65f4f49c8174128b577ea7840ce49a30f51198d98decc75aa75bbe74dc08b9",
+      "priorSha256": null
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai1Service.test.js",
+      "sha256": "5a2c6584666f4ff7bd8ea692bd234b4089d28347e51f4118eae81c810c5213a2",
+      "priorSha256": "2131d4dd135de42d28d5ac8a1bf6af71e17d1026d706cb19404cbad72fcf9709"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai1Runtime.test.js",
+      "sha256": "d92e99ea71d34a0c3c367ef4a3ac80d874439f7eb73cf6c818004d653eaed4b3",
+      "priorSha256": "8a05a046b6485a2817dad625938307fae222e5b23828b4f76b46c2e27e212e28"
+    }
+  ],
+  "patch": {
+    "path": "candidate.patch",
+    "sha256": "83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8"
+  },
+  "metadata": "README and verification summaries are not part of source digest; approval records separately archived",
+  "approvalRecords": {
+    "path": "approval-records.patch",
+    "sha256": "464e795e8e2d3157206a032bc2dd0cad48aa07451e6c0fc38246fbeb07702ca1",
+    "files": [
+      {
+        "path": "docs/development/evidence/ai3-a-20261104/README.md",
+        "priorSha256": "7b177ecbef29c9b4011b8762d2a0774afa6821683bc1248df83b426300df971b",
+        "sha256": "bd590879732627214176cc17a4739590e743479cb72e04ec880ff53f14f438f4"
+      },
+      {
+        "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "priorSha256": "00a76f8a9ca3bd6e7dafd4e6477834ec2d4eb85c2b7296655488305e3998d516",
+        "sha256": "b5d73762087b033d47b84457a114e36111ae1e1625014458b9ad73b9daef70fd"
+      }
+    ]
+  }
+}

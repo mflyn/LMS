@@ -12,7 +12,7 @@ const closed = (value, required, optional = []) => object(value)
   && Object.keys(value).every(key => required.includes(key) || optional.includes(key));
 const invalid = () => new AppError('VALIDATION_ERROR', 400, 'VALIDATION_ERROR', true, []);
 const unavailable = () => new AppError('MEDIA_SERVICE_UNAVAILABLE', 503, 'MEDIA_SERVICE_UNAVAILABLE', true, []);
-const validate = body => {
+const validate = (body, ai3) => {
   if (!closed(body, ['familyId', 'childId', 'identity', 'mediaIds', 'bindings'])
     || ![body.familyId, body.childId].every(value => matches(value, ID))
     || !closed(body.identity, ['id', 'role'], ['familyId', 'childId', 'tokenVersion'])
@@ -26,8 +26,8 @@ const validate = body => {
     || !Array.isArray(body.bindings) || body.bindings.length !== body.mediaIds.length) throw invalid();
   body.bindings.forEach((binding, index) => {
     if (!closed(binding, ['mediaId', 'resourceType', 'resourceId', 'field', 'bindingOperationId'])
-      || binding.mediaId !== body.mediaIds[index] || binding.resourceType !== 'ai2_attempt'
-      || !matches(binding.resourceId, ID) || binding.field !== 'correctionMediaIds'
+      || binding.mediaId !== body.mediaIds[index] || binding.resourceType !== (ai3 ? 'ai3_attempt' : 'ai2_attempt')
+      || !matches(binding.resourceId, ID) || binding.field !== (ai3 ? 'practiceMediaIds' : 'correctionMediaIds')
       || !matches(binding.bindingOperationId, UUID)) throw invalid();
   });
 };
@@ -43,11 +43,12 @@ const metadata = (items, mediaIds) => {
 };
 const safeErrors = new Map([
   ['INVALID_SERVICE_CREDENTIAL', 401], ['VALIDATION_ERROR', 400], ['CHILD_ACCESS_DENIED', 403],
-  ['RESOURCE_NOT_FOUND', 404], ['MEDIA_SERVICE_UNAVAILABLE', 503], ['AI2_NOT_READY', 503]
+  ['RESOURCE_NOT_FOUND', 404], ['MEDIA_SERVICE_UNAVAILABLE', 503], ['AI2_NOT_READY', 503], ['AI3_NOT_READY', 503]
 ]);
 
-const createAi2MediaInspectRouter = ({ serviceToken, mediaService, assertAi2Continuous = () => {} } = {}) => {
-  if (typeof mediaService?.inspect !== 'function' || typeof assertAi2Continuous !== 'function') {
+const createAttemptMediaInspectRouter = (ai3, { serviceToken, mediaService, assertContinuous = () => {} } = {}) => {
+  const inspect = ai3 ? mediaService?.inspectAi3 : mediaService?.inspect;
+  if (typeof inspect !== 'function' || typeof assertContinuous !== 'function') {
     throw new TypeError('AI2 inspection dependencies required');
   }
   const credential = createMediaReferenceCredential(serviceToken);
@@ -55,11 +56,11 @@ const createAi2MediaInspectRouter = ({ serviceToken, mediaService, assertAi2Cont
   // Mounted ahead of the app JSON parser so unauthenticated/malformed payloads never reach generic error logging.
   router.post('/inspect', credential, express.json({ limit: '32kb' }), (req, res, next) => {
     Promise.resolve().then(() => {
-      assertAi2Continuous();
-      validate(req.body);
-      return mediaService.inspect(req.body);
+      assertContinuous();
+      validate(req.body, ai3);
+      return inspect(req.body);
     }).then(items => {
-      assertAi2Continuous();
+      assertContinuous();
       res.set('Cache-Control', 'no-store');
       res.json({ success: true, data: { items: metadata(items, req.body.mediaIds) } });
     }).catch(next);
@@ -74,4 +75,10 @@ const createAi2MediaInspectRouter = ({ serviceToken, mediaService, assertAi2Cont
   return router;
 };
 
-module.exports = { createAi2MediaInspectRouter };
+const createAi2MediaInspectRouter = ({ assertAi2Continuous, ...options } = {}) =>
+  createAttemptMediaInspectRouter(false, { ...options, assertContinuous: assertAi2Continuous });
+const createAi3MediaInspectRouter = ({ assertAi3Continuous = () => {
+  throw new AppError('AI3_NOT_READY', 503, 'AI3_NOT_READY', true, []);
+}, ...options } = {}) =>
+  createAttemptMediaInspectRouter(true, { ...options, assertContinuous: assertAi3Continuous });
+module.exports = { createAi2MediaInspectRouter, createAi3MediaInspectRouter };

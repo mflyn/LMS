@@ -1,4 +1,4 @@
-const { fieldFor, purposeFor, validPair, typedScope, referenceSetHash } = require('../../../common/services/completionMediaProtocol');
+const { fieldFor, purposeFor, validPair, typedScope, referenceSetHash, isAttemptType } = require('../../../common/services/completionMediaProtocol');
 const { AppError } = require('../../../common/middleware/errorTypes');
 const MediaAsset = require('../models/MediaAsset');
 const MediaReference = require('../models/MediaReference');
@@ -57,10 +57,11 @@ const referenceKey = (command, reference) => ({
 const createMediaReferenceOperationService = ({
   MediaAssetModel = MediaAsset, MediaReferenceModel = MediaReference,
   OperationModel = MediaReferenceOperation, transactionRunner, now = Date.now, leaseSeconds = 900,
-  ai2Mode = () => 'off'
+  ai2Mode = () => 'off', ai3Mode = () => 'off'
 } = {}) => {
   if (typeof transactionRunner !== 'function') throw new Error('transactionRunner is required');
-  if (typeof now !== 'function' || typeof ai2Mode !== 'function' || !Number.isInteger(leaseSeconds) || leaseSeconds < 1 || leaseSeconds > 3600) {
+  if (typeof now !== 'function' || typeof ai2Mode !== 'function' || typeof ai3Mode !== 'function'
+    || !Number.isInteger(leaseSeconds) || leaseSeconds < 1 || leaseSeconds > 3600) {
     throw new Error('Invalid operation clock or lease duration');
   }
 
@@ -98,7 +99,7 @@ const createMediaReferenceOperationService = ({
   };
   const response = (command, operation, rows, time, proofs) => ({
     operation: command.operationId ? {
-      ...typedScope(command), ...(command.resourceType === 'ai2_attempt' ? { referenceSetHash: operation?.referenceSetHash || null } : {}),
+      ...typedScope(command), ...(isAttemptType(command.resourceType) ? { referenceSetHash: operation?.referenceSetHash || null } : {}),
       operationId: command.operationId, state: operation?.state || 'ABSENT', commandHash: operation?.commandHash || null,
       leaseExpiresAt: operation?.state === 'PREPARED' ? operation.leaseExpiresAt.toISOString() : null,
       leaseExpired: operation?.state === 'PREPARED' ? time >= operation.leaseExpiresAt : null,
@@ -129,7 +130,7 @@ const createMediaReferenceOperationService = ({
       if (!asset || asset.status !== 'active') return 'RESOURCE_NOT_FOUND';
       if (String(asset.familyId) !== command.familyId || String(asset.childId) !== command.childId) return 'CHILD_ACCESS_DENIED';
       if (asset.purpose !== purposeFor(command.resourceType) || !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)
-        || command.resourceType === 'ai2_attempt' && (String(asset.uploadedBy) !== command.childId
+        || isAttemptType(command.resourceType) && (String(asset.uploadedBy) !== command.childId
           || !Number.isSafeInteger(asset.sizeBytes) || asset.sizeBytes < 1 || asset.sizeBytes > 10 * 1024 * 1024)) {
         return 'MEDIA_PURPOSE_MISMATCH';
       }
@@ -236,6 +237,9 @@ const createMediaReferenceOperationService = ({
     return transact(async (session) => {
       if (command.resourceType === 'ai2_attempt' && ['prepare', 'commit'].includes(action) && ai2Mode() !== 'enabled') {
         throw error(503, 'AI2_DISABLED');
+      }
+      if (command.resourceType === 'ai3_attempt' && ['prepare', 'commit'].includes(action) && ai3Mode() !== 'enabled') {
+        throw error(503, 'AI3_DISABLED');
       }
       let operation = await OperationModel.findOne(operationKey(command)).session(session).lean();
       let rows = await readReferences(command, session);

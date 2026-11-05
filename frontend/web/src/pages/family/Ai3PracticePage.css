@@ -1,0 +1,10 @@
+.ai3-page .ai2-snapshot > .family-record { display: block; margin: 12px 0; }
+.ai3-page .ai2-snapshot h3 { margin-top: 0; }
+.ai3-page .ai2-snapshot strong { display: block; }
+.ai3-page fieldset { border: 0; padding: 0; }
+.ai3-page input:not([type="checkbox"]):not([type="file"]),
+.ai3-page select { display: block; box-sizing: border-box; width: 100%; max-width: 420px; min-height: 44px; padding: 8px; border: 1px solid #cbd5df; border-radius: 4px; background: #fff; color: #24343b; font: inherit; }
+.ai3-page .family-record { flex-wrap: wrap; gap: 8px; }
+.ai3-page .family-record > .family-button { flex: 0 0 auto; }
+.ai3-page .family-record > p { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.ai3-page .family-record a { overflow-wrap: anywhere; }

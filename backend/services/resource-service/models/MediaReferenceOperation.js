@@ -15,7 +15,7 @@ const referenceSchema = new Schema({
 // deleting them would allow a delayed prepare to resurrect an aborted operation.
 const schema = new Schema({
   familyId: objectId(), childId: objectId(), resourceId: objectId(),
-  resourceType: { type: String, enum: ['growth_task', 'ai2_attempt'], required: true, immutable: true },
+  resourceType: { type: String, enum: ['growth_task', 'ai2_attempt', 'ai3_attempt'], required: true, immutable: true },
   field: completionField(),
   operationId: { type: String, required: true, immutable: true, lowercase: true, match: UUID },
   commandHash: digest(),

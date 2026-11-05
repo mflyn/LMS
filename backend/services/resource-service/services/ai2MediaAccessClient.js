@@ -8,7 +8,7 @@ const shape = (value, keys) => value && typeof value === 'object' && !Array.isAr
 const matches = (value, pattern) => typeof value === 'string' && pattern.test(value);
 const unavailable = () => new AppError('Media access dependency unavailable', 503, 'MEDIA_SERVICE_UNAVAILABLE', true, []);
 
-const createAi2MediaAccessClient = ({ axiosInstance = axios, homeworkServiceUrl, serviceToken, timeout = 3000 } = {}) => {
+const createAttemptMediaAccessClient = (profile, { axiosInstance = axios, homeworkServiceUrl, serviceToken, timeout = 3000 } = {}) => {
   let url;
   try { url = new URL(homeworkServiceUrl); } catch (_) { throw new Error('HOMEWORK_SERVICE_URL is required'); }
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
@@ -16,7 +16,7 @@ const createAi2MediaAccessClient = ({ axiosInstance = axios, homeworkServiceUrl,
   }
   if (typeof serviceToken !== 'string' || serviceToken.length < 32) throw new Error('MEDIA_REFERENCE_SERVICE_TOKEN is required');
   if (!Number.isSafeInteger(timeout) || timeout < 1 || typeof axiosInstance?.post !== 'function') throw new Error('Invalid media access transport');
-  const endpoint = `${url.toString().replace(/\/+$/, '')}/api/internal/ai2/media-access-check`;
+  const endpoint = `${url.toString().replace(/\/+$/, '')}/api/internal/${profile}/media-access-check`;
   const check = async input => {
     if (!shape(input, ['familyId', 'childId', 'actorId', 'role', 'mediaId', 'bindings'])
       || ![input.familyId, input.childId, input.actorId, input.mediaId].every(v => matches(v, ID))
@@ -44,4 +44,6 @@ const createAi2MediaAccessClient = ({ axiosInstance = axios, homeworkServiceUrl,
   return { check };
 };
 
-module.exports = { createAi2MediaAccessClient };
+const createAi2MediaAccessClient = options => createAttemptMediaAccessClient('ai2', options);
+const createAi3MediaAccessClient = options => createAttemptMediaAccessClient('ai3', options);
+module.exports = { createAi2MediaAccessClient, createAi3MediaAccessClient };

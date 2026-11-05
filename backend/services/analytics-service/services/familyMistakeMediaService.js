@@ -81,8 +81,11 @@ const createFamilyMistakeMediaService = ({
 
   const update = (filter, updateDocument, session = null) => {
     let query = FamilyMistakeModel.findOneAndUpdate(
-      filter,
-      updateDocument,
+      { ...filter, $and: [...(filter.$and || []), { $or: [
+        { stateRevision: { $exists: false } },
+        { stateRevision: { $gte: 0, $lt: Number.MAX_SAFE_INTEGER, $mod: [1, 0] } }
+      ] }] },
+      { ...updateDocument, $inc: { ...updateDocument.$inc, stateRevision: 1 } },
       { new: true, runValidators: true }
     );
     if (session && typeof query.session === 'function') query = query.session(session);

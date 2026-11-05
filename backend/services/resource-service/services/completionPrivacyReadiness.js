@@ -1,5 +1,5 @@
 const { assertMediaReferenceOperationReadiness } = require('./mediaReferenceOperationReadiness');
-const { validPair, purposeFor, protocolPurposes, protocolFields, validAi2MediaMetadata } = require('../../../common/services/completionMediaProtocol');
+const { validPair, purposeFor, protocolPurposes, protocolFields, validAi2MediaMetadata, isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 
 // Native reads only. Model imports could create indexes before the preflight checks them.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?![\s\S])/;
@@ -75,7 +75,7 @@ const assertCompletionPrivacyReadiness = async ({ connection, writesPaused } = {
     const matchesAsset = (asset, tombstone) => sameId(asset._id, tombstone.mediaId)
       && sameId(asset.familyId, tombstone.familyId) && sameId(asset.childId, tombstone.childId)
       && asset.purpose === tombstone.purpose && protocolPurposes.includes(asset.purpose) && asset.status === 'deleted' && asset.privacyDeletionRecorded === true
-      && (tombstone.purpose !== 'ai2_correction' || validAi2MediaMetadata(tombstone)
+      && (!isAttemptPurpose(tombstone.purpose) || validAi2MediaMetadata(tombstone)
         && asset.mimeType === tombstone.mimeType && asset.sizeBytes === tombstone.sizeBytes)
       && sameTime(asset.deletedAt, tombstone.deletedAt);
 
@@ -83,7 +83,7 @@ const assertCompletionPrivacyReadiness = async ({ connection, writesPaused } = {
       if (![tombstone._id, tombstone.mediaId, tombstone.familyId, tombstone.childId, tombstone.actorId].every(oid)
         || !['parent', 'student'].includes(tombstone.role) || !protocolPurposes.includes(tombstone.purpose)
         || tombstone.reason !== 'user_requested' || !date(tombstone.deletedAt)
-        || (tombstone.purpose === 'ai2_correction' ? !validAi2MediaMetadata(tombstone)
+        || (isAttemptPurpose(tombstone.purpose) ? !validAi2MediaMetadata(tombstone)
           : tombstone.mimeType !== undefined || tombstone.sizeBytes !== undefined)
         || (tombstone.role === 'student' && !sameId(tombstone.actorId, tombstone.childId))) {
         issues.add('TOMBSTONE_INVALID'); return;

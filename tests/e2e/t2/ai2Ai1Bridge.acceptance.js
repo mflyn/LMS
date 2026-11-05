@@ -79,7 +79,8 @@ test('PUB01/FLOW01 actual AI1 revision and approval bridge into the child AI2 co
     AI1_REMOTE_STORE_CONTINUOUS: 'true', AI1_PROVIDER_PROFILE_CONFIRMED: 'true', AI1_OPERATION_URL: origin.origin,
     AI1_OPERATION_TOKEN: 'synthetic-service-credential-00000001', AI1_MODEL_PROFILE: process.env.AI1_ACTUAL_REMOTE_PROFILE,
     AI1_BUDGET_LIMITS: JSON.stringify({ singleMicros: 16384, dayMicros: 163840, monthMicros: 163840, experimentMicros: 163840 }),
-    AI2_MODE: 'enabled', AI2_STORE_CONTINUOUS: 'true' };
+    AI2_MODE: 'enabled', AI2_STORE_CONTINUOUS: 'true',
+    ...(process.env.AI3_BRIDGE === 'true' ? { AI3_MODE: 'enabled', AI3_STORE_CONTINUOUS: 'true' } : {}) };
   previous = Object.fromEntries(Object.keys(config).map(key => [key, process.env[key]]));
   runtime = await createT2WebRuntime({ beforeStart: () => Object.assign(process.env, config) });
   expect(runtime.mode).toBe('enabled'); expect(runtime.modelConnectionsMatch).toBe(true);
@@ -355,4 +356,10 @@ test('PUB01/FLOW01 actual AI1 revision and approval bridge into the child AI2 co
     childSnapshotHash: expectedSnapshotHash, packageVersions: [1, 3, 4, 6, 7], attempts: 2,
     ai1UnchangedExceptPublicationCas: true, businessUnchanged: true, businessWriteCallsDuringAi2: 0,
     rejectedWriteProbeCount: 1, deniedTcpProbeCount: 3, unexpectedTcpCount: 0 }));
+  if (process.env.AI3_BRIDGE === 'true') {
+    await require('./ai3PracticeFlow').runAi3Flow({ page, browser, browserName, info, runtime, parent, packageId, source });
+    expect(seen.errors).toEqual([]); expect(seen.console).toEqual([]); expect(seen.external).toEqual([]);
+    expect(seen.failed).toEqual([]);
+    expect(deniedTcp).toEqual(Array(3).fill('non-loopback TCP denied'));
+  }
 });

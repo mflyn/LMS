@@ -8017,3 +8017,161 @@ USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY，当前唯一状态声明位于本Ga
 所有历史IMPLEMENTING/OPEN/待批准描述保留为当时快照，不覆盖本次用户明确授权。
 DEVICE_PENDING、AI2-VIEW-NB-001及T5-NB-001/002、T4/T8/AI-1 OPEN、Docker INCOMPLETE_FAILED、
 QUALIFIED_COUNTER_PENDING及REMAINDER_DEFERRED保持。未调用模型、未提交推送合并、未部署，不自动启动后续业务。
+
+### AI3-1 设计批准与首批本地实现（2026-11-04）
+
+用户明确批准AI3-1最小设计、API、测试方案及设计§1取舍：AI3-1 ACCEPTED / USER_APPROVED。
+孩子提交摘要P1与事件生效时间P2 CLOSED / USER_APPROVED，原设计待审与复审证据保留在
+[测试计划§5/6](family-ai3-test-plan.md#5-本轮设计检查记录2026-11-04)。
+AI-3 OPEN / IMPLEMENTING，首批仅未装配的手工候选状态闭环，批次仍待验收；
+范围、永久反例、验证与独立评审见[首批交付记录](evidence/ai3-a-20261104/README.md)。
+无AI3生产路由、真实模型、媒体写入、复习效果写回或页面验收，不将局部通过等同完整28行或总门禁通过。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、非阻断补测、计数资格待验及后置范围保持。
+本次仅追加此段，既有未提交T8及合并后状态记录不覆盖；不提交推送、部署或提前关闭AI-3。
+
+### AI3-A 批次批准与后续共享账本实施（2026-11-04）
+
+用户在本轮只读复审后批准AI3-A ACCEPTED / USER_APPROVED，readiness P2及相关两项测试保护缺口 CLOSED / USER_APPROVED。
+绑定[首批批准记录](evidence/ai3-a-20261104/README.md#用户批准与复审绑定2026-11-04)、原10文件冻结候选与
+补丁`63b488422575bdc4a63b66c475184040b8e58bf34bdb1a93ce1d43e649d7a0ae`；本轮独立41项通过与开发完整1751项分开。
+原权限失败、其他历史红灯与当时待审记录不回写。下一批为AI3-B共享费用账本/发送占位基础，未获批前不自动验收。
+AI-3 OPEN；T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测、计数待验及后置范围保持。
+仅本地合成实现与验证，无真实模型、提交推送或部署。
+
+### AI3-B 共享预算基础候选（2026-11-04）
+
+AI3-B IMPLEMENTED / USER_REVIEW_PENDING，AI-3 OPEN。范围及证据见[本批记录](evidence/ai3-b-20261104/README.md)。
+复用原AI1 Account/Reservation/Slot，封闭ai1/ai3 owner分派、旧字段缺失兼容、未知归属拒绝与精确释放；
+AI1实际接入，AI3仅内部事务consumer夹具，不宣称公共生成、Provider或原命令远端恢复已完成。
+候选8文件增量补丁SHA256 `83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8`，
+以上一批冻结为前置；未混入T8或既有AI1/AI2文档增量。
+开发相关19套445项在最后四补测前通过；最终完整homework 51套1776项通过、退出0。
+独立最终20项通过，与此前69项及开发全量分开；两项开发变异分别3/2反例拦截，独立仅核验日志未重跑变异。
+自查close脱敏及三项保护建议 FIXED_AND_INDEPENDENTLY_REVIEWED，随本批待用户验收。
+首轮EPERM（112断言通过但suite失败）、旧过期夹具1/19失败及完整1/1775失败、初始缺模块/变异工具失败均保留。
+冷竞争11000条件分支未保证每轮必触发，实际AI3公开编排重试仍属后批，不扩大本次验收。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数资格待验及后置范围不变。
+无真实模型、Git提交推送、合并或部署，不提前关闭AI-3。
+
+### AI3-B 限定合成验收批准（2026-11-04）
+
+AI3-B ACCEPTED / USER_APPROVED，绑定[批准与独立复验记录](evidence/ai3-b-20261104/README.md#本轮批准与独立复验)
+及原补丁`83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8`。
+本轮独立73+47项通过、两项变异3/2条目标反例拦截，与开发51套1776项和所有历史失败分开。
+继续AI3-C本地生成预览/原命令编排及冷初始化确定性重试；远端发送仍未装配，不调用真实模型。
+AI-3、T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数待验及后置范围保持。
+
+### AI3-C 本地生成准备候选（2026-11-04）
+
+AI3-C IMPLEMENTED / USER_REVIEW_PENDING；[本批证据](evidence/ai3-c-20261104/README.md)绑定九文件增量补丁
+`48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89`，不改写A/B旧冻结与失败快照。
+完整预览/共享预留/原actor持久命令/单次内部claim及冷初始化原ID重试已实现；无公开路由、远端发送或完整终态恢复。
+末端开关/报价重检P2修复后开发与独立各46项通过，独立不是全量；两项开发变异各3条反例实际拦截。
+P2 FIXED_AND_INDEPENDENTLY_REVIEWED，C批待验收；完整回归候选时点与其他限制见证据页，不提前关闭AI-3。
+最终冻结后原homework完整52套1799项通过，258.17秒、退出0，独立46项与开发全量分开；旧红灯及中途修改候选的早轮回归保持。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、两项非阻断补测、计数资格待验及后置范围不变。
+仅本地合成，无真实模型、Git提交推送、合并或部署。
+
+### AI3-C 限定合成验收批准（2026-11-04）
+
+AI3-C ACCEPTED / USER_APPROVED，末端claim开关/报价/截止点P2 CLOSED / USER_APPROVED。
+绑定[原冻结与本轮复审](evidence/ai3-c-20261104/README.md#当前批准2026-11-04)及补丁
+`48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89`。
+本轮独立46项通过、两项变异各3条拦截；开发52/1799仅核对原始日志，不冒充独立全量。
+继续下一批远端受限operation、原映射查询、终态结算与家长生成候选，仅合成替身验证。
+AI-3及T4/T8/AI-1 OPEN，DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、非阻断补测和后置范围保持。
+
+### AI3-D 受限远端与生成候选待验收（2026-11-04）
+
+AI3-D IMPLEMENTED / USER_REVIEW_PENDING，见[本批冻结与证据](evidence/ai3-d-20261104/README.md)。
+双仓局部实现完整profile摘要、单次发送claim、原映射GET、持久远端claim、事务结算与未发布家长候选。
+自查映射/结果引用/迟到accepted问题已补反例；独立发现深度输出和CRLF长度语义两项P2，修订后FIXED_AND_INDEPENDENTLY_REVIEWED，待用户批准关闭。
+独立LMS86项、DeepTutor236项加单独六项跨HTTP通过；开发全量、变异和历史失败另列，不互相替代。
+公共路由/页面与孩子作答/审核/复习效果未交付；本批真实HTTP只到受限内部工厂，Provider为替身。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数资格待验和后置范围不变。
+无真实模型、提交推送、合并或部署；AI-3总门禁OPEN。
+
+### AI3-D 完整请求32KiB P2修订候选（2026-11-04）
+
+旧D冻结复审发现完整请求超限发生于持久claim之后，远端413无operation导致未知费用/共享槽无法沿既有路径收敛。
+本轮仅修复LMS完整wire字节校验和claim前持久映射复核，补齐永久反例；[新候选及验证](evidence/ai3-d-size-20261104/README.md)
+以原D快照为前置，旧补丁、失败证据和历史通过记录保持不变。新预留超限零写；旧RESERVED只拒绝claim、不自动退款。
+本P2及随后历史超长UNKNOWN的P3测试缺口均FIXED_AND_INDEPENDENTLY_REVIEWED，待用户验收/关闭，AI3-D USER_REVIEW_PENDING，AI-3总门禁OPEN。
+最终独立两套100项、开发最终五套144项及跨HTTP六项通过；开发完整53套1858项在最后只补测试之前通过，业务源码一致，不能写成最终全部新测试全量。
+本轮夹具红灯、EPERM中止、旧源码回放及变异失败分别保留；四类变异拦截旧缺陷，不削弱原断言。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数资格待验和后置范围不变。
+仅本地合成，无真实模型、Git提交推送、合并或部署。
+
+### AI3-D 限定合成验收批准与 AI3-E 启动（2026-11-04）
+
+AI3-D ACCEPTED / USER_APPROVED；完整请求32KiB P2及历史UNKNOWN测试保护P3 CLOSED / USER_APPROVED。
+绑定[批准记录](evidence/ai3-d-size-20261104/acceptance.md)、原七文件冻结补丁
+`63992a837860554da5358a4d09a5c6fb0f7be7384ec6187e96a0b2e33888f2c1`及本轮独立144项、跨HTTP六项与四类变异证据。
+此前D批深度输出/CRLF修订随限定批次验收；旧候选、历史失败和当时待审快照不回写。
+继续AI3-E孩子提交与私有媒体，IMPLEMENTING / USER_REVIEW_PENDING，不提前交付最终审核/效果/页面或正式装配。
+AI-3总门禁OPEN；T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、
+QUALIFIED_COUNTER_PENDING及REMAINDER_DEFERRED保持。仅本地合成，不调用真实模型、不提交推送或部署。
+
+### AI3-E 孩子提交与私有媒体候选（2026-11-04）
+
+AI3-E IMPLEMENTED / USER_REVIEW_PENDING；[候选、冻结补丁与验证分层](evidence/ai3-e-20261104/README.md)。
+孩子提交的持久映射、所见发布内容绑定、owner/阶段/租约CAS、精确补偿及认证私有媒体已实现。
+本轮独立发现自身Round撤回阻塞、原命令依赖503被吞、最后远端授权等待和批量文件读取后的权限窗口，
+两项P1/两项P2均FIXED_AND_INDEPENDENTLY_REVIEWED，等待用户复审批准，不自行标为CLOSED。
+独立homework139项与resource118项通过；媒体临时副本九项反例全部拦截，开发回归与历史失败另列。
+生产/公开路由未挂载，家长最终审核、复习效果写回与页面仍待后续批次，不冒充正式浏览器验收。
+AI-3总门禁OPEN；T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、
+非阻断补测、QUALIFIED_COUNTER_PENDING及REMAINDER_DEFERRED不变。无真实模型、提交推送或部署。
+
+### AI3 后续工程集成进展（2026-11-05）
+
+**AI-3 gate:** CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY
+**AI3-E acceptance:** ACCEPTED / USER_APPROVED
+**AI-3 scope:** LOCAL_SYNTHETIC_ONLY
+**AI-3 real model:** NOT_AUTHORIZED / QUALIFIED_COUNTER_PENDING
+**AI-3 device:** DEVICE_PENDING
+**AI-3 retained gates:** T4 OPEN / T8 OPEN / AI-1 OPEN
+**AI-3 Docker audit:** INCOMPLETE_FAILED
+**AI-3 historical failures:** PRESERVED
+**AI-3 nonblocking:** PRESERVED
+**AI-3 deferred:** REMAINDER_DEFERRED
+**AI-3 delivery:** NOT_AUTHORIZED / NO_GIT / NO_DEPLOY
+
+当前[工程验收准备](evidence/ai3-integration-20261105/engineering-readiness.md)由现有文档校验器核对；
+唯一状态行按2026-11-05用户批准更新；缺失、重复、回退待审或扩大边界均拒绝，不创建新发布入口或自动审批。
+最新批准见[关闭记录](evidence/ai3-integration-20261105/closure-review.md)，以下进展正文保留批准前历史。
+
+上节保留E候选当时的未挂载边界；E仍USER_REVIEW_PENDING，不因后续编码自动批准。
+当前已实现最终审核、analytics/progress效果、家长/孩子页面及正式LMS装配，
+来源与版本历史补齐、实际验证层级和失败记录见[集成进展](evidence/ai3-integration-20261105/README.md)。
+独立来源31项及一次变异触发的三项权限等待反例、正式HTTP10项、周报跨周组合修复均分层记录；
+前端完整71套1163项通过不替代家庭后端全量或最后正式浏览器。
+先前后端209套46失败/163通过与JSON导出失败、随后6320通过/3失败及DeepTutor235通过/1超时全部保留。
+最后兼容/取消修订后，家庭210套6331项全通过；正式HTTP入口50应用/HTTP加57断言项、浏览器四组116.21秒通过。
+DeepTutor独立242项及两个永久取消屏障变异通过；源码145+14文件累计补丁重建验证，28项覆盖/逐要求审计已归并。
+本段不是用户批次批准或总门禁关闭。AI-3 OPEN / ENGINEERING_VERIFIED / USER_ACCEPTANCE_PENDING；T4/T8/AI-1 OPEN、
+DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数资格待验及后置范围不变。
+仅本地合成，不调用真实模型、不提交推送、合并或部署；不改写无关T8及AI-1/AI-2增量的交付分组。
+
+### AI3 完整候选复审修订（2026-11-05）
+
+用户授权先修复三处行为问题并补齐回归入口，再复验、冻结候选，最后决定总门禁。
+历史超限RESERVED的退款次序、临时pending草稿失败项丢失、分页导致已知未决锁丢失，
+以及analytics三套遗漏测试，见[修订与验证记录](evidence/ai3-integration-20261105/review-fixes.md)。
+原累计补丁及失败快照保留，修订候选经限定独立复核后仍待用户验收；不把旧全量通过自动沿用到新源码。
+本轮限定独立复核通过，三项行为永久反例及回归发现保护有效；新累计源码147+14文件已重建。
+家庭全量213套211过/2失败、6408项6406过/2失败、exit 1及JSON循环引用导出失败均保留；
+两项Git架构启动失败在系统Git优先的原套件定向复验106项通过，不能改称一次全量全绿。
+当前为FIXED_REVIEWED / USER_REVIEW_PENDING，最新源码、文档与分层证据继续由上述修订记录绑定。
+AI3-E USER_REVIEW_PENDING、AI-3 OPEN；T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+历史失败、非阻断补测及后置范围不变；无真实模型、Git交付或部署授权。
+
+### AI3 限定合成工程关闭批准（2026-11-05）
+
+用户在系统Git完整回归及关闭评审后明确批准：AI3-E及后续工程ACCEPTED / USER_APPROVED，
+AI-3 CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY。三项行为问题及遗漏回归入口修订验收通过。
+证据与范围见[关闭记录](evidence/ai3-integration-20261105/closure-review.md)。
+原家庭八项目213套6408项一次全通过，0失败/跳过、exit0、1002.451秒；新结果不覆盖旧6406过/2失败及JSON导出失败。
+源码147+14文件候选不变；新关闭文档和状态校验是独立增量，不改写旧冻结。
+保留T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、
+QUALIFIED_COUNTER_PENDING与REMAINDER_DEFERRED。真实模型、Git交付、合并和部署仍未授权。

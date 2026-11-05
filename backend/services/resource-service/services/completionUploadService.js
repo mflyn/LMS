@@ -7,13 +7,14 @@ const Family = require('../../../common/models/Family');
 const User = require('../models/FamilyUser');
 const { AppError } = require('../../../common/middleware/errorTypes');
 const { canonicalMetadata, hash, validateRecord } = require('./completionUploadRecord');
+const { isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 const { identityFor, matchesGuard } = require('./completionUploadGuardService');
 const error = (status, code) => new AppError(code, status, code, true, []);
 const pending = () => error(503, 'MEDIA_UPLOAD_PENDING');
 
 const authorize = async (record, session) => {
   const { identity, metadata: m } = record;
-  if (m.purpose === 'ai2_correction' && (identity.role !== 'student' || identity.id !== m.childId || identity.id !== m.uploadedBy)) {
+  if (isAttemptPurpose(m.purpose) && (identity.role !== 'student' || identity.id !== m.childId || identity.id !== m.uploadedBy)) {
     throw error(403, 'CHILD_ACCESS_DENIED');
   }
   const actor = await User.findOne({ _id: identity.id, role: identity.role }).session(session).lean();
@@ -25,11 +26,13 @@ const authorize = async (record, session) => {
 };
 
 const createCompletionUploadService = ({ transactionRunner, mediaStore, journal, now = Date.now,
-  ai2Mode = () => 'off' } = {}) => {
+  ai2Mode = () => 'off', ai3Mode = () => 'off' } = {}) => {
   if (typeof transactionRunner !== 'function' || typeof journal?.persist !== 'function'
-    || typeof ai2Mode !== 'function' || typeof mediaStore?.read !== 'function' || typeof mediaStore?.remove !== 'function') throw new TypeError('Upload dependencies required');
+    || typeof ai2Mode !== 'function' || typeof ai3Mode !== 'function'
+    || typeof mediaStore?.read !== 'function' || typeof mediaStore?.remove !== 'function') throw new TypeError('Upload dependencies required');
   const assertAi2Enabled = purpose => {
     if (purpose === 'ai2_correction' && ai2Mode() !== 'enabled') throw error(503, 'AI2_DISABLED');
+    if (purpose === 'ai3_practice' && ai3Mode() !== 'enabled') throw error(503, 'AI3_DISABLED');
   };
   const readState = async (record, session) => {
     if (!session?.inTransaction()) throw pending();
@@ -95,7 +98,7 @@ const createCompletionUploadService = ({ transactionRunner, mediaStore, journal,
       }
       throw pending();
     } catch (cause) {
-      if (cause instanceof AppError && (cause.statusCode < 500 || cause.code === 'AI2_DISABLED')) throw cause;
+      if (cause instanceof AppError && (cause.statusCode < 500 || ['AI2_DISABLED', 'AI3_DISABLED'].includes(cause.code))) throw cause;
       throw pending();
     }
   };
@@ -113,7 +116,7 @@ const createCompletionUploadService = ({ transactionRunner, mediaStore, journal,
     } catch (cause) {
       // No metadata attempt was dispatched; only this pre-write failure permits compensation.
       try { await mediaStore.remove(metadata.storageKey); } catch (_cleanup) { /* Quarantined for operator inspection. */ }
-      if (cause?.code === 'AI2_DISABLED') throw cause;
+      if (['AI2_DISABLED', 'AI3_DISABLED'].includes(cause?.code)) throw cause;
       throw pending();
     }
     return resume(record);

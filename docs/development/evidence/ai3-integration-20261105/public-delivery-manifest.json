@@ -1,0 +1,1163 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-05",
+  "scope": "SYNTHETIC_ENGINEERING_DRAFT_PR_ONLY",
+  "selfHash": "Excluded to avoid circular hash; Git commit identifies this manifest",
+  "repositories": [
+    {
+      "name": "mflyn/LMS",
+      "base": "a4f051e26f3514da051910a3495e11b149a32c45",
+      "files": [
+        {
+          "path": "backend/common/deployment/__tests__/ai3Activation.test.js",
+          "sha256": "eb769170b3087f09e54605dd3d4a3e60f9890137fc035e33f66a0c8072a07d7a",
+          "bytes": 2053
+        },
+        {
+          "path": "backend/common/deployment/__tests__/ai3Assembly.test.js",
+          "sha256": "f7e30c14ad651c317c14fa0359757fc65de57cdc1a62fcee8d224c9b120b0c1b",
+          "bytes": 3302
+        },
+        {
+          "path": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+          "sha256": "71ae63511ea536bc43a513746d33d317774d799a0953b65bdb4cec8d3feb05d1",
+          "bytes": 38553
+        },
+        {
+          "path": "backend/common/deployment/__tests__/task5Deployment.test.js",
+          "sha256": "6e53c4e5a973f417709f32893586f6e03180e3a906de1420c6e6965a0083914b",
+          "bytes": 8903
+        },
+        {
+          "path": "backend/common/routes/ai3EvidenceRouter.js",
+          "sha256": "f3455e51e434a32dd25ac5f2856efcfa8774b1f752449b93a59be600a715f7ce",
+          "bytes": 5790
+        },
+        {
+          "path": "backend/common/services/__tests__/ai3EvidenceClient.test.js",
+          "sha256": "c897dc0e95fe36cc868e7fe6158148ca20f2983e633939490d3e371d68ceb513",
+          "bytes": 10076
+        },
+        {
+          "path": "backend/common/services/__tests__/ai3EvidenceRouter.test.js",
+          "sha256": "af7ff8274d80545f0498f1d3ccadca48e8db777b9adbb04724a0a68285acc2a8",
+          "bytes": 17179
+        },
+        {
+          "path": "backend/common/services/__tests__/ai3ReviewEvidence.test.js",
+          "sha256": "39ed80c5f8020b756ce5e9fd0b438be7aa429792482a74561dfb487c937c4679",
+          "bytes": 6874
+        },
+        {
+          "path": "backend/common/services/ai3Activation.js",
+          "sha256": "8595ce21e773a39690da0210a2bf155452805741d3ac22210f2d9f00af8413d2",
+          "bytes": 1279
+        },
+        {
+          "path": "backend/common/services/ai3EvidenceClient.js",
+          "sha256": "dcd41d3356398fe0801fd34609c818e0b67d4bba40ecb448c0ab72908f0bd86b",
+          "bytes": 7439
+        },
+        {
+          "path": "backend/common/services/ai3ReviewEvidence.js",
+          "sha256": "869524b73fe2c021b22c15feb53f64a9773f6312abe48d4ae922ccf93c732da2",
+          "bytes": 6948
+        },
+        {
+          "path": "backend/common/services/ai3Runtime.js",
+          "sha256": "1d54b1dbb882810b1929576d23cec0b06c1d708ebeea50990558b606062e8810",
+          "bytes": 3581
+        },
+        {
+          "path": "backend/common/services/completionActivation.js",
+          "sha256": "9c8bb26852541e5b82cfcb3fa88bae15168d71c614980e6dbc640c3be8bd3fb6",
+          "bytes": 8151
+        },
+        {
+          "path": "backend/common/services/completionMediaProtocol.js",
+          "sha256": "4ed853c13f81e114aa5617812b6d4ee29af979a8fb90deb199ffb0ffb63fe5e8",
+          "bytes": 1875
+        },
+        {
+          "path": "backend/common/services/completionMediaReferenceClient.js",
+          "sha256": "200e822600aea2783ae75d6b20b0fd1ad56206d166b7e4a984afa664a7a15d10",
+          "bytes": 9860
+        },
+        {
+          "path": "backend/gateway/__tests__/ai3Routes.test.js",
+          "sha256": "73ef1fc1e591fda6776f7b55a92bcff9482854f8db825aa56b7084784485930c",
+          "bytes": 2800
+        },
+        {
+          "path": "backend/gateway/ai3ProxyInput.js",
+          "sha256": "91072f4be9ade02bac12bd2ab77b43170afef8f950652f37f6a5209069f7908f",
+          "bytes": 1624
+        },
+        {
+          "path": "backend/gateway/identityMiddleware.js",
+          "sha256": "3b392bbdb581f6cd38750b79a9dfb828102f0f93c8db09b7d8f46f25c3373ab0",
+          "bytes": 1606
+        },
+        {
+          "path": "backend/gateway/server.js",
+          "sha256": "b343f52b2f978b02937b2399aa388224d28aa31122fd5c408d6e9e6daa444881",
+          "bytes": 6601
+        },
+        {
+          "path": "backend/services/analytics-service/__tests__/ai3MistakeEffects.test.js",
+          "sha256": "35ce559a7d2bf1cefa3d10187a315a0aa6dc2e241bc2a58890f0e05c325d7dd2",
+          "bytes": 17282
+        },
+        {
+          "path": "backend/services/analytics-service/__tests__/ai3MistakeRevision.test.js",
+          "sha256": "243810e9736911f67f9dc4cc2eceeb786868d33f2a71a3ce1c1246ff213891c9",
+          "bytes": 5790
+        },
+        {
+          "path": "backend/services/analytics-service/__tests__/helpers/ai3MistakeFixtures.js",
+          "sha256": "5cd888168508ed7b4696f13982280fe5a5217d9fad3434f21ef0ab84ab8be539",
+          "bytes": 2306
+        },
+        {
+          "path": "backend/services/analytics-service/__tests__/startupCleanup.test.js",
+          "sha256": "7cca05791a0addc691876f57afbeb90af342f32c896095caf6985d675f3ab6c0",
+          "bytes": 4059
+        },
+        {
+          "path": "backend/services/analytics-service/__tests__/weeklyReports.test.js",
+          "sha256": "1e54fe281748618be337afd033eb586d1492d088e3b5d23a70f9da411ac84c57",
+          "bytes": 35686
+        },
+        {
+          "path": "backend/services/analytics-service/app.js",
+          "sha256": "ba98cc1dcf061f0ff17d49fb0ad5b69915c240dceb33688a1522fed97d64785a",
+          "bytes": 2693
+        },
+        {
+          "path": "backend/services/analytics-service/jest.attachments.config.js",
+          "sha256": "a0122b0ce72645cccb6f496ccaa68971fa94c105479b5b3838f9397dbfd0c299",
+          "bytes": 837
+        },
+        {
+          "path": "backend/services/analytics-service/models/Ai3ReviewEffectReceipt.js",
+          "sha256": "40b1dce1034de996db294d390c4b6d7b8527c73b8da9c90303237c728de5c1ed",
+          "bytes": 1315
+        },
+        {
+          "path": "backend/services/analytics-service/models/FamilyMistake.js",
+          "sha256": "e98384e2dd0b5211930e5b842ada1d16558a2709070cf06e8dcde215cac7c580",
+          "bytes": 5124
+        },
+        {
+          "path": "backend/services/analytics-service/models/FamilyMistakeStateEvent.js",
+          "sha256": "2c81d41fee877eb0d6b8a192d7782bf96bbcce741e15bb2f669f493ba87db4f2",
+          "bytes": 2103
+        },
+        {
+          "path": "backend/services/analytics-service/routes/familyMistakes.js",
+          "sha256": "ca9a61d5356b5cbb0bcde9c3f10f3d4d8ff6638c946fc9d13d93045f2d10fe5a",
+          "bytes": 16649
+        },
+        {
+          "path": "backend/services/analytics-service/server.js",
+          "sha256": "af82e6ef480ace6f47dd8e56f1c044f0f9a1e343f85e5d5e14c40a2e48a00cdf",
+          "bytes": 5782
+        },
+        {
+          "path": "backend/services/analytics-service/services/ai3MistakeEffectService.js",
+          "sha256": "b1e9a80609a77fa488a2a7daa5069028aa6baf40d24e2572199758cecaaab57d",
+          "bytes": 9560
+        },
+        {
+          "path": "backend/services/analytics-service/services/ai3Runtime.js",
+          "sha256": "794b5afed6109be919ed3960e837fc2a86d9b942521eed8a90701f53577a5668",
+          "bytes": 1307
+        },
+        {
+          "path": "backend/services/analytics-service/services/familyMistakeMediaService.js",
+          "sha256": "36acd1fddaf7c43b55b7aaf88487679f15a7510bbd7a983b1556b5c450de1f05",
+          "bytes": 15429
+        },
+        {
+          "path": "backend/services/analytics-service/services/weeklyReportService.js",
+          "sha256": "a45231b7054c887e67b3c78a6970ad67d14c9d88773d6baba704ffa37a0e72c4",
+          "bytes": 14983
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai1Runtime.test.js",
+          "sha256": "d92e99ea71d34a0c3c367ef4a3ac80d874439f7eb73cf6c818004d653eaed4b3",
+          "bytes": 12160
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai1Service.test.js",
+          "sha256": "5a2c6584666f4ff7bd8ea692bd234b4089d28347e51f4118eae81c810c5213a2",
+          "bytes": 50505
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai2Service.test.js",
+          "sha256": "d438be1d063fbb7bfa3dc690f4ae78b16844c20af5145a249e22ff58030db4e7",
+          "bytes": 39344
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Budget.test.js",
+          "sha256": "fa65f4f49c8174128b577ea7840ce49a30f51198d98decc75aa75bbe74dc08b9",
+          "bytes": 17699
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3ContentHistory.test.js",
+          "sha256": "06fae1f741e3758efd58ad95d86d73b2e6f9b419734d8feeec34eaa8feb46235",
+          "bytes": 15940
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Contract.test.js",
+          "sha256": "9f642006ccbaae4c5907a3d9fcc68478671911927e6bb9bda1c8f7575a710459",
+          "bytes": 3864
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3GenerationPreview.test.js",
+          "sha256": "35258d1979b5cc0ecc76d64d2eb99d4d2d24524e68b01f41308f290f7cafaa83",
+          "bytes": 3309
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3MediaAccess.test.js",
+          "sha256": "3ae62b32a067eea7434bdb8f3b4f536c49a203ebc2345c1e0b19c09937819973",
+          "bytes": 23166
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3MediaInspectClient.test.js",
+          "sha256": "b924cfb6162b3cce13940418579a2258b41daa5f22ff5f265673dbde7fa053a4",
+          "bytes": 3881
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Operation.test.js",
+          "sha256": "4224ef7379e36d03fdabf6215d4eb266cf202aa322fdb080b4a2c596102f4f35",
+          "bytes": 8286
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Review.test.js",
+          "sha256": "6281174804d1b06a5ce6bdb38b74e9ebae4f0fa32631fd3806cbb2c8f12a32d5",
+          "bytes": 40188
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Router.test.js",
+          "sha256": "fa42c59fb9af8d8139dfd692b0acbc042a622a233f182c599b5ec4c91a44ff36",
+          "bytes": 6147
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Runtime.test.js",
+          "sha256": "3ab93b6354ec743b347a2d7a02dbf8d0ab009ec87fa766a02a54410d00408d40",
+          "bytes": 3916
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Service.test.js",
+          "sha256": "b2cd650e5d37fb23f8a43171e6506e88c326c8734e1f3817901c5a9aaa1c082e",
+          "bytes": 66104
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3SourceReader.test.js",
+          "sha256": "3acbdbbbd91c59b906ad8fa7fc33b9dfd162e4159423387db4408839d4ee0c5a",
+          "bytes": 4023
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Submission.test.js",
+          "sha256": "cf64ca68b4579400ce49cc2e7afc8ae0521bc61d19302364c5d4a4fb5fd2bf6d",
+          "bytes": 33897
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3SubmissionHttp.test.js",
+          "sha256": "86b41ac1227da5cf3ec1d1a74954995001c0b2ff5413022624d3d64108f766c5",
+          "bytes": 19546
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/setup.js",
+          "sha256": "8797d1f4e04efa537138bed5b1c9af07ca3fc036650aca20f0acbbb9e5487d77",
+          "bytes": 2228
+        },
+        {
+          "path": "backend/services/homework-service/models/Ai1.js",
+          "sha256": "6d055ec781f100bc2778e7979cbebde1d3e3c273307f0d3139fc02bae2e79ec3",
+          "bytes": 4436
+        },
+        {
+          "path": "backend/services/homework-service/models/Ai3.js",
+          "sha256": "c45721f5eb880f2fa9a31170f5d4bb3027f574ba4c6a401c301986b8dca7f4ce",
+          "bytes": 6065
+        },
+        {
+          "path": "backend/services/homework-service/routes/ai3.js",
+          "sha256": "126ef8af6db2629b16eb604a5c249b49c4dadab6afa57b9fd423375dd008fec6",
+          "bytes": 6298
+        },
+        {
+          "path": "backend/services/homework-service/routes/ai3MediaAccess.js",
+          "sha256": "8d7e40d2d87678dbfe39a5d7cdead16a9337ba34799d16ce1ff0b3171489ef48",
+          "bytes": 5801
+        },
+        {
+          "path": "backend/services/homework-service/server.js",
+          "sha256": "3a7c8ed411e9ee365d56e9a58c600c085633d2061b56325c9a98defde1f4325a",
+          "bytes": 20676
+        },
+        {
+          "path": "backend/services/homework-service/services/ai1Runtime.js",
+          "sha256": "b19ec1c7dad9a2f39a5cb5f7671e3491bd265990a625620d00828c0b965692a3",
+          "bytes": 3988
+        },
+        {
+          "path": "backend/services/homework-service/services/ai1Service.js",
+          "sha256": "76851038d2253522d218ce85f991883443c712f76624b31c9a79ce9478cf122a",
+          "bytes": 30105
+        },
+        {
+          "path": "backend/services/homework-service/services/ai2MediaInspectClient.js",
+          "sha256": "b10c152d5ea67d90c901f3b57e66f9ea02fb52bf5eafc1a7c31501fd080a091f",
+          "bytes": 5591
+        },
+        {
+          "path": "backend/services/homework-service/services/ai2Service.js",
+          "sha256": "ba6b348a0be6c9e968ed806f0ff20a293cec9c3d3f65eb16b4b8ab3e870fb61a",
+          "bytes": 22193
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3ContentHistoryService.js",
+          "sha256": "af4868b891aa3ad51f559b20817f4a01f8ac134af214f7a05bd88560e2b18910",
+          "bytes": 4080
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3Contract.js",
+          "sha256": "adf4368aa6c43160fdb74a9f2afc76ce0714cd99348316552f8d1a15c03cb120",
+          "bytes": 7375
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3GenerationPreview.js",
+          "sha256": "dbd93ca8c5866f6242a2f8ece6a240af46804bc67d1286a2a7f720bfed39f74d",
+          "bytes": 2836
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3MediaInspectClient.js",
+          "sha256": "daae81c69600da4d338e508eb8f52c37230f06c74035ac959f1c725f37768405",
+          "bytes": 127
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3Operation.js",
+          "sha256": "e3833e86ca96870188a677dda0a2c4c5fc3099a20e2ce3e17626dac27d1ee3e0",
+          "bytes": 6682
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3Readiness.js",
+          "sha256": "88f52e6e8ede30d6f5f3cb39dbf313866fac27adccb06f1cbed8132a28843376",
+          "bytes": 1162
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3ReviewService.js",
+          "sha256": "2e757339160b4f3f428079fa06387c64d5c639904eb163077f2e6483ec02f5d1",
+          "bytes": 18900
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3Runtime.js",
+          "sha256": "9c1f01bf20a1b4a314d6b36208ab5af7d952780fe6a358a5c178d6ca8c04f6c0",
+          "bytes": 1555
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3Service.js",
+          "sha256": "563767fad8439cd91c85e88bce482962332bc370f9720d797dc94df886c2807b",
+          "bytes": 47653
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3SourceReader.js",
+          "sha256": "ffe26bf4c26378100c503b917bf04780e1bd39f3ac43b091be1441aa6cb1dbb1",
+          "bytes": 1448
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3SubmissionService.js",
+          "sha256": "16a4d42877bdd095278f4f2731809f6a618507599662b5efd8ffdad9f99c68d0",
+          "bytes": 25851
+        },
+        {
+          "path": "backend/services/homework-service/services/aiGenerationBudget.js",
+          "sha256": "bb08f26e11b6bf251e08b41952793c2296176d8a9e153997bd0c3cd8316c2e37",
+          "bytes": 7933
+        },
+        {
+          "path": "backend/services/progress-service/__tests__/ai3MasteryEffects.test.js",
+          "sha256": "deb1e44cbf77f9d4adc7d20a532ded03b64e6390d9a4241373e2b65b06ea4ec1",
+          "bytes": 22834
+        },
+        {
+          "path": "backend/services/progress-service/__tests__/knowledgePointRevision.test.js",
+          "sha256": "1c77b7fe83a315bae55b8a490fe3b84daf6922e51cc43b2f280866732e5cb3e4",
+          "bytes": 3289
+        },
+        {
+          "path": "backend/services/progress-service/__tests__/startup.test.js",
+          "sha256": "5814b96b9a089e606756ffcdf83a27d443a3cd4a22934f1f46517caa64c62a7e",
+          "bytes": 4054
+        },
+        {
+          "path": "backend/services/progress-service/__tests__/startupCleanup.test.js",
+          "sha256": "06f1015b6e6f2a687ba532e23428df5c305a94988b450d6b9aa70c5b24770bce",
+          "bytes": 2831
+        },
+        {
+          "path": "backend/services/progress-service/models/Ai3MasteryEffectReceipt.js",
+          "sha256": "12ca4a795d8b5a91d4fccad4046bb9144c917b943e62e5b25e236b74593bd113",
+          "bytes": 2826
+        },
+        {
+          "path": "backend/services/progress-service/models/KnowledgePoint.js",
+          "sha256": "d211c423ba246929c5f94570645906f7c331622b6f15e42ee1ba218c0b6bbc00",
+          "bytes": 1768
+        },
+        {
+          "path": "backend/services/progress-service/models/KnowledgePointMasteryEvent.js",
+          "sha256": "18413f7a3789438c301c618e4d3b38e53d70218cc3fe34c628eb469a278d1fb3",
+          "bytes": 2292
+        },
+        {
+          "path": "backend/services/progress-service/routes/knowledgePoints.js",
+          "sha256": "34fc1e276a43827433d7cffcb503d60e372ac6325894464984cbb6c8aa655731",
+          "bytes": 10338
+        },
+        {
+          "path": "backend/services/progress-service/server.js",
+          "sha256": "603de9dcb0c622ccef849995f0d593879a2175782e72dc0569f012cf0b3357e1",
+          "bytes": 5094
+        },
+        {
+          "path": "backend/services/progress-service/services/ai3MasteryEffectService.js",
+          "sha256": "7cc8522e6ebbeea08d2ca475a32f75d43245d369505bb4b3646ffde98380a0fa",
+          "bytes": 7484
+        },
+        {
+          "path": "backend/services/progress-service/services/ai3Runtime.js",
+          "sha256": "8a4463acddf666e58f38c1e405fb500409ff0f100e6c46fcb2cea1ca104bacdc",
+          "bytes": 1312
+        },
+        {
+          "path": "backend/services/progress-service/services/growthAccess.js",
+          "sha256": "d5a624a6695678a316005c7f090337e9779ff77ddaa6c20d35f6772b639fad43",
+          "bytes": 1771
+        },
+        {
+          "path": "backend/services/progress-service/services/knowledgePointState.js",
+          "sha256": "840305e92d72885f8608f8cb611c80b2a05d29811c95b0eb9f6df8a36c8d5600",
+          "bytes": 588
+        },
+        {
+          "path": "backend/services/resource-service/__tests__/ai3MediaProtocol.test.js",
+          "sha256": "4de8af34cccfd5811ba63412072f66f090aa989b0fcc5135a2ee362caef43641",
+          "bytes": 5985
+        },
+        {
+          "path": "backend/services/resource-service/__tests__/ai3PrivateMediaHttp.test.js",
+          "sha256": "4ebe5675eebc1489685feec06fa0c10a4eb0bf0584bb5d378a62a4f6bb97d8c8",
+          "bytes": 28591
+        },
+        {
+          "path": "backend/services/resource-service/__tests__/completionReferenceReadiness.test.js",
+          "sha256": "491c49778e72a1165b4b02dc8ba4086330e94c3e717386c019e61b05497c83e4",
+          "bytes": 25464
+        },
+        {
+          "path": "backend/services/resource-service/__tests__/mediaModels.test.js",
+          "sha256": "815f83f33ec8637b5d52a98cf44477b630c6de4c6da6f4c999cbf13cd442b4e7",
+          "bytes": 8670
+        },
+        {
+          "path": "backend/services/resource-service/__tests__/task6Startup.test.js",
+          "sha256": "61185c4160249094c28f6567d7bc4497534adfec252af2d9debbc4caa7a7cf05",
+          "bytes": 12433
+        },
+        {
+          "path": "backend/services/resource-service/app.js",
+          "sha256": "d8f8439456c8f5950be889816bc30f8a9a17f3285e31459ae88b2de36dbe2279",
+          "bytes": 4351
+        },
+        {
+          "path": "backend/services/resource-service/jest.family.config.js",
+          "sha256": "c8add07c1251b9983578a0901bc40b459685745512a46e475fa44e5f03e9dcd8",
+          "bytes": 3206
+        },
+        {
+          "path": "backend/services/resource-service/models/MediaAsset.js",
+          "sha256": "a3845f9bc64d0cbf2216edf8df34db71f8165060411b52862127d8af3d496f86",
+          "bytes": 5802
+        },
+        {
+          "path": "backend/services/resource-service/models/MediaDeletionReceipt.js",
+          "sha256": "5303673ae7f7ea63cfd577b6b430deeee6cee4a3a56917646d10e84ecc9a9912",
+          "bytes": 1282
+        },
+        {
+          "path": "backend/services/resource-service/models/MediaDeletionTombstone.js",
+          "sha256": "fbbeabd9e23e81f3a61ac605e964cfee721a8b0c8c019d55eb8786d105d81ee5",
+          "bytes": 1523
+        },
+        {
+          "path": "backend/services/resource-service/models/MediaReference.js",
+          "sha256": "93ecf9c6a1989b80d141c95ed08bf8e6c5f44af203fa0b428ddb059baa235612",
+          "bytes": 3286
+        },
+        {
+          "path": "backend/services/resource-service/models/MediaReferenceOperation.js",
+          "sha256": "4e792b8490ec7505513577b2cbc0e3c4fde2492f247768a93aa0b5e3cbff68a8",
+          "bytes": 3387
+        },
+        {
+          "path": "backend/services/resource-service/routes/ai2MediaInspect.js",
+          "sha256": "5f670df0e0c108a47d0fe6b771d41d2d269883710b4bdc86e193b874b8c0ea0f",
+          "bytes": 5282
+        },
+        {
+          "path": "backend/services/resource-service/routes/ai3MediaInspect.js",
+          "sha256": "009bf9621a8e418768d7c023d76792a81026136e867f725daeae830d2a6ffde2",
+          "bytes": 121
+        },
+        {
+          "path": "backend/services/resource-service/routes/mediaReferenceProtocolRouter.js",
+          "sha256": "3e9bae1f4588edfe1848bdc2ccd25bae8a7b790aeaee9a48d5d861d84035794c",
+          "bytes": 2587
+        },
+        {
+          "path": "backend/services/resource-service/server.js",
+          "sha256": "2d5e4a9106ec4383d320a9db438f19f05e5b9ba49dbc5503c94f536edc28af63",
+          "bytes": 12859
+        },
+        {
+          "path": "backend/services/resource-service/services/ai2MediaAccessClient.js",
+          "sha256": "8de8409324f7ed728c2be14a79016ab5d447b33fc0a5d0f96054ead3a2c57dd1",
+          "bytes": 3162
+        },
+        {
+          "path": "backend/services/resource-service/services/ai3MediaAccessClient.js",
+          "sha256": "a058aea63e8a08cc175b5b0dd15716f45f8cf5ac4ca4b626c0ec01c5fbf0165d",
+          "bytes": 124
+        },
+        {
+          "path": "backend/services/resource-service/services/ai3Runtime.js",
+          "sha256": "1bbe89a0c31f5d6a1b33362c9b726aecd91f0fc2e2bdab3f1597fd5b714b965a",
+          "bytes": 1403
+        },
+        {
+          "path": "backend/services/resource-service/services/completionMediaCleanupService.js",
+          "sha256": "4f1f3d6d4787571b52b19486a7e171386d6c4ddef5b15b0fd69d27a9ccfb146b",
+          "bytes": 6156
+        },
+        {
+          "path": "backend/services/resource-service/services/completionMediaPrivacyService.js",
+          "sha256": "6a1ccc668edf1409ef215931cccb6f7d25247eb1725025b017c90a8a6b34fdb1",
+          "bytes": 8492
+        },
+        {
+          "path": "backend/services/resource-service/services/completionPrivacyReadiness.js",
+          "sha256": "5c29684d739566428f71136f7e45c0e3889ceffa660bd543995c61f34d52c8f7",
+          "bytes": 10902
+        },
+        {
+          "path": "backend/services/resource-service/services/completionReferenceReadiness.js",
+          "sha256": "9bfcd5b46b41c81e5099e9d0312aada378852d803c939b98e1763c31f7f27144",
+          "bytes": 6979
+        },
+        {
+          "path": "backend/services/resource-service/services/completionRetentionReadiness.js",
+          "sha256": "4e54a3690deef8be36a8001f39b8f6d1bbe939fe9660aa32d73e1cbb71f3c77a",
+          "bytes": 23105
+        },
+        {
+          "path": "backend/services/resource-service/services/completionUploadRecord.js",
+          "sha256": "36b459b4c76475d76310508ea221541d4dd46c73dbf2203a12aeeb735074a3b2",
+          "bytes": 2623
+        },
+        {
+          "path": "backend/services/resource-service/services/completionUploadService.js",
+          "sha256": "bfab3f061ae15995350be90e7e5cc93f748c3023dcbb1d917f1b4552c7a02042",
+          "bytes": 7576
+        },
+        {
+          "path": "backend/services/resource-service/services/mediaCleanupService.js",
+          "sha256": "bec9f3b7576b7364821ac8b296d166b7af9a4225490b784b131f86703a54ed48",
+          "bytes": 2684
+        },
+        {
+          "path": "backend/services/resource-service/services/mediaDeletionDispatcher.js",
+          "sha256": "6fdc0e453360a68eb77fc292697e74f1d2b2fa199b819aa2fda3d5ad19f39ec7",
+          "bytes": 4746
+        },
+        {
+          "path": "backend/services/resource-service/services/mediaDeletionEvidence.js",
+          "sha256": "8cfdfcff44f2c72d924895cea36f4e31057ca07a0febcbc5c120611d3d27867c",
+          "bytes": 2054
+        },
+        {
+          "path": "backend/services/resource-service/services/mediaDeletionJournal.js",
+          "sha256": "e4aa76d2505153cf9c2a98276bc91d8aae83dd981fa1fe482288403d0a46d896",
+          "bytes": 4172
+        },
+        {
+          "path": "backend/services/resource-service/services/mediaReferenceOperationService.js",
+          "sha256": "1f42a60e1adb720ed2680546531510da4407a40be35195e0cfc21f4a5482bee0",
+          "bytes": 23493
+        },
+        {
+          "path": "backend/services/resource-service/services/mediaService.js",
+          "sha256": "4b7b2258b565399ff154d4fe5749975144267e000e7590f712dea248da27694d",
+          "bytes": 24371
+        },
+        {
+          "path": "backend/tests/t2/ai3EffectAssertions.integration.test.js",
+          "sha256": "9db99af7595d3969a9683ae9489287b2e5b4ed2637be56dc61c4e5045ac640fa",
+          "bytes": 10431
+        },
+        {
+          "path": "backend/tests/t2/ai3ReviewRuntime.integration.test.js",
+          "sha256": "e4cbc5c9f8b18abd1dbe5fe7aa4547f47c34f9ed794d9182fac137c807acbcc2",
+          "bytes": 18657
+        },
+        {
+          "path": "backend/tests/t2/ai3Runtime.integration.test.js",
+          "sha256": "507f43d08e2546abad16f4d820c75115c9bff0462175501745c0d3287fff2b17",
+          "bytes": 3739
+        },
+        {
+          "path": "backend/tests/t2/serviceRuntime.js",
+          "sha256": "dbd142b1c0ae4766b16a2134c681ddb1344f158b4ca9e55a99db7dea589d3274",
+          "bytes": 15811
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/ai3Client.test.js",
+          "sha256": "0ed0b467e6b82f49c7d89803b2bc5b8a8357ddd8f341ba68eb25ff84f71e89ec",
+          "bytes": 23397
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/Ai3ContentHistory.test.js",
+          "sha256": "ebc8fb198873c774c37da8fc8e7ce299f65f0817e64b6dd7fbc477b72cdc5cd2",
+          "bytes": 11574
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/Ai3DraftRefresh.test.js",
+          "sha256": "8e3632ae49dcb05c3a008a8d7cc1b44643530a1148c89054b5022d8bdaa611a9",
+          "bytes": 12310
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/ai3HistoryApi.test.js",
+          "sha256": "a6b8fffafdecbe6f6178a7a224b91039b0c99eb6fb1401bab43c225b9698d66e",
+          "bytes": 2648
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/Ai3PracticePage.test.js",
+          "sha256": "252ea63a18356ac5dffaabd1f1d6b41295c15064e890353f3775f5f92e2302ef",
+          "bytes": 17806
+        },
+        {
+          "path": "frontend/web/src/__tests__/shared/Ai3Media.test.js",
+          "sha256": "e8b4f65ae8e5e35650a222f455626dd14e8103521f700f7dc6ad921e6b19b527",
+          "bytes": 6878
+        },
+        {
+          "path": "frontend/web/src/__tests__/shared/ai3MediaApi.test.js",
+          "sha256": "327d831f9f6c5cdccc99020b67933f2574bb45bb00119843b2faf20e6c490e06",
+          "bytes": 6788
+        },
+        {
+          "path": "frontend/web/src/App.js",
+          "sha256": "a265dd73c659c98d3390f1009454f2477cc54bba0587f46fd1e8f81a5b7c5ae4",
+          "bytes": 5059
+        },
+        {
+          "path": "frontend/web/src/components/family/Ai2Media.js",
+          "sha256": "9a840420e70aaa4b4c72dfa12f88edff1297c774d91876d0ea72391ae043181c",
+          "bytes": 18134
+        },
+        {
+          "path": "frontend/web/src/components/family/Ai3Media.js",
+          "sha256": "72245f8c902a3626a2bcaf183bf0e02502287024587231f15a5ce2e43ab4a134",
+          "bytes": 153
+        },
+        {
+          "path": "frontend/web/src/pages/family/Ai2LearningPage.js",
+          "sha256": "420b4eb62b64bf3e0fe879b097bab3bd0eebbdc6b6261ed5f171fcd5e1a06619",
+          "bytes": 27309
+        },
+        {
+          "path": "frontend/web/src/pages/family/Ai3PracticePage.css",
+          "sha256": "04ade23eda5fd45e57145c8a5e2d51ef68191a0f6119325361c205c11eddb666",
+          "bytes": 761
+        },
+        {
+          "path": "frontend/web/src/pages/family/Ai3PracticePage.js",
+          "sha256": "5e04bdff0d47b7015563c14a1426fe3d2b7a2f8f1f8eeb206e82facc797f29fe",
+          "bytes": 39005
+        },
+        {
+          "path": "frontend/web/src/services/ai2MediaApi.js",
+          "sha256": "e8bce651818e7930b49d8904094ed80a421e3a26e56d1f946a1019bdcd13780d",
+          "bytes": 6682
+        },
+        {
+          "path": "frontend/web/src/services/ai3Api.js",
+          "sha256": "c06c6e03ead55c0e4f04f408ad6c843c6a5118a52d46d1177b91aa1090dd1857",
+          "bytes": 4245
+        },
+        {
+          "path": "frontend/web/src/services/ai3Commands.js",
+          "sha256": "ff4a83b01a4d0f671b843169fd8a34fef9fa7d41a1446da1b5e65e20e6f0514f",
+          "bytes": 8638
+        },
+        {
+          "path": "frontend/web/src/services/ai3MediaApi.js",
+          "sha256": "a56781fa3afa0a6522bad97145305d99ba8bdd49e8e8cee4600621723873490a",
+          "bytes": 397
+        },
+        {
+          "path": "frontend/web/src/services/familySession.js",
+          "sha256": "9622aeccb88e3fe82c9b20f64021cbc1887f743471be9128d23a7ab729e55ca6",
+          "bytes": 13991
+        },
+        {
+          "path": "scripts/check-family-docs.js",
+          "sha256": "ccc6d80dcad68f85bc6558214f73d8b7b9fbc6d55a02fc676a3c75a12e2ccc01",
+          "bytes": 175825
+        },
+        {
+          "path": "tests/e2e/t2/ai2Ai1Bridge.acceptance.js",
+          "sha256": "4155d52be4f7d6cc9457c6bb7d0c8adf744ca654f731feb6c7295c38764fba33",
+          "bytes": 26728
+        },
+        {
+          "path": "tests/e2e/t2/ai3_bridge_acceptance.py",
+          "sha256": "a3e1765c3ea5bfca49771c4102dbea4cb9494547a6a1b72b4940549f7ff5beea",
+          "bytes": 8837
+        },
+        {
+          "path": "tests/e2e/t2/ai3BrowserRecovery.js",
+          "sha256": "0ede253e56258480906ad7d5d2d44fa3d61cdbaf0eef02b1e1b6573e86ef1757",
+          "bytes": 4667
+        },
+        {
+          "path": "tests/e2e/t2/ai3EffectAssertions.js",
+          "sha256": "828413845f68cfab14926b8b3702dc3227f1374540f582a1dfb7660140a38f29",
+          "bytes": 5607
+        },
+        {
+          "path": "tests/e2e/t2/ai3PracticeFlow.js",
+          "sha256": "9dfe1a616497939a2730fd0e4bdc8151cb076f70aec79ea6a28590b2e48d1b2c",
+          "bytes": 15411
+        },
+        {
+          "path": "docs/api/family-ai3-api.md",
+          "sha256": "a77f33c08e21f6317a5b369aabe27844d375552893adb75bb1e52c1a9adec822",
+          "bytes": 25547
+        },
+        {
+          "path": "docs/development/evidence/ai3-a-20261104/gate-append.md",
+          "sha256": "9e6f39ba4150e1054e794fc6e8c73751da74df8abac198a64f920f3edc356984",
+          "bytes": 977
+        },
+        {
+          "path": "docs/development/evidence/ai3-a-20261104/README.md",
+          "sha256": "bd590879732627214176cc17a4739590e743479cb72e04ec880ff53f14f438f4",
+          "bytes": 7765
+        },
+        {
+          "path": "docs/development/evidence/ai3-b-20261104/README.md",
+          "sha256": "cbcf40b85bd6c28920508456f63b94cd7beb42d5bff2d04a62be621066ad0e6b",
+          "bytes": 9831
+        },
+        {
+          "path": "docs/development/evidence/ai3-c-20261104/README.md",
+          "sha256": "bad92660f24a30bcec0d67abf1622321e05446c771b24c8ab2dd0957c625837e",
+          "bytes": 7852
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-20261104/README.md",
+          "sha256": "640c07f89129ef24f1a761324e15f316d3449874b4e0ff61065dc78a7298d0c5",
+          "bytes": 8656
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-size-20261104/acceptance.md",
+          "sha256": "8347000edb42d42920967146549ade38edabddf52b106bf03e16e276d9349e1a",
+          "bytes": 2091
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-size-20261104/README.md",
+          "sha256": "9948f2adb70163e922ce29883cbfe3cca9143981b19d55541702644f8ea7a57b",
+          "bytes": 6189
+        },
+        {
+          "path": "docs/development/evidence/ai3-e-20261104/README.md",
+          "sha256": "fab0640f54eec8ec9e14d5385180509ef2d4542735569a0e58665ec863c57588",
+          "bytes": 9285
+        },
+        {
+          "path": "docs/development/evidence/ai3-integration-20261105/coverage.md",
+          "sha256": "2895debc80d39abee42db3df5c570d1f8833a50daf95888aec1a593d0dc6b9bd",
+          "bytes": 8089
+        },
+        {
+          "path": "docs/development/evidence/ai3-integration-20261105/engineering-readiness.md",
+          "sha256": "feffb0d0efe6b232c7f95dee816a1478f183294014990a166505d365e19301c5",
+          "bytes": 7753
+        },
+        {
+          "path": "docs/development/evidence/ai3-integration-20261105/independent-review.md",
+          "sha256": "0b55ecac625955111307de4cede936497824069b20cccefdfd4461148bd7fde2",
+          "bytes": 6798
+        },
+        {
+          "path": "docs/development/evidence/ai3-integration-20261105/README.md",
+          "sha256": "611a6b16bf9556b5ae603f00fccc6488c8b01568a4cca7cd52b76a651fa822e3",
+          "bytes": 10056
+        },
+        {
+          "path": "docs/development/evidence/ai3-integration-20261105/review-fixes.md",
+          "sha256": "6c4e81acad113eb9c3c54f0aaa2956c4b9eb58edb616e97cd913927e6cb05d4f",
+          "bytes": 7026
+        },
+        {
+          "path": "docs/development/family-ai3-test-plan.md",
+          "sha256": "bfe70b7c26c94b2ee94fc1f704924f99ce81ca2e76990e846d674843b93fbc32",
+          "bytes": 21347
+        },
+        {
+          "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+          "sha256": "86362c731ac23e25fac2e7f7a43889a2e639c696119d46a799c05045f9d459c8",
+          "bytes": 781795
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+          "sha256": "38684ef7eac2dbbef1c7e9e96b4b7d90f1c90a2f098001e642b9d11cba1a14ab",
+          "bytes": 132696
+        },
+        {
+          "path": "docs/superpowers/specs/2026-11-04-family-ai3-minimal-design.md",
+          "sha256": "4df141d421822f688e78f0568d49f137925a156c2e295a26927e0eb4d0a6d283",
+          "bytes": 21803
+        },
+        {
+          "path": "docs/development/evidence/ai3-a-20261104/candidate.json",
+          "sha256": "40edaf2be8378245fe35136c4825e6f8de045e1c8c139af6a686c53954ff3b82",
+          "bytes": 2309
+        },
+        {
+          "path": "docs/development/evidence/ai3-a-20261104/candidate.patch",
+          "sha256": "63b488422575bdc4a63b66c475184040b8e58bf34bdb1a93ce1d43e649d7a0ae",
+          "bytes": 116756
+        },
+        {
+          "path": "docs/development/evidence/ai3-a-20261104/verification.json",
+          "sha256": "ca2b41153c3e8ad33d008e8c8098e8529657e781d037913d6bd6de8af81e8393",
+          "bytes": 7161
+        },
+        {
+          "path": "docs/development/evidence/ai3-b-20261104/approval-records.patch",
+          "sha256": "464e795e8e2d3157206a032bc2dd0cad48aa07451e6c0fc38246fbeb07702ca1",
+          "bytes": 5199
+        },
+        {
+          "path": "docs/development/evidence/ai3-b-20261104/candidate.json",
+          "sha256": "11ebcd6115e57295c7fa6651ca68699fa2daef6657ca8d77a08a33e57b6c06d0",
+          "bytes": 3278
+        },
+        {
+          "path": "docs/development/evidence/ai3-b-20261104/candidate.patch",
+          "sha256": "83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8",
+          "bytes": 45730
+        },
+        {
+          "path": "docs/development/evidence/ai3-b-20261104/verification.json",
+          "sha256": "2f80d5aa3fbc5ee1839b222cf3e99506d776b350929f889433e92c9a2d855ae1",
+          "bytes": 6495
+        },
+        {
+          "path": "docs/development/evidence/ai3-c-20261104/approval-records.patch",
+          "sha256": "2ebf862a0d08c1fd4edbc4ba101721e3bce27caedfdb3144dfc6b061cc795371",
+          "bytes": 4342
+        },
+        {
+          "path": "docs/development/evidence/ai3-c-20261104/candidate.json",
+          "sha256": "421d83e1768e58178b2c0970df09c0b1096699cb47dc0bc00230584edf3f04af",
+          "bytes": 3647
+        },
+        {
+          "path": "docs/development/evidence/ai3-c-20261104/candidate.patch",
+          "sha256": "48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89",
+          "bytes": 44259
+        },
+        {
+          "path": "docs/development/evidence/ai3-c-20261104/synthetic-preview.json",
+          "sha256": "5f8c776adabab3f15be8f2fe22ff6cf9c8d3e09806cb4e124826f722ab48350a",
+          "bytes": 1973
+        },
+        {
+          "path": "docs/development/evidence/ai3-c-20261104/verification.json",
+          "sha256": "7f15cc7455b7f501e48e47e66769bc34695fc2f3067665f8c6858314d9b305d2",
+          "bytes": 6884
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-20261104/approval-records.patch",
+          "sha256": "1414470121bcdef433a0a9965a08d41fe7b567245c237d191f3770d469383fc8",
+          "bytes": 3992
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-20261104/candidate.json",
+          "sha256": "0b6cfaf8a33550c3a47a08dc3d91f3f345689559940fca87a7a11404f62e6554",
+          "bytes": 5530
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-20261104/candidate.patch",
+          "sha256": "8d59ea59bc5d6b3f5c1d37b2ccdaab2c82ba8c2cf6bc0c19603dc2223289f05e",
+          "bytes": 49962
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-20261104/deeptutor.patch",
+          "sha256": "685075d998702babacf9e68b038ec39dfbcde4aefc80a9007c9cecf35f4b22cf",
+          "bytes": 48105
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-20261104/verification.json",
+          "sha256": "ff2838b9b3eb982e7b4c9a8964a666940a49e941585bbfe8c728adfab55ba331",
+          "bytes": 22642
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-size-20261104/candidate.json",
+          "sha256": "fc1198ea802ef13fba2e02d187a4a36c5cf2c7596e2ad454d82006431b579d6d",
+          "bytes": 2853
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-size-20261104/candidate.patch",
+          "sha256": "63992a837860554da5358a4d09a5c6fb0f7be7384ec6187e96a0b2e33888f2c1",
+          "bytes": 22098
+        },
+        {
+          "path": "docs/development/evidence/ai3-d-size-20261104/verification.json",
+          "sha256": "b7c24566040c8978a5e69a4d1a127d3c32dbcf40f7c5228c93e9eee809adfda3",
+          "bytes": 6882
+        },
+        {
+          "path": "docs/development/evidence/ai3-e-20261104/candidate.json",
+          "sha256": "c8debf79ca3fd477b7ccaa171c20d46ab98f5183bbeb832a7527bb901d65368d",
+          "bytes": 12867
+        },
+        {
+          "path": "docs/development/evidence/ai3-e-20261104/candidate.patch",
+          "sha256": "208eb430f863e3f5e8abad56420ed9549142f9dceb9be48febee4b5ac01294c3",
+          "bytes": 267320
+        },
+        {
+          "path": "docs/development/evidence/ai3-e-20261104/evidence-index.json",
+          "sha256": "01b690fb23c60e156fe003c0a3a2b9457d8d0eed0d491b7b7249bf5a4dfd72fd",
+          "bytes": 30686
+        },
+        {
+          "path": "docs/development/evidence/ai3-integration-20261105/evidence-index.json",
+          "sha256": "f4380b467a0f86b754d872dbf8540245c98e6105bb0817a6d810114e6564cd37",
+          "bytes": 105546
+        },
+        {
+          "path": "docs/development/evidence/ai3-integration-20261105/closure-review.md",
+          "sha256": "164f699892724883c9216d8a17268071ecaea669ed797865670697f692d4aca5",
+          "bytes": 6462
+        },
+        {
+          "path": "docs/development/evidence/ai3-integration-20261105/public-delivery.md",
+          "sha256": "c2d4449044df08f403c2676e91e8438205415a48ce075b9393ce5ad98044de77",
+          "bytes": 4365
+        }
+      ]
+    },
+    {
+      "name": "mflyn/DeepTutor",
+      "base": "a5e64ca49667ddba2a0ba80c02ac1c59959dc2f9",
+      "files": [
+        {
+          "path": "deeptutor/runtime/background_leader.py",
+          "sha256": "c5dc840b17a49808954e56cba9163f1f02df9b5d94f294cc553fbed7a52a498d"
+        },
+        {
+          "path": "deeptutor/services/ai1_contract.py",
+          "sha256": "0cfeac149b1ef879bd449c4d47f8e7f2515253dc641fd3fe1ed26c30ad166e77"
+        },
+        {
+          "path": "deeptutor/services/ai1_http.py",
+          "sha256": "d45a9cf3cd24d539d87bcde340dfd1fe30e1adce0363f61aa73c0d49977634de"
+        },
+        {
+          "path": "deeptutor/services/ai1_operation.py",
+          "sha256": "4dfd96ff16afb27f958386da781c95211ecbbeb8c9bfb17ab042bbc397dbc2ba"
+        },
+        {
+          "path": "deeptutor/services/ai1_store.py",
+          "sha256": "f778d8811f9ac713aa8a5d7c653c9a34776026cb16508a6d64901e874be70020"
+        },
+        {
+          "path": "deeptutor/services/ai3_contract.py",
+          "sha256": "0028b603a77ac7c1270605d419c8c18dfe486f568d197066680f3b4fd10396e7"
+        },
+        {
+          "path": "deeptutor/services/ai3_http.py",
+          "sha256": "ce5a33729868c1ef99c33ffa6e79c7023cdc4f6449cfc51ed9955be37628ef49"
+        },
+        {
+          "path": "deeptutor/services/ai3_operation.py",
+          "sha256": "e43916c47c0f391ca874a0b44f5c4bed45be515f90c9aa4baf1c082a4ef63792"
+        },
+        {
+          "path": "tests/runtime/test_background_leader.py",
+          "sha256": "a9ff5ef014177cd052e4fa29327ebc2a8c8ab28bf3bfaf4105c5b81c724f1726"
+        },
+        {
+          "path": "tests/services/ai3/lms_acceptance.py",
+          "sha256": "d6882b8400037425e97f1f74971090a4bd1e735892a5ae08bb6c6e961692efa5"
+        },
+        {
+          "path": "tests/services/ai3/lms_wire_golden.json",
+          "sha256": "7dd3dff816efb325035af62cb4702ab627795201f9cafca350933b52d1f8ddba"
+        },
+        {
+          "path": "tests/services/ai3/synthetic_server.py",
+          "sha256": "04a981779f2d6fff556e7c364d49c1aa31d7ce6d34f69db29e97b5ad288b1ee4"
+        },
+        {
+          "path": "tests/services/ai3/test_operations.py",
+          "sha256": "c46c1138ab48bbdff0680aa8bff726d02b4de4fcb489b1446df40ec25c00a53e"
+        },
+        {
+          "path": "tests/services/ai3/test_synthetic_server.py",
+          "sha256": "fb4e64b85fbf42cba4da92e679fdce6dc6561f8fed0568202819a08f81054dd9"
+        },
+        {
+          "path": "docs-for-dev/AI3_SYNTHETIC_DELIVERY.md",
+          "sha256": "6789f8596ea5df512d6aaf2c28edeba3428055960bbdb32917db1f6406c1f3ec",
+          "bytes": 2159
+        }
+      ]
+    }
+  ],
+  "frozenPatches": [
+    {
+      "path": "review-fixes-v1/source-freeze/candidate.patch",
+      "sha256": "5bff86cda287335568f67e790ec0ba510cf34645310cb9fe164de1b83ac2561f"
+    },
+    {
+      "path": "review-fixes-v1/documents/ai3-documents.patch",
+      "sha256": "53e73edea074d2800c7199ea13c3dd1c393a42fd73c8ae77ed56109240b56fe9"
+    },
+    {
+      "path": "delivery/evidence-companion/ai3-evidence-companion.patch",
+      "sha256": "1e39998d91c9f95016c352710a0d3b2a562c219ef321cfa009204d2cd2bafcd8"
+    },
+    {
+      "path": "approved-closure-v1/closure.patch",
+      "sha256": "3cdf9915e5bf160aa661bde14f824ce7b82c89e3dbafbe21f8bb6d1548bab13f"
+    }
+  ],
+  "projectionReconstruction": {
+    "checkedFiles": 190,
+    "allMatch": true
+  },
+  "redactions": [
+    {
+      "path": "docs/development/evidence/ai3-d-size-20261104/acceptance.md",
+      "privateOriginalSha256": "f1f4e77b63982031a29b3a35146e57d1a28bd2a4510286f98482cba12c2b583d",
+      "publishedSha256": "8347000edb42d42920967146549ade38edabddf52b106bf03e16e276d9349e1a",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-e-20261104/README.md",
+      "privateOriginalSha256": "5909494cfec15c6c37fb35232733f7a59366b52ec573ea15a873fb355155f602",
+      "publishedSha256": "fab0640f54eec8ec9e14d5385180509ef2d4542735569a0e58665ec863c57588",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-integration-20261105/independent-review.md",
+      "privateOriginalSha256": "ff2422c18475e0eb3861571953a2b29a7f4a5e33d63815e476c7fdc99d318713",
+      "publishedSha256": "0b55ecac625955111307de4cede936497824069b20cccefdfd4461148bd7fde2",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-integration-20261105/README.md",
+      "privateOriginalSha256": "297763e8fdd3aaa0ca66bb42df2571ad04593336137d601c4d837ee23724a5a4",
+      "publishedSha256": "611a6b16bf9556b5ae603f00fccc6488c8b01568a4cca7cd52b76a651fa822e3",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-a-20261104/verification.json",
+      "privateOriginalSha256": "981102b1bd3e6306c63174df6994ff5a86d83c5b2e582ce66caf48d0ce4bb9ce",
+      "publishedSha256": "ca2b41153c3e8ad33d008e8c8098e8529657e781d037913d6bd6de8af81e8393",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-b-20261104/verification.json",
+      "privateOriginalSha256": "20102bf4e4b9750eef6a9afb4a356acf9e52b2e40aa65eeeeb226e1c38d18c82",
+      "publishedSha256": "2f80d5aa3fbc5ee1839b222cf3e99506d776b350929f889433e92c9a2d855ae1",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-c-20261104/verification.json",
+      "privateOriginalSha256": "1cbc870e5d7f6f016ee8c3aa821951a7128043f10527585a82cad0e774454832",
+      "publishedSha256": "7f15cc7455b7f501e48e47e66769bc34695fc2f3067665f8c6858314d9b305d2",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-d-20261104/verification.json",
+      "privateOriginalSha256": "aa745633281971e4a581b11c3530f47ed21d39a5961d89c3e24c8e560f9fbda5",
+      "publishedSha256": "ff2838b9b3eb982e7b4c9a8964a666940a49e941585bbfe8c728adfab55ba331",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-d-size-20261104/verification.json",
+      "privateOriginalSha256": "1d355ecb84320357395476b52fd27c82c1b2c8de883df20794f4e6ebd4c4c104",
+      "publishedSha256": "b7c24566040c8978a5e69a4d1a127d3c32dbcf40f7c5228c93e9eee809adfda3",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    },
+    {
+      "path": "docs/development/evidence/ai3-e-20261104/candidate.patch",
+      "privateOriginalSha256": "9b39877f657c01b21d73abbb5758e7faf1213a6cb8438f01b5cf5e1a12a14146",
+      "publishedSha256": "208eb430f863e3f5e8abad56420ed9549142f9dceb9be48febee4b5ac01294c3",
+      "change": "temporary path prefixes only; JSON serialization preserved semantic values except redacted paths"
+    }
+  ],
+  "verification": [
+    {
+      "name": "first-failure",
+      "exit": 0,
+      "seconds": 18.652,
+      "timeoutMs": 180000,
+      "passed": 242,
+      "warnings": 4,
+      "jsonSha256": "fea44aabea6ebe371463226dc55bc4a9f002353da54ca5de16a14eeaaeae7786",
+      "rawLogSha256": "d230767675b06c33c075a27422b8b302010be3d81747408fadb9d8c5a99684a0",
+      "artifactVisibility": "PRIVATE_LOCAL_ONLY"
+    },
+    {
+      "name": "original",
+      "exit": 0,
+      "seconds": 14.05,
+      "timeoutMs": 180000,
+      "passed": 242,
+      "warnings": 4,
+      "jsonSha256": "c905555675666f065a468f4d6686fbcd141568c734af850fcd4d1325f27aa793",
+      "rawLogSha256": "86a6421c1dbf22645bc1a2cf07b2b281c0ed71a0f787e7c8cf9d1727dc5c2460",
+      "artifactVisibility": "PRIVATE_LOCAL_ONLY"
+    }
+  ],
+  "historicalDeliveryFailure": {
+    "failureMarkers": 5,
+    "outerTimeoutMs": 180000,
+    "completeSummary": false,
+    "rootCause": "UNDETERMINED_NOT_REPRODUCED",
+    "rawLogs": "UNAVAILABLE_AFTER_HOST_RESTART",
+    "recordSource": "previous tool result and conversation; no fabricated raw hash"
+  },
+  "retained": [
+    "T4 OPEN",
+    "T8 OPEN",
+    "AI-1 OPEN",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "QUALIFIED_COUNTER_PENDING",
+    "HISTORICAL_FAILURES",
+    "NONBLOCKING_FOLLOWUPS",
+    "REMAINDER_DEFERRED"
+  ]
+}

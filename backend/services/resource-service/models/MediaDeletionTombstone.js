@@ -1,21 +1,21 @@
 const mongoose = require('mongoose');
-const { validAi2MediaMetadata } = require('../../../common/services/completionMediaProtocol');
+const { validAi2MediaMetadata, isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 const { Schema } = mongoose;
 const identity = () => ({ type: Schema.Types.ObjectId, required: true, immutable: true });
 
 const schema = new Schema({
   mediaId: identity(), familyId: identity(), childId: identity(), actorId: identity(),
   role: { type: String, enum: ['parent', 'student'], required: true, immutable: true },
-  purpose: { type: String, enum: ['task_completion', 'ai2_correction'], required: true, immutable: true },
+  purpose: { type: String, enum: ['task_completion', 'ai2_correction', 'ai3_practice'], required: true, immutable: true },
   reason: { type: String, enum: ['user_requested'], required: true, immutable: true },
   deletedAt: { type: Date, required: true, immutable: true },
   mimeType: { type: String, immutable: true, default: undefined },
   sizeBytes: { type: Number, immutable: true, default: undefined }
 }, { strict: 'throw', versionKey: false });
 schema.pre('validate', function validateTypedMetadata() {
-  if (this.purpose === 'ai2_correction' ? !validAi2MediaMetadata(this)
+  if (isAttemptPurpose(this.purpose) ? !validAi2MediaMetadata(this)
     : this.mimeType !== undefined || this.sizeBytes !== undefined) {
-    this.invalidate('mimeType', 'Only AI2 tombstones require valid immutable image metadata');
+    this.invalidate('mimeType', 'Only attempt tombstones require valid immutable image metadata');
   }
 });
 // No TTL: deletion evidence must survive content retention and old-command replay.

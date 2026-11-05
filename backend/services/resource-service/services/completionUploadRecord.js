@@ -1,6 +1,6 @@
 const { createHash } = require('crypto');
 const Asset = require('../models/MediaAsset');
-const { protocolPurposes } = require('../../../common/services/completionMediaProtocol');
+const { protocolPurposes, isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 const { AppError } = require('../../../common/middleware/errorTypes');
 const keys = ['familyId', 'childId', 'uploadedBy', 'purpose', 'mimeType', 'displayName', 'sizeBytes',
   'pageCount', 'storageKey', 'malwareScanStatus', 'malwareScannedAt'];
@@ -25,7 +25,7 @@ const validateRecord = async record => {
   if (!identity || !['parent', 'student'].includes(identity.role) || identity.id !== metadata.uploadedBy
     || Object.keys(identity).some(key => !['id', 'role', 'tokenVersion'].includes(key))
     || identity.role === 'student' && (!Number.isSafeInteger(identity.tokenVersion) || identity.tokenVersion < 0)) throw fail();
-  if (metadata.purpose === 'ai2_correction' && (identity.role !== 'student' || identity.id !== metadata.childId
+  if (isAttemptPurpose(metadata.purpose) && (identity.role !== 'student' || identity.id !== metadata.childId
     || !Number.isSafeInteger(metadata.sizeBytes) || metadata.sizeBytes < 1 || metadata.sizeBytes > 10 * 1024 * 1024)) throw fail();
   await new Asset({ _id: record.mediaId, ...metadata }).validate();
   return record;

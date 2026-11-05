@@ -1,0 +1,131 @@
+{
+  "rawLogsLocalOnly": "private-evidence/ai3-a-20261104",
+  "records": [
+    {
+      "name": "readiness-red.log",
+      "kind": "development regression before P2 fix",
+      "exitCode": 1,
+      "sha256": "de00f9285c8f024378219629ece03a6117e21431784f66cfb1fe553a600ab5d8",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       2 failed, 21 skipped, 23 total",
+        "Snapshots:   0 total",
+        "Time:        3.201 s, estimated 7 s"
+      ],
+      "failureSuites": [
+        "FAIL homework-service backend/services/homework-service/__tests__/services/ai3Service.test.js"
+      ],
+      "hasPermissionErrors": false
+    },
+    {
+      "name": "ai3-final.log",
+      "kind": "development targeted after P2 fix",
+      "exitCode": 0,
+      "sha256": "a1c4d0165cc9eb50e9a3728ef29c082b3f2490ff9dde3e82b036908d60b7e50e",
+      "summary": [
+        "Test Suites: 2 passed, 2 total",
+        "Tests:       41 passed, 41 total",
+        "Snapshots:   0 total",
+        "Time:        8.307 s"
+      ],
+      "failureSuites": [],
+      "hasPermissionErrors": false
+    },
+    {
+      "name": "homework-regression.log",
+      "kind": "development full service restricted execution context",
+      "exitCode": 1,
+      "sha256": "3e196b6f96eafb9a9b0058d2d689acc16c80e7dbd7868d60212e92356a4420f2",
+      "summary": [
+        "Test Suites: 23 failed, 27 passed, 50 total",
+        "Tests:       142 failed, 1609 passed, 1751 total",
+        "Snapshots:   0 total",
+        "Time:        287.058 s"
+      ],
+      "failureSuites": [
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionProductionAssembly.test.js (25.821 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionThreeServiceHttp.test.js (25.841 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/dailyLearningPlan.test.js (11.69 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/growthTasks.test.js (6.265 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionPrivacyHttp.test.js (7.038 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/growthTaskMediaReferences.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionProtocolDispatch.test.js (7.365 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionRetirement.test.js (7.444 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionPublicHttp.test.js (6.353 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionHttp.test.js (6.592 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/ai1Production.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionMutationHttp.test.js (5.721 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/ai2SubmissionHttp.test.js (7.483 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionStarHttp.test.js (5.5 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionReadHttp.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskHelpService.test.js (5.457 s)",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/ai1Http.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/ai1Runtime.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskSources.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/ai2Http.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionProductionStartup.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/services/growthTaskCompletionIsolation.test.js",
+        "FAIL homework-service backend/services/homework-service/__tests__/serverLifecycle.test.js",
+        "FAIL __tests__/services/growthTaskCompletionProductionAssembly.test.js (25.821 s)",
+        "FAIL __tests__/services/growthTaskCompletionThreeServiceHttp.test.js (25.841 s)",
+        "FAIL __tests__/services/dailyLearningPlan.test.js (11.69 s)",
+        "FAIL __tests__/growthTasks.test.js (6.265 s)",
+        "FAIL __tests__/services/growthTaskCompletionPrivacyHttp.test.js (7.038 s)",
+        "FAIL __tests__/growthTaskMediaReferences.test.js",
+        "FAIL __tests__/services/growthTaskCompletionProtocolDispatch.test.js (7.365 s)",
+        "FAIL __tests__/services/growthTaskCompletionRetirement.test.js (7.444 s)",
+        "FAIL __tests__/services/growthTaskCompletionPublicHttp.test.js (6.353 s)",
+        "FAIL __tests__/services/growthTaskCompletionHttp.test.js (6.592 s)",
+        "FAIL __tests__/services/ai1Production.test.js",
+        "FAIL __tests__/services/growthTaskCompletionMutationHttp.test.js (5.721 s)",
+        "FAIL __tests__/services/ai2SubmissionHttp.test.js (7.483 s)",
+        "FAIL __tests__/services/growthTaskCompletionStarHttp.test.js (5.5 s)",
+        "FAIL __tests__/services/growthTaskCompletionReadHttp.test.js",
+        "FAIL __tests__/services/growthTaskHelpService.test.js (5.457 s)",
+        "FAIL __tests__/services/ai1Http.test.js",
+        "FAIL __tests__/services/ai1Runtime.test.js",
+        "FAIL __tests__/services/growthTaskSources.test.js",
+        "FAIL __tests__/services/ai2Http.test.js",
+        "FAIL __tests__/services/growthTaskCompletionProductionStartup.test.js",
+        "FAIL __tests__/services/growthTaskCompletionIsolation.test.js",
+        "FAIL __tests__/serverLifecycle.test.js"
+      ],
+      "hasPermissionErrors": true
+    },
+    {
+      "name": "homework-regression-normal-permissions.log",
+      "kind": "development full service normal execution context",
+      "exitCode": 0,
+      "sha256": "e7536b21f382c9ad48ee4e405a02356db6b10f766737f654a2dce7c19e413d71",
+      "summary": [
+        "Test Suites: 50 passed, 50 total",
+        "Tests:       1751 passed, 1751 total",
+        "Snapshots:   0 total",
+        "Time:        262.146 s, estimated 286 s"
+      ],
+      "failureSuites": [],
+      "hasPermissionErrors": false
+    }
+  ],
+  "independent": {
+    "source": "read-only reviewer tool results in current conversation; no separate raw log archived",
+    "initial": {
+      "suitesPassed": 2,
+      "testsPassed": 36,
+      "exitCode": 0
+    },
+    "afterFix": {
+      "testsPassed": 5,
+      "testsNotSelected": 36,
+      "exitCode": 0,
+      "selection": "missing collection|failed hello|after transaction snapshot|exact child DTO"
+    }
+  },
+  "notClaimed": [
+    "family backend full regression",
+    "AI3 formal HTTP",
+    "AI3 browser",
+    "real model",
+    "mutation verification"
+  ]
+}

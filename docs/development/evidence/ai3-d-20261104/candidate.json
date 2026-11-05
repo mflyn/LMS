@@ -1,0 +1,135 @@
+{
+  "scope": "AI3-D local synthetic remote operation and candidate; no public routes or real Provider",
+  "status": "USER_REVIEW_PENDING",
+  "parentPatch": {
+    "path": "../ai3-c-20261104/candidate.patch",
+    "sha256": "48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89"
+  },
+  "lms": {
+    "base": "a4f051e26f3514da051910a3495e11b149a32c45",
+    "files": [
+      {
+        "path": "backend/services/homework-service/services/ai3Service.js",
+        "priorSha256": "d18d5ee6e288fb16a33316faabebb33763562a3f5ce2fa74c9e187f55524155e",
+        "sha256": "a174a502472305e13c7960f2fc30cac74d9ef6200ec64de6b3ab41a70d11102a"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai3Contract.js",
+        "priorSha256": "ab5978a5f91ff472f65ebaa019c8b690644a77a4bac842a0bcc12c8dae027cea",
+        "sha256": "2f823aa9a80b3139da54cc49f27d441b5d77c9475096c0bfe7cd5c169b92e13b"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai3Operation.js",
+        "priorSha256": null,
+        "sha256": "cbeae06436fbaed3d6eaa3070b9174fd1ef3aa8fdc4ad1a29deb04a282f5bcca"
+      },
+      {
+        "path": "backend/services/homework-service/models/Ai3.js",
+        "priorSha256": "c706b70c102231ee5d14a82e025af2ad2e1ebb9b7b52162213f0aa83ee57960c",
+        "sha256": "a875ac5c76ca46c1c127c86887600c05d9670ee6373a35dbd0d5af658adc50df"
+      },
+      {
+        "path": "backend/services/homework-service/__tests__/services/ai3Service.test.js",
+        "priorSha256": "8e57cc7c060b3e69d0c8ea235d699f5f38e1d68e16f6bb42a193cd88609bdef3",
+        "sha256": "64f3d3362aa31c5b3af79370e40fe1261de57d4c8cd7f44e75800e285d1ab04d"
+      },
+      {
+        "path": "backend/services/homework-service/__tests__/services/ai3Operation.test.js",
+        "priorSha256": null,
+        "sha256": "22a6d575211820a9505e1db6ce2c836117ab2cee7eb53d15e02b92f428eef00c"
+      },
+      {
+        "path": "docs/api/family-ai3-api.md",
+        "priorSha256": "98482de2f2633c9d4e96052c80e1126ec202ccc834ab762cf5d05465b5e35b4f",
+        "sha256": "db6b3b77df092df57583e0a9b472238288fe5468257daa020aa7494e28d5b60c"
+      },
+      {
+        "path": "docs/development/family-ai3-test-plan.md",
+        "priorSha256": "cd6efb900e2fcbd966125d2df3f5c6b74ae456198fa6e90a3d8d46e4035e0281",
+        "sha256": "3e597ca2297aaba036989bcef2aa2cd8f4a2f21d2f041e297d04d0ba21926381"
+      }
+    ],
+    "patch": "candidate.patch",
+    "patchSha256": "8d59ea59bc5d6b3f5c1d37b2ccdaab2c82ba8c2cf6bc0c19603dc2223289f05e"
+  },
+  "approvalRecords": {
+    "files": [
+      {
+        "path": "docs/development/evidence/ai3-c-20261104/README.md",
+        "priorSha256": "c3003d9918213e24304cb3789d44e6196b4662ca77bb4b5d6690b8386fc83f39",
+        "sha256": "bad92660f24a30bcec0d67abf1622321e05446c771b24c8ab2dd0957c625837e"
+      },
+      {
+        "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "priorSha256": "83272a4c25590f33b0b969bcb4d2525d01ff593547d4f3a45f64b6714d86d196",
+        "sha256": "3c5b018776c69affb8094162506b2b834950523a96a3dd74c422636418476b41"
+      }
+    ],
+    "patch": "approval-records.patch",
+    "patchSha256": "1414470121bcdef433a0a9965a08d41fe7b567245c237d191f3770d469383fc8"
+  },
+  "deepTutor": {
+    "base": "a5e64ca49667ddba2a0ba80c02ac1c59959dc2f9",
+    "files": [
+      {
+        "path": "deeptutor/services/ai1_contract.py",
+        "sha256": "0cfeac149b1ef879bd449c4d47f8e7f2515253dc641fd3fe1ed26c30ad166e77"
+      },
+      {
+        "path": "deeptutor/services/ai1_operation.py",
+        "sha256": "4dfd96ff16afb27f958386da781c95211ecbbeb8c9bfb17ab042bbc397dbc2ba"
+      },
+      {
+        "path": "deeptutor/services/ai1_store.py",
+        "sha256": "f778d8811f9ac713aa8a5d7c653c9a34776026cb16508a6d64901e874be70020"
+      },
+      {
+        "path": "deeptutor/services/ai1_http.py",
+        "sha256": "d45a9cf3cd24d539d87bcde340dfd1fe30e1adce0363f61aa73c0d49977634de"
+      },
+      {
+        "path": "deeptutor/services/ai3_contract.py",
+        "sha256": "0028b603a77ac7c1270605d419c8c18dfe486f568d197066680f3b4fd10396e7"
+      },
+      {
+        "path": "deeptutor/services/ai3_operation.py",
+        "sha256": "e43916c47c0f391ca874a0b44f5c4bed45be515f90c9aa4baf1c082a4ef63792"
+      },
+      {
+        "path": "deeptutor/services/ai3_http.py",
+        "sha256": "ce5a33729868c1ef99c33ffa6e79c7023cdc4f6449cfc51ed9955be37628ef49"
+      },
+      {
+        "path": "tests/services/ai3/test_operations.py",
+        "sha256": "c46c1138ab48bbdff0680aa8bff726d02b4de4fcb489b1446df40ec25c00a53e"
+      },
+      {
+        "path": "tests/services/ai3/test_synthetic_server.py",
+        "sha256": "fb4e64b85fbf42cba4da92e679fdce6dc6561f8fed0568202819a08f81054dd9"
+      },
+      {
+        "path": "tests/services/ai3/synthetic_server.py",
+        "sha256": "04a981779f2d6fff556e7c364d49c1aa31d7ce6d34f69db29e97b5ad288b1ee4"
+      },
+      {
+        "path": "tests/services/ai3/lms_acceptance.py",
+        "sha256": "d6882b8400037425e97f1f74971090a4bd1e735892a5ae08bb6c6e961692efa5"
+      },
+      {
+        "path": "tests/services/ai3/lms_wire_golden.json",
+        "sha256": "7dd3dff816efb325035af62cb4702ab627795201f9cafca350933b52d1f8ddba"
+      }
+    ],
+    "patch": "deeptutor.patch",
+    "patchSha256": "685075d998702babacf9e68b038ec39dfbcde4aefc80a9007c9cecf35f4b22cf"
+  },
+  "preservedInitialFiles": 45,
+  "boundaries": [
+    "AI-3 OPEN",
+    "T4/T8/AI-1 OPEN",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "QUALIFIED_COUNTER_PENDING",
+    "REMAINDER_DEFERRED"
+  ]
+}

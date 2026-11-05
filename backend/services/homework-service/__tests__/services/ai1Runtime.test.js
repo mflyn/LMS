@@ -58,6 +58,21 @@ test('query-only needs continuous stores and dedicated transport but not a curre
   expect(runtime.dependencies.operationClient.put).toBeUndefined();
   expect(runtime.dependencies.getProfile()).toBeNull();
 });
+test.each(['enabled', 'query-only'])('mixed budget invalid owner prevents %s startup without repair or auto-creating AI3 collections', async mode => {
+  const missing = new mongoose.Types.ObjectId();
+  await M.Reservation.collection.insertOne({ _id: missing, jobId: missing, familyId: missing, childId: missing,
+    ownerProfile: 'ai3', reservedMicros: 184320, state: 'reserved' });
+  const before = await M.Reservation.find().lean();
+  const collections = async () => (await mongoose.connection.db.listCollections({}, { nameOnly: true }).toArray()).map(c => c.name).sort();
+  const original = await collections();
+  const runtime = createAi1Runtime({ env: env(mode), connection: mongoose.connection });
+  await expect(runtime.assertReady()).rejects.toThrow(/^AI_PROFILE_UNAVAILABLE$/);
+  expect(() => runtime.dependencies.getRuntime()).toThrow(/^AI_PROFILE_UNAVAILABLE$/);
+  expect(await M.Reservation.find().lean()).toEqual(before);
+  expect(await collections()).toEqual(original);
+  expect(await M.Account.countDocuments()).toBe(0);
+  expect(await M.Slot.countDocuments()).toBe(0);
+});
 test.each(['extra', 'negative', 'fraction', 'string', 'unsafe'])('budget config rejects %s without exposing values', kind => {
   const config = env(), limits = JSON.parse(config.AI1_BUDGET_LIMITS);
   if (kind === 'extra') limits.secretMarker = 'synthetic-do-not-log';

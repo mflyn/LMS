@@ -420,6 +420,22 @@ test('GET package/history/command/list have zero persisted side effects and chil
   await service.listCommands({ identity: parent, childId: child.id }); await service.getCommand({ identity: parent, commandId: result.command.id });
   expect(await snapshot()).toBe(before);
 });
+test('AI3 source review hash is parent-only, persisted-review based and independent of media availability', async () => {
+  const { result } = await publish(), packageId = result.package.id, { a, body } = await submitted(packageId);
+  await service.review({ identity: parent, packageId, attemptId: String(a._id), body });
+  const persisted = await M.Attempt.findById(a._id).lean();
+  const expected = C.hash(JSON.parse(JSON.stringify(persisted.review)));
+  const before = JSON.stringify(await M.Attempt.findById(a._id).lean());
+  const p = await service.getAttempt({ identity: parent, packageId, attemptId: String(a._id) });
+  expect(p.attempt.sourceReviewHash).toBe(expected);
+  mediaReader.mockImplementation(async q => q.mediaIds.map(mediaId => ({ mediaId, mimeType: 'image/png', sizeBytes: 100, status: 'deleted' })));
+  const deleted = await service.getAttempt({ identity: parent, packageId, attemptId: String(a._id) });
+  expect(deleted.attempt.media[0].status).toBe('deleted');
+  expect(deleted.attempt.sourceReviewHash).toBe(expected);
+  const c = await service.getAttempt({ identity: child, packageId, attemptId: String(a._id) });
+  expect(c.attempt).not.toHaveProperty('sourceReviewHash');
+  expect(JSON.stringify(await M.Attempt.findById(a._id).lean())).toBe(before);
+});
 test('review never approves an empty persisted correction even when the media port returns empty', async () => {
   const { result } = await publish(), packageId = result.package.id, { a, body } = await submitted(packageId);
   await M.Attempt.collection.updateOne({ _id: a._id }, { $set: { mediaIds: [], mediaBindings: [] } });

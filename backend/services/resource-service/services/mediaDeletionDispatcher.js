@@ -10,11 +10,13 @@ const error = (status, code) => new AppError(code, status, code, true, []);
 const objectId = value => typeof value === 'string' && /^[0-9a-f]{24}$/i.test(value);
 
 // Classify only inside the caller's live scope; the selected writer authorizes again.
-const createMediaDeletionDispatcher = ({ mediaService, privacyService, retirementService, assertAi2Continuous = () => {} } = {}) => {
+const createMediaDeletionDispatcher = ({ mediaService, privacyService, retirementService,
+  assertAi2Continuous = () => {}, assertAi3Continuous = () => { throw error(503, 'AI3_NOT_READY'); } } = {}) => {
   if (typeof mediaService?.deleteMedia !== 'function' || typeof privacyService?.deleteMedia !== 'function') {
     throw new TypeError('Both media deletion services are required');
   }
   if (typeof assertAi2Continuous !== 'function') throw new TypeError('AI2 continuity assertion is required');
+  if (typeof assertAi3Continuous !== 'function') throw new TypeError('AI3 continuity assertion is required');
   const dispatch = async ({ identity, mediaId } = {}, reclassified = false) => {
     try {
       if (!identity || !objectId(identity.id) || !['parent', 'student'].includes(identity.role)) {
@@ -40,6 +42,7 @@ const createMediaDeletionDispatcher = ({ mediaService, privacyService, retiremen
       const tombstone = await Tombstone.findOne({ mediaId, ...scope }).select('_id purpose').lean();
       const asset = await Asset.findOne({ _id: mediaId, ...scope }).select('purpose').lean();
       if (tombstone?.purpose === 'ai2_correction' || asset?.purpose === 'ai2_correction') await assertAi2Continuous();
+      if (tombstone?.purpose === 'ai3_practice' || asset?.purpose === 'ai3_practice') await assertAi3Continuous();
       const retirement = await Retirement.findOne({ mediaId, ...scope }).select('state').lean();
       if (retirement?.state === 'INCONSISTENT'
         || tombstone && retirement && ['DELETED', 'PURGED'].includes(retirement.state)) throw error(409, 'MEDIA_RETIREMENT_INCONSISTENT');

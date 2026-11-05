@@ -162,7 +162,8 @@ function createAi2Service({ now = Date.now, getRuntime = () => ({ enabled: false
     const result = { id: String(a._id), attemptVersion: a.attemptVersion, note: a.note, submittedAt: a.submittedAt,
       review: a.review ? { decision: a.review.decision, comment: a.review.comment, reviewedAt: a.review.reviewedAt } : null };
     if (identity.role === 'parent') Object.assign(result, { attemptPayloadHash: a.payloadHash, submittedBy: String(a.submittedBy),
-      mediaBindings: plain(a.mediaBindings), review: a.review ? plain(a.review) : null });
+      mediaBindings: plain(a.mediaBindings), review: a.review ? plain(a.review) : null,
+      sourceReviewHash: a.review ? C.hash(plain(a.review)) : null });
     return result;
   }
   async function attemptView(a, identity) {

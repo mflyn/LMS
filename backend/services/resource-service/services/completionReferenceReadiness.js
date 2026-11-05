@@ -1,6 +1,6 @@
 const { assertCompletionPrivacyReadiness } = require('./completionPrivacyReadiness');
 const { validateSystemRetirement } = require('./completionRetentionReadiness');
-const { validPair, purposeFor, protocolFields } = require('../../../common/services/completionMediaProtocol');
+const { validPair, purposeFor, protocolFields, isAttemptType } = require('../../../common/services/completionMediaProtocol');
 
 // Native reads only; callers must keep protocol writes paused for the whole preflight.
 const READ = { maxTimeMS: 5000, readPreference: 'primary' };
@@ -46,9 +46,9 @@ const assertCompletionReferenceReadiness = async ({ connection, writesPaused, jo
       const cursor = connection.db.collection(name).find(filter, { ...READ, projection: PROJECTIONS[name], batchSize: 100 });
       try { for await (const row of cursor) await visitor(row); } finally { await cursor.close(); }
     };
-    await scan('mediareferences', { $or: [{ field: { $in: protocolFields } }, { resourceType: 'ai2_attempt' }] }, async row => {
+    await scan('mediareferences', { $or: [{ field: { $in: protocolFields } }, { resourceType: { $in: ['ai2_attempt', 'ai3_attempt'] } }] }, async row => {
       if (!validReference(row)) { issues.add('REFERENCE_INVALID'); return; }
-      const ai2 = row.resourceType === 'ai2_attempt';
+      const ai2 = isAttemptType(row.resourceType);
       const asset = await one('mediaassets', { _id: row.mediaId }, ai2 ? { uploadedBy: 1, sizeBytes: 1 } : {});
       let sameSystemEvidence = false;
       if (row.state === 'released' && asset?.status === 'deleted' && asset.orphanRetirementId != null) {

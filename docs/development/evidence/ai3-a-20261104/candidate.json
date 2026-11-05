@@ -1,0 +1,56 @@
+{
+  "base": "a4f051e26f3514da051910a3495e11b149a32c45",
+  "scope": "AI3-A unmounted manual service only; excludes unrelated T8 and AI1/AI2 increments",
+  "files": [
+    {
+      "path": "backend/services/homework-service/models/Ai3.js",
+      "sha256": "ca7ea9c9136874d4b6a55a5106ba1d5296804eeeb6df1dc472df5cac6cb5dd91"
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Contract.js",
+      "sha256": "98a0b3d4230f67b585ff3d418a2d8b7804c9734fb7d603731e2a24fdbad4e04c"
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Readiness.js",
+      "sha256": "88f52e6e8ede30d6f5f3cb39dbf313866fac27adccb06f1cbed8132a28843376"
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Service.js",
+      "sha256": "67302dc845af286059d674150a9f9543eb26fd5a520a56645bbc3becd3139ac1"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3Contract.test.js",
+      "sha256": "9f642006ccbaae4c5907a3d9fcc68478671911927e6bb9bda1c8f7575a710459"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3Service.test.js",
+      "sha256": "4e56ff70c63bb0ca85f81cd587d48091f5a3b42d8bf3ff12530b0201807c6e7e"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/setup.js",
+      "sha256": "8797d1f4e04efa537138bed5b1c9af07ca3fc036650aca20f0acbbb9e5487d77"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-04-family-ai3-minimal-design.md",
+      "sha256": "b2dc4f7d4d2d553bd507ed76f2efd7fec64bb7fa474281d9c3cb0a4ea67567f5"
+    },
+    {
+      "path": "docs/api/family-ai3-api.md",
+      "sha256": "2122279d6cfcf9833500663341a04948e8efbe9fc0a3ad86b7b23cf4e06fde93"
+    },
+    {
+      "path": "docs/development/family-ai3-test-plan.md",
+      "sha256": "5c8e8f4a5a54da3e336549b102cba604476d8792c0be1c2098be695d101c252d"
+    }
+  ],
+  "patch": {
+    "path": "candidate.patch",
+    "sha256": "63b488422575bdc4a63b66c475184040b8e58bf34bdb1a93ce1d43e649d7a0ae"
+  },
+  "gate": {
+    "priorSha256": "a374484031f0aadd7b53418c5839daacd8700434afe52e7a8cb6ed37cb14c321",
+    "appendPath": "gate-append.md",
+    "appendSha256": "9e6f39ba4150e1054e794fc6e8c73751da74df8abac198a64f920f3edc356984"
+  },
+  "reviewMetadata": "README and verification summaries are not part of the source candidate digest"
+}

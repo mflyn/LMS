@@ -1,0 +1,191 @@
+{
+  "sourcePatchSha256": "48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89",
+  "rawLogsLocalOnly": "private-evidence/ai3-c-SAW4Nm",
+  "records": [
+    {
+      "name": "red.log",
+      "exitCode": 1,
+      "kind": "new generation methods absent; 7 failing tests, original 23 passing",
+      "sha256": "46383fdac64270172e631073e0d1f8fc5486b9d638f57b3c79f8ea1e7e70c773",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       7 failed, 23 passed, 30 total",
+        "Time:        8.704 s"
+      ]
+    },
+    {
+      "name": "first.log",
+      "exitCode": 1,
+      "kind": "old fixture had fake immutable source digest; not weakened",
+      "sha256": "4ca006ed7a27dd6866f54afcf774194e35ed844e9559cfe12838c7522985500a",
+      "summary": [
+        "Test Suites: 1 failed, 2 passed, 3 total",
+        "Tests:       7 failed, 61 passed, 68 total",
+        "Time:        14.236 s, estimated 15 s"
+      ]
+    },
+    {
+      "name": "second.log",
+      "exitCode": 1,
+      "kind": "revocation fixture collided with existing family owner unique key",
+      "sha256": "5d807284936c154a710fd3d8c00955a6a23aad053d574560bcccc9104d272bcb",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 29 passed, 30 total",
+        "Time:        9.514 s"
+      ]
+    },
+    {
+      "name": "deadline-red.log",
+      "exitCode": 1,
+      "kind": "genuine deadline crossing bug before final resampling",
+      "sha256": "5a0c34c05f8df509bd4d7a227ac7213cb659677bc192c7222a1aa2df1098df59",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 35 passed, 36 total",
+        "Time:        8.366 s"
+      ]
+    },
+    {
+      "name": "ai-regression.log",
+      "exitCode": 0,
+      "kind": "development 19 AI suites before final preview and review additions",
+      "sha256": "4daa0ba0f0b262dadab3a7e94a67bede694920931a8bb39c42bc8c85ebb64f4d",
+      "summary": [
+        "Test Suites: 19 passed, 19 total",
+        "Tests:       462 passed, 462 total",
+        "Time:        88.47 s, estimated 92 s"
+      ]
+    },
+    {
+      "name": "preview-red.log",
+      "exitCode": 1,
+      "kind": "four invalid input boundaries before closure",
+      "sha256": "bcbfd57dd8950fda48d4a4ef988e84db3743e246fa86ae45ce12f43ed538ed56",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       4 failed, 2 passed, 6 total",
+        "Time:        3.4 s"
+      ]
+    },
+    {
+      "name": "preview-green.log",
+      "exitCode": 0,
+      "kind": "development preview cases",
+      "sha256": "1aff61e56546b123c282b074ae674ad324a1cf52251c72d7ea1912409c72704c",
+      "summary": [
+        "Test Suites: 1 passed, 1 total",
+        "Tests:       6 passed, 6 total",
+        "Time:        3.041 s"
+      ]
+    },
+    {
+      "name": "review-red.log",
+      "exitCode": 1,
+      "kind": "final off/profile review P2 red; other 4 selected tests passing",
+      "sha256": "2b736f7ef1cb724f6aa7015e2cfddd2e014fd0bab3389a76e79ae42c508f3cd4",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       2 failed, 34 skipped, 4 passed, 40 total",
+        "Time:        5.273 s, estimated 6 s"
+      ]
+    },
+    {
+      "name": "review-green.log",
+      "exitCode": 0,
+      "kind": "development final service and preview 46",
+      "sha256": "3be8ada2f75afa0aef32bb74971762958b4b4ee5a5d77eb1cd3f82a802c8fe4e",
+      "summary": [
+        "Test Suites: 2 passed, 2 total",
+        "Tests:       46 passed, 46 total",
+        "Time:        13.035 s"
+      ]
+    },
+    {
+      "name": "mutation-final.log",
+      "exitCode": 1,
+      "kind": "valid mutation killed by deadline/off/profile assertions",
+      "sha256": "aa2b7aea1c28bae70141d1196979f35ca1ca0194940f45d742aacc00d269a5a6",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       3 failed, 37 skipped, 40 total",
+        "Time:        4.537 s, estimated 11 s"
+      ]
+    },
+    {
+      "name": "mutation-retry.log",
+      "exitCode": 1,
+      "kind": "valid mutation killed by three deterministic cold retry assertions",
+      "sha256": "2b1f36bbd3237ebae4d810fc395713aea14aebfc717eace23363358ae6c82881",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       3 failed, 37 skipped, 40 total",
+        "Time:        4.995 s, estimated 10 s"
+      ]
+    },
+    {
+      "name": "homework-regression.log",
+      "exitCode": 0,
+      "kind": "source changed during this run; not final frozen verification",
+      "sha256": "ff0c7f5179f97728e3f9a3f5346d6289369d86755c70d152ccfea3b1099b39a5",
+      "summary": [
+        "Test Suites: 52 passed, 52 total",
+        "Tests:       1799 passed, 1799 total",
+        "Time:        292.461 s, estimated 295 s"
+      ]
+    },
+    {
+      "name": "homework-frozen.log",
+      "exitCode": 0,
+      "kind": "final full homework configuration on unchanged frozen source",
+      "sha256": "5088b38899b3124af9f64cc3f2a77741256280abf31bb433266eeda3104aa75d",
+      "summary": [
+        "Test Suites: 52 passed, 52 total",
+        "Tests:       1799 passed, 1799 total",
+        "Time:        258.17 s, estimated 291 s"
+      ]
+    }
+  ],
+  "independent": {
+    "source": "read-only reviewer tool output; no separately archived raw reviewer log",
+    "agentId": "01a1a679-c789-7f91-96d7-d44e4cd53c09",
+    "testsPassed": 46,
+    "suitesPassed": 2,
+    "skipped": 0,
+    "exitCode": 0,
+    "seconds": 12.477,
+    "toolSession": "67448",
+    "toolOutputChunk": "ef03fb",
+    "hashBinding": "No contemporaneous hash snapshot during independent tests; subsequent read-only hash/static check and in-memory base+A+B+C reconstruction matched current source",
+    "scope": "ai3Service and ai3GenerationPreview; not full homework",
+    "reviewP2": "FIXED_AND_INDEPENDENTLY_REVIEWED, pending user batch acceptance",
+    "mutations": "development reruns only, independent reviewer did not rerun"
+  },
+  "reconstruction": {
+    "files": 9,
+    "matched": true,
+    "scope": "only incremental files rebuilt from recorded before snapshots, not whole-repo clean execution",
+    "initialInvalidPatch": {
+      "sha256": "d1ad46f9567a5e8c0e8c71e9df5bd1c92e64eda5f979c37e1ea26043c0157713",
+      "reason": "missing new-file mode; git apply forward failed with dev/null; retained locally"
+    }
+  },
+  "preservation": {
+    "unrelatedOriginalFileHashesUnchanged": 37
+  },
+  "checks": {
+    "eslintSixFiles": "PASS",
+    "docsFamilyCheck": "PASS, existing checker not a complete AI3 semantic gate",
+    "diffCheck": "PASS",
+    "localLinkPaths": 21
+  },
+  "notClaimed": [
+    "qualified complete input token counting",
+    "real model or external requests",
+    "AI3 remote outcome/terminal recovery",
+    "AI3 public HTTP/browser acceptance",
+    "whole family backend/release verification",
+    "device validation",
+    "AI-3 gate closure"
+  ]
+}

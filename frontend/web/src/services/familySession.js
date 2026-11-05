@@ -4,6 +4,7 @@ export const PARENT_SESSION_EXPIRED_EVENT = 'family-growth:parent-session-expire
 export const CHILD_SESSION_EXPIRED_EVENT = 'family-growth:child-session-expired';
 export const TUTOR_COMMAND_PREFIX = 'family-growth.ai1-command.v1:';
 export const AI2_COMMAND_PREFIX = 'family-growth.ai2-command.v1:';
+export const AI3_COMMAND_PREFIX = 'family-growth.ai3-command.v1:';
 
 const toParentSession = (value) => {
   if (!value || typeof value.token !== 'string' || !value.token.trim()) return null;
@@ -46,6 +47,7 @@ const toChildSession = (value) => {
 const keys = { parent: PARENT_SESSION_KEY, student: CHILD_SESSION_KEY };
 const changeKey = role => `family-growth.session-change.v1:${role}`;
 const exitKey = (role, actorId) => `family-growth.session-exit.v1:${role}:${actorId}`;
+const ai3ExpiryKey = (role, actorId) => `family-growth.ai3-session-expiry.v1:${role}:${actorId}`;
 const COMMAND_PREFIX = 'family-growth.completion-command.v1:';
 const observers = new Set();
 const observed = new Map();
@@ -58,14 +60,16 @@ const parse = raw => { try { return JSON.parse(raw); } catch { return null; } };
 const stored = key => { try { return localStorage.getItem(key); } catch { return null; } };
 const actor = (role, session) => role === 'parent' ? session?.user.id : session?.child.childId;
 
-const clearCommands = (role, actorId) => {
+const clearCommands = (role, actorId, ai3Only = false) => {
   if (!actorId) return;
   try {
     const remove = [];
     for (let index = 0; index < sessionStorage.length; index += 1) {
       const key = sessionStorage.key(index);
-      if (key?.startsWith(AI2_COMMAND_PREFIX)) {
-        const suffix = key.slice(AI2_COMMAND_PREFIX.length), parts = parse(suffix);
+      if (ai3Only && !key?.startsWith(AI3_COMMAND_PREFIX)) continue;
+      const aiPrefix = [AI2_COMMAND_PREFIX, AI3_COMMAND_PREFIX].find(prefix => key?.startsWith(prefix));
+      if (aiPrefix) {
+        const suffix = key.slice(aiPrefix.length), parts = parse(suffix);
         if (Array.isArray(parts) && parts.length === 4 && JSON.stringify(parts) === suffix
           && ['parent', 'student'].includes(parts[0])
           && parts.slice(1).every(value => typeof value === 'string' && /^[0-9a-f]{24}$/.test(value))
@@ -98,16 +102,17 @@ const clearCommands = (role, actorId) => {
 };
 
 // Persistent non-secret exit markers let a suspended tab clear its own command store on resume.
-const reconcileExit = (role, actorId) => {
+const reconcileExit = (role, actorId, ai3Only = false) => {
   if (!actorId) return;
-  const marker = stored(exitKey(role, actorId));
+  const marker = stored((ai3Only ? ai3ExpiryKey : exitKey)(role, actorId));
   if (!marker) return;
   try {
-    const seen = `family-growth.session-exit-seen.v1:${role}:${actorId}`;
+    const seen = ai3Only ? `family-growth.ai3-session-expiry-seen.v1:${role}:${actorId}`
+      : `family-growth.session-exit-seen.v1:${role}:${actorId}`;
     if (sessionStorage.getItem(seen) !== marker) {
-      if (clearCommands(role, actorId)) sessionStorage.setItem(seen, marker);
+      if (clearCommands(role, actorId, ai3Only)) sessionStorage.setItem(seen, marker);
     }
-  } catch { clearCommands(role, actorId); }
+  } catch { clearCommands(role, actorId, ai3Only); }
 };
 
 const read = role => {
@@ -119,10 +124,10 @@ const read = role => {
   const change = parse(stored(changeKey(role)));
   const previousActor = previous?.snapshot?.actorId;
   if (session && previousActor && previousActor !== actor(role, session)) clearCommands(role, previousActor);
-  reconcileExit(role, previous?.snapshot?.actorId);
-  reconcileExit(role, change?.previousActorId);
-  reconcileExit(role, change?.actorId);
-  reconcileExit(role, actor(role, session));
+  for (const actorId of new Set([previousActor, change?.previousActorId, change?.actorId, actor(role, session)])) {
+    reconcileExit(role, actorId);
+    reconcileExit(role, actorId, true);
+  }
   if (raw && !session) { try { localStorage.removeItem(keys[role]); } catch { /* Unavailable storage is anonymous. */ } }
   if (previous?.raw === raw && Boolean(previous.session) === Boolean(session)) return previous;
   const snapshot = session ? Object.freeze({ role, actorId: actor(role, session),
@@ -152,11 +157,13 @@ const notify = (role, reason, previousActorId) => {
 };
 const recordExit = (role, actorId, reason) => {
   if (!actorId) return;
-  clearCommands(role, actorId);
+  const ai3Only = reason === 'expired';
+  clearCommands(role, actorId, ai3Only);
   try {
-    localStorage.setItem(exitKey(role, actorId), JSON.stringify({ revision: revision(), reason }));
+    // Expiry must not overwrite a prior explicit-exit marker or change older command recovery policies.
+    localStorage.setItem((ai3Only ? ai3ExpiryKey : exitKey)(role, actorId), JSON.stringify({ revision: revision(), reason }));
   } catch { /* Sign-out must remain possible when storage becomes unavailable. */ }
-  reconcileExit(role, actorId);
+  reconcileExit(role, actorId, ai3Only);
 };
 const save = (role, value) => {
   const session = (role === 'parent' ? toParentSession : toChildSession)(value);
@@ -178,7 +185,7 @@ const clear = (role, reason, expected) => {
   if (expected !== undefined && !isSessionCurrent(expected)) return false;
   const current = captureSession(role);
   const actorId = current?.actorId || parse(stored(changeKey(role)))?.actorId;
-  if (reason === 'explicit_logout' || reason === 'account_switch') recordExit(role, actorId, reason);
+  if (['explicit_logout', 'account_switch', 'expired'].includes(reason)) recordExit(role, actorId, reason);
   deniedRaw.set(role, stored(keys[role]));
   try {
     localStorage.setItem(changeKey(role), JSON.stringify({ revision: revision(), reason, actorId, previousActorId: actorId }));
@@ -208,7 +215,8 @@ window.addEventListener('storage', event => {
   if (event.storageArea && event.storageArea !== localStorage) return;
   for (const role of Object.keys(keys)) {
     if (event.key !== null && event.key !== keys[role] && event.key !== changeKey(role)
-      && !event.key?.startsWith(`family-growth.session-exit.v1:${role}:`)) continue;
+      && !event.key?.startsWith(`family-growth.session-exit.v1:${role}:`)
+      && !event.key?.startsWith(`family-growth.ai3-session-expiry.v1:${role}:`)) continue;
     const previousActor = observed.get(role)?.snapshot?.actorId;
     const change = parse(stored(changeKey(role)));
     const current = captureSession(role);

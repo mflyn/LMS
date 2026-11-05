@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { EventEmitter } = require('events');
 
 describe('progress-service startup boundary', () => {
   test('uses standard deployment database and port variables', () => {
@@ -34,8 +35,10 @@ describe('progress-service startup boundary', () => {
 
   test('startServer connects before listening', async () => {
     const calls = [];
-    const server = { close: jest.fn() };
+    const server = new EventEmitter();
+    server.close = jest.fn();
     const app = {
+      locals: {},
       listen: jest.fn((port, callback) => {
         calls.push(`listen:${port}`);
         callback();

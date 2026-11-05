@@ -23,7 +23,7 @@ const list = (value, length) => Array.isArray(value) && value.length === length
     return descriptor?.enumerable && own(descriptor, 'value');
   });
 const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
-const bodyFor = input => {
+const bodyFor = (input, type, field) => {
   if (!closed(input, ['familyId', 'childId', 'identity', 'mediaIds', 'bindings'])
     || !isId(input.familyId) || !isId(input.childId) || !record(input.identity)) throw unavailable();
   // Parent membership is resolved from current Family data, never stale JWT scope claims.
@@ -39,8 +39,8 @@ const bodyFor = input => {
     || !list(input.bindings, length) || !input.mediaIds.every(isId) || new Set(input.mediaIds).size !== length) throw unavailable();
   const bindings = input.bindings.map((ref, i) => {
     if (!closed(ref, ['mediaId', 'resourceType', 'resourceId', 'field', 'bindingOperationId'])
-      || ref.mediaId !== input.mediaIds[i] || ref.resourceType !== 'ai2_attempt' || !isId(ref.resourceId)
-      || ref.field !== 'correctionMediaIds' || !uuid(ref.bindingOperationId)) throw unavailable();
+      || ref.mediaId !== input.mediaIds[i] || ref.resourceType !== type || !isId(ref.resourceId)
+      || ref.field !== field || !uuid(ref.bindingOperationId)) throw unavailable();
     return { mediaId: ref.mediaId, resourceType: ref.resourceType, resourceId: ref.resourceId,
       field: ref.field, bindingOperationId: ref.bindingOperationId };
   });
@@ -58,7 +58,7 @@ const parse = (response, command, serviceToken) => {
     return { mediaId: item.mediaId, mimeType: item.mimeType, sizeBytes: item.sizeBytes, status: item.status };
   });
 };
-function createAi2MediaInspectClient({ resourceServiceUrl, serviceToken, timeout = 3000, axiosInstance = axios } = {}) {
+function createMediaInspectClient({ resourceServiceUrl, serviceToken, timeout = 3000, axiosInstance = axios } = {}, profile) {
   let url;
   try {
     url = new URL(resourceServiceUrl);
@@ -66,14 +66,18 @@ function createAi2MediaInspectClient({ resourceServiceUrl, serviceToken, timeout
       || url.pathname !== '/' || url.search || url.hash || typeof serviceToken !== 'string' || serviceToken.length < 32
       || !Number.isInteger(timeout) || timeout < 1 || timeout > 30000 || typeof axiosInstance?.post !== 'function') throw invalidConfig();
   } catch { throw invalidConfig(); }
-  const endpoint = `${url.origin}/api/internal/media/ai2/inspect`;
+  const endpoint = `${url.origin}/api/internal/media/${profile.name}/inspect`;
   return { inspect: async input => {
     try {
-      const command = bodyFor(input);
+      const command = bodyFor(input, profile.type, profile.field);
       const response = await axiosInstance.post(endpoint, command, { headers: { 'x-service-token': serviceToken },
         timeout, maxRedirects: 0, maxContentLength: 32768, maxBodyLength: 32768, proxy: false });
       return parse(response, command, serviceToken);
     } catch { throw unavailable(); }
   } };
 }
-module.exports = { createAi2MediaInspectClient };
+const createAi2MediaInspectClient = options => createMediaInspectClient(options,
+  { name: 'ai2', type: 'ai2_attempt', field: 'correctionMediaIds' });
+const createAi3MediaInspectClient = options => createMediaInspectClient(options,
+  { name: 'ai3', type: 'ai3_attempt', field: 'practiceMediaIds' });
+module.exports = { createAi2MediaInspectClient, createAi3MediaInspectClient };

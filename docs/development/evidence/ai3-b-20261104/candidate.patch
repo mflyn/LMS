@@ -1,0 +1,625 @@
+diff --git a/backend/services/homework-service/__tests__/services/ai1Runtime.test.js b/backend/services/homework-service/__tests__/services/ai1Runtime.test.js
+index 88b4883d..c0b4bed9 100644
+--- a/backend/services/homework-service/__tests__/services/ai1Runtime.test.js
++++ b/backend/services/homework-service/__tests__/services/ai1Runtime.test.js
+@@ -58,6 +58,21 @@ test('query-only needs continuous stores and dedicated transport but not a curre
+   expect(runtime.dependencies.operationClient.put).toBeUndefined();
+   expect(runtime.dependencies.getProfile()).toBeNull();
+ });
++test.each(['enabled', 'query-only'])('mixed budget invalid owner prevents %s startup without repair or auto-creating AI3 collections', async mode => {
++  const missing = new mongoose.Types.ObjectId();
++  await M.Reservation.collection.insertOne({ _id: missing, jobId: missing, familyId: missing, childId: missing,
++    ownerProfile: 'ai3', reservedMicros: 184320, state: 'reserved' });
++  const before = await M.Reservation.find().lean();
++  const collections = async () => (await mongoose.connection.db.listCollections({}, { nameOnly: true }).toArray()).map(c => c.name).sort();
++  const original = await collections();
++  const runtime = createAi1Runtime({ env: env(mode), connection: mongoose.connection });
++  await expect(runtime.assertReady()).rejects.toThrow(/^AI_PROFILE_UNAVAILABLE$/);
++  expect(() => runtime.dependencies.getRuntime()).toThrow(/^AI_PROFILE_UNAVAILABLE$/);
++  expect(await M.Reservation.find().lean()).toEqual(before);
++  expect(await collections()).toEqual(original);
++  expect(await M.Account.countDocuments()).toBe(0);
++  expect(await M.Slot.countDocuments()).toBe(0);
++});
+ test.each(['extra', 'negative', 'fraction', 'string', 'unsafe'])('budget config rejects %s without exposing values', kind => {
+   const config = env(), limits = JSON.parse(config.AI1_BUDGET_LIMITS);
+   if (kind === 'extra') limits.secretMarker = 'synthetic-do-not-log';
+diff --git a/backend/services/homework-service/__tests__/services/ai1Service.test.js b/backend/services/homework-service/__tests__/services/ai1Service.test.js
+index 9d1990ad..8f63a060 100644
+--- a/backend/services/homework-service/__tests__/services/ai1Service.test.js
++++ b/backend/services/homework-service/__tests__/services/ai1Service.test.js
+@@ -33,6 +33,17 @@ const candidate = async () => {
+   const job = await M.Job.findById(g.job.id).lean();
+   return { c, g, result: await service.applyOutcome({ jobId: g.job.id, evidence: outcome(job) }) };
+ };
++test.each(['ai3', 'future', null])('shared owner %s cannot be settled through an AI1 job', async ownerProfile => {
++  const c = await create(), g = await generate(c);
++  await service.claim({ identity: parent, jobId: g.job.id });
++  const job = await M.Job.findById(g.job.id).lean();
++  await M.Reservation.collection.updateOne({ _id: job.reservationId }, { $set: { ownerProfile } });
++  const snapshot = async () => JSON.stringify(await Promise.all([M.Job, M.Cycle, M.Artifact, M.Account, M.Reservation, M.Slot]
++    .map(m => m.find().sort({ _id: 1 }).lean())));
++  const before = await snapshot();
++  await expect(service.applyOutcome({ jobId: g.job.id, evidence: outcome(job) })).rejects.toMatchObject({ statusCode: 503, code: 'AI_STORE_ISOLATED' });
++  expect(await snapshot()).toBe(before);
++});
+ beforeAll(async () => { for (const model of [...Object.values(M), Family, User]) await model.init(); });
+ beforeEach(async () => {
+   clock = Date.parse('2026-11-01T01:00:00.000Z');
+diff --git a/backend/services/homework-service/models/Ai1.js b/backend/services/homework-service/models/Ai1.js
+index 25c58086..d37d4e56 100644
+--- a/backend/services/homework-service/models/Ai1.js
++++ b/backend/services/homework-service/models/Ai1.js
+@@ -38,12 +38,13 @@ const Command = model('Ai1Command', { ...scope, actorId: oid, endpointOperation:
+   operationId: { type: String, required: true }, requestHash: { type: String, required: true },
+   result: { type: Schema.Types.Mixed, required: true }
+ }, [[{ familyId: 1, actorId: 1, endpointOperation: 1, operationId: 1 }, { unique: true }]]);
+-const Reservation = model('Ai1Reservation', { ...scope, jobId: oid, reservedMicros: amount, settledMicros: { type: Number, default: null },
++const Reservation = model('Ai1Reservation', { ...scope, jobId: oid,
++  ownerProfile: { type: String, enum: ['ai1', 'ai3'] }, reservedMicros: amount, settledMicros: { type: Number, default: null },
+   state: { type: String, enum: ['reserved', 'reserved_unknown', 'settled', 'released'], required: true },
+   reservedDay: { type: String, required: true }, reservedMonth: { type: String, required: true },
+   reservedTimezone: { type: String, required: true }, settledAt: Date
+ }, [[{ jobId: 1 }, { unique: true }]]);
+ const Account = model('Ai1Account', { _id: String, outstandingMicros: { ...amount, default: 0 },
+   settledMicros: { ...amount, default: 0 }, revision: { ...amount, default: 0 }, halted: { type: Boolean, default: false } });
+-const Slot = model('Ai1SendSlot', { _id: String, jobId: Schema.Types.ObjectId });
++const Slot = model('Ai1SendSlot', { _id: String, jobId: Schema.Types.ObjectId, ownerProfile: { type: String, enum: ['ai1', 'ai3'] } });
+ module.exports = { Cycle, Job, Artifact, Command, Reservation, Account, Slot };
+diff --git a/backend/services/homework-service/services/ai1Runtime.js b/backend/services/homework-service/services/ai1Runtime.js
+index 473b2075..917f0de5 100644
+--- a/backend/services/homework-service/services/ai1Runtime.js
++++ b/backend/services/homework-service/services/ai1Runtime.js
+@@ -4,6 +4,7 @@ const M = require('../models/Ai1');
+ const { createOperationClient } = require('./ai1Operation');
+ const { assertAi1Indexes } = require('./ai1Readiness');
+ const { assertTransactionCapability } = require('../../../common/services/mongoTransaction');
++const { assertAiBudgetOwners } = require('./aiGenerationBudget');
+ 
+ const unavailable = () => C.error(503, 'AI_PROFILE_UNAVAILABLE');
+ const PROFILE_KEYS = ['model', 'modelProfileVersion', 'pricingProfileVersion', 'checkedAt', 'expiresAt',
+@@ -54,6 +55,7 @@ function createAi1Runtime({ env = process.env, connection = mongoose.connection
+           command: query => connection.db.admin().command(query, { maxTimeMS: 5000, readPreference: 'primary' })
+         }) } }, 'AI1');
+         await assertAi1Indexes();
++        await assertAiBudgetOwners();
+         if (profile) validateProfile(profile);
+         ready = true;
+       } catch { throw unavailable(); }
+diff --git a/backend/services/homework-service/services/ai1Service.js b/backend/services/homework-service/services/ai1Service.js
+index 33c7140b..d75b2a96 100644
+--- a/backend/services/homework-service/services/ai1Service.js
++++ b/backend/services/homework-service/services/ai1Service.js
+@@ -4,11 +4,11 @@ const M = require('../models/Ai1');
+ const Family = require('../../../common/models/Family');
+ const User = require('../../../common/models/User');
+ const { resolveChildAccess } = require('../../../common/utils/familyAccess');
+-const { formatLocalDate } = require('../../../common/utils/familyDate');
+ const { runMongoTransaction } = require('../../../common/services/mongoTransaction');
+ const C = require('./ai1Contract');
+ const { assertAi1Indexes } = require('./ai1Readiness');
+ const { buildRequest, validateOperation } = require('./ai1Operation');
++const { createAiGenerationBudget } = require('./aiGenerationBudget');
+ const objectId = () => new mongoose.Types.ObjectId();
+ const id = value => typeof value === 'string' && /^[a-f0-9]{24}$/.test(value);
+ const same = (a, b) => String(a) === String(b);
+@@ -28,6 +28,8 @@ const artifactView = a => ({ id: String(a._id), cycleId: String(a.cycleId), vers
+ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits = () => null,
+   getRuntime = () => ({ enabled: false, continuousStore: false }), sourceReader, operationClient,
+   transactionRunner = work => runMongoTransaction({ mongooseInstance: mongoose, work }) } = {}) {
++  const budget = createAiGenerationBudget({ now, getLimits });
++  const { account, adjust, budgetState, reserve } = budget;
+   const continuity = () => { if (getRuntime()?.continuousStore !== true) throw C.error(503, 'AI_STORE_ISOLATED'); };
+   const enabled = () => { if (getRuntime()?.enabled !== true) throw C.error(503, 'AI_DISABLED'); continuity(); };
+   const parentScope = async (identity, session = null) => {
+@@ -92,7 +94,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
+     return snapshot;
+   });
+   const jobView = async (j, identity, session = null) => {
+-    const r = await M.Reservation.findById(j.reservationId).session(session).lean();
++    const r = await budget.reservation('ai1', j, session);
+     return { id: String(j._id), cycleId: String(j.cycleId), operationId: j.operationId, createdBy: String(j.createdBy),
+       status: j.status, recoveryStatus: j.status === 'unknown' ? 'uncertain_manual_reconcile' : j.status === 'dispatching' ? 'query_pending' : 'none',
+       canRecover: same(j.createdBy, identity?.id) && ['reserved', 'dispatching', 'unknown'].includes(j.status)
+@@ -115,42 +117,6 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
+     const current = C.buildPreview(cycle, getProfile(), Number(now()));
+     if (C.hash(current) !== C.hash(cycle.preview)) throw C.error(409, 'AI_PREVIEW_STALE');
+   };
+-  const account = async (key, session) => M.Account.findOneAndUpdate({ _id: key }, { $setOnInsert: {
+-    outstandingMicros: 0, settledMicros: 0, revision: 0, halted: false } }, { upsert: true, new: true, session }).lean();
+-  const adjust = async (a, outstandingDelta, settledDelta, session) => {
+-    if (![a.outstandingMicros + outstandingDelta, a.settledMicros + settledDelta].every(C.integer)) throw C.error(503, 'AI_STORE_ISOLATED');
+-    const r = await M.Account.updateOne({ _id: a._id, revision: a.revision },
+-      { $inc: { outstandingMicros: outstandingDelta, settledMicros: settledDelta, revision: 1 } }, { session });
+-    if (r.matchedCount !== 1) throw conflict();
+-  };
+-  const budgetState = async (access, amount, session, singleAmount = amount) => {
+-    const limits = getLimits();
+-    if (!limits || !['singleMicros', 'dayMicros', 'monthMicros', 'experimentMicros'].every(k => C.integer(limits[k]))) throw C.error(503, 'AI_PROFILE_UNAVAILABLE');
+-    const a = await account(String(access.familyId), session), experiment = await account('experiment', session);
+-    if (a.halted || experiment.halted) throw C.error(503, 'AI_STORE_ISOLATED');
+-    const date = new Date(Number(now())), timezone = access.family.timezone;
+-    const day = formatLocalDate(date, timezone), month = day.slice(0, 7);
+-    // Re-bucket dated settlements in the CURRENT timezone; changing timezone cannot erase charges.
+-    const settled = await M.Reservation.find({ familyId: access.familyId, state: 'settled' }).session(session).lean();
+-    let daily = 0n, monthly = 0n;
+-    for (const r of settled) {
+-      const d = formatLocalDate(r.settledAt, timezone);
+-      if (d === day) daily += BigInt(r.settledMicros);
+-      if (d.slice(0, 7) === month) monthly += BigInt(r.settledMicros);
+-    }
+-    const pending = BigInt(a.outstandingMicros) + BigInt(amount);
+-    if (singleAmount > limits.singleMicros || daily + pending > BigInt(limits.dayMicros) || monthly + pending > BigInt(limits.monthMicros)
+-      || BigInt(experiment.settledMicros) + BigInt(experiment.outstandingMicros) + BigInt(amount) > BigInt(limits.experimentMicros)) {
+-      throw C.error(409, 'AI_BUDGET_EXCEEDED');
+-    }
+-    return { a, experiment, day, month, timezone };
+-  };
+-  const reserve = async (access, childId, jobId, reservationId, amount, session) => {
+-    const { a, experiment, day, month, timezone } = await budgetState(access, amount, session);
+-    await adjust(a, amount, 0, session); await adjust(experiment, amount, 0, session);
+-    await M.Reservation.create([{ _id: reservationId, familyId: access.familyId, childId, jobId, reservedMicros: amount,
+-      state: 'reserved', reservedDay: day, reservedMonth: month, reservedTimezone: timezone }], { session });
+-  };
+   const create = async ({ identity, body }) => {
+     const access = await authorize(identity, body?.childId), command = C.normalize('create', body);
+     const previous = await replay(identity, command.childId, 'create', '/api/tutor-cycles', command);
+@@ -225,18 +191,17 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
+         return { claimed: false, job: await jobView(await M.Job.findById(j._id).session(session).lean(), identity, session) };
+       }
+       await budgetState(await authorize(identity, String(j.childId), session), 0, session, j.preview.reservedCeilingMicros);
+-      const slot = await M.Slot.findOneAndUpdate({ _id: 'global' }, { $setOnInsert: { jobId: null } }, { upsert: true, new: true, session }).lean();
+-      if (slot.jobId) throw unresolved();
++      await budget.claimSlot('ai1', j, session);
+       const claimed = await M.Job.findOneAndUpdate({ _id: j._id, status: 'reserved' },
+         { $set: { status: 'dispatching', owner: randomUUID(), leaseExpiresAt: new Date(Number(now()) + 30000) } }, { new: true, session }).lean();
+       if (!claimed) throw unresolved();
+-      await M.Slot.updateOne({ _id: 'global', jobId: null }, { $set: { jobId: j._id } }, { session });
+       return { claimed: true, owner: claimed.owner, job: await jobView(claimed, identity, session) };
+     });
+   };
+   const markUnknown = async ({ jobId, owner }) => transact(async session => {
+     continuity(); const j = await M.Job.findOne({ _id: jobId, ...(owner ? { owner } : {}), status: { $in: ['dispatching', 'unknown'] } }).session(session).lean();
+     if (!j || j.status === 'unknown') return;
++    await budget.reservation('ai1', j, session);
+     await M.Job.updateOne({ _id: j._id, status: j.status }, { $set: { status: 'unknown' } }, { session });
+     await M.Reservation.updateOne({ _id: j.reservationId }, { $set: { state: 'reserved_unknown' } }, { session });
+   });
+@@ -256,6 +221,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
+       return { artifact: artifactView(a), cycleStateVersion: j.evidence.cycleStateVersion };
+     }
+     if (!['dispatching', 'unknown'].includes(j.status)) throw invalid();
++    const reservation = await budget.reservation('ai1', j, session);
+     let charge = null;
+     if (evidence.usage !== null) {
+       if (!evidence.usage || Object.keys(evidence.usage).sort().join(',') !== 'inputTokens,outputTokens') throw invalid();
+@@ -269,7 +235,6 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
+       text, contentHash: C.sha(text), createdBy: j.createdBy, origin: 'ai_generation', status: 'candidate', reviewVersion: 1,
+       generation: { jobId: String(j._id), modelProfileVersion: j.preview.modelProfileVersion, generationInputHash: j.preview.generationInputHash } }], { session });
+     if (charge !== null) {
+-      const reservation = await M.Reservation.findById(j.reservationId).session(session).lean();
+       if (!['reserved', 'reserved_unknown'].includes(reservation.state)) throw invalid();
+       await adjust(await account(String(j.familyId), session), -reservation.reservedMicros, charge, session);
+       await adjust(await account('experiment', session), -reservation.reservedMicros, charge, session);
+@@ -279,7 +244,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
+       { $set: { status: 'candidate', currentArtifactId: a._id }, $inc: { stateVersion: 1 } }, { session });
+     await M.Job.updateOne({ _id: j._id, status: j.status }, { $set: { status: 'succeeded', artifactId: a._id, outcomeHash: digest,
+       evidence: { digest, cycleStateVersion: c.stateVersion + 1 } } }, { session });
+-    await M.Slot.updateOne({ _id: 'global', jobId: j._id }, { $set: { jobId: null } }, { session });
++    await budget.releaseSlot('ai1', j, session);
+     return { artifact: artifactView(a), cycleStateVersion: c.stateVersion + 1 };
+   });
+   const edit = action => async ({ identity, cycleId, body }) => {
+@@ -333,7 +298,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
+   };
+ 
+   const failJob = async (j, { release, charge, failureCode, digest }, session) => {
+-    const r = await M.Reservation.findById(j.reservationId).session(session).lean();
++    const r = await budget.reservation('ai1', j, session);
+     if (!r || !['reserved', 'reserved_unknown'].includes(r.state)) throw C.error(503, 'AI_STORE_ISOLATED');
+     if (release || charge !== null) {
+       await adjust(await account(String(j.familyId), session), -r.reservedMicros, charge || 0, session);
+@@ -347,7 +312,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
+     const job = await M.Job.updateOne({ _id: j._id, status: j.status },
+       { $set: { status: 'failed', failureCode, outcomeHash: digest } }, { session });
+     if (cycle.matchedCount !== 1 || job.matchedCount !== 1) throw conflict();
+-    await M.Slot.updateOne({ _id: 'global', jobId: j._id }, { $set: { jobId: null } }, { session });
++    await budget.releaseSlot('ai1', j, session);
+   };
+   const halt = async jobId => transact(async session => {
+     continuity(); const j = await M.Job.findById(jobId).session(session).lean();
+diff --git a/backend/services/homework-service/services/aiGenerationBudget.js b/backend/services/homework-service/services/aiGenerationBudget.js
+new file mode 100644
+index 00000000..56af50be
+--- /dev/null
++++ b/backend/services/homework-service/services/aiGenerationBudget.js
+@@ -0,0 +1,129 @@
++const M = require('../models/Ai1');
++const C = require('./ai1Contract');
++const { formatLocalDate } = require('../../../common/utils/familyDate');
++const isolated = () => C.error(503, 'AI_STORE_ISOLATED');
++const same = (a, b) => a != null && b != null && String(a) === String(b);
++const isObjectId = value => value?._bsontype === 'ObjectId';
++const profile = value => { if (!['ai1', 'ai3'].includes(value)) throw isolated(); return value; };
++const storedProfile = row => Object.hasOwn(row, 'ownerProfile') ? profile(row.ownerProfile) : 'ai1';
++const inTransaction = session => { if (!session?.inTransaction()) throw isolated(); };
++const ownerFields = (p, owner) => p === 'ai1'
++  ? { reservationId: owner.reservationId, amount: owner.preview?.reservedCeilingMicros }
++  : { reservationId: owner.generation?.reservationId, amount: owner.generation?.reservedCeilingMicros };
++
++function validateReservation(p, owner, r) {
++  profile(p);
++  const fields = ownerFields(p, owner);
++  if (!r || storedProfile(r) !== p || ![r._id, r.jobId, r.familyId, r.childId].every(isObjectId)
++    || !same(r._id, fields.reservationId) || !same(r.jobId, owner._id)
++    || !same(r.familyId, owner.familyId) || !same(r.childId, owner.childId)
++    || !C.integer(r.reservedMicros) || r.reservedMicros !== fields.amount
++    || (p === 'ai3' && owner.endpointOperation !== 'ai3.generate')) throw isolated();
++  return r;
++}
++async function reservation(p, owner, session = null) {
++  profile(p);
++  const fields = ownerFields(p, owner);
++  if (!isObjectId(fields.reservationId)) throw isolated();
++  return validateReservation(p, owner, await M.Reservation.findById(fields.reservationId).session(session).lean());
++}
++async function resolveOwner(r, session = null) {
++  const p = storedProfile(r);
++  if (!isObjectId(r.jobId)) throw isolated();
++  // Same homework database, closed two-owner dispatch. Raw AI3 read avoids model auto-init on an AI1-only startup.
++  const owner = p === 'ai1' ? await M.Job.findById(r.jobId).session(session).lean()
++    : await M.Reservation.db.collection('ai3commands').findOne({ _id: r.jobId }, { session });
++  if (!owner) throw isolated();
++  validateReservation(p, owner, r);
++  return { profile: p, owner };
++}
++async function validateSlot(slot, session = null) {
++  if (!slot) return;
++  if (slot._id !== 'global') throw isolated();
++  if (slot.jobId == null) { if (Object.hasOwn(slot, 'ownerProfile')) throw isolated(); return; }
++  const p = storedProfile(slot);
++  if (!isObjectId(slot.jobId)) throw isolated();
++  const r = await M.Reservation.findOne({ jobId: slot.jobId }).session(session).lean();
++  if (!r || storedProfile(r) !== p || !['reserved', 'reserved_unknown'].includes(r.state)) throw isolated();
++  const { owner } = await resolveOwner(r, session);
++  const phase = p === 'ai1' ? owner.status : owner.phase;
++  if (!(p === 'ai1' ? ['dispatching', 'unknown'] : ['DISPATCHING', 'UNKNOWN']).includes(phase)) throw isolated();
++}
++async function assertAiBudgetOwners() {
++  try {
++    const cursor = M.Reservation.find().lean().cursor();
++    try {
++      for await (const r of cursor) await resolveOwner(r);
++      await validateSlot(await M.Slot.findById('global').lean());
++    } finally { await cursor.close(); }
++  } catch (_) { throw isolated(); }
++}
++
++// Internal transactional primitives only. Callers own authorization, quote/claim proof and owner state CAS.
++// These functions never send, retry a Provider, expire unknown charges or repair stored data.
++function createAiGenerationBudget({ now = Date.now, getLimits = () => null } = {}) {
++  const account = async (key, session) => {
++    inTransaction(session);
++    return M.Account.findOneAndUpdate({ _id: key }, { $setOnInsert: {
++      outstandingMicros: 0, settledMicros: 0, revision: 0, halted: false } }, { upsert: true, new: true, session }).lean();
++  };
++  const adjust = async (a, outstandingDelta, settledDelta, session) => {
++    inTransaction(session);
++    if (![a.outstandingMicros + outstandingDelta, a.settledMicros + settledDelta].every(C.integer)) throw isolated();
++    const result = await M.Account.updateOne({ _id: a._id, revision: a.revision },
++      { $inc: { outstandingMicros: outstandingDelta, settledMicros: settledDelta, revision: 1 } }, { session });
++    if (result.matchedCount !== 1) throw C.error(409, 'AI_VERSION_CONFLICT');
++  };
++  const budgetState = async (access, amount, session, singleAmount = amount) => {
++    inTransaction(session);
++    if (!C.integer(amount) || !C.integer(singleAmount)) throw isolated();
++    const limits = getLimits();
++    if (!limits || !['singleMicros', 'dayMicros', 'monthMicros', 'experimentMicros'].every(k => C.integer(limits[k]))) throw C.error(503, 'AI_PROFILE_UNAVAILABLE');
++    const a = await account(String(access.familyId), session), experiment = await account('experiment', session);
++    if (a.halted || experiment.halted) throw isolated();
++    const date = new Date(Number(now())), timezone = access.family.timezone;
++    const day = formatLocalDate(date, timezone), month = day.slice(0, 7);
++    const rows = await M.Reservation.find({ familyId: access.familyId }).session(session).lean();
++    let daily = 0n, monthly = 0n;
++    for (const r of rows) {
++      await resolveOwner(r, session);
++      if (r.state !== 'settled') continue;
++      if (!C.integer(r.settledMicros)) throw isolated();
++      const d = formatLocalDate(r.settledAt, timezone);
++      if (d === day) daily += BigInt(r.settledMicros);
++      if (d.slice(0, 7) === month) monthly += BigInt(r.settledMicros);
++    }
++    const pending = BigInt(a.outstandingMicros) + BigInt(amount);
++    if (singleAmount > limits.singleMicros || daily + pending > BigInt(limits.dayMicros) || monthly + pending > BigInt(limits.monthMicros)
++      || BigInt(experiment.settledMicros) + BigInt(experiment.outstandingMicros) + BigInt(amount) > BigInt(limits.experimentMicros)) throw C.error(409, 'AI_BUDGET_EXCEEDED');
++    return { a, experiment, day, month, timezone };
++  };
++  const reserve = async (access, childId, jobId, reservationId, amount, session, ownerProfile = 'ai1') => {
++    inTransaction(session); profile(ownerProfile);
++    const { a, experiment, day, month, timezone } = await budgetState(access, amount, session);
++    await adjust(a, amount, 0, session); await adjust(experiment, amount, 0, session);
++    await M.Reservation.create([{ _id: reservationId, familyId: access.familyId, childId, jobId, ownerProfile, reservedMicros: amount,
++      state: 'reserved', reservedDay: day, reservedMonth: month, reservedTimezone: timezone }], { session });
++  };
++  const claimSlot = async (p, owner, session) => {
++    inTransaction(session); await reservation(p, owner, session);
++    const slot = await M.Slot.findOneAndUpdate({ _id: 'global' }, { $setOnInsert: { jobId: null } }, { upsert: true, new: true, session }).lean();
++    await validateSlot(slot, session);
++    if (slot.jobId) throw C.error(409, 'AI_OPERATION_UNRESOLVED');
++    const result = await M.Slot.updateOne({ _id: 'global', jobId: null, ownerProfile: { $exists: false } },
++      { $set: { jobId: owner._id, ownerProfile: p } }, { session });
++    if (result.matchedCount !== 1) throw isolated();
++  };
++  const releaseSlot = async (p, owner, session) => {
++    inTransaction(session); await reservation(p, owner, session);
++    const slot = await M.Slot.findById('global').session(session).lean();
++    if (!slot || !same(slot.jobId, owner._id)) { await validateSlot(slot, session); return; }
++    if (storedProfile(slot) !== p) throw isolated();
++    const result = await M.Slot.updateOne({ _id: 'global', jobId: owner._id,
++      ...(Object.hasOwn(slot, 'ownerProfile') ? { ownerProfile: p } : { ownerProfile: { $exists: false } }) },
++    { $set: { jobId: null }, $unset: { ownerProfile: '' } }, { session });
++    if (result.matchedCount !== 1) throw isolated();
++  };
++  return { account, adjust, budgetState, reserve, reservation, claimSlot, releaseSlot };
++}
++module.exports = { createAiGenerationBudget, assertAiBudgetOwners };
+diff --git a/backend/services/homework-service/__tests__/services/ai3Budget.test.js b/backend/services/homework-service/__tests__/services/ai3Budget.test.js
+new file mode 100644
+index 00000000..b656f2a8
+--- /dev/null
++++ b/backend/services/homework-service/__tests__/services/ai3Budget.test.js
+@@ -0,0 +1,236 @@
++const mongoose = require('mongoose');
++const { randomUUID } = require('crypto');
++const M = require('../../models/Ai1');
++const A3 = require('../../models/Ai3');
++const Family = require('../../../../common/models/Family');
++const User = require('../../../../common/models/User');
++const { runMongoTransaction } = require('../../../../common/services/mongoTransaction');
++const { createAi1Service } = require('../../services/ai1Service');
++const { createAiGenerationBudget, assertAiBudgetOwners } = require('../../services/aiGenerationBudget');
++const oid = () => new mongoose.Types.ObjectId();
++const tx = work => runMongoTransaction({ mongooseInstance: mongoose, work });
++let family, child, parent, clock, limits, ledger, ai1;
++const command = () => ({ schemaVersion: 'ai1-min-v1', operationId: randomUUID() });
++beforeAll(async () => { for (const m of [...Object.values(M), ...Object.values(A3), Family, User]) await m.init(); });
++beforeEach(async () => {
++  clock = Date.parse('2026-11-30T23:59:00Z'); child = oid(); parent = { id: String(oid()), role: 'parent' };
++  family = await Family.create({ familyName: 'Synthetic shared budget', ownerParentId: parent.id,
++    memberParentIds: [parent.id], childIds: [child], timezone: 'UTC' });
++  await User.collection.insertMany([{ _id: new mongoose.Types.ObjectId(parent.id), role: 'parent', username: parent.id },
++    { _id: child, familyId: family._id, role: 'student', username: String(child) }]);
++  limits = { singleMicros: 184320, dayMicros: 368640, monthMicros: 368640, experimentMicros: 737280 };
++  ledger = createAiGenerationBudget({ now: () => clock, getLimits: () => limits });
++  const profile = { model: 'synthetic-no-provider', modelProfileVersion: 'synthetic-model-1', pricingProfileVersion: 'synthetic-price-1',
++    inputPriceMicrosPerMillion: 9000000, outputPriceMicrosPerMillion: 27000000,
++    checkedAt: '2026-11-01T00:00:00.000Z', expiresAt: '2026-12-31T00:00:00.000Z', callWindowMs: 60000, clockMarginMs: 5000 };
++  ai1 = createAi1Service({ now: () => clock, getProfile: () => profile, getLimits: () => limits,
++    getRuntime: () => ({ enabled: true, continuousStore: true }), sourceReader: { require: async q => ({
++      id: q.sourceTaskId, familyId: String(family._id), childId: String(child), subject: 'math' }) } });
++});
++async function ai1Cycle() {
++  return ai1.create({ identity: parent, body: { ...command(), childId: String(child), source: { type: 'task', id: String(oid()) },
++    input: { questionText: '124 * 23', answerText: null, parentContext: '' },
++    chapter: { provenance: 'parent_declared', subject: 'math', grade: 4, term: 'upper', textbookLabel: 'Synthetic',
++      chapterLabel: '\u591a\u4f4d\u6570\u4e58\u4e24\u4f4d\u6570' }, deidentifiedConfirmed: true } });
++}
++const generateAi1 = c => ai1.generate({ identity: parent, cycleId: c.cycle.id, body: { ...command(), expectedCycleStateVersion: c.cycle.stateVersion,
++  generationInputHash: c.preview.generationInputHash, modelProfileVersion: c.preview.modelProfileVersion,
++  pricingProfileVersion: c.preview.pricingProfileVersion, maxAuthorizedCostMicros: 184320, externalSendConfirmed: true } });
++// Internal ledger consumer fixture, not an implemented public AI3 generate or Provider path.
++async function reserveAi3(session, seed = { id: oid(), reservationId: oid(), operationId: randomUUID() }) {
++  const { id, reservationId, operationId } = seed;
++  await ledger.reserve({ familyId: family._id, family }, child, id, reservationId, 184320, session, 'ai3');
++  const [c] = await A3.Command.create([{ _id: id, familyId: family._id, childId: child, roundId: oid(), actorId: parent.id,
++    endpointOperation: 'ai3.generate', operationId, requestHash: 'a'.repeat(64), payload: { synthetic: true },
++    phase: 'RESERVED', resultReference: { synthetic: true }, generation: { reservationId, reservedCeilingMicros: 184320 } }], { session });
++  return c.toObject();
++}
++async function claimAi3(c) {
++  return tx(async session => {
++    const current = await A3.Command.findById(c._id).session(session).lean();
++    if (current.phase !== 'RESERVED') throw new Error('Fixture cannot reclaim');
++    await ledger.budgetState({ familyId: family._id, family }, 0, session, 184320);
++    await ledger.claimSlot('ai3', current, session);
++    await A3.Command.updateOne({ _id: c._id, phase: 'RESERVED' }, { $set: { phase: 'DISPATCHING' } }, { session });
++  });
++}
++async function settleAi3(c, session) {
++  const r = await ledger.reservation('ai3', c, session);
++  await ledger.adjust(await ledger.account(String(family._id), session), -r.reservedMicros, 100, session);
++  await ledger.adjust(await ledger.account('experiment', session), -r.reservedMicros, 100, session);
++  await M.Reservation.updateOne({ _id: r._id }, { $set: { state: 'settled', settledMicros: 100, settledAt: new Date(clock) } }, { session });
++  await A3.Command.updateOne({ _id: c._id }, { $set: { phase: 'SUCCEEDED' } }, { session });
++  await ledger.releaseSlot('ai3', c, session);
++}
++const snapshot = async () => JSON.stringify(await Promise.all([M.Account, M.Reservation, M.Slot, M.Job, A3.Command]
++  .map(m => m.find().sort({ _id: 1 }).lean())));
++
++test('AI1 and AI3 race for the same final allowance, with one reservation and unchanged loser', async () => {
++  limits.dayMicros = 184320; const c = await ai1Cycle();
++  // Existing counters avoid testing first-upsert Mongo behavior instead of budget CAS.
++  await tx(async session => { await ledger.account(String(family._id), session); await ledger.account('experiment', session); });
++  const result = await Promise.allSettled([generateAi1(c), tx(reserveAi3)]);
++  expect(result.filter(x => x.status === 'fulfilled')).toHaveLength(1);
++  expect(result.find(x => x.status === 'rejected').reason.code).toBe('AI_BUDGET_EXCEEDED');
++  expect(await M.Reservation.countDocuments()).toBe(1);
++  expect(await M.Job.countDocuments() + await A3.Command.countDocuments()).toBe(1);
++  expect((await M.Account.findById(String(family._id))).outstandingMicros).toBe(184320);
++  expect((await M.Account.findById('experiment')).outstandingMicros).toBe(184320);
++});
++test('both profiles contend for one global slot; losing claim preserves reserved state', async () => {
++  const one = await generateAi1(await ai1Cycle()), three = await tx(reserveAi3);
++  await M.Slot.create({ _id: 'global', jobId: null });
++  const result = await Promise.allSettled([ai1.claim({ identity: parent, jobId: one.job.id }), claimAi3(three)]);
++  expect(result.filter(x => x.status === 'fulfilled')).toHaveLength(1);
++  expect(result.find(x => x.status === 'rejected').reason.code).toBe('AI_OPERATION_UNRESOLVED');
++  const slot = await M.Slot.findById('global').lean();
++  const firstWon = result[0].status === 'fulfilled';
++  expect(slot.ownerProfile).toBe(firstWon ? 'ai1' : 'ai3');
++  expect(String(slot.jobId)).toBe(firstWon ? one.job.id : String(three._id));
++  expect((await M.Job.findById(one.job.id)).status).toBe(firstWon ? 'dispatching' : 'reserved');
++  expect((await A3.Command.findById(three._id)).phase).toBe(firstWon ? 'RESERVED' : 'DISPATCHING');
++  await assertAiBudgetOwners();
++});
++test('cold counter and slot contention is atomic; a duplicate upsert retries only the same local owner', async () => {
++  const cycle = await ai1Cycle(), seed = { id: oid(), reservationId: oid(), operationId: randomUUID() };
++  expect(await M.Account.countDocuments()).toBe(0); expect(await M.Slot.countDocuments()).toBe(0);
++  const results = await Promise.allSettled([generateAi1(cycle), tx(s => reserveAi3(s, seed))]);
++  expect(results[0].status).toBe('fulfilled');
++  let three;
++  if (results[1].status === 'rejected') {
++    expect(results[1].reason.code).toBe(11000);
++    expect(await M.Reservation.countDocuments({ _id: seed.reservationId })).toBe(0);
++    expect(await A3.Command.countDocuments({ _id: seed.id })).toBe(0);
++    three = await tx(s => reserveAi3(s, seed));
++  } else three = results[1].value;
++  expect(String(three._id)).toBe(String(seed.id)); expect(three.operationId).toBe(seed.operationId);
++  expect(await M.Reservation.countDocuments()).toBe(2);
++  expect(await M.Account.findById(String(family._id))).toMatchObject({ outstandingMicros: 368640, settledMicros: 0 });
++  const one = results[0].value;
++  const claims = await Promise.allSettled([ai1.claim({ identity: parent, jobId: one.job.id }), claimAi3(three)]);
++  expect(claims.filter(x => x.status === 'fulfilled')).toHaveLength(1);
++  const failed = claims.findIndex(x => x.status === 'rejected');
++  expect(['AI_OPERATION_UNRESOLVED', 11000]).toContain(claims[failed].reason.code);
++  const before = await snapshot();
++  await expect(failed === 0 ? ai1.claim({ identity: parent, jobId: one.job.id }) : claimAi3(three))
++    .rejects.toMatchObject({ code: 'AI_OPERATION_UNRESOLVED' });
++  expect(await snapshot()).toBe(before); await assertAiBudgetOwners();
++});
++test('legacy missing profile is AI1 and can settle; it is never guessed as AI3', async () => {
++  const g = await generateAi1(await ai1Cycle()); await ai1.claim({ identity: parent, jobId: g.job.id });
++  await M.Reservation.collection.updateOne({ jobId: new mongoose.Types.ObjectId(g.job.id) }, { $unset: { ownerProfile: '' } });
++  await M.Slot.collection.updateOne({ _id: 'global' }, { $unset: { ownerProfile: '' } });
++  await assertAiBudgetOwners();
++  const j = await M.Job.findById(g.job.id).lean();
++  await ai1.applyOutcome({ jobId: g.job.id, evidence: { remoteOperationId: j.remoteOperationId,
++    generationInputHash: j.preview.generationInputHash, modelProfileVersion: j.preview.modelProfileVersion,
++    pricingProfileVersion: j.preview.pricingProfileVersion, sendNotAfter: j.sendNotAfter.toISOString(), status: 'succeeded',
++    text: 'Synthetic parent draft', usage: { inputTokens: 100, outputTokens: 50 } } });
++  expect((await M.Account.findById(String(family._id)))).toMatchObject({ outstandingMicros: 0, settledMicros: 2250 });
++  expect((await M.Slot.findById('global')).jobId).toBeNull();
++  await assertAiBudgetOwners();
++  const c = await tx(reserveAi3);
++  await M.Reservation.collection.updateOne({ _id: c.generation.reservationId }, { $unset: { ownerProfile: '' } });
++  const before = await snapshot(); await expect(assertAiBudgetOwners()).rejects.toMatchObject({ code: 'AI_STORE_ISOLATED' });
++  expect(await snapshot()).toBe(before);
++});
++test('unknown AI3 occupancy survives day/month rollover, lease absence and reconstruction', async () => {
++  const c = await tx(reserveAi3); await claimAi3(c);
++  await tx(async session => {
++    await A3.Command.updateOne({ _id: c._id }, { $set: { phase: 'UNKNOWN' } }, { session });
++    await M.Reservation.updateOne({ _id: c.generation.reservationId }, { $set: { state: 'reserved_unknown' } }, { session });
++  });
++  clock = Date.parse('2026-12-01T00:01:00Z'); limits.dayMicros = 184320;
++  ledger = createAiGenerationBudget({ now: () => clock, getLimits: () => limits });
++  const before = await snapshot(); await assertAiBudgetOwners(); expect(await snapshot()).toBe(before);
++  await expect(generateAi1(await ai1Cycle())).rejects.toMatchObject({ code: 'AI_BUDGET_EXCEEDED' });
++  expect((await M.Account.findById(String(family._id))).outstandingMicros).toBe(184320);
++  expect((await M.Reservation.findById(c.generation.reservationId))).toMatchObject({ state: 'reserved_unknown', reservedMonth: '2026-11' });
++  expect(String((await M.Slot.findById('global')).jobId)).toBe(String(c._id));
++});
++test.each(['unknown', 'null', 'crossChild', 'wrongOwner', 'wrongAmount', 'notGenerate'])('invalid persisted reservation %s isolates without repair', async kind => {
++  const c = await tx(reserveAi3);
++  if (kind === 'notGenerate') await A3.Command.collection.updateOne({ _id: c._id }, { $set: { endpointOperation: 'ai3.publish' } });
++  else await M.Reservation.collection.updateOne({ _id: c.generation.reservationId }, { $set:
++    kind === 'unknown' ? { ownerProfile: 'future' } : kind === 'null' ? { ownerProfile: null }
++      : kind === 'crossChild' ? { childId: oid() } : kind === 'wrongOwner' ? { jobId: oid() } : { reservedMicros: 1 } });
++  const before = await snapshot();
++  await expect(assertAiBudgetOwners()).rejects.toMatchObject({ statusCode: 503, code: 'AI_STORE_ISOLATED' });
++  await expect(generateAi1(await ai1Cycle())).rejects.toMatchObject({ statusCode: 503, code: 'AI_STORE_ISOLATED' });
++  expect(await snapshot()).toBe(before);
++});
++test('same ID with a different profile cannot release or reuse the other slot', async () => {
++  const c = await tx(reserveAi3); await claimAi3(c); const before = await snapshot();
++  await expect(tx(s => ledger.releaseSlot('ai1', { ...c, reservationId: c.generation.reservationId,
++    preview: { reservedCeilingMicros: 184320 } }, s))).rejects.toMatchObject({ code: 'AI_STORE_ISOLATED' });
++  expect(await snapshot()).toBe(before);
++});
++test('legal AI3 slot survives another expired AI1 release, then releases only its own settled slot', async () => {
++  const one = await generateAi1(await ai1Cycle()), three = await tx(reserveAi3);
++  await claimAi3(three); const originalSlot = await M.Slot.findById('global').lean();
++  const deadline = (await M.Job.findById(one.job.id)).sendNotAfter.getTime();
++  expect(clock).toBeLessThan(deadline); clock = deadline;
++  const expired = await ai1.claim({ identity: parent, jobId: one.job.id });
++  expect(expired).toMatchObject({ claimed: false, job: { status: 'failed', budget: { state: 'released' } } });
++  expect(await M.Slot.findById('global').lean()).toEqual(originalSlot);
++  expect((await M.Account.findById(String(family._id))).outstandingMicros).toBe(184320);
++  await tx(s => settleAi3(three, s));
++  const slot = await M.Slot.findById('global').lean();
++  expect(slot.jobId).toBeNull(); expect(Object.hasOwn(slot, 'ownerProfile')).toBe(false);
++  expect(await M.Account.findById(String(family._id))).toMatchObject({ outstandingMicros: 0, settledMicros: 100 });
++  expect(await M.Account.findById('experiment')).toMatchObject({ outstandingMicros: 0, settledMicros: 100 });
++  await assertAiBudgetOwners();
++});
++test('claim and release failures after slot writes roll back owner, slot and accounts together', async () => {
++  const c = await tx(reserveAi3), reserved = await snapshot();
++  await expect(tx(async s => {
++    await ledger.claimSlot('ai3', c, s);
++    await A3.Command.updateOne({ _id: c._id }, { $set: { phase: 'DISPATCHING' } }, { session: s });
++    throw new Error('after claim');
++  })).rejects.toThrow('after claim');
++  expect(await snapshot()).toBe(reserved);
++  await claimAi3(c); const claimed = await snapshot();
++  await expect(tx(async s => { await settleAi3(c, s); throw new Error('after release'); })).rejects.toThrow('after release');
++  expect(await snapshot()).toBe(claimed);
++  await assertAiBudgetOwners();
++});
++test('matching reservation cannot release a slot whose identical ID has a conflicting profile', async () => {
++  const c = await tx(reserveAi3); await claimAi3(c);
++  await M.Slot.collection.updateOne({ _id: 'global' }, { $set: { ownerProfile: 'ai1' } });
++  const before = await snapshot();
++  await expect(tx(s => ledger.releaseSlot('ai3', c, s))).rejects.toMatchObject({ code: 'AI_STORE_ISOLATED' });
++  expect(await snapshot()).toBe(before);
++});
++test('reservation and owner rollback together; duplicate ID cannot create a second budget pool', async () => {
++  await expect(tx(async s => { await reserveAi3(s); throw new Error('rollback'); })).rejects.toThrow('rollback');
++  for (const m of [M.Account, M.Reservation, A3.Command]) expect(await m.countDocuments()).toBe(0);
++  const c = await tx(reserveAi3), before = await snapshot();
++  await expect(tx(s => ledger.reserve({ familyId: family._id, family }, child, c._id, oid(), 184320, s, 'ai1'))).rejects.toMatchObject({ code: 11000 });
++  expect(await snapshot()).toBe(before);
++});
++test('unknown slot profile or dangling owner stops claims; readonly preflight never releases it', async () => {
++  const g = await generateAi1(await ai1Cycle());
++  for (const fields of [{ jobId: oid(), ownerProfile: 'future' }, { jobId: oid(), ownerProfile: 'ai3' }, { jobId: null, ownerProfile: 'ai3' }]) {
++    await M.Slot.collection.updateOne({ _id: 'global' }, { $set: fields }, { upsert: true });
++    const before = await snapshot();
++    await expect(assertAiBudgetOwners()).rejects.toMatchObject({ code: 'AI_STORE_ISOLATED' });
++    await expect(ai1.claim({ identity: parent, jobId: g.job.id })).rejects.toMatchObject({ code: 'AI_STORE_ISOLATED' });
++    expect(await snapshot()).toBe(before);
++  }
++});
++test('missing transaction and unknown new profile cannot create a reservation', async () => {
++  await expect(ledger.reserve({ familyId: family._id, family }, child, oid(), oid(), 184320, null, 'ai3')).rejects.toMatchObject({ code: 'AI_STORE_ISOLATED' });
++  await expect(tx(s => ledger.reserve({ familyId: family._id, family }, child, oid(), oid(), 184320, s, 'future'))).rejects.toMatchObject({ code: 'AI_STORE_ISOLATED' });
++  expect(await M.Account.countDocuments()).toBe(0); expect(await M.Reservation.countDocuments()).toBe(0);
++});
++test.each(['read', 'close'])('owner preflight %s failure closes its cursor and returns only sanitized error', async failure => {
++  const before = await snapshot(); let closed = false;
++  const cursor = { async *[Symbol.asyncIterator]() { if (failure === 'read') throw new Error('SYNTHETIC_PRIVATE_DB_MARKER'); },
++    close: async () => { closed = true; if (failure === 'close') throw new Error('SYNTHETIC_PRIVATE_DB_MARKER'); } };
++  const spy = jest.spyOn(M.Reservation, 'find').mockReturnValue({ lean: () => ({ cursor: () => cursor }) });
++  try {
++    await expect(assertAiBudgetOwners()).rejects.toMatchObject({ code: 'AI_STORE_ISOLATED', message: 'AI_STORE_ISOLATED', details: [] });
++    expect(closed).toBe(true);
++  } finally { spy.mockRestore(); }
++  expect(await snapshot()).toBe(before);
++});
+diff --git a/backend/services/homework-service/models/Ai3.js b/backend/services/homework-service/models/Ai3.js
+--- a/backend/services/homework-service/models/Ai3.js
++++ b/backend/services/homework-service/models/Ai3.js
+@@ -29,9 +29,12 @@
+   derivedFromContentId: { type: Schema.Types.ObjectId, default: null }, reason: { type: String, required: true, immutable: true }
+ }, [[{ roundId: 1, version: 1 }, { unique: true, name: 'ai3_content_version' }]]);
+ const Command = model('Ai3Command', { ...scope, roundId: oid, actorId: oid,
+-  endpointOperation: { type: String, enum: ['ai3.create', 'ai3.revise_content', 'ai3.reject_content', 'ai3.publish', 'ai3.cancel', 'ai3.withdraw'], required: true },
++  endpointOperation: { type: String, enum: ['ai3.create', 'ai3.revise_content', 'ai3.reject_content', 'ai3.publish', 'ai3.cancel', 'ai3.withdraw', 'ai3.generate'], required: true },
+   operationId: { type: String, required: true }, requestHash: digest, payload: snapshot,
+-  phase: { type: String, enum: ['SUCCEEDED'], required: true }, resultReference: snapshot
++  phase: { type: String, enum: ['RESERVED', 'DISPATCHING', 'UNKNOWN', 'SUCCEEDED', 'FAILED'], required: true }, resultReference: snapshot,
++  generation: { type: new Schema({ reservationId: oid,
++    reservedCeilingMicros: { type: Number, required: true, min: 0, validate: Number.isSafeInteger }
++  }, { _id: false, strict: 'throw' }), immutable: true }
+ }, [[{ familyId: 1, actorId: 1, endpointOperation: 1, operationId: 1 }, { unique: true, name: 'ai3_actor_command' }],
+   [{ familyId: 1, childId: 1, actorId: 1, phase: 1, createdAt: 1 }, { name: 'ai3_actor_discovery' }]]);
+ module.exports = { Round, Content, Command };
