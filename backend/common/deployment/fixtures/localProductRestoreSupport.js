@@ -38,4 +38,36 @@ function createHttpOwner(makeHarness) {
   };
   return { request, close };
 }
-module.exports = { indexSnapshot, createToolOwner, createHttpOwner };
+function createBrowserOwner({ deadlineMs = 60000 } = {}) {
+  let browser, work, closing, closed = false;
+  const close = () => {
+    closed = true;
+    if (browser && !closing) closing = Promise.resolve().then(() => browser.close());
+    return closing || Promise.resolve();
+  };
+  const run = callback => {
+    if (closed || work) throw Error('DRILL_CANCELLED');
+    let expired = false, closeError;
+    const timer = setTimeout(() => { expired = true; close().catch(error => { closeError = error; }); }, deadlineMs);
+    work = Promise.resolve().then(() => callback(async value => {
+      browser = value;
+      if (closed) { await close(); throw Error('DRILL_CANCELLED'); }
+    })).then(value => {
+      if (expired) throw Error('BROWSER_DEADLINE_EXCEEDED');
+      return value;
+    }).finally(async () => {
+      clearTimeout(timer); await close(); if (closeError) throw closeError;
+    });
+    return work;
+  };
+  const stop = async () => {
+    try { await close(); }
+    finally {
+      if (work) await work.catch(() => {});
+      // A late attach may start closing after stop's first close() completed.
+      if (closing) await closing;
+    }
+  };
+  return { run, stop };
+}
+module.exports = { indexSnapshot, createToolOwner, createHttpOwner, createBrowserOwner };
