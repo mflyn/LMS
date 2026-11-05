@@ -6749,6 +6749,69 @@ CI 以 PR 最新 SHA 的实际结果为准，本节不预先声明通过，也�
 全仓 ESLint、文档状态与 diff 校验通过。授权状态增量独立只读复核未发现新增 P1/P2；
 该复核不冒充真实恢复重跑，历史实例证据与原候选继续保留。
 
+### 28.5 不依赖 NAS 的本机认证恢复补验（2026-11-03）
+
+用户明确授权本地合成夹具与文档修订；不改业务实现、不访问 NAS/服务器、不提交推送或部署。
+在已合并 `4655d30f` 上扩展原正式恢复夹具，接入真实 user-service；恢复后清空会话并重新登录，
+用正式 JWT 验证原命令恢复、作品/审核、三孩子隔离、错误凭据及 PIN 重置。原六项保留，最终正式
+恢复十项通过；归档五项通过，合并显式执行 2 suites/15 tests，17.203 秒。
+归档预演实跑发现同步 restore ETIMEDOUT 后等待，限定停止自有工具并保留 5 failed/9 passed；
+修订为复用已有异步工具 owner，沿用 30 秒超时配置并显式使用 SIGKILL；两个预期负向工具场景
+要求 code/status=1，其他异常仍判失败，不削弱断言。
+本轮独立审阅提出 users 集合过宽豁免 P2 和真实旧 token 写入补测 P3，已补限定字段比较、五种永久
+比较负例及旧会话 complete/recover 拒绝。独立只读复核通过，两项测试保护问题已修复；
+复核未重跑真实实例，最后文档/收尾定向 4 suites/402 tests 为开发复验；不提前关闭 T8。
+
+源码、候选补丁、逐轮证据哈希及剩余发布条件见
+[T8 本机补验](evidence/t8-nonnas-20261103/README.md)。正式应用仍共用临时连接，不冒充独立容器或浏览器；
+NAS/Restic、目标 Ubuntu、浏览器/真机、RPO/RTO、回滚和真实发布尚未验证。
+`LEGACY_USER_DELETION_EVIDENCE_INSUFFICIENT` 仍阻止开放删除前快照，未运行高级恢复 writer。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、两项非阻断补测、
+REMAINDER_DEFERRED 和 T9 NOT_STARTED 不变；原 §28–§28.4 和 §29.34 历史结果不覆盖。
+
+### 28.6 本机恢复后的真实浏览器闭环（2026-11-03）
+
+用户授权优先补本机页面验收，不等待 NAS；仅修改合成夹具/测试/证据文档，不改业务实现、不部署。
+源库真实 dump/restore 到新空副本集并核对完整快照后，生产前端构建经七个正式应用工厂真实 HTTP
+完成孩子 PIN 登录/退出重登、发现原命令并恢复、家长查看旧版本、孩子修改、409 拒绝后重新审核、
+孩子刷新回看。图片实际字节与源摘要一致；原 actor/operation/媒体代次、审核版本 `[1,2]`、共管
+首次确认及单条账本均有断言。两引擎跨标签切换后迟到请求在网络层完成、随后私有视图仍为空，
+不扩大为应用回调消费或无瞬时闪现证明。兄弟姐妹拒绝及原十项 HTTP 安全场景保留。
+
+当前同候选 WebKit/Chromium 各 11 项通过，浏览器默认关闭分支 10 项通过，support 11 项通过；
+前端构建和四文件 ESLint 通过。独立只读复核提出的迟到响应证据和超时收尾两项 P2 已补齐、复核通过；
+新增四项 owner 永久反例。复核只读代码和原始报告，不冒称独立实跑。
+提醒默认初始化快照失败、WebKit access-control 失败、新等待误拒绝缓存 304 的失败全部保留；
+等待初始化响应不放宽零 pageerror/指定路径以外零 console error 断言，不宣称长期稳定性已证明。
+源码冻结、逐轮证据及剩余条件见[T8 浏览器补验](evidence/t8-browser-20261103/README.md)。
+
+本轮仅 macOS 合成恢复与触控尺寸模拟，DEVICE_PENDING；NAS、目标 Ubuntu、异机恢复、RPO/RTO、
+停写/回滚仍待验。严格删除恢复的 `LEGACY_USER_DELETION_EVIDENCE_INSUFFICIENT` 阻断保持，
+不扩展高级恢复或新回收。T4/T8/AI-1 OPEN、历史失败、Docker INCOMPLETE_FAILED、两项非阻断补测
+及 REMAINDER_DEFERRED 不变。未提交、推送、合并、调用模型或访问服务器/NAS。
+
+### 28.7 当前 main 的 T8 本地收口候选（2026-11-04）
+
+核验前序64件认证、126件浏览器归档及冻结源码，保留原失败；基于main `a4f051e26f3514da051910a3495e11b149a32c45`
+重新构建前端并串行复验。独立审查发现迟到attach后的close失败可能误报收尾成功P2，已仅修改helper与单测，
+红灯1失败12通过、绿灯13通过；独立单测13通过。修订后Chromium/WebKit各11通过、归档/HTTP共15通过。
+这些浏览器实跑是开发验证，独立复核不冒称独立浏览器复验；同版本合成备份往返不代表跨版本升级恢复。
+候选、证据、分组清单见[收口记录](evidence/t8-closeout-20261104/README.md)。P2 FIXED_REVIEWED / USER_ACCEPTANCE_PENDING，
+本批待用户验收及另行Git交付授权，T8 OPEN / RELEASE_NOT_READY；真机、NAS、目标Ubuntu、删除恢复及RPO/RTO等条件不变。
+AI-1本地文档增量与T8分开，AI-2合并后状态仅更新当前入口；历史冻结、未关闭和后置状态保留。
+
+2026-11-04后续用户明确批准本批T8本地收口：ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY；
+迟到浏览器关闭失败传播P2 CLOSED / USER_APPROVED。上方待验收描述保留为送审快照。
+绑定原5文件累计补丁`8a9831bc8fb51dc5905998fe6266ec21952990815c32abf1ebf54ecd0c1b66ee`及原97件/追加27件索引，
+本轮复审重新核对全部归档和补丁，实际13项单测0.521秒通过；开发双引擎、HTTP及408项证据仅核验、不冒称重跑。
+详见[批准及复验记录](evidence/t8-closeout-20261104/README.md#用户批准及本轮复验证据)。
+AI-2合并后状态及三组交付边界不变；T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、
+历史失败、非阻断补测及后置范围保持。本次只更新文档，不调用模型、不提交推送或部署。
+
+2026-11-05用户另行授权将已验收T8增量从最新main分离为专用分支/Draft PR，见
+[公开交付范围及验证](evidence/t8-closeout-20261104/public-delivery.md)。不包含已合并AI-3或独立AI-1/AI-2文档增量；
+此前禁止Git写入的记录保留为历史。本次不合并、不部署、不调用模型，T4/T8/AI-1 OPEN及后置范围不变。
+
 ## 29. AI-1 最小接入设计候选（2026-10-31）
 
 本节及§29.1保留当时状态；2026-11-01复审归档与当前任务盘点见§29.2。

@@ -1,5 +1,27 @@
 # T8 本地备份准备记录
 
+## 当前交付状态（2026-11-03）
+
+限定本地准备及合成恢复交付已获单独合并授权，[PR #36](https://github.com/mflyn/LMS/pull/36)
+以 merge commit `c0e16594762fca194c1a51fcf518fd4024b41180` 合入 main，
+文件树与候选 `1d49abb11580172fa86a7e282cb31588bf682027` 一致；
+[合并后 CI 41559078175](https://github.com/mflyn/LMS/actions/runs/41559078175)通过。
+原完整01–18含07b/13b：后端161 suites/4933 tests，前端57 suites/739 tests，
+浏览器Task11/Task12/自主学习分别4/1/54项，Compose配置/构建/启动、原smoke与Git clean通过。
+可选性能、安全扫描、镜像发布和部署未启用；不算真实家庭发布验收。
+
+T8总门禁仍OPEN；NAS暂缓、目标Ubuntu兼容、真机、RPO/RTO、回滚与删除证据恢复待验保持。
+随后本机恢复后正式登录/PIN补验及剩余发布条件见[2026-11-03补验](../t8-nonnas-20261103/README.md)。
+再后续[恢复后真实浏览器补验](../t8-browser-20261103/README.md)通过本机 Chromium/WebKit 闭环，仍不关闭 T8。
+以上仅本机合成验证，不将其写作目标服务器或真机验收。以下历史登录未验记录不覆盖。
+LEGACY_USER_DELETION_EVIDENCE_INSUFFICIENT不是本批新增实现任务，不扩大高级恢复。
+T4/AI-1 OPEN、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、两项非阻断补测和REMAINDER_DEFERRED不变。
+双仓合并证据见[Gate §29.34](../../family-self-directed-learning-mvp-gate.md#2934-t8-与-ai-1-双仓限定合并及合并后-ci2026-11-03)。
+以下保留2026-10-30原始授权/验收快照及哈希，不因后续合并重写旧结果或delivery-manifest.json；
+本次仅本地文档同步，不授权服务器执行、模型调用、提交推送或部署。
+
+## 原本地交付快照（2026-10-30）
+
 状态：LOCAL_IMPLEMENTATION / LOCAL_REVIEW_PASS / LOCAL_TECHNICAL_ACCEPTANCE_PASS；本地交付验收见文末，T8 总门禁 OPEN。
 首批只授权本地说明/最小入口与测试；后续另行授权本机合成归档及正式 HTTP 恢复验证，见下文。
 本批服务器执行、安装、挂载、真实数据备份恢复及部署未获授权；最新 Git 专用分支/PR 授权见文末，历史时点记录不覆盖。

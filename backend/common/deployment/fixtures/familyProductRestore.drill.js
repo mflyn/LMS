@@ -8,8 +8,9 @@ const mongoose = require('mongoose');
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { createLifecycle } = require('./localBackupDrillLifecycle');
-const { indexSnapshot, createToolOwner, createHttpOwner } = require('./localProductRestoreSupport');
+const { indexSnapshot, createToolOwner, createHttpOwner, createBrowserOwner } = require('./localProductRestoreSupport');
 const { createHttpTestHarness } = require('../../test/httpTestHarness');
 
 mongoose.set('autoIndex', false); mongoose.set('autoCreate', false);
@@ -17,6 +18,10 @@ process.env.INTERNAL_SERVICE_TOKEN = 'synthetic-t8-star-token-32-characters';
 const homework = require('../../../services/homework-service/server');
 const resource = require('../../../services/resource-service/server');
 const progress = require('../../../services/progress-service/server');
+const user = require('../../../services/user-service/server');
+const browserEnabled = process.env.T8_BROWSER_RESTORE === 'true';
+const analytics = browserEnabled ? require('../../../services/analytics-service/app') : null;
+const notification = browserEnabled ? require('../../../services/notification-service/app') : null;
 const { createApp: createGateway } = require('../../../gateway/server');
 const Task = require('../../../services/homework-service/models/GrowthTask');
 const Operation = require('../../../services/homework-service/models/GrowthTaskCompletionOperation');
@@ -66,10 +71,17 @@ const common = { NODE_ENV: 'test', ENABLE_RABBITMQ: 'false', COMPLETION_PROTOCOL
 const id = () => String(new mongoose.Types.ObjectId());
 const actors = { parent: { id: id(), role: 'parent' }, coparent: { id: id(), role: 'parent' },
   child: { id: id(), role: 'student', tokenVersion: 0 }, sibling: { id: id(), role: 'student', tokenVersion: 0 },
+  youngest: { id: id(), role: 'student', tokenVersion: 0 },
   outsider: { id: id(), role: 'parent' } };
+const sessions = new Map();
+const password = 'Synthetic-T8-password!';
+const initialPin = '2468';
 let application, runtimeEnv, family, confirmed, recoverable, sameUuid, childCommand, terminalResponse,
   confirmedView, confirmedMedia, pendingMedia, confirmedContent, preserved, restored, dropped = 0, dropCommit = false, uploads = 0;
 const pendingContents = new Map();
+let browserTask, browserMedia, browserMediaBytes, browserOperation, browserUrl;
+const browserTitle = 'Restored browser work';
+const browserOwner = createBrowserOwner();
 const active = () => { lifecycle.assertActive(); if (closing) throw Error('DRILL_CANCELLED'); };
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const snapshot = async () => {
@@ -82,6 +94,14 @@ const snapshot = async () => {
   }
   active(); return result;
 };
+const withoutResetFields = (users, childId) => ({ ...users, rows: JSON.parse(users.rows).map(row => {
+  if (row._id.$oid === childId) {
+    delete row.childProfile.pinHash;
+    delete row.childProfile.tokenVersion;
+    delete row.updatedAt;
+  }
+  return row;
+}) });
 async function startDatabase(name) {
   active();
   return (await lifecycle.start({ binary: { systemBinary: tools.MONGOD },
@@ -127,16 +147,51 @@ async function assemble(mediaRoot, journalRoot) {
   const resourceUrl = await listen(resourceApp), progressUrl = await listen(progress.createApp());
   const homeworkUrl = await listen(homework.createProductionApp({ env: { ...runtimeEnv,
     RESOURCE_SERVICE_URL: resourceUrl, PROGRESS_SERVICE_URL: progressUrl } }));
-  application = createGateway({ serviceHosts: { user: 'http://127.0.0.1:1', homework: homeworkUrl,
-    resource: resourceUrl, progress: progressUrl }, jwtSecret: process.env.JWT_SECRET,
+  const userUrl = await listen(user.createProductionApp({ env: { ...runtimeEnv, RESOURCE_SERVICE_URL: resourceUrl } }));
+  const extraHosts = browserEnabled ? {
+    analytics: await listen(analytics.createApp({ env: { ...runtimeEnv, HOMEWORK_SERVICE_URL: homeworkUrl } })),
+    notification: await listen(notification.createApp())
+  } : {};
+  application = createGateway({ serviceHosts: { user: userUrl, homework: homeworkUrl,
+    resource: resourceUrl, progress: progressUrl, ...extraHosts }, jwtSecret: process.env.JWT_SECRET,
   identitySecret: process.env.GATEWAY_IDENTITY_SECRET, enableLegacyDataProxy: false,
   rateLimitOptions: { windowMs: 60000, max: 1000 } });
   await listen(application);
+  if (browserEnabled) {
+    const build = process.env.T8_WEB_BUILD;
+    if (!build || !path.isAbsolute(build) || !fs.statSync(path.join(build, 'index.html')).isFile()) {
+      throw Error('Explicit existing T8_WEB_BUILD required');
+    }
+    const gateway = application, web = express();
+    web.use((req, res, next) => req.path.startsWith('/api/') ? gateway(req, res, next) : next());
+    web.use(express.static(build));
+    web.get('*', (_req, res) => res.sendFile(path.join(build, 'index.html')));
+    browserUrl = await listen(web);
+  }
 }
 async function call(method, url, body, actor = actors.parent, extraHeaders = {}) {
   active(); let req = (await harness.request(application))[method.toLowerCase()](url); active();
-  if (actor) req = req.set('Authorization', 'Bearer ' + jwt.sign(actor, process.env.JWT_SECRET, { expiresIn: '1h' }));
+  if (actor) {
+    const token = sessions.get(actor);
+    if (!token) throw Error('Real login required for synthetic actor');
+    req = req.set('Authorization', 'Bearer ' + token);
+  }
   const response = await (body === undefined ? req.set(extraHeaders) : req.set(extraHeaders).send(body)); active(); return response;
+}
+async function loginActor(actor, pin = initialPin) {
+  const body = actor.role === 'student' ? { familyId: actor.familyId, childId: actor.id, pin }
+    : { username: actor.username, password };
+  const response = await call('POST', '/api/auth/' + (actor.role === 'student' ? 'child-pin-login' : 'login'), body, null);
+  expect(response.status).toBe(200); expect(response.body.success).toBe(true);
+  const token = response.body.data.token;
+  expect(jwt.verify(token, process.env.JWT_SECRET)).toMatchObject({ id: actor.id, role: actor.role,
+    ...(actor.role === 'student' ? { familyId: actor.familyId, childId: actor.id, tokenVersion: actor.tokenVersion } : {}) });
+  sessions.set(actor, token);
+  return token;
+}
+async function loginAll() {
+  sessions.clear();
+  for (const actor of Object.values(actors)) await loginActor(actor);
 }
 const taskUrl = task => '/api/growth-tasks/' + task;
 const recoveryUrl = task => taskUrl(task) + '/completion-operations/' + sameUuid + '/recover';
@@ -148,9 +203,9 @@ async function createTask(title) {
 }
 async function upload() {
   const bytes = await require('sharp')({ create: { width: 2, height: 2, channels: 3,
-    background: ['white', 'red', 'blue'][uploads++] } }).png().toBuffer();
+    background: ['white', 'red', 'blue', 'green'][uploads++ % 4] } }).png().toBuffer();
   active(); const response = await (await harness.request(application)).post('/api/media')
-    .set('Authorization', 'Bearer ' + jwt.sign(actors.child, process.env.JWT_SECRET))
+    .set('Authorization', 'Bearer ' + sessions.get(actors.child))
     .field('childId', actors.child.id).field('purpose', 'task_completion')
     .attach('file', bytes, { filename: 'synthetic.png', contentType: 'image/png' });
   active(); expect(response.status).toBe(201); return response.body.data.media.mediaId;
@@ -168,14 +223,20 @@ beforeAll(async () => {
   const sourceUri = await startDatabase('source-db');
   for (const model of Object.values(mongoose.models)) { await model.createCollection(); await model.createIndexes(); active(); }
   family = await Family.create({ familyName: 'Synthetic restore', ownerParentId: actors.parent.id,
-    memberParentIds: [actors.parent.id, actors.coparent.id], childIds: [actors.child.id, actors.sibling.id] }); active();
-  for (const actor of [actors.child, actors.sibling]) Object.assign(actor, { childId: actor.id, familyId: String(family._id) });
-  await User.collection.insertMany(Object.values(actors).map(actor => ({ _id: new mongoose.Types.ObjectId(actor.id),
-    role: actor.role, username: actor.id, email: actor.id + '@example.test',
-    ...(actor.role === 'student' ? { familyId: family._id, childProfile: { tokenVersion: 0 } } : {}) }))); active();
+    memberParentIds: [actors.parent.id, actors.coparent.id], childIds: [actors.child.id, actors.sibling.id, actors.youngest.id] }); active();
+  for (const actor of [actors.child, actors.sibling, actors.youngest]) Object.assign(actor, { childId: actor.id, familyId: String(family._id) });
+  const pinHash = await bcrypt.hash(initialPin, 10);
+  for (const [name, actor] of Object.entries(actors)) {
+    actor.username = 't8_' + name;
+    await User.create({ _id: actor.id, role: actor.role, username: actor.username, name: 'Synthetic ' + name,
+      password, email: actor.username + '@example.test',
+      ...(actor.role === 'student' ? { familyId: family._id, childProfile: { tokenVersion: 0, pinHash } } : {}) }); active();
+  }
   await Family.create({ familyName: 'Other synthetic restore', ownerParentId: actors.outsider.id,
     memberParentIds: [actors.outsider.id], childIds: [] }); active();
   await assemble(sourceMedia, sourceJournal);
+  await loginAll();
+  if (browserEnabled) expect((await call('GET', '/api/notifications/settings')).status).toBe(200);
   confirmed = await createTask('Confirmed before backup'); confirmedMedia = await upload();
   expect((await call('PATCH', taskUrl(confirmed) + '/complete', complete(undefined, 0, [confirmedMedia]), actors.child)).status).toBe(200);
   expect((await call('PATCH', taskUrl(confirmed) + '/confirm', { expectedCompletionVersion: 1, parentFeedback: 'First review' }, actors.coparent)).status).toBe(200);
@@ -192,6 +253,17 @@ beforeAll(async () => {
   expect(op.phase).toBe('PREPUBLISH'); expect((await Remote.findOne({ operationId: op.remoteOperationId })).state).toBe('COMMITTED');
   for (const mediaId of pendingMedia) pendingContents.set(mediaId, (await readMedia(mediaId)).bytes);
   expect(new Set([...pendingContents.values(), confirmedContent.bytes].map(digest)).size).toBe(3);
+  if (browserEnabled) {
+    browserTask = await createTask(browserTitle); browserMedia = await upload();
+    dropCommit = true;
+    const pendingBrowser = await call('PATCH', taskUrl(browserTask) + '/complete', complete(undefined, 0, [browserMedia]), actors.child);
+    expect(pendingBrowser.status).toBe(503); expect(pendingBrowser.body.error.code).toBe('MEDIA_REFERENCE_PENDING');
+    expect(dropped).toBe(2);
+    browserOperation = await Operation.findOne({ taskId: browserTask, actorId: actors.child.id }).lean();
+    expect(browserOperation.phase).toBe('PREPUBLISH');
+    expect((await Remote.findOne({ operationId: browserOperation.remoteOperationId })).state).toBe('COMMITTED');
+    browserMediaBytes = (await readMedia(browserMedia)).bytes;
+  }
   await closeHttp(); active(); preserved = await snapshot();
   await command('MONGODUMP', ['--uri', sourceUri, '--oplog', '--archive=' + path.join(root, 'mongo.archive')], 'dump');
   fs.chmodSync(path.join(root, 'mongo.archive'), 0o600);
@@ -215,12 +287,17 @@ beforeAll(async () => {
   }
   restored = await snapshot(); expect(restored).toEqual(preserved);
   await assemble(targetMedia, targetJournal); expect(await snapshot()).toEqual(preserved);
+  await loginAll(); expect(await snapshot()).toEqual(preserved);
+  report.restoredRealLoginVerified = true;
 }, 60000);
 
 afterAll(async () => {
   closing = true; report.instancesStopped = false; report.httpClosed = false; report.toolsStopped = false;
   try {
-    try { await toolOwner.stop(); report.toolsStopped = true; }
+    try {
+      try { await browserOwner.stop(); report.browserOwnerStopped = true; }
+      finally { await toolOwner.stop(); report.toolsStopped = true; }
+    }
     finally { await closeHttp({ final: true }); report.httpClosed = true; }
   }
   finally {
@@ -230,6 +307,63 @@ afterAll(async () => {
       console.log('Synthetic formal restore evidence retained: ' + root);
     }
   }
+});
+
+if (browserEnabled) test('restored real browser login, original command recovery, review, readback and account isolation', async () => {
+  const { runRestoredBrowser } = require('./localProductRestoreBrowser');
+  const before = await snapshot();
+  try {
+    report.browser = await browserOwner.run(onBrowser => runRestoredBrowser({ onBrowser, webUrl: browserUrl, actors, password, pin: initialPin,
+      taskId: browserTask, title: browserTitle, operationId: browserOperation.operationId, imageDigest: digest(browserMediaBytes),
+      outputRoot: mkdir('browser'), snapshot, check: async stage => {
+        if (stage === 'before-recovery') { expect(await snapshot()).toEqual(before); return; }
+        const task = await Task.collection.findOne({ _id: new mongoose.Types.ObjectId(browserTask) });
+        const op = await Operation.findById(browserOperation._id).lean();
+        expect(op).toMatchObject({ operationId: browserOperation.operationId,
+          remoteOperationId: browserOperation.remoteOperationId, phase: 'SUCCEEDED' });
+        const ledger = await Ledger.find({ sourceId: browserTask, type: 'earn', sourceType: 'task_confirmation' }).lean();
+        if (stage === 'recovered') {
+          expect(task.completionVersion).toBe(1); expect(ledger).toHaveLength(0);
+          expect(task.completionMediaBindings.map(row => [String(row.mediaId), row.bindingOperationId]))
+            .toEqual([[browserMedia, browserOperation.remoteOperationId]]);
+          expect(await Operation.countDocuments({ taskId: browserTask })).toBe(1);
+        } else if (stage === 'conflict') {
+          expect(task.status).toBe('completed'); expect(task.completionVersion).toBe(2); expect(ledger).toHaveLength(0);
+        } else if (stage === 'confirmed') {
+          expect(task.status).toBe('confirmed'); expect(task.completionVersion).toBe(2);
+          expect(String(task.confirmedByParentId)).toBe(actors.coparent.id);
+          expect(task.parentFeedback).toBe('Restored browser feedback'); expect(ledger).toHaveLength(1);
+        }
+      } }));
+  } finally {
+    // Fresh listeners after browser traffic; data and tokens stay intact for the original HTTP cases.
+    await closeHttp(); await assemble(targetMedia, targetJournal);
+  }
+}, 120000);
+
+test('restored parent credentials authenticate through the real Gateway and user service', async () => {
+  const response = await call('POST', '/api/auth/login', {
+    username: 't8_parent', password: 'Synthetic-T8-password!'
+  }, null);
+  expect(response.status).toBe(200);
+  expect(response.body.success).toBe(true);
+  expect(jwt.verify(response.body.data.token, process.env.JWT_SECRET)).toMatchObject({ id: actors.parent.id, role: 'parent' });
+});
+
+test('wrong restored password, PIN and family cannot issue a session or mutate restored data', async () => {
+  const before = await snapshot();
+  const other = await Family.findOne({ ownerParentId: actors.outsider.id }).lean();
+  for (const [route, body] of [
+    ['login', { username: actors.parent.username, password: 'Wrong-synthetic-password!' }],
+    ['child-pin-login', { familyId: actors.child.familyId, childId: actors.child.id, pin: '0000' }],
+    ['child-pin-login', { familyId: String(other._id), childId: actors.child.id, pin: initialPin }]
+  ]) {
+    const response = await call('POST', '/api/auth/' + route, body, null);
+    expect(response.status).toBe(401); expect(response.body.success).toBe(false);
+    expect(response.body).not.toHaveProperty('data.token');
+    expect(response.body).not.toHaveProperty('data.child');
+  }
+  expect(await snapshot()).toEqual(before);
 });
 
 test('restored formal apps pass prerequisites without index repair and return the original confirmed view and media', async () => {
@@ -287,13 +421,15 @@ test('reviewing an old version is rejected; repeated confirmation preserves one 
 });
 test('restored JWT/family/child isolation rejects reads and writes without private output or state changes', async () => {
   const before = await snapshot();
-  for (const [actor, expected] of [[null, 401], [actors.sibling, 403], [actors.outsider, 403], [{ ...actors.child, tokenVersion: 1 }, 401]]) {
+  const stale = jwt.sign({ ...actors.child, tokenVersion: 1 }, process.env.JWT_SECRET);
+  for (const [actor, expected, headers = {}] of [[null, 401], [actors.sibling, 403], [actors.youngest, 403],
+    [actors.outsider, 403], [null, 401, { Authorization: 'Bearer ' + stale }]]) {
     for (const [method, url, body] of [['GET', taskUrl(confirmed)], ['PATCH', taskUrl(confirmed) + '/complete', complete()], ['POST', recoveryUrl(recoverable), {}]]) {
-      const response = await call(method, url, body, actor, { 'x-user-id': actors.parent.id });
+      const response = await call(method, url, body, actor, { 'x-user-id': actors.parent.id, ...headers });
       expect(response.status).toBe(expected); expect(response.body.success).toBe(false);
       expect(JSON.stringify(response.body)).not.toContain('First review');
     }
-    const media = await call('GET', '/api/media/' + confirmedMedia + '/access', undefined, actor);
+    const media = await call('GET', '/api/media/' + confirmedMedia + '/access', undefined, actor, headers);
     expect(media.status).toBe(expected); expect(media.body).not.toHaveProperty('data.access');
   }
   const expired = jwt.sign({ ...actors.child, exp: 1 }, process.env.JWT_SECRET);
@@ -308,6 +444,55 @@ test('live membership revocation survives restoration and old clients remain rej
   const old = await call('PATCH', taskUrl(confirmed) + '/complete', { actualMinutes: 5 }, actors.child);
   expect(old.status).toBe(400); expect(old.body.error.code).toBe('CLIENT_UPGRADE_REQUIRED');
   expect(await snapshot()).toEqual(before);
+});
+test('restored PIN reset invalidates old sessions and old PIN while fresh login preserves teaching and rewards', async () => {
+  const before = await snapshot();
+  const resetUrl = '/api/children/' + actors.child.id + '/pin';
+  for (const actor of [actors.outsider, actors.sibling]) {
+    expect((await call('POST', resetUrl, { pin: '1357' }, actor)).status).toBe(403);
+  }
+  expect(await snapshot()).toEqual(before);
+  expect((await call('POST', resetUrl, { pin: '1357' })).status).toBe(200);
+  const afterReset = await snapshot();
+  expect(withoutResetFields(afterReset[User.collection.name], actors.child.id))
+    .toEqual(withoutResetFields(before[User.collection.name], actors.child.id));
+  const resetChild = await User.findById(actors.child.id).select('+childProfile.pinHash').lean();
+  expect(resetChild.childProfile.tokenVersion).toBe(1);
+  expect(await bcrypt.compare('1357', resetChild.childProfile.pinHash)).toBe(true);
+  for (const name of Object.keys(before).filter(name => name !== User.collection.name)) {
+    expect(afterReset[name]).toEqual(before[name]);
+  }
+  for (const [method, url, body] of [['GET', taskUrl(confirmed)], ['GET', '/api/media/' + confirmedMedia + '/access'],
+    ['PATCH', taskUrl(recoverable) + '/complete', childCommand], ['POST', recoveryUrl(recoverable), {}]]) {
+    const response = await call(method, url, body, actors.child);
+    expect(response.status).toBe(401); expect(response.body.error.code).toBe('STALE_CHILD_TOKEN');
+    expect(response.body).not.toHaveProperty('data');
+  }
+  expect((await call('POST', '/api/auth/child-pin-login', {
+    familyId: actors.child.familyId, childId: actors.child.id, pin: initialPin
+  }, null)).status).toBe(401);
+  for (const actor of [actors.sibling, actors.youngest]) {
+    expect((await call('GET', taskUrl(confirmed), undefined, actor)).status).toBe(403);
+    await loginActor(actor);
+  }
+  actors.child.tokenVersion = 1;
+  await loginActor(actors.child, '1357');
+  expect((await call('GET', taskUrl(confirmed), undefined, actors.child)).body).toEqual(confirmedView);
+  expect((await readMedia(confirmedMedia)).bytes).toEqual(confirmedContent.bytes);
+  expect(await snapshot()).toEqual(afterReset);
+});
+test('PIN reset comparison detects unrelated user fields, sibling credentials and index changes', () => {
+  const users = preserved[User.collection.name], expected = withoutResetFields(users, actors.child.id);
+  for (const mutate of [
+    rows => { rows.find(row => row._id.$oid === actors.sibling.id).childProfile.pinHash = 'incorrect'; },
+    rows => { rows.find(row => row._id.$oid === actors.youngest.id).childProfile.tokenVersion = 99; },
+    rows => { rows.find(row => row._id.$oid === actors.child.id).name = 'incorrect'; },
+    rows => { rows.find(row => row._id.$oid === actors.parent.id).password = 'incorrect'; }
+  ]) {
+    const rows = JSON.parse(users.rows); mutate(rows);
+    expect(withoutResetFields({ ...users, rows: JSON.stringify(rows) }, actors.child.id)).not.toEqual(expected);
+  }
+  expect(withoutResetFields({ ...users, indexes: '[]' }, actors.child.id)).not.toEqual(expected);
 });
 test('normal deletion revokes restored capability without altering teaching or reward; strict deletion recovery remains blocked', async () => {
   const task = await Task.findById(confirmed).lean(), ledger = await Ledger.find().lean();

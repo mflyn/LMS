@@ -2,11 +2,12 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { spawnSync } = require('child_process');
+const { execFile } = require('child_process');
 const { createHash, randomUUID } = require('crypto');
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const { MongoClient, ObjectId, Long, Binary, BSON } = require('mongodb');
 const { createLifecycle } = require('./localBackupDrillLifecycle');
+const { createToolOwner } = require('./localProductRestoreSupport');
 
 const binaries = ['MONGOD', 'MONGODUMP', 'MONGORESTORE', 'TAR'];
 const tools = Object.fromEntries(binaries.map(name => {
@@ -32,16 +33,20 @@ let client, manifest, baseline, restored;
 const lifecycle = createLifecycle({ makeInstance: options => new MongoMemoryReplSet(options),
   makeClient: uri => new MongoClient(uri, { serverSelectionTimeoutMS: 5000 }) });
 
-function command(tool, args, name) {
-  lifecycle.assertActive();
-  const result = spawnSync(tools[tool], args, { encoding: 'utf8', timeout: 30000,
-    maxBuffer: 2 * 1024 * 1024, env: { ...process.env, COPYFILE_DISABLE: '1' } });
+const toolOwner = createToolOwner({ execFile, record: (name, result) => {
   fs.writeFileSync(path.join(root, `${name}.log`), (result.stdout || '') + (result.stderr || ''), { mode: 0o600, flag: 'wx' });
   report.commands.push({ name, status: result.status, signal: result.signal, error: result.error?.code || null });
+} });
+async function command(tool, args, name) {
+  lifecycle.assertActive();
+  // Drain mongod's pipes while tools run; a synchronous restore can deadlock index creation.
+  const result = await toolOwner.run(tools[tool], args, { encoding: 'utf8', timeout: 30000,
+    killSignal: 'SIGKILL', maxBuffer: 2 * 1024 * 1024, env: { ...process.env, COPYFILE_DISABLE: '1' } }, name);
+  lifecycle.assertActive();
   return result;
 }
 function succeeded(result) {
-  expect(result.error).toBeUndefined(); expect(result.signal).toBeNull(); expect(result.status).toBe(0);
+  expect(result.error).toBeNull(); expect(result.signal).toBeNull(); expect(result.status).toBe(0);
 }
 async function start(name) {
   lifecycle.assertActive();
@@ -89,10 +94,10 @@ beforeAll(async () => {
     JSON.stringify({ synthetic: true, validDeletionEvidence: false, mediaId: mediaId.toHexString() }), { mode: 0o600 });
   baseline = await snapshot();
   report.captureStartedAt = new Date().toISOString();
-  succeeded(command('MONGODUMP', ['--uri', uri, '--oplog', `--archive=${archive}`], 'dump'));
+  succeeded(await command('MONGODUMP', ['--uri', uri, '--oplog', `--archive=${archive}`], 'dump'));
   fs.chmodSync(archive, 0o600);
   for (const [name, source] of [['media', sourceMedia], ['journal', sourceJournal]]) {
-    succeeded(command('TAR', ['-czf', path.join(root, `${name}.tar.gz`), '-C', source, '.'], `archive-${name}`));
+    succeeded(await command('TAR', ['-czf', path.join(root, `${name}.tar.gz`), '-C', source, '.'], `archive-${name}`));
     fs.chmodSync(path.join(root, `${name}.tar.gz`), 0o600);
   }
   manifest = Object.fromEntries(['mongo.archive', 'media.tar.gz', 'journal.tar.gz'].map(name => {
@@ -107,17 +112,20 @@ beforeAll(async () => {
   expect(await client.db('t8_synthetic').listCollections().toArray()).toEqual([]);
   lifecycle.assertActive();
   verifyArtifacts();
-  succeeded(command('MONGORESTORE', ['--uri', target, '--oplogReplay', `--archive=${archive}`], 'restore'));
+  succeeded(await command('MONGORESTORE', ['--uri', target, '--oplogReplay', `--archive=${archive}`], 'restore'));
   for (const [name, directory] of [['media', restoreMedia], ['journal', restoreJournal]]) {
-    succeeded(command('TAR', ['-xzf', path.join(root, `${name}.tar.gz`), '-C', directory], `restore-${name}`));
+    succeeded(await command('TAR', ['-xzf', path.join(root, `${name}.tar.gz`), '-C', directory], `restore-${name}`));
   }
   restored = await snapshot(); report.restoreFinishedAt = new Date().toISOString();
   report.targetUri = target; // Private synthetic loopback only; never copied into public evidence.
 }, 60000);
 
 afterAll(async () => {
-  report.instancesStopped = false;
-  try { await stop({ final: true }); report.instancesStopped = true; }
+  report.instancesStopped = false; report.toolsStopped = false;
+  try {
+    try { await toolOwner.stop(); report.toolsStopped = true; }
+    finally { await stop({ final: true }); report.instancesStopped = true; }
+  }
   finally {
     delete report.targetUri;
     report.status = 'EXECUTION_FINISHED_SEE_JEST_RESULT';
@@ -159,11 +167,11 @@ test('missing journal and same-size corrupted media are rejected before restorat
 });
 test('real corrupt archive and failed dump exit nonzero without changing restored data', async () => {
   const bad = path.join(root, 'corrupt.archive'); fs.writeFileSync(bad, 'not-a-mongo-archive', { mode: 0o600 });
-  const restore = command('MONGORESTORE', ['--uri', report.targetUri, '--oplogReplay', `--archive=${bad}`], 'rejected-restore');
-  expect(restore.error).toBeUndefined(); expect(restore.signal).toBeNull(); expect(restore.status).toBeGreaterThan(0);
+  const restore = await command('MONGORESTORE', ['--uri', report.targetUri, '--oplogReplay', `--archive=${bad}`], 'rejected-restore');
+  expect(restore.error).toMatchObject({ code: 1 }); expect(restore.signal).toBeNull(); expect(restore.status).toBe(1);
   // A directory is accepted by mongodump; a child path under a regular file must fail.
-  const dump = command('MONGODUMP', ['--uri', report.targetUri, '--oplog', `--archive=${bad}/cannot-create.archive`], 'rejected-dump');
-  expect(dump.error).toBeUndefined(); expect(dump.signal).toBeNull(); expect(dump.status).toBeGreaterThan(0);
+  const dump = await command('MONGODUMP', ['--uri', report.targetUri, '--oplog', `--archive=${bad}/cannot-create.archive`], 'rejected-dump');
+  expect(dump.error).toMatchObject({ code: 1 }); expect(dump.signal).toBeNull(); expect(dump.status).toBe(1);
   expect(await snapshot()).toEqual(baseline);
   report.negativeToolExitsVerified = true;
 });
