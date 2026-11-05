@@ -1,7 +1,7 @@
 # AI-2 限定合成工程关闭评审材料
 
 日期：2026-11-04。材料状态：APPROVED；AI2-5 CLOSED；AI-2 CLOSED（仅限定合成工程）。
-用户明确批准关闭AI2-5汇总及AI-2限定合成范围工程总门禁。随后授权专用分支提交推送/PR/CI，见[交付记录](delivery.md)；模型发送、合并和部署仍未授权。
+用户明确批准关闭AI2-5汇总及AI-2限定合成范围工程总门禁。随后授权专用分支交付及PR #38合并，见[交付记录](delivery.md)和[合并后证据](postmerge.md)；真实模型发送、部署及本轮新的Git写入仍未授权。
 
 **AI2-5 status:** CLOSED
 **AI-2 gate:** CLOSED
@@ -14,10 +14,10 @@
 **AI-2 historical failures:** PRESERVED
 **AI-2 deferred:** REMAINDER_DEFERRED
 **AI-2 real model:** NOT_AUTHORIZED / QUALIFIED_COUNTER_PENDING
-**AI-2 Git:** BRANCH_PR_ONLY / NO_MERGE
+**AI-2 Git:** MERGED_DEFAULT_OFF / NO_NEW_GIT_AUTHORIZATION
 **AI-2 deployment:** NOT_AUTHORIZED
 
-以上为当前批准状态；本文件§1–6保留子批验收和关闭时的证据身份；旧Git禁止描述不覆盖随后限定PR授权，关闭原始快照不回写。
+以上为当前批准状态；本文件§1–6保留子批验收和关闭时的证据身份；旧Git禁止描述不覆盖随后限定PR及合并授权，关闭原始快照不回写。
 
 ## 1. 本轮批准与冻结绑定
 

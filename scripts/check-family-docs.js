@@ -3601,7 +3601,7 @@ function validate() {
     ['AI-2 historical failures', 'PRESERVED'],
     ['AI-2 deferred', 'REMAINDER_DEFERRED'],
     ['AI-2 real model', 'NOT_AUTHORIZED / QUALIFIED_COUNTER_PENDING'],
-    ['AI-2 Git', 'BRANCH_PR_ONLY / NO_MERGE'],
+    ['AI-2 Git', 'MERGED_DEFAULT_OFF / NO_NEW_GIT_AUTHORIZATION'],
     ['AI-2 deployment', 'NOT_AUTHORIZED']
   ];
   const hasAi2ClosureStates = source => ai2ClosureStates.every(([key, value]) => {

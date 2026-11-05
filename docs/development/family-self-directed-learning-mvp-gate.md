@@ -13,8 +13,12 @@
 **AI-2 historical failures:** PRESERVED
 **AI-2 deferred:** REMAINDER_DEFERRED
 **AI-2 real model:** NOT_AUTHORIZED / QUALIFIED_COUNTER_PENDING
-**AI-2 Git:** BRANCH_PR_ONLY / NO_MERGE
+**AI-2 Git:** MERGED_DEFAULT_OFF / NO_NEW_GIT_AUTHORIZATION
 **AI-2 deployment:** NOT_AUTHORIZED
+
+> **2026-11-04 AI-2 合并后状态：** PR #38 已按用户授权以 merge commit `a4f051e26f3514da051910a3495e11b149a32c45`
+> 合入 main，合并后 CI 41801096578 成功。固定源 SHA、测试计数和证据包摘要见[合并后记录](evidence/ai2-5-20261103/postmerge.md)。
+> 当前只授权本地 T8 复验及状态文档收口，不授权新的提交推送、模型调用或部署；原 Git 限制和失败保留为历史快照。
 
 > **2026-11-03 当前 Git 交付状态：** T8 限定本地交付、AI-1 双仓默认关闭合成工程均已按用户授权
 > 合入各自 main，合并后 CI 通过，固定 SHA 和证据见 §29.34。合并不是门禁关闭：
