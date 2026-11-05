@@ -1,5 +1,9 @@
 # 家庭自主学习 MVP 开发计划
 
+> **2026-11-04 当前AI-2交付：** PR #38已按授权以merge commit `a4f051e26f3514da051910a3495e11b149a32c45`合入main，
+> 合并后CI 41801096578成功，见[合并后记录](../../development/evidence/ai2-5-20261103/postmerge.md)。默认关闭、限定合成工程；
+> 下方分批Git限制是原快照。本轮仅本地收口T8与文档，不新增提交推送/模型调用/部署授权，不关闭T4/T8/AI-1。
+
 > AI2-5 / AI-2最新批准：2026-11-04用户批准关闭AI2-5汇总及AI-2限定合成工程总门禁，CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY，见[关闭批准记录](../../development/evidence/ai2-5-20261103/closure-readiness.md)。保留31项核心覆盖、冻结候选、分层回归和历史失败；后续真机、Git交付、真实启用须单独授权，不自动启动其他开发，不授权模型/Git/部署。下方实施进度保留历史身份。
 
 > 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）；2026-11-03 当前交付：T8 限定本地交付和 AI-1 默认关闭合成工程已按授权合入 main，双仓 merge SHA、合并后 CI 及保留边界见 Gate §29.34。T5/T6/T7 已交付 main；T7 脱敏交付见 §27.45，限定合成工程总门禁 CLOSED（§27.42）。全部历史失败保留，不以最新 CI 改写原失败快照。T4/T8/AI-1 总门禁仍 OPEN，DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项非阻断补测、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留；未部署、未启用真实 AI 发送。

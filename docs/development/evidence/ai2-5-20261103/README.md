@@ -1,5 +1,8 @@
 # AI2-5 正式应用接线候选
 
+**当前Git交付：** PR #38已合入main，merge `a4f051e2`及合并后CI 41801096578通过，详见[合并后状态](postmerge.md)。
+保持默认关闭和限定合成工程结论；下方候选、待审批与Git禁止描述保留为历史，不扩展真实启用授权。
+
 **2026-11-04当前摘要：** PUB-02/VIEW-01及WITHDRAW-01/02、MEDIA-04补验已获用户ACCEPTED / USER_APPROVED；
 矩阵首页P3已修正。31项核心覆盖、最新独立9/3复验和两批冻结身份见[批准记录与关闭材料](closure-readiness.md)。
 2026-11-04用户随后明确批准AI2-5汇总及AI-2总门禁CLOSED / ENGINEERING_SYNTHETIC_ONLY；真机、真实启用、其他OPEN门禁及后置范围不变。下方分批进度、OPEN和计数保留为历史快照，不覆盖本摘要。

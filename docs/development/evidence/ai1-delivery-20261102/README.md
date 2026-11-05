@@ -1,5 +1,30 @@
 # AI-1 双仓限定合成工程保存交付
 
+## 当前交付状态（2026-11-03）
+
+双仓默认关闭合成工程已按后续用户授权合入各自 main；本索引后面的 2026-11-02 保存交付内容
+保留为原始快照，旧 Draft/base/SHA/授权限制不再代表当前 Git 状态。原冻结补丁、manifest 和
+verification.json 不改写，新合并证据汇总见[Gate §29.34](../../family-self-directed-learning-mvp-gate.md#2934-t8-与-ai-1-双仓限定合并及合并后-ci2026-11-03)。
+
+| 仓库/PR | 合并 SHA | 合并后 CI |
+| --- | --- | --- |
+| mflyn/DeepTutor [#1](https://github.com/mflyn/DeepTutor/pull/1)，个人 fork main | `a5e64ca49667ddba2a0ba80c02ac1c59959dc2f9` | [Tests attempt 3](https://github.com/mflyn/DeepTutor/actions/runs/41466687632/attempts/3)、[Hygiene](https://github.com/mflyn/DeepTutor/actions/runs/41466688020) success |
+| mflyn/LMS [#37](https://github.com/mflyn/LMS/pull/37)，main | `4655d30f1b61b55f400b67f16f9143dd191de1d2` | [41564246688](https://github.com/mflyn/LMS/actions/runs/41564246688) success |
+
+LMS 的 T8 前置 PR #36 已另行授权合并为 `c0e16594762fca194c1a51fcf518fd4024b41180`，
+[其合并后 CI](https://github.com/mflyn/LMS/actions/runs/41559078175)通过。AI-1 retarget main 后164文件差异未变，
+新基线 CI 41561602500 对 source HEAD `158976b5` 通过，再执行 merge commit；不是绕过 T8 的合并授权。
+LMS 最终完整 01–18 含07b/13b通过：后端168/5136、前端59/788，浏览器4/1/71；Compose和原smoke通过。
+DeepTutor attempt 1/2 的 runner 容量失败保留；attempt 3 只重试未成功作业，macOS及Python四版本通过，
+既有外部fixture浏览器作业仍skipped。LMS可选性能/安全扫描/镜像发布/部署未启用，不写为已验收。
+
+当前仅 ENGINEERING_SYNTHETIC_ACCEPTED / MERGED_DEFAULT_OFF；QUALIFIED_COUNTER_PENDING、
+B/D/AI-1 OPEN、T4/T8 OPEN、DEVICE_PENDING、T9 NOT_STARTED、Docker INCOMPLETE_FAILED、
+T5-NB-001/002 OPEN_NONBLOCKING和REMAINDER_DEFERRED保持。真实发送关闭、人工审核及未知原命令保护不变。
+2026-11-03本次仅本地更新文档，不调用模型、不提交推送或部署；历史分支清理不改写冻结候选。
+
+## 原保存交付快照（2026-11-02）
+
 用户授权保存已完成的双仓工程：专用分支、提交推送、Draft PR和CI检查；不合并、不部署。
 计数技术依据暂缓，不是取消准入；QUALIFIED_COUNTER_PENDING和真实发送关闭保持。
 
