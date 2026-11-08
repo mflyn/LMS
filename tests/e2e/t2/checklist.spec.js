@@ -68,6 +68,39 @@ async function screenshot(page, info, name) {
   await page.screenshot({ path: info.outputPath(name), fullPage: true });
 }
 
+test('task creation refreshes the real filtered list and pagination without reposting', async ({ page }, info) => {
+  const errors = monitor(page), creates = [];
+  page.on('request', request => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/growth-tasks') creates.push(request);
+  });
+  await login(page, 'parent');
+  const visible = await createViaPage(page, 'Synthetic pagination visible task');
+  await expect(page.getByText('第 1 页 · 共 2 项', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: visible.title, exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: '筛选维度', exact: true }).selectOption('physical');
+  await expect(page.getByText('暂无成长任务', { exact: true })).toBeVisible();
+  const excluded = await createViaPage(page, 'Synthetic academic task outside physical filter');
+  await expect(page.getByRole('combobox', { name: '筛选维度', exact: true })).toHaveValue('physical');
+  await expect(page.getByText('暂无成长任务', { exact: true })).toBeVisible();
+  await expect(page.getByText('第 1 页 · 共 0 项', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: excluded.title, exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: '查看已保存任务', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: '作品查看与审核', exact: true })).toContainText(excluded.title);
+  await page.getByRole('dialog').getByRole('button', { name: '关闭', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: '筛选维度', exact: true })).toHaveValue('physical');
+  await expect(page.getByRole('heading', { name: excluded.title, exact: true })).toHaveCount(0);
+  await expect(page.getByRole('article')).toHaveCount(0);
+  await expect(page.getByText('暂无成长任务', { exact: true })).toBeVisible();
+  await expect(page.getByText('第 1 页 · 共 0 项', { exact: true })).toBeVisible();
+  await screenshot(page, info, 'task-filter-after-detail-close.png');
+  await page.getByRole('combobox', { name: '筛选维度', exact: true }).selectOption('');
+  await expect(page.getByText('第 1 页 · 共 3 项', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: excluded.title, exact: true })).toBeVisible();
+  expect(creates).toHaveLength(2);
+  await screenshot(page, info, 'task-pagination-after-save.png');
+  expect(errors).toEqual([]);
+});
+
 for (const grade of [1, 4]) test(`grade ${grade}: real checklist creation, independent help, partial submission, review and reread`, async ({ page, browser }, info) => {
   expectData(await parent.patch(`/api/children/${fixture.actors.child.childId}`, { grade }));
   const childContext = await browser.newContext({ viewport: { width: 768, height: 1024 } });

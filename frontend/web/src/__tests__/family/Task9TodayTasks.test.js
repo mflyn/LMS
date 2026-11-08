@@ -338,7 +338,11 @@ describe('Task 9 today and task workflows', () => {
     ['labor', '整理房间']
   ])('creates a %s task for the selected child', async (dimension, title) => {
     const user = userEvent.setup();
-    createGrowthTask.mockResolvedValueOnce({ task: task({ dimension, title }) });
+    createGrowthTask.mockImplementationOnce(async () => {
+      const created = task({ dimension, title });
+      listGrowthTasks.mockResolvedValue({ items: [created], total: 1 });
+      return { task: created };
+    });
     renderPage(<TasksPage />);
 
     await screen.findByText('暂无成长任务');
@@ -356,6 +360,137 @@ describe('Task 9 today and task workflows', () => {
       title
     })));
     expect(await screen.findByText(title)).toBeInTheDocument();
+  });
+
+  test('refreshes server pagination after a successful create without another POST', async () => {
+    const user = userEvent.setup();
+    const existing = Array.from({ length: 20 }, (_, index) => task({
+      taskId: String(index + 10).padStart(24, '0'), title: `Existing task ${index}`
+    }));
+    const created = task({ title: 'New page boundary task' });
+    listGrowthTasks.mockResolvedValueOnce({ items: existing, total: 20 })
+      .mockResolvedValue({ items: [created, ...existing.slice(0, 19)], total: 21 });
+    createGrowthTask.mockResolvedValueOnce({ task: created });
+    renderPage(<TasksPage />);
+
+    await screen.findByText('第 1 页 · 共 20 项');
+    expect(screen.getByRole('button', { name: '下一页任务' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await user.type(screen.getByLabelText('任务标题'), created.title);
+    await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+    await user.click(screen.getByRole('button', { name: '保存任务' }));
+
+    expect(await screen.findByText('第 1 页 · 共 21 项')).toBeInTheDocument();
+    expect(screen.getAllByRole('article')).toHaveLength(20);
+    expect(screen.queryByText('Existing task 19')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '下一页任务' })).toBeEnabled();
+    expect(createGrowthTask).toHaveBeenCalledTimes(1);
+    expect(listGrowthTasks).toHaveBeenLastCalledWith(expect.objectContaining({
+      childId: '000000000000000000000002', page: 1, pageSize: 20
+    }), expect.any(AbortSignal));
+  });
+
+  test('keeps a newly created task outside the current filter out of the list', async () => {
+    const user = userEvent.setup();
+    const created = task({ title: 'New academic task', dimension: 'academic' });
+    let saved = false;
+    listGrowthTasks.mockImplementation(async ({ dimension }) => ({
+      items: dimension === 'physical' || !saved ? [] : [created], total: dimension === 'physical' || !saved ? 0 : 1
+    }));
+    createGrowthTask.mockImplementationOnce(async () => { saved = true; return { task: created }; });
+    renderPage(<TasksPage />);
+    await screen.findByText('暂无成长任务');
+    await user.selectOptions(screen.getByLabelText('筛选维度'), 'physical');
+    await screen.findByText('暂无成长任务');
+    const readsBeforeSave = listGrowthTasks.mock.calls.length;
+    await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await user.type(screen.getByLabelText('任务标题'), created.title);
+    await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+    await user.click(screen.getByRole('button', { name: '保存任务' }));
+
+    await screen.findByText('任务已创建。');
+    await waitFor(() => expect(listGrowthTasks).toHaveBeenCalledTimes(readsBeforeSave + 1));
+    expect(await screen.findByText('暂无成长任务')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: created.title })).not.toBeInTheDocument();
+    expect(screen.getByText('第 1 页 · 共 0 项')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '查看已保存任务' })).toBeEnabled();
+    getGrowthTask.mockResolvedValueOnce({ task: created });
+    const readsBeforeDetail = listGrowthTasks.mock.calls.length;
+    await user.click(screen.getByRole('button', { name: '查看已保存任务' }));
+    const dialog = screen.getByRole('dialog', { name: '作品查看与审核' });
+    expect(await within(dialog).findByRole('heading', { name: created.title })).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: '关闭', exact: true }));
+    expect(screen.getByLabelText('筛选维度')).toHaveValue('physical');
+    expect(screen.queryByRole('heading', { name: created.title })).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('article')).toHaveLength(0);
+    expect(screen.getByText('暂无成长任务')).toBeInTheDocument();
+    expect(screen.getByText('第 1 页 · 共 0 项')).toBeInTheDocument();
+    expect(listGrowthTasks).toHaveBeenCalledTimes(readsBeforeDetail);
+    await user.selectOptions(screen.getByLabelText('筛选维度'), '');
+    expect(await screen.findByRole('heading', { name: created.title })).toBeInTheDocument();
+    expect(screen.getByText('第 1 页 · 共 1 项')).toBeInTheDocument();
+    expect(createGrowthTask).toHaveBeenCalledTimes(1);
+  });
+
+  test('viewing a saved task outside the current page preserves its membership and size', async () => {
+    const user = userEvent.setup();
+    const existing = Array.from({ length: 40 }, (_, index) => task({
+      taskId: String(index + 10).padStart(24, '0'), title: `Paged task ${index}`
+    }));
+    const created = task({ title: 'New task on another page', dimension: 'academic', dueDate: '2026-07-12' });
+    let saved = false;
+    listGrowthTasks.mockImplementation(async ({ page }) => ({
+      items: existing.slice((page - 1) * 20, page * 20), total: saved ? 41 : 40
+    }));
+    createGrowthTask.mockImplementationOnce(async () => { saved = true; return { task: created }; });
+    getGrowthTask.mockResolvedValueOnce({ task: created });
+    renderPage(<TasksPage />);
+    await screen.findByText('第 1 页 · 共 40 项');
+    await user.click(screen.getByRole('button', { name: '下一页任务' }));
+    await screen.findByText('第 2 页 · 共 40 项');
+    await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await user.type(screen.getByLabelText('任务标题'), created.title);
+    await user.type(screen.getByLabelText('截止日期'), created.dueDate);
+    await user.click(screen.getByRole('button', { name: '保存任务' }));
+    await screen.findByText('第 2 页 · 共 41 项');
+    const readsBeforeDetail = listGrowthTasks.mock.calls.length;
+    await user.click(screen.getByRole('button', { name: '查看已保存任务' }));
+    const dialog = screen.getByRole('dialog', { name: '作品查看与审核' });
+    expect(await within(dialog).findByRole('heading', { name: created.title })).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: '关闭', exact: true }));
+
+    expect(screen.getAllByRole('article')).toHaveLength(20);
+    expect(screen.getAllByRole('article').map(article => within(article).getByRole('heading').textContent))
+      .toEqual(existing.slice(20).map(item => item.title));
+    expect(screen.queryByRole('heading', { name: created.title })).not.toBeInTheDocument();
+    expect(screen.getByText('第 2 页 · 共 41 项')).toBeInTheDocument();
+    expect(listGrowthTasks).toHaveBeenCalledTimes(readsBeforeDetail);
+    expect(listGrowthTasks).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, pageSize: 20 }), expect.any(AbortSignal));
+    expect(createGrowthTask).toHaveBeenCalledTimes(1);
+  });
+
+  test('retries only the list when its refresh fails after a confirmed create', async () => {
+    const user = userEvent.setup();
+    const created = task({ title: 'Saved before list outage' });
+    listGrowthTasks.mockResolvedValueOnce({ items: [], total: 0 })
+      .mockRejectedValueOnce({ response: { status: 503 } })
+      .mockResolvedValue({ items: [created], total: 1 });
+    createGrowthTask.mockResolvedValueOnce({ task: created });
+    renderPage(<TasksPage />);
+    await screen.findByText('暂无成长任务');
+    await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await user.type(screen.getByLabelText('任务标题'), created.title);
+    await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+    await user.click(screen.getByRole('button', { name: '保存任务' }));
+
+    await screen.findByRole('button', { name: '重新加载数据' });
+    expect(screen.getByText('任务已创建。')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '重新加载数据' }));
+    expect(await screen.findByRole('heading', { name: created.title })).toBeInTheDocument();
+    expect(screen.getByText('第 1 页 · 共 1 项')).toBeInTheDocument();
+    expect(createGrowthTask).toHaveBeenCalledTimes(1);
+    expect(listGrowthTasks).toHaveBeenCalledTimes(3);
   });
 
   test('queries task filters for the selected child', async () => {
@@ -512,6 +647,7 @@ describe('Task 9 today and task workflows', () => {
         within(screen.getByRole('heading', { name: '跳绳 500 个' }).closest('article')).getByText('已确认')
       ).toBeInTheDocument();
     });
+    expect(listGrowthTasks).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole('button', { name: '归档 跳绳 500 个' }));
     await user.click(screen.getByRole('button', { name: '确认归档' }));

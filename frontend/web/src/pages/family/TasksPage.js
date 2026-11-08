@@ -209,6 +209,12 @@ const ScopedTasksPage = () => {
     });
   }, []);
 
+  const updateListedTask = useCallback((nextTask) => {
+    setItems((current) => current.map((item) => (
+      item.taskId === nextTask.taskId ? nextTask : item
+    )));
+  }, []);
+
   const openCreate = () => {
     if (writing.current || sourceTarget) return;
     editorGeneration.current += 1;
@@ -274,6 +280,8 @@ const ScopedTasksPage = () => {
       setSavedTaskId(result.task.taskId);
       setEditor(null);
       setMessage(editor.mode === 'create' ? '任务已创建。' : '任务已更新。');
+      // New tasks can change filtered totals and page membership.
+      if (editor.mode === 'create') resource.reload();
     } catch (taskError) {
       if (!current()) return;
       if ([401, 403].includes(taskError?.response?.status)) {
@@ -455,7 +463,7 @@ const ScopedTasksPage = () => {
       {!accessBlocked && review && review.childId === selectedChildId && (
         <TaskCompletionReview key={`${family?.familyId}-${selectedChildId}-${childScopeVersion}-${review.taskId}`}
           taskId={review.taskId} familyId={family?.familyId} childId={selectedChildId}
-          initialMode={review.mode} onClose={() => setReview(null)} onTask={replaceTask} />
+          initialMode={review.mode} onClose={() => setReview(null)} onTask={updateListedTask} />
       )}
 
       {editor && !accessBlocked && (
