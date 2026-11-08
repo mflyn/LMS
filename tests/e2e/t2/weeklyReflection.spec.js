@@ -141,3 +141,54 @@ test('committed reflection with lost response stays protected across failed rere
   expect(expectData(await parent.get(`/api/growth-logs?childId=${fixture.actors.child.childId}`))).toEqual(before);
   expect((await runtime.inspect()).database.Ledger).toEqual([]);
 });
+
+test('parent reflection lost response locks the growth-log entry until explicit reconciliation', async ({ page }) => {
+  let patches = 0;
+  page.on('request', request => {
+    if (request.method() === 'PATCH' && new URL(request.url()).pathname.startsWith('/api/growth-logs/')) patches += 1;
+  });
+  await login(page, 'parent');
+  await page.getByRole('link', { name: '周报', exact: true }).click();
+  const date = await page.getByLabel('周一开始').inputValue();
+  const created = expectData(await parent.post('/api/growth-logs', {
+    childId: fixture.actors.child.childId, date, dimension: 'academic', subject: '数学',
+    content: 'Synthetic cross-entry reflection', childReflection: 'Original reflection'
+  }), 201).log;
+  await page.reload();
+  await page.getByRole('button', { name: '修改反思：Synthetic cross-entry reflection' }).click();
+  await page.getByLabel('孩子反思', { exact: true }).fill('Committed with lost response');
+  runtime.dropNextResponse({ method: 'PATCH', path: `/api/growth-logs/${created.logId}` });
+  await page.getByRole('button', { name: '保存反思', exact: true }).click();
+  await expect(page.getByText(/保存结果尚未确定/)).toBeVisible();
+  await page.locator('a[href="/app/logs"]').click();
+  await expect(page.getByText('Committed with lost response', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '编辑 Synthetic cross-entry reflection' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '记录成长', exact: true })).toBeDisabled();
+  expect(patches).toBe(1);
+  await page.getByRole('link', { name: '前往周复盘核对上次保存' }).click();
+  await expect(page.getByRole('button', { name: '重读全部记录并核对' })).toBeVisible();
+  await page.route('**/api/growth-logs?**', route => route.abort('failed'), { times: 1 });
+  await page.getByRole('button', { name: '重读全部记录并核对' }).click();
+  await expect(page.getByText('读取失败，请重试。', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '已核对，结束上次编辑' })).toHaveCount(0);
+  await page.locator('a[href="/app/logs"]').click();
+  await expect(page.getByRole('button', { name: '编辑 Synthetic cross-entry reflection' })).toBeDisabled();
+  expect(patches).toBe(1);
+  await page.getByRole('link', { name: '前往周复盘核对上次保存' }).click();
+  await page.getByRole('button', { name: '重读全部记录并核对' }).click();
+  await page.getByRole('button', { name: '已核对，结束上次编辑' }).click();
+  await page.locator('a[href="/app/logs"]').click();
+  await page.getByRole('button', { name: '编辑 Synthetic cross-entry reflection' }).click();
+  await page.getByRole('dialog', { name: '编辑成长记录', exact: true })
+    .getByRole('textbox', { name: '孩子自评', exact: true }).fill('Explicit new reflection');
+  await page.getByRole('button', { name: '保存成长记录', exact: true }).click();
+  await expect(page.getByText('成长记录已更新。', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Explicit new reflection', { exact: true })).toBeVisible();
+  expect(patches).toBe(2);
+  const saved = expectData(await parent.get(`/api/growth-logs?childId=${created.childId}`));
+  expect(saved.total).toBe(1);
+  expect(saved.items[0]).toMatchObject({ logId: created.logId, childReflection: 'Explicit new reflection',
+    updatedBy: fixture.actors.parent.userId });
+  expect((await runtime.inspect()).database.Ledger).toEqual([]);
+});

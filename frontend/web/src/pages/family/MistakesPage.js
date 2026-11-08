@@ -150,7 +150,7 @@ const ScopedMistakesPage = ({ session }) => {
       correctAnswer: form.correctAnswer,
       parentNote: form.parentNote,
       childExplanation: form.childExplanation,
-      reviewReminderDate: form.reviewReminderDate || undefined,
+      reviewReminderDate: form.reviewReminderDate || (editor.mode === 'edit' ? '' : undefined),
       corrected: form.corrected,
       reviewed: form.reviewed,
       mastered: form.mastered

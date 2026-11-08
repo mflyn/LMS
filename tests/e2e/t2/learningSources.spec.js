@@ -20,6 +20,37 @@ async function login(page, name) {
   }
 }
 
+test('parent clears a review date persistently without changing mastery or disabling undated reminders', async ({ page }) => {
+  const childId = fixture.actors.child.childId;
+  const mistake = expectData(await parent.post('/api/mistakes', {
+    childId, subject: 'Math', reason: 'calculation', knowledgePointName: 'Synthetic clear date',
+    reviewReminderDate: '2026-12-20'
+  }), 201).mistake;
+  const reminders = async () => expectData(await parent.get(
+    `/api/notifications/family?childId=${childId}&date=2026-11-08`
+  )).items.filter(item => item.sourceId === mistake.mistakeId);
+  expect(await reminders()).toHaveLength(0);
+  await login(page, 'parent');
+  await page.goto(`${runtime.webUrl}/app/mistakes?mistakeId=${mistake.mistakeId}`);
+  await expect(page.getByLabel('提醒复习日期')).toHaveValue('2026-12-20');
+  await page.getByLabel('提醒复习日期').fill('');
+  const saved = page.waitForResponse(response => response.request().method() === 'PATCH'
+    && new URL(response.url()).pathname === `/api/mistakes/${mistake.mistakeId}`);
+  await page.getByRole('button', { name: '保存复盘', exact: true }).click();
+  expect((await saved).status()).toBe(200);
+  await expect(page.getByText('复盘已保存。', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '查看已保存错题' }).click();
+  await expect(page.getByLabel('提醒复习日期')).toHaveValue('');
+  await page.reload();
+  await page.getByRole('button', { name: '复盘 Synthetic clear date', exact: true }).click();
+  await expect(page.getByLabel('提醒复习日期')).toHaveValue('');
+  const stored = expectData(await parent.get(`/api/mistakes/${mistake.mistakeId}`)).mistake;
+  expect(stored.reviewReminderDate).toBe('');
+  expect(stored).toMatchObject({ corrected: false, reviewed: false, mastered: false });
+  expect(await reminders()).toHaveLength(1);
+  expect((await runtime.inspect()).database.Ledger).toEqual([]);
+});
+
 test('child lost create keeps its lock across close, failed list read, reload and account return without repost', async ({ page }, info) => {
   await login(page, 'child');
   await page.goto(runtime.webUrl + '/child/mistakes');
