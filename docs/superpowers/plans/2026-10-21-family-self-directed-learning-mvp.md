@@ -1,5 +1,7 @@
 # 家庭自主学习 MVP 开发计划
 
+> **2026-11-08 任务列表局部收口：** 基于已合并PR #42的main `01a61c63`，用户已批准本次分页修订及筛选外/页外回看P2验收关闭，见[验收与交付记录](../../development/evidence/mvp-task-list-20261108/acceptance.md)。本次仅授权专用分支提交推送、Draft PR及CI；不合并、不部署、不操作服务器或调用模型。后续按实际缺陷修复，不恢复WP1/T8底层执行器开发；T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING及历史/后置状态保持。下方旧交付授权与验证结论保留历史身份。
+
 > **本批交付权限（2026-11-08）：** 用户已授权已验收MVP局部修订的专用分支、Draft PR与CI，详见[交付范围](../../development/evidence/mvp-closeout-20261108/public-delivery.md)。不合并、不部署、不调用模型或操作服务器；下方原禁止Git描述保留历史身份，不扩大WP1/T8范围。
 
 > **2026-11-08 最新开发优先级：先完成MVP。** 以[联合验收清单§0](../../development/t4-t8-joint-acceptance.md#0-mvp-优先与后置范围2026-11-08)为当前范围入口：复用T1–T7，只修影响学习闭环的实际缺陷；WP1底层执行器剩余范围REMAINDER_DEFERRED / NOT_COMPLETE，不再阻塞产品开发。真实恢复/回滚与真机等启用条件不取消，T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED和历史/后置状态保持。本次不授权服务器、模型、Git提交推送或部署；下方历史“继续实现”不构成自动恢复工具开发的指令。

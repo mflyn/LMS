@@ -76,3 +76,15 @@ ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY；反思跨入口未知写入保
 本次只关闭上述局部问题，不关闭MVP整体、T4/T8/AI-1或服务器/真机门禁。
 SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、
 非阻断补测和REMAINDER_DEFERRED均保持；WP1不恢复开发。不调用模型、不操作服务器、不提交推送或部署。
+
+### 0.3 任务列表分页与回看局部验收（2026-11-08）
+
+本批在main `01a61c63` 合成走查后修订创建成功的服务端分页刷新，复审发现的筛选外/页外任务回看混入列表P2已修复。
+详情回调只更新列表已有行；创建后读取服务端总数，当前行完成/确认状态继续更新，查看详情不额外读取列表或重复创建。
+用户在复审通过后批准执行收口：批次 ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY，P2 CLOSED / USER_APPROVED。
+完整三文件候选、原失败及本轮97项组件/4项浏览器复验证据见[关闭记录](evidence/mvp-task-list-20261108/acceptance.md)。
+开发97项/8项、复审97项/4项分开记录，不相加、不宣称一次全量通过；原§0.1/§0.2及原冻结档案不覆盖。
+
+本次专用分支、Draft PR及CI获授权；合并、模型调用、服务器和部署仍未授权。
+未带入WP1/T8执行器增量，不关闭MVP整体或T4/T8/AI-1；SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、
+Docker INCOMPLETE_FAILED、历史失败、非阻断补测、QUALIFIED_COUNTER_PENDING及REMAINDER_DEFERRED保持。

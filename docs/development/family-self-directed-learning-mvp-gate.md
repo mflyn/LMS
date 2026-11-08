@@ -1,5 +1,10 @@
 # 家庭自主学习 MVP 增量 Gate
 
+> **2026-11-08 任务列表局部验收与交付：** 用户在本轮复审通过后批准执行局部收口及专用分支交付。
+> 任务列表批次为 ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY，筛选外及页外任务回看混入列表 P2 为 CLOSED / USER_APPROVED。
+> 冻结候选、分批复验与公开范围见[本次关闭记录](evidence/mvp-task-list-20261108/acceptance.md)。仅授权提交推送、Draft PR及CI，不合并、部署、调用模型或操作服务器。
+> T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、历史失败及后置状态不变；下方各批记录保留历史身份，WP1/T8执行器不随本批交付。
+
 > **2026-11-08 MVP专用分支交付授权：** 已验收局部修订可提交、推送并创建Draft PR及检查CI；不合并、不部署、不调用模型或操作服务器。范围与证据见[公开交付说明](evidence/mvp-closeout-20261108/public-delivery.md)。旧禁止Git文字为当时快照；WP1/T8执行器增量不随本批交付，未关闭门禁不变。
 
 > **2026-11-08 MVP优先裁决：** 用户要求先完成MVP，其他工作记录后置。当前范围见[联合清单§0](t4-t8-joint-acceptance.md#0-mvp-优先与后置范围2026-11-08)：WP1底层执行器剩余开发REMAINDER_DEFERRED / NOT_COMPLETE，不再阻塞产品闭环开发；恢复可靠性与真实启用验收不取消。T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING及历史失败/非阻断/后置状态不变。下方已冻结批次、旧实现授权和计数保留历史身份，不据此关闭门禁或恢复工具开发。
