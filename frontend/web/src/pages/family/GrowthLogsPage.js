@@ -1,11 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { createGrowthLog, listGrowthLogs, updateGrowthLog } from '../../services/familyApi';
-import { reflectionWeek } from '../../services/reflection';
+import { beginReflectionWrite, clearReflectionWrite, readReflectionWrite, reflectionWeek } from '../../services/reflection';
+import { captureSession, isSessionCurrent, subscribeSessionChanges } from '../../services/familySession';
+import { assertLearningScope, isLearningDenied, isLearningId } from '../../services/learningSources';
 
 const DIMENSIONS = [
   ['moral', '德育'], ['academic', '智育'], ['physical', '体育'],
@@ -20,12 +22,23 @@ const blankLog = () => ({
 const numberOrUndefined = (value) => (value === '' ? undefined : Number(value));
 const messageFor = (error) => error?.response?.data?.error?.message || error?.message || '保存失败，请重试。';
 
-const GrowthLogsPage = () => {
-  const { selectedChild, selectedChildId } = useFamily();
+const GrowthLogsEditor = ({ session }) => {
+  const { family, selectedChild, selectedChildId } = useFamily();
+  const scope = { role: 'parent', actorId: session.actorId, familyId: family?.familyId, childId: selectedChildId };
+  const alive = useRef(true), writing = useRef(false), refused = useRef(false);
+  const [denied, setDenied] = useState(false);
   const [filters, setFilters] = useState({ from: '', to: '', dimension: '' });
   const load = useCallback(
-    ({ childId, signal }) => listGrowthLogs({ childId, ...filters, pageSize: 100 }, signal),
-    [filters]
+    async ({ childId, signal }) => {
+      try { return await listGrowthLogs({ childId, ...filters, pageSize: 100 }, signal, session); }
+      catch (readError) {
+        if (alive.current && isSessionCurrent(session) && isLearningDenied(readError)) {
+          refused.current = true; setDenied(true);
+        }
+        throw readError;
+      }
+    },
+    [filters, session]
   );
   const resource = useChildResource({ load });
   const mutationGuard = useChildMutationGuard();
@@ -35,6 +48,13 @@ const GrowthLogsPage = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [unknown, setUnknown] = useState(() => {
+    try { return readReflectionWrite(scope); } catch { return { storageError: true }; }
+  });
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; };
+  }, []);
 
   useEffect(() => {
     setItems(resource.data?.items || []);
@@ -47,6 +67,7 @@ const GrowthLogsPage = () => {
   }, [selectedChildId]);
 
   const openEditor = (log) => {
+    if (busy || unknown || refused.current || !isSessionCurrent(session)) return;
     setForm(log ? { ...blankLog(), ...log } : blankLog());
     setEditor(log ? { mode: 'edit', log } : { mode: 'create' });
     setError('');
@@ -54,7 +75,20 @@ const GrowthLogsPage = () => {
 
   const save = async (event) => {
     event.preventDefault();
+    if (!editor || writing.current || unknown || refused.current || !isSessionCurrent(session)) return;
+    let marker;
+    try {
+      // Both entry points write the same records; an unresolved write must block either one.
+      marker = beginReflectionWrite(scope, editor.mode === 'edit' ? { logId: editor.log.logId } : {});
+    } catch {
+      try { setUnknown(readReflectionWrite(scope)); } catch { setUnknown({ storageError: true }); }
+      setError('无法保存写入保护或存在未核对记录，请前往周复盘核对。');
+      return;
+    }
     const mutationScope = mutationGuard.captureScope();
+    const current = () => alive.current && !refused.current && isSessionCurrent(session)
+      && mutationGuard.isCurrentScope(mutationScope);
+    writing.current = true;
     setBusy(true);
     setError('');
     const payload = {
@@ -78,27 +112,40 @@ const GrowthLogsPage = () => {
       const result = editor.mode === 'create'
         ? await createGrowthLog({ childId: selectedChildId, ...payload })
         : await updateGrowthLog(editor.log.logId, payload);
-      if (!mutationGuard.isCurrentScope(mutationScope)) return;
+      if (!current()) return;
+      assertLearningScope(result?.log, 'logId', editor.mode === 'edit' ? editor.log.logId : result?.log?.logId,
+        scope.familyId, scope.childId);
+      if (!isLearningId(result.log.logId)) throw new Error('Invalid saved record');
+      if (!clearReflectionWrite(scope, marker)) throw new Error('Write marker changed');
+      setUnknown(null);
       setItems((current) => editor.mode === 'create'
         ? [result.log, ...current]
         : current.map((item) => (item.logId === result.log.logId ? result.log : item)));
       setMessage(editor.mode === 'create' ? '成长记录已保存。' : '成长记录已更新。');
       setEditor(null);
     } catch (saveError) {
-      if (!mutationGuard.isCurrentScope(mutationScope)) return;
+      if (!current()) return;
+      if (isLearningDenied(saveError)) { refused.current = true; setDenied(true); return; }
+      if ([400, 409, 422].includes(saveError?.response?.status)) {
+        try {
+          if (!clearReflectionWrite(scope, marker)) throw new Error('Write marker changed');
+        } catch { setUnknown(marker); }
+      } else setUnknown(marker);
       setError(messageFor(saveError));
     } finally {
-      setBusy(false);
+      if (current()) { writing.current = false; setBusy(false); }
     }
   };
 
   if (!selectedChild) return <FamilyDataState state="empty" />;
+  if (denied || isLearningDenied(resource.error)) return <p role="alert">当前身份无法读取此记录。</p>;
+  const locked = busy || Boolean(unknown);
 
   return (
     <section className="family-page family-page-wide" aria-labelledby="growth-logs-title">
       <div className="family-page-heading">
         <div><p className="family-eyebrow">{selectedChild.name}的每日成长</p><h1 id="growth-logs-title">记录</h1></div>
-        <button type="button" className="family-button primary" disabled={resource.state === 'loading'} onClick={() => openEditor(null)}>记录成长</button>
+        <button type="button" className="family-button primary" disabled={locked || resource.state === 'loading'} onClick={() => openEditor(null)}>记录成长</button>
       </div>
       <div className="family-filter-bar" aria-label="成长记录筛选">
         <label>开始日期<input type="date" value={filters.from} onChange={(event) => setFilters((value) => ({ ...value, from: event.target.value }))} /></label>
@@ -107,6 +154,10 @@ const GrowthLogsPage = () => {
       </div>
       {message && <p className="family-success-message" role="status">{message}</p>}
       {error && <p className="family-form-error" role="alert">{error}</p>}
+      {unknown && <div role="alert">
+        <p>{unknown.storageError ? '无法读取写入保护，暂不能保存。' : '保存结果尚未确定，请先核对，不要重复提交。'}</p>
+        <Link to="/app/reports">前往周复盘核对上次保存</Link>
+      </div>}
       {resource.state === 'loading' && <FamilyDataState state="loading" />}
       {resource.state === 'retryable_error' && <FamilyDataState state="retryable_error" onRetry={resource.reload} />}
       {resource.state === 'error' && <FamilyDataState state="error" error={resource.error} />}
@@ -121,7 +172,7 @@ const GrowthLogsPage = () => {
               {item.childReflection && <p>{item.childReflection}</p>}
               <Link to={`/app/reports?weekStart=${reflectionWeek(item.date).from}`} aria-label={`查看本周复盘：${item.content}`}>查看本周复盘</Link>
             </div>
-            <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.content}`} onClick={() => openEditor(item)}>编辑</button>
+            <button type="button" className="family-button secondary" disabled={locked || resource.state === 'loading'} aria-label={`编辑 ${item.content}`} onClick={() => openEditor(item)}>编辑</button>
           </article>
         ))}
       </div>
@@ -145,12 +196,21 @@ const GrowthLogsPage = () => {
             <label className="family-field-wide">记录内容<textarea required value={form.content} onChange={(event) => setForm((value) => ({ ...value, content: event.target.value }))} /></label>
             <label className="family-field-wide">孩子自评<textarea value={form.childReflection} onChange={(event) => setForm((value) => ({ ...value, childReflection: event.target.value }))} /></label>
             <label className="family-field-wide">家长备注<textarea value={form.parentNote} onChange={(event) => setForm((value) => ({ ...value, parentNote: event.target.value }))} /></label>
-            <button type="submit" className="family-button primary" disabled={busy || resource.state === 'loading'}>保存成长记录</button>
+            <button type="submit" className="family-button primary" disabled={locked || resource.state === 'loading'}>保存成长记录</button>
           </form>
         </FamilyDialog>
       )}
     </section>
   );
+};
+
+const GrowthLogsPage = () => {
+  const { family, selectedChildId, childScopeVersion } = useFamily();
+  const [session, setSession] = useState(() => captureSession('parent'));
+  useEffect(() => subscribeSessionChanges(() => setSession(captureSession('parent'))), []);
+  if (!session || !isSessionCurrent(session)) return <p role="alert">请重新登录家长账号。</p>;
+  return <GrowthLogsEditor session={session}
+    key={`${session.actorId}:${session.revision}:${family?.familyId}:${selectedChildId}:${childScopeVersion}`} />;
 };
 
 export default GrowthLogsPage;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import GrowthLogsPage from '../../pages/family/GrowthLogsPage';
@@ -24,9 +24,9 @@ jest.mock('../../contexts/FamilyContext', () => ({
 }));
 
 const familyContext = (overrides = {}) => ({
-    family: { familyId: 'family-a' },
-    selectedChildId: 'child-a1',
-    selectedChild: { childId: 'child-a1', name: '小明' },
+    family: { familyId: '000000000000000000000001' },
+    selectedChildId: '000000000000000000000002',
+    selectedChild: { childId: '000000000000000000000002', name: '小明' },
     childScopeVersion: 1,
     ...overrides
 });
@@ -51,8 +51,9 @@ jest.mock('../../services/familyApi', () => ({
 }));
 
 const growthLog = (overrides = {}) => ({
-  logId: 'log-1',
-  childId: 'child-a1',
+  logId: '000000000000000000000005',
+  familyId: '000000000000000000000001',
+  childId: '000000000000000000000002',
   date: '2026-07-11',
   dimension: 'physical',
   area: '跳绳',
@@ -64,8 +65,8 @@ const growthLog = (overrides = {}) => ({
 
 const mistake = (overrides = {}) => ({
   mistakeId: 'mistake-1',
-  familyId: 'family-a',
-  childId: 'child-a1',
+  familyId: '000000000000000000000001',
+  childId: '000000000000000000000002',
   dimension: 'academic',
   subject: '数学',
   knowledgePointName: '分数计算',
@@ -82,6 +83,8 @@ const renderPage = (page) => render(<MemoryRouter future={routerFuture}>{page}</
 describe('Task 9 growth logs', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorage.clear(); sessionStorage.clear();
+    saveParentSession({ token: 'synthetic-parent', user: { id: '000000000000000000000004', name: '家长', role: 'parent' } });
     mockFamilyContext = familyContext();
     listGrowthLogs.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
   });
@@ -108,7 +111,7 @@ describe('Task 9 growth logs', () => {
     await user.click(screen.getByRole('button', { name: '保存成长记录' }));
 
     await waitFor(() => expect(createGrowthLog).toHaveBeenCalledWith(expect.objectContaining({
-      childId: 'child-a1',
+      childId: '000000000000000000000002',
       dimension,
       area,
       content: `完成${area}`,
@@ -129,7 +132,7 @@ describe('Task 9 growth logs', () => {
     await user.type(content, '完成 600 个');
     await user.click(screen.getByRole('button', { name: '保存成长记录' }));
 
-    await waitFor(() => expect(updateGrowthLog).toHaveBeenCalledWith('log-1', expect.objectContaining({
+    await waitFor(() => expect(updateGrowthLog).toHaveBeenCalledWith('000000000000000000000005', expect.objectContaining({
       content: '完成 600 个'
     })));
     expect(await screen.findByText('完成 600 个')).toBeInTheDocument();
@@ -175,8 +178,8 @@ describe('Task 9 growth logs', () => {
     await user.click(screen.getByRole('button', { name: '保存成长记录' }));
 
     mockFamilyContext = familyContext({
-      selectedChildId: 'child-a2',
-      selectedChild: { childId: 'child-a2', name: '小红' },
+      selectedChildId: '000000000000000000000003',
+      selectedChild: { childId: '000000000000000000000003', name: '小红' },
       childScopeVersion: 2
     });
     view.rerender(
@@ -194,7 +197,8 @@ describe('Task 9 growth logs', () => {
 describe('Task 9 mistakes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    saveParentSession({ token: 'synthetic-parent', user: { id: 'parent-a', name: '家长', role: 'parent' } });
+    localStorage.clear(); sessionStorage.clear();
+    saveParentSession({ token: 'synthetic-parent', user: { id: '000000000000000000000004', name: '家长', role: 'parent' } });
     getMistake.mockResolvedValue({ mistake: mistake() });
     mockFamilyContext = familyContext();
     deletePrivateMedia.mockResolvedValue({});
@@ -215,12 +219,76 @@ describe('Task 9 mistakes', () => {
     await user.click(screen.getByRole('button', { name: '保存错题' }));
 
     await waitFor(() => expect(createMistake).toHaveBeenCalledWith(expect.objectContaining({
-      childId: 'child-a1',
+      childId: '000000000000000000000002',
       subject: '数学',
       knowledgePointName: '分数计算',
       reason: 'calculation'
     })));
     expect(await screen.findByText('分数计算')).toBeInTheDocument();
+  });
+
+  test('clears an existing review date through the submitted patch and an authoritative reread', async () => {
+    const user = userEvent.setup();
+    let stored = mistake({ reviewReminderDate: '2026-11-10' });
+    listMistakes.mockResolvedValue({ items: [{ ...stored }], total: 1 });
+    getMistake.mockImplementation(async () => ({ mistake: { ...stored } }));
+    updateMistake.mockImplementation(async (_id, payload) => {
+      // JSON omits undefined fields; the server only patches fields it receives.
+      stored = { ...stored, ...JSON.parse(JSON.stringify(payload)) };
+      return { mistake: { ...stored } };
+    });
+    renderPage(<MistakesPage />);
+
+    await user.click(await screen.findByRole('button', { name: '复盘 分数计算' }));
+    expect(await screen.findByLabelText('提醒复习日期')).toHaveValue('2026-11-10');
+    fireEvent.change(screen.getByLabelText('提醒复习日期'), { target: { value: '' } });
+    await user.click(screen.getByRole('button', { name: '保存复盘' }));
+    await screen.findByText('复盘已保存。');
+    await user.click(screen.getByRole('button', { name: '查看已保存错题' }));
+
+    expect(await screen.findByLabelText('提醒复习日期')).toHaveValue('');
+    expect(getMistake).toHaveBeenCalledTimes(2);
+    expect(updateMistake).toHaveBeenCalledTimes(1);
+    expect(updateMistake).toHaveBeenCalledWith('mistake-1', expect.objectContaining({
+      reviewReminderDate: '', reviewed: false, mastered: false
+    }));
+    expect(createMistake).not.toHaveBeenCalled();
+  });
+
+  test('preserves an unchanged review date when saving an existing mistake', async () => {
+    const user = userEvent.setup();
+    const existing = mistake({ reviewReminderDate: '2026-11-10' });
+    listMistakes.mockResolvedValue({ items: [existing], total: 1 });
+    getMistake.mockResolvedValue({ mistake: existing });
+    updateMistake.mockResolvedValue({ mistake: existing });
+    renderPage(<MistakesPage />);
+
+    await user.click(await screen.findByRole('button', { name: '复盘 分数计算' }));
+    expect(await screen.findByLabelText('提醒复习日期')).toHaveValue('2026-11-10');
+    await user.click(screen.getByRole('button', { name: '保存复盘' }));
+    await screen.findByText('复盘已保存。');
+    expect(updateMistake).toHaveBeenCalledWith('mistake-1', expect.objectContaining({
+      reviewReminderDate: '2026-11-10'
+    }));
+  });
+
+  test.each(['', '2026-11-10'])('preserves create behavior for review date "%s"', async reviewReminderDate => {
+    const user = userEvent.setup();
+    createMistake.mockResolvedValue({ mistake: mistake({ reviewReminderDate: reviewReminderDate || undefined }) });
+    renderPage(<MistakesPage />);
+    await screen.findByText('暂无错题');
+    await user.click(screen.getByRole('button', { name: '记录错题' }));
+    await user.type(screen.getByLabelText('学科'), '数学');
+    if (reviewReminderDate) fireEvent.change(screen.getByLabelText('提醒复习日期'), { target: { value: reviewReminderDate } });
+    await user.click(screen.getByRole('button', { name: '保存错题' }));
+    await screen.findByText('错题已记录。');
+
+    expect(createMistake).toHaveBeenCalledTimes(1);
+    const submitted = JSON.parse(JSON.stringify(createMistake.mock.calls[0][0]));
+    if (reviewReminderDate) expect(submitted.reviewReminderDate).toBe(reviewReminderDate);
+    else expect(submitted).not.toHaveProperty('reviewReminderDate');
+    expect(submitted).toMatchObject({ reviewed: false, mastered: false });
+    expect(updateMistake).not.toHaveBeenCalled();
   });
 
   test('updates correction, review, mastery and parent note', async () => {
@@ -279,7 +347,7 @@ describe('Task 9 mistakes', () => {
     await user.click(screen.getByRole('button', { name: '保存错题' }));
 
     await waitFor(() => expect(createMistake).toHaveBeenCalledWith(expect.objectContaining({
-      childId: 'child-a1',
+      childId: '000000000000000000000002',
       questionMediaIds: ['question-image', 'question-pdf'],
       childAnswerMediaIds: ['answer-pdf']
     })));

@@ -35,6 +35,12 @@
 
 ## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
 
+2026-11-08本批已验收：[MVP两项P2及使用指引关闭记录](./evidence/mvp-closeout-20261108/acceptance.md)。
+反思跨入口未知写入保护及错题日期清空两项P2已关闭，原冻结、开发分批及独立复验证据分别保留。
+当前[MVP优先级摘录](./t4-t8-joint-acceptance.md#0-mvp-优先与后置范围2026-11-08)将WP1执行器未完增强后置，不取消必要恢复/回滚、真机和真实启用验收。
+本轮只授权[专用分支/Draft PR交付](./evidence/mvp-closeout-20261108/public-delivery.md)，不合并、部署、调用模型或操作服务器。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、历史失败、非阻断补测及后置状态不变。
+
 [T7 限定合成工程关闭记录](./family-self-directed-learning-mvp-gate.md#2742-t7-限定合成工程总门禁批准关闭2026-10-30)
 经用户批准关闭，不连带关闭T4、真机或后置义务；T7 脱敏交付已合并（Gate §27.45），未部署。
 当前 T8 本地交付范围与证据见[本地验收清单](./evidence/t8-local-preparation-2026-10-30/README.md#本地交付验收与范围清单)，总门禁 OPEN；已授权专用分支及 PR（Gate §28.4），不合并、不部署。

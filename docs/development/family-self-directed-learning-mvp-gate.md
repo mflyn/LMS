@@ -1,5 +1,11 @@
 # 家庭自主学习 MVP 增量 Gate
 
+> **2026-11-08 MVP专用分支交付授权：** 已验收局部修订可提交、推送并创建Draft PR及检查CI；不合并、不部署、不调用模型或操作服务器。范围与证据见[公开交付说明](evidence/mvp-closeout-20261108/public-delivery.md)。旧禁止Git文字为当时快照；WP1/T8执行器增量不随本批交付，未关闭门禁不变。
+
+> **2026-11-08 MVP优先裁决：** 用户要求先完成MVP，其他工作记录后置。当前范围见[联合清单§0](t4-t8-joint-acceptance.md#0-mvp-优先与后置范围2026-11-08)：WP1底层执行器剩余开发REMAINDER_DEFERRED / NOT_COMPLETE，不再阻塞产品闭环开发；恢复可靠性与真实启用验收不取消。T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING及历史失败/非阻断/后置状态不变。下方已冻结批次、旧实现授权和计数保留历史身份，不据此关闭门禁或恢复工具开发。
+
+> **2026-11-08 MVP局部批次验收：** 用户已批准两项修订及三份使用指引验收，状态为 ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY；反思跨入口未知写入保护、错题复习日期清空两项 P2 为 CLOSED / USER_APPROVED。见[评审与关闭记录](evidence/mvp-closeout-20261108/acceptance.md)，绑定原冻结清单与本轮独立复验证据。开发全量、分批浏览器和独立专项不相加、不改写为一次全量通过；本次不是MVP或T4/T8/AI-1总门禁关闭。SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、非阻断补测及后置范围保持；不调用模型、操作服务器、提交推送或部署。
+
 > AI2-5 / AI-2最新批准：2026-11-04用户明确批准关闭汇总及限定合成范围工程总门禁，见[关闭批准记录](evidence/ai2-5-20261103/closure-readiness.md)。31项核心覆盖与两批冻结候选、独立9/3证据保留原身份；历史OPEN为当时快照，不覆盖本次授权。真实启用及其他门禁未关闭。
 
 **AI2-5 status:** CLOSED
