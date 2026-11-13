@@ -2,7 +2,24 @@
 
 日期：2026-11-13，Asia/Shanghai。
 
-## 当前结论
+## 当前交付：已合并、真人待验
+
+[PR #44](https://github.com/mflyn/LMS/pull/44) 已合并；源提交 `7d4028f021c95372e59a3caee8fe2801f80f30d6`，
+merge commit `ce264b9dec6fb469dd78154f507bba8e997b7e90`。合并树与源提交一致。
+
+| 合并阶段证据 | 固定 SHA | 结果 |
+| --- | --- | --- |
+| [PR CI 43343545972](https://github.com/mflyn/LMS/actions/runs/43343545972) | `7d4028f0` | success |
+| [main CI 43346652716](https://github.com/mflyn/LMS/actions/runs/43346652716) | `ce264b9d` | success |
+
+两轮 Family Regression / Reproducible Family Release Gate 及证据上传成功；可选性能、安全扫描、独立镜像构建和部署作业按原配置未启用，不记为对应分项通过。CI 只证明上述已合并提交，不包含随后未提交的文档修订，也不覆盖真人验收。
+
+真人测试由测试／评审线程继续：先核对并保留现有合成数据，再核实新版入口，分段验证双孩子标签页、求助、作品提交、家长审核和孩子回看；本次状态校正不代写任何真人通过结果。原实例和数据不因 Git 合并自动替换，iPad 保持 DEVICE_PENDING。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED、非阻断补测及后置状态不变；不调用模型、不操作服务器、不部署，不扩展 WP1/T8 执行器。
+
+以下是提交前的批准、分批验证和实例边界快照。原始日志、失败证据及 [verification.json](verification.json) 的冻结哈希/计数不改写，也不把历史状态或摘要当作新的真人验证。
+
+## 提交前结论（历史快照）
 
 `QA-CHILD-TABS-LOGIN-001` 在限定本地合成工程验证范围内 CLOSED。独立复评确认同孩子跨标签退出后，匿名页不能接受退出前已在途的 PIN 响应；没有新增必须修复的问题。用户已授权提交、推送和合并，不授权部署或替换真人测试实例。
 
@@ -36,6 +53,6 @@
 - 开发修订的 65 项证据与独立证据分开保留。保留有效功能红灯 10 失败 / 5 对照通过、自查两次旧 actor 元数据失败、首次 lint/build 失败，以及 UTC 夹具与北京时间“今天”不一致导致的浏览器 6 通过 / 1 失败。
 - 日期修订只在该用例中经正式家长 API 对齐两份合成任务日期；原列表、身份、隐私、刷新、切换及零错误断言保留，未改业务日期或超时。
 
-## 保持的边界
+## 提交时边界（历史快照）
 
 仅关闭该 P2 的工程验证项；T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置范围不变。复制标签页或有 opener 的页面可能复制初始会话，不宣称浏览器配置文件级隔离。当前真人实例没有升级或重启，新功能真人接续和 iPad 验证仍待测试/评审线程安排。不调用真实模型、不操作服务器/NAS、不部署。

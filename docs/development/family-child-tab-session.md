@@ -2,6 +2,13 @@
 
 ## 当前交付状态（2026-11-13）
 
+**已合并、真人待验。** [PR #44](https://github.com/mflyn/LMS/pull/44) 的源提交 `7d4028f021c95372e59a3caee8fe2801f80f30d6`
+已以 merge commit `ce264b9dec6fb469dd78154f507bba8e997b7e90` 合入 main；PR 与合并后 CI 均成功，详见[合并后证据](evidence/child-tab-session-20261113/README.md)。
+`QA-CHILD-TABS-LOGIN-001` 仅在已批准的合成工程范围内 CLOSED。真人测试由测试／评审线程保留既有合成数据后接续，使用其核实的新版入口，分段实际结果以该线程记录为准；不把合并、入口准备或自动化通过当作真人通过。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置状态不变。
+
+### 提交前批准快照（原文保留）
+
 方案二及 `QA-CHILD-TABS-LOGIN-001` 已通过独立复评；该 P2 在本固定候选的本地合成工程验证范围内 **CLOSED**。用户随后授权提交、推送及合并，CI 与合并状态以对应 PR 的固定 SHA 记录为准，不将授权等同于 CI 已通过。
 
 完整受评候选为基线 `a383eb3054b28cdfec914e716ebfe786b5b449da` 加 33 文件补丁，SHA-256：`5049f316842844af7bfeaa48795bd6227352c062ad1d2d6d566cd929b4d6c8e6`。交付仅增加当前关闭说明及脱敏证据索引，业务/测试文件与该候选相同。见[独立复评与历史证据索引](evidence/child-tab-session-20261113/README.md)。
