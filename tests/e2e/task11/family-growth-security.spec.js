@@ -69,7 +69,7 @@ test('child identity cannot enter parent routes or read a sibling profile', asyn
   await loginChild(childPage, family.familyId, childA.childId);
 
   const siblingResult = await childPage.evaluate(async ({ siblingId }) => {
-    const session = JSON.parse(localStorage.getItem('family-growth.child-session.v1'));
+    const session = JSON.parse(sessionStorage.getItem('family-growth.child-session.v1'));
     const response = await fetch(`/api/children/${siblingId}`, {
       headers: { Authorization: `Bearer ${session.token}` }
     });
@@ -96,15 +96,15 @@ test('resetting a PIN expires the existing child browser session', async ({ page
   await childPage.reload();
   await expect(childPage).toHaveURL(/\/child\/login$/);
   await expect(childPage.getByRole('alert')).toContainText('会话已过期，请重新登录');
-  const storedSession = await childPage.evaluate(() => localStorage.getItem('family-growth.child-session.v1'));
+  const storedSession = await childPage.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'));
   expect(storedSession).toBeNull();
   // The 401 is now handled before this reload, regardless of the first reload's timing.
-  expect(await childPage.evaluate(() => JSON.parse(localStorage.getItem('family-growth.session-change.v1:student')).reason))
+  expect(await childPage.evaluate(() => JSON.parse(sessionStorage.getItem('family-growth.session-change.v1:student')).reason))
     .toBe('expired');
   await childPage.reload();
   await expect(childPage).toHaveURL(/\/child\/login$/);
   await expect(childPage.getByRole('alert')).toContainText('会话已过期，请重新登录');
-  expect(await childPage.evaluate(() => localStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+  expect(await childPage.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
   await expect(childPage.getByRole('navigation', { name: '孩子导航' })).toHaveCount(0);
   await childPage.getByLabel('家庭 ID').fill(family.familyId);
   await childPage.getByLabel('孩子 ID').fill(childA.childId);

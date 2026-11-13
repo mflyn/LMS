@@ -15,7 +15,7 @@ describe('family parent session storage', () => {
 
   test('restores only the versioned parent session key', () => {
     localStorage.setItem('token', 'legacy-token');
-    localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
+    sessionStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
 
     expect(loadParentSession()).toBeNull();
 
@@ -80,7 +80,7 @@ describe('AI2 canonical command exit cleanup', () => {
         localStorage.setItem(`family-growth.session-exit.v1:${role}:${id}`,
           JSON.stringify({ revision: 'synthetic-cross-tab-exit', reason: 'explicit_logout' }));
         if (reason === 'storage') window.dispatchEvent(new StorageEvent('storage', {
-          key: role === 'parent' ? PARENT_SESSION_KEY : CHILD_SESSION_KEY
+          key: `family-growth.session-exit.v1:${role}:${id}`, storageArea: localStorage
         }));
         else window.dispatchEvent(new Event('pageshow'));
       }

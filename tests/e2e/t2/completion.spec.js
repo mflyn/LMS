@@ -145,7 +145,104 @@ test('real pages: upload, refresh, parent review, child feedback; four viewports
   } finally { await parentContext.close(); }
 });
 
-test('a sibling login in a second tab clears private work and rejects a late media response from the previous actor', async ({ page, context }) => {
+test('one browser keeps parent and sibling tabs independent through refresh and explicit switching', async ({ page, context }, testInfo) => {
+  // The shared seed uses UTC dates; this UI contract explicitly checks Shanghai's today.
+  const dueDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(new Date());
+  for (const task of [fixture.tasks.child, fixture.tasks.sibling]) {
+    expectData(await fixtureParent.patch(`/api/growth-tasks/${task.taskId}`, { dueDate }));
+  }
+  const childA = await context.newPage(), childB = await context.newPage();
+  const errors = [page, childA, childB].map(monitor);
+  try {
+    await parentLogin(page);
+    const parentBefore = await page.evaluate(() => localStorage.getItem('family-growth.parent-session.v1'));
+    await childLogin(childA);
+    const popupReady = childA.waitForEvent('popup');
+    await childA.evaluate(() => window.open('/child/login', '_blank'));
+    const copied = await popupReady;
+    try {
+      await expect(copied.getByRole('heading', { name: '孩子登录', exact: true })).toBeVisible();
+      await expect(copied.getByRole('button', { name: '继续使用Synthetic child', exact: true })).toBeVisible();
+      await expect(copied.getByRole('button', { name: '切换孩子', exact: true })).toBeVisible();
+      await expect(copied.getByRole('navigation', { name: '孩子导航', exact: true })).toHaveCount(0);
+    } finally { await copied.close(); }
+    await childB.goto(runtime.webUrl + '/child/login');
+    await expect(childB.getByLabel('PIN')).toBeVisible();
+    expect(await childB.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+    await childLogin(childB, 'sibling');
+    await expect(childA.getByRole('region', { name: '今天的任务', exact: true }).getByText(fixture.tasks.child.title, { exact: true })).toBeVisible();
+    await expect(childB.getByRole('region', { name: '今天的任务', exact: true }).getByText(fixture.tasks.sibling.title, { exact: true })).toBeVisible();
+    await expect(childB.getByText(fixture.tasks.child.title, { exact: true })).toHaveCount(0);
+    for (const [tab, name] of [[childA, 'Synthetic child'], [childB, 'Synthetic sibling']]) {
+      await tab.reload();
+      await expect(tab.getByRole('banner').getByText(name, { exact: true })).toBeVisible();
+      expect(await tab.evaluate(() => localStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+      await tab.goto(runtime.webUrl + '/child/login');
+      await expect(tab.getByRole('heading', { name: '孩子登录', exact: true })).toBeVisible();
+      await tab.getByRole('button', { name: `继续使用${name}`, exact: true }).click();
+      await expect(tab).toHaveURL(/\/child\/today$/);
+    }
+    const siblingBefore = await childB.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'));
+    for (const width of [1280, 768, 360]) {
+      await childA.setViewportSize({ width, height: 900 });
+      await expect(childA.getByRole('button', { name: '切换孩子', exact: true })).toBeVisible();
+      expect(await childA.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+      await childA.screenshot({ path: testInfo.outputPath(`child-switch-${width}.png`) });
+    }
+    childA.once('dialog', dialog => dialog.dismiss());
+    await childA.getByRole('button', { name: '切换孩子', exact: true }).click();
+    await expect(childA.getByRole('banner').getByText('Synthetic child', { exact: true })).toBeVisible();
+    childA.once('dialog', dialog => dialog.accept());
+    await childA.getByRole('button', { name: '切换孩子', exact: true }).click();
+    await expect(childA.getByLabel('PIN')).toHaveValue('');
+    expect(await childA.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+    await childB.reload();
+    expect(await childB.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBe(siblingBefore);
+    await expect(childB.getByRole('banner').getByText('Synthetic sibling', { exact: true })).toBeVisible();
+    await page.reload();
+    expect(await page.evaluate(() => localStorage.getItem('family-growth.parent-session.v1'))).toBe(parentBefore);
+    await expect(page.getByRole('navigation', { name: '家长导航', exact: true })).toBeVisible();
+    expect(errors.flat()).toEqual([]);
+  } finally { try { await childA.close(); } finally { await childB.close(); } }
+});
+
+test('another child tab login and exit preserve the original unknown completion command', async ({ page, context }) => {
+  const task = await newTask('Synthetic independent tab recovery');
+  await childLogin(page); await page.goto(runtime.webUrl + taskPath(task));
+  const sent = [];
+  page.on('request', request => { if (request.url().endsWith(`/${task.taskId}/complete`)) sent.push(request.postDataJSON()); });
+  const commands = () => page.evaluate(() => Object.fromEntries(Object.entries(sessionStorage)
+    .filter(([key]) => key.startsWith('family-growth.completion-command.v1:'))));
+  runtime.dropNextResponse({ method: 'PATCH', path: `/api/growth-tasks/${task.taskId}/complete` });
+  await page.getByRole('button', { name: '提交完成情况' }).click();
+  await expect(page.getByRole('button', { name: '重试本次提交' })).toBeVisible();
+  const saved = await commands(), before = await runtime.inspect();
+  expect(Object.keys(saved)).toHaveLength(1);
+  const sibling = await context.newPage();
+  try {
+    await childLogin(sibling, 'sibling');
+    await expect(page.getByRole('button', { name: '重试本次提交' })).toBeVisible();
+    expect(await commands()).toEqual(saved);
+    await sibling.goto(runtime.webUrl + '/child/me');
+    await sibling.getByRole('button', { name: '退出孩子端', exact: true }).click();
+    await page.reload();
+    await expect(page.getByRole('button', { name: '重试本次提交' })).toBeVisible();
+    expect(await commands()).toEqual(saved); expect(sent).toHaveLength(1);
+    const retried = page.waitForResponse(response => response.url().endsWith(`/${task.taskId}/complete`)
+      && response.request().method() === 'PATCH');
+    await page.getByRole('button', { name: '重试本次提交' }).click();
+    const response = await retried;
+    expect(response.status()).toBe(200); expect(await response.finished()).toBeNull();
+    expect((await response.json()).data.task.completionVersion).toBe(1);
+    await expect.poll(commands).toEqual({});
+    await expect(page.getByRole('button', { name: '重试本次提交' })).toHaveCount(0);
+    await expect(page.getByText('作品版本 1')).toBeVisible();
+    expect(sent).toHaveLength(2); expect(sent[1]).toEqual(sent[0]);
+    expect(await commands()).toEqual({}); expect(await runtime.inspect()).toEqual(before);
+  } finally { await sibling.close(); }
+});
+
+test('same-child logout in a second tab clears private work and rejects late media before sibling login', async ({ page, context }) => {
   const task = await newTask('Synthetic cross-tab work');
   await childLogin(page); await page.goto(runtime.webUrl + taskPath(task)); await upload(page);
   await page.getByRole('button', { name: '提交完成情况' }).click();
@@ -162,6 +259,7 @@ test('a sibling login in a second tab clears private work and rejects a late med
   await ready;
   const other = await context.newPage();
   try {
+    await childLogin(other);
     await other.goto(runtime.webUrl + '/child/me');
     await other.getByRole('button', { name: '退出孩子端' }).click();
     await childLogin(other, 'sibling');
@@ -203,7 +301,8 @@ for (const reason of ['revoked-session', 'expired-JWT']) test(`a late real ${rea
   const other = await context.newPage();
   try {
     if (reason === 'expired-JWT') {
-      // Only the intercepted request used an expired JWT; the second tab still has a valid session.
+      // Only the intercepted request used an expired JWT; explicitly authenticate this independent tab.
+      await childLogin(other);
       await other.goto(runtime.webUrl + '/child/me');
       await other.getByRole('button', { name: '退出孩子端' }).click();
     }
@@ -212,7 +311,7 @@ for (const reason of ['revoked-session', 'expired-JWT']) test(`a late real ${rea
     await other.reload();
     await expect(other).toHaveURL(/\/child\/today$/);
     await expect(other.getByRole('banner').getByText('Synthetic sibling', { exact: true })).toBeVisible();
-    expect(await other.evaluate(() => JSON.parse(localStorage.getItem('family-growth.child-session.v1')).child.childId))
+    expect(await other.evaluate(() => JSON.parse(sessionStorage.getItem('family-growth.child-session.v1')).child.childId))
       .toBe(fixture.actors.sibling.childId);
   } finally { release(); await other.close(); }
 });
@@ -285,15 +384,18 @@ for (const role of ['child', 'parent']) test(`real expired JWT: ${role} relogs a
   const saved = await rawCommands(); expect(Object.keys(saved)).toHaveLength(1);
   const expired = require('jsonwebtoken').sign({ id: fixture.actors[role].userId,
     role: role === 'child' ? 'student' : 'parent', tokenVersion: 0 }, process.env.JWT_SECRET, { expiresIn: -1 });
-  await page.evaluate(({ key, token }) => {
-    const session = JSON.parse(localStorage.getItem(key));
-    localStorage.setItem(key, JSON.stringify({ ...session, token }));
-  }, { key: storageKey, token: expired });
+  await page.evaluate(({ key, token, role }) => {
+    const store = role === 'child' ? sessionStorage : localStorage;
+    const session = JSON.parse(store.getItem(key));
+    if (!session?.token) throw new Error('Expected an authenticated expiry fixture');
+    store.setItem(key, JSON.stringify({ ...session, token }));
+  }, { key: storageKey, token: expired, role });
   const denial = page.waitForResponse(response => response.url().includes('/api/') && response.status() === 401);
   await page.reload();
   expect((await (await denial).json()).error.code).toBe('UNAUTHENTICATED');
   await expect(page).toHaveURL(role === 'child' ? /\/child\/login/ : /\/login/);
-  expect(await page.evaluate(key => localStorage.getItem(key), storageKey)).toBeNull();
+  expect(await page.evaluate(({ key, role }) => (role === 'child' ? sessionStorage : localStorage).getItem(key),
+    { key: storageKey, role })).toBeNull();
   expect(await rawCommands()).toEqual(saved);
   expect(await runtime.inspect()).toEqual(before);
   if (role === 'child') { await childLogin(page); await page.goto(runtime.webUrl + taskPath(task)); }

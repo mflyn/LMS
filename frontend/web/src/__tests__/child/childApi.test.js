@@ -56,7 +56,7 @@ describe('childApi', () => {
       childId: 'child-a1',
       pin: '1234'
     });
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).not.toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).not.toBeNull();
     expect(expired).not.toHaveBeenCalled();
     window.removeEventListener(CHILD_SESSION_EXPIRED_EVENT, expired);
   });
@@ -220,7 +220,7 @@ describe('childApi', () => {
 
     await expect(getOwnProfile()).rejects.toEqual({ response: { status: 401 } });
 
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
     expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parentSnapshot);
     expect(expired).toHaveBeenCalledTimes(1);
     window.removeEventListener(CHILD_SESSION_EXPIRED_EVENT, expired);

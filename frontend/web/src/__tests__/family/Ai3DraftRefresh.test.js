@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { ChildPracticePage } from '../../pages/family/Ai3PracticePage';
 import { createAi3Api } from '../../services/ai3Api';
 import { createAi2MediaApi } from '../../services/ai2MediaApi';
-import { saveChildSession, CHILD_SESSION_KEY } from '../../services/familySession';
+import { saveChildSession } from '../../services/familySession';
 
 // Mock only HTTP boundaries. The page, session fence, command store and Ai3Media are real.
 jest.mock('../../services/ai3Api', () => ({ createAi3Api: jest.fn() }));
@@ -145,8 +145,9 @@ test.each(['local', 'external'])('AI3 %s account switch releases blobs and fence
     const replacement = { token: 'synthetic-replacement', child: { childId: 'a'.repeat(24), familyId, name: 'Other synthetic child' } };
     if (source === 'local') saveChildSession(replacement);
     else {
-      localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ ...replacement, revision: 'external' }));
-      window.dispatchEvent(new StorageEvent('storage', { key: CHILD_SESSION_KEY }));
+      const key = `family-growth.session-exit.v1:student:${childId}`;
+      localStorage.setItem(key, JSON.stringify({ revision: 'external', reason: 'account_switch' }));
+      window.dispatchEvent(new StorageEvent('storage', { key, storageArea: localStorage }));
     }
   });
   assertPrivateGone(); expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:synthetic-ai3-draft');

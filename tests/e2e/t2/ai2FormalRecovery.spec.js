@@ -178,6 +178,7 @@ for (const kind of ['detail GET', 'authenticated media']) {
     let hold;
     try {
       const otherSeen = await observe(tab, runtime);
+      await login(tab, runtime, 'child');
       await tab.goto(runtime.webUrl + '/child/me');
       await page.bringToFront();
       await viewImage(page);
@@ -199,7 +200,7 @@ for (const kind of ['detail GET', 'authenticated media']) {
       await expect(page.getByLabel('订正说明', { exact: true })).toHaveCount(0);
       expect(await localCommands(page)).toEqual({});
       await login(tab, runtime, 'sibling');
-      const siblingSession = await tab.evaluate(() => localStorage.getItem('family-growth.child-session.v1'));
+      const siblingSession = await tab.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'));
       expect(JSON.parse(siblingSession).child.childId).toBe(runtime.fixture.actors.sibling.childId);
       hold.release(); await hold.dispose();
       expect(hold.state.fetchErrors).toEqual([]);
@@ -209,7 +210,9 @@ for (const kind of ['detail GET', 'authenticated media']) {
       await expect(page.getByText('Synthetic private cross-tab correction.', { exact: true })).toHaveCount(0);
       await expect(page.getByRole('region', { name: '学习包详情', exact: true })).toHaveCount(0);
       expect(await page.evaluate(() => window.ai2RecoveryDocument)).toBe('same-document');
-      expect(await page.evaluate(() => localStorage.getItem('family-growth.child-session.v1'))).toBe(siblingSession);
+      expect(await page.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+      expect(await page.evaluate(() => localStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+      expect(await tab.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBe(siblingSession);
       expect(await localCommands(page)).toEqual({});
       expect(await page.evaluate(async url => { try { await fetch(url); return true; } catch { return false; } }, oldBlob)).toBe(false);
       await tab.reload(); await expect(tab).toHaveURL(/\/child\/today$/);

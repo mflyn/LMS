@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createAi2MediaApi } from '../../services/ai2MediaApi';
-import { captureSession, saveChildSession, CHILD_SESSION_KEY } from '../../services/familySession';
+import { captureSession, saveChildSession } from '../../services/familySession';
 
 jest.mock('../../services/ai2MediaApi', () => ({ ...jest.requireActual('../../services/ai2MediaApi'), createAi2MediaApi: jest.fn() }));
 const id = n => n.toString(16).padStart(24, '0'), childId = id(100);
@@ -61,8 +61,9 @@ test.each(['child', 'scope', 'session', 'external'])('AI3 %s change clears blob 
   if (change === 'scope') view.rerender(<Media {...p} scopeKey="other-round" values={[]} />);
   if (change === 'session') act(() => { login('replacement'); });
   if (change === 'external') act(() => {
-    const saved = JSON.parse(localStorage.getItem(CHILD_SESSION_KEY)); saved.token = 'external'; saved.revision = 'external';
-    localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify(saved)); window.dispatchEvent(new StorageEvent('storage', { key: CHILD_SESSION_KEY }));
+    const key = `family-growth.session-exit.v1:student:${childId}`;
+    localStorage.setItem(key, JSON.stringify({ revision: 'external', reason: 'explicit_logout' }));
+    window.dispatchEvent(new StorageEvent('storage', { key, storageArea: localStorage }));
   });
   await act(async () => { resolve(new Blob(['image'], { type: 'image/png' })); });
   expect(screen.queryByRole('img')).not.toBeInTheDocument(); expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:synthetic');

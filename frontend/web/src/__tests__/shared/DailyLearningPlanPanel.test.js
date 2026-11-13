@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import DailyLearningPlanPanel from '../../components/family/DailyLearningPlanPanel';
 import * as childApi from '../../services/childApi';
 import * as parentApi from '../../services/familyApi';
-import { saveChildSession, saveParentSession, clearChildSession, CHILD_SESSION_KEY } from '../../services/familySession';
+import { saveChildSession, saveParentSession, clearChildSession } from '../../services/familySession';
 import { resetChildScope } from '../../services/childScope';
 import { familyLocalDate } from '../../services/dailyLearningPlan';
 import * as dates from '../../services/dailyLearningPlan';
@@ -247,14 +247,14 @@ test('twenty items cannot add another; midnight disables writing without copying
   expect(childApi.saveOwnDailyLearningPlan).not.toHaveBeenCalled(); expect(screen.queryByText(oldDate)).not.toBeInTheDocument();
   clock.mockRestore();
 });
-test('cross-tab identity replacement clears the old draft and a late success cannot restore it', async () => {
+test('cross-tab exit of the same child clears the old draft and a late success cannot restore it', async () => {
   let resolve; childApi.saveOwnDailyLearningPlan.mockImplementation(() => new Promise(r => { resolve = r; }));
   const user = userEvent.setup(); render(tree()); await add(user, 'a');
   await user.click(screen.getByRole('button', { name: '保存今日计划' }));
   act(() => {
-    localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'synthetic-sibling', revision: 'other-tab',
-      child: { childId: 'sibling', familyId: 'f', name: '合成兄弟姐妹' } }));
-    window.dispatchEvent(new StorageEvent('storage', { key: CHILD_SESSION_KEY, storageArea: localStorage }));
+    const key = 'family-growth.session-exit.v1:student:c';
+    localStorage.setItem(key, JSON.stringify({ revision: 'other-tab', reason: 'account_switch' }));
+    window.dispatchEvent(new StorageEvent('storage', { key, storageArea: localStorage }));
   });
   await act(async () => resolve(plan(1, [item('a')])));
   expect(screen.queryByText('任务a')).not.toBeInTheDocument();

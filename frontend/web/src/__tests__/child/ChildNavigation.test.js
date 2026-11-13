@@ -135,7 +135,7 @@ describe('child authentication and route isolation', () => {
     fireEvent.click(screen.getByRole('button', { name: '退出孩子端' }));
 
     expect(screen.getByText('anonymous:none')).toBeInTheDocument();
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
     expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parentSnapshot);
   });
 });
