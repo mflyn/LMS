@@ -1,5 +1,9 @@
 # 家庭自主学习 MVP 增量 Gate
 
+> **2026-11-13 当前交付摘要：已合并、真人待验。** PR #42、#43、#44 已分别合入 main，当前核对代码基线为 `ce264b9dec6fb469dd78154f507bba8e997b7e90`。
+> 孩子标签页隔离及在途 PIN 修订的独立复评、源/合并 SHA 与 CI 见[交付索引](evidence/child-tab-session-20261113/README.md)。真人测试由测试／评审线程继续，不将入口准备、合并或 CI 通过记为真人验收通过。
+> 下方各日期记录及原失败保留历史身份，不重写为一次全量通过；本摘要不改变 T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测及后置范围，也不授权模型调用、服务器操作、部署或 WP1/T8 执行器开发。
+
 > **2026-11-08 任务列表局部验收与交付：** 用户在本轮复审通过后批准执行局部收口及专用分支交付。
 > 任务列表批次为 ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY，筛选外及页外任务回看混入列表 P2 为 CLOSED / USER_APPROVED。
 > 冻结候选、分批复验与公开范围见[本次关闭记录](evidence/mvp-task-list-20261108/acceptance.md)。仅授权提交推送、Draft PR及CI，不合并、部署、调用模型或操作服务器。

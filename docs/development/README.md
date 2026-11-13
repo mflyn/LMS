@@ -35,7 +35,20 @@
 
 ## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
 
-2026-11-08最新局部交付：[任务列表分页与回看P2验收关闭](./evidence/mvp-task-list-20261108/acceptance.md)。
+**当前交付摘要（2026-11-13）：已合并、真人待验。** 本次核对的 main 代码基线为 `ce264b9dec6fb469dd78154f507bba8e997b7e90`。
+
+| 已合并范围 | PR | merge commit |
+| --- | --- | --- |
+| MVP 两项 P2 与使用指引 | [#42](https://github.com/mflyn/LMS/pull/42) | `01a61c63` |
+| 任务列表分页与回看 | [#43](https://github.com/mflyn/LMS/pull/43) | `a383eb30` |
+| 孩子标签页隔离与在途 PIN 响应保护 | [#44](https://github.com/mflyn/LMS/pull/44) | `ce264b9d` |
+
+PR #44 及合并后 main 的 CI 已通过，固定 SHA 与分批验证依据见[交付证据索引](./evidence/child-tab-session-20261113/README.md)。
+真人测试由测试／评审线程核对并保留既有合成数据后继续，入口和实际结果以该线程记录为准；Git 合并和 CI 通过不等于真人、iPad 或部署验收。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置状态不变，WP1/T8 执行器不恢复开发。
+以下按日期保留候选及授权快照；其中“待复评／不合并”等不覆盖对应模块的后续批准和已合并事实，也不授予新的执行权限。
+
+2026-11-08任务列表交付快照（合并前）：[任务列表分页与回看P2验收关闭](./evidence/mvp-task-list-20261108/acceptance.md)。
 基于已合并PR #42的main `01a61c63`，仅提交本次三文件修订、关闭记录及脱敏证据索引；专用分支/Draft PR/CI已授权，合并与部署未授权。以下MVP两项P2及其交付权限保留为上一批快照。
 
 2026-11-08本批已验收：[MVP两项P2及使用指引关闭记录](./evidence/mvp-closeout-20261108/acceptance.md)。
