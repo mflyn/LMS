@@ -41,6 +41,9 @@
   min-height: 68px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   padding: 12px max(24px, calc((100% - 1120px) / 2));
   border-bottom: 1px solid var(--child-border);
   background: var(--child-surface);
@@ -182,6 +185,9 @@ a.child-task-row:hover { border-color: #8fb8aa; background: #f8fcfa; }
   cursor: pointer;
   font-weight: 750;
 }
+.child-header > div { min-width: 0; overflow-wrap: anywhere; }
+.child-header > button { flex-shrink: 0; }
+.child-login-panel button { max-width: 100%; overflow-wrap: anywhere; }
 .child-primary-button { color: #fff; background: var(--child-primary); }
 .child-primary-button:hover { background: var(--child-primary-dark); }
 .child-secondary-button { color: var(--child-ink); border-color: var(--child-border); background: var(--child-surface); }

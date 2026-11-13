@@ -24,7 +24,7 @@ describe('family API client', () => {
   });
 
   test('uses only the parent session token for a family request', async () => {
-    localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
+    sessionStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
     localStorage.setItem(PARENT_SESSION_KEY, JSON.stringify({
       token: 'parent-token',
       user: { id: 'parent-a', name: '小明妈妈', role: 'parent' }
@@ -38,7 +38,7 @@ describe('family API client', () => {
   });
 
   test('rejects a family request when only a child session exists', async () => {
-    localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
+    sessionStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
 
     await expect(getMyFamily()).rejects.toMatchObject({ response: { status: 401 } });
     expect(axios.get).not.toHaveBeenCalled();

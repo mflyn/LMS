@@ -53,13 +53,14 @@ describe('child PIN login', () => {
 
     expect(await screen.findByRole('heading', { name: '今天' })).toBeInTheDocument();
     expect(childPinLogin).toHaveBeenCalledWith({ familyId: 'family-a', childId: 'child-a1', pin: '1234' });
-    const stored = JSON.parse(localStorage.getItem(CHILD_SESSION_KEY));
+    const stored = JSON.parse(sessionStorage.getItem(CHILD_SESSION_KEY));
     expect(stored).toEqual({
       revision: expect.any(String),
+      exitRevision: null,
       token: 'child-token',
       child: { childId: 'child-a1', familyId: 'family-a', name: '小雨' }
     });
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).not.toContain('1234');
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).not.toContain('1234');
     expect(window.location.pathname).toBe('/child/today');
   });
 
@@ -78,7 +79,7 @@ describe('child PIN login', () => {
     expect(screen.getByLabelText('家庭 ID')).toHaveValue('family-a');
     expect(screen.getByLabelText('孩子 ID')).toHaveValue('child-a1');
     expect(screen.getByLabelText('PIN')).toHaveValue('');
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
   });
 
   test('disables submission while login is in flight', async () => {

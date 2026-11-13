@@ -236,14 +236,15 @@ test.each(['parent', 'student'].flatMap(role => ['storage', 'pageshow'].map(even
     const marker = `family-growth.ai3-session-expiry.v1:${role}:${session.actorId}`;
     localStorage.setItem(marker, JSON.stringify({ revision: 'remote-expiry', reason: 'expired' }));
     const sessionKey = role === 'parent' ? PARENT_SESSION_KEY : CHILD_SESSION_KEY;
+    const credentialStore = role === 'parent' ? localStorage : sessionStorage;
     if (event === 'storage') {
-      localStorage.removeItem(sessionKey);
+      credentialStore.removeItem(sessionKey);
       window.dispatchEvent(new StorageEvent('storage', { key: marker }));
     } else {
-      // A suspended tab can miss both expiry and same-actor login storage events.
-      const replacement = JSON.parse(localStorage.getItem(sessionKey)); replacement.token = 'replacement'; replacement.revision = 'new-login';
-      localStorage.setItem(sessionKey, JSON.stringify(replacement));
-      localStorage.setItem(`family-growth.session-change.v1:${role}`, JSON.stringify({ actorId: session.actorId, reason: 'authenticated' }));
+      // Resume after an identity revision without receiving its change notification.
+      const replacement = JSON.parse(credentialStore.getItem(sessionKey)); replacement.token = 'replacement'; replacement.revision = 'new-login';
+      credentialStore.setItem(sessionKey, JSON.stringify(replacement));
+      credentialStore.setItem(`family-growth.session-change.v1:${role}`, JSON.stringify({ actorId: session.actorId, reason: 'authenticated' }));
       window.dispatchEvent(new Event('pageshow'));
     }
     expect(sessionStorage.getItem(owned)).toBeNull(); expect(sessionStorage.getItem(ai2)).toBe('{legacy-preserve');

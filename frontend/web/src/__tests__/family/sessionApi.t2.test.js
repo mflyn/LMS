@@ -107,7 +107,7 @@ describe.each(['parent', 'student'])('T2 %s session isolation', role => {
     const key = role === 'parent' ? sessions.PARENT_SESSION_KEY : sessions.CHILD_SESSION_KEY;
     const replacement = role === 'parent' ? { token: 'b', user: { id: 'b', role: 'parent' } }
       : { token: 'b', child: { childId: 'b', familyId: 'family', name: 'b' } };
-    localStorage.setItem(key, JSON.stringify(replacement));
+    (role === 'parent' ? localStorage : sessionStorage).setItem(key, JSON.stringify(replacement));
     const request = role === 'parent' ? parent.getPrivateMediaAccess('m', { session }) : child.getOwnPrivateMediaAccess('m', { session });
     await expect(request).rejects.toMatchObject({ code: 'SESSION_CHANGED' });
     expect(axios.get).not.toHaveBeenCalled();
@@ -191,10 +191,10 @@ test.each(['parent', 'student'])('%s explicit logout is not prevented by a marke
   } finally { spy.mockRestore(); }
 });
 
-test.each(['parent', 'student'])('%s observes a legacy cross-tab account replacement and clears only the old actor', role => {
+test.each(['parent', 'student'])('%s observes replacement in its own credential store and clears only the old actor', role => {
   save(role); const old = command('a', role), next = command('b', role);
   const key = role === 'parent' ? sessions.PARENT_SESSION_KEY : sessions.CHILD_SESSION_KEY;
-  localStorage.setItem(key, JSON.stringify(role === 'parent'
+  (role === 'parent' ? localStorage : sessionStorage).setItem(key, JSON.stringify(role === 'parent'
     ? { token: 'b', user: { id: 'b', role: 'parent' } }
     : { token: 'b', child: { childId: 'b', familyId: 'family', name: 'b' } }));
   expect(sessions.captureSession(role).actorId).toBe('b');

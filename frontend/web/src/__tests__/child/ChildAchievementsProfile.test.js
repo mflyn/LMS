@@ -134,7 +134,7 @@ describe('child profile and logout', () => {
 
     expect(await screen.findByRole('heading', { name: '孩子登录' })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/child/login');
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
     expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parentSnapshot);
   });
 
@@ -146,6 +146,6 @@ describe('child profile and logout', () => {
 
     expect(await screen.findByRole('heading', { name: '孩子登录' })).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('会话已过期，请重新登录。');
-    await waitFor(() => expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull());
+    await waitFor(() => expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull());
   });
 });

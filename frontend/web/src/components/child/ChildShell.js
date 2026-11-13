@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { CHILD_NAV_ITEMS } from '../../config/childNavigation';
 import { useChildAuth } from '../../contexts/ChildAuthContext';
+import ChildSwitchButton from './ChildSwitchButton';
 
 const ChildShell = () => {
   const { child } = useChildAuth();
@@ -13,6 +14,7 @@ const ChildShell = () => {
           <p className="child-eyebrow">我的成长空间</p>
           <strong>{child?.name}</strong>
         </div>
+        <ChildSwitchButton />
       </header>
       <nav className="child-navigation" aria-label="孩子导航">
         {CHILD_NAV_ITEMS.map((item) => (

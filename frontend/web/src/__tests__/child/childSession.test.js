@@ -36,7 +36,7 @@ describe('child session storage isolation', () => {
       child: { ...childIdentity, grade: 3 }
     });
     expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parentSnapshot);
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).not.toContain('discard-me');
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).not.toContain('discard-me');
   });
 
   test.each([undefined, null, 0, 7, 1.5, '1', true, {}])('invalid grade %p uses the generic identity without rejecting login', grade => {
@@ -63,38 +63,38 @@ describe('child session storage isolation', () => {
   ])('removes malformed child storage without touching parent storage', (stored) => {
     const parentSnapshot = JSON.stringify({ token: 'parent-token' });
     localStorage.setItem(PARENT_SESSION_KEY, parentSnapshot);
-    localStorage.setItem(CHILD_SESSION_KEY, stored);
+    sessionStorage.setItem(CHILD_SESSION_KEY, stored);
 
     expect(loadChildSession()).toBeNull();
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
     expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parentSnapshot);
   });
 
   test('rejects invalid sessions before writing storage', () => {
     expect(() => saveChildSession({ token: 'child-token', child: { childId: 'child-a1' } }))
       .toThrow('Only child sessions can be persisted in the child session store');
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
   });
 
   test('clears only the child session', () => {
     const parentSnapshot = JSON.stringify({ token: 'parent-token' });
     localStorage.setItem(PARENT_SESSION_KEY, parentSnapshot);
-    localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
+    sessionStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
 
     clearChildSession();
 
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
     expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parentSnapshot);
   });
 
   test('expires the child session and emits one recoverable event', () => {
     const listener = jest.fn();
     window.addEventListener(CHILD_SESSION_EXPIRED_EVENT, listener);
-    localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
+    sessionStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
 
     expireChildSession();
 
-    expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
     expect(listener).toHaveBeenCalledTimes(1);
     window.removeEventListener(CHILD_SESSION_EXPIRED_EVENT, listener);
   });

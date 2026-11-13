@@ -21,6 +21,8 @@ let consoleErrorGuard;
 let consoleWarnGuard;
 
 beforeEach(() => {
+  // Each test starts in a fresh tab; scenarios may explicitly seed recovery state.
+  sessionStorage.clear();
   consoleErrorGuard = jest.spyOn(console, 'error').mockImplementation((...values) => {
     throw new Error(`Unexpected console.error: ${values.map(formatConsoleValue).join(' ')}`);
   });

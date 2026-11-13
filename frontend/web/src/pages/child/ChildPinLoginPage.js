@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useChildAuth } from '../../contexts/ChildAuthContext';
+import ChildSwitchButton from '../../components/child/ChildSwitchButton';
 
 const ChildPinLoginPage = () => {
   const navigate = useNavigate();
-  const { status, error, login, clearError } = useChildAuth();
+  const { status, child, error, login, clearError } = useChildAuth();
   const [form, setForm] = useState({ familyId: '', childId: '', pin: '' });
   const [formError, setFormError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (status === 'authenticated') return <Navigate to="/child/today" replace />;
+  if (status === 'authenticated') return (
+    <main className="child-login-page">
+      <section className="child-login-panel" aria-labelledby="child-login-heading">
+        <p className="child-eyebrow">家庭成长追踪</p>
+        <h1 id="child-login-heading">孩子登录</h1>
+        <div className="child-form">
+          <button type="button" className="child-primary-button"
+            onClick={() => navigate('/child/today', { replace: true })}>继续使用{child.name}</button>
+          <ChildSwitchButton />
+        </div>
+      </section>
+    </main>
+  );
 
   const updateField = (field) => (event) => {
     const value = event.target.value;

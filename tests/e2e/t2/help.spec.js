@@ -287,7 +287,7 @@ test('lost request response preserves command, and stale parent resolve reads ne
   expect(sent.filter(command => command.action === 'resolve')).toHaveLength(1);
 });
 
-test('cross-tab sibling login hides old help and a delayed read cannot refill it', async ({ page, context }) => {
+test('same-child cross-tab exit hides old help and a delayed read cannot refill it after sibling login', async ({ page, context }) => {
   const task = await newTask(); expectData(await child.patch(path(task) + '/help', request(0)));
   await login(page); await page.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
   await expect(page.getByText('Synthetic fresh question')).toBeVisible();
@@ -297,6 +297,7 @@ test('cross-tab sibling login hides old help and a delayed read cannot refill it
   const reload = page.reload(); await reached;
   const other = await context.newPage();
   try {
+    await login(other);
     await other.goto(runtime.webUrl + '/child/me'); await other.getByRole('button', { name: '退出孩子端' }).click();
     await login(other, 'sibling'); release(); await reload;
     await expect(page.getByText('Synthetic fresh question')).toHaveCount(0);

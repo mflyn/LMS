@@ -1,0 +1,258 @@
+{
+  "status": "CLOSED_INDEPENDENT_AUTOMATED_SCOPE",
+  "finding": "QA-CHILD-TABS-LOGIN-001",
+  "baseline": "a383eb3054b28cdfec914e716ebfe786b5b449da",
+  "reviewedPatchSha256": "5049f316842844af7bfeaa48795bd6227352c062ad1d2d6d566cd929b4d6c8e6",
+  "frozenFiles": [
+    {
+      "path": "docs/development/family-child-tab-session.md",
+      "bytes": 14320,
+      "sha256": "14c70894704654ac064c2d88da80ad493e4ddc08dcd164c0506248b27d509e5a"
+    },
+    {
+      "path": "docs/user-guide/child-guide.md",
+      "bytes": 10930,
+      "sha256": "b02cbf2ef98aa8ac65432385f036c11a78572ed1be792b6e30172ef01e436056"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/ChildAchievementsProfile.test.js",
+      "bytes": 5987,
+      "sha256": "616ef3522e78ed7ce355883e5e11b3a6a493523169fa30384c8c35e10cb2af74"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/ChildAuthContext.test.js",
+      "bytes": 3783,
+      "sha256": "e738422e93f6e27918ed3c2310208d1e3eb1d409be7d0f213a17328bbe6aee88"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/ChildLogin.test.js",
+      "bytes": 4359,
+      "sha256": "01ddbfeb053b109ed861a8f8ebde031dd473ca0c8319f2a58d98b5c00de8df35"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/ChildLoginRace.test.js",
+      "bytes": 7569,
+      "sha256": "8bf499ca0f11c0820dc855f24416d322e16c34e31f54efbd50462448b4c13b9b"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/ChildNavigation.test.js",
+      "bytes": 4914,
+      "sha256": "d9f6ff14892f892bc2e43a402a50b454d62e5fe8766e98cad7b81680c3c1a3c5"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/ChildSwitch.test.js",
+      "bytes": 4803,
+      "sha256": "823597b410afb9393faedfd776270355a861bfb03b2551a0587d03efc9f8cb73"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/childApi.test.js",
+      "bytes": 8464,
+      "sha256": "13a0832e0aa6efa863823960108c5c7fc4493d83ddca63e9ec53c575aed76924"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/childSession.test.js",
+      "bytes": 4087,
+      "sha256": "f22b38f0675b1864acae5a6a15da9048d3adb3ed9c0c173de378de1546f64f30"
+    },
+    {
+      "path": "frontend/web/src/__tests__/child/childTabSession.test.js",
+      "bytes": 6180,
+      "sha256": "83d452d08c4278914a71c81d3a0d232166061af9e1f193dad83282155dd873a2"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/Ai3DraftRefresh.test.js",
+      "bytes": 12365,
+      "sha256": "c0039ae71c9238ee0a3de28c4b2ddf122012d624c4a770e4abe31f980de7f26a"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/FamilyNavigation.test.js",
+      "bytes": 7194,
+      "sha256": "4413f907fcee6925ba0bb3095ac4ffa9f1f1eb8bc4a55a7d94954744dc6c3ce8"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/ai3Client.test.js",
+      "bytes": 23491,
+      "sha256": "58af06faed4a07a53ae012b1e67db49a401e3c0e54ee86a0a06425d3f7c1ea56"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/familyApi.test.js",
+      "bytes": 4835,
+      "sha256": "dbf03cf0d62d5bc84a708fcc4ab864da33b1cecc63c6675e6e9bb83202c45cb4"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/familySession.test.js",
+      "bytes": 4302,
+      "sha256": "61419f955f353142ba42da48610c6c989cd90f2dc335494a7f1269da6c79890b"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/sessionApi.t2.test.js",
+      "bytes": 15304,
+      "sha256": "35c7b27f5df4ff34b211446557ef18f40a2b3d62a7e6117e39ac9f022e4e5ca8"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/sessionContexts.t2.test.js",
+      "bytes": 7663,
+      "sha256": "f614899c673e01eb29e4083b60e6eba9d9117f78a80fd3cd93d7f9efb14ecb67"
+    },
+    {
+      "path": "frontend/web/src/__tests__/shared/Ai3Media.test.js",
+      "bytes": 6845,
+      "sha256": "801954d1a0e3d8c9bfaa6b45e170c61cd4e8ed5f64cd75e64d607d484d2ca87b"
+    },
+    {
+      "path": "frontend/web/src/__tests__/shared/DailyLearningPlanPanel.test.js",
+      "bytes": 24604,
+      "sha256": "147974e82dc89b5927c6449e710842697bd2cb135bd30e0f17c3778c6a04bdfe"
+    },
+    {
+      "path": "frontend/web/src/__tests__/shared/useTaskCompletion.test.js",
+      "bytes": 14398,
+      "sha256": "63d1d8e85c64221af36c680ebce03979437e17fa8225d09846a8210c19364983"
+    },
+    {
+      "path": "frontend/web/src/child-shell.css",
+      "bytes": 9818,
+      "sha256": "6d0d7938e29d555e69a869fe4040b024627bc726713b33cb48766e9a7e114806"
+    },
+    {
+      "path": "frontend/web/src/components/child/ChildShell.js",
+      "bytes": 1051,
+      "sha256": "b6a29dfab6e0cdc6067a369e56c0fae116a30dd2a5121a44cdb2e58cdf6bb30b"
+    },
+    {
+      "path": "frontend/web/src/components/child/ChildSwitchButton.js",
+      "bytes": 752,
+      "sha256": "7d3b37fd7785f1f3845a124fa7292ea4f8bc7386fdb2763f3a88406407abceb3"
+    },
+    {
+      "path": "frontend/web/src/contexts/ChildAuthContext.js",
+      "bytes": 4235,
+      "sha256": "7ce57430d1dadb210a7d10729421b0053277cc2284c753de9938c1380bdd9dff"
+    },
+    {
+      "path": "frontend/web/src/pages/child/ChildPinLoginPage.js",
+      "bytes": 3676,
+      "sha256": "19ff43e074adb5f107011f2ad316c671cbf12ef3cc42f86f37a4010ff8347a7f"
+    },
+    {
+      "path": "frontend/web/src/services/familySession.js",
+      "bytes": 17885,
+      "sha256": "783de8987d780d362d009f46011925255c89127b0b54533646f35f65d1d00fef"
+    },
+    {
+      "path": "frontend/web/src/setupTests.js",
+      "bytes": 2074,
+      "sha256": "28b41a3f5b2dde9dc8725045cecd6b420a62b14365e48f0f7dbbfbb1d67f7f9c"
+    },
+    {
+      "path": "tests/e2e/t2/ai2FormalRecovery.spec.js",
+      "bytes": 15021,
+      "sha256": "236527f3861111e73a1f3ab6baae81c0febde5d371c264b65841b506c44e6915"
+    },
+    {
+      "path": "tests/e2e/t2/childLoginRace.spec.js",
+      "bytes": 4223,
+      "sha256": "539f1df2d109b9ae98c1f946124bff56180e65f39603bb263766394fc41cfe27"
+    },
+    {
+      "path": "tests/e2e/t2/completion.spec.js",
+      "bytes": 39221,
+      "sha256": "68eff71b7a33e030de6ad803976b24b64d7b8b9a6171d44c8c3ecdd00c737d38"
+    },
+    {
+      "path": "tests/e2e/t2/help.spec.js",
+      "bytes": 21514,
+      "sha256": "511ce35bbd3b08662776d0e78b4ccf87a71269ef310e5d07c1660ab6e2f0b96a"
+    },
+    {
+      "path": "tests/e2e/task11/family-growth-security.spec.js",
+      "bytes": 8569,
+      "sha256": "d3e57e98029b591f30441d2699af60ab02aab224e9803dc1c1d0cea63267b2a0"
+    }
+  ],
+  "deliveryByteIdenticalFiles": 32,
+  "deliveryOnlyChanges": [
+    "docs/development/family-child-tab-session.md",
+    "docs/development/evidence/child-tab-session-20261113/README.md",
+    "docs/development/evidence/child-tab-session-20261113/verification.json"
+  ],
+  "originalFailureManifestSha256": "88d8809a79cd79424e6a1faffcaa30ae21b5be8f1d6b0ab480c02a94c88b1ff6",
+  "independentManifestSha256": "4c4d6eef59851eb4eccdab1fd92c69937b1564bd285a0786cafaaed67398bf6f",
+  "independentReportSha256": "f64d28b898eca7e25c9a4d7ea88d6aafe6ed6f03f592f19be6e739ac56610329",
+  "independentOriginalComponent": {
+    "suites": 1,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "independentAffectedComponent": {
+    "suites": 25,
+    "passed": 385,
+    "failed": 0,
+    "skipped": 0
+  },
+  "independentBrowserBatches": {
+    "original-chromium": {
+      "startTime": "2026-11-12T16:45:25.568Z",
+      "duration": 9982.824,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "controls-chromium": {
+      "startTime": "2026-11-12T16:45:35.810Z",
+      "duration": 47895.436,
+      "expected": 7,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "original-webkit": {
+      "startTime": "2026-11-12T16:46:23.992Z",
+      "duration": 9807.391,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "controls-webkit": {
+      "startTime": "2026-11-12T16:46:34.065Z",
+      "duration": 49589.119,
+      "expected": 7,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "independentBuildIndexSha256": "d43d564a694964e293be6ecedf3a9b1e57c537fc5d51a6cb0900ff7842bb0866",
+  "permanentTestsIncludedInAffected": 17,
+  "originalFailureFiles": 121,
+  "independentArchiveFiles": 112,
+  "developerEvidenceFiles": 65,
+  "preservedStates": [
+    "T4_OPEN",
+    "T8_OPEN",
+    "AI1_OPEN",
+    "SERVER_TIMING_UNVERIFIED",
+    "DEVICE_PENDING",
+    "Docker_INCOMPLETE_FAILED",
+    "nonblocking_and_deferred_unchanged"
+  ],
+  "noHumanOrIpadAcceptance": true,
+  "noRealModelOrDeployment": true,
+  "deliveryFrontend": {
+    "suites": 75,
+    "passed": 1218,
+    "failed": 0,
+    "skipped": 0,
+    "reportSha256": "5f7236f9e4ac083164c30e8ccf8c8ac95f3b9d08e6c6a43b274258aff0cb6c33",
+    "independentQA": false
+  },
+  "deliveryLocalChecks": {
+    "lint": "PASS",
+    "documentation": "PASS",
+    "diffWhitespace": "PASS",
+    "sensitiveScope": "PASS_35_FILES"
+  }
+}

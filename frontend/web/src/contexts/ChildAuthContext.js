@@ -4,6 +4,8 @@ import {
   CHILD_SESSION_EXPIRED_EVENT,
   clearChildSession,
   captureSession,
+  captureChildLogin,
+  assertChildLoginCurrent,
   expireChildSession,
   loadChildSession,
   wasChildSessionExpired,
@@ -16,6 +18,12 @@ const ChildAuthContext = createContext(null);
 const loginErrorMessage = (error) => {
   const status = error?.response?.status;
   const code = error?.response?.data?.error?.code;
+  if (error?.code === 'CHILD_SESSION_STORAGE_UNAVAILABLE') {
+    return '无法保存本页登录状态，请检查浏览器存储设置后重试。';
+  }
+  if (error?.code === 'CHILD_LOGIN_CHANGED') {
+    return '此次登录已失效，请重新输入 PIN。';
+  }
   if (status === 401 || code === 'INVALID_CHILD_CREDENTIALS') {
     return '家庭、孩子或 PIN 不正确。';
   }
@@ -33,16 +41,24 @@ export const ChildAuthProvider = ({ children }) => {
 
   const login = useCallback(async (credentials) => {
     const version = ++attempt.current, initial = captureSession('student');
+    let loginBoundary;
     try {
+      loginBoundary = captureChildLogin(credentials);
       const payload = await childPinLogin(credentials);
       if (version !== attempt.current || captureSession('student') !== initial) return false;
-      const nextSession = saveChildSession(payload);
+      assertChildLoginCurrent(loginBoundary);
+      const nextSession = saveChildSession(payload, loginBoundary);
       setSession(nextSession);
       setError(null);
       return true;
     } catch (requestError) {
       if (version !== attempt.current || captureSession('student') !== initial) return false;
-      setError(loginErrorMessage(requestError));
+      let loginError = requestError;
+      if (loginBoundary) {
+        try { assertChildLoginCurrent(loginBoundary); }
+        catch (boundaryError) { loginError = boundaryError; }
+      }
+      setError(loginErrorMessage(loginError));
       return false;
     }
   }, []);
@@ -64,7 +80,9 @@ export const ChildAuthProvider = ({ children }) => {
       observedSession.current = next;
       attempt.current += 1;
       setSession(loadChildSession());
-      setError(event.reason === 'expired' ? '会话已过期，请重新登录。' : null);
+      setError(event.reason === 'expired' ? '会话已过期，请重新登录。'
+        : event.reason === 'storage_unavailable'
+          ? loginErrorMessage({ code: 'CHILD_SESSION_STORAGE_UNAVAILABLE' }) : null);
     });
     const handleExpiredSession = event => { if (!event.detail?.handled) expireChildSession(); };
     setSession(loadChildSession());
