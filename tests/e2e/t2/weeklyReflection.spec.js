@@ -10,6 +10,7 @@ async function login(page, name) {
   const actor = fixture.actors[name], child = Boolean(actor.pin);
   await page.goto(runtime.webUrl + (child ? '/child/login' : '/login'));
   if (child) {
+    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
     await page.getByLabel('家庭 ID').fill(actor.familyId);
     await page.getByLabel('孩子 ID').fill(actor.childId);
     await page.getByLabel('PIN').fill(actor.pin);

@@ -164,6 +164,7 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
   const childPage = await childContext.newPage();
   const assertChildConsole = monitorPage(childPage);
   await childPage.goto('/child/login');
+  await childPage.getByRole('button', { name: '手工填写标识', exact: true }).click();
   await childPage.getByLabel('家庭 ID').fill(family.familyId);
   await childPage.getByLabel('孩子 ID').fill(childA.childId);
   await childPage.getByLabel('PIN').fill('2468');

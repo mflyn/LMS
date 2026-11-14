@@ -55,6 +55,7 @@ const setupFamily = async (page) => {
 
 const loginChild = async (page, familyId, childId, pin = '2468') => {
   await page.goto('/child/login');
+  await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
   await page.getByLabel('家庭 ID').fill(familyId);
   await page.getByLabel('孩子 ID').fill(childId);
   await page.getByLabel('PIN').fill(pin);
@@ -106,6 +107,7 @@ test('resetting a PIN expires the existing child browser session', async ({ page
   await expect(childPage.getByRole('alert')).toContainText('会话已过期，请重新登录');
   expect(await childPage.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
   await expect(childPage.getByRole('navigation', { name: '孩子导航' })).toHaveCount(0);
+  await childPage.getByRole('button', { name: '手工填写标识', exact: true }).click();
   await childPage.getByLabel('家庭 ID').fill(family.familyId);
   await childPage.getByLabel('孩子 ID').fill(childA.childId);
   await childPage.getByLabel('PIN').fill('2468');

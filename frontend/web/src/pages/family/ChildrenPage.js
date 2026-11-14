@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import FamilyDialog from '../../components/family/FamilyDialog';
 import PrivateMediaField from '../../components/family/PrivateMediaField';
+import ChildEntryActions from '../../components/family/ChildEntryActions';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useDraftMedia } from '../../hooks/useDraftMedia';
 import { createChild, setChildPin, updateChild } from '../../services/familyApi';
@@ -193,6 +194,7 @@ const ChildrenPage = () => {
                     <p className="family-id-line"><span>孩子 ID</span><code>{child.childId}</code></p>
                   </div>
                   <div className="family-child-actions">
+                    <ChildEntryActions child={child} />
                     <button
                       type="button"
                       className="family-button secondary"

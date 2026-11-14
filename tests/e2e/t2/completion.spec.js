@@ -16,6 +16,7 @@ test.afterEach(async () => { await runtime?.stop(); });
 async function childLogin(page, name = 'child') {
   const actor = fixture.actors[name];
   await page.goto(runtime.webUrl + '/child/login');
+  await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
   await page.getByLabel('家庭 ID').fill(actor.familyId);
   await page.getByLabel('孩子 ID').fill(actor.childId);
   await page.getByLabel('PIN').fill(actor.pin);
@@ -167,6 +168,7 @@ test('one browser keeps parent and sibling tabs independent through refresh and 
       await expect(copied.getByRole('navigation', { name: '孩子导航', exact: true })).toHaveCount(0);
     } finally { await copied.close(); }
     await childB.goto(runtime.webUrl + '/child/login');
+    await childB.getByRole('button', { name: '手工填写标识', exact: true }).click();
     await expect(childB.getByLabel('PIN')).toBeVisible();
     expect(await childB.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
     await childLogin(childB, 'sibling');
@@ -194,6 +196,7 @@ test('one browser keeps parent and sibling tabs independent through refresh and 
     await expect(childA.getByRole('banner').getByText('Synthetic child', { exact: true })).toBeVisible();
     childA.once('dialog', dialog => dialog.accept());
     await childA.getByRole('button', { name: '切换孩子', exact: true }).click();
+    await childA.getByRole('button', { name: '手工填写标识', exact: true }).click();
     await expect(childA.getByLabel('PIN')).toHaveValue('');
     expect(await childA.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
     await childB.reload();

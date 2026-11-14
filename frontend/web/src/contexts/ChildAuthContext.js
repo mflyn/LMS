@@ -39,20 +39,21 @@ export const ChildAuthProvider = ({ children }) => {
   const attempt = useRef(0);
   const observedSession = useRef(captureSession('student'));
 
-  const login = useCallback(async (credentials) => {
+  const login = useCallback(async (credentials, { isCurrent = () => true } = {}) => {
+    if (!isCurrent()) return false;
     const version = ++attempt.current, initial = captureSession('student');
     let loginBoundary;
     try {
       loginBoundary = captureChildLogin(credentials);
       const payload = await childPinLogin(credentials);
-      if (version !== attempt.current || captureSession('student') !== initial) return false;
+      if (!isCurrent() || version !== attempt.current || captureSession('student') !== initial) return false;
       assertChildLoginCurrent(loginBoundary);
       const nextSession = saveChildSession(payload, loginBoundary);
       setSession(nextSession);
       setError(null);
       return true;
     } catch (requestError) {
-      if (version !== attempt.current || captureSession('student') !== initial) return false;
+      if (!isCurrent() || version !== attempt.current || captureSession('student') !== initial) return false;
       let loginError = requestError;
       if (loginBoundary) {
         try { assertChildLoginCurrent(loginBoundary); }

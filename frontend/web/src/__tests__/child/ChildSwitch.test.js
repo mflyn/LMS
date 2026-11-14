@@ -39,6 +39,7 @@ test('cancelled switch keeps the current page and identity; confirmed switch req
     expect(confirm).toHaveBeenCalledWith(expect.stringContaining('未提交'));
     expect(screen.getByRole('heading', { name: '孩子登录' })).toBeInTheDocument();
     expect(captureSession('student')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '手工填写标识' }));
     expect(screen.getByLabelText('PIN')).toHaveValue('');
     expect(childPinLogin).not.toHaveBeenCalled();
     childPinLogin.mockResolvedValueOnce(child('B'));
@@ -62,6 +63,7 @@ test('storage failure reports a local login problem without navigating or persis
     return original.call(this, key, value);
   });
   try {
+    fireEvent.click(screen.getByRole('button', { name: '手工填写标识' }));
     fireEvent.change(screen.getByLabelText('家庭 ID'), { target: { value: 'family' } });
     fireEvent.change(screen.getByLabelText('孩子 ID'), { target: { value: 'A' } });
     fireEvent.change(screen.getByLabelText('PIN'), { target: { value: '2468' } });

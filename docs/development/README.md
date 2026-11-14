@@ -35,6 +35,8 @@
 
 ## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
 
+2026-11-14 [孩子专属入口 + PIN 最小设计](../superpowers/specs/2026-11-13-family-child-entry-design.md)及[测试方案](family-child-entry-test-plan.md)对应的限定合成工程已获用户验收，两项测试保护缺口批准关闭；[本批证据与评审记录](evidence/child-entry-20261113/README.md)区分开发实跑、独立复评与历史失败。现授权专用分支、Draft PR 和 CI，不授权合并或替换真人入口；下列已合并快照及 OPEN/DEVICE_PENDING 等状态不变。
+
 **当前交付摘要（2026-11-13）：已合并、真人待验。** 本次核对的 main 代码基线为 `ce264b9dec6fb469dd78154f507bba8e997b7e90`。
 
 | 已合并范围 | PR | merge commit |
