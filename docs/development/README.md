@@ -46,6 +46,11 @@
 不将代码合并、CI 或本次文档更新写成入口已更新、真人通过或部署完成。
 T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置状态不变。
 
+2026-11-14 测试线程另交接[三页面业务闭环自动浏览器证据](evidence/browser-business-loop-20261114/README.md)：
+固定受测 SHA 仍为 `2ac06898`，复用已登录家长及两个孩子页面，完成求助、两版作品、按所见版本审核和回看；
+结果 PASS_BROWSER_BUSINESS_LOOP，25 份冻结文件核验通过，26 条基线文档未变。2026-11-14 复审通过并获用户批准本批证据收口，绑定原受测 SHA 及索引中的原 manifest 哈希；仅文档状态已批准，
+不是新的专属入口登录测试、真人/iPad 验收或全量通过，不改绑最新 main、不关闭门禁；[测试记录](family-child-entry-test-plan.md#6-后续三页面业务接续记录2026-11-14)区分原专项与本轮范围。
+
 ### 历史交付与授权快照
 
 以下各日期内容保留当时身份，其中 Draft PR／未授权合并等描述不覆盖上方已合并事实，也不授予新的执行权限。
