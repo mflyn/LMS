@@ -35,6 +35,21 @@
 
 ## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
 
+**当前交付摘要（2026-11-14）：专属入口＋PIN 已合并、真人待验。**
+[PR #46](https://github.com/mflyn/LMS/pull/46) 已使用 merge commit 合入 main
+`2ac0689881a62d97bd79b731a8712ca4023406b5`；[合并后 CI 43554728658](https://github.com/mflyn/LMS/actions/runs/43554728658)
+的家庭发布回归和证据上传通过。可选性能、安全扫描、镜像发布及部署未启用，不计为通过。
+合并树与已验收 head `4c3ad7b96c83594d15f421d80b932e9cd990a216` 一致；
+[原候选与分批验证](evidence/child-entry-20261113/README.md)、冻结补丁/manifest 哈希及历史失败保持原样。
+使用步骤见[快速开始](../user-guide/quick-start.md)、[家长指南](../user-guide/parent-guide.md)和[孩子指南](../user-guide/child-guide.md)。
+本机真人入口由测试／评审线程先核对并保留既有合成数据后更新，实际版本与结果以该线程记录为准；
+不将代码合并、CI 或本次文档更新写成入口已更新、真人通过或部署完成。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置状态不变。
+
+### 历史交付与授权快照
+
+以下各日期内容保留当时身份，其中 Draft PR／未授权合并等描述不覆盖上方已合并事实，也不授予新的执行权限。
+
 2026-11-14 [孩子专属入口 + PIN 最小设计](../superpowers/specs/2026-11-13-family-child-entry-design.md)及[测试方案](family-child-entry-test-plan.md)对应的限定合成工程已获用户验收，两项测试保护缺口批准关闭；[本批证据与评审记录](evidence/child-entry-20261113/README.md)区分开发实跑、独立复评与历史失败。现授权专用分支、Draft PR 和 CI，不授权合并或替换真人入口；下列已合并快照及 OPEN/DEVICE_PENDING 等状态不变。
 
 **当前交付摘要（2026-11-13）：已合并、真人待验。** 本次核对的 main 代码基线为 `ce264b9dec6fb469dd78154f507bba8e997b7e90`。
