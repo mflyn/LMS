@@ -15,6 +15,7 @@ async function login(page, role) {
   const actor = fixture.actors[role];
   await page.goto(runtime.webUrl + (role === 'child' ? '/child/login' : '/login'));
   if (role === 'child') {
+    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
     await page.getByLabel('家庭 ID').fill(actor.familyId); await page.getByLabel('孩子 ID').fill(actor.childId);
     await page.getByLabel('PIN').fill(actor.pin); await page.getByRole('button', { name: '进入我的成长空间' }).click();
     await expect(page).toHaveURL(/\/child\/today$/);

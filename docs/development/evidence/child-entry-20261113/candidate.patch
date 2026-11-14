@@ -1,0 +1,1449 @@
+diff --git a/docs/development/README.md b/docs/development/README.md
+index 3d31db9e..b813ce00 100644
+--- a/docs/development/README.md
++++ b/docs/development/README.md
+@@ -35,6 +35,8 @@
+ 
+ ## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
+ 
++2026-11-13 [孩子专属入口 + PIN 最小设计](../superpowers/specs/2026-11-13-family-child-entry-design.md)及[测试方案](family-child-entry-test-plan.md)已获批准，限定本地实现进入工程验收候选；[本批证据与评审记录](evidence/child-entry-20261113/README.md)区分开发实跑、独立复评与历史失败。尚未提交、合并或替换真人入口，不改变下列已合并快照及 OPEN/DEVICE_PENDING 等状态。
++
+ **当前交付摘要（2026-11-13）：已合并、真人待验。** 本次核对的 main 代码基线为 `ce264b9dec6fb469dd78154f507bba8e997b7e90`。
+ 
+ | 已合并范围 | PR | merge commit |
+diff --git a/eslint.config.js b/eslint.config.js
+index 3fff683e..bccef4c4 100644
+--- a/eslint.config.js
++++ b/eslint.config.js
+@@ -57,6 +57,7 @@ module.exports = [
+       'tests/e2e/t2/dailyLearningPlan.spec.js',
+       'tests/e2e/t2/weekly{Reflection,MathLoop}.spec.js',
+       'tests/e2e/t2/ai2*.js',
++      'tests/e2e/t2/childEntry.spec.js',
+       'backend/services/{user,homework,resource}-service/{app,server}.js',
+       'scripts/**/*.js',
+       'eslint.config.js',
+@@ -71,7 +72,7 @@ module.exports = [
+     rules: sharedRules
+   },
+   {
+-    files: ['tests/e2e/t2/ai2*.js'],
++    files: ['tests/e2e/t2/ai2*.js', 'tests/e2e/t2/childEntry.spec.js'],
+     languageOptions: { globals: cleanGlobals(globals.browser) }
+   },
+   {
+@@ -81,7 +82,7 @@ module.exports = [
+       'frontend/web/src/contexts/{AuthContext,ChildAuthContext,FamilyContext}.js',
+       'frontend/web/src/hooks/{useAsyncResource,useChildDataResource,useChildResource}.js',
+       'frontend/web/src/pages/{child,family}/**/*.{js,jsx}',
+-      'frontend/web/src/services/{childApi,childScope,childSession,familyApi,familySession,dailyLearningPlan,reflection}.js',
++      'frontend/web/src/services/{childApi,childEntry,childScope,childSession,familyApi,familySession,dailyLearningPlan,reflection}.js',
+       'frontend/web/src/__tests__/{child,family,shared}/**/*.{js,jsx}'
+     ],
+     languageOptions: {
+diff --git a/frontend/web/src/__tests__/child/ChildLogin.test.js b/frontend/web/src/__tests__/child/ChildLogin.test.js
+index 67dc70df..25c8f072 100644
+--- a/frontend/web/src/__tests__/child/ChildLogin.test.js
++++ b/frontend/web/src/__tests__/child/ChildLogin.test.js
+@@ -16,6 +16,7 @@ const openLogin = () => {
+ };
+ 
+ const fillLogin = ({ familyId = 'family-a', childId = 'child-a1', pin = '1234' } = {}) => {
++  fireEvent.click(screen.getByRole('button', { name: '手工填写标识' }));
+   fireEvent.change(screen.getByLabelText('家庭 ID'), { target: { value: familyId } });
+   fireEvent.change(screen.getByLabelText('孩子 ID'), { target: { value: childId } });
+   fireEvent.change(screen.getByLabelText('PIN'), { target: { value: pin } });
+diff --git a/frontend/web/src/__tests__/child/ChildSwitch.test.js b/frontend/web/src/__tests__/child/ChildSwitch.test.js
+index 25ef8b49..95bd4baa 100644
+--- a/frontend/web/src/__tests__/child/ChildSwitch.test.js
++++ b/frontend/web/src/__tests__/child/ChildSwitch.test.js
+@@ -39,6 +39,7 @@ test('cancelled switch keeps the current page and identity; confirmed switch req
+     expect(confirm).toHaveBeenCalledWith(expect.stringContaining('未提交'));
+     expect(screen.getByRole('heading', { name: '孩子登录' })).toBeInTheDocument();
+     expect(captureSession('student')).toBeNull();
++    fireEvent.click(screen.getByRole('button', { name: '手工填写标识' }));
+     expect(screen.getByLabelText('PIN')).toHaveValue('');
+     expect(childPinLogin).not.toHaveBeenCalled();
+     childPinLogin.mockResolvedValueOnce(child('B'));
+@@ -62,6 +63,7 @@ test('storage failure reports a local login problem without navigating or persis
+     return original.call(this, key, value);
+   });
+   try {
++    fireEvent.click(screen.getByRole('button', { name: '手工填写标识' }));
+     fireEvent.change(screen.getByLabelText('家庭 ID'), { target: { value: 'family' } });
+     fireEvent.change(screen.getByLabelText('孩子 ID'), { target: { value: 'A' } });
+     fireEvent.change(screen.getByLabelText('PIN'), { target: { value: '2468' } });
+diff --git a/frontend/web/src/child-shell.css b/frontend/web/src/child-shell.css
+index 4389f232..c014132c 100644
+--- a/frontend/web/src/child-shell.css
++++ b/frontend/web/src/child-shell.css
+@@ -244,6 +244,7 @@ a.child-task-row:hover { border-color: #8fb8aa; background: #f8fcfa; }
+ }
+ .child-login-panel h1 { margin: 0; font-size: 30px; letter-spacing: 0; }
+ .child-login-panel .child-form { margin-top: 24px; }
++.child-entry-manual { margin-top: 12px; min-height: 44px; }
+ 
+ @media (max-width: 767px) {
+   .child-header { min-height: 62px; padding: 10px 16px; }
+diff --git a/frontend/web/src/contexts/ChildAuthContext.js b/frontend/web/src/contexts/ChildAuthContext.js
+index 02f1806f..0773b670 100644
+--- a/frontend/web/src/contexts/ChildAuthContext.js
++++ b/frontend/web/src/contexts/ChildAuthContext.js
+@@ -39,20 +39,21 @@ export const ChildAuthProvider = ({ children }) => {
+   const attempt = useRef(0);
+   const observedSession = useRef(captureSession('student'));
+ 
+-  const login = useCallback(async (credentials) => {
++  const login = useCallback(async (credentials, { isCurrent = () => true } = {}) => {
++    if (!isCurrent()) return false;
+     const version = ++attempt.current, initial = captureSession('student');
+     let loginBoundary;
+     try {
+       loginBoundary = captureChildLogin(credentials);
+       const payload = await childPinLogin(credentials);
+-      if (version !== attempt.current || captureSession('student') !== initial) return false;
++      if (!isCurrent() || version !== attempt.current || captureSession('student') !== initial) return false;
+       assertChildLoginCurrent(loginBoundary);
+       const nextSession = saveChildSession(payload, loginBoundary);
+       setSession(nextSession);
+       setError(null);
+       return true;
+     } catch (requestError) {
+-      if (version !== attempt.current || captureSession('student') !== initial) return false;
++      if (!isCurrent() || version !== attempt.current || captureSession('student') !== initial) return false;
+       let loginError = requestError;
+       if (loginBoundary) {
+         try { assertChildLoginCurrent(loginBoundary); }
+diff --git a/frontend/web/src/family-shell.css b/frontend/web/src/family-shell.css
+index b0c9b00b..f7994098 100644
+--- a/frontend/web/src/family-shell.css
++++ b/frontend/web/src/family-shell.css
+@@ -170,6 +170,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
+ .family-child-record { align-items: flex-start; }
+ .family-child-record h2 { margin: 0 0 6px; font-size: 18px; }
+ .family-child-actions { display: grid; width: min(100%, 330px); justify-items: start; gap: 12px; }
++.family-child-entry-actions { display: grid; gap: 8px; width: 100%; min-width: 0; }
++.family-child-entry-actions label { display: grid; gap: 6px; font-size: 14px; }
++.family-child-entry-actions input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; }
++.family-child-entry-actions p { margin: 0; font-size: 14px; }
+ .family-id-line { display: flex; flex-wrap: wrap; gap: 4px 8px; color: var(--family-muted); font-size: 13px; }
+ .family-id-line code { max-width: 100%; overflow-wrap: anywhere; color: var(--family-ink); }
+ .family-pin-form { display: grid; width: min(100%, 330px); gap: 6px; }
+diff --git a/frontend/web/src/pages/child/ChildPinLoginPage.js b/frontend/web/src/pages/child/ChildPinLoginPage.js
+index 8cb69354..8b890b14 100644
+--- a/frontend/web/src/pages/child/ChildPinLoginPage.js
++++ b/frontend/web/src/pages/child/ChildPinLoginPage.js
+@@ -1,110 +1,138 @@
+-import React, { useState } from 'react';
+-import { useNavigate } from 'react-router-dom';
++import React, { useCallback, useLayoutEffect, useReducer, useRef, useState } from 'react';
++import { useLocation, useNavigate } from 'react-router-dom';
+ import { useChildAuth } from '../../contexts/ChildAuthContext';
+ import ChildSwitchButton from '../../components/child/ChildSwitchButton';
++import { captureSession } from '../../services/familySession';
++import { parseChildEntry } from '../../services/childEntry';
++
++const intentKey = (entry, manual, form) => entry.status === 'valid'
++  ? `entry:${entry.familyId}:${entry.childId}`
++  : entry.status === 'invalid' ? 'invalid'
++    : manual ? JSON.stringify(['manual', form.familyId, form.childId]) : 'absent';
+ 
+ const ChildPinLoginPage = () => {
+-  const navigate = useNavigate();
+-  const { status, child, error, login, clearError } = useChildAuth();
+-  const [form, setForm] = useState({ familyId: '', childId: '', pin: '' });
++  const navigate = useNavigate(), location = useLocation();
++  const { status, child, error, login, logout, clearError } = useChildAuth();
++  const [, refresh] = useReducer(value => value + 1, 0);
+   const [formError, setFormError] = useState(null);
+-  const [submitting, setSubmitting] = useState(false);
++  const form = useRef({ familyId: '', childId: '', pin: '' });
++  const manual = useRef(false), mounted = useRef(true), intent = useRef(null);
++  const pinOwner = useRef(null), request = useRef(null);
++  const entry = parseChildEntry(location.hash);
+ 
+-  if (status === 'authenticated') return (
+-    <main className="child-login-page">
+-      <section className="child-login-panel" aria-labelledby="child-login-heading">
+-        <p className="child-eyebrow">家庭成长追踪</p>
+-        <h1 id="child-login-heading">孩子登录</h1>
+-        <div className="child-form">
+-          <button type="button" className="child-primary-button"
+-            onClick={() => navigate('/child/today', { replace: true })}>继续使用{child.name}</button>
+-          <ChildSwitchButton />
+-        </div>
+-      </section>
+-    </main>
+-  );
++  const syncIntent = useCallback((key) => {
++    if (intent.current?.key === key) return;
++    intent.current = { key };
++    form.current.pin = '';
++    pinOwner.current = null;
++    request.current = null;
++  }, []);
++  syncIntent(intentKey(entry, manual.current, form.current));
++  const renderedIntent = intent.current;
+ 
+-  const updateField = (field) => (event) => {
+-    const value = event.target.value;
+-    setForm((current) => ({ ...current, [field]: value }));
+-    setFormError(null);
+-    clearError();
+-  };
++  useLayoutEffect(() => {
++    mounted.current = true;
++    if (!intent.current) {
++      syncIntent(intentKey(parseChildEntry(window.location.hash), manual.current, form.current));
++      refresh();
++    }
++    const change = event => {
++      const hash = event.newURL ? new URL(event.newURL).hash : window.location.hash;
++      syncIntent(intentKey(parseChildEntry(hash), manual.current, form.current));
++      refresh();
++    };
++    window.addEventListener('hashchange', change);
++    window.addEventListener('popstate', change);
++    return () => {
++      mounted.current = false;
++      intent.current = null;
++      window.removeEventListener('hashchange', change);
++      window.removeEventListener('popstate', change);
++    };
++  }, [syncIntent]);
+ 
+-  const handleSubmit = async (event) => {
++  const isCurrent = owner => mounted.current && intent.current === owner
++    && intentKey(parseChildEntry(window.location.hash), manual.current, form.current) === owner?.key;
++  const submitting = Boolean(request.current && request.current.owner === intent.current);
++  const updateField = field => event => {
++    if (!isCurrent(renderedIntent)) return;
++    form.current[field] = event.target.value;
++    if (field !== 'pin') syncIntent(intentKey(entry, manual.current, form.current));
++    else pinOwner.current = intent.current;
++    setFormError(null); clearError(); refresh();
++  };
++  const useManual = () => {
++    manual.current = true;
++    form.current = { familyId: '', childId: '', pin: '' };
++    syncIntent(intentKey({ status: 'absent' }, true, form.current));
++    setFormError(null); clearError();
++    navigate('/child/login', { replace: true }); refresh();
++  };
++  const handleSubmit = async event => {
+     event.preventDefault();
+-    if (submitting) return;
+-
+-    const familyId = form.familyId.trim();
+-    const childId = form.childId.trim();
+-    if (!familyId || !childId) {
+-      setFormError('请填写家庭 ID 和孩子 ID。');
+-      return;
+-    }
+-    if (!/^[0-9]{4,6}$/.test(form.pin)) {
+-      setFormError('PIN 需要填写 4 到 6 位数字。');
+-      return;
++    const owner = renderedIntent;
++    if (request.current?.owner === owner || !isCurrent(owner)) return;
++    const familyId = entry.status === 'valid' ? entry.familyId : form.current.familyId.trim();
++    const childId = entry.status === 'valid' ? entry.childId : form.current.childId.trim();
++    if (!familyId || !childId) { setFormError('请填写家庭 ID 和孩子 ID。'); return; }
++    if (pinOwner.current !== owner || !/^[0-9]{4,6}$/.test(form.current.pin)) {
++      setFormError('PIN 需要填写 4 到 6 位数字。'); return;
+     }
+-
+-    setSubmitting(true);
+-    setFormError(null);
+-    clearError();
+-    const pin = form.pin;
++    const active = { owner }; request.current = active;
++    setFormError(null); clearError(); refresh();
+     try {
+-      const accepted = await login({ familyId, childId, pin });
+-      if (accepted) navigate('/child/today', { replace: true });
++      const accepted = await login({ familyId, childId, pin: form.current.pin }, { isCurrent: () => isCurrent(owner) });
++      if (accepted && isCurrent(owner)) navigate('/child/today', { replace: true });
+     } finally {
+-      setForm((current) => ({ ...current, pin: '' }));
+-      setSubmitting(false);
++      if (isCurrent(owner) && request.current === active) {
++        form.current.pin = ''; pinOwner.current = null; request.current = null; refresh();
++      }
+     }
+   };
++  const switchToEntry = () => {
++    const session = captureSession('student'), owner = renderedIntent;
++    if (!session || !isCurrent(owner)) return;
++    if (!window.confirm('切换孩子将清除本页未提交的内容。结果未确认的提交，需要原孩子重新登录后恢复。继续切换？')) return;
++    if (captureSession('student') !== session || !isCurrent(owner)) return;
++    logout(); form.current.pin = ''; pinOwner.current = null;
++    setFormError(null); refresh();
++  };
++  const different = entry.status === 'valid' && child
++    && (child.childId.toLowerCase() !== entry.childId || child.familyId.toLowerCase() !== entry.familyId);
++  const showForm = entry.status === 'valid' || (entry.status === 'absent' && manual.current);
+ 
+-  return (
+-    <main className="child-login-page">
+-      <section className="child-login-panel" aria-labelledby="child-login-heading">
+-        <p className="child-eyebrow">家庭成长追踪</p>
+-        <h1 id="child-login-heading">孩子登录</h1>
+-        <form className="child-form" onSubmit={handleSubmit} noValidate>
+-          <label>
+-            家庭 ID
+-            <input
+-              value={form.familyId}
+-              onChange={updateField('familyId')}
+-              autoComplete="organization"
+-              disabled={submitting}
+-            />
+-          </label>
+-          <label>
+-            孩子 ID
+-            <input
+-              value={form.childId}
+-              onChange={updateField('childId')}
+-              autoComplete="username"
+-              disabled={submitting}
+-            />
+-          </label>
+-          <label>
+-            PIN
+-            <input
+-              type="password"
+-              value={form.pin}
+-              onChange={updateField('pin')}
+-              inputMode="numeric"
+-              pattern="[0-9]{4,6}"
+-              minLength={4}
+-              maxLength={6}
+-              autoComplete="one-time-code"
+-              disabled={submitting}
+-            />
+-          </label>
++  return <main className="child-login-page">
++    <section className="child-login-panel" aria-labelledby="child-login-heading">
++      <p className="child-eyebrow">家庭成长追踪</p>
++      <h1 id="child-login-heading">孩子登录</h1>
++      {entry.status === 'invalid' && <p className="child-form-error" role="alert">入口无效，请重新打开家长准备的入口。</p>}
++      {status === 'authenticated' ? <div className="child-form">
++        {different ? <>
++          <p>当前登录的是{child.name}，此入口指向另一个孩子。</p>
++          <button type="button" className="child-primary-button" onClick={switchToEntry}>切换到此入口</button>
++          <button type="button" className="child-secondary-button" onClick={() => navigate('/child/today', { replace: true })}>保留当前孩子</button>
++        </> : <>
++          <button type="button" className="child-primary-button" onClick={() => navigate('/child/today', { replace: true })}>继续使用{child.name}</button>
++          <ChildSwitchButton />
++        </>}
++      </div> : <>
++        {showForm ? <form className="child-form" onSubmit={handleSubmit} noValidate>
++          {entry.status !== 'valid' && <>
++            <label>家庭 ID<input value={form.current.familyId} onChange={updateField('familyId')} autoComplete="organization" disabled={submitting} /></label>
++            <label>孩子 ID<input value={form.current.childId} onChange={updateField('childId')} autoComplete="username" disabled={submitting} /></label>
++          </>}
++          <label>PIN<input type="password" value={form.current.pin} onChange={updateField('pin')} inputMode="numeric"
++            pattern="[0-9]{4,6}" minLength={4} maxLength={6} autoComplete="one-time-code" disabled={submitting} /></label>
+           {(formError || error) && <p className="child-form-error" role="alert">{formError || error}</p>}
+-          <button type="submit" className="child-primary-button" disabled={submitting}>
+-            {submitting ? '正在登录...' : '进入我的成长空间'}
+-          </button>
+-        </form>
+-      </section>
+-    </main>
+-  );
++          <button type="submit" className="child-primary-button" disabled={submitting}>{submitting ? '正在登录...' : '进入我的成长空间'}</button>
++        </form> : <>
++          {entry.status === 'absent' && <p>请打开家长准备的专属入口。</p>}
++          {error && <p className="child-form-error" role="alert">{error}</p>}
++        </>}
++        {(entry.status !== 'absent' || !manual.current) && <button type="button" className="child-secondary-button child-entry-manual" onClick={useManual}>手工填写标识</button>}
++      </>}
++    </section>
++  </main>;
+ };
+ 
+ export default ChildPinLoginPage;
+diff --git a/frontend/web/src/pages/family/ChildrenPage.js b/frontend/web/src/pages/family/ChildrenPage.js
+index 48e7c7e5..7fb88fb7 100644
+--- a/frontend/web/src/pages/family/ChildrenPage.js
++++ b/frontend/web/src/pages/family/ChildrenPage.js
+@@ -1,6 +1,7 @@
+ import React, { useState } from 'react';
+ import FamilyDialog from '../../components/family/FamilyDialog';
+ import PrivateMediaField from '../../components/family/PrivateMediaField';
++import ChildEntryActions from '../../components/family/ChildEntryActions';
+ import { useFamily } from '../../contexts/FamilyContext';
+ import { useDraftMedia } from '../../hooks/useDraftMedia';
+ import { createChild, setChildPin, updateChild } from '../../services/familyApi';
+@@ -193,6 +194,7 @@ const ChildrenPage = () => {
+                     <p className="family-id-line"><span>孩子 ID</span><code>{child.childId}</code></p>
+                   </div>
+                   <div className="family-child-actions">
++                    <ChildEntryActions child={child} />
+                     <button
+                       type="button"
+                       className="family-button secondary"
+diff --git a/tests/e2e/t2/ai2Fixture.js b/tests/e2e/t2/ai2Fixture.js
+index 958b07b3..5f7058d1 100644
+--- a/tests/e2e/t2/ai2Fixture.js
++++ b/tests/e2e/t2/ai2Fixture.js
+@@ -100,6 +100,7 @@ async function login(page, runtime, name = 'parent') {
+   };
+   if (actor.pin) {
+     await page.goto(runtime.webUrl + '/child/login');
++    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await page.getByLabel('家庭 ID').fill(actor.familyId);
+     await page.getByLabel('孩子 ID').fill(actor.childId);
+     await page.getByLabel('PIN', { exact: true }).fill(actor.pin);
+diff --git a/tests/e2e/t2/checklist.spec.js b/tests/e2e/t2/checklist.spec.js
+index 68924514..24a8b69f 100644
+--- a/tests/e2e/t2/checklist.spec.js
++++ b/tests/e2e/t2/checklist.spec.js
+@@ -15,6 +15,7 @@ async function login(page, role) {
+   const actor = fixture.actors[role];
+   await page.goto(runtime.webUrl + (role === 'child' ? '/child/login' : '/login'));
+   if (role === 'child') {
++    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await page.getByLabel('家庭 ID').fill(actor.familyId); await page.getByLabel('孩子 ID').fill(actor.childId);
+     await page.getByLabel('PIN').fill(actor.pin); await page.getByRole('button', { name: '进入我的成长空间' }).click();
+     await expect(page).toHaveURL(/\/child\/today$/);
+diff --git a/tests/e2e/t2/childLoginRace.spec.js b/tests/e2e/t2/childLoginRace.spec.js
+index ded371c0..e3b809d9 100644
+--- a/tests/e2e/t2/childLoginRace.spec.js
++++ b/tests/e2e/t2/childLoginRace.spec.js
+@@ -8,6 +8,7 @@ test.afterEach(async () => { await runtime?.stop(); });
+ async function fillPin(page, name = 'child') {
+   const actor = runtime.fixture.actors[name];
+   await page.goto(runtime.webUrl + '/child/login');
++  await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+   await page.getByLabel('家庭 ID').fill(actor.familyId);
+   await page.getByLabel('孩子 ID').fill(actor.childId);
+   await page.getByLabel('PIN').fill(actor.pin);
+diff --git a/tests/e2e/t2/completion.spec.js b/tests/e2e/t2/completion.spec.js
+index 8b819d9c..807901ce 100644
+--- a/tests/e2e/t2/completion.spec.js
++++ b/tests/e2e/t2/completion.spec.js
+@@ -16,6 +16,7 @@ test.afterEach(async () => { await runtime?.stop(); });
+ async function childLogin(page, name = 'child') {
+   const actor = fixture.actors[name];
+   await page.goto(runtime.webUrl + '/child/login');
++  await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+   await page.getByLabel('家庭 ID').fill(actor.familyId);
+   await page.getByLabel('孩子 ID').fill(actor.childId);
+   await page.getByLabel('PIN').fill(actor.pin);
+@@ -167,6 +168,7 @@ test('one browser keeps parent and sibling tabs independent through refresh and
+       await expect(copied.getByRole('navigation', { name: '孩子导航', exact: true })).toHaveCount(0);
+     } finally { await copied.close(); }
+     await childB.goto(runtime.webUrl + '/child/login');
++    await childB.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await expect(childB.getByLabel('PIN')).toBeVisible();
+     expect(await childB.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+     await childLogin(childB, 'sibling');
+@@ -194,6 +196,7 @@ test('one browser keeps parent and sibling tabs independent through refresh and
+     await expect(childA.getByRole('banner').getByText('Synthetic child', { exact: true })).toBeVisible();
+     childA.once('dialog', dialog => dialog.accept());
+     await childA.getByRole('button', { name: '切换孩子', exact: true }).click();
++    await childA.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await expect(childA.getByLabel('PIN')).toHaveValue('');
+     expect(await childA.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+     await childB.reload();
+diff --git a/tests/e2e/t2/dailyLearningPlan.spec.js b/tests/e2e/t2/dailyLearningPlan.spec.js
+index 332ca844..923764dc 100644
+--- a/tests/e2e/t2/dailyLearningPlan.spec.js
++++ b/tests/e2e/t2/dailyLearningPlan.spec.js
+@@ -11,6 +11,7 @@ async function login(page, role) {
+   const actor = fixture.actors[role];
+   await page.goto(runtime.webUrl + (role === 'child' ? '/child/login' : '/login'));
+   if (role === 'child') {
++    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await page.getByLabel('家庭 ID').fill(actor.familyId); await page.getByLabel('孩子 ID').fill(actor.childId);
+     await page.getByLabel('PIN').fill(actor.pin); await page.getByRole('button', { name: '进入我的成长空间' }).click();
+     await expect(page).toHaveURL(/\/child\/today$/);
+diff --git a/tests/e2e/t2/help.spec.js b/tests/e2e/t2/help.spec.js
+index 914dd6fe..7a4a5cff 100644
+--- a/tests/e2e/t2/help.spec.js
++++ b/tests/e2e/t2/help.spec.js
+@@ -15,6 +15,7 @@ async function login(page, role = 'child') {
+   const actor = fixture.actors[role];
+   await page.goto(runtime.webUrl + (['child', 'sibling'].includes(role) ? '/child/login' : '/login'));
+   if (['child', 'sibling'].includes(role)) {
++    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await page.getByLabel('家庭 ID').fill(actor.familyId); await page.getByLabel('孩子 ID').fill(actor.childId);
+     await page.getByLabel('PIN').fill(actor.pin); await page.getByRole('button', { name: '进入我的成长空间' }).click();
+     await expect(page).toHaveURL(/\/child\/today$/);
+diff --git a/tests/e2e/t2/learningSources.spec.js b/tests/e2e/t2/learningSources.spec.js
+index b999a50d..cba21841 100644
+--- a/tests/e2e/t2/learningSources.spec.js
++++ b/tests/e2e/t2/learningSources.spec.js
+@@ -11,6 +11,7 @@ async function login(page, name) {
+   const actor = fixture.actors[name], child = Boolean(actor.pin);
+   await page.goto(runtime.webUrl + (child ? '/child/login' : '/login'));
+   if (child) {
++    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await page.getByLabel('家庭 ID').fill(actor.familyId); await page.getByLabel('孩子 ID').fill(actor.childId);
+     await page.getByLabel('PIN').fill(actor.pin); await page.getByRole('button', { name: '进入我的成长空间' }).click();
+     await expect(page).toHaveURL(/\/child\/today$/);
+diff --git a/tests/e2e/t2/weeklyMathLoop.spec.js b/tests/e2e/t2/weeklyMathLoop.spec.js
+index ee6a0188..f2cd6433 100644
+--- a/tests/e2e/t2/weeklyMathLoop.spec.js
++++ b/tests/e2e/t2/weeklyMathLoop.spec.js
+@@ -16,6 +16,7 @@ async function login(page, name) {
+   const actor = fixture.actors[name];
+   await page.goto(runtime.webUrl + (actor.pin ? '/child/login' : '/login'));
+   if (actor.pin) {
++    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await page.getByLabel('家庭 ID').fill(actor.familyId); await page.getByLabel('孩子 ID').fill(actor.childId);
+     await page.getByLabel('PIN').fill(actor.pin); await page.getByRole('button', { name: '进入我的成长空间' }).click();
+     await expect(page).toHaveURL(/\/child\/today$/);
+diff --git a/tests/e2e/t2/weeklyReflection.spec.js b/tests/e2e/t2/weeklyReflection.spec.js
+index f01e5390..91c81feb 100644
+--- a/tests/e2e/t2/weeklyReflection.spec.js
++++ b/tests/e2e/t2/weeklyReflection.spec.js
+@@ -10,6 +10,7 @@ async function login(page, name) {
+   const actor = fixture.actors[name], child = Boolean(actor.pin);
+   await page.goto(runtime.webUrl + (child ? '/child/login' : '/login'));
+   if (child) {
++    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+     await page.getByLabel('家庭 ID').fill(actor.familyId);
+     await page.getByLabel('孩子 ID').fill(actor.childId);
+     await page.getByLabel('PIN').fill(actor.pin);
+diff --git a/tests/e2e/task11/family-growth-flow.spec.js b/tests/e2e/task11/family-growth-flow.spec.js
+index 8b8ee09e..a65c030d 100644
+--- a/tests/e2e/task11/family-growth-flow.spec.js
++++ b/tests/e2e/task11/family-growth-flow.spec.js
+@@ -164,6 +164,7 @@ test('parent and child complete the five-dimension growth task loop', async ({ p
+   const childPage = await childContext.newPage();
+   const assertChildConsole = monitorPage(childPage);
+   await childPage.goto('/child/login');
++  await childPage.getByRole('button', { name: '手工填写标识', exact: true }).click();
+   await childPage.getByLabel('家庭 ID').fill(family.familyId);
+   await childPage.getByLabel('孩子 ID').fill(childA.childId);
+   await childPage.getByLabel('PIN').fill('2468');
+diff --git a/tests/e2e/task11/family-growth-security.spec.js b/tests/e2e/task11/family-growth-security.spec.js
+index 15d45ace..cc37969c 100644
+--- a/tests/e2e/task11/family-growth-security.spec.js
++++ b/tests/e2e/task11/family-growth-security.spec.js
+@@ -55,6 +55,7 @@ const setupFamily = async (page) => {
+ 
+ const loginChild = async (page, familyId, childId, pin = '2468') => {
+   await page.goto('/child/login');
++  await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
+   await page.getByLabel('家庭 ID').fill(familyId);
+   await page.getByLabel('孩子 ID').fill(childId);
+   await page.getByLabel('PIN').fill(pin);
+@@ -106,6 +107,7 @@ test('resetting a PIN expires the existing child browser session', async ({ page
+   await expect(childPage.getByRole('alert')).toContainText('会话已过期，请重新登录');
+   expect(await childPage.evaluate(() => sessionStorage.getItem('family-growth.child-session.v1'))).toBeNull();
+   await expect(childPage.getByRole('navigation', { name: '孩子导航' })).toHaveCount(0);
++  await childPage.getByRole('button', { name: '手工填写标识', exact: true }).click();
+   await childPage.getByLabel('家庭 ID').fill(family.familyId);
+   await childPage.getByLabel('孩子 ID').fill(childA.childId);
+   await childPage.getByLabel('PIN').fill('2468');
+diff --git a/docs/development/evidence/child-entry-20261113/README.md b/docs/development/evidence/child-entry-20261113/README.md
+new file mode 100644
+index 00000000..bf91ebd2
+--- /dev/null
++++ b/docs/development/evidence/child-entry-20261113/README.md
+@@ -0,0 +1,80 @@
++# 孩子专属入口 + PIN：限定本地工程候选
++
++日期：2026-11-13。状态：**ENGINEERING_ACCEPTANCE_PENDING**。
++
++## 范围与授权
++
++用户已批准方案 A、最小设计、测试方案及未提交 PIN 归属的设计 P2 关闭，并授权限定本地实现。本记录不代替用户工程验收，不提交、推送、合并或部署，不改变真人测试实例。
++
++已核实实现基线 `f8073fcd52bc4d2b4b2c94b0a3e292d171d8d600`。原设计引用的 PR #45/main 标签 `0ec8b746ef5a549bbae57c3f0289e6dec342556d` 在当前本地对象库无法解析；本批不声明两树等同或 GitHub 最新状态，也不据此拉取/切换分支。冻结补丁以实际 HEAD 重建，独立复评同样绑定此 HEAD。候选包含家长孩子行入口、孩子 PIN 页、窄 Context 请求归属检查、入口解析、样式、相关测试与文档；无后端、会话存储、原命令模型或 WP1/T8 执行器变更。
++
++家长可打开/复制当前孩子的同源专属入口，孩子仅输入 PIN；通用入口保留显式手工表单。不同已登录孩子必须明确切换并重新输入 PIN；取消、入口变化和旧响应不能清除原命令或污染新身份。书签重登通过原 actor 显式恢复同一完成命令，不自动恢复、不换 UUID。
++
++## 验证分批记录
++
++| 分项 | 结果与性质 |
++| --- | --- |
++| 开发前端默认回归，最终组件候选 | 77 套件 / 1251 项通过，退出 0；包含全部默认前端调用方、原会话/媒体/命令反例。不是全仓历史回归。 |
++| 孩子后端原相关套件 | `children.test.js` 1 套件 / 10 项通过，退出 0；本批未修改后端。 |
++| 构建 | `BUILD_PATH` 指向本轮临时目录，最终产品构建成功，退出 0。无持久预览服务。 |
++| Chromium 相关真实 HTTP 浏览器 | 22 项通过，退出 0：新入口 4、原 PIN 竞态 2、原完成/恢复 16。后续仅导航就绪/测试收尾小修订另补新入口专项，不冒充该批原样执行。 |
++| Chromium 最终新入口专项 | 导航就绪和测试收尾修订后 4 项通过，退出 0；与前一批 22 项重叠，不相加为 26 个不同用例。 |
++| WebKit 首轮 | 21 通过 / 1 失败，退出 1。失败为新入口用例过早整页刷新，今日计划请求被中断并触发原零浏览器错误断言。原 18 项竞态/完成回归均通过。 |
++| WebKit 导航修订后专项 | 新入口 4 项通过，退出 0；等待实际今日计划及待办数据就绪后再导航，零错误断言不放宽、不加超时/重试。与首轮 18 项合并覆盖，不称一次 22 项全绿。 |
++| 组件保护移除验证 | 临时副本 5 类变异均被拦截，子测试退出 1，驱动退出 0；工作区源文件不替换。 |
++| 浏览器保存前保护移除 | 临时构建仅移除 Context 保存前的意图检查，真实 HTTP 反例 1 项失败、退出 1，明确在旧 A 会话非空断言处拦截；不是超时或后续 B 登录偶然失败。 |
++| 静态与文档检查 | 新服务工具和浏览器文件纳入现有 lint，规则不变；lint、文档门禁、`git diff --check` 均退出 0。最后归档另校验文件哈希与补丁重建。 |
++| 独立复评 | 两个新增组件套件独立执行：2 套件 / 33 项通过，退出 0；独立静态复评及变异证据核验通过，未发现新增实质问题。开发浏览器结果不冒充独立重跑。 |
++
++原始输出在本地忽略目录 `release-gate-artifacts/child-entry-20261113-local/` 归档，公开候选仅保存文件/日志摘要与脱敏索引，不包含凭据、截图或原始业务响应。冻结文件与[候选补丁](candidate.patch)哈希以本批 [manifest.json](manifest.json) 为准，后续交付需重新核对；当前未形成 Git 提交或 CI 结果。
++
++### 实际复用入口
++
++```sh
++# PATH 以系统 Git 和既有 Node 22 为准；不安装依赖。
++CI=true npm run test:ci --prefix frontend/web -- --runInBand
++BUILD_PATH="$RUN/build" npm run build --prefix frontend/web
++npm run lint
++npm run test:family-regression -- --runTestsByPath backend/services/user-service/__tests__/routes/children.test.js
++# 显式使用已有 Mongo 二进制并关闭下载；RUN 为本轮独立临时目录。
++T2_WEB_BUILD="$RUN/build" T2_BROWSER_OUTPUT="$RUN/chromium-final" npm run test:t2:e2e -- tests/e2e/t2/childEntry.spec.js tests/e2e/t2/childLoginRace.spec.js tests/e2e/t2/completion.spec.js
++T2_WEB_BUILD="$RUN/build" T2_BROWSER_OUTPUT="$RUN/webkit" npm run test:t2:e2e -- --browser=webkit tests/e2e/t2/childEntry.spec.js tests/e2e/t2/childLoginRace.spec.js tests/e2e/t2/completion.spec.js
++T2_WEB_BUILD="$RUN/build" T2_BROWSER_OUTPUT="$RUN/webkit-final" npm run test:t2:e2e -- --browser=webkit tests/e2e/t2/childEntry.spec.js
++T2_WEB_BUILD="$RUN/build" T2_BROWSER_OUTPUT="$RUN/chromium-reviewed" npm run test:t2:e2e -- tests/e2e/t2/childEntry.spec.js
++npm run docs:family:check
++git diff --check
++```
++
++两引擎使用原 `playwright.t2.config.js`：workers=1、retries=0、test=120000ms、expect=10000ms、action=15000ms。浏览器逐批串行；同一 BrowserContext 下的不同孩子标签页，不用不同 Context 冒充隔离。360/768/1280px 截图和溢出检查为浏览器模拟，不是 iPad 实测。
++
++正式应用工厂与真实回环 HTTP 覆盖 Gateway、user、homework(enabled)、resource(enabled)、progress；既有 analytics/notification 应用接线与临时副本集合成库沿用原 runtime，不替换 PIN 或完成成功响应。媒体采用既有 trusted-local 测试 profile，不宣称 ClamAV 验收。通过路由保持真实已签发响应、原远端丢响应注入验证恢复；组件层 API/Context 替身与浏览器实跑明确分开。
++
++## 自查、评审与历史失败
++
++- 设计 P2 已获用户批准关闭；工程批次仍待验收。第 7 节原设计快照和旧候选哈希保持，不改写为已实现。
++- 自查发现 StrictMode 模拟卸载后意图重新绑定但提交闭包未刷新，首个 PIN 输入被丢弃。已修复生命周期重新绑定，增加首次输入成功永久正例；首轮 1 失败 / 94 通过保留。
++- 独立首轮复评发现两项 P2 测试保护缺口，未确认产品逻辑缺陷：卸载被先行 ABA 掩盖、浏览器响应断言可能早于客户端处理。现独立覆盖卸载的 200/401；浏览器等待真实 XHR loadend 后下一任务，先断言旧身份未保存再登录 B。不用任意 sleep 或产品测试 hook。
++- 组件变异分别移除 PIN 清理、发送前意图检查、保存前检查、不同身份分支及卸载失效；发送前变异需同时移除页面和 Context 两层相同检查，不谎称单层移除也必然红灯。卸载变异同时去掉 mounted 与意图失效，两个旧响应均被新反例拦截。
++- 保留最初测试夹具缺 Router future flags 的失败、实施前真实行为红灯、家长组件未实现的 missing module、后端首次 EPERM（0 测试执行）、Chromium 首轮遗漏手工展开步骤（21 通过 / 1 失败），以及 WebKit 首轮失败。原测试仅增加显式手工导航，不删除原断言。
++- 新文件接入现有 lint 后发现 `finally` 内 throw，被原规则拦截；已将重抛置于收尾之外，路由等待与错误传播保留，不放宽规则。记录初次文档检查因本索引尚未创建而失败，不将中途检查写为全绿。
++- 最终基线自查发现原设计的 main 标签无法在本地解析，已收窄当前基线声明，不覆盖历史引用或把缓存引用冒充 GitHub 实时状态。该文档校正不改变已测代码、测试和独立复评基线；Git 交付前仍需核对届时真实 main。
++
++### 独立复评回执
++
++独立评审者在修订后的候选上实际运行 `ChildEntry.test.js`（21 项）和 `ChildEntryActions.test.js`（12 项），共 2 套件 / 33 项通过，退出 0；运行前后源码哈希一致。随后对导航与 ESLint 小修订另做静态复核，并读取开发侧浏览器日志与变异构建的 source map。
++
++复评确认：两项 P2 测试保护缺口已解决，未发现新的实质问题。卸载反例在不改变 Provider/目标/attempt 的情况下有效；浏览器保存前检查单处移除后，客户端处理屏障已通过而匿名断言失败，B 的新请求尚未发出。保留首轮发现，不改写成一次通过。
++
++- 最终独立报告 SHA-256：`6c36b6b0b78856968caed9f05b7a688b6fd7917471c2ea7a1f8fb9b6b09312bd`。
++- 浏览器变异独立核验摘要 SHA-256：`7e5f7fabc07149398f7e5af66054b795989537df61289483f9f328e0adda9825`。
++- 独立完整产物索引 SHA-256：`7b821b061ae0a0be06ce1deccafc788fb5d9ece9f794644d7d7fe123e1bf9d8a`。
++
++原始报告、独立日志、14 项产物索引及前版归档保存于本地忽略目录的 `independent/`。独立浏览器未重跑，独立工作不冒充前端全量或后端全量；本批工程验收与问题最终关闭仍提交用户确认，不关闭现有总门禁。
++
++## 待验收与保留边界
++
++用户验收后再决定 Git 交付及真人入口升级；测试/评审线程继续自己的真人测试，本线程不重启、替换或清理其服务和数据。iPad 保存书签/主屏幕、系统复制、触控与真人易用性仍待验。
++
++家长 localStorage 会话仍在同浏览器共享；新开孩子标签页不等于共享设备的家长权限隔离，交给孩子前仍应退出家长。专属链接只是定位不是凭据；相同 PIN 下用户主动选错链接的风险通过家长命名书签与使用验收处理，本批不新增账号体系。
++
++T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置范围保持。不调用真实模型、不操作服务器/NAS、不扩展执行器，不关闭既有总门禁。撤回本前端增量仍可手工登录，PR #44 标签页保护、后端权限和原命令记录不撤回。
+diff --git a/docs/development/family-child-entry-test-plan.md b/docs/development/family-child-entry-test-plan.md
+new file mode 100644
+index 00000000..06ded11f
+--- /dev/null
++++ b/docs/development/family-child-entry-test-plan.md
+@@ -0,0 +1,92 @@
++# 孩子专属入口 + PIN 测试方案
++
++**状态：** DESIGN_APPROVED / ENGINEERING_ACCEPTANCE_PENDING。用户已批准设计、测试方案及 P2 设计问题关闭，授权限定本地实现；实现及测试结果见[本批证据与评审记录](evidence/child-entry-20261113/README.md)，工程验收待用户确认，不关闭现有总门禁。
++**已核实实现基线：** `f8073fcd52bc4d2b4b2c94b0a3e292d171d8d600`；原 main 标签的核实限制保留在[最小设计](../superpowers/specs/2026-11-13-family-child-entry-design.md)。本表以批准设计为预期，不改原 [API](../api/family-learning-tracker-api.md#27-孩子-pin-登录) 或 [标签页安全契约](family-child-tab-session.md)。
++
++## 1. 测试层次与证据
++
++- 复用现有 Jest/Testing Library、`playwright.t2.config.js`、`createT2WebRuntime`，不建新测试框架或长期预览实例。纯入口函数与组件可用替身；最终 HTTP/浏览器使用原正式应用工厂、真实 PIN API、临时合成库与媒体目录，不注入假登录成功。
++- 入口涉及 Context 时，覆盖当前所有 `ChildAuthProvider` 使用方及原会话/命令/媒体测试；不只测新 PIN 表单。原手工登录用例至多增加“展开手工填写”的导航步骤，保留原断言和错误、竞态覆盖。
++- 登录值与示例均用合成 ObjectId/PIN；不读取真人实例配置或真实家庭数据。开发与独立复验证据分开，首轮失败与后续成功分批保留；不得增加 timeout、自动重跑、跳过旧测试或用任意 sleep 替代竞态屏障。
++- 设计阶段仅做文档/链接/状态检查；下表是原批准的验证要求，当前实现映射和实跑结果另见第 5 节，不以既往 1218 项、PR #44/#45 的 CI 或既有真人结果替代新功能验证。
++
++## 2. 永久用例清单
++
++表中参数变体应参数化保留；编号用于本批追踪，不新增全局需求/门禁体系。
++
++| ID | 层次 | 场景与关键断言 |
++| --- | --- | --- |
++| ENTRY-01 | 单元/家长组件 | 当前认证家庭的 A/B 行生成固定同源 `/child/login`、仅两个 ID 的 fragment；无 PIN/Token/姓名/任务号。未就绪、旧家长快照或旧家庭行不能打开/复制。 |
++| ENTRY-02 | 单元 | 合法 24 位十六进制、大小写规范化、参数顺序交换；拒绝缺项、空值、重复键、未知键、非法/畸形编码、非十六进制、少/多一位和超过 256 字符。拒绝不得沿用上次目标。 |
++| ENTRY-03 | 家长组件/浏览器 | 打开新页无 opener；目标页不获得父页孩子身份或 PIN。剪贴板成功/拒绝/不可用有真实反馈；账号或家庭变化后的迟到完成不恢复旧提示/回退链接。动作不退出家长，不能把新页当成家长权限隔离。 |
++| ENTRY-04 | 孩子组件/HTTP | 匿名有效入口只输 PIN；提交前无登录/孩子私有读取/业务写调用；提交恰好一次、正文仅原三字段；响应的 familyId/childId 不匹配时拒绝保存，成功仅保存原白名单并 replace 到 `/child/today`。 |
++| ENTRY-05 | 组件 | 无入口默认说明与显式手工展开；无效入口显示拒绝，不自动 POST/换号。主动改用手工时先清 fragment/旧目标/PIN，原三字段成功与失败规则仍有效。补齐下述“已输入但未提交”目标/模式变化反例：清旧 PIN、重新输入前零 POST、原会话和命令不变，以及重渲染保留输入、重新输入后登录的合法正例。 |
++| ENTRY-06 | 组件/HTTP | PIN 非数字、长度边界；401 统一错误不透露家庭/孩子存在，429 保留限流，网络错误不自动重试。结束后清本次 PIN，目标仍有效时可显式重试；PIN 从未入 URL、存储或日志。 |
++| ENTRY-07 | 组件/浏览器 | 同目标已有会话只能明确继续，不自动跳转；A 会话打开 B 入口不进入 A 的任务页。确认切换先清 A 私有界面再要求 B PIN；取消确认保持提示前原会话/可用草稿/命令及退出标记不变。确认期间身份或目标改变时，旧确认不得退出较新会话或转入旧目标。“保留当前孩子”只进入 A 并清 B fragment。 |
++| ENTRY-08 | Context/组件 | 保持 A 的 PIN 200 或 401，先切入口 B/无效/无入口/手工，再释放；不保存 A、不导航、不覆盖新错误/PIN/提交状态。A -> B -> A 仍拒绝旧 A 响应；切换时清空 A 的输入，B 重新输入后的 PIN 不得被旧 finally 清掉，B 的新请求可正常成功。普通重渲染/设置 submitting/清错误不取消合法请求。与 ENTRY-05 共用意图变体，但未发送与已在途场景分别建立，不用其中一类代替另一类。 |
++| ENTRY-09 | Context/组件 | 保持响应后离开/卸载登录页，旧成功/错误均不得写会话；旧页面收尾不取消较新 attempt。成功后正常卸载保留刚登录会话；取消请求不写退出标记、不删除任何业务命令。 |
++| ENTRY-10 | 原回归/真实 HTTP 浏览器 | 保留 `ChildLoginRace.test.js` 和 `childLoginRace.spec.js`：同孩子另一页退出后释放真实已签发 200 仍拒绝；漏事件也拒绝；兄弟姐妹退出不取消本目标；原 401/存储失败/新同 actor 会话保护不弱化。 |
++| ENTRY-11 | 同 context 双标签浏览器 | 分别从 A/B 专属入口 PIN 登录，刷新各页仍是各自身份；新独立页不自动继承。复制页/已有会话打开另一入口必须明确切换；禁止用两个隔离 BrowserContext 冒充同浏览器标签隔离。 |
++| ENTRY-12 | 会话/媒体回归 | 确认切换后，旧媒体成功、旧业务成功/401 不恢复 A 私有内容、不登出 B；家长会话不变；同孩子显式退出仍使同 actor 其他页失效，不影响另一个孩子。 |
++| ENTRY-13 | 正式 HTTP/浏览器 | 完成请求提交成功后丢响应；当前会话仍只重试原 UUID/正文。显式退出后重新开 A 入口、输入 PIN，按现有待恢复入口发现并显式恢复同一持久命令，不重复发布/发星；只访问书签不得自动恢复。 |
++| ENTRY-14 | 正式 HTTP/浏览器 | A 的未知命令未确认时登录 B，B 不显示/恢复 A 命令；返回 A 仍用原命令。反思、错题未知写入锁和损坏命令退出清理继续跑原反例，不因新入口一键清空或解除。 |
++| ENTRY-15 | 正式 HTTP | 有效形状但错家庭/错孩子/错 PIN、重置 PIN 后旧 PIN/旧 Token 均按原契约拒绝；旧书签+新 PIN 可用。身份不匹配不能访问兄弟姐妹、跨家庭任务/私有媒体；不修改后端授权或加入匿名名单接口。 |
++| ENTRY-16 | 组件/浏览器 | 登录页刷新保留定位但不保留 PIN、不重发；真实 JWT 过期回通用页显示原过期提示。重新打开书签并 PIN 登录后保留原 actor 恢复边界，不恢复旧 Token、不换业务 UUID。 |
++| ENTRY-17 | 构建/浏览器/人工待验 | 360/768px 无横向溢出，PIN 有标签/数字键盘提示，按钮触控与键盘可用，错误明确。浏览器 Chromium/WebKit 验证书签式 URL、刷新、返回和复制失败，不冒充 iPad 添加书签/主屏幕、中文输入或真人使用验收。 |
++
++ENTRY-05 设计 P2 的永久反例与正例要求（保留原预期，执行结果另列）：
++
++1. 保持同一登录页挂载，输入 A 的合成 PIN 但不提交，先验证输入确实存在、登录调用为 0。参数化切换 A -> B（分别只换 childId、只换 familyId）、A -> 无效/无入口 -> B、A -> B -> A、A -> 无效/无入口 -> A、专属 -> 手工 -> 专属，以及手工模式编辑任一目标字段。通过路由/fragment 变化模拟前进返回，不能靠卸载重建表单掩盖清理缺失；两孩子可使用相同合成 PIN，避免错误凭据拒绝偶然掩盖旧输入复用。
++2. 每个变化点断言旧 PIN 已清空，未重新输入前触发表单提交也零 POST；最终回到原目标仍为空。除即时清空外，单独制造入口已变化而旧输入/提交闭包尚在的时序，断言提交前意图校验拒绝旧 PIN，不能只靠按钮 disabled。每次对比变更前后的孩子/家长会话、退出标记、原 UUID/正文命令及未知写入锁不变；使用另一孩子标签页保留会话和预置合成命令，断言没有 logout、退出广播、命令删除或业务写调用，避免仅比较空存储的空洞通过。
++3. 合法正例：不改模式/目标的普通重渲染、清错误，以及同一专属目标的参数顺序/大小写规范化变化均保留已输入 PIN，显式提交恰好一次原三字段请求；入口变为 B 后必须重新输入 B 的 PIN，才允许恰好一次 B 请求并接受匹配的响应。另验证完成手工目标编辑、重新输入 PIN 后仍能正常登录。ENTRY-08 则在 B 已重新输入或已发送新请求后释放 A 的旧成功/失败，等待旧 finally 结束再检查新输入/会话不受影响。
++
++ENTRY-08/09 的屏障必须等到响应处理结束后核对会话、URL、页面和命令状态，不能只断言旧按钮消失。测试 finally 释放阻塞并等待路由/请求收尾，传播清理异常，保证失败也能退出；只清理本次已创建合成资源。
++
++## 3. 原批准的最小执行顺序
++
++1. 先在原实现上建立“有效专属入口只输 PIN”“不同目标不误继续”“入口变化后未提交 PIN 不得复用”和“入口变化/卸载后旧 PIN 不得保存”的红灯；按原层次实现。手工表单兼容测试保留。
++2. 定向运行入口工具、家长孩子页、孩子登录/切换、`ChildAuthContext` 和 `familySession` 测试；永久反例与合法正例均执行。对保存前意图检查、不同目标分支至少各做一次临时删除保护的变异；本次 P2 另分别移除未提交 PIN 清理、提交前输入归属检查，必须分别在输入清空、零 POST 断言处失败，不能仅依赖旧响应用例失败。验证后还原，不扩建变异框架。
++3. 运行前端完整默认回归、构建和现有 lint；后端只需原孩子登录/权限相关套件，无后端代码变化不机械重跑全仓历史。若共享层实际改动扩大，扩大受影响调用方回归并说明依据。
++4. 在与真人入口分开的临时实例上，以真实应用验证 ENTRY-04/07/10/11/13/15/16；Chromium、WebKit 使用同 BrowserContext 多标签。保留原求助/完成/订正恢复和 PIN 重置安全用例。可用故障注入保持真实响应，不用假成功替代真实登录或业务落库。
++5. 自查范围、失败、异常收尾与证据后提交独立复评；真人使用继续由测试/评审线程另行安排。原实例、数据、正在测试的版本均不自动替换，设备和总门禁不因此关闭。
++
++复用的命令入口（原设计命令，不据此推断执行；实际选定范围、结果与退出码见本批记录）：
++
++```sh
++# 已准备依赖的隔离开发副本，先定向，再完整前端
++CI=true npm run test:ci --prefix frontend/web -- --runInBand --testPathPattern='ChildLogin|ChildSwitch|ChildAuthContext|childSession|childTabSession|Task11Children|childEntry'
++CI=true npm run test:ci --prefix frontend/web -- --runInBand
++npm run build --prefix frontend/web
++npm run lint
++npm run test:family-regression -- --runTestsByPath backend/services/user-service/__tests__/routes/children.test.js
++# 新入口专项放进同一个 tests/e2e/t2 目录，复用现有 runtime
++npm run test:t2:e2e -- tests/e2e/t2/childEntry.spec.js tests/e2e/t2/childLoginRace.spec.js
++npm run test:t2:e2e -- --browser=webkit tests/e2e/t2/childEntry.spec.js tests/e2e/t2/childLoginRace.spec.js
++npm run docs:family:check
++```
++
++`childEntry.spec.js` 已按本方案新增，沿用现有 `T2_WEB_BUILD`、既有本机 Mongo 二进制与独立临时输出设置；未借用真人预览服务或安装/下载依赖。已有完成/恢复专项选择 `completion.spec.js`，不将这些专项称为全部历史浏览器回归。
++
++## 4. 验收与限制
++
++验收证据需要绑定实现候选与实际命令/退出码，分别列出定向、完整前端、正式 HTTP、两引擎和独立复验结果。未执行项保留待验；历史红灯不删除、不改写为一次全绿。
++
++本轮准备不改变 T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置范围。不调用模型、不操作服务器、不提交推送或部署，不恢复 WP1/T8 执行器开发。正式真人入口升级和 iPad 实测仍由用户与测试/评审线程安排，不属于本次设计授权。
++
++## 5. 本地实现映射与评审修订
++
++| 要求 | 当前永久保护位置 |
++| --- | --- |
++| ENTRY-01/02/03 | `ChildEntryActions.test.js`：同源链接、解析边界、实时家长/行范围、复制成功与失败及迟到结果；`childEntry.spec.js`：真实家长准备链接、无 opener、新页不继承孩子。 |
++| ENTRY-04/05/06 | `ChildEntry.test.js`、原 `ChildLogin.test.js`/`ChildLoginRace.test.js`/`ChildSwitch.test.js` 和后端 `children.test.js`：三字段、输入意图、零 POST、身份匹配、401/429/存储失败、合法手工兼容。 |
++| ENTRY-07/08/09 | `ChildEntry.test.js`：显式切换、取消与旧确认拒绝、ABA、迟到 200/401、独立卸载和新 attempt；浏览器真实响应保持/释放后等待客户端处理屏障。 |
++| ENTRY-10/11/12 | 原 `childLoginRace.spec.js` 与 `completion.spec.js`，保留同 actor 退出、兄弟姐妹独立、迟到媒体/401 和旧命令保护；只增加显式手工入口导航，不删除原断言。 |
++| ENTRY-13/14/15/16 | `childEntry.spec.js` 原 actor 书签重登恢复与 PIN 重置；`completion.spec.js` 原 UUID 丢响应、损坏命令、真实 JWT 过期、权限和媒体删除；原错题/反思未知锁由前端完整默认回归覆盖。 |
++| ENTRY-17 | 构建、两引擎真实页面及 360/768/1280px 截图/溢出检查；iPad 书签/主屏幕、相机、触控与真人易用性仍 DEVICE_PENDING。 |
++
++独立复评首轮发现两项 P2 测试保护缺口，保留首轮结论，未判定为新增产品逻辑漏洞：
++
++1. 原卸载变体先触发 ABA，无法独立证明卸载保护。现单独保持 Provider、目标与 fragment 不变，不发新请求，仅卸载登录页后释放旧 200/401；检查存储、命令、退出标记、导航与持久 Context 错误。另保留 ABA 与较新 attempt 用例。
++2. 原浏览器屏障只等待路由 fulfill/dispose，可能早于客户端处理。现观察真实 XHR `loadend` 后的 MessageChannel 下一任务，等待 Axios、Context 与页面 finally 的微任务链结束；先检查 A 未保存、仍为 B 的 URL/PIN、无旧错误，再允许 B 登录。不加产品测试 hook、不用任意 sleep、不改变真实响应。
++
++临时移除卸载失效保护、单独移除保存前意图检查的验证及最终独立结论见本批证据。自查另修复 StrictMode 首次输入失效，永久正例保留。所有结果分批记录，不将工程候选、独立静态复评或浏览器模拟等同真人验收。
+diff --git a/docs/superpowers/specs/2026-11-13-family-child-entry-design.md b/docs/superpowers/specs/2026-11-13-family-child-entry-design.md
+new file mode 100644
+index 00000000..6796face
+--- /dev/null
++++ b/docs/superpowers/specs/2026-11-13-family-child-entry-design.md
+@@ -0,0 +1,144 @@
++# 孩子专属入口 + PIN 最小设计
++
++**状态：** DESIGN_APPROVED / ENGINEERING_ACCEPTANCE_PENDING。用户已批准方案 A、本详细设计及 P2 设计问题关闭；限定本地实现的候选、测试与复评见[工程证据索引](../../development/evidence/child-entry-20261113/README.md)，工程验收仍待用户确认。
++**日期：** 2026-11-13。
++**已核实实现基线：** 当前工作树源提交 `f8073fcd52bc4d2b4b2c94b0a3e292d171d8d600`。原设计记录的 PR #45/main 标签 `0ec8b746ef5a549bbae57c3f0289e6dec342556d` 保留为历史引用，但本地对象库无法解析；本批不据此声明文件树等同或 GitHub 当前状态，以可重建的实现基线和候选补丁为准。
++**关联：** `FR-CHILD-004`、`FR-CHILD-005`、`NFR-SEC-001`；[现有登录 API](../../api/family-learning-tracker-api.md#27-孩子-pin-登录)、[已合并标签页隔离](../../development/family-child-tab-session.md)、[本批测试方案](../../development/family-child-entry-test-plan.md)。
++
++## 1. 目标与取舍
++
++家长在已有孩子档案中打开或复制专属入口，孩子将其保存为自己的书签；日常打开入口后只输入 4 至 6 位 PIN，不记忆或复制家庭 ID、孩子 ID。两个 ID 仍由原服务端验证，不因前端隐藏而省略。
++
++| 方案 | 取舍 |
++| --- | --- |
++| A：每个孩子一个入口 + PIN | 本轮已选。复用现有接口、档案、页面和标签页会话，不新增账户或设备数据。 |
++| B：家庭设备内选孩子 + PIN | 后置；需要额外定义设备首次设置、名单保存/清除和换家庭规则，不纳入本轮。 |
++| 只输入 PIN、由服务端查找孩子 | 不采用；PIN 不是全局唯一身份，不新增匿名家庭/孩子发现。 |
++
++本轮不做二维码、短链服务、设备配对、免密登录、PIN 找回新流程、全局用户名、后台换号或新恢复框架；不修改后端认证、限流、模型、数据库、部署配置。入口不保证帮助不同孩子记住相同 PIN 的区别，登录成功后仍须核对实际返回的姓名。
++
++## 2. 现有实现与最小接线
++
++| 现有位置 | 本轮设计 |
++| --- | --- |
++| `ChildrenPage.js` / `FamilyContext` | 从已认证家长当前家庭的现有孩子行生成入口，不再要求家长手抄 ID。 |
++| `ChildPinLoginPage.js` | 识别有效专属入口，仅显示 PIN；通用入口保留显式手工登录兼容路径。 |
++| `childApi.childPinLogin` | 保留现有 `familyId`、`childId`、`pin` 三字段 POST，不增加参数或另一登录接口。 |
++| `ChildAuthContext` | 保留原 attempt、会话快照和退出标记检查；补足当前登录页意图失效对在途响应的约束，见第 5 节。 |
++| `familySession.js` / `ChildSwitchButton` | 复用现有存储、显式退出及切换清理。必要的 UI 接线不能改变共享退出标记或命令清理政策。 |
++
++允许一个小型纯函数模块共用入口生成/解析，不引入新依赖、持久存储键、跨标签通信协议或通用会话抽象。`ChildRoute`、业务请求层和业务恢复端点保持原行为。
++
++## 3. 入口格式与隐私边界
++
++客户端链接格式如下；尖括号为占位符，不是可直接发送的数据：
++
++```text
++<当前站点 origin>/child/login#familyId=<24位十六进制ID>&childId=<24位十六进制ID>
++```
++
++- 用现有 `URL` / `URLSearchParams` 生成与解析。路径固定 `/child/login`，origin 取当前站点；不接受外部 origin、任意路径或 `next`/`redirect`。本轮不改变部署的根路径假设。
++- 仅 fragment 携带这两个定位字段；不在 query、路由路径、日志或遥测中增加 ID。fragment 不随普通 HTTP 请求/Referer 发送，但仍可被同源脚本、浏览器历史、书签、剪贴板及其同步读取，不能宣称加密或保密。
++- 两个参数都必须恰好出现一次，值必须完整匹配 24 位十六进制，规范化为小写；参数顺序可交换。fragment 含 `#` 的原始长度上限 256 个字符；空值、缺项、重复项、未知参数及解析后不合法的值一律拒绝。不将非法输入截断、部分采用或与旧目标拼接。
++- 不含姓名、头像、PIN、Token、家长会话、任务号或业务命令。身份名称只能来自已认证会话，不信任 URL 的展示身份。
++- 此链接只是定位信息，不是访问凭证，也没有新增吊销机制。链接被复制后仍需有效 PIN；PIN 重置继续撤销旧孩子 Token，但不改变这两个 ID，所以旧书签可使用新 PIN。
++- 不提供匿名孩子名单、头像或家庭查询。仅打开链接不自动发 PIN 登录、业务写入或恢复请求，不读取目标孩子的私有资料。
++- 不新增“记住此家庭/孩子”的 localStorage/sessionStorage 数据。刷新登录页依靠原 fragment；进入业务页后依靠现有已认证会话，不从片段构造会话。
++
++## 4. 家长与孩子交互
++
++### 4.1 家长准备入口
++
++在 `/app/children` 的每个现有孩子行增加“打开孩子入口”和“复制孩子入口”，沿用现有图标库、按钮样式和可访问名称。前者新开标签页，采用 `noopener` / `noreferrer`；不把父页已有孩子凭据复制给目标页。
++
++动作仅在当前家长会话有效、`familyStatus=ready` 且行属于当前 `FamilyContext.children` 时可用；点击时再核对会话快照、家庭和行，旧家长/旧家庭的陈旧闭包不得生成或打开入口。不为生成链接新增网络查询，也不能将此检查当作替代后端权限。
++
++复制失败、剪贴板不可用时，在当前仍有效的家长视图显示只读链接供手工选择；不得虚报“已复制”，不得请求长期剪贴板权限。异步复制返回前切换账号/家庭时，不显示旧成功消息或旧回退链接。已经交给系统剪贴板的内容无法保证撤销，因此动作前校验，不把事后清理 UI 宣称为撤回剪贴板。
++
++家长仍使用现有方式设置/重置 PIN；不根据是否生成了链接推断 PIN 已配置。准备入口不会自动退出家长或孩子；共享设备交给孩子前，家长仍应退出家长账号，标签页隔离不等于浏览器配置文件级权限隔离。
++
++### 4.2 登录页状态
++
++| 当前状态 | 展示与允许动作 | 不允许的副作用 |
++| --- | --- | --- |
++| 匿名 + 有效专属入口 | “孩子登录”、PIN、提交按钮；默认不显示两个 ID 输入框。PIN 校验/错误规则保持原样。 | 不自动提交、不猜测姓名、不加载兄弟姐妹资料。 |
++| 匿名 + 无 fragment | 提示使用家长准备的入口；提供显式“手工填写标识”，展开原三字段表单。 | 不自动恢复上一个孩子或家长选中的孩子。 |
++| 匿名 + 无效 fragment | 明确提示入口无效，禁止该入口提交；可重新打开正确书签，或显式清除入口后进入手工表单。 | 不静默退回旧 ID、不边报错边自动登录。 |
++| 已登录 + 入口目标与现有 familyId/childId 均相同 | 显示真实会话姓名，明确选择“继续使用”或原切换动作。 | 不自动跳转；不重新发 PIN 请求。 |
++| 已登录 A + 有效入口 B 不同 | 提示当前实际登录 A、该入口指向另一身份；提供“切换到此入口”和“保留当前孩子”。 | 不以 B 的入口直接进入 A，不免 PIN 切为 B，不将 B 的 ID 写入 A 会话。 |
++| 已登录 + 无入口/无效入口 | 无入口沿用原显式继续/切换；无效入口另提示无效，只能显式继续原身份或换正确入口。 | 不用原会话掩盖无效入口，也不因坏链接自动退出。 |
++
++选择“切换到此入口”必须先使用现有未提交内容/未知结果提示。取消时不主动退出、不清草稿/命令、不写退出标记，保留当前身份且不自动进入任务页；确认后才对原孩子调用既有退出流程，再保留已校验 B 的 fragment 展示空 PIN 表单。必须由 B 重新输入 PIN。
++
++确认动作绑定弹出提示时的会话快照和入口意图，确认返回后再次核对；期间原身份退出、出现较新会话或目标改变，丢弃旧确认并重新呈现当前状态，不用旧确认清除新身份。取消的零副作用以提示出现前为比较基准，不承诺恢复用户此前离开业务页时已丢失的未保存内存草稿；各模块的原草稿/未知命令规则仍保留。
++
++“保留当前孩子”是明确选择 A，替换路由到原 `/child/today` 并去除 B 的 fragment，不请求 B 的资料。用户之后仍可重新打开 B 的书签。
++
++PIN 从输入时起绑定当前登录页的入口意图代次，不等到发送请求才绑定。匿名状态下目标 A 变 B、入口移除或变非法、专属/手工模式互换，以及手工目标字段编辑时，立即清除上一意图的 PIN，即使尚未发送任何请求；A -> B -> A、A -> 无效/无入口 -> A 也不恢复旧值。新意图必须重新输入 PIN。普通重渲染、错误提示变化、submitting 更新，以及同一合法专属目标仅参数顺序或十六进制大小写变化，不新建意图、不清除当前输入。
++
++上述输入清理只作用于登录表单和归属该意图的请求资格，不调用退出、不写退出标记、不改变已有会话或业务命令；已有认证身份仍按上表和显式切换确认处理。提交前再次核对 PIN 所属意图与当前模式、目标一致；不匹配或新意图尚未输入合法 PIN 时零 POST，不仅依赖异步副作用稍后清空字段或按钮禁用。不得将旧 PIN 重新绑定给新意图。
++
++提交时固定本次意图代次、规范化目标和 PIN，成功后只接受身份与目标一致且意图仍有效的服务端响应，复用现有保存逻辑并 replace 到 `/child/today`，不带 fragment。所有结束路径清除本次 PIN；失效请求的 finally 不得清掉较新输入或改动较新页面的提交状态。
++
++### 4.3 刷新、退出与重新登录
++
++- 登录页刷新：有效 fragment 可重新解析，但 PIN 不保留，也不自动重发。
++- 已登录页刷新：继续现有本标签页会话检查；不以书签替代有效会话。
++- 显式退出、普通“切换孩子”、过期跳转仍可回到原通用 `/child/login`；本轮不增加退出后的定位缓存或改造全局过期跳转。孩子重新打开自己的书签即可只输入 PIN，手工表单仍作兼容入口。
++- 多个书签由家长命名并保存，不承诺网页能自动创建书签。复制标签页/浏览器恢复仍可能带来原身份，必须执行第 4.2 节已有身份判断，不能把新链接当成已登录新孩子。
++- 认证失败统一显示原错误，保留已校验目标并清 PIN；限流按原规则等待；网络失败只允许用户重新输入并显式登录，不自动重试。登录不是新的业务幂等命令，不为登录创建业务 UUID。
++
++## 5. 在途响应、切换清理和原命令恢复
++
++入口变化新增了一个现有 Context 不直接感知的失效原因：旧 PIN 请求在目标已经变化或登录页卸载后返回。仅在页面 `await login()` 后决定不导航不足以防止旧会话已被保存。
++
++因此，实施时在现有 `ChildAuthContext` 内复用 attempt 代次，增加窄的、按本次请求归属取消/检查机制：入口从 A 变 B、移除或变非法、登录模式切换、登录页离开/卸载，都使旧请求失效；手工模式的目标字段变化也不能保留旧请求资格。相同目标 A -> B -> A 仍是新代次，不能只比较最终两个 ID。第 4.2 节的未提交 PIN 清理与这里的在途请求失效使用一致的意图变化规则；未发请求也必须清理旧输入，不能用请求 attempt 的存在与否决定是否清理。普通渲染、更新 submitting 或清除旧错误不构成新意图，不得因此取消正常登录。
++
++- 在 `saveChildSession` 前以及写入错误状态/返回成功前确认页面意图仍有效；原 attempt、原会话快照、`captureChildLogin`/`assertChildLoginCurrent` 和退出标记检查缺一不可。
++- 取消只作用调用方拥有的在途 attempt；旧页面收尾不得取消较新的 attempt。成功完成后页面卸载也不得撤销刚成功的会话。
++- 只使旧请求失效，不用 `logout()`、广播退出或删除命令模拟取消。不能因改变/取消入口而影响另一个孩子或家长，也不能靠清理当前新身份来处理旧 200/401。
++- 请求已发送无法保证服务端不签发 Token；客户端必须拒绝使用迟到响应，不能把 AbortController 或按钮禁用当作完整保护。
++- 新入口不改变现有显式退出清理、自然过期和反思/错题未知写入的差异化政策；不得将全部存储一键清空或为方便切换解除未知写入保护。
++- 未知完成提交在当前会话内仍重试原 UUID/正文；退出重登后仍由原 actor 发现并显式恢复服务端持久命令。只打开链接不恢复；换成 B 不能看到/恢复 A 的命令，也不能为 A 生成新 UUID。已知成功/历史终态不能重复发布或发星。
++- 会话存储失败仍拒绝登录，不退回共享孩子 Token；同孩子跨标签显式退出、另一孩子不受影响、家长独立会话及私有媒体迟到响应保护均保留。
++
++## 6. API 兼容、范围和回滚
++
++网络请求保持 `POST /api/auth/child-pin-login`，请求体仅为 `familyId`、`childId`、`pin`。成功仍读取 `{ success: true, data: { token, child } }`；统一 `401 INVALID_CHILD_CREDENTIALS`、`429 PIN_LOGIN_RATE_LIMITED` 和既有网络/本地存储错误处理不变。不改变家长/孩子权限或放宽任何服务端 ID 校验。
++
++主要实施影响面限于家长孩子页、孩子登录页、小型入口工具、ChildAuthContext 的请求归属失效及必要的切换目标接线。现有 `familySession.js` 若确需改动，必须先证明当前接口不足，扩大对应调用方回归，不能顺带重构。用户指南应待实现验收后再更新，不把本设计写成已上线。
++
++前端变更可整体撤回到本基线，不迁移数据、不修改后端；撤回后专属链接可能不能自动填 ID，使用原手工登录即可。回滚不撤销 PR #44 的标签页/在途 PIN 安全修订，不清理业务记录或未知命令。
++
++## 7. 设计阶段自查与评审历史
++
++2026-11-13 本地设计自查完成，详细设计仍待评审，未进入编码；下表仅为源码对照和文档检查，不是产品用例执行或独立复评结果。
++
++| 自查项 | 结论 |
++| --- | --- |
++| 入口与接口 | 仅客户端定位格式；复用原三字段 POST、服务端权限及错误，不新增名单读取/设备存储。 |
++| 在途 PIN | 明确在 Context 保存前校验请求归属；A -> B -> A、页面卸载、迟到 200/401 均有对应永久反例设计，合法渲染不误取消。 |
++| 未提交 PIN（本次 P2） | 输入归属入口意图；目标/模式改变时清空，提交前拒绝旧意图输入，普通渲染和同目标规范化等价变化保留输入。ENTRY-05/08 补齐零 POST、会话/命令不变及合法正例设计；尚未实施或执行。 |
++| 切换确认 | 自查补齐确认返回后的身份/目标复核，旧确认不能清除新会话；取消零副作用不冒充已离开页面草稿恢复。 |
++| 原命令与账号边界 | 取消登录意图与显式退出分离；原 UUID/actor 恢复、同 actor 退出标记、兄弟姐妹及家长隔离保持原规则。 |
++| 验证与历史 | 2 份新文档、1 处开发目录入口；格式、相对路径/锚点、17 个用例编号、敏感信息及历史内容保持检查通过。原文档门禁通过，包含 412 项既有契约夹具，但不代表本新功能已验证。 |
++
++当前仍未实施、未运行产品测试、未做浏览器或真机验证；应先评审本设计与测试方案，再授权本地合成实现。没有为本轮新增审批框架或工程总门禁关闭记录。
++
++以上为设计候选阶段快照。2026-11-13 独立复评绑定设计 `698406b5b4489764fd2ada43a45d371f59a80cca19d082060ac0083df4a1b518` 与测试方案 `e9a008e2e5441e08824370878d359c4f58387f4bc979ef3d2d495c26d0d3b138`，未发现新增实质问题，建议 P2 在设计层面关闭；用户随后批准设计及该设计问题关闭，开始限定本地实现。此批准不等于工程验收或总门禁关闭，不更改此前首轮发现记录。
++
++2026-11-13 首轮独立评审发现 P2：入口改变时未定义尚未提交 PIN 的清理，原候选不能据此进入编码。本次仅补齐第 4.2/5 节及 ENTRY-05/08 的设计约定，自查覆盖未提交、在途和合法重渲染三条路径；不将首轮结论改写为通过。独立复评结果另以本轮评审回执为准，设计问题修订不代表实现验收、用户批准编码或任何现有总门禁关闭。
++
++仅新增本设计、配套测试方案及开发目录入口，不修改历史快照、失败证据、冻结哈希、API 实现或状态校验器；不新增测试框架或逐步骤审批。
++
++T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置范围不变。不扩展 WP1/T8 执行器，不调用模型、不操作服务器、不提交推送或部署。测试/评审线程的真人实例、数据、窗口和结果保持独立，本轮不重启、替换或清理它们。
++
++## 8. 限定本地实现与交付边界
++
++本批新增 `childEntry` 定位工具和家长 `ChildEntryActions`，调整孩子登录页与 `ChildAuthContext.login` 的可选 `isCurrent` 请求归属检查；复用原 PIN API、会话存储、退出标记和业务命令恢复，不修改后端、`familySession` 或任何原命令模型。
++
++页面实现把未提交 PIN 和在途请求绑定同一意图对象。目标/模式变化创建新对象；提交闭包、保存响应和 finally 均核对原对象及当前 fragment，卸载使对象失效；普通重渲染与等价定位保留输入。StrictMode 的模拟卸载后重建合法意图并刷新提交闭包，保留首次输入的永久正例。
++
++本地独立复评提出的卸载用例与浏览器处理屏障两项测试保护缺口，按[测试方案第 5 节](../../development/family-child-entry-test-plan.md#5-本地实现映射与评审修订)补强。开发实跑、独立复验及原失败分别绑定到工程证据，不覆盖第 7 节历史候选，也不将设计问题关闭等同工程验收。
++
++仍不增加账号体系、匿名孩子名单、二维码、设备信任或 PIN 缓存；正式真人入口不自动升级。验收后是否交付 Git、如何让测试/评审线程切换实例，需后续授权；当前回滚仍只涉及前端增量，不动原标签页隔离与业务记录。
+diff --git a/frontend/web/src/__tests__/child/ChildEntry.test.js b/frontend/web/src/__tests__/child/ChildEntry.test.js
+new file mode 100644
+index 00000000..99fc0d66
+--- /dev/null
++++ b/frontend/web/src/__tests__/child/ChildEntry.test.js
+@@ -0,0 +1,181 @@
++import React from 'react';
++import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
++import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
++import { ChildAuthProvider, useChildAuth } from '../../contexts/ChildAuthContext';
++import ChildPinLoginPage from '../../pages/child/ChildPinLoginPage';
++import { childPinLogin } from '../../services/childApi';
++import { captureSession, saveChildSession, saveParentSession } from '../../services/familySession';
++
++jest.mock('../../services/childApi', () => ({ childPinLogin: jest.fn() }));
++const family = 'f'.repeat(24), a = 'a'.repeat(24), b = 'b'.repeat(24);
++const link = (id = a, f = family) => `/child/login#familyId=${f}&childId=${id}`;
++const payload = id => ({ token: `synthetic-${id}`, child: { familyId: family, childId: id, name: id === a ? '孩子A' : '孩子B' } });
++let go;
++const Navigation = () => {
++  go = useNavigate();
++  const { error } = useChildAuth();
++  return <output aria-label="登录错误">{error || 'none'}</output>;
++};
++const mount = (path = link()) => {
++  window.history.replaceState({}, '', path);
++  return render(<ChildAuthProvider><BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Navigation /><Routes>
++    <Route path="/child/login" element={<ChildPinLoginPage />} />
++    <Route path="/child/today" element={<h1>今天的任务</h1>} />
++    <Route path="/away" element={<h1>其他页面</h1>} />
++  </Routes></BrowserRouter></ChildAuthProvider>);
++};
++const typePin = () => fireEvent.change(screen.getByLabelText('PIN'), { target: { value: '2468' } });
++const submit = () => fireEvent.submit(screen.getByLabelText('PIN').closest('form'));
++const storage = () => [JSON.stringify({ ...localStorage }), JSON.stringify({ ...sessionStorage })];
++beforeEach(() => { localStorage.clear(); sessionStorage.clear(); jest.clearAllMocks(); });
++afterEach(() => jest.restoreAllMocks());
++
++test('dedicated entry requires only PIN and uses the original three-field request', async () => {
++  childPinLogin.mockResolvedValue(payload(a)); mount();
++  expect(screen.queryByLabelText('家庭 ID')).not.toBeInTheDocument();
++  expect(screen.queryByLabelText('孩子 ID')).not.toBeInTheDocument();
++  expect(childPinLogin).not.toHaveBeenCalled(); typePin(); submit();
++  await screen.findByRole('heading', { name: '今天的任务' });
++  expect(childPinLogin).toHaveBeenCalledTimes(1);
++  expect(childPinLogin).toHaveBeenCalledWith({ familyId: family, childId: a, pin: '2468' });
++  expect(window.location.hash).toBe('');
++  expect(captureSession('student')?.actorId).toBe(a);
++});
++
++test.each([
++  [link(b)], [link(a, b)], ['/child/login#bad', link(b)], ['/child/login', link(b)],
++  [link(b), link()], ['/child/login#bad', link()], ['/child/login', link()]
++])('unsubmitted PIN is cleared on intent changes without session or command writes: %j', (...paths) => {
++  saveParentSession({ token: 'synthetic-parent', user: { id: 'parent', role: 'parent' } });
++  sessionStorage.setItem('synthetic-pending-command', JSON.stringify({ operationId: 'original-uuid', state: 'unknown' }));
++  localStorage.setItem(`family-growth.session-exit.v1:student:${b}`, JSON.stringify({ revision: 'prior-exit' }));
++  mount(); typePin(); expect(screen.getByLabelText('PIN')).toHaveValue('2468');
++  const before = storage();
++  for (const path of paths) {
++    act(() => go(path));
++    const input = screen.queryByLabelText('PIN');
++    if (input) { expect(input).toHaveValue(''); fireEvent.submit(input.closest('form')); }
++    expect(childPinLogin).not.toHaveBeenCalled(); expect(storage()).toEqual(before);
++  }
++});
++
++test('submit rejects an old input even before the route change has rendered', () => {
++  mount(); typePin(); const form = screen.getByLabelText('PIN').closest('form');
++  window.history.pushState({}, '', link(b));
++  fireEvent.submit(form);
++  expect(childPinLogin).not.toHaveBeenCalled(); expect(captureSession('student')).toBeNull();
++});
++
++test('equivalent target and ordinary renders preserve PIN; new target requires fresh input', async () => {
++  mount(); typePin();
++  act(() => go(`/child/login#childId=${a.toUpperCase()}&familyId=${family.toUpperCase()}`));
++  expect(screen.getByLabelText('PIN')).toHaveValue('2468');
++  act(() => go(`/child/login#childId=${a.toUpperCase()}&familyId=${family.toUpperCase()}`, { replace: true }));
++  expect(screen.getByLabelText('PIN')).toHaveValue('2468');
++  childPinLogin.mockResolvedValueOnce(payload(a));
++  submit();
++  await waitFor(() => expect(captureSession('student')?.actorId).toBe(a));
++});
++
++test.each(['success', 'failure'])('late %s after entry change cannot restore identity or clear the new PIN', async outcome => {
++  let settle; childPinLogin.mockImplementationOnce(() => new Promise((resolve, reject) => {
++    settle = () => outcome === 'success' ? resolve(payload(a)) : reject({ response: { status: 401 } });
++  }));
++  mount(); typePin(); submit(); act(() => go(link(b))); typePin();
++  await act(async () => settle());
++  expect(captureSession('student')).toBeNull(); expect(screen.getByLabelText('PIN')).toHaveValue('2468');
++  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
++  childPinLogin.mockResolvedValueOnce(payload(b)); submit();
++  await screen.findByRole('heading', { name: '今天的任务' });
++  expect(captureSession('student')?.actorId).toBe(b);
++});
++
++test('ABA invalidates the old owned request', async () => {
++  let settle; childPinLogin.mockImplementationOnce(() => new Promise(resolve => { settle = resolve; }));
++  mount(); typePin(); submit(); act(() => go(link(b))); act(() => go(link()));
++  await act(async () => settle(payload(a)));
++  expect(captureSession('student')).toBeNull();
++  expect(screen.getByRole('heading', { name: '孩子登录' })).toBeInTheDocument();
++});
++
++test.each(['success', 'failure'])('unmount alone rejects late %s with provider and target unchanged', async outcome => {
++  let settle;
++  childPinLogin.mockImplementationOnce(() => new Promise((resolve, reject) => {
++    settle = () => outcome === 'success' ? resolve(payload(a)) : reject({ response: { status: 401 } });
++  }));
++  sessionStorage.setItem('synthetic-pending-command', JSON.stringify({ operationId: 'original-uuid', state: 'unknown' }));
++  localStorage.setItem(`family-growth.session-exit.v1:student:${b}`, JSON.stringify({ revision: 'prior-exit' }));
++  mount(); typePin(); submit();
++  const hash = window.location.hash, before = storage();
++  act(() => go('/away' + hash));
++  expect(window.location.hash).toBe(hash);
++  await act(async () => settle());
++  expect(childPinLogin).toHaveBeenCalledTimes(1);
++  expect(storage()).toEqual(before);
++  expect(captureSession('student')).toBeNull();
++  expect(window.location.pathname).toBe('/away');
++  expect(screen.getByRole('heading', { name: '其他页面' })).toBeInTheDocument();
++  expect(screen.getByLabelText('登录错误')).toHaveTextContent('none');
++});
++
++test('mode changes and manual target edits clear PIN, then fresh manual input works', async () => {
++  mount(); typePin();
++  fireEvent.click(screen.getByRole('button', { name: '手工填写标识' }));
++  expect(screen.getByLabelText('PIN')).toHaveValue('');
++  expect(window.location.hash).toBe('');
++  for (const [label, value] of [['家庭 ID', family], ['孩子 ID', b]]) {
++    typePin(); fireEvent.change(screen.getByLabelText(label), { target: { value } });
++    expect(screen.getByLabelText('PIN')).toHaveValue(''); submit();
++    expect(childPinLogin).not.toHaveBeenCalled();
++  }
++  typePin(); act(() => go(link()));
++  expect(screen.getByLabelText('PIN')).toHaveValue(''); submit(); expect(childPinLogin).not.toHaveBeenCalled();
++  fireEvent.click(screen.getByRole('button', { name: '手工填写标识' }));
++  fireEvent.change(screen.getByLabelText('家庭 ID'), { target: { value: family } });
++  fireEvent.change(screen.getByLabelText('孩子 ID'), { target: { value: b } });
++  childPinLogin.mockResolvedValueOnce(payload(b)); typePin(); submit();
++  await screen.findByRole('heading', { name: '今天的任务' });
++  expect(childPinLogin).toHaveBeenCalledTimes(1);
++  expect(childPinLogin).toHaveBeenCalledWith({ familyId: family, childId: b, pin: '2468' });
++});
++
++test.each(['resolve', 'reject'])('old page cleanup and %s do not cancel a newer page login', async outcome => {
++  let resolve, reject;
++  childPinLogin.mockImplementationOnce(() => new Promise((ok, fail) => { resolve = ok; reject = fail; }));
++  mount(); typePin(); submit(); act(() => go('/away')); act(() => go(link(b)));
++  childPinLogin.mockResolvedValueOnce(payload(b)); typePin(); submit();
++  await screen.findByRole('heading', { name: '今天的任务' });
++  const current = captureSession('student');
++  await act(async () => outcome === 'resolve' ? resolve(payload(a)) : reject({ response: { status: 401 } }));
++  expect(captureSession('student')).toBe(current);
++  expect(current.actorId).toBe(b);
++});
++
++test('StrictMode cleanup does not discard the next valid PIN input', async () => {
++  window.history.replaceState({}, '', link());
++  render(<React.StrictMode><ChildAuthProvider><BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
++    <Routes><Route path="/child/login" element={<ChildPinLoginPage />} /><Route path="/child/today" element={<h1>今天的任务</h1>} /></Routes>
++  </BrowserRouter></ChildAuthProvider></React.StrictMode>);
++  childPinLogin.mockResolvedValueOnce(payload(a)); typePin();
++  expect(screen.getByLabelText('PIN')).toHaveValue('2468'); submit();
++  await screen.findByRole('heading', { name: '今天的任务' });
++  expect(captureSession('student')?.actorId).toBe(a);
++});
++
++test('explicit keep current clears the other target without requesting it', () => {
++  saveChildSession(payload(a)); mount(link(b)); const initial = captureSession('student');
++  fireEvent.click(screen.getByRole('button', { name: '保留当前孩子' }));
++  expect(window.location.pathname).toBe('/child/today'); expect(window.location.hash).toBe('');
++  expect(captureSession('student')).toBe(initial); expect(childPinLogin).not.toHaveBeenCalled();
++});
++
++test('different existing identity cannot continue silently; cancel and stale confirmation preserve identity', () => {
++  saveChildSession(payload(a)); mount(link(b)); const initial = captureSession('student');
++  expect(screen.queryByRole('button', { name: '继续使用孩子A' })).not.toBeInTheDocument();
++  const confirm = jest.spyOn(window, 'confirm').mockReturnValueOnce(false);
++  const before = storage(); fireEvent.click(screen.getByRole('button', { name: '切换到此入口' }));
++  expect(storage()).toEqual(before); expect(captureSession('student')).toBe(initial);
++  confirm.mockImplementationOnce(() => { saveChildSession(payload(b)); return true; });
++  fireEvent.click(screen.getByRole('button', { name: '切换到此入口' }));
++  expect(captureSession('student')?.actorId).toBe(b); expect(childPinLogin).not.toHaveBeenCalled();
++});
+diff --git a/frontend/web/src/__tests__/family/ChildEntryActions.test.js b/frontend/web/src/__tests__/family/ChildEntryActions.test.js
+new file mode 100644
+index 00000000..7be60ad2
+--- /dev/null
++++ b/frontend/web/src/__tests__/family/ChildEntryActions.test.js
+@@ -0,0 +1,98 @@
++import React from 'react';
++import { act, fireEvent, render, screen } from '@testing-library/react';
++import ChildEntryActions from '../../components/family/ChildEntryActions';
++import { useFamily } from '../../contexts/FamilyContext';
++import { useAuth } from '../../contexts/AuthContext';
++import { captureSession, saveParentSession } from '../../services/familySession';
++import { buildChildEntry, parseChildEntry } from '../../services/childEntry';
++
++jest.mock('../../contexts/FamilyContext', () => ({ useFamily: jest.fn() }));
++jest.mock('../../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
++const familyId = 'f'.repeat(24), childId = 'a'.repeat(24);
++const child = { childId, name: '合成孩子' };
++let family;
++beforeEach(() => {
++  localStorage.clear(); sessionStorage.clear(); jest.clearAllMocks();
++  saveParentSession({ token: 'synthetic-parent', user: { id: 'parent', role: 'parent' } });
++  useAuth.mockReturnValue({ status: 'authenticated', sessionSnapshot: captureSession('parent') });
++  family = { familyStatus: 'ready', family: { familyId }, children: [child] };
++  useFamily.mockReturnValue(family);
++});
++afterEach(() => { jest.restoreAllMocks(); delete navigator.clipboard; });
++
++test('opens a fixed same-origin entry with no opener or credential fields', () => {
++  const open = jest.spyOn(window, 'open').mockReturnValue(null);
++  render(<ChildEntryActions child={child} />);
++  fireEvent.click(screen.getByRole('button', { name: '打开合成孩子入口' }));
++  expect(open).toHaveBeenCalledWith(`http://localhost/child/login#familyId=${familyId}&childId=${childId}`, '_blank', 'noopener,noreferrer');
++  expect(captureSession('parent')?.actorId).toBe('parent');
++});
++
++test.each(['missing', 'failure'])('copy %s provides a selectable link without claiming success', async mode => {
++  if (mode === 'failure') Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: jest.fn().mockRejectedValue(new Error('denied')) } });
++  render(<ChildEntryActions child={child} />);
++  await act(async () => fireEvent.click(screen.getByRole('button', { name: '复制合成孩子入口' })));
++  expect(screen.getByLabelText('合成孩子的专属入口')).toHaveValue(`http://localhost/child/login#familyId=${familyId}&childId=${childId}`);
++  expect(screen.queryByText('入口已复制。')).not.toBeInTheDocument();
++});
++
++test('copy reports success only after the current clipboard request resolves', async () => {
++  let finish;
++  const writeText = jest.fn(() => new Promise(resolve => { finish = resolve; }));
++  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
++  render(<ChildEntryActions child={child} />);
++  fireEvent.click(screen.getByRole('button', { name: '复制合成孩子入口' }));
++  expect(screen.queryByText('入口已复制。')).not.toBeInTheDocument();
++  await act(async () => finish());
++  expect(writeText).toHaveBeenCalledTimes(1);
++  expect(writeText).toHaveBeenCalledWith(`http://localhost/child/login#familyId=${familyId}&childId=${childId}`);
++  expect(screen.getByText('入口已复制。')).toBeInTheDocument();
++});
++
++test.each(['loading', 'anonymous', 'other-family', 'removed-child'])('%s cannot open or copy a child entry', mode => {
++  if (mode === 'loading') useFamily.mockReturnValue({ ...family, familyStatus: 'loading' });
++  if (mode === 'anonymous') useAuth.mockReturnValue({ status: 'anonymous', sessionSnapshot: null });
++  if (mode === 'other-family') useFamily.mockReturnValue({ ...family, family: { familyId: 'b'.repeat(24) }, children: [] });
++  if (mode === 'removed-child') useFamily.mockReturnValue({ ...family, children: [] });
++  const open = jest.spyOn(window, 'open').mockReturnValue(null), writeText = jest.fn();
++  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
++  render(<ChildEntryActions child={child} />);
++  for (const button of screen.queryAllByRole('button')) fireEvent.click(button);
++  expect(open).not.toHaveBeenCalled(); expect(writeText).not.toHaveBeenCalled();
++  expect(screen.queryByLabelText('合成孩子的专属入口')).not.toBeInTheDocument();
++});
++
++test.each(['success', 'failure'])('late clipboard %s cannot restore an old family link', async outcome => {
++  let finish;
++  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: jest.fn(() => new Promise((resolve, reject) => {
++    finish = () => outcome === 'success' ? resolve() : reject(new Error('denied'));
++  })) } });
++  const view = render(<ChildEntryActions child={child} />);
++  fireEvent.click(screen.getByRole('button', { name: '复制合成孩子入口' }));
++  useFamily.mockReturnValue({ ...family, family: { familyId: 'b'.repeat(24) }, children: [] });
++  view.rerender(<ChildEntryActions child={child} />);
++  await act(async () => finish());
++  expect(screen.queryByLabelText('合成孩子的专属入口')).not.toBeInTheDocument();
++  expect(screen.queryByText('入口已复制。')).not.toBeInTheDocument();
++});
++
++test('stale parent actions fail closed even before the next render', () => {
++  const open = jest.spyOn(window, 'open').mockReturnValue(null);
++  render(<ChildEntryActions child={child} />);
++  saveParentSession({ token: 'synthetic-new', user: { id: 'other-parent', role: 'parent' } });
++  fireEvent.click(screen.getByRole('button', { name: '打开合成孩子入口' }));
++  expect(open).not.toHaveBeenCalled();
++});
++
++test('canonicalizes IDs and rejects malformed, duplicate, extra and oversized fields', () => {
++  expect(buildChildEntry('https://synthetic.invalid', familyId.toUpperCase(), childId)).toBe(`https://synthetic.invalid/child/login#familyId=${familyId}&childId=${childId}`);
++  expect(parseChildEntry(`#childId=${childId.toUpperCase()}&familyId=${familyId}`)).toEqual({ status: 'valid', familyId, childId });
++  expect(parseChildEntry('')).toEqual({ status: 'absent' });
++  for (const hash of ['#', '#familyId=bad', `#familyId=${familyId}&childId=`,
++    `#familyId=${familyId}&childId=${childId}&childId=${childId}`, `#familyId=${familyId}&childId=${childId}&next=x`,
++    `#familyId=${familyId}&childId=%FF`, `#familyId=${familyId}&childId=%ZZ`,
++    ...['a'.repeat(23), 'a'.repeat(25), 'g'.repeat(24)].map(id => `#familyId=${familyId}&childId=${id}`), '#'.padEnd(257, 'a')]) {
++    expect(parseChildEntry(hash)).toEqual({ status: 'invalid' });
++  }
++  expect(buildChildEntry('https://synthetic.invalid', 'bad', childId)).toBeNull();
++});
+diff --git a/frontend/web/src/components/family/ChildEntryActions.js b/frontend/web/src/components/family/ChildEntryActions.js
+new file mode 100644
+index 00000000..67e610e4
+--- /dev/null
++++ b/frontend/web/src/components/family/ChildEntryActions.js
+@@ -0,0 +1,55 @@
++import React, { useLayoutEffect, useRef, useState } from 'react';
++import { CopyOutlined, ExportOutlined } from '@ant-design/icons';
++import { useAuth } from '../../contexts/AuthContext';
++import { useFamily } from '../../contexts/FamilyContext';
++import { isSessionCurrent } from '../../services/familySession';
++import { buildChildEntry } from '../../services/childEntry';
++
++const ChildEntryActions = ({ child }) => {
++  const { status, sessionSnapshot } = useAuth();
++  const { familyStatus, family, children } = useFamily();
++  const [feedback, setFeedback] = useState(null);
++  const current = useRef(null), mounted = useRef(true), sequence = useRef(0);
++  const scope = { session: sessionSnapshot, family, children, child, status, familyStatus };
++  current.current = scope;
++  useLayoutEffect(() => {
++    mounted.current = true;
++    return () => { mounted.current = false; sequence.current += 1; };
++  }, []);
++  const valid = owner => mounted.current && owner.status === 'authenticated' && owner.familyStatus === 'ready'
++    && current.current.status === 'authenticated' && current.current.familyStatus === 'ready'
++    && isSessionCurrent(owner.session) && current.current.session === owner.session
++    && current.current.family === owner.family && current.current.children === owner.children
++    && current.current.child === owner.child && owner.children.some(row => row.childId === owner.child.childId);
++  const url = valid(scope) ? buildChildEntry(window.location.origin, family?.familyId, child.childId) : null;
++  const open = () => {
++    if (!url || !valid(scope)) return;
++    window.open(url, '_blank', 'noopener,noreferrer');
++  };
++  const copy = async () => {
++    if (!url || !valid(scope)) return;
++    const version = ++sequence.current;
++    setFeedback(null);
++    try {
++      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
++      await navigator.clipboard.writeText(url);
++      if (valid(scope) && sequence.current === version) setFeedback({ scope, copied: true });
++    } catch (_error) {
++      if (valid(scope) && sequence.current === version) setFeedback({ scope, copied: false, url });
++    }
++  };
++  return <div className="family-child-entry-actions">
++    <div className="family-inline-actions">
++      <button type="button" className="family-button secondary" disabled={!url} onClick={open} aria-label={`打开${child.name}入口`}>
++        <ExportOutlined aria-hidden="true" /> 打开孩子入口
++      </button>
++      <button type="button" className="family-button secondary" disabled={!url} onClick={copy} aria-label={`复制${child.name}入口`}>
++        <CopyOutlined aria-hidden="true" /> 复制孩子入口
++      </button>
++    </div>
++    {feedback && valid(feedback.scope) && (feedback.copied ? <p role="status">入口已复制。</p>
++      : <label>复制未完成，可手工选择链接<input aria-label={`${child.name}的专属入口`} readOnly value={feedback.url} onFocus={event => event.target.select()} /></label>)}
++  </div>;
++};
++
++export default ChildEntryActions;
+diff --git a/frontend/web/src/services/childEntry.js b/frontend/web/src/services/childEntry.js
+new file mode 100644
+index 00000000..b70c6b8f
+--- /dev/null
++++ b/frontend/web/src/services/childEntry.js
+@@ -0,0 +1,23 @@
++const objectId = /^[a-f0-9]{24}$/i;
++
++export const parseChildEntry = (hash = '') => {
++  if (!hash) return { status: 'absent' };
++  if (!hash.startsWith('#') || hash.length > 256) return { status: 'invalid' };
++  try {
++    // URLSearchParams tolerates malformed escapes; entry identifiers must not.
++    decodeURIComponent(hash.slice(1));
++    const params = new URLSearchParams(hash.slice(1));
++    if ([...params.keys()].length !== 2 || params.getAll('familyId').length !== 1
++      || params.getAll('childId').length !== 1) return { status: 'invalid' };
++    const familyId = params.get('familyId'), childId = params.get('childId');
++    if (!objectId.test(familyId) || !objectId.test(childId)) return { status: 'invalid' };
++    return { status: 'valid', familyId: familyId.toLowerCase(), childId: childId.toLowerCase() };
++  } catch (_error) { return { status: 'invalid' }; }
++};
++
++export const buildChildEntry = (origin, familyId, childId) => {
++  if (!objectId.test(familyId) || !objectId.test(childId)) return null;
++  const url = new URL('/child/login', origin);
++  url.hash = new URLSearchParams({ familyId: familyId.toLowerCase(), childId: childId.toLowerCase() }).toString();
++  return url.href;
++};
+diff --git a/tests/e2e/t2/childEntry.spec.js b/tests/e2e/t2/childEntry.spec.js
+new file mode 100644
+index 00000000..0b9dce04
+--- /dev/null
++++ b/tests/e2e/t2/childEntry.spec.js
+@@ -0,0 +1,187 @@
++const { test, expect } = require('@playwright/test');
++const { createT2WebRuntime } = require('./webRuntime');
++let runtime;
++test.beforeEach(async () => { runtime = await createT2WebRuntime(); });
++test.afterEach(async () => { await runtime?.stop(); });
++const entry = (name = 'child') => {
++  const actor = runtime.fixture.actors[name];
++  return `${runtime.webUrl}/child/login#familyId=${actor.familyId}&childId=${actor.childId}`;
++};
++async function login(page, name = 'child', pin) {
++  await page.goto(entry(name));
++  await expect(page.getByLabel('家庭 ID')).toHaveCount(0);
++  await page.getByLabel('PIN').fill(pin || runtime.fixture.actors[name].pin);
++  await page.getByRole('button', { name: '进入我的成长空间', exact: true }).click();
++  await expect(page).toHaveURL(/\/child\/today$/);
++}
++const childSession = page => page.evaluate(() => JSON.parse(sessionStorage.getItem('family-growth.child-session.v1')));
++async function todayReady(page) {
++  await expect(page.getByRole('button', { name: '读取最新计划', exact: true })).toBeEnabled();
++  await expect(page.getByText('正在读取待办…', { exact: true })).toHaveCount(0);
++}
++
++test('parent-generated entries open sibling tabs independently; copy fallback and explicit switch', async ({ page, context }, info) => {
++  const errors = [];
++  page.on('pageerror', error => errors.push(error.message));
++  const parent = runtime.fixture.actors.parent;
++  await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined }));
++  await page.goto(runtime.webUrl + '/login');
++  await page.getByLabel('用户名').fill(parent.username);
++  await page.getByLabel('密码', { exact: true }).fill(parent.password);
++  await page.getByRole('button', { name: '登录', exact: true }).click();
++  await expect(page).toHaveURL(/\/app\/today$/);
++  await page.goto(runtime.webUrl + '/app/children');
++  const row = page.getByTestId('child-row-' + runtime.fixture.actors.child.childId);
++  await row.getByRole('button', { name: '复制Synthetic child入口', exact: true }).click();
++  await expect(row.getByLabel('Synthetic child的专属入口')).toHaveValue(entry());
++  const popup = page.waitForEvent('popup');
++  await row.getByRole('button', { name: '打开Synthetic child入口', exact: true }).click();
++  const childA = await popup, childB = await context.newPage();
++  try {
++    for (const tab of [childA, childB]) {
++      tab.on('pageerror', error => errors.push(error.message));
++      tab.on('console', message => { if (['error', 'warning'].includes(message.type())) errors.push(message.text()); });
++    }
++    await expect(childA.getByLabel('PIN')).toBeVisible();
++    expect(await childA.evaluate(() => window.opener === null)).toBe(true);
++    expect(await childSession(childA)).toBeNull();
++    for (const width of [360, 768, 1280]) {
++      await childA.setViewportSize({ width, height: 900 });
++      expect(await childA.title()).toBeTruthy();
++      await expect(childA.locator('iframe#webpack-dev-server-client-overlay')).toHaveCount(0);
++      expect(await childA.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
++      await childA.screenshot({ path: info.outputPath(`entry-${width}.png`) });
++    }
++    await childA.getByLabel('PIN').fill(runtime.fixture.actors.child.pin);
++    await childA.getByRole('button', { name: '进入我的成长空间' }).click();
++    await expect(childA).toHaveURL(/\/child\/today$/);
++    await todayReady(childA);
++    await login(childB, 'sibling');
++    await todayReady(childB);
++    for (const [tab, name] of [[childA, 'child'], [childB, 'sibling']]) {
++      await tab.reload();
++      await todayReady(tab);
++      await expect(tab.getByRole('banner').getByText(`Synthetic ${name}`, { exact: true })).toBeVisible();
++      expect((await childSession(tab)).child.childId).toBe(runtime.fixture.actors[name].childId);
++    }
++    const before = await childSession(childA);
++    await childA.goto(entry('sibling'));
++    childA.once('dialog', dialog => dialog.dismiss());
++    await childA.getByRole('button', { name: '切换到此入口' }).click();
++    expect(await childSession(childA)).toEqual(before);
++    childA.once('dialog', dialog => dialog.accept());
++    await childA.getByRole('button', { name: '切换到此入口' }).click();
++    await expect(childA.getByLabel('PIN')).toHaveValue('');
++    expect(await childSession(childA)).toBeNull();
++    expect((await childSession(childB)).child.childId).toBe(runtime.fixture.actors.sibling.childId);
++    await page.reload(); await expect(page.getByRole('navigation', { name: '家长导航' })).toBeVisible();
++    expect(errors).toEqual([]);
++  } finally { try { await childA.close(); } finally { await childB.close(); } }
++});
++
++test('hash change clears unsubmitted PIN and rejects a held real success without erasing fresh input', async ({ page }) => {
++  await page.addInitScript(() => {
++    window.pinResponsesSettled = 0;
++    const open = XMLHttpRequest.prototype.open;
++    XMLHttpRequest.prototype.open = function (method, url, ...args) {
++      if (new URL(url, location.href).pathname === '/api/auth/child-pin-login') {
++        this.addEventListener('loadend', () => {
++          // Axios and login/finally finish their microtask chain before this next task.
++          const channel = new MessageChannel();
++          channel.port1.onmessage = () => {
++            window.pinResponsesSettled++;
++            channel.port1.close(); channel.port2.close();
++          };
++          channel.port2.postMessage(null);
++        }, { once: true });
++      }
++      return open.call(this, method, url, ...args);
++    };
++  });
++  let requests = 0;
++  page.on('request', request => { if (request.url().endsWith('/api/auth/child-pin-login')) requests++; });
++  await page.goto(entry()); await page.getByLabel('PIN').fill(runtime.fixture.actors.child.pin);
++  await page.evaluate(url => { location.hash = new URL(url).hash; }, entry('sibling'));
++  await expect(page.getByLabel('PIN')).toHaveValue('');
++  await page.getByRole('button', { name: '进入我的成长空间' }).click();
++  expect(requests).toBe(0);
++  await page.goto(entry());
++  let release, ready, finished, failure;
++  const held = new Promise(resolve => { release = resolve; });
++  const issued = new Promise(resolve => { ready = resolve; });
++  const done = new Promise(resolve => { finished = resolve; });
++  await page.route('**/api/auth/child-pin-login', async route => {
++    let response;
++    try {
++      response = await route.fetch({ maxRetries: 0 });
++      expect(response.status()).toBe(200); ready(); await held;
++      await route.fulfill({ response });
++    } catch (error) { failure = error; ready(); }
++    finally { try { await response?.dispose(); } finally { finished(); } }
++  });
++  try {
++    await page.getByLabel('PIN').fill(runtime.fixture.actors.child.pin);
++    await page.getByRole('button', { name: '进入我的成长空间' }).click();
++    await issued; if (failure) throw failure;
++    await page.evaluate(url => { location.hash = new URL(url).hash; }, entry('sibling'));
++    await expect(page.getByLabel('PIN')).toHaveValue('');
++    await page.getByLabel('PIN').fill(runtime.fixture.actors.sibling.pin);
++    release(); await done; if (failure) throw failure;
++    await page.unrouteAll({ behavior: 'wait' });
++    await expect.poll(() => page.evaluate(() => window.pinResponsesSettled)).toBe(1);
++    expect(await childSession(page)).toBeNull();
++    await expect(page).toHaveURL(entry('sibling'));
++    await expect(page.getByLabel('PIN')).toHaveValue(runtime.fixture.actors.sibling.pin);
++    await expect(page.getByRole('alert')).toHaveCount(0);
++    await page.getByRole('button', { name: '进入我的成长空间' }).click();
++    await expect(page).toHaveURL(/\/child\/today$/);
++    expect((await childSession(page)).child.childId).toBe(runtime.fixture.actors.sibling.childId);
++  } finally { release(); await page.unrouteAll({ behavior: 'wait' }); }
++  if (failure) throw failure;
++});
++
++test('bookmark relogin explicitly recovers the original durable completion after lost remote response', async ({ page }) => {
++  const fixture = runtime.fixture, task = fixture.tasks.child;
++  await login(page); await page.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
++  await page.getByLabel('添加完成图片').setInputFiles({ name: fixture.image.name, mimeType: fixture.image.mimeType, buffer: fixture.image.bytes });
++  await expect(page.getByText('已添加 1/10')).toBeVisible();
++  runtime.dropNextResponse({ service: 'resource-service', method: 'POST', path: '/api/internal/media/references/commit' });
++  await page.getByRole('button', { name: '提交完成情况' }).click();
++  await expect(page.getByRole('button', { name: '重试本次提交' })).toBeVisible();
++  const before = await runtime.inspect(), original = before.database.Operation.find(row => row.taskId === task.taskId);
++  expect(original).toBeTruthy();
++  await page.goto(runtime.webUrl + '/child/me');
++  await page.getByRole('button', { name: '退出孩子端' }).click();
++  await login(page, 'sibling');
++  await page.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
++  await expect(page.getByRole('alert').filter({ hasText: '当前身份无法访问此任务' })).toBeVisible();
++  await page.goto(runtime.webUrl + '/child/me');
++  await page.getByRole('button', { name: '退出孩子端' }).click();
++  await login(page);
++  await page.getByRole('button', { name: '检查待恢复提交' }).click();
++  await page.getByRole('link', { name: `查看待恢复提交 ${task.taskId}`, exact: true }).click();
++  await expect(page.getByRole('button', { name: '继续上次提交' })).toBeVisible();
++  expect(await runtime.inspect()).toEqual(before);
++  await page.getByRole('button', { name: '继续上次提交' }).click();
++  await expect(page.getByText('作品版本 1')).toBeVisible();
++  await page.reload(); await expect(page.getByText('作品版本 1')).toBeVisible();
++  const after = await runtime.inspect(), operations = after.database.Operation.filter(row => row.taskId === task.taskId);
++  expect(operations).toHaveLength(1);
++  expect(operations[0]).toMatchObject({ operationId: original.operationId, remoteOperationId: original.remoteOperationId, phase: 'SUCCEEDED' });
++  expect(after.database.Ledger.filter(row => row.sourceId === task.taskId)).toHaveLength(0);
++});
++
++test('PIN reset rejects old credentials while the same bookmark accepts the new PIN', async ({ page }) => {
++  await login(page);
++  const parent = await runtime.login('parent'), actor = runtime.fixture.actors.child;
++  expect((await parent.post(`/api/children/${actor.childId}/pin`, { pin: '9753' })).status).toBe(200);
++  await page.reload(); await expect(page).toHaveURL(/\/child\/login$/);
++  await expect(page.getByRole('alert')).toContainText('会话已过期');
++  await page.goto(entry()); await page.getByLabel('PIN').fill(actor.pin);
++  await page.getByRole('button', { name: '进入我的成长空间' }).click();
++  await expect(page.getByRole('alert')).toContainText('家庭、孩子或 PIN 不正确');
++  expect(await childSession(page)).toBeNull();
++  await page.getByLabel('PIN').fill('9753');
++  await page.getByRole('button', { name: '进入我的成长空间' }).click();
++  await expect(page).toHaveURL(/\/child\/today$/);
++});

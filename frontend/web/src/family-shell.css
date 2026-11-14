@@ -170,6 +170,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-child-record { align-items: flex-start; }
 .family-child-record h2 { margin: 0 0 6px; font-size: 18px; }
 .family-child-actions { display: grid; width: min(100%, 330px); justify-items: start; gap: 12px; }
+.family-child-entry-actions { display: grid; gap: 8px; width: 100%; min-width: 0; }
+.family-child-entry-actions label { display: grid; gap: 6px; font-size: 14px; }
+.family-child-entry-actions input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; }
+.family-child-entry-actions p { margin: 0; font-size: 14px; }
 .family-id-line { display: flex; flex-wrap: wrap; gap: 4px 8px; color: var(--family-muted); font-size: 13px; }
 .family-id-line code { max-width: 100%; overflow-wrap: anywhere; color: var(--family-ink); }
 .family-pin-form { display: grid; width: min(100%, 330px); gap: 6px; }

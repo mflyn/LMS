@@ -100,6 +100,7 @@ async function login(page, runtime, name = 'parent') {
   };
   if (actor.pin) {
     await page.goto(runtime.webUrl + '/child/login');
+    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
     await page.getByLabel('家庭 ID').fill(actor.familyId);
     await page.getByLabel('孩子 ID').fill(actor.childId);
     await page.getByLabel('PIN', { exact: true }).fill(actor.pin);

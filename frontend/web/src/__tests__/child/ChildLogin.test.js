@@ -16,6 +16,7 @@ const openLogin = () => {
 };
 
 const fillLogin = ({ familyId = 'family-a', childId = 'child-a1', pin = '1234' } = {}) => {
+  fireEvent.click(screen.getByRole('button', { name: '手工填写标识' }));
   fireEvent.change(screen.getByLabelText('家庭 ID'), { target: { value: familyId } });
   fireEvent.change(screen.getByLabelText('孩子 ID'), { target: { value: childId } });
   fireEvent.change(screen.getByLabelText('PIN'), { target: { value: pin } });

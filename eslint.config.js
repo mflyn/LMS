@@ -57,6 +57,7 @@ module.exports = [
       'tests/e2e/t2/dailyLearningPlan.spec.js',
       'tests/e2e/t2/weekly{Reflection,MathLoop}.spec.js',
       'tests/e2e/t2/ai2*.js',
+      'tests/e2e/t2/childEntry.spec.js',
       'backend/services/{user,homework,resource}-service/{app,server}.js',
       'scripts/**/*.js',
       'eslint.config.js',
@@ -71,7 +72,7 @@ module.exports = [
     rules: sharedRules
   },
   {
-    files: ['tests/e2e/t2/ai2*.js'],
+    files: ['tests/e2e/t2/ai2*.js', 'tests/e2e/t2/childEntry.spec.js'],
     languageOptions: { globals: cleanGlobals(globals.browser) }
   },
   {
@@ -81,7 +82,7 @@ module.exports = [
       'frontend/web/src/contexts/{AuthContext,ChildAuthContext,FamilyContext}.js',
       'frontend/web/src/hooks/{useAsyncResource,useChildDataResource,useChildResource}.js',
       'frontend/web/src/pages/{child,family}/**/*.{js,jsx}',
-      'frontend/web/src/services/{childApi,childScope,childSession,familyApi,familySession,dailyLearningPlan,reflection}.js',
+      'frontend/web/src/services/{childApi,childEntry,childScope,childSession,familyApi,familySession,dailyLearningPlan,reflection}.js',
       'frontend/web/src/__tests__/{child,family,shared}/**/*.{js,jsx}'
     ],
     languageOptions: {

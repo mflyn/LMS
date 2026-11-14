@@ -8,6 +8,7 @@ test.afterEach(async () => { await runtime?.stop(); });
 async function fillPin(page, name = 'child') {
   const actor = runtime.fixture.actors[name];
   await page.goto(runtime.webUrl + '/child/login');
+  await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
   await page.getByLabel('家庭 ID').fill(actor.familyId);
   await page.getByLabel('孩子 ID').fill(actor.childId);
   await page.getByLabel('PIN').fill(actor.pin);

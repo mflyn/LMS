@@ -244,6 +244,7 @@ a.child-task-row:hover { border-color: #8fb8aa; background: #f8fcfa; }
 }
 .child-login-panel h1 { margin: 0; font-size: 30px; letter-spacing: 0; }
 .child-login-panel .child-form { margin-top: 24px; }
+.child-entry-manual { margin-top: 12px; min-height: 44px; }
 
 @media (max-width: 767px) {
   .child-header { min-height: 62px; padding: 10px 16px; }
