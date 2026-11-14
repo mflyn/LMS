@@ -12,6 +12,8 @@
 
 本次不授权合并、更新真人入口、模型调用、服务器操作或部署。T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置范围不变。
 
+交付检查说明：将原冻结补丁作为新增文本暂存后，完整 `git diff --cached --check` 返回 2，指出补丁中的 13 行空白上下文标记（单个空格），不是产品源码新增尾随空白。为保留原补丁哈希，不修剪这些合法 unified-diff 标记；补丁重建与哈希检查通过，排除这一个证据补丁后的全部交付文件 `git diff origin/main HEAD --check -- . ':(exclude)docs/development/evidence/child-entry-20261113/candidate.patch'` 通过。原返回 2 保留，不表述为整个暂存检查通过；不改变 Git/lint 规则或排除其他源码。
+
 ## 原候选与验证快照
 
 ## 范围与授权
