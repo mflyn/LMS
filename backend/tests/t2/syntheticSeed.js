@@ -1,4 +1,6 @@
 const { randomUUID } = require('crypto');
+const { formatLocalDate } = require('../../common/utils/familyDate');
+const timezone = 'Asia/Shanghai';
 const expectData = (response, status = 200) => {
   if (response.status !== status || response.data?.success !== true) {
     const code = /^[A-Z][A-Z0-9_]{1,80}$/.test(response.data?.error?.code || '') ? response.data.error.code : 'UNKNOWN';
@@ -22,17 +24,17 @@ const createSeed = ({ api, models }) => {
         actors[name] = { ...credentials, userId: String(registration.user.id || registration.user._id) };
         clients[name] = api.asParent(expectData(await api.loginParent(credentials)).token);
       }
-      const family = expectData(await clients.parent.post('/api/families', { familyName: 'Synthetic T2 Family', timezone: 'Asia/Shanghai' }), 201).family;
+      const family = expectData(await clients.parent.post('/api/families', { familyName: 'Synthetic T2 Family', timezone }), 201).family;
       const invitation = expectData(await clients.parent.post(`/api/families/${family.familyId}/parent-invitations`, {}), 201).invitation;
       expectData(await clients.coparent.post('/api/parent-invitations/accept', { token: invitation.token, familyRole: 'guardian' }));
-      const foreignFamily = expectData(await clients.outsider.post('/api/families', { familyName: 'Synthetic Foreign Family', timezone: 'Asia/Shanghai' }), 201).family;
+      const foreignFamily = expectData(await clients.outsider.post('/api/families', { familyName: 'Synthetic Foreign Family', timezone }), 201).family;
       const tasks = {};
       for (const [name, owner, pin] of [['child', 'parent', '2468'], ['sibling', 'parent', '1357'], ['foreignChild', 'outsider', '8642']]) {
         const child = expectData(await clients[owner].post('/api/children', { name: `Synthetic ${name}`, grade: 3 }), 201).child;
         expectData(await clients[owner].post(`/api/children/${child.childId}/pin`, { pin }));
         actors[name] = { userId: child.childId, childId: child.childId, familyId: owner === 'parent' ? family.familyId : foreignFamily.familyId, pin };
         const created = expectData(await clients[owner].post('/api/growth-tasks', { childId: child.childId, title: `Synthetic ${name} work`,
-          dimension: 'academic', taskType: 'practice', dueDate: new Date().toISOString().slice(0, 10), estimatedMinutes: 15 }), 201).task;
+          dimension: 'academic', taskType: 'practice', dueDate: formatLocalDate(new Date(), timezone), estimatedMinutes: 15 }), 201).task;
         tasks[name === 'foreignChild' ? 'foreign' : name] = expectData(await clients[owner].get('/api/growth-tasks/' + created.taskId)).task;
       }
       const bytes = await require('sharp')({ create: { width: 24, height: 24, channels: 3, background: '#20a080' } }).png().toBuffer();
