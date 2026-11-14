@@ -10,10 +10,12 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])'
 ].join(',');
 
-const FamilyDialog = ({ labelledBy, onClose, children }) => {
+const FamilyDialog = ({ labelledBy, onClose, returnFocusTargets, children }) => {
   const dialogRef = useRef(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const returnFocusRef = useRef(returnFocusTargets);
+  returnFocusRef.current = returnFocusTargets;
 
   useEffect(() => {
     const previousFocus = document.activeElement;
@@ -22,7 +24,7 @@ const FamilyDialog = ({ labelledBy, onClose, children }) => {
     const previousHidden = root?.getAttribute('aria-hidden');
     const previousInert = root?.getAttribute('inert');
     const dialog = dialogRef.current;
-    const available = node => node instanceof HTMLElement && !node.matches(':disabled')
+    const available = node => node instanceof HTMLElement && node.isConnected && !node.matches(':disabled, [aria-disabled="true"]')
       && !node.closest('[hidden], [inert], [aria-hidden="true"]')
       && getComputedStyle(node).display !== 'none' && getComputedStyle(node).visibility !== 'hidden';
     const controls = () => Array.from(dialog.querySelectorAll(FOCUSABLE)).filter(available);
@@ -67,9 +69,13 @@ const FamilyDialog = ({ labelledBy, onClose, children }) => {
         if (previousInert === null) root.removeAttribute('inert');
         else root.setAttribute('inert', previousInert);
       }
-      if (previousFocus?.isConnected && available(previousFocus)) previousFocus.focus?.();
-      else if (previousParent?.isConnected) {
-        Array.from(previousParent.querySelectorAll(FOCUSABLE)).find(available)?.focus();
+      // A scoped resolver can replace stale list nodes, or explicitly deny returning to them.
+      const targets = returnFocusRef.current ? returnFocusRef.current() : [previousFocus,
+        ...(previousParent?.isConnected ? previousParent.querySelectorAll(FOCUSABLE) : [])];
+      for (const target of targets) {
+        if (!available(target)) continue;
+        target.focus();
+        if (document.activeElement === target) break;
       }
     };
   }, []);
