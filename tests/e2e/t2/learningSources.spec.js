@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { createT2WebRuntime } = require('./webRuntime');
 const { openParentTasks } = require('./parentNavigation');
+const { openChildTask } = require('./businessNavigation');
 const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
 let runtime, fixture, parent;
 test.beforeEach(async () => {
@@ -110,7 +111,7 @@ test('real pages connect source work, manual mistake image, correction review an
   for (const target of [page, childPage]) target.on('pageerror', error => errors.push(error.message));
   try {
     await login(childPage, 'child');
-    await childPage.goto(runtime.webUrl + `/child/tasks/${fixture.tasks.child.taskId}`);
+    await openChildTask(childPage, runtime.webUrl, fixture.tasks.child.taskId);
     await childPage.getByLabel('添加完成图片').setInputFiles({ name: fixture.image.name,
       mimeType: fixture.image.mimeType, buffer: fixture.image.bytes });
     await expect(childPage.getByText('已添加 1/10')).toBeVisible();
@@ -151,6 +152,7 @@ test('real pages connect source work, manual mistake image, correction review an
     const createdResponse = await created; expect(createdResponse.status()).toBe(201);
     const task = (await createdResponse.json()).data.task;
     expect(task.sourceMistakeId).toBe(mistake.mistakeId);
+    // This dated correction is outside today's list; retain its original deep-link coverage.
     await childPage.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
     await expect(childPage.getByRole('link', { name: /查看来源错题/ })).toHaveAttribute('href', `/child/mistakes?mistakeId=${mistake.mistakeId}`);
     await childPage.getByLabel('我的一句话').fill('Synthetic correction reflection');

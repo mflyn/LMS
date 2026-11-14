@@ -8,19 +8,82 @@ import { saveParentSession } from '../../services/familySession';
 import { loadCompletionCommand, saveCompletionCommand } from '../../services/completionCommandStore';
 
 jest.mock('../../services/familyApi');
+let mockChildId = 'child';
 jest.mock('../../contexts/FamilyContext', () => ({ useFamily: () => ({ family: { familyId: 'family' },
-  selectedChildId: 'child', selectedChild: { childId: 'child', name: '合成孩子' }, childScopeVersion: 1 }) }));
+  selectedChildId: mockChildId, selectedChild: { childId: mockChildId, name: '合成孩子' }, childScopeVersion: 1 }) }));
 jest.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'parent' } }) }));
 const task = { taskId: 'task', familyId: 'family', childId: 'child', title: '上周的任务', area: '合成活动',
   dimension: 'academic', status: 'completed', dueDate: '2026-01-01', helpVersion: 1,
   helpRequest: { status: 'pending', helpType: 'cannot_start', note: '不知道先做什么' } };
 beforeEach(() => {
+  mockChildId = 'child';
   jest.resetAllMocks(); localStorage.clear(); sessionStorage.clear();
   saveParentSession({ token: 'synthetic', user: { id: 'parent', name: '合成家长', role: 'parent' } });
   api.listGrowthTasks.mockResolvedValue({ items: [task], total: 21, page: 1, pageSize: 20 });
   api.getGrowthTask.mockResolvedValue({ task }); api.listCompletionRecoveries.mockResolvedValue({ items: [] });
 });
 const show = (url = '/app/tasks') => render(<MemoryRouter initialEntries={[url]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><TasksPage /></MemoryRouter>);
+
+test.each(['Escape', 'close'])('help %s returns to the replacement trigger after a held list reload', async method => {
+  const user = userEvent.setup(); show();
+  const original = await screen.findByRole('button', { name: `求助 ${task.title}` });
+  await user.click(original); await screen.findByText(task.helpRequest.note);
+  let finish;
+  api.listGrowthTasks.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  api.updateTaskHelp.mockResolvedValue({ task: { ...task, helpVersion: 2,
+    helpRequest: { ...task.helpRequest, status: 'resolved' } } });
+  await user.click(screen.getByRole('button', { name: '标记已处理' }));
+  await waitFor(() => expect(original.isConnected).toBe(false));
+  await act(async () => finish({ items: [task], total: 1 }));
+  if (method === 'Escape') await user.keyboard('{Escape}');
+  else await user.click(screen.getByRole('button', { name: '关闭', exact: true }));
+  const replacement = await screen.findByRole('button', { name: `求助 ${task.title}` });
+  expect(replacement).not.toBe(original);
+  expect(replacement).toHaveFocus();
+});
+
+test.each(['empty', 'loading', 'denied'])('help closing with %s list focuses only the non-private page heading', async outcome => {
+  const user = userEvent.setup(); show();
+  const original = await screen.findByRole('button', { name: `求助 ${task.title}` });
+  await user.click(original); await screen.findByText(task.helpRequest.note);
+  let finish;
+  api.listGrowthTasks.mockImplementationOnce(() => new Promise((resolve, reject) => {
+    finish = () => outcome === 'denied' ? reject({ response: { status: 403 } }) : resolve({ items: [], total: 0 });
+  }));
+  api.updateTaskHelp.mockResolvedValue({ task: { ...task, helpVersion: 2,
+    helpRequest: { ...task.helpRequest, status: 'resolved' } } });
+  await user.click(screen.getByRole('button', { name: '标记已处理' }));
+  await waitFor(() => expect(original.isConnected).toBe(false));
+  if (outcome !== 'loading') await act(async () => finish());
+  if (outcome !== 'denied') await user.keyboard('{Escape}');
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(screen.getByRole('heading', { name: '任务', exact: true })).toHaveFocus();
+  expect(screen.queryByText(task.helpRequest.note)).not.toBeInTheDocument();
+  if (outcome === 'loading') await act(async () => finish());
+});
+
+test('readonly help closes back to the still-mounted trigger', async () => {
+  const user = userEvent.setup(); show();
+  const original = await screen.findByRole('button', { name: `求助 ${task.title}` });
+  await user.click(original); await screen.findByText(task.helpRequest.note);
+  await user.keyboard('{Escape}'); expect(original).toHaveFocus();
+  expect(api.updateTaskHelp).not.toHaveBeenCalled();
+});
+
+test('child switch cannot return focus to a different child same-title task or retain old help', async () => {
+  const user = userEvent.setup(), view = show();
+  const original = await screen.findByRole('button', { name: `求助 ${task.title}` });
+  await user.click(original); await screen.findByText(task.helpRequest.note);
+  mockChildId = 'sibling';
+  api.listGrowthTasks.mockResolvedValue({ items: [{ ...task, childId: 'sibling', taskId: 'sibling-task' }], total: 1 });
+  view.rerender(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><TasksPage /></MemoryRouter>);
+  const replacement = await screen.findByRole('button', { name: `求助 ${task.title}` });
+  expect(original.isConnected).toBe(false);
+  expect(replacement).not.toHaveFocus();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.queryByText(task.helpRequest.note)).not.toBeInTheDocument();
+  expect(api.updateTaskHelp).not.toHaveBeenCalled();
+});
 
 test.each([401, 403])('parent list %s after a successful reply clears the private help dialog', async status => {
   const user = userEvent.setup(); show();

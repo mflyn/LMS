@@ -172,6 +172,8 @@ a.child-task-row:hover { border-color: #8fb8aa; background: #f8fcfa; }
   background: var(--child-surface);
 }
 .child-form textarea { min-height: 96px; resize: vertical; }
+/* WebKit's native menu ignores min-height; retain its picker and set the hit area. */
+.child-form select { height: 44px; }
 .child-checkbox { display: flex !important; align-items: center; gap: 10px !important; }
 .child-checkbox input { width: 20px; min-height: 20px; }
 

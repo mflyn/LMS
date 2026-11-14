@@ -53,6 +53,12 @@ T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_
 
 ### 历史交付与授权快照
 
+2026-11-14 后续功能复评：求助焦点恢复、WebKit 业务导航与 44px 触控区域三项 P2
+已获限定关闭授权，见[固定候选、独立复评及关闭记录](evidence/functional-p2-followup-20261114/README.md)。
+受验身份为 `e5aea7e5` 加九文件未提交补丁，不是已合并版本；本轮仅补文档收口。
+两引擎原 65 项与新增 7 项分别运行，开发端口冲突与补验、独立 QA 记录错误均保留。
+现有真人入口仍是旧构建、没有应用修复；自动浏览器通过不等于真人或 iPad 验收，也不关闭总门禁。
+
 以下各日期内容保留当时身份，其中 Draft PR／未授权合并等描述不覆盖上方已合并事实，也不授予新的执行权限。
 
 2026-11-14 [孩子专属入口 + PIN 最小设计](../superpowers/specs/2026-11-13-family-child-entry-design.md)及[测试方案](family-child-entry-test-plan.md)对应的限定合成工程已获用户验收，两项测试保护缺口批准关闭；[本批证据与评审记录](evidence/child-entry-20261113/README.md)区分开发实跑、独立复评与历史失败。现授权专用分支、Draft PR 和 CI，不授权合并或替换真人入口；下列已合并快照及 OPEN/DEVICE_PENDING 等状态不变。

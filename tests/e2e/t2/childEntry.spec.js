@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { createT2WebRuntime } = require('./webRuntime');
+const { openParentChildren } = require('./businessNavigation');
 let runtime;
 test.beforeEach(async () => { runtime = await createT2WebRuntime(); });
 test.afterEach(async () => { await runtime?.stop(); });
@@ -30,7 +31,7 @@ test('parent-generated entries open sibling tabs independently; copy fallback an
   await page.getByLabel('密码', { exact: true }).fill(parent.password);
   await page.getByRole('button', { name: '登录', exact: true }).click();
   await expect(page).toHaveURL(/\/app\/today$/);
-  await page.goto(runtime.webUrl + '/app/children');
+  await openParentChildren(page, runtime.webUrl);
   const row = page.getByTestId('child-row-' + runtime.fixture.actors.child.childId);
   await row.getByRole('button', { name: '复制Synthetic child入口', exact: true }).click();
   await expect(row.getByLabel('Synthetic child的专属入口')).toHaveValue(entry());
