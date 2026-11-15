@@ -147,10 +147,10 @@ describe('child today page', () => {
     openRoute('/child/today');
     await waitFor(() => expect(listOwnTasks).toHaveBeenCalledTimes(1));
     act(() => saveChildSession({ token: 'synthetic-next', child: { childId: id(9), familyId: id(1), name: '新孩子' } }));
-    expect(await screen.findByText('新身份任务')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /新身份任务/ })).toBeInTheDocument();
     await act(async () => resolveOld({ items: [task({ title: '旧身份迟到任务' })], total: 1 }));
     expect(screen.queryByText('旧身份迟到任务')).not.toBeInTheDocument();
-    expect(screen.getByText('新身份任务')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /新身份任务/ })).toBeInTheDocument();
   });
 });
 

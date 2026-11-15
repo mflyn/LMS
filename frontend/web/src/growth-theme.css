@@ -1,0 +1,311 @@
+/* Shared visual theme. Existing forms, routes, disabled states and access guards own behavior. */
+:root {
+  --growth-canvas: #faf8f3;
+  --growth-surface: #fffefa;
+  --growth-ink: #293f35;
+  --growth-muted: #65716a;
+  --growth-primary: #486f5b;
+  --growth-primary-dark: #34533f;
+  --growth-line: #e5e3da;
+  --growth-warm: #fbecd7;
+  --growth-warm-ink: #8b5018;
+  --growth-focus: #ad742b;
+  --family-canvas: var(--growth-canvas);
+  --family-surface: var(--growth-surface);
+  --family-ink: var(--growth-ink);
+  --family-muted: var(--growth-muted);
+  --family-border: var(--growth-line);
+  --family-primary: var(--growth-primary);
+  --family-primary-dark: var(--growth-primary-dark);
+  --child-canvas: var(--growth-canvas);
+  --child-surface: var(--growth-surface);
+  --child-ink: var(--growth-ink);
+  --child-muted: var(--growth-muted);
+  --child-border: var(--growth-line);
+  --child-primary: var(--growth-primary);
+  --child-primary-dark: var(--growth-primary-dark);
+  --child-focus: var(--growth-focus);
+}
+
+body { background: var(--growth-canvas); }
+
+/* Portal dialogs also receive these tokens, outside the authenticated shell. */
+.home-shell, .home-page, .family-dialog-backdrop, .family-auth-page, .child-login-page, .family-route-state {
+  --home-canvas: var(--growth-canvas);
+  --home-surface: var(--growth-surface);
+  --home-ink: var(--growth-ink);
+  --home-muted: var(--growth-muted);
+  --home-green: var(--growth-primary);
+  --home-green-dark: var(--growth-primary-dark);
+  --home-line: var(--growth-line);
+  color: var(--growth-ink);
+}
+
+.family-page { width: 100%; max-width: 1180px; margin: 0 auto; font-size: 15px; line-height: 1.65; }
+.child-page { font-size: 16px; line-height: 1.7; }
+:is(.family-page, .child-page, .family-dialog) :is(h1, h2, h3, p, li, dd) { overflow-wrap: anywhere; }
+:is(.family-page, .child-page) h1 { color: var(--growth-ink); font-size: clamp(25px, 2.5vw, 32px); line-height: 1.4; font-weight: 650; letter-spacing: -.02em; }
+:is(.family-page, .child-page) h2 { color: var(--growth-ink); font-size: 20px; line-height: 1.5; font-weight: 650; }
+:is(.family-page, .child-page) h3 { color: var(--growth-ink); font-size: 17px; line-height: 1.5; font-weight: 600; }
+:is(.family-page-heading, .child-page-heading) { align-items: center; margin-bottom: 28px; gap: 20px; }
+:is(.family-page-heading, .child-page-heading) > div { min-width: 0; }
+:is(.family-eyebrow, .child-eyebrow) { font-size: 13px; letter-spacing: .02em; }
+:is(.family-page, .child-page, .family-dialog, .family-auth-page) a { color: var(--growth-primary); text-underline-offset: 4px; }
+:is(.family-page, .child-page, .family-dialog, .family-auth-page) a:hover { color: var(--growth-primary-dark); }
+
+/* Native controls keep validation, focus, disabled and file input behavior. */
+:is(.family-shell, .child-shell, .family-dialog, .family-auth-page, .child-login-page, .family-route-state) button {
+  min-height: 44px;
+  max-width: 100%;
+  border-radius: 10px;
+  border-color: #a6b7a9;
+  background: var(--growth-surface);
+  color: var(--growth-ink);
+  font: inherit;
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+:is(.family-shell, .child-shell, .family-dialog, .family-auth-page, .child-login-page) button:disabled { cursor: not-allowed; opacity: .55; }
+:is(.family-shell, .child-shell, .family-dialog, .family-auth-page, .child-login-page) :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--growth-focus);
+  outline-offset: 3px;
+}
+:is(.family-shell, .child-shell, .family-dialog, .family-auth-page, .child-login-page) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  border: 1px solid #a6b7a9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--growth-ink);
+  background: var(--growth-surface);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+}
+:is(.family-shell, .child-shell, .family-dialog, .family-auth-page, .child-login-page) textarea { min-height: 100px; resize: vertical; }
+:is(.family-shell, .child-shell, .family-dialog, .family-auth-page, .child-login-page) :is(input, select, textarea):disabled { opacity: .65; cursor: not-allowed; }
+:is(.family-shell, .child-shell, .family-dialog) input:is([type="checkbox"], [type="radio"]) { accent-color: var(--growth-primary); flex-shrink: 0; }
+.family-button, .child-primary-button, .child-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.family-button:not(.primary):not(.danger), .child-secondary-button { background: var(--growth-surface); border-color: #a6b7a9; color: var(--growth-primary-dark); }
+:is(.family-shell, .child-shell, .family-dialog, .family-auth-page, .child-login-page) :is(.family-button.primary, .child-primary-button, .task-completion-primary) {
+  color: #fff;
+  border-color: var(--growth-primary);
+  background: var(--growth-primary);
+}
+:is(.family-shell, .child-shell, .family-dialog, .family-auth-page, .child-login-page) :is(.family-button.primary, .child-primary-button, .task-completion-primary):hover:enabled {
+  color: #fff;
+  border-color: var(--growth-primary-dark);
+  background: var(--growth-primary-dark);
+}
+:is(.family-shell, .child-shell, .family-dialog) .family-button.danger { color: #fff; background: var(--family-danger); border-color: var(--family-danger); }
+.family-button.secondary:hover:enabled, .child-secondary-button:hover:enabled { background: #edf1e8; }
+
+/* Parent lists, filters, reports, profiles and rewards. */
+.family-panel, .family-record, .family-parent-slot { padding: 24px; border-color: var(--growth-line); border-radius: 14px; background: var(--growth-surface); }
+.family-panel > h2, .family-record h2 { margin-bottom: 14px; }
+.family-unframed-panel { padding: 0; border: 0; background: transparent; }
+.family-record-list { gap: 14px; }
+.family-record { align-items: flex-start; gap: 20px; }
+.family-record-main { flex: 1 1 260px; }
+.family-record-main h3 { margin: 8px 0; }
+.family-record-main p { margin: 6px 0; }
+.family-record > .family-inline-actions { flex: 0 1 450px; justify-content: flex-end; align-self: center; }
+.family-record > .family-inline-actions > button { flex: 0 1 auto; }
+.family-record :is(code, pre), .family-dialog :is(code, pre) { white-space: pre-wrap; overflow-wrap: anywhere; }
+.family-section-grid { gap: 24px; align-items: start; }
+.family-filter-bar { gap: 16px; padding: 18px; border: 1px solid var(--growth-line); border-radius: 12px; background: var(--growth-surface); }
+.family-filter-bar label { flex: 1 1 140px; min-width: 0; gap: 8px; font-size: 13px; }
+.family-filter-bar :is(input, select) { width: 100%; }
+.family-form-grid { gap: 18px; }
+:is(.family-form-grid, .family-filter-bar, .family-settings-form, .family-feedback-form) label { min-width: 0; }
+.family-form-grid :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea), .family-field-wide textarea, .family-feedback-form textarea { width: 100%; }
+.family-checkbox, .family-checkbox-row label { min-height: 44px; }
+.family-checkbox-row { gap: 10px 20px; }
+.family-checkbox-row input { width: 18px; height: 18px; }
+.family-metric-grid { gap: 14px; }
+.family-metric-grid article { border-color: var(--growth-line); border-radius: 12px; background: var(--growth-surface); }
+.family-metric-grid strong { color: var(--growth-primary-dark); }
+.family-list { line-height: 1.8; }
+.family-list > li { padding: 6px 0; }
+.family-list > li > strong + span { margin-left: 12px; }
+.family-dimension, .child-dimension { border-radius: 20px; padding: 3px 10px; font-weight: 600; }
+.family-dimension.is-academic, .child-dimension.is-academic { background: #e9efdf; color: #426142; }
+.family-dimension.is-physical, .child-dimension.is-physical { background: #e5efe7; color: #345e45; }
+.family-dimension.is-moral, .child-dimension.is-moral { background: #fbecd7; color: #8b5018; }
+.family-dimension.is-artistic, .child-dimension.is-artistic { background: #f3e8e3; color: #865141; }
+.family-dimension.is-labor, .child-dimension.is-labor { background: #f0eddb; color: #665a28; }
+.family-star-balance, .child-star-balance { border: 1px solid #ead8ba; border-radius: 14px; background: #fbf1e2; padding: 20px 24px; }
+.family-children-layout { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 24px; }
+.family-children-create { padding: 24px; border: 1px solid var(--growth-line); border-radius: 14px; background: var(--growth-surface); }
+.family-child-record { flex-direction: column; }
+.family-child-record > .family-record-main { flex: 0 1 auto; width: 100%; }
+.family-child-actions, .family-pin-form { width: 100%; max-width: 100%; }
+.family-parent-slot.is-empty { background: #f5f3ea; border-style: dashed; }
+.family-owner-badge { border-radius: 20px; color: var(--growth-primary-dark); background: #e9efdf; }
+.family-invitation-panel { padding: 24px; border: 1px solid var(--growth-line); border-radius: 14px; background: var(--growth-surface); }
+.family-invitation-link input { width: 100%; }
+
+/* Child details, mistakes, achievements and reflection reuse the same surfaces. */
+.child-page:not(.home-page) > .child-section,
+.child-page:not(.home-page) > .child-section-grid > .child-section,
+.child-profile-section {
+  margin-top: 0;
+  margin-bottom: 24px;
+  padding: 24px;
+  border: 1px solid var(--growth-line);
+  border-radius: 14px;
+  background: var(--growth-surface);
+}
+.child-profile-grid { gap: 20px; }
+.child-profile-section { margin-bottom: 0; }
+.child-section-grid { gap: 24px; align-items: start; }
+.child-mistake-row, .child-reward-row { padding: 24px; border-radius: 14px; border-color: var(--growth-line); background: var(--growth-surface); }
+.child-mistake-row .child-record-heading { padding-bottom: 12px; border-bottom: 1px solid var(--growth-line); }
+.child-record-heading > div { flex-wrap: wrap; }
+.child-mistake-create-form { max-width: none; padding: 24px; border: 1px solid var(--growth-line); border-radius: 14px; background: var(--growth-surface); }
+.child-mistake-create-form > label { min-width: 0; }
+.child-inline-actions { gap: 12px; }
+.child-detail-list { gap: 20px; }
+.child-page .family-panel { margin-bottom: 24px; }
+.child-page > .family-panel .family-page-heading { margin-bottom: 20px; }
+.child-form { max-width: none; }
+.child-form > label { min-width: 0; }
+.child-back-link { gap: 8px; text-underline-offset: 4px; }
+.child-page:not(.home-page) > .child-back-link { margin-bottom: 20px; }
+.child-ledger-list li { gap: 12px; }
+.child-ledger-list li > span { min-width: 0; overflow-wrap: anywhere; }
+.child-ledger-list strong { flex-shrink: 0; }
+.child-star-balance { margin-bottom: 24px; }
+
+/* Shared task panels, including the portalled parent review. */
+:is(.child-page, .family-page, .family-dialog) > .task-completion-panel,
+.child-task-page > #task-independent-help > .task-help-panel {
+  padding: 24px;
+  margin: 0 0 24px;
+  border: 1px solid var(--growth-line);
+  border-radius: 14px;
+  background: var(--growth-surface);
+}
+.task-completion-panel { color: var(--growth-ink); }
+.task-completion-evidence, .task-completion-feedback, .task-checklist-editor-row { border-color: var(--growth-line); }
+.task-completion-version, .task-completion-facts dt { color: var(--growth-muted); }
+.task-completion-panel button { border-color: #a6b7a9; border-radius: 10px; }
+.task-completion-panel .task-completion-junior button { min-height: 48px; }
+.task-completion-panel button.task-completion-primary { color: #fff; background: var(--growth-primary); border-color: var(--growth-primary); }
+.task-completion-reminder { color: var(--growth-warm-ink); background: #fbf1e2; border-color: #c8944d; border-radius: 8px; }
+.task-completion-reminder a { color: var(--growth-primary-dark); }
+.task-help-panel { color: var(--growth-ink); border-color: var(--growth-line); }
+.task-help-panel h2, .task-completion-heading h2 { font-size: 20px; }
+.task-help-form, .task-completion-fields { gap: 18px; }
+.task-completion-actions, .daily-plan-actions, .daily-plan-tools { gap: 10px; }
+.task-checklist-editor-row { gap: 14px; }
+.daily-plan { border-color: var(--growth-line); }
+.daily-plan :is(button, input) { border-radius: 8px; border-color: #a6b7a9; }
+.daily-plan button[aria-label="保存今日计划"] { color: #fff; background: var(--growth-primary); border-color: var(--growth-primary); }
+.family-media-preview { background: #f4f3ed; border-color: var(--growth-line); border-radius: 10px; }
+.family-media-field, .child-media-field { min-width: 0; }
+:is(.family-media-field, .child-media-field) input[type="file"] { width: 100%; max-width: 100%; min-width: 0; min-height: 44px; overflow: hidden; }
+:is(.family-media-field, .child-media-field) input[type="file"]::file-selector-button {
+  min-height: 44px;
+  margin-right: 12px;
+  padding: 9px 14px;
+  border: 1px solid #a6b7a9;
+  border-radius: 8px;
+  background: #edf1e8;
+  color: var(--growth-primary-dark);
+  font: inherit;
+  cursor: pointer;
+}
+.family-media-field .family-media-item { padding: 16px 0; }
+
+/* Dialog remains in the original focus trap and scroll container. */
+.family-dialog-backdrop { background: rgba(35, 49, 40, .4); padding: 5vh 20px; }
+.family-dialog { width: min(100%, 760px); max-height: 90vh; padding: 28px; border-color: var(--growth-line); border-radius: 18px; background: var(--growth-surface); box-shadow: 0 20px 65px rgba(35, 49, 40, .16); overscroll-behavior: contain; }
+.family-dialog :is(.family-page-heading, .child-page-heading) { align-items: flex-start; margin-bottom: 22px; }
+.family-dialog > form, .family-dialog > div { min-width: 0; }
+.family-dialog .family-page-heading h2 { font-size: 22px; line-height: 1.5; }
+.family-dialog .family-page-heading > button { flex-shrink: 0; }
+.family-dialog :is(.family-panel, .task-completion-panel) { border: 0; border-radius: 0; padding: 0; }
+
+/* Authentication, setup and read/error/empty states share the visual system. */
+.family-auth-panel, .child-login-panel { padding: 36px; border-color: var(--growth-line); border-radius: 18px; background: var(--growth-surface); box-shadow: 0 12px 36px rgba(35, 49, 40, .06); }
+.family-auth-panel h1, .child-login-panel h1 { color: var(--growth-ink); font-size: 28px; line-height: 1.4; }
+.family-auth-panel form { gap: 10px; }
+.family-auth-panel input { width: 100%; }
+.family-auth-panel form > button { margin-top: 8px; }
+.family-auth-panel p { line-height: 1.7; }
+.family-state, .family-data-state { max-width: 100%; border-color: var(--growth-line); border-radius: 12px; background: var(--growth-surface); }
+.family-empty-copy, .child-empty-copy { color: var(--growth-muted); padding: 24px; border: 1px dashed #c9cebd; border-radius: 12px; background: #f7f6ef; }
+.child-page .child-empty-copy { margin: 12px 0; }
+.family-data-state.is-partial { border-left-color: #bf8a42; background: #fff8ec; }
+.family-success-message, .child-success-message { padding: 10px 14px; border-radius: 8px; background: #eaf0e3; }
+.family-form-error, .child-form-error, .task-completion-error { line-height: 1.65; }
+.home-brand > div, .home-child-identity { min-width: 0; overflow-wrap: anywhere; }
+.family-child-selector { min-width: 0; }
+.family-child-selector select { max-width: 240px; }
+
+@media (max-width: 1100px) {
+  .family-record { flex-direction: column; }
+  .family-record-main { flex: 0 1 auto; width: 100%; }
+  .family-record > .family-inline-actions { flex: 0 1 auto; justify-content: flex-start; }
+  .family-children-layout { grid-template-columns: minmax(0, 1fr); }
+  .child-profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  :is(.family-page-heading, .child-page-heading) { flex-direction: column; align-items: stretch; margin-bottom: 22px; gap: 14px; }
+  :is(.family-page, .child-page):not(.home-page) h1 { font-size: 26px; }
+  :is(.family-page-heading, .child-page-heading) > .family-inline-actions { width: 100%; }
+  .family-page:not(.home-page) > .family-page-heading > button { width: 100%; }
+  .family-panel, .family-record, .family-parent-slot, .family-children-create, .family-invitation-panel { padding: 18px; border-radius: 12px; }
+  .family-unframed-panel { padding: 0; }
+  .family-record { gap: 16px; }
+  .family-record > .family-inline-actions { width: 100%; }
+  .family-record > .family-inline-actions > button { flex: 1 1 100px; }
+  .family-filter-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; padding: 16px; }
+  .family-filter-bar label { min-width: 0; }
+  .family-filter-bar > button { align-self: end; }
+  .family-form-grid, .family-section-grid, .family-parent-slots, .child-profile-grid, .child-section-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .family-checkbox-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .family-checkbox-row label { padding: 6px 0; }
+  .family-star-balance, .child-star-balance { width: 100%; min-width: 0; }
+  .child-page:not(.home-page) > .child-section, .child-page:not(.home-page) > .child-section-grid > .child-section,
+  .child-profile-section, .child-mistake-row, .child-reward-row, .child-mistake-create-form { padding: 18px; border-radius: 12px; }
+  .child-inline-actions > button { flex: 1 1 120px; }
+  .child-detail-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+  :is(.child-page, .family-page, .family-dialog) > .task-completion-panel,
+  .child-task-page > #task-independent-help > .task-help-panel { padding: 18px; border-radius: 12px; }
+  .task-completion-actions > button { flex: 1 1 130px; }
+  .family-dialog-backdrop { padding: 12px; }
+  .family-dialog { max-height: calc(100dvh - 24px); padding: 20px 16px; border-radius: 14px; }
+  .family-dialog .family-page-heading { flex-direction: row; align-items: flex-start; gap: 12px; }
+  .family-dialog :is(.family-panel, .task-completion-panel) { padding: 0; }
+  .family-auth-panel, .child-login-panel { padding: 26px 22px; }
+  .family-child-selector select { max-width: 190px; }
+  .family-header-actions .family-child-selector { flex: 1 1 180px; }
+  .child-page:not(.home-page) .family-page-heading { align-items: stretch; }
+}
+
+@media (max-width: 359px) {
+  .family-filter-bar { grid-template-columns: minmax(0, 1fr); }
+  .family-child-selector select { max-width: 170px; }
+  .family-header-actions .family-child-selector { flex-basis: 100%; }
+  .task-completion-fields { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .family-shell *, .child-shell *, .family-dialog * { scroll-behavior: auto !important; }
+}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import { ReadOutlined } from '@ant-design/icons';
 import { CHILD_NAV_ITEMS } from '../../config/childNavigation';
 import { useChildAuth } from '../../contexts/ChildAuthContext';
 
@@ -7,11 +8,10 @@ const ChildShell = () => {
   const { child } = useChildAuth();
 
   return (
-    <div className="child-shell">
+    <div className="child-shell home-shell">
       <header className="child-header">
         <div>
-          <p className="child-eyebrow">我的成长空间</p>
-          <strong>{child?.name}</strong>
+          <span className="home-child-brand"><ReadOutlined aria-hidden="true" />家庭成长<span className="home-child-identity"><span>{child?.name}</span> · 儿童端</span></span>
         </div>
       </header>
       <nav className="child-navigation" aria-label="孩子导航">
