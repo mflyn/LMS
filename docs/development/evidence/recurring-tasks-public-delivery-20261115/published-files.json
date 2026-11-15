@@ -1,0 +1,530 @@
+{
+  "excludesSelf": true,
+  "acceptedBase": "3816c3f2a45daff8b66221cfffb322de11bdce33",
+  "deliveryBase": "b2c5266393c1ef6a5dac788bbf28211c6171e225",
+  "originalCandidatePatchSha256": "dd58f6480900ab1bec1679043e7441ebae5cfb732a98f5569a5332df0807756b",
+  "originalArtifactsRetainedLocally": true,
+  "note": "Historical archive/candidate hash manifests attest original artifacts. Use publishedSha256 here for sanitized public bytes.",
+  "files": [
+    {
+      "path": "backend/common/services/completionActivation.js",
+      "originalSha256": "35f5f2a8f1ad28b50ead931793886eb6c1e9ae5c83826fad68bc1c68fcff35c1",
+      "publishedSha256": "35f5f2a8f1ad28b50ead931793886eb6c1e9ae5c83826fad68bc1c68fcff35c1",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/common/services/completionRetentionReadinessHelpers.js",
+      "originalSha256": "8767782af8914107cb30f2adcd94a742b72d99277cbf5d9a3820ac33049fbc0a",
+      "publishedSha256": "8767782af8914107cb30f2adcd94a742b72d99277cbf5d9a3820ac33049fbc0a",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/common/utils/familyDate.js",
+      "originalSha256": "7a062d31beeffb2ce2b8439549404bf4d76d641c1aef9e766554d08095adc617",
+      "publishedSha256": "7a062d31beeffb2ce2b8439549404bf4d76d641c1aef9e766554d08095adc617",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/gateway/server.js",
+      "originalSha256": "8ffa389959ed234f95dbf9c53a75665ad6ec489c651ba76fa2a6102176efc983",
+      "publishedSha256": "8ffa389959ed234f95dbf9c53a75665ad6ec489c651ba76fa2a6102176efc983",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/recurringTaskPlan.test.js",
+      "originalSha256": "7e780883487dd0a1a74fbb72ff33b1530a51fd63e0ed6cc5c50ff20fe88456eb",
+      "publishedSha256": "7e780883487dd0a1a74fbb72ff33b1530a51fd63e0ed6cc5c50ff20fe88456eb",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/recurringTaskPlanRuntime.test.js",
+      "originalSha256": "b21c51cd091a04b4363472a16b0317ee20b67cd2d5fcab013e988a0996f9e416",
+      "publishedSha256": "b21c51cd091a04b4363472a16b0317ee20b67cd2d5fcab013e988a0996f9e416",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/setup.js",
+      "originalSha256": "1035a9b1e25d4bf442fb39c01b0def4be77677fd838eed969515dcc34431ea3d",
+      "publishedSha256": "1035a9b1e25d4bf442fb39c01b0def4be77677fd838eed969515dcc34431ea3d",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/models/GrowthTask.js",
+      "originalSha256": "3c298172493775eea4eacb61d82395cf81ceba1294d3efc5461d9eeb74cf35bd",
+      "publishedSha256": "3c298172493775eea4eacb61d82395cf81ceba1294d3efc5461d9eeb74cf35bd",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/models/RecurringTaskPlan.js",
+      "originalSha256": "eee932022a16dd5dbcc86738739bc5b2b534ed287a7d41566342aaf5880c007c",
+      "publishedSha256": "eee932022a16dd5dbcc86738739bc5b2b534ed287a7d41566342aaf5880c007c",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/models/RecurringTaskPlanCommand.js",
+      "originalSha256": "58abba080fde683bd00245a53b38ca6f5ca8bbbea29781017511b91065cae2f8",
+      "publishedSha256": "58abba080fde683bd00245a53b38ca6f5ca8bbbea29781017511b91065cae2f8",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/models/RecurringTaskScanState.js",
+      "originalSha256": "44a383f83c13e33c304afa183806ec879c59ec675bcea9318fa9c7d3827f635e",
+      "publishedSha256": "44a383f83c13e33c304afa183806ec879c59ec675bcea9318fa9c7d3827f635e",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/routes/recurringTaskPlans.js",
+      "originalSha256": "6797b0baea775890209c73eec809124cd90e6a4988d81f41dbfba2484eab3b04",
+      "publishedSha256": "6797b0baea775890209c73eec809124cd90e6a4988d81f41dbfba2484eab3b04",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/server.js",
+      "originalSha256": "ff6b3cb6873bce70255aa37b2151c1c4dca03fbfcbfb04f2914409ba8b1e5a9f",
+      "publishedSha256": "ff6b3cb6873bce70255aa37b2151c1c4dca03fbfcbfb04f2914409ba8b1e5a9f",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/services/completionMediaGuardReadiness.js",
+      "originalSha256": "74dd4040b7bbe2730bcfe77992237e25972ba5f3eb40c4cdb83b50878e71d755",
+      "publishedSha256": "74dd4040b7bbe2730bcfe77992237e25972ba5f3eb40c4cdb83b50878e71d755",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanCommand.js",
+      "originalSha256": "b0b09d28e09b89305f72b4c72d98dfd5c278a6121936659524755dbcfcd4efa1",
+      "publishedSha256": "b0b09d28e09b89305f72b4c72d98dfd5c278a6121936659524755dbcfcd4efa1",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanRuntime.js",
+      "originalSha256": "3534b2464836666649d1614b1fbdbc41cd963c853f5d62eb7227b505986d6ea2",
+      "publishedSha256": "3534b2464836666649d1614b1fbdbc41cd963c853f5d62eb7227b505986d6ea2",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanScanner.js",
+      "originalSha256": "f707b3dcca9a4ffb829b953c6d70d2592abd1730d33666e56888eefdfe6e6411",
+      "publishedSha256": "f707b3dcca9a4ffb829b953c6d70d2592abd1730d33666e56888eefdfe6e6411",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanService.js",
+      "originalSha256": "b48f2c11b50af9975673f5ae1847417709c0a71260cb0b03bd940ef296b628be",
+      "publishedSha256": "b48f2c11b50af9975673f5ae1847417709c0a71260cb0b03bd940ef296b628be",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/tests/t2/recurringBarrier.integration.test.js",
+      "originalSha256": "c3ac3f571a082525474f241d301fd1c7f393316c8a079a2d111133ccd49ffa86",
+      "publishedSha256": "c3ac3f571a082525474f241d301fd1c7f393316c8a079a2d111133ccd49ffa86",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/tests/t2/recurringBarrier.js",
+      "originalSha256": "236eb3f51efc62524550f2c25ea334cb489e3b8dad01b74772b8873b53bdba1d",
+      "publishedSha256": "236eb3f51efc62524550f2c25ea334cb489e3b8dad01b74772b8873b53bdba1d",
+      "reason": "unchanged"
+    },
+    {
+      "path": "backend/tests/t2/recurringPlans.integration.test.js",
+      "originalSha256": "127bc68a79701ec8430e74243a1ce7b5c5715b9aec19d1071b0c02372d57e4de",
+      "publishedSha256": "127bc68a79701ec8430e74243a1ce7b5c5715b9aec19d1071b0c02372d57e4de",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/api/family-recurring-tasks-api.md",
+      "originalSha256": "1ae9ebca7dfbceb9b4ce2d932ace3b039b68ba5f19e15c86cfb7f3befa651c76",
+      "publishedSha256": "1ae9ebca7dfbceb9b4ce2d932ace3b039b68ba5f19e15c86cfb7f3befa651c76",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-family-regression-20261115/README.md",
+      "originalSha256": "2bff854dcc98b0766ea864b186aaa52c5d55c87eaaccb3c40b8d30c708d3cc5c",
+      "publishedSha256": "2bff854dcc98b0766ea864b186aaa52c5d55c87eaaccb3c40b8d30c708d3cc5c",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-family-regression-20261115/archive-files.json",
+      "originalSha256": "9f52323a0a4e517428219df87fcadfb2277e18b691238b62f276c6c48113a293",
+      "publishedSha256": "9f52323a0a4e517428219df87fcadfb2277e18b691238b62f276c6c48113a293",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-family-regression-20261115/verification.json",
+      "originalSha256": "e83b53caefe006c9ad4fd1374c6679333f345e524b3609b99bc6b9d05cdf0e53",
+      "publishedSha256": "e83b53caefe006c9ad4fd1374c6679333f345e524b3609b99bc6b9d05cdf0e53",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-acceptance-20261115/README.md",
+      "originalSha256": "4346af4267229ccb45b5c149f82c84239ddbd1380ff37484d201bf8c301a62af",
+      "publishedSha256": "4346af4267229ccb45b5c149f82c84239ddbd1380ff37484d201bf8c301a62af",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-acceptance-20261115/archive-files.json",
+      "originalSha256": "97dba917c9678094f5e394eecfb2ff960ceaa626c007cff95de42152ae3c5535",
+      "publishedSha256": "97dba917c9678094f5e394eecfb2ff960ceaa626c007cff95de42152ae3c5535",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-acceptance-20261115/verification.json",
+      "originalSha256": "a8d2c60bfc41601b5ed3d0c2670f022d1888be3843fe33da28b46619e56cf53a",
+      "publishedSha256": "a8d2c60bfc41601b5ed3d0c2670f022d1888be3843fe33da28b46619e56cf53a",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-integration-20261115/README.md",
+      "originalSha256": "02807eb51c97f2487d686ec9cbcd012d8029df64f2cf5c6c86107e977c657bb9",
+      "publishedSha256": "02807eb51c97f2487d686ec9cbcd012d8029df64f2cf5c6c86107e977c657bb9",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-integration-20261115/archive-files.json",
+      "originalSha256": "c411318dfca07db19946dd0d0b6ce07497c7e56cec04a9286b98830c236be20e",
+      "publishedSha256": "c411318dfca07db19946dd0d0b6ce07497c7e56cec04a9286b98830c236be20e",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-integration-20261115/candidate-files.json",
+      "originalSha256": "9660f0a2c2a081039a93a3dab38b3197e0ca119f44f404570a5278f0ccd6d930",
+      "publishedSha256": "9660f0a2c2a081039a93a3dab38b3197e0ca119f44f404570a5278f0ccd6d930",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-integration-20261115/candidate.patch",
+      "originalSha256": "dd58f6480900ab1bec1679043e7441ebae5cfb732a98f5569a5332df0807756b",
+      "publishedSha256": "70b6cc23002e232301262e584ebc2e141ed6c8f54fe5f9352f0a1c15488a485f",
+      "reason": "dependency path redacted; original historical hash retained"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-integration-20261115/recurring-child-readback.png",
+      "originalSha256": "7d07cdcf18bcc1e05411a58ea0b4a7d30f30a6ef364cae16f42354ba086a6ca1",
+      "publishedSha256": "7d07cdcf18bcc1e05411a58ea0b4a7d30f30a6ef364cae16f42354ba086a6ca1",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-integration-20261115/recurring-final-mutation-transform.cjs",
+      "originalSha256": "f5d88de60f6f961645de7cddb4feb073c0022bda2b06c6a1d25acdac0fca2499",
+      "publishedSha256": "f5d88de60f6f961645de7cddb4feb073c0022bda2b06c6a1d25acdac0fca2499",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-integration-20261115/recurring-final-mutations.cjs",
+      "originalSha256": "10dfe4bdafb9deaa1739c2e9637c316aa8fb738d28a8dc4265d332353342a54b",
+      "publishedSha256": "10dfe4bdafb9deaa1739c2e9637c316aa8fb738d28a8dc4265d332353342a54b",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-final-integration-20261115/verification.json",
+      "originalSha256": "267b19b97833d69b98656fc91f3b662dc265032b48a2d8d7bbf473f0cb2fb624",
+      "publishedSha256": "267b19b97833d69b98656fc91f3b662dc265032b48a2d8d7bbf473f0cb2fb624",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-first-batch-20261115/README.md",
+      "originalSha256": "2c97c70f6389993b1d894f2941cf484a5fbc52f32751585d75194269df897359",
+      "publishedSha256": "2c97c70f6389993b1d894f2941cf484a5fbc52f32751585d75194269df897359",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-first-batch-20261115/candidate-files.json",
+      "originalSha256": "0423743b57d21f8f71df6a368c879d60727be228849c260a19803882a4de4d4c",
+      "publishedSha256": "0423743b57d21f8f71df6a368c879d60727be228849c260a19803882a4de4d4c",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-first-batch-20261115/candidate.patch",
+      "originalSha256": "30dcffb21678db42faa96f410a6abe4f102113bb08a0072596900bcebc939bbe",
+      "publishedSha256": "53ebe55699fbacd5bd543b93af70147fda7914da7b03c72ea96fbec9d29a1678",
+      "reason": "dependency path redacted; original historical hash retained"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-first-batch-20261115/verification.json",
+      "originalSha256": "907e48cbdd55813d47a6af0f8afbcdc91a7a087b7dce8318528c2f532c583aec",
+      "publishedSha256": "907e48cbdd55813d47a6af0f8afbcdc91a7a087b7dce8318528c2f532c583aec",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/README.md",
+      "originalSha256": "eb6fef180d262b1ca2e6f49552d2cd9e646dd15f7b2c45a52efa6d9b50f92fdf",
+      "publishedSha256": "eb6fef180d262b1ca2e6f49552d2cd9e646dd15f7b2c45a52efa6d9b50f92fdf",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/candidate-files.json",
+      "originalSha256": "cd12378cabbadf080a204cbfc75c39fd2c52d29d910cec68a0cd1ff8eb46cc32",
+      "publishedSha256": "cd12378cabbadf080a204cbfc75c39fd2c52d29d910cec68a0cd1ff8eb46cc32",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/candidate.patch",
+      "originalSha256": "88ae98bad4acf08c3380b7cb19f602b633cfc68998e9ec9898c1b778f23efdfb",
+      "publishedSha256": "e37b2ebc16342c6dc02eaafa32b20429759b069eff95435202456429204df4e9",
+      "reason": "dependency path redacted; original historical hash retained"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/independent-final-binding.json",
+      "originalSha256": "6747962bb5b4b25a859f616ca18a4aa3b8cbeae20aed328f2270b4f5124562fa",
+      "publishedSha256": "6747962bb5b4b25a859f616ca18a4aa3b8cbeae20aed328f2270b4f5124562fa",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/independent-final-probes.cjs",
+      "originalSha256": "a5828fec53c63b42f4b00af2dfc34a99129824cd4dbd4725150bfaa0710a4c8b",
+      "publishedSha256": "a5828fec53c63b42f4b00af2dfc34a99129824cd4dbd4725150bfaa0710a4c8b",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/independent-final-probes.json",
+      "originalSha256": "4c83b68fecb373ddca7e9a606a3ef0df36dac1d1c7696ee3e91710ddc2384485",
+      "publishedSha256": "4c83b68fecb373ddca7e9a606a3ef0df36dac1d1c7696ee3e91710ddc2384485",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/independent-old-probes.json",
+      "originalSha256": "c2acc6debcfce5898582baff4a43be7f93b849060d4c4538063e3ea4311fcbc8",
+      "publishedSha256": "c2acc6debcfce5898582baff4a43be7f93b849060d4c4538063e3ea4311fcbc8",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/mutation-transform.cjs",
+      "originalSha256": "abaa9aaceabec61aaea8034d93477a1f145685a8de7e2e1c504bf443fe0853c4",
+      "publishedSha256": "abaa9aaceabec61aaea8034d93477a1f145685a8de7e2e1c504bf443fe0853c4",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/superseded-6ef0c80d/README.md",
+      "originalSha256": "d8c3c2d4d7bfd74fff9989f3a8ae44ead96ba2c35368d6bdbe38bb81d550f926",
+      "publishedSha256": "d8c3c2d4d7bfd74fff9989f3a8ae44ead96ba2c35368d6bdbe38bb81d550f926",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/superseded-6ef0c80d/candidate-files.json",
+      "originalSha256": "dfa9fe531fb162a54355ff6b31207b6581c39b9f7c0d804da4069073c2cb36ca",
+      "publishedSha256": "dfa9fe531fb162a54355ff6b31207b6581c39b9f7c0d804da4069073c2cb36ca",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/superseded-6ef0c80d/candidate.patch",
+      "originalSha256": "6ef0c80d1ba622982ff4e430bca11b71d4b19b5e99a95a290163577a780635b2",
+      "publishedSha256": "1efe34035b3f3889f368ef953394eece80d8955e46ec534aa05a6387c92f51de",
+      "reason": "dependency path redacted; original historical hash retained"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/superseded-6ef0c80d/verification.json",
+      "originalSha256": "f7a0e4f3c32b5ef7c45b962618adf38e5b3bbe707bf829a963c42927c2ac8f79",
+      "publishedSha256": "f7a0e4f3c32b5ef7c45b962618adf38e5b3bbe707bf829a963c42927c2ac8f79",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-http-batch-20261115/verification.json",
+      "originalSha256": "c452179c42984f0200a8ccbb1d5a2571c8c7e68c2641eefd41a4b31920e60412",
+      "publishedSha256": "c452179c42984f0200a8ccbb1d5a2571c8c7e68c2641eefd41a4b31920e60412",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/README.md",
+      "originalSha256": "0724b82b36814ccc55cb7c8484e9effa43a7c308c446d01fea8900a9d3053b45",
+      "publishedSha256": "0724b82b36814ccc55cb7c8484e9effa43a7c308c446d01fea8900a9d3053b45",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/archive-files.json",
+      "originalSha256": "b570927899bd94b0cccabd19caac0c5c3b23286654c1a1babc35a87c087eed9a",
+      "publishedSha256": "b570927899bd94b0cccabd19caac0c5c3b23286654c1a1babc35a87c087eed9a",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/candidate-files.json",
+      "originalSha256": "d0875d43a50a36b6ea43464213ecc45b3382c95b341114ba69c431bb26ef2c90",
+      "publishedSha256": "d0875d43a50a36b6ea43464213ecc45b3382c95b341114ba69c431bb26ef2c90",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/candidate.patch",
+      "originalSha256": "f29db32dbbc9fec703f39363a52a79dde44544b199322c6fc5bd7641547d0632",
+      "publishedSha256": "e24d402e64c1e0896a27ed26254ed6afc3d0ae06560d8dd03700d2bc2735843c",
+      "reason": "dependency path redacted; original historical hash retained"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/evidence-rollover.json",
+      "originalSha256": "cfe7f572fbd294b9a392070f458b457051f4485e9f481598299e2e644b98292d",
+      "publishedSha256": "cfe7f572fbd294b9a392070f458b457051f4485e9f481598299e2e644b98292d",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/independent-coverage-r1-binding.json",
+      "originalSha256": "fc964b065635f650927c756515e03f7664c973a7f5fe5d063f2e6a9c04fceb5e",
+      "publishedSha256": "fc964b065635f650927c756515e03f7664c973a7f5fe5d063f2e6a9c04fceb5e",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/independent-final-r1-binding.json",
+      "originalSha256": "f7f6320d079e4fc6a5fd14338b2328287d8d462e94eda4055d6e0710fd270864",
+      "publishedSha256": "f7f6320d079e4fc6a5fd14338b2328287d8d462e94eda4055d6e0710fd270864",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/independent-final-r2-binding.json",
+      "originalSha256": "44bad6de5fabbb8a912d02683c29d3f11edb5fc771bf8c4bb33683c9d4a7df44",
+      "publishedSha256": "44bad6de5fabbb8a912d02683c29d3f11edb5fc771bf8c4bb33683c9d4a7df44",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/independent-prefreeze-r1-binding.json",
+      "originalSha256": "1628600d66ef5698cdd88bd15b768415205e17e318395dee9078bd2634afd1d6",
+      "publishedSha256": "1628600d66ef5698cdd88bd15b768415205e17e318395dee9078bd2634afd1d6",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/independent-prefreeze-r1-probes.json",
+      "originalSha256": "628d42b583fef7a0b62783dbd2c9f4a20db98c672e4474fd1cbe93db40b04557",
+      "publishedSha256": "628d42b583fef7a0b62783dbd2c9f4a20db98c672e4474fd1cbe93db40b04557",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/mutations-binding.json",
+      "originalSha256": "ac82ec376ef297417f838dcc7a58c4cfaba29f8177fe0ba8eeeaf973ecb43f3b",
+      "publishedSha256": "ac82ec376ef297417f838dcc7a58c4cfaba29f8177fe0ba8eeeaf973ecb43f3b",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/mutations.cjs",
+      "originalSha256": "5845ac8a293f16b0337c6b3f5287bf15ee23bf0070a335e073f9c9b439c0487f",
+      "publishedSha256": "5845ac8a293f16b0337c6b3f5287bf15ee23bf0070a335e073f9c9b439c0487f",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/recurring-1280.png",
+      "originalSha256": "9d99a991d844cab66c2ae1c251bdfad64630e17fa7f5e00aec368e864ad916a0",
+      "publishedSha256": "9d99a991d844cab66c2ae1c251bdfad64630e17fa7f5e00aec368e864ad916a0",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/recurring-360.png",
+      "originalSha256": "1094db9d949b3f2d91c7a27694084854c990e3882cea8bc10a3cd3d674764d41",
+      "publishedSha256": "1094db9d949b3f2d91c7a27694084854c990e3882cea8bc10a3cd3d674764d41",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/recurring-768.png",
+      "originalSha256": "a8884c03f47813358e0a0aa072f7c4002a3d4b25cc638ea84daee0173da9f5ce",
+      "publishedSha256": "a8884c03f47813358e0a0aa072f7c4002a3d4b25cc638ea84daee0173da9f5ce",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/verification-prefinal.json",
+      "originalSha256": "b54b4ecece2e912545f85d9d47bfbc09c1903e3e8aaaa4a0ed34f363dca0184d",
+      "publishedSha256": "b54b4ecece2e912545f85d9d47bfbc09c1903e3e8aaaa4a0ed34f363dca0184d",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-page-batch-20261115/verification.json",
+      "originalSha256": "04736d2d1158828ba314fff0e0a870a20bf6c3f2af594771028fc762ed5c9968",
+      "publishedSha256": "04736d2d1158828ba314fff0e0a870a20bf6c3f2af594771028fc762ed5c9968",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/family-recurring-tasks-test-plan.md",
+      "originalSha256": "dfae68045f4d13bd24b9dc8dbb7b965e4b575f0f3aeaf3b343ee226e4983fa35",
+      "publishedSha256": "5fb0478f236fe75c99181dfc7935e8634b37aadebb9a009d6387dc2d2edd1940",
+      "reason": "dependency path redacted and current public-delivery section appended"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md",
+      "originalSha256": "4a239dc9b3334bbedf41edaaee57b6687afb7b02020794343de9e8961bfa76c8",
+      "publishedSha256": "4a239dc9b3334bbedf41edaaee57b6687afb7b02020794343de9e8961bfa76c8",
+      "reason": "unchanged"
+    },
+    {
+      "path": "eslint.config.js",
+      "originalSha256": "6bb87258a36fa8bff72a78a891dd75b08acf338afac06af00ed92b4bd131c481",
+      "publishedSha256": "6bb87258a36fa8bff72a78a891dd75b08acf338afac06af00ed92b4bd131c481",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/App.js",
+      "originalSha256": "ce385f1288c40de4ded7f7abb8eb83830eee283c0dfb46af3aeff8310a82e7ed",
+      "publishedSha256": "5fd22ece755688f0df6a198d39391074f7919269660bb25950f85e25aaefd085",
+      "reason": "preserved latest main theme import plus approved recurring route"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/RecurringPlansPage.test.js",
+      "originalSha256": "3d60796b115519a438c148552066b0d207e8c7f272c0e222c7a1802648929a89",
+      "publishedSha256": "3d60796b115519a438c148552066b0d207e8c7f272c0e222c7a1802648929a89",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/recurringApi.test.js",
+      "originalSha256": "96098374042ebc470516174722dc4660e3436344d359344a902863b06bb1c45e",
+      "publishedSha256": "96098374042ebc470516174722dc4660e3436344d359344a902863b06bb1c45e",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/recurringCommands.test.js",
+      "originalSha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093",
+      "publishedSha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/family-shell.css",
+      "originalSha256": "f60b0ca0e528b8b94a9bfc55580014ffae71c5df65286d5627844031a36b4a11",
+      "publishedSha256": "f60b0ca0e528b8b94a9bfc55580014ffae71c5df65286d5627844031a36b4a11",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/pages/family/RecurringPlansPage.js",
+      "originalSha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80",
+      "publishedSha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/pages/family/TasksPage.js",
+      "originalSha256": "504ebf4c1899dfd09f453bb7efde5cedf22ddaa036b2d493b93158bfd46c9b28",
+      "publishedSha256": "504ebf4c1899dfd09f453bb7efde5cedf22ddaa036b2d493b93158bfd46c9b28",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/services/familyApi.js",
+      "originalSha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c",
+      "publishedSha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/services/familySession.js",
+      "originalSha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c",
+      "publishedSha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c",
+      "reason": "unchanged"
+    },
+    {
+      "path": "frontend/web/src/services/recurringCommands.js",
+      "originalSha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae",
+      "publishedSha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae",
+      "reason": "unchanged"
+    },
+    {
+      "path": "tests/e2e/t2/recurringFinal.spec.js",
+      "originalSha256": "045b8197d3be0939db06a4ed72e673ff6bae80717cc52d4724462e14dfdaaedc",
+      "publishedSha256": "045b8197d3be0939db06a4ed72e673ff6bae80717cc52d4724462e14dfdaaedc",
+      "reason": "unchanged"
+    },
+    {
+      "path": "tests/e2e/t2/recurringPlans.spec.js",
+      "originalSha256": "a40f5f6e5ddd5ed13669ea1daf68cd69c540fd1ae3c18640917744458a5967c1",
+      "publishedSha256": "a40f5f6e5ddd5ed13669ea1daf68cd69c540fd1ae3c18640917744458a5967c1",
+      "reason": "unchanged"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-public-delivery-20261115/README.md",
+      "publishedSha256": "1dcf64e5ce7ec037f3d7773756c163cbad5317f7ecb28312f0c9fe6386b54b94",
+      "reason": "new public delivery index"
+    },
+    {
+      "path": "docs/development/evidence/recurring-tasks-public-delivery-20261115/verification.json",
+      "publishedSha256": "86219ac73829a39b9cd00d11114881ea0b21542253a647fee9e567488bcae766",
+      "reason": "new public delivery index"
+    }
+  ]
+}

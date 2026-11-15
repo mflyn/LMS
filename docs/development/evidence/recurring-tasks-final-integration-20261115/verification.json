@@ -1,0 +1,2160 @@
+[
+  {
+    "file": "recurring-b3-user-review-audit.json",
+    "rawSha256": "30b846eb9855125561cbf2ecc6db4f47943e7bc3170313933910b39e3f621d54",
+    "type": "diagnostic",
+    "result": {
+      "checkedAt": "2026-11-15T13:09:17.798Z",
+      "scope": "Read-only frozen artifact audit; reconstruction only under /tmp; no test, browser, server, commit, push or deployment execution",
+      "checks": {
+        "reconstructedAndWorkingFilesMatch": 33,
+        "backendFilesUnchangedFromB2": 18,
+        "reviewedFilesBoundToFrozenCandidate": 6
+      },
+      "candidate": {
+        "base": "3816c3f2a45daff8b66221cfffb322de11bdce33",
+        "patchSha256": "f29db32dbbc9fec703f39363a52a79dde44544b199322c6fc5bd7641547d0632",
+        "manifestSha256": "d0875d43a50a36b6ea43464213ecc45b3382c95b341114ba69c431bb26ef2c90",
+        "fileCount": 33
+      },
+      "reconstructionDirectory": "<TMP>/recurring-b3-independent-reconstruct-0c3mZU",
+      "files": [
+        {
+          "path": "backend/common/services/completionActivation.js",
+          "sha256": "35f5f2a8f1ad28b50ead931793886eb6c1e9ae5c83826fad68bc1c68fcff35c1",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "35f5f2a8f1ad28b50ead931793886eb6c1e9ae5c83826fad68bc1c68fcff35c1",
+          "workingSha256": "35f5f2a8f1ad28b50ead931793886eb6c1e9ae5c83826fad68bc1c68fcff35c1"
+        },
+        {
+          "path": "backend/common/services/completionRetentionReadinessHelpers.js",
+          "sha256": "8767782af8914107cb30f2adcd94a742b72d99277cbf5d9a3820ac33049fbc0a",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "8767782af8914107cb30f2adcd94a742b72d99277cbf5d9a3820ac33049fbc0a",
+          "workingSha256": "8767782af8914107cb30f2adcd94a742b72d99277cbf5d9a3820ac33049fbc0a"
+        },
+        {
+          "path": "backend/common/utils/familyDate.js",
+          "sha256": "7a062d31beeffb2ce2b8439549404bf4d76d641c1aef9e766554d08095adc617",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "7a062d31beeffb2ce2b8439549404bf4d76d641c1aef9e766554d08095adc617",
+          "workingSha256": "7a062d31beeffb2ce2b8439549404bf4d76d641c1aef9e766554d08095adc617"
+        },
+        {
+          "path": "backend/gateway/server.js",
+          "sha256": "8ffa389959ed234f95dbf9c53a75665ad6ec489c651ba76fa2a6102176efc983",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "8ffa389959ed234f95dbf9c53a75665ad6ec489c651ba76fa2a6102176efc983",
+          "workingSha256": "8ffa389959ed234f95dbf9c53a75665ad6ec489c651ba76fa2a6102176efc983"
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/recurringTaskPlan.test.js",
+          "sha256": "7e780883487dd0a1a74fbb72ff33b1530a51fd63e0ed6cc5c50ff20fe88456eb",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "7e780883487dd0a1a74fbb72ff33b1530a51fd63e0ed6cc5c50ff20fe88456eb",
+          "workingSha256": "7e780883487dd0a1a74fbb72ff33b1530a51fd63e0ed6cc5c50ff20fe88456eb"
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/recurringTaskPlanRuntime.test.js",
+          "sha256": "b21c51cd091a04b4363472a16b0317ee20b67cd2d5fcab013e988a0996f9e416",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "b21c51cd091a04b4363472a16b0317ee20b67cd2d5fcab013e988a0996f9e416",
+          "workingSha256": "b21c51cd091a04b4363472a16b0317ee20b67cd2d5fcab013e988a0996f9e416"
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/setup.js",
+          "sha256": "1035a9b1e25d4bf442fb39c01b0def4be77677fd838eed969515dcc34431ea3d",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "1035a9b1e25d4bf442fb39c01b0def4be77677fd838eed969515dcc34431ea3d",
+          "workingSha256": "1035a9b1e25d4bf442fb39c01b0def4be77677fd838eed969515dcc34431ea3d"
+        },
+        {
+          "path": "backend/services/homework-service/models/GrowthTask.js",
+          "sha256": "3c298172493775eea4eacb61d82395cf81ceba1294d3efc5461d9eeb74cf35bd",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "3c298172493775eea4eacb61d82395cf81ceba1294d3efc5461d9eeb74cf35bd",
+          "workingSha256": "3c298172493775eea4eacb61d82395cf81ceba1294d3efc5461d9eeb74cf35bd"
+        },
+        {
+          "path": "backend/services/homework-service/models/RecurringTaskPlan.js",
+          "sha256": "eee932022a16dd5dbcc86738739bc5b2b534ed287a7d41566342aaf5880c007c",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "eee932022a16dd5dbcc86738739bc5b2b534ed287a7d41566342aaf5880c007c",
+          "workingSha256": "eee932022a16dd5dbcc86738739bc5b2b534ed287a7d41566342aaf5880c007c"
+        },
+        {
+          "path": "backend/services/homework-service/models/RecurringTaskPlanCommand.js",
+          "sha256": "58abba080fde683bd00245a53b38ca6f5ca8bbbea29781017511b91065cae2f8",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "58abba080fde683bd00245a53b38ca6f5ca8bbbea29781017511b91065cae2f8",
+          "workingSha256": "58abba080fde683bd00245a53b38ca6f5ca8bbbea29781017511b91065cae2f8"
+        },
+        {
+          "path": "backend/services/homework-service/models/RecurringTaskScanState.js",
+          "sha256": "44a383f83c13e33c304afa183806ec879c59ec675bcea9318fa9c7d3827f635e",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "44a383f83c13e33c304afa183806ec879c59ec675bcea9318fa9c7d3827f635e",
+          "workingSha256": "44a383f83c13e33c304afa183806ec879c59ec675bcea9318fa9c7d3827f635e"
+        },
+        {
+          "path": "backend/services/homework-service/routes/recurringTaskPlans.js",
+          "sha256": "6797b0baea775890209c73eec809124cd90e6a4988d81f41dbfba2484eab3b04",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "6797b0baea775890209c73eec809124cd90e6a4988d81f41dbfba2484eab3b04",
+          "workingSha256": "6797b0baea775890209c73eec809124cd90e6a4988d81f41dbfba2484eab3b04"
+        },
+        {
+          "path": "backend/services/homework-service/server.js",
+          "sha256": "ff6b3cb6873bce70255aa37b2151c1c4dca03fbfcbfb04f2914409ba8b1e5a9f",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "ff6b3cb6873bce70255aa37b2151c1c4dca03fbfcbfb04f2914409ba8b1e5a9f",
+          "workingSha256": "ff6b3cb6873bce70255aa37b2151c1c4dca03fbfcbfb04f2914409ba8b1e5a9f"
+        },
+        {
+          "path": "backend/services/homework-service/services/completionMediaGuardReadiness.js",
+          "sha256": "74dd4040b7bbe2730bcfe77992237e25972ba5f3eb40c4cdb83b50878e71d755",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "74dd4040b7bbe2730bcfe77992237e25972ba5f3eb40c4cdb83b50878e71d755",
+          "workingSha256": "74dd4040b7bbe2730bcfe77992237e25972ba5f3eb40c4cdb83b50878e71d755"
+        },
+        {
+          "path": "backend/services/homework-service/services/recurringTaskPlanCommand.js",
+          "sha256": "b0b09d28e09b89305f72b4c72d98dfd5c278a6121936659524755dbcfcd4efa1",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "b0b09d28e09b89305f72b4c72d98dfd5c278a6121936659524755dbcfcd4efa1",
+          "workingSha256": "b0b09d28e09b89305f72b4c72d98dfd5c278a6121936659524755dbcfcd4efa1"
+        },
+        {
+          "path": "backend/services/homework-service/services/recurringTaskPlanRuntime.js",
+          "sha256": "3534b2464836666649d1614b1fbdbc41cd963c853f5d62eb7227b505986d6ea2",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "3534b2464836666649d1614b1fbdbc41cd963c853f5d62eb7227b505986d6ea2",
+          "workingSha256": "3534b2464836666649d1614b1fbdbc41cd963c853f5d62eb7227b505986d6ea2"
+        },
+        {
+          "path": "backend/services/homework-service/services/recurringTaskPlanScanner.js",
+          "sha256": "f707b3dcca9a4ffb829b953c6d70d2592abd1730d33666e56888eefdfe6e6411",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "f707b3dcca9a4ffb829b953c6d70d2592abd1730d33666e56888eefdfe6e6411",
+          "workingSha256": "f707b3dcca9a4ffb829b953c6d70d2592abd1730d33666e56888eefdfe6e6411"
+        },
+        {
+          "path": "backend/services/homework-service/services/recurringTaskPlanService.js",
+          "sha256": "b48f2c11b50af9975673f5ae1847417709c0a71260cb0b03bd940ef296b628be",
+          "changedSinceSecondBatch": false,
+          "reconstructedSha256": "b48f2c11b50af9975673f5ae1847417709c0a71260cb0b03bd940ef296b628be",
+          "workingSha256": "b48f2c11b50af9975673f5ae1847417709c0a71260cb0b03bd940ef296b628be"
+        },
+        {
+          "path": "docs/api/family-recurring-tasks-api.md",
+          "sha256": "c506c8b76e0d8721c51af9cbfe6d1499acc579c096e819ff017324c58f266e96",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "c506c8b76e0d8721c51af9cbfe6d1499acc579c096e819ff017324c58f266e96",
+          "workingSha256": "c506c8b76e0d8721c51af9cbfe6d1499acc579c096e819ff017324c58f266e96"
+        },
+        {
+          "path": "docs/development/family-recurring-tasks-test-plan.md",
+          "sha256": "2759ad009833f9a62f1650064c61b12c364018a15dd6efe022c0d2f232704e97",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "2759ad009833f9a62f1650064c61b12c364018a15dd6efe022c0d2f232704e97",
+          "workingSha256": "2759ad009833f9a62f1650064c61b12c364018a15dd6efe022c0d2f232704e97"
+        },
+        {
+          "path": "docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md",
+          "sha256": "ef40092f145446a7b5dcda3ede0a2e2e63df0ee7e3e398b5f7453eed793a2be3",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "ef40092f145446a7b5dcda3ede0a2e2e63df0ee7e3e398b5f7453eed793a2be3",
+          "workingSha256": "ef40092f145446a7b5dcda3ede0a2e2e63df0ee7e3e398b5f7453eed793a2be3"
+        },
+        {
+          "path": "eslint.config.js",
+          "sha256": "6bb87258a36fa8bff72a78a891dd75b08acf338afac06af00ed92b4bd131c481",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "6bb87258a36fa8bff72a78a891dd75b08acf338afac06af00ed92b4bd131c481",
+          "workingSha256": "6bb87258a36fa8bff72a78a891dd75b08acf338afac06af00ed92b4bd131c481"
+        },
+        {
+          "path": "frontend/web/src/App.js",
+          "sha256": "ce385f1288c40de4ded7f7abb8eb83830eee283c0dfb46af3aeff8310a82e7ed",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "ce385f1288c40de4ded7f7abb8eb83830eee283c0dfb46af3aeff8310a82e7ed",
+          "workingSha256": "ce385f1288c40de4ded7f7abb8eb83830eee283c0dfb46af3aeff8310a82e7ed"
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/RecurringPlansPage.test.js",
+          "sha256": "3d60796b115519a438c148552066b0d207e8c7f272c0e222c7a1802648929a89",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "3d60796b115519a438c148552066b0d207e8c7f272c0e222c7a1802648929a89",
+          "workingSha256": "3d60796b115519a438c148552066b0d207e8c7f272c0e222c7a1802648929a89"
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/recurringApi.test.js",
+          "sha256": "96098374042ebc470516174722dc4660e3436344d359344a902863b06bb1c45e",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "96098374042ebc470516174722dc4660e3436344d359344a902863b06bb1c45e",
+          "workingSha256": "96098374042ebc470516174722dc4660e3436344d359344a902863b06bb1c45e"
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/recurringCommands.test.js",
+          "sha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093",
+          "workingSha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093"
+        },
+        {
+          "path": "frontend/web/src/family-shell.css",
+          "sha256": "f60b0ca0e528b8b94a9bfc55580014ffae71c5df65286d5627844031a36b4a11",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "f60b0ca0e528b8b94a9bfc55580014ffae71c5df65286d5627844031a36b4a11",
+          "workingSha256": "f60b0ca0e528b8b94a9bfc55580014ffae71c5df65286d5627844031a36b4a11"
+        },
+        {
+          "path": "frontend/web/src/pages/family/RecurringPlansPage.js",
+          "sha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80",
+          "workingSha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80"
+        },
+        {
+          "path": "frontend/web/src/pages/family/TasksPage.js",
+          "sha256": "504ebf4c1899dfd09f453bb7efde5cedf22ddaa036b2d493b93158bfd46c9b28",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "504ebf4c1899dfd09f453bb7efde5cedf22ddaa036b2d493b93158bfd46c9b28",
+          "workingSha256": "504ebf4c1899dfd09f453bb7efde5cedf22ddaa036b2d493b93158bfd46c9b28"
+        },
+        {
+          "path": "frontend/web/src/services/familyApi.js",
+          "sha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c",
+          "workingSha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c"
+        },
+        {
+          "path": "frontend/web/src/services/familySession.js",
+          "sha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c",
+          "workingSha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c"
+        },
+        {
+          "path": "frontend/web/src/services/recurringCommands.js",
+          "sha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae",
+          "workingSha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae"
+        },
+        {
+          "path": "tests/e2e/t2/recurringPlans.spec.js",
+          "sha256": "a40f5f6e5ddd5ed13669ea1daf68cd69c540fd1ae3c18640917744458a5967c1",
+          "changedSinceSecondBatch": true,
+          "reconstructedSha256": "a40f5f6e5ddd5ed13669ea1daf68cd69c540fd1ae3c18640917744458a5967c1",
+          "workingSha256": "a40f5f6e5ddd5ed13669ea1daf68cd69c540fd1ae3c18640917744458a5967c1"
+        }
+      ],
+      "reviewedFiles": [
+        {
+          "path": "frontend/web/src/services/recurringCommands.js",
+          "sha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae"
+        },
+        {
+          "path": "frontend/web/src/services/familySession.js",
+          "sha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c"
+        },
+        {
+          "path": "frontend/web/src/services/familyApi.js",
+          "sha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c"
+        },
+        {
+          "path": "frontend/web/src/pages/family/RecurringPlansPage.js",
+          "sha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80"
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/recurringCommands.test.js",
+          "sha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093"
+        },
+        {
+          "path": "frontend/web/src/__tests__/family/RecurringPlansPage.test.js",
+          "sha256": "3d60796b115519a438c148552066b0d207e8c7f272c0e222c7a1802648929a89"
+        }
+      ],
+      "priorIndependentBinding": {
+        "path": "<TMP>/recurring-b3-independent-coverage-r1-binding.json",
+        "sha256": "84016f7374825c2fb458c314d76048fe2a9f61a40f35c32718fd5f343d41625d",
+        "testResult": {
+          "success": true,
+          "total": 36,
+          "passed": 36,
+          "failed": 0,
+          "suites": [
+            {
+              "name": "<WORKTREE>/frontend/web/src/__tests__/family/RecurringPlansPage.test.js",
+              "status": "passed",
+              "tests": 13
+            },
+            {
+              "name": "<WORKTREE>/frontend/web/src/__tests__/family/recurringCommands.test.js",
+              "status": "passed",
+              "tests": 20
+            },
+            {
+              "name": "<WORKTREE>/frontend/web/src/__tests__/family/recurringApi.test.js",
+              "status": "passed",
+              "tests": 3
+            }
+          ]
+        }
+      },
+      "rawEvidenceChecks": [
+        {
+          "file": "recurring-b3-browser-final.log",
+          "rawSha256": "289d407ccf5836eb4fd5a898c131fbc5609e5f83c2fe4069ccd321d22a9dcf0f",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-browser-r2.log",
+          "rawSha256": "82a9f446645db497772d245f0db8c24dfb1d7302ca2a6d7d34392a00a3514ba1",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-browser-r3.log",
+          "rawSha256": "c747df843a67ad1f7f0abd405df4abf9641c3ab4911b1e5aa806c180ffadaf64",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-browser.log",
+          "rawSha256": "20a4f631afd80f11249329a80b50d0894b33d93ec91bcfe99f926f48c375acfa",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-build-final.log",
+          "rawSha256": "5f507e7f839f9a84f1c67ea08062e7a152d9aeebb05aadd418665331d3721536",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-build-r2.log",
+          "rawSha256": "4487ea7072dc3bd6d5dc2952e2cd808ea9240971b0fec2950d67e4cdebf82286",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-build-r3.log",
+          "rawSha256": "cec21639545a5ddcc94de4ba035832037c6e9dec870c075a1180142415732f13",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-build.log",
+          "rawSha256": "bab923e2abd649cfc4ec64377206140ff1bdda4577ebff5b2dbdd7659ab79642",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-docs-final.log",
+          "rawSha256": "d9175aafe05dcfe86d6f3bec6a621be1cfabcc5177ab41d53f209df80969c842",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-docs.log",
+          "rawSha256": "d9175aafe05dcfe86d6f3bec6a621be1cfabcc5177ab41d53f209df80969c842",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-expanded.json",
+          "rawSha256": "ca668ced90014098d67646678b8e3aaf8526df5e76df147d6d736e5ddffcf644",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-final-targeted-r2.json",
+          "rawSha256": "a63a096e4f3337d37fa67616f60b255f604de8c8fe98b9308026cdcb92f28bb7",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-final-targeted-r2.log",
+          "rawSha256": "529ba42543b3e871119e21eb3a7496eea144361ba9679ee0cdc252684937b000",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-final-targeted.json",
+          "rawSha256": "65840ecd5a8939453863632a27d5c3538bf23d5e6e3573fa9c361dc94997e77c",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-final-targeted.log",
+          "rawSha256": "7ef97b251a508308a3ed4551a13cbe84e55c8c8ca529f75be04f01468ed8cc90",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-first.json",
+          "rawSha256": "8c6a5159cb4b9899e23f66850030efcca313ddd105e531a01c3d25acad850da6",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-fixes.json",
+          "rawSha256": "679526fe232bf09c445e65cd42f8e9485f71710aafa52b59f4f5024d0d1ae847",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-fixes.log",
+          "rawSha256": "0a68560f2720591a95c33b8a70a10733b06f4fb973b206479038f4178469c412",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-frontend-all.json",
+          "rawSha256": "394562bc9ea21efb9e85b6f3e82d8a49b391b47ff6e0d57b875f509c8213d739",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-frontend-all.log",
+          "rawSha256": "fe0c56c8d10fa4090addc8a1b5c6cfb677a610a0d7cf682a2243e6207f109580",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-frontend-final.json",
+          "rawSha256": "13c382c029f51d72dcf9f43015e431560b02e9a4f4e037154c104063b07af95a",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-frontend-final.log",
+          "rawSha256": "7a0572be1fc5d24574bbc540adf1a1fb8a0f62d243ad98972fc1a6b46df3410d",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-coverage-r1-before.json",
+          "rawSha256": "68c615964122a5a283a24e8a2c037944497cf8a1d361093ff1f971d8b854ba52",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-coverage-r1-binding.json",
+          "rawSha256": "84016f7374825c2fb458c314d76048fe2a9f61a40f35c32718fd5f343d41625d",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-coverage-r1-jest.json",
+          "rawSha256": "018bfcb247565272b9e26c2930f131657d9636e27b7072638b82b060d4b4e340",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-final-r1-binding.json",
+          "rawSha256": "d879803d3364fbbe47d2566138ef250c0a80d14d47f5610e6137d97dd7be3359",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-final-r2-binding.json",
+          "rawSha256": "c63c7d6e7dc98bb5163bcf5269a44fa48cb105ae2deaa0240f32c4bd9262a796",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-findings-red.json",
+          "rawSha256": "8460e945e510a9567c01ad9de859761f951f34151eeecdf60cfdf4c3286f9b3c",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-findings-red.log",
+          "rawSha256": "0e17b4a30e495a88924277aaabedf92ba2abcdc2068cfd0587b2d959fbb5e4f2",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-fixes-r1-jest.json",
+          "rawSha256": "bf8b2dd8644ddf75d1d4a08a5763a94c91ad7b98f4c2868ca8499e7e89d7ec07",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-fixes-r1-probes.json",
+          "rawSha256": "095550c584e360fbce1c2ffe963018e0bcd9374c9abe773f8e756bad1bc5a20b",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-fixes-r2-binding.json",
+          "rawSha256": "45c1d1a4d8b096a4a50603995e492bc6a36f2d3aa9aeb4dea282692d19f31b6f",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-fixes-r2-jest.json",
+          "rawSha256": "6ba096c09892806ab176765ebbea02e9b1b9b6921a651c5964e08b077c8a125b",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-initial-services-r2.json",
+          "rawSha256": "c828c43284217db8b2e655eac925318a47f84c4b86053cc4ce1aed7b1e7072b6",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-initial-services.json",
+          "rawSha256": "042080ef1c93cb0f5ec904d38e7f7d6fa5d23c48450446f9fb4099dcf0a8e2ee",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-prefreeze-r1-binding.json",
+          "rawSha256": "e70353f4174427e9b2b1646e257369f276b8914ce011686a695d79b8fb770ea5",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-prefreeze-r1-jest.json",
+          "rawSha256": "313c688ae580ae53a7839fccf6d1fcc8ce3850c1fdab8e424dd94c5a269711dd",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-independent-prefreeze-r1-probes.json",
+          "rawSha256": "628d42b583fef7a0b62783dbd2c9f4a20db98c672e4474fd1cbe93db40b04557",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-lint-final.log",
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-lint.log",
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-abort-previous.json",
+          "rawSha256": "e2e822f54bc241af6fc62d4eabc7e008852cdf6be0c125566cfab756b3318ffc",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-abort-previous.log",
+          "rawSha256": "5547f6c6a91268a26fb4a3258fdf0cb8b38473f11b17e4403580161a22555b62",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-abort.json",
+          "rawSha256": "31ff2d1a9fe27e52e42518cf6514d0b3d92118de22d4ea69d050d2aef978169f",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-abort.log",
+          "rawSha256": "b38b83e9b39419ae832cdfd46674a1461f277ac14378117ffd3d2bc28adb9d82",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-late-old-survived.json",
+          "rawSha256": "97979a73f582360d0970d236c8fa4888c09186710baf304b090236acc5bfd2ea",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-late-previous.json",
+          "rawSha256": "20e5ad8e46d2803175d387ca8a3d0fc887fda6049f1c53c58e44f637a33ee957",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-late-previous.log",
+          "rawSha256": "4a38529b47d5779d676873327beb63e72cbdda744aed96f5a5c6c18234a2b6f2",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-late.json",
+          "rawSha256": "7a00633e4b001d6361825c7558611933ceb7a66304835053b42c75219ba9b997",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-late.log",
+          "rawSha256": "949189e60861b3082a3b63a3b49746be3dff60cf0eb357ab95e777dc9aacf61e",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-logout-previous.json",
+          "rawSha256": "86454b7a39a30e37a2ca0ac86e29b02e2d4de377f55f7512b9394f017bccfbb6",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-logout-previous.log",
+          "rawSha256": "5228ecae96f478c70b1dbf0b39edfdb9a61e838da896cd1cd51476b3a5c73381",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-logout.json",
+          "rawSha256": "a5f50d313a59e8ae9ccba60841769333e4b5ea7f46d8c598db2011226d32bc4c",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-logout.log",
+          "rawSha256": "628b6bd4533e2d28ce804394cdd3cf0017e5878a279cefa36cda8c767f322f7b",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-marker-previous.json",
+          "rawSha256": "2a7001dab4210be3a59ad3ac7f526b4dc3f26a6d52c6361bd383ab04c26a9b0f",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-marker-previous.log",
+          "rawSha256": "4ad485ad695810d5088e6a1805effeff2b4cea301310b9b496739cc3c960664f",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-marker.json",
+          "rawSha256": "afadbdd03ad1aaade4eb998db6b46c0707142cd0851176dc6ecc22f3bdd39380",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-marker.log",
+          "rawSha256": "d01af1a08308fdaa245d679a3e63b57de86135d9231a19250d3ec2b62b09f26e",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-notfound-previous.json",
+          "rawSha256": "3d513c012d68babf6084737ab1f95cb2dfa8fa78db931267b48dc6b6d4064d78",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-notfound-previous.log",
+          "rawSha256": "74f3caf864cc182544edfa8cdb5369c7e8a50e7bb68a966140103d2aaccdbdd1",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-notfound.json",
+          "rawSha256": "e84ebc923c3e331011a82ef76f6b4f8586374a38a64ffafa28a665fd13eac8a3",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-notfound.log",
+          "rawSha256": "0536dfd3e2be7a15afab637beadb991fbc3e6176829f17d1a7fa6a2e43f1d88d",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-reauth-previous.json",
+          "rawSha256": "0661f0980639bec9266aa58c190e310696bb2bf0285827a117347c7649a22874",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-reauth-previous.log",
+          "rawSha256": "016df788d9110a9fc3636e107bd6646b39c95b846dfe0b35b194f4402e3e39e9",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-reauth.json",
+          "rawSha256": "60de465f2f0e744243682c28f33bc84145e049aa88819e367d19f45e5fca8682",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-reauth.log",
+          "rawSha256": "bd989c0e84d4134928add767b2c48c44df7a53faedb13723b458cb44531ce017",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-scope-previous.json",
+          "rawSha256": "be39816273a4d0a106334c7e11357ca76245340613f59e2c4a693018288b0770",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-scope-previous.log",
+          "rawSha256": "7d876d67d7141906026d1c83a8af79d1a9f11fb893820f65e9e5f5706d7492c0",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-scope.json",
+          "rawSha256": "736e5e48f033495005a47110a5b43c965c91e091844d35334738519fa60a6c4e",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-scope.log",
+          "rawSha256": "226bb14a28b2b8279a69318a64506375218d895efdd39ffcdf4e8da6d6804095",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-slots-previous.json",
+          "rawSha256": "1c9d4ce09a1addaf2b2a8fe9546d3124b5699c5d4c2d324cd819381033832d68",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-slots-previous.log",
+          "rawSha256": "85834a248d3018863bf627f3e0ce802e3fdc36e44e9d3f6f5558eea6ce74164d",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-slots.json",
+          "rawSha256": "a0ef01923f88a4925765e1fa160bafc89f60280034fe6bd68f45755f187b20ca",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutation-slots.log",
+          "rawSha256": "f141e2b7d3d5672430c1eefd7615514b4cddc27cc14b2d867a3e10ad9afca3b4",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutations-binding.json",
+          "rawSha256": "ac82ec376ef297417f838dcc7a58c4cfaba29f8177fe0ba8eeeaf973ecb43f3b",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutations-final.log",
+          "rawSha256": "517cc74cb77016e764fd81b327e06c3569b3039397fe5abf3c0736a5b0dc5b6b",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutations-summary.json",
+          "rawSha256": "1432230ac5e05f01e04ab53e14d1233a518b286687c7ca373ab76056dd18f589",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-page-red.json",
+          "rawSha256": "1684f0c5a11a130735613bb84a9695877548725b1bd1a078d7c69becd5dafdca",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-r2.json",
+          "rawSha256": "a84c52551f2054eefd89c5802ef2d1c9cb7b954c93d96bf6618e1e0b7ecde52a",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-r3.json",
+          "rawSha256": "e1ef33f3ba65abe18f21f4ba08f77fc31901a68b90d763e2e9b3fc94dd649937",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-receipt-red.json",
+          "rawSha256": "22b336b39b3dce7efd974a52b1f7edf5d46162db983aa37378a18864e64fefca",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-store-red.json",
+          "rawSha256": "7670ad67a7cec3971c5532cf059ade4503bc5c5466dd16244f54c4e561c175e6",
+          "sourcePresent": true,
+          "hashMatches": true
+        },
+        {
+          "file": "recurring-b3-mutations-summary-recovered.json",
+          "rawSha256": "6eaa0d87ce22a52489fe5c09f808f2a421258641778005439b7d3fa0c01c23b5",
+          "sourcePresent": true,
+          "hashMatches": true
+        }
+      ],
+      "recordedResults": {
+        "targeted": {
+          "passed": 36,
+          "suites": 3
+        },
+        "browserPassed": 3,
+        "mutations": [
+          {
+            "name": "marker",
+            "exitCode": 1,
+            "failed": 1,
+            "passed": 0,
+            "skippedByFocusedSelection": 32
+          },
+          {
+            "name": "notfound",
+            "exitCode": 1,
+            "failed": 1,
+            "passed": 0,
+            "skippedByFocusedSelection": 32
+          },
+          {
+            "name": "scope",
+            "exitCode": 1,
+            "failed": 3,
+            "passed": 0,
+            "skippedByFocusedSelection": 30
+          },
+          {
+            "name": "slots",
+            "exitCode": 1,
+            "failed": 1,
+            "passed": 0,
+            "skippedByFocusedSelection": 32
+          },
+          {
+            "name": "reauth",
+            "exitCode": 1,
+            "failed": 1,
+            "passed": 0,
+            "skippedByFocusedSelection": 32
+          },
+          {
+            "name": "logout",
+            "exitCode": 1,
+            "failed": 1,
+            "passed": 0,
+            "skippedByFocusedSelection": 32
+          },
+          {
+            "name": "late",
+            "exitCode": 1,
+            "failed": 1,
+            "passed": 0,
+            "skippedByFocusedSelection": 32
+          },
+          {
+            "name": "abort",
+            "exitCode": 1,
+            "failed": 1,
+            "passed": 0,
+            "skippedByFocusedSelection": 32
+          }
+        ],
+        "oldLateSurvivedRetained": true,
+        "note": "Evidence files inspected and hashes verified; not newly executed in this audit"
+      },
+      "documentationReview": {
+        "readmeSha256": "0724b82b36814ccc55cb7c8484e9effa43a7c308c446d01fea8900a9d3053b45",
+        "testPlanSha256": "2759ad009833f9a62f1650064c61b12c364018a15dd6efe022c0d2f232704e97",
+        "gate": "OPEN; B3 awaits user acceptance",
+        "countsConsistent": true,
+        "remainingScope": [
+          "RP-17/19 media and actual reward/idempotency/caregiver/cross-day child review integration",
+          "RP-15a precommit barrier plus logout/relogin in one browser scenario",
+          "Patch/stop lost-response browser combinations",
+          "Automatic timer multi-cycle check",
+          "Existing device/manual/server timing/Docker and other historical gates remain open"
+        ],
+        "archiveIndexPresent": true
+      },
+      "archiveFiles": [
+        {
+          "file": "README.md",
+          "sha256": "0724b82b36814ccc55cb7c8484e9effa43a7c308c446d01fea8900a9d3053b45"
+        },
+        {
+          "file": "archive-files.json",
+          "sha256": "b570927899bd94b0cccabd19caac0c5c3b23286654c1a1babc35a87c087eed9a"
+        },
+        {
+          "file": "candidate-files.json",
+          "sha256": "d0875d43a50a36b6ea43464213ecc45b3382c95b341114ba69c431bb26ef2c90"
+        },
+        {
+          "file": "candidate.patch",
+          "sha256": "f29db32dbbc9fec703f39363a52a79dde44544b199322c6fc5bd7641547d0632"
+        },
+        {
+          "file": "evidence-rollover.json",
+          "sha256": "cfe7f572fbd294b9a392070f458b457051f4485e9f481598299e2e644b98292d"
+        },
+        {
+          "file": "independent-coverage-r1-binding.json",
+          "sha256": "fc964b065635f650927c756515e03f7664c973a7f5fe5d063f2e6a9c04fceb5e"
+        },
+        {
+          "file": "independent-final-r1-binding.json",
+          "sha256": "f7f6320d079e4fc6a5fd14338b2328287d8d462e94eda4055d6e0710fd270864"
+        },
+        {
+          "file": "independent-final-r2-binding.json",
+          "sha256": "44bad6de5fabbb8a912d02683c29d3f11edb5fc771bf8c4bb33683c9d4a7df44"
+        },
+        {
+          "file": "independent-prefreeze-r1-binding.json",
+          "sha256": "1628600d66ef5698cdd88bd15b768415205e17e318395dee9078bd2634afd1d6"
+        },
+        {
+          "file": "independent-prefreeze-r1-probes.json",
+          "sha256": "628d42b583fef7a0b62783dbd2c9f4a20db98c672e4474fd1cbe93db40b04557"
+        },
+        {
+          "file": "mutations-binding.json",
+          "sha256": "ac82ec376ef297417f838dcc7a58c4cfaba29f8177fe0ba8eeeaf973ecb43f3b"
+        },
+        {
+          "file": "mutations.cjs",
+          "sha256": "5845ac8a293f16b0337c6b3f5287bf15ee23bf0070a335e073f9c9b439c0487f"
+        },
+        {
+          "file": "recurring-1280.png",
+          "sha256": "9d99a991d844cab66c2ae1c251bdfad64630e17fa7f5e00aec368e864ad916a0"
+        },
+        {
+          "file": "recurring-360.png",
+          "sha256": "1094db9d949b3f2d91c7a27694084854c990e3882cea8bc10a3cd3d674764d41"
+        },
+        {
+          "file": "recurring-768.png",
+          "sha256": "a8884c03f47813358e0a0aa072f7c4002a3d4b25cc638ea84daee0173da9f5ce"
+        },
+        {
+          "file": "verification-prefinal.json",
+          "sha256": "b54b4ecece2e912545f85d9d47bfbc09c1903e3e8aaaa4a0ed34f363dca0184d"
+        },
+        {
+          "file": "verification.json",
+          "sha256": "04736d2d1158828ba314fff0e0a870a20bf6c3f2af594771028fc762ed5c9968"
+        }
+      ],
+      "success": true
+    }
+  },
+  {
+    "file": "recurring-b3-user-review-jest.json",
+    "rawSha256": "c7fc3165d1d9f23119306ade999f691ec91ae517b2f6db8ff5e02acd763328ba",
+    "type": "jest",
+    "total": 36,
+    "passed": 36,
+    "failed": 0,
+    "pending": 0,
+    "suites": 3,
+    "assertions": [
+      {
+        "name": "creates a weekday plan, preserves unknown command and retries exact ID/body, never another POST on refresh",
+        "status": "passed"
+      },
+      {
+        "name": "same actor relogin discovers marker without private body; not_found stays locked, explicit abort clears matching terminal",
+        "status": "passed"
+      },
+      {
+        "name": "abort confirmation cannot silently retarget a replacement command from another tab",
+        "status": "passed"
+      },
+      {
+        "name": "403 clears private plan and draft; an earlier late success cannot restore them",
+        "status": "passed"
+      },
+      {
+        "name": "account switch and late command success cannot clear original actor marker",
+        "status": "passed"
+      },
+      {
+        "name": "editing fetches the viewed version; version conflict keeps exact original command and does not auto overwrite",
+        "status": "passed"
+      },
+      {
+        "name": "stop requires confirmation and preserves seen version",
+        "status": "passed"
+      },
+      {
+        "name": "stopped row and its scheduled rule are readonly and never advertised as generating tomorrow",
+        "status": "passed"
+      },
+      {
+        "name": "successful historical terminal does not overwrite current plan fetched after settlement",
+        "status": "passed"
+      },
+      {
+        "name": "403 during recovery clears private view but preserves marker, even after a late earlier list success",
+        "status": "passed"
+      },
+      {
+        "name": "switching child during original command query retains marker and rejects late result",
+        "status": "passed"
+      },
+      {
+        "name": "submitted form closes but unresolved POST remains locked; child switch denies its late success and followup GET",
+        "status": "passed"
+      },
+      {
+        "name": "partial numeric entry rejects before marker or POST while normal focus refresh preserves form",
+        "status": "passed"
+      },
+      {
+        "name": "persist only minimal identity locally, retain exact normalized body in the tab, and block a second intent",
+        "status": "passed"
+      },
+      {
+        "name": "interleaved tabs never overwrite another UUID marker; settling one leaves the other locked",
+        "status": "passed"
+      },
+      {
+        "name": "same actor authentication without logout clears raw private bodies and retains marker",
+        "status": "passed"
+      },
+      {
+        "name": "success for patch requires exact target and required result fields",
+        "status": "passed"
+      },
+      {
+        "name": "success for stop requires exact target and required result fields",
+        "status": "passed"
+      },
+      {
+        "name": "matching succeeded requires original body hash and correctly scoped result before unlock",
+        "status": "passed"
+      },
+      {
+        "name": "scope switch while digest is pending writes nothing; expired identity cannot finish receipt",
+        "status": "passed"
+      },
+      {
+        "name": "child switch clears only that child private body, both minimal markers survive",
+        "status": "passed"
+      },
+      {
+        "name": "storage refusal or missing crypto never creates a dispatchable command",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input rejects before persisting minimal marker: {\"schedule\":{\"kind\":\"weekly\",\"weekdays\":[1,1]}}",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input rejects before persisting minimal marker: {\"schedule\":{\"kind\":\"weekly\",\"weekdays\":[]}}",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input rejects before persisting minimal marker: {\"schedule\":{\"kind\":\"daily\",\"weekdays\":[1]}}",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input rejects before persisting minimal marker: {\"startDate\":\"2026-02-30\"}",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input rejects before persisting minimal marker: {\"template\":{\"title\":\" 跳绳 \",\"dimension\":\"physical\",\"taskType\":\"exercise\",\"attachmentMediaIds\":[]}}",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input rejects before persisting minimal marker: {\"template\":{\"title\":\" 跳绳 \",\"dimension\":\"physical\",\"taskType\":\"exercise\",\"estimatedMinutes\":-1}}",
+        "status": "passed"
+      },
+      {
+        "name": "explicit logout clears private body including corrupt body; same actor relogin retains only marker",
+        "status": "passed"
+      },
+      {
+        "name": "not_found and mismatched terminal keep the marker; matching aborted alone releases it",
+        "status": "passed"
+      },
+      {
+        "name": "late old-session receipt cannot remove marker after relogin",
+        "status": "passed"
+      },
+      {
+        "name": "session changes while succeeded receipt hash is pending cannot clear the persistent marker",
+        "status": "passed"
+      },
+      {
+        "name": "cross-tab changed marker and corrupt marker refuse dispatch rather than deleting protection",
+        "status": "passed"
+      },
+      {
+        "name": "complete command body and original operation ID pass through exact endpoints and captured credentials",
+        "status": "passed"
+      },
+      {
+        "name": "command GET is readonly and abort uses same UUID without private body",
+        "status": "passed"
+      },
+      {
+        "name": "late old-actor 401 cannot expire replacement actor or dispatch a retry",
+        "status": "passed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-b3-user-review-mutations-summary.json",
+    "rawSha256": "1432230ac5e05f01e04ab53e14d1233a518b286687c7ca373ab76056dd18f589",
+    "type": "diagnostic",
+    "result": [
+      {
+        "name": "marker",
+        "exitCode": 1,
+        "failed": 1,
+        "passed": 0,
+        "skippedByFocusedSelection": 32
+      },
+      {
+        "name": "notfound",
+        "exitCode": 1,
+        "failed": 1,
+        "passed": 0,
+        "skippedByFocusedSelection": 32
+      },
+      {
+        "name": "scope",
+        "exitCode": 1,
+        "failed": 3,
+        "passed": 0,
+        "skippedByFocusedSelection": 30
+      },
+      {
+        "name": "slots",
+        "exitCode": 1,
+        "failed": 1,
+        "passed": 0,
+        "skippedByFocusedSelection": 32
+      },
+      {
+        "name": "reauth",
+        "exitCode": 1,
+        "failed": 1,
+        "passed": 0,
+        "skippedByFocusedSelection": 32
+      },
+      {
+        "name": "logout",
+        "exitCode": 1,
+        "failed": 1,
+        "passed": 0,
+        "skippedByFocusedSelection": 32
+      },
+      {
+        "name": "late",
+        "exitCode": 1,
+        "failed": 1,
+        "passed": 0,
+        "skippedByFocusedSelection": 32
+      },
+      {
+        "name": "abort",
+        "exitCode": 1,
+        "failed": 1,
+        "passed": 0,
+        "skippedByFocusedSelection": 32
+      }
+    ]
+  },
+  {
+    "file": "recurring-b3-user-review-session-jest.json",
+    "rawSha256": "dabf761405bb11c1fc405bbc93bed2f4b7bece0a4eea4e9f3e1690e7af65b36d",
+    "type": "jest",
+    "total": 70,
+    "passed": 70,
+    "failed": 0,
+    "pending": 0,
+    "suites": 5,
+    "assertions": [
+      {
+        "name": "parent recovery list sends only pagination with the captured identity",
+        "status": "passed"
+      },
+      {
+        "name": "student recovery list sends only pagination with the captured identity",
+        "status": "passed"
+      },
+      {
+        "name": "T2 parent session isolation immutable snapshot rejects same-actor relogin and ABA, not just changed token",
+        "status": "passed"
+      },
+      {
+        "name": "T2 parent session isolation late ordinary success and late 401 cannot affect a newer session",
+        "status": "passed"
+      },
+      {
+        "name": "T2 parent session isolation current 401 preserves original error and command, explicit logout removes only its actor",
+        "status": "passed"
+      },
+      {
+        "name": "T2 parent session isolation Gateway UNAUTHENTICATED expires only the current session, preserves command on same-actor relogin, and leaves business 403 authenticated",
+        "status": "passed"
+      },
+      {
+        "name": "T2 parent session isolation account switch clears former actor even following expiry; old expiry cannot clear new actor",
+        "status": "passed"
+      },
+      {
+        "name": "T2 parent session isolation explicit expected scope prevents HTTP even before storage event arrives",
+        "status": "passed"
+      },
+      {
+        "name": "T2 student session isolation immutable snapshot rejects same-actor relogin and ABA, not just changed token",
+        "status": "passed"
+      },
+      {
+        "name": "T2 student session isolation late ordinary success and late 401 cannot affect a newer session",
+        "status": "passed"
+      },
+      {
+        "name": "T2 student session isolation current 401 preserves original error and command, explicit logout removes only its actor",
+        "status": "passed"
+      },
+      {
+        "name": "T2 student session isolation Gateway UNAUTHENTICATED expires only the current session, preserves command on same-actor relogin, and leaves business 403 authenticated",
+        "status": "passed"
+      },
+      {
+        "name": "T2 student session isolation account switch clears former actor even following expiry; old expiry cannot clear new actor",
+        "status": "passed"
+      },
+      {
+        "name": "T2 student session isolation explicit expected scope prevents HTTP even before storage event arrives",
+        "status": "passed"
+      },
+      {
+        "name": "session subscriptions expose reasons without credentials and unsubscribe",
+        "status": "passed"
+      },
+      {
+        "name": "T2 parent complete and recovery preserve fields, errors and scope",
+        "status": "passed"
+      },
+      {
+        "name": "T2 student complete and recovery preserve fields, errors and scope",
+        "status": "passed"
+      },
+      {
+        "name": "parent confirm sends only the actually supplied version and feedback",
+        "status": "passed"
+      },
+      {
+        "name": "parent suspended tab reconciles exit markers before sending after same-actor relogin",
+        "status": "passed"
+      },
+      {
+        "name": "student suspended tab reconciles exit markers before sending after same-actor relogin",
+        "status": "passed"
+      },
+      {
+        "name": "parent GET supports both the original signal position and the shared fourth-position scope",
+        "status": "passed"
+      },
+      {
+        "name": "parent explicit logout is not prevented by a marker write failure",
+        "status": "passed"
+      },
+      {
+        "name": "student explicit logout is not prevented by a marker write failure",
+        "status": "passed"
+      },
+      {
+        "name": "parent observes replacement in its own credential store and clears only the old actor",
+        "status": "passed"
+      },
+      {
+        "name": "student observes replacement in its own credential store and clears only the old actor",
+        "status": "passed"
+      },
+      {
+        "name": "parent rejects an expected session of the other role without HTTP",
+        "status": "passed"
+      },
+      {
+        "name": "student rejects an expected session of the other role without HTTP",
+        "status": "passed"
+      },
+      {
+        "name": "current session error contracts retain the original response for every shared verb",
+        "status": "passed"
+      },
+      {
+        "name": "parent media APIs honor the third snapshot before upload, access and delete",
+        "status": "passed"
+      },
+      {
+        "name": "student media APIs honor the third snapshot before upload, access and delete",
+        "status": "passed"
+      },
+      {
+        "name": "parent context follows its credential store changes and unknown removal preserves commands",
+        "status": "passed"
+      },
+      {
+        "name": "student context follows its credential store changes and unknown removal preserves commands",
+        "status": "passed"
+      },
+      {
+        "name": "parent expiry clears UI but preserves commands, explicit exit removes them",
+        "status": "passed"
+      },
+      {
+        "name": "student expiry clears UI but preserves commands, explicit exit removes them",
+        "status": "passed"
+      },
+      {
+        "name": "family switches parent while authenticated, clears view and rejects old success and old 401",
+        "status": "passed"
+      },
+      {
+        "name": "ready family is cleared during another actor load, not reused as a background refresh",
+        "status": "passed"
+      },
+      {
+        "name": "late parent login after logout cannot recreate credentials",
+        "status": "passed"
+      },
+      {
+        "name": "late student login after logout cannot recreate credentials",
+        "status": "passed"
+      },
+      {
+        "name": "resuming a tab synchronizes context even when a storage event was missed",
+        "status": "passed"
+      },
+      {
+        "name": "unchanged visibility refresh does not cancel an in-flight parent login",
+        "status": "passed"
+      },
+      {
+        "name": "unchanged visibility refresh does not cancel an in-flight student login",
+        "status": "passed"
+      },
+      {
+        "name": "child credentials stay in this tab; parent credentials remain shared",
+        "status": "passed"
+      },
+      {
+        "name": "a fresh tab with only legacy shared credentials must log in, preserving unknown commands",
+        "status": "passed"
+      },
+      {
+        "name": "another tab cannot replace this child by publishing credentials or change metadata",
+        "status": "passed"
+      },
+      {
+        "name": "a different child exit neither clears credentials/commands nor broadcasts this tab logout",
+        "status": "passed"
+      },
+      {
+        "name": "same-child exit rejects old credentials before HTTP, even with storage event=true",
+        "status": "passed"
+      },
+      {
+        "name": "same-child exit rejects old credentials before HTTP, even with storage event=false",
+        "status": "passed"
+      },
+      {
+        "name": "new PIN login consumes the prior exit marker without immediately expiring the new session",
+        "status": "passed"
+      },
+      {
+        "name": "expiry keeps the original command and remains local when another child authenticates",
+        "status": "passed"
+      },
+      {
+        "name": "child login fails closed when sessionStorage write is throw; no shared fallback",
+        "status": "passed"
+      },
+      {
+        "name": "child login fails closed when sessionStorage write is silent; no shared fallback",
+        "status": "passed"
+      },
+      {
+        "name": "late success after a same-child external exit cannot revive credentials",
+        "status": "passed"
+      },
+      {
+        "name": "late 401 after a same-child external exit cannot revive credentials",
+        "status": "passed"
+      },
+      {
+        "name": "family parent session storage restores only the versioned parent session key",
+        "status": "passed"
+      },
+      {
+        "name": "family parent session storage removes malformed or non-parent saved sessions",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup parent logout clears corrupt owned bodies without trusting their contents",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup student logout clears corrupt owned bodies without trusting their contents",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup parent switch clears owned corrupt entries even when their body claims another actor: {broken",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup parent switch clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup parent storage clears owned corrupt entries even when their body claims another actor: {broken",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup parent storage clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup parent pageshow clears owned corrupt entries even when their body claims another actor: {broken",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup parent pageshow clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup student switch clears owned corrupt entries even when their body claims another actor: {broken",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup student switch clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup student storage clears owned corrupt entries even when their body claims another actor: {broken",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup student storage clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup student pageshow clears owned corrupt entries even when their body claims another actor: {broken",
+        "status": "passed"
+      },
+      {
+        "name": "AI2 canonical command exit cleanup student pageshow clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+        "status": "passed"
+      },
+      {
+        "name": "resets registered child-scoped state before selecting another child",
+        "status": "passed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-barrier-r1.json",
+    "rawSha256": "6f25c004b2bf2c1dfbe06c4d06748ad973cc273b30446a1756d974bf7e539e10",
+    "type": "jest",
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "pending": 0,
+    "suites": 1,
+    "assertions": [
+      {
+        "name": "recurring barrier awaits rollback and full session cleanup without requiring a success record",
+        "status": "passed"
+      },
+      {
+        "name": "recurring barrier preserves body and execution failures and waits even before the insert hook is reached",
+        "status": "passed"
+      },
+      {
+        "name": "recurring barrier lawful success returns the body result only after full execution cleanup",
+        "status": "passed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-browser-r2.log",
+    "rawSha256": "68d2d4c945b9e52aeb905076e3c2209be621693736b8fae5d94f21c3e2c9f40c",
+    "type": "log",
+    "summary": "\nRunning 5 tests using 1 worker\n\n(node:74735) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n✅ 配置加载成功 (环境: test)\n  ✓  1 tests/e2e/t2/recurringFinal.spec.js:44:41 › patch committed response lost: relogin resolves original UUID with GET only (10.1s)\n  ✘  2 tests/e2e/t2/recurringFinal.spec.js:44:41 › stop committed response lost: relogin resolves original UUID with GET only (16.3s)\n(node:75186) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n✅ 配置加载成功 (环境: test)\n  ✓  3 tests/e2e/t2/recurringFinal.spec.js:75:1 › abort response loss retains original marker across relogin; confirmed tombstone rejects a late original POST (11.2s)\n  ✓  4 tests/e2e/t2/recurringFinal.spec.js:105:1 › transaction is still in flight during logout: not_found cannot unlock, late commit is recovered without a second POST (7.4s)\n  ✓  5 tests/e2e/t2/recurringFinal.spec.js:142:1 › recurring work real pages: child uploads, coparent views and confirms, child reloads readonly picture and feedback (7.6s)\n\n\n  1) tests/e2e/t2/recurringFinal.spec.js:44:41 › stop committed response lost: relogin resolves original UUID with GET only \n\n    Error: expect(locator).toBeEnabled() failed\n\n    Locator: getByRole('button', { name: '核对原命令' })\n    Expected: enabled\n    Timeout: 10000ms\n    Error: element(s) not found\n\n    Call log:\n      - Expect \"toBeEnabled\" with timeout 10000ms\n      - waiting for getByRole('button', { name: '核对原命令' })\n\n\n      54 |   if (action === 'patch') { await page.getByLabel('计划名称').fill('Synthetic tomorrow rule'); await page.getByRole('button', { name: '保存计划' }).click(); }\n      55 |   else await page.getByRole('button', { name: '确认停止' }).click();\n    > 56 |   await expect(page.getByRole('button', { name: '核对原命令' })).toBeEnabled();\n         |                                                             ^\n      57 |   const keys = await markers(page); expect(keys).toHaveLength(1); expect(writes).toHaveLength(1);\n      58 |   await page.getByRole('button', { name: /退出/ }).click(); await login(page);\n      59 |   expect(await markers(page)).toEqual(keys);\n        at <WORKTREE>/tests/e2e/t2/recurringFinal.spec.js:56:61\n\n    Error Context: ../../../../../..<TMP>/recurring-final-browser-r2/recurringFinal-stop-commit-12990-original-UUID-with-GET-only/error-context.md\n\n  1 failed\n    tests/e2e/t2/recurringFinal.spec.js:44:41 › stop committed response lost: relogin resolves original UUID with GET only \n  4 passed (55.0s)\n"
+  },
+  {
+    "file": "recurring-final-browser-r3.log",
+    "rawSha256": "af6246eddb1d7a600badaf538ab88c6884d5342678dcf20fa67cbaa8e6e8acbe",
+    "type": "log",
+    "summary": "\nRunning 8 tests using 1 worker\n\n(node:76785) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n✅ 配置加载成功 (环境: test)\n  ✓  1 tests/e2e/t2/recurringFinal.spec.js:44:41 › patch committed response lost: relogin resolves original UUID with GET only (9.4s)\n  ✓  2 tests/e2e/t2/recurringFinal.spec.js:44:41 › stop committed response lost: relogin resolves original UUID with GET only (6.4s)\n  ✓  3 tests/e2e/t2/recurringFinal.spec.js:80:1 › abort response loss retains original marker across relogin; confirmed tombstone rejects a late original POST (6.2s)\n  ✓  4 tests/e2e/t2/recurringFinal.spec.js:110:1 › transaction is still in flight during logout: not_found cannot unlock, late commit is recovered without a second POST (8.4s)\n  ✓  5 tests/e2e/t2/recurringFinal.spec.js:153:1 › recurring work real pages: child uploads, coparent views and confirms, child reloads readonly picture and feedback (9.6s)\n  ✓  6 tests/e2e/t2/recurringPlans.spec.js:32:1 › formal HTTP: create, refresh, edit tomorrow and stop retain the one daily task (1.1s)\n  ✓  7 tests/e2e/t2/recurringPlans.spec.js:65:1 › formal commit then lost response: logout/relogin discovers original UUID and only GET recovers it (838ms)\n  ✓  8 tests/e2e/t2/recurringPlans.spec.js:92:1 › request never arrives: relogin keeps not_found locked, explicit real abort prevents a late original POST (962ms)\n\n  8 passed (50.2s)\n"
+  },
+  {
+    "file": "recurring-final-browser-r4.log",
+    "rawSha256": "7af9b7dc6a3f3cc1db27e2ce0617eaf1d0b8113861251ffba8e33bcc864d6c0f",
+    "type": "log",
+    "summary": "\nRunning 5 tests using 1 worker\n\n(node:83809) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n✅ 配置加载成功 (环境: test)\n  ✓  1 tests/e2e/t2/recurringFinal.spec.js:45:41 › patch committed response lost: relogin resolves original UUID with GET only (10.3s)\n  ✓  2 tests/e2e/t2/recurringFinal.spec.js:45:41 › stop committed response lost: relogin resolves original UUID with GET only (7.2s)\n  ✓  3 tests/e2e/t2/recurringFinal.spec.js:81:1 › abort response loss retains original marker across relogin; confirmed tombstone rejects a late original POST (7.4s)\n  ✓  4 tests/e2e/t2/recurringFinal.spec.js:111:1 › transaction is still in flight during logout: not_found cannot unlock, late commit is recovered without a second POST (8.2s)\n  ✓  5 tests/e2e/t2/recurringFinal.spec.js:145:1 › recurring work real pages: child uploads, coparent views and confirms, child reloads readonly picture and feedback (7.7s)\n\n  5 passed (43.4s)\n"
+  },
+  {
+    "file": "recurring-final-build-r2.log",
+    "rawSha256": "218c90b7d01dcc7b9b5b37f627f0d2509057ac77e19047e9649ce7018227f823",
+    "type": "log",
+    "summary": "Creating an optimized production build...\nBrowserslist: browsers data (caniuse-lite) is 21 months old. Please run:\n  npx update-browserslist-db@latest\n  Why you should do it regularly: https://github.com/browserslist/update-db#readme\nBrowserslist: browsers data (caniuse-lite) is 21 months old. Please run:\n  npx update-browserslist-db@latest\n  Why you should do it regularly: https://github.com/browserslist/update-db#readme\nCompiled successfully.\n\nFile sizes after gzip:\n\n  205.74 kB  recurring-final-build/static/js/main.8c09e678.js\n  6.32 kB    recurring-final-build/static/css/main.97cf1310.css\n\nThe project was built assuming it is hosted at /.\nYou can control this with the homepage field in your package.json.\n\nThe ../../..<TMP>/recurring-final-build folder is ready to be deployed.\nYou may serve it with a static server:\n\n  npm install -g serve\n  serve -s ../../..<TMP>/recurring-final-build\n\nFind out more about deployment here:\n\n  https://cra.link/deployment\n\n"
+  },
+  {
+    "file": "recurring-final-docs-r2.log",
+    "rawSha256": "d9175aafe05dcfe86d6f3bec6a621be1cfabcc5177ab41d53f209df80969c842",
+    "type": "log",
+    "summary": "\n> code-trae@1.0.0 docs:family:check\n> node scripts/check-family-docs.js\n\nFamily documentation gate passed: 23 baseline documents, 4 proposed self-directed-learning documents, 16 self-directed contract probes, 42 AI-2 closure probes, 36 AI-3 engineering-state probes, 35 value-gate text probes, 8 proposed AI documents, 23 AI contracts, 412 contract fixture cases, 38 requirements.\n"
+  },
+  {
+    "file": "recurring-final-http-r1.json",
+    "rawSha256": "aa87bc96350d0fb6997f1fdfe5ee62de043180ddc072100e477d0678cb489dd1",
+    "type": "jest",
+    "total": 2,
+    "passed": 1,
+    "failed": 1,
+    "pending": 0,
+    "suites": 1,
+    "assertions": [
+      {
+        "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+        "status": "passed"
+      },
+      {
+        "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+        "status": "failed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-http-r2.json",
+    "rawSha256": "799bbac0bb62e43b72e9407b3fa6edc68e6481ca6dbeca6b9f1ab45532c6250b",
+    "type": "jest",
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "pending": 0,
+    "suites": 1,
+    "assertions": [
+      {
+        "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+        "status": "passed"
+      },
+      {
+        "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+        "status": "passed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-http-regression-r1.json",
+    "rawSha256": "70cc8c1de5cba616ffa5fe87c3de99d515cbe261c2624f0c9bab5dde0e75cc14",
+    "type": "jest",
+    "total": 15,
+    "passed": 15,
+    "failed": 0,
+    "pending": 0,
+    "suites": 3,
+    "assertions": [
+      {
+        "name": "T2 real login and official HTTP completion protocol seed exposes known synthetic identities and details without tokens; core reads are write-free",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol upload -> complete -> refresh -> version confirmation -> child review has one ledger and first audit",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol a replacement snapshot clears omitted compatibility values and replays without republishing or changing first audit",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol parent entry without images records the real actor; enabled protocol rejects legacy completion bodies",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol losing a committed public completion response retries the same UUID without republishing",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol real remote COMMITTED lost acknowledgement is discovered read-only after login and only original actor can recover",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol parent cannot confirm an unseen replacement version; lost confirmation response preserves one ledger and audit",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol sibling, foreign family and stale child cannot read or change work; public internal endpoints stay closed",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol normal privacy deletion invalidates a prior capability without changing teaching state, reward or first deletion audit",
+        "status": "passed"
+      },
+      {
+        "name": "formal Gateway plan lifecycle preserves actual estimator, scopes, task business fields and all other collections",
+        "status": "passed"
+      },
+      {
+        "name": "lost committed PUT is recovered with original version conflict and read, never a second write",
+        "status": "passed"
+      },
+      {
+        "name": "completion and confirmation are projected without a plan save changing completion, help, media or rewards",
+        "status": "passed"
+      },
+      {
+        "name": "anonymous, sibling, foreign, forged identity and removed coparent cannot read or mutate the plan",
+        "status": "passed"
+      },
+      {
+        "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+        "status": "passed"
+      },
+      {
+        "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+        "status": "passed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-http-regression-r2.json",
+    "rawSha256": "60fcdefd83931f9522e4ef21e1f2f28366cee12c6bf9795efe7686ae5eb6957b",
+    "type": "jest",
+    "total": 18,
+    "passed": 18,
+    "failed": 0,
+    "pending": 0,
+    "suites": 4,
+    "assertions": [
+      {
+        "name": "T2 real login and official HTTP completion protocol seed exposes known synthetic identities and details without tokens; core reads are write-free",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol upload -> complete -> refresh -> version confirmation -> child review has one ledger and first audit",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol a replacement snapshot clears omitted compatibility values and replays without republishing or changing first audit",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol parent entry without images records the real actor; enabled protocol rejects legacy completion bodies",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol losing a committed public completion response retries the same UUID without republishing",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol real remote COMMITTED lost acknowledgement is discovered read-only after login and only original actor can recover",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol parent cannot confirm an unseen replacement version; lost confirmation response preserves one ledger and audit",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol sibling, foreign family and stale child cannot read or change work; public internal endpoints stay closed",
+        "status": "passed"
+      },
+      {
+        "name": "T2 real login and official HTTP completion protocol normal privacy deletion invalidates a prior capability without changing teaching state, reward or first deletion audit",
+        "status": "passed"
+      },
+      {
+        "name": "formal Gateway plan lifecycle preserves actual estimator, scopes, task business fields and all other collections",
+        "status": "passed"
+      },
+      {
+        "name": "lost committed PUT is recovered with original version conflict and read, never a second write",
+        "status": "passed"
+      },
+      {
+        "name": "completion and confirmation are projected without a plan save changing completion, help, media or rewards",
+        "status": "passed"
+      },
+      {
+        "name": "anonymous, sibling, foreign, forged identity and removed coparent cannot read or mutate the plan",
+        "status": "passed"
+      },
+      {
+        "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+        "status": "passed"
+      },
+      {
+        "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+        "status": "passed"
+      },
+      {
+        "name": "recurring barrier awaits rollback and full session cleanup without requiring a success record",
+        "status": "passed"
+      },
+      {
+        "name": "recurring barrier preserves body and execution failures and waits even before the insert hook is reached",
+        "status": "passed"
+      },
+      {
+        "name": "recurring barrier lawful success returns the body result only after full execution cleanup",
+        "status": "passed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-independent-cleanup-r1.json",
+    "rawSha256": "64ca4bce9a4f47589ab73d6538f4ca34f04acc6c4b79c59f5cf342d174b119e0",
+    "type": "diagnostic",
+    "result": {
+      "schemaVersion": 1,
+      "recordType": "retrospective_independent_control_flow_diagnostic",
+      "recordedDate": "2026-11-15",
+      "workspace": "<WORKTREE>",
+      "provenance": {
+        "source": "Tool outputs from the preceding independent review in this chat",
+        "writtenAfterDiagnostic": true,
+        "rawReportExistedAtExecution": false,
+        "description": "This JSON records the previously executed diagnostic and its observed outputs. It is not an original Jest, Playwright, HTTP, or MongoDB exception-injection report."
+      },
+      "candidate": {
+        "path": "tests/e2e/t2/recurringFinal.spec.js",
+        "sha256": "ce559411b8163bbc1b672a4227642425523c6db8e65b3afcacd681417636cfe2",
+        "hashBasis": "SHA-256 read during the preceding review, before replacement by withRecurringBarrier",
+        "lineStart": 147,
+        "lineEnd": 149,
+        "finalizerSource": "release(); Command.create = originalCreate;\nif (entered) await expect.poll(async () => Boolean(await Command.findOne({ operationId: commandId }).lean())).toBe(true);"
+      },
+      "method": {
+        "sourceExtraction": "Parsed the then-current file with @babel/parser, selected the transaction-is-still-in-flight test and extracted its actual TryStatement finalizer by AST offsets.",
+        "execution": "Executed the extracted finalizer in a Node AsyncFunction around a controlled primary error or normal body.",
+        "substitutions": [
+          "Command.findOne().lean() returned either null or a synthetic succeeded row.",
+          "expect.poll was replaced by a one-evaluation assertion adapter throwing cleanup-poll-timeout on mismatch; no real Playwright polling timeout was run.",
+          "A separate deferred promise represented an operation that had not yet settled in the visible-record case."
+        ],
+        "exitCode": 0,
+        "realHttpExceptionInjection": false,
+        "realMongoRollbackInjection": false,
+        "browserExecuted": false,
+        "projectFilesModified": false
+      },
+      "observations": [
+        {
+          "diagnostic": "actual finalizer with missing terminal row",
+          "primaryError": "original-transaction-rollback",
+          "originalErrorPreserved": false,
+          "observedError": "cleanup-poll-timeout",
+          "patchRestored": true,
+          "barrierReleased": true
+        },
+        {
+          "diagnostic": "actual finalizer with visible terminal row",
+          "cleanupReturned": true,
+          "inFlightSettled": false,
+          "diagnosticDeferredReleasedBeforeProcessExit": true
+        }
+      ],
+      "finding": {
+        "priority": "P2",
+        "summary": "Success-record polling is not operation drainage and can replace the original failure.",
+        "confirmedControlFlow": [
+          "An exception thrown by the finalizer replaces an exception already propagating from the body.",
+          "The finalizer has no dependency on completion of the full service execution promise.",
+          "When entered is false, the finalizer does not wait, even if a request has already entered execute but has not reached Command.create."
+        ],
+        "productionBoundaryReviewed": "backend/common/services/mongoTransaction.js awaits session.endSession() in finally before its returned promise settles.",
+        "minimalRecommendation": "Release the barrier, await settlement of all tracked full execute/transaction promises, restore patched methods reliably, and preserve both body and execution errors. Do not require a succeeded command row as cleanup evidence."
+      },
+      "limits": [
+        "This diagnostic demonstrates JavaScript cleanup control flow with substitutes, not an observed production data-loss or authorization bug.",
+        "The delayed-operation case does not reproduce real MongoDB commit/endSession scheduling.",
+        "The historical candidate hash does not identify the subsequently revised helper or browser test.",
+        "The new withRecurringBarrier implementation requires a separate review and must not overwrite this historical finding."
+      ]
+    }
+  },
+  {
+    "file": "recurring-final-independent-cleanup-r2.json",
+    "rawSha256": "31a716c73f4d141a5615a94185e0b0519afac4f96b043be7d93da28f87e78216",
+    "type": "diagnostic",
+    "result": {
+      "schemaVersion": 1,
+      "recordType": "independent_helper_review_and_diagnostic_record",
+      "recordedDate": "2026-11-15",
+      "workspace": "<WORKTREE>",
+      "provenance": {
+        "reviewAndDiagnosticSource": "Actual source reads, node --check results, and independent Node diagnostic output in the preceding helper-review turn of this chat",
+        "writtenAfterDiagnostic": true,
+        "diagnosticsRerunDuringArchivalTurn": false,
+        "browserLogReadDuringArchivalTurn": true,
+        "candidateHashesRecheckedDuringArchivalTurn": true,
+        "candidateHashesMatchReviewedVersions": true,
+        "description": "This is a retrospective record of the independent helper review and diagnostic execution, plus a separate read-only check of the developer browser r4 log. It is not a Jest JSON report or an independent browser execution report."
+      },
+      "reviewedCandidateFiles": [
+        {
+          "path": "backend/tests/t2/recurringBarrier.js",
+          "sha256": "236eb3f51efc62524550f2c25ea334cb489e3b8dad01b74772b8873b53bdba1d"
+        },
+        {
+          "path": "backend/tests/t2/recurringBarrier.integration.test.js",
+          "sha256": "c3ac3f571a082525474f241d301fd1c7f393316c8a079a2d111133ccd49ffa86"
+        },
+        {
+          "path": "tests/e2e/t2/recurringFinal.spec.js",
+          "sha256": "045b8197d3be0939db06a4ed72e673ff6bae80717cc52d4724462e14dfdaaedc"
+        }
+      ],
+      "review": {
+        "newReproducibleP1P2Findings": [],
+        "previousP2Disposition": "Implementation fixed; independent reviewer recommends closing the cleanup finding, not automatically closing the entire final-integration gate.",
+        "checks": [
+          {
+            "path": "backend/tests/t2/recurringBarrier.js",
+            "lineStart": 8,
+            "lineEnd": 13,
+            "conclusion": "Calls are registered on entry to execute, before the insert barrier; synchronous throws become tracked rejections, and rejection handling is attached immediately."
+          },
+          {
+            "path": "backend/tests/t2/recurringBarrier.js",
+            "lineStart": 24,
+            "lineEnd": 32,
+            "conclusion": "Cleanup closes admission, releases the barrier, awaits all registered outcome promises without rejection short-circuiting, and restores both methods afterward. Distinct body and execution failures are retained in AggregateError."
+          },
+          {
+            "path": "backend/common/services/mongoTransaction.js",
+            "lineStart": 31,
+            "lineEnd": 37,
+            "conclusion": "The full transaction runner promise includes commit or rollback and awaited endSession cleanup."
+          },
+          {
+            "path": "tests/e2e/t2/recurringFinal.spec.js",
+            "lineStart": 113,
+            "lineEnd": 116,
+            "conclusion": "The wrapper receives the formal recurring service object from the Express request listener app.locals. Production routes dynamically access service.execute, so the wrapper is on the request path."
+          },
+          {
+            "path": "tests/e2e/t2/recurringFinal.spec.js",
+            "lineStart": 132,
+            "lineEnd": 141,
+            "conclusion": "The comment now accurately describes persistent recovery after document replacement, late commit and lost response; it no longer claims an old-document success-callback epoch test."
+          },
+          {
+            "path": "backend/tests/t2/recurringBarrier.integration.test.js",
+            "lineStart": 4,
+            "lineEnd": 50,
+            "conclusion": "The three permanent cases cover rollback cleanup, combined body and pre-insert failure, and success cleanup. They use control-flow substitutes, not real HTTP or MongoDB rollback injection."
+          }
+        ]
+      },
+      "independentSyntaxChecks": {
+        "executionTurn": "preceding helper-review turn",
+        "commands": [
+          "node --check backend/tests/t2/recurringBarrier.js",
+          "node --check backend/tests/t2/recurringBarrier.integration.test.js",
+          "node --check tests/e2e/t2/recurringFinal.spec.js"
+        ],
+        "exitCodes": [
+          0,
+          0,
+          0
+        ]
+      },
+      "independentNodeDiagnostics": {
+        "executionTurn": "preceding helper-review turn",
+        "method": "Loaded the actual recurringBarrier helper in a standalone Node process with node:assert/strict. Used synthetic service and Command objects, deferred cleanup promises, and setImmediate turns to check non-settlement and restoration order.",
+        "processExecutions": 1,
+        "exitCode": 0,
+        "assertionGroups": 4,
+        "rawSummaryLines": 3,
+        "countingNote": "The closing-admission check was executed inside the multiple-call diagnostic and shared its output line. Four assertion groups are not four processes, four Jest cases, or four browser cases.",
+        "groups": [
+          {
+            "id": "multiple_calls_and_primary_failure",
+            "result": "passed",
+            "assertions": [
+              "Tracked one insert-path rollback and one pre-insert failure while the body also failed.",
+              "After releasing only the first cleanup, the helper remained unsettled and patched methods remained installed.",
+              "After both cleanups settled, AggregateError.errors retained the body error and both execution errors in registration order.",
+              "Both original methods were restored."
+            ]
+          },
+          {
+            "id": "closing_admission",
+            "result": "passed",
+            "assertions": [
+              "An execute call during cleanup rejected with the barrier-is-closing error.",
+              "The original execute call count remained two; the rejected call did not enter business execution."
+            ]
+          },
+          {
+            "id": "synchronous_execute_failure",
+            "result": "passed",
+            "assertions": [
+              "A synchronous throw from original execute was propagated as the identical original error object.",
+              "Both original methods were restored."
+            ]
+          },
+          {
+            "id": "success_waits_for_cleanup",
+            "result": "passed",
+            "assertions": [
+              "A successful insert did not settle the helper while deferred execution cleanup remained pending.",
+              "After cleanup was released, the helper returned the body result and restored both original methods."
+            ]
+          }
+        ],
+        "observedStdout": [
+          {
+            "case": "multiple admitted calls plus body failure",
+            "allSettledBeforeRestore": true,
+            "errorsPreserved": 3,
+            "closingCallDidNotExecute": true
+          },
+          {
+            "case": "synchronous execute failure",
+            "originalErrorPreserved": true,
+            "methodsRestored": true
+          },
+          {
+            "case": "success waits for cleanup",
+            "result": "body",
+            "methodsRestored": true
+          }
+        ]
+      },
+      "developerBrowserEvidenceReadback": {
+        "path": "<TMP>/recurring-final-browser-r4.log",
+        "sha256": "7af9b7dc6a3f3cc1db27e2ce0617eaf1d0b8113861251ffba8e33bcc864d6c0f",
+        "verificationMethod": "Read the existing developer log only; did not launch Playwright or a browser.",
+        "independentBrowserRerun": false,
+        "observedWorkers": 1,
+        "observedPassed": 5,
+        "observedDurationSeconds": 43.4,
+        "userReportedExitCode": 0,
+        "exitCodeIndependentlyObservedFromOriginalProcess": false,
+        "testFile": "tests/e2e/t2/recurringFinal.spec.js",
+        "observedScenarios": [
+          "patch committed response lost and relogin GET recovery",
+          "stop committed response lost and relogin GET recovery",
+          "abort response loss and late original POST rejection",
+          "pre-commit in-flight logout, not_found lock, late commit and recovery",
+          "child image upload, coparent confirmation, and child read-only readback"
+        ],
+        "scope": "Five affected recurring-final scenarios only, not the full browser suite and not an additional run of the three B3 regression cases.",
+        "buildPathReportedByUserEarlier": "<TMP>/recurring-final-build",
+        "buildIdentityVerifiedFromThisLog": false,
+        "sourceToRunBinding": "Current reviewed source hashes and log hash are recorded separately. This text log alone does not cryptographically bind its execution to source or build hashes."
+      },
+      "priorIndependentHttpEvidence": {
+        "path": "<TMP>/recurring-final-independent-review-http-r1.json",
+        "sha256": "43768243dac2a5fc401668575f906bb258f9d23441f48c7b1b2bd183de9c47c4",
+        "executionTurn": "earlier independent HTTP review, before the helper revision",
+        "suitesPassed": 1,
+        "testsPassed": 2,
+        "testsFailed": 0,
+        "testsSkipped": 0,
+        "exitCode": 0,
+        "httpRerunDuringHelperReviewOrArchivalTurn": false,
+        "scope": "The two recurringPlans.integration.test.js cases, not the new helper cases or a full HTTP regression suite."
+      },
+      "historicalFindingRecord": {
+        "path": "<TMP>/recurring-final-independent-cleanup-r1.json",
+        "sha256": "64ca4bce9a4f47589ab73d6538f4ca34f04acc6c4b79c59f5cf342d174b119e0",
+        "preservedUnchanged": true
+      },
+      "limits": [
+        "The independent Node diagnostics use synthetic control-flow objects; they do not execute real MongoDB transactions, endSession, HTTP exception injection, or browser interactions.",
+        "The three permanent Jest helper cases were statically reviewed but were not independently run as a Jest suite in this helper review.",
+        "The formal service/transaction boundary was verified by source inspection, not by a new independent HTTP run.",
+        "The browser r4 result is developer-run evidence checked by reading its log, not an independent browser rerun.",
+        "The earlier independent HTTP two-pass result is historical evidence and is not counted again as a current-turn run.",
+        "This record does not claim closure of the overall feature gate, full-suite coverage, device acceptance, deployment, or real-user testing.",
+        "No project files or Git state were modified. Only the user-authorized temporary evidence JSON was created during this archival turn."
+      ]
+    }
+  },
+  {
+    "file": "recurring-final-independent-review-http-r1.json",
+    "rawSha256": "43768243dac2a5fc401668575f906bb258f9d23441f48c7b1b2bd183de9c47c4",
+    "type": "jest",
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "pending": 0,
+    "suites": 1,
+    "assertions": [
+      {
+        "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+        "status": "passed"
+      },
+      {
+        "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+        "status": "passed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-mutation-audit.json",
+    "rawSha256": "607458cf514ff8a8d1478299ce84b908945b15864e92475a35a01d9a2ac26669",
+    "type": "jest",
+    "total": 2,
+    "passed": 0,
+    "failed": 1,
+    "pending": 1,
+    "suites": 1,
+    "assertions": [
+      {
+        "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+        "status": "failed"
+      },
+      {
+        "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+        "status": "pending"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-mutation-audit.log",
+    "rawSha256": "35d9ee85220179ddadc336dcaff00b751ea30db08d7f530fe144b41ef324689d",
+    "type": "log",
+    "summary": "  console.log\n    ✅ 配置加载成功 (环境: test)\n\n      at ConfigManager.loadConfig (../../common/config/index.js:111:15)\n\nFAIL t2-formal-http backend/tests/t2/recurringPlans.integration.test.js (10.057 s)\n  ✕ recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback (705 ms)\n  ○ skipped two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work\n\n  ● recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback\n\n    expect(received).toMatchObject(expected)\n\n    - Expected  - 3\n    + Received  + 3\n\n      Object {\n    -   \"confirmedAt\": \"2026-11-15T13:24:11.304Z\",\n    -   \"confirmedByParentId\": \"6af9b2797f3cde06c214ee5d\",\n    -   \"parentFeedback\": \"Synthetic first review\",\n    +   \"confirmedAt\": \"2026-11-15T13:24:11.440Z\",\n    +   \"confirmedByParentId\": \"6af9b2797f3cde06c214ee62\",\n    +   \"parentFeedback\": \"Must not replace\",\n        \"starAwardState\": \"awarded\",\n      }\n\n      74 |   const stable = await runtime.snapshot();\n      75 |   expect(rows(stable, 'Ledger', 'sourceId', task.taskId)).toEqual(rows(pending, 'Ledger', 'sourceId', task.taskId));\n    > 76 |   expect(rows(stable, 'Task', '_id', task.taskId)[0]).toMatchObject({ starAwardState: 'awarded',\n         |                                                       ^\n      77 |     confirmedByParentId: fixture.actors.parent.userId, confirmedAt: rows(pending, 'Task', '_id', task.taskId)[0].confirmedAt,\n      78 |     parentFeedback: 'Synthetic first review' });\n      79 |   expectData(await parent.patch(url(task) + '/confirm', { expectedCompletionVersion: 1 }));\n\n      at Object.<anonymous> (recurringPlans.integration.test.js:76:55)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 skipped, 2 total\nSnapshots:   0 total\nTime:        10.121 s\nRan all test suites within paths \"<WORKTREE>/backend/tests/t2/recurringPlans.integration.test.js\".\nTest results written to: ../../../../../..<TMP>/recurring-final-mutation-audit.json\n"
+  },
+  {
+    "file": "recurring-final-mutation-cleanup.json",
+    "rawSha256": "943cbc540ec7cbc01358c788ea72935f5722a2de06fe323ff069bbef7a84792b",
+    "type": "jest",
+    "total": 3,
+    "passed": 0,
+    "failed": 3,
+    "pending": 0,
+    "suites": 1,
+    "assertions": [
+      {
+        "name": "recurring barrier awaits rollback and full session cleanup without requiring a success record",
+        "status": "failed"
+      },
+      {
+        "name": "recurring barrier preserves body and execution failures and waits even before the insert hook is reached",
+        "status": "failed"
+      },
+      {
+        "name": "recurring barrier lawful success returns the body result only after full execution cleanup",
+        "status": "failed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-mutation-date.json",
+    "rawSha256": "fe797478c20a4cd336d341ec9711f81ac580b7b10937eec0d1c04a3410922623",
+    "type": "jest",
+    "total": 2,
+    "passed": 0,
+    "failed": 1,
+    "pending": 1,
+    "suites": 1,
+    "assertions": [
+      {
+        "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+        "status": "pending"
+      },
+      {
+        "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+        "status": "failed"
+      }
+    ]
+  },
+  {
+    "file": "recurring-final-mutation-date.log",
+    "rawSha256": "868988fe046e423c922dd085e2d03ee97454cc26712558cd0cad3753d30b7799",
+    "type": "log",
+    "summary": "  console.log\n    ✅ 配置加载成功 (环境: test)\n\n      at ConfigManager.loadConfig (../../common/config/index.js:111:15)\n\nFAIL t2-formal-http backend/tests/t2/recurringPlans.integration.test.js (12.498 s)\n  ✕ two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work (285 ms)\n  ○ skipped recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback\n\n  ● two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work\n\n    expect(received).not.toBe(expected) // Object.is equality\n\n    Expected: not \"6af9b2882110dc72b632b915\"\n\n      108 |     transactionRunner: work => runMongoTransaction({ mongooseInstance: Task.db, work }) });\n      109 |   const generated = await service.generate({ planId: plan.id });\n    > 110 |   expect(generated.generatedTaskId).not.toBe(task.taskId);\n          |                                         ^\n      111 |   expect(await service.generate({ planId: plan.id })).toEqual(generated);\n      112 |   const second = expectData(await child.get('/api/growth-tasks/' + generated.generatedTaskId)).task;\n      113 |   expect(second).toMatchObject({ status: 'pending', completionVersion: 0, dueDate: tomorrow, completionMediaIds: [] });\n\n      at Object.<anonymous> (recurringPlans.integration.test.js:110:41)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 skipped, 2 total\nSnapshots:   0 total\nTime:        12.545 s\nRan all test suites within paths \"<WORKTREE>/backend/tests/t2/recurringPlans.integration.test.js\".\nTest results written to: ../../../../../..<TMP>/recurring-final-mutation-date.json\n"
+  },
+  {
+    "file": "recurring-final-mutations-result.json",
+    "rawSha256": "cd02e81807d50f80ed68e2df57a26195e71cc684a909278effb742378b912bf6",
+    "type": "diagnostic",
+    "result": {
+      "results": [
+        {
+          "mode": "audit",
+          "exitCode": 1,
+          "failed": 1,
+          "assertions": [
+            "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback"
+          ]
+        },
+        {
+          "mode": "date",
+          "exitCode": 1,
+          "failed": 1,
+          "assertions": [
+            "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "file": "backend/tests/t2/recurringPlans.integration.test.js",
+          "sha256": "127bc68a79701ec8430e74243a1ce7b5c5715b9aec19d1071b0c02372d57e4de"
+        },
+        {
+          "file": "backend/services/homework-service/services/recurringTaskPlanService.js",
+          "sha256": "b48f2c11b50af9975673f5ae1847417709c0a71260cb0b03bd940ef296b628be"
+        },
+        {
+          "file": "backend/services/homework-service/services/growthTaskCompletionConfirmationService.js",
+          "sha256": "5ab1275eb3afe1fe7aab593baa95e7e36fad8cc199a84b71ba5ba13edd52f82d"
+        }
+      ]
+    }
+  },
+  {
+    "file": "recurring-final-browser-r1/recurringFinal-abort-respo-4110e-ejects-a-late-original-POST/error-context.md",
+    "rawSha256": "5457fc243527b1a81164cb4629ae65ffe4431b2404dc89f1baac077d0001c1e8",
+    "type": "browser-failure",
+    "summary": "# Instructions\n\n- Following Playwright test failed.\n- Explain why, be concise, respect Playwright best practices.\n- Provide a snippet of code with the fix, if possible.\n\n# Test info\n\n- Name: recurringFinal.spec.js >> abort response loss retains original marker across relogin; confirmed tombstone rejects a late original POST\n- Location: tests/e2e/t2/recurringFinal.spec.js:75:1\n\n# Error details\n\n```\nError: browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n<launched> pid=73916\n[pid=73916][err] [1115/211959.383250:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n[pid=73916][err] [1115/211959.385677:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n[pid=73916][err] [1115/211959.386452:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.73916: Permission denied (1100)\nCall log:\n  - <launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n  - <launched> pid=73916\n  - [pid=73916][err] [1115/211959.383250:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n  - [pid=73916][err] [1115/211959.385677:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n  - [pid=73916][err] [1115/211959.386452:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.73916: Permission denied (1100)\n  - [pid=73916] <gracefully close start>\n  - [pid=73916] <kill>\n  - [pid=73916] <will force kill>\n  - [pid=73916] exception while trying to kill process: Error: kill EPERM\n  - [pid=73916] <process did exit: exitCode=null, signal=SIGTRAP>\n  - [pid=73916] starting temporary directories cleanup\n  - [pid=73916] finished temporary directories cleanup\n  - [pid=73916] <gracefully close end>\n\n```"
+  },
+  {
+    "file": "recurring-final-browser-r1/recurringFinal-patch-commi-988a2-original-UUID-with-GET-only/error-context.md",
+    "rawSha256": "904c0d0b6feea92885f23655e41f638938985c1f4f0bab95828aad68be4ae365",
+    "type": "browser-failure",
+    "summary": "# Instructions\n\n- Following Playwright test failed.\n- Explain why, be concise, respect Playwright best practices.\n- Provide a snippet of code with the fix, if possible.\n\n# Test info\n\n- Name: recurringFinal.spec.js >> patch committed response lost: relogin resolves original UUID with GET only\n- Location: tests/e2e/t2/recurringFinal.spec.js:44:41\n\n# Error details\n\n```\nError: browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n<launched> pid=73512\n[pid=73512][err] [1115/211940.263106:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n[pid=73512][err] [1115/211940.266645:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n[pid=73512][err] [1115/211940.269183:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.73512: Permission denied (1100)\nCall log:\n  - <launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n  - <launched> pid=73512\n  - [pid=73512][err] [1115/211940.263106:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n  - [pid=73512][err] [1115/211940.266645:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n  - [pid=73512][err] [1115/211940.269183:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.73512: Permission denied (1100)\n  - [pid=73512] <gracefully close start>\n  - [pid=73512] <kill>\n  - [pid=73512] <will force kill>\n  - [pid=73512] exception while trying to kill process: Error: kill EPERM\n  - [pid=73512] <process did exit: exitCode=null, signal=SIGTRAP>\n  - [pid=73512] starting temporary directories cleanup\n  - [pid=73512] finished temporary directories cleanup\n  - [pid=73512] <gracefully close end>\n\n```"
+  },
+  {
+    "file": "recurring-final-browser-r1/recurringFinal-recurring-w-763ee-adonly-picture-and-feedback/error-context.md",
+    "rawSha256": "9ff7991d2f579e426f9dc7e8db6eeaa0d2b86eaf2d69ae1c450c689d0a1767c3",
+    "type": "browser-failure",
+    "summary": "# Instructions\n\n- Following Playwright test failed.\n- Explain why, be concise, respect Playwright best practices.\n- Provide a snippet of code with the fix, if possible.\n\n# Test info\n\n- Name: recurringFinal.spec.js >> recurring work real pages: child uploads, coparent views and confirms, child reloads readonly picture and feedback\n- Location: tests/e2e/t2/recurringFinal.spec.js:142:1\n\n# Error details\n\n```\nError: browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n<launched> pid=74409\n[pid=74409][err] [1115/212022.758378:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n[pid=74409][err] [1115/212022.781188:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n[pid=74409][err] [1115/212022.793352:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.74409: Permission denied (1100)\nCall log:\n  - <launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n  - <launched> pid=74409\n  - [pid=74409][err] [1115/212022.758378:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n  - [pid=74409][err] [1115/212022.781188:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n  - [pid=74409][err] [1115/212022.793352:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.74409: Permission denied (1100)\n  - [pid=74409] <gracefully close start>\n  - [pid=74409] <kill>\n  - [pid=74409] <will force kill>\n  - [pid=74409] exception while trying to kill process: Error: kill EPERM\n  - [pid=74409] <process did exit: exitCode=null, signal=SIGTRAP>\n  - [pid=74409] starting temporary directories cleanup\n  - [pid=74409] finished temporary directories cleanup\n  - [pid=74409] <gracefully close end>\n\n```"
+  },
+  {
+    "file": "recurring-final-browser-r1/recurringFinal-stop-commit-12990-original-UUID-with-GET-only/error-context.md",
+    "rawSha256": "1752f50def7c6abbd6f9d70c0ec1f01a1cfa3fc22b953a1406ddfe22bfa9953a",
+    "type": "browser-failure",
+    "summary": "# Instructions\n\n- Following Playwright test failed.\n- Explain why, be concise, respect Playwright best practices.\n- Provide a snippet of code with the fix, if possible.\n\n# Test info\n\n- Name: recurringFinal.spec.js >> stop committed response lost: relogin resolves original UUID with GET only\n- Location: tests/e2e/t2/recurringFinal.spec.js:44:41\n\n# Error details\n\n```\nError: browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n<launched> pid=73692\n[pid=73692][err] [1115/211949.674347:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n[pid=73692][err] [1115/211949.675984:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n[pid=73692][err] [1115/211949.677385:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.73692: Permission denied (1100)\nCall log:\n  - <launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n  - <launched> pid=73692\n  - [pid=73692][err] [1115/211949.674347:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n  - [pid=73692][err] [1115/211949.675984:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n  - [pid=73692][err] [1115/211949.677385:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.73692: Permission denied (1100)\n  - [pid=73692] <gracefully close start>\n  - [pid=73692] <kill>\n  - [pid=73692] <will force kill>\n  - [pid=73692] exception while trying to kill process: Error: kill EPERM\n  - [pid=73692] <process did exit: exitCode=null, signal=SIGTRAP>\n  - [pid=73692] starting temporary directories cleanup\n  - [pid=73692] finished temporary directories cleanup\n  - [pid=73692] <gracefully close end>\n\n```"
+  },
+  {
+    "file": "recurring-final-browser-r1/recurringFinal-transaction-31484-vered-without-a-second-POST/error-context.md",
+    "rawSha256": "614a667185e51bba8a44482a73d53437cd7bec267ba89afb126be8d4cb969e21",
+    "type": "browser-failure",
+    "summary": "# Instructions\n\n- Following Playwright test failed.\n- Explain why, be concise, respect Playwright best practices.\n- Provide a snippet of code with the fix, if possible.\n\n# Test info\n\n- Name: recurringFinal.spec.js >> transaction is still in flight during logout: not_found cannot unlock, late commit is recovered without a second POST\n- Location: tests/e2e/t2/recurringFinal.spec.js:105:1\n\n# Error details\n\n```\nError: browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n<launched> pid=74163\n[pid=74163][err] [1115/212010.530761:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n[pid=74163][err] [1115/212010.533743:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n[pid=74163][err] [1115/212010.535340:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.74163: Permission denied (1100)\nCall log:\n  - <launching> <HOME>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=<TEMP_PATH> --remote-debugging-pipe --no-startup-window\n  - <launched> pid=74163\n  - [pid=74163][err] [1115/212010.530761:ERROR:base/power_monitor/thermal_state_observer_mac.mm:140] ThermalStateObserverMac unable to register to power notifications. Result: 9\n  - [pid=74163][err] [1115/212010.533743:ERROR:net/dns/dns_config_service_posix.cc:138] DNS config watch failed to start.\n  - [pid=74163][err] [1115/212010.535340:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer.74163: Permission denied (1100)\n  - [pid=74163] <gracefully close start>\n  - [pid=74163] <kill>\n  - [pid=74163] <will force kill>\n  - [pid=74163] exception while trying to kill process: Error: kill EPERM\n  - [pid=74163] <process did exit: exitCode=null, signal=SIGTRAP>\n  - [pid=74163] starting temporary directories cleanup\n  - [pid=74163] finished temporary directories cleanup\n  - [pid=74163] <gracefully close end>\n\n```"
+  },
+  {
+    "file": "recurring-final-browser-r2/recurringFinal-stop-commit-12990-original-UUID-with-GET-only/error-context.md",
+    "rawSha256": "427136dfb9ecc25f7e834f3fa967abf381b5798ce4244690c3348e7b6a8d5a89",
+    "type": "browser-failure",
+    "summary": "# Instructions\n\n- Following Playwright test failed.\n- Explain why, be concise, respect Playwright best practices.\n- Provide a snippet of code with the fix, if possible.\n\n# Test info\n\n- Name: recurringFinal.spec.js >> stop committed response lost: relogin resolves original UUID with GET only\n- Location: tests/e2e/t2/recurringFinal.spec.js:44:41\n\n# Error details\n\n```\nError: expect(locator).toBeEnabled() failed\n\nLocator: getByRole('button', { name: '核对原命令' })\nExpected: enabled\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeEnabled\" with timeout 10000ms\n  - waiting for getByRole('button', { name: '核对原命令' })\n\n```\n\n```yaml\n- dialog \"停止重复计划\":\n  - heading \"停止重复计划\" [level=2]\n  - paragraph: 立即停止生成；已经生成的任务原样保留，需要时单独取消。\n  - alert: 请求未能确认，请重试读取或核对原命令。\n  - button \"确认停止\"\n  - button \"返回\"\n```\n\n"
+  }
+]

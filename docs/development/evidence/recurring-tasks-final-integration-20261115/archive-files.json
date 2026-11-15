@@ -1,0 +1,33 @@
+{
+  "excludesSelf": true,
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "02807eb51c97f2487d686ec9cbcd012d8029df64f2cf5c6c86107e977c657bb9"
+    },
+    {
+      "path": "candidate-files.json",
+      "sha256": "9660f0a2c2a081039a93a3dab38b3197e0ca119f44f404570a5278f0ccd6d930"
+    },
+    {
+      "path": "candidate.patch",
+      "sha256": "dd58f6480900ab1bec1679043e7441ebae5cfb732a98f5569a5332df0807756b"
+    },
+    {
+      "path": "recurring-child-readback.png",
+      "sha256": "7d07cdcf18bcc1e05411a58ea0b4a7d30f30a6ef364cae16f42354ba086a6ca1"
+    },
+    {
+      "path": "recurring-final-mutation-transform.cjs",
+      "sha256": "f5d88de60f6f961645de7cddb4feb073c0022bda2b06c6a1d25acdac0fca2499"
+    },
+    {
+      "path": "recurring-final-mutations.cjs",
+      "sha256": "10dfe4bdafb9deaa1739c2e9637c316aa8fb738d28a8dc4265d332353342a54b"
+    },
+    {
+      "path": "verification.json",
+      "sha256": "267b19b97833d69b98656fc91f3b662dc265032b48a2d8d7bbf473f0cb2fb624"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "base": "3816c3f2a45daff8b66221cfffb322de11bdce33",
+  "patchSha256": "30dcffb21678db42faa96f410a6abe4f102113bb08a0072596900bcebc939bbe",
+  "files": [
+    {
+      "path": "backend/common/utils/familyDate.js",
+      "sha256": "7a062d31beeffb2ce2b8439549404bf4d76d641c1aef9e766554d08095adc617"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/setup.js",
+      "sha256": "1035a9b1e25d4bf442fb39c01b0def4be77677fd838eed969515dcc34431ea3d"
+    },
+    {
+      "path": "backend/services/homework-service/models/GrowthTask.js",
+      "sha256": "3c298172493775eea4eacb61d82395cf81ceba1294d3efc5461d9eeb74cf35bd"
+    },
+    {
+      "path": "eslint.config.js",
+      "sha256": "8ef94b02282f210faab471658340175cd0c08b00f5bae9d6b7a5ea89dbb56382"
+    },
+    {
+      "path": "backend/services/homework-service/models/RecurringTaskPlan.js",
+      "sha256": "eee932022a16dd5dbcc86738739bc5b2b534ed287a7d41566342aaf5880c007c"
+    },
+    {
+      "path": "backend/services/homework-service/models/RecurringTaskPlanCommand.js",
+      "sha256": "58abba080fde683bd00245a53b38ca6f5ca8bbbea29781017511b91065cae2f8"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanCommand.js",
+      "sha256": "b0b09d28e09b89305f72b4c72d98dfd5c278a6121936659524755dbcfcd4efa1"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanService.js",
+      "sha256": "2851a3ed0572945ff48a039fa9db4f4bc86365f1bef4361e76b7a098d775c3c9"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/recurringTaskPlan.test.js",
+      "sha256": "7e780883487dd0a1a74fbb72ff33b1530a51fd63e0ed6cc5c50ff20fe88456eb"
+    },
+    {
+      "path": "docs/api/family-recurring-tasks-api.md",
+      "sha256": "4d94f929e1be7cff707d289f50adabae5cdaa2095e9a001b99aed10f1da71e6f"
+    },
+    {
+      "path": "docs/development/family-recurring-tasks-test-plan.md",
+      "sha256": "35aa70783362698fae3e77e44c728472b77789f5534ec35583b0c2792d92f237"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md",
+      "sha256": "cec2fdb9353a66e95fd10f7f8457194c1e1f84f717ba7d7fa31d52b8866bf313"
+    }
+  ]
+}

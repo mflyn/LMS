@@ -18,6 +18,7 @@ import Register from './pages/Register';
 import FamilySetupPage from './pages/family/FamilySetupPage';
 import TodayPage from './pages/family/TodayPage';
 import TasksPage from './pages/family/TasksPage';
+import RecurringPlansPage from './pages/family/RecurringPlansPage';
 import GrowthLogsPage from './pages/family/GrowthLogsPage';
 import KnowledgePointsPage from './pages/family/KnowledgePointsPage';
 import MistakesPage from './pages/family/MistakesPage';
@@ -57,6 +58,7 @@ const AppRoutes = () => (
           <Route index element={<Navigate to="today" replace />} />
           <Route path="today" element={<TodayPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="recurring-plans" element={<RecurringPlansPage />} />
           <Route path="logs" element={<GrowthLogsPage />} />
           <Route path="points" element={<KnowledgePointsPage />} />
           <Route path="mistakes" element={<MistakesPage />} />

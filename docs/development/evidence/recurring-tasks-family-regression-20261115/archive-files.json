@@ -1,0 +1,13 @@
+{
+  "excludesSelf": true,
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "2bff854dcc98b0766ea864b186aaa52c5d55c87eaaccb3c40b8d30c708d3cc5c"
+    },
+    {
+      "path": "verification.json",
+      "sha256": "e83b53caefe006c9ad4fd1374c6679333f345e524b3609b99bc6b9d05cdf0e53"
+    }
+  ]
+}

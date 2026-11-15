@@ -48,6 +48,7 @@ const getWeekRange = (localDate) => {
 
 module.exports = {
   LOCAL_DATE_PATTERN,
+  assertLocalDate,
   addLocalDateDays,
   formatLocalDate,
   getWeekRange,

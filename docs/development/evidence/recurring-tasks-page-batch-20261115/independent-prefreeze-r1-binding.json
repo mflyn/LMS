@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-11-15T12:47:59.337Z",
+  "sourcesStable": true,
+  "sources": [
+    {
+      "file": "services/recurringCommands.js",
+      "sha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae",
+      "finalSha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae",
+      "sameAsPreviousReview": true
+    },
+    {
+      "file": "services/familySession.js",
+      "sha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c",
+      "finalSha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c",
+      "sameAsPreviousReview": true
+    },
+    {
+      "file": "services/familyApi.js",
+      "sha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c",
+      "finalSha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c",
+      "sameAsPreviousReview": true
+    },
+    {
+      "file": "pages/family/RecurringPlansPage.js",
+      "sha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80",
+      "finalSha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80",
+      "sameAsPreviousReview": false
+    },
+    {
+      "file": "__tests__/family/recurringCommands.test.js",
+      "sha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093",
+      "finalSha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093",
+      "sameAsPreviousReview": false
+    },
+    {
+      "file": "__tests__/family/RecurringPlansPage.test.js",
+      "sha256": "741710164ba5fd8fa1d75c7485ab4bb1354cde1d664fcfbba2f6f13f48c74f78",
+      "finalSha256": "741710164ba5fd8fa1d75c7485ab4bb1354cde1d664fcfbba2f6f13f48c74f78",
+      "sameAsPreviousReview": true
+    }
+  ],
+  "independentJest": {
+    "suites": 5,
+    "total": 55,
+    "passed": 55,
+    "failed": 0,
+    "success": true
+  },
+  "independentProbes": {
+    "success": true,
+    "passed": 9
+  },
+  "artifacts": [
+    {
+      "path": "<TMP>/recurring-b3-independent-prefreeze-r1-probes.json",
+      "sha256": "628d42b583fef7a0b62783dbd2c9f4a20db98c672e4474fd1cbe93db40b04557"
+    },
+    {
+      "path": "<TMP>/recurring-b3-independent-prefreeze-r1-jest.json",
+      "sha256": "313c688ae580ae53a7839fccf6d1fcc8ce3850c1fdab8e424dd94c5a269711dd"
+    },
+    {
+      "path": "<TMP>/recurring-b3-independent-prefreeze-r1-probes.cjs",
+      "sha256": "90a0452ed5f0725081f75aa98f9e1181f60c4546bd5952c10c45787acea73992"
+    },
+    {
+      "path": "<TMP>/recurring-b3-independent-fixes-r1-probes.cjs",
+      "sha256": "cecfee14c011cf2d1cb6f569bb8efb14be0f9a7803954a9ced5fe2c261d6062f"
+    }
+  ],
+  "externalEvidence": {
+    "path": "<TMP>/recurring-b3-browser-r3.log",
+    "sha256": "c747df843a67ad1f7f0abd405df4abf9641c3ab4911b1e5aa806c180ffadaf64",
+    "observed": "Log reports 2 passed; not independently rerun"
+  },
+  "scope": "Read-only prefreeze review; no worktree edits or browser/server execution; not frozen candidate binding"
+}

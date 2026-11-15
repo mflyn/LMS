@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const { LOCAL_DATE_PATTERN } = require('../../../common/utils/familyDate');
+const { LOCAL_DATE_PATTERN, assertLocalDate } = require('../../../common/utils/familyDate');
 
 const OPERATION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_ATTACHMENT_MEDIA = 100;
@@ -33,6 +33,9 @@ const requireArrayInput = (path, { allowUndefined = false } = {}) => (value) => 
 };
 
 const growthTaskSchema = new Schema({
+  recurringPlanId: { type: Schema.Types.ObjectId, immutable: true },
+  occurrenceDate: { type: String, immutable: true },
+  planRevision: { type: Number, min: 1, validate: Number.isSafeInteger, immutable: true },
   sourceTaskId: { type: Schema.Types.ObjectId, immutable: true },
   sourceMistakeId: { type: Schema.Types.ObjectId, immutable: true },
   childId: {
@@ -238,11 +241,18 @@ const growthTaskSchema = new Schema({
 });
 
 growthTaskSchema.index({ familyId: 1, childId: 1, dueDate: 1 });
+growthTaskSchema.index({ recurringPlanId: 1, occurrenceDate: 1 }, { name: 'recurring_occurrence_identity', unique: true,
+  partialFilterExpression: { recurringPlanId: { $type: 'objectId' }, occurrenceDate: { $type: 'string' } } });
 growthTaskSchema.add(require('./growthTaskCompletionFields'));
 growthTaskSchema.add(require('./growthTaskHelpFields').fields);
 growthTaskSchema.index({ familyId: 1, childId: 1, dimension: 1, status: 1 });
 
 growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next) {
+  if ([this.recurringPlanId, this.occurrenceDate, this.planRevision].some(value => value != null)) {
+    let valid = Boolean(this.recurringPlanId && this.occurrenceDate && Number.isSafeInteger(this.planRevision) && this.planRevision >= 1);
+    try { assertLocalDate(this.occurrenceDate); } catch { valid = false; }
+    if (!valid || this.sourceTaskId || this.sourceMistakeId) this.invalidate('recurringPlanId', 'Invalid recurring task identity');
+  }
   if (this.sourceTaskId && this.sourceMistakeId) {
     this.invalidate('sourceMistakeId', 'Only one learning source is permitted');
   }

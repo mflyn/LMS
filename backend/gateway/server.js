@@ -14,6 +14,8 @@ const { AI3_PATH, createAi3ProxyInput, checkAi3ProxyInput, ai3ProxyOptions } = r
 const logger = createLogger('api-gateway');
 const DAILY_PLAN_PATH = /^\/api\/children\/[^/]+\/daily-learning-plans\/[^/]+\/?$/;
 const DAILY_PLAN_INPUT_ERROR = Symbol('dailyPlanInputError');
+const RECURRING_PATH = /^\/api\/recurring-task-(?:plans|plan-commands)(?=\/|$)/i;
+const RECURRING_BODY = Symbol('recurringOriginalBody');
 
 const requireServiceHost = (serviceHosts, name) => {
   const value = serviceHosts && serviceHosts[name];
@@ -53,6 +55,9 @@ const createApp = ({
     rateLimitOptions,
     beforeJsonBody: serviceHosts.homework ? [createAi1ProxyInput(), createAi2ProxyInput(), createAi3ProxyInput()] : undefined,
     beforeSanitize: serviceHosts.homework ? (req, res, next) => {
+      // Preserve command identity, including unknown keys for strict downstream rejection.
+      // The ordinary JSON size limit, limiter and authentication remain in force.
+      if (RECURRING_PATH.test(req.path)) req[RECURRING_BODY] = req.body === undefined ? undefined : JSON.parse(JSON.stringify(req.body));
       if (req.method === 'PUT' && DAILY_PLAN_PATH.test(req.path)) {
         try { normalizeDailyLearningPlanInput(req.body); } catch (cause) {
           // Preserve the original failure without bypassing the ordinary limiter or authentication.
@@ -72,6 +77,9 @@ const createApp = ({
   }));
 
   if (serviceHosts.homework) {
+    app.use(RECURRING_PATH, authenticateToken, (req, res, next) => {
+      req.body = req[RECURRING_BODY]; next();
+    }, proxy(serviceHosts.homework, { proxyReqPathResolver: req => req.originalUrl }));
     app.use(AI1_PATH, authenticateToken, checkAi1ProxyInput,
       proxy(serviceHosts.homework, ai1ProxyOptions));
     app.use(AI2_PATH, authenticateToken, checkAi2ProxyInput,

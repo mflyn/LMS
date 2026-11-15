@@ -1,0 +1,59 @@
+{
+  "sourceFile": "recurring-b2-independent-terminal-unknown-r1-probes.json",
+  "sourceSha256": "5fe8dd2e934ae10d09e15ede3568cc251445f0dd63596f240e6b6805bc98f4df",
+  "evidence": {
+    "scannerSha256": "f707b3dcca9a4ffb829b953c6d70d2592abd1730d33666e56888eefdfe6e6411",
+    "probes": [
+      {
+        "name": "ended_unknown_reconciles_from_zero_instances",
+        "passed": true,
+        "processed": [
+          1,
+          1,
+          0
+        ],
+        "taskCount": 1
+      },
+      {
+        "name": "stopped_unknown_reconciles_from_zero_instances",
+        "passed": true,
+        "processed": [
+          1,
+          1,
+          0
+        ],
+        "taskCount": 1
+      },
+      {
+        "name": "unresolved_low_id_respects_shared_50_page_cursor",
+        "passed": true,
+        "processed": [
+          50,
+          1,
+          1,
+          0
+        ],
+        "uniquePlansBeforeRetry": 51,
+        "taskCount": 51
+      },
+      {
+        "name": "timeout_then_late_success",
+        "passed": true,
+        "firstStop": "RECURRING_SCAN_STOP_UNKNOWN",
+        "secondStopInFlight": "RECURRING_SCAN_STOP_UNKNOWN",
+        "explicitRetry": "RESOLVED",
+        "repeatedRetry": "RESOLVED"
+      },
+      {
+        "name": "timeout_then_late_unknown",
+        "passed": true,
+        "firstStop": "RECURRING_SCAN_STOP_UNKNOWN",
+        "secondStopInFlight": "RECURRING_SCAN_STOP_UNKNOWN",
+        "explicitRetry": "RECURRING_SCAN_STOP_UNKNOWN",
+        "repeatedRetry": "RECURRING_SCAN_STOP_UNKNOWN"
+      }
+    ],
+    "success": true,
+    "note": "Fresh isolated loopback Mongo replica set; real service transactions, controlled service-boundary reply loss and delays. Distinguishes late known success from explicit WRITE_UNKNOWN."
+  }
+}

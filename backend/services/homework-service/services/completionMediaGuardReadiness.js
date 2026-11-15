@@ -1,7 +1,11 @@
 const { oid, uuid, date, revision, fail, scan, one, assertPrerequisites } = require('../../../common/services/completionRetentionReadinessHelpers');
 
 const GUARD = 'completionmediaguards';
-const SPECS = { [GUARD]: { unique: [{ familyId: 1, childId: 1, mediaId: 1 }] }, growthtasks: {} };
+// Optional while recurring plans are disabled; their own readiness requires it when enabled.
+const SPECS = { [GUARD]: { unique: [{ familyId: 1, childId: 1, mediaId: 1 }] }, growthtasks: {
+  partialUnique: [{ key: { recurringPlanId: 1, occurrenceDate: 1 },
+    partialFilterExpression: { recurringPlanId: { $type: 'objectId' }, occurrenceDate: { $type: 'string' } } }]
+} };
 const PROJECTION = { _id: 1, familyId: 1, childId: 1, mediaId: 1, state: 1, revision: 1,
   retirementId: 1, retiredAt: 1, createdAt: 1, updatedAt: 1 };
 const USAGE = ['completionEvidence.completionMediaIds', 'completionMediaBindings.mediaId',

@@ -1,0 +1,70 @@
+{
+  "sourceFile": "recurring-b2-independent-terminal-unknown-r1-binding.json",
+  "sourceSha256": "f3a00d5a4328cd471cdf92c4bd2b9ec51ce7c010a876331a97be3402c068cf55",
+  "evidence": {
+    "candidatePatchSha256": "88ae98bad4acf08c3380b7cb19f602b633cfc68998e9ec9898c1b778f23efdfb",
+    "manifestPatchSha256": "88ae98bad4acf08c3380b7cb19f602b633cfc68998e9ec9898c1b778f23efdfb",
+    "manifestFileCount": 22,
+    "fileMismatches": [],
+    "reversePatchCheckExitCode": 0,
+    "sourceReportCount": 32,
+    "sourceMismatches": [],
+    "supersededPatchSha256": "6ef0c80d1ba622982ff4e430bca11b71d4b19b5e99a95a290163577a780635b2",
+    "independentRuns": [
+      {
+        "path": "/tmp/recurring-b2-independent-terminal-unknown-r1-related.json",
+        "sha256": "a521cd53da5632b7bb7893d29f8f66d6881bdfaeb5fa739ba621497baa9ee952",
+        "success": true,
+        "tests": 202,
+        "passed": 202,
+        "failed": 0,
+        "suites": [
+          {
+            "name": "recurringTaskPlanRuntime.test.js",
+            "status": "passed",
+            "tests": 43
+          },
+          {
+            "name": "growthTaskCompletionGuardReadiness.test.js",
+            "status": "passed",
+            "tests": 38
+          },
+          {
+            "name": "growthTaskCompletionReadiness.test.js",
+            "status": "passed",
+            "tests": 53
+          },
+          {
+            "name": "recurringTaskPlan.test.js",
+            "status": "passed",
+            "tests": 51
+          },
+          {
+            "name": "growthTaskCompletionProductionStartup.test.js",
+            "status": "passed",
+            "tests": 13
+          },
+          {
+            "name": "serverLifecycle.test.js",
+            "status": "passed",
+            "tests": 4
+          }
+        ]
+      },
+      {
+        "path": "/tmp/recurring-b2-independent-terminal-unknown-r1-probes.json",
+        "sha256": "5fe8dd2e934ae10d09e15ede3568cc251445f0dd63596f240e6b6805bc98f4df",
+        "success": true,
+        "probes": 5,
+        "passed": 5
+      }
+    ],
+    "probeScript": {
+      "path": "/tmp/recurring-b2-independent-terminal-unknown-r1-probes.cjs",
+      "sha256": "39428b51054912bebe7497f774e409cfae67535f0e2150d7f847857e80325527"
+    },
+    "scope": "Local second-batch implementation review only; no production deployment or real-user acceptance.",
+    "stopSemantics": "In-flight and explicit WRITE_UNKNOWN remain rejected; explicit retry after observed late known success is legitimate.",
+    "priorEvidence": "Prior 88/38, 130 and frozen-6ef0c80d reports were not overwritten or added to the current test counts."
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "excludesSelf": true,
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "0724b82b36814ccc55cb7c8484e9effa43a7c308c446d01fea8900a9d3053b45"
+    },
+    {
+      "path": "candidate-files.json",
+      "sha256": "d0875d43a50a36b6ea43464213ecc45b3382c95b341114ba69c431bb26ef2c90"
+    },
+    {
+      "path": "candidate.patch",
+      "sha256": "f29db32dbbc9fec703f39363a52a79dde44544b199322c6fc5bd7641547d0632"
+    },
+    {
+      "path": "evidence-rollover.json",
+      "sha256": "cfe7f572fbd294b9a392070f458b457051f4485e9f481598299e2e644b98292d"
+    },
+    {
+      "path": "independent-coverage-r1-binding.json",
+      "sha256": "fc964b065635f650927c756515e03f7664c973a7f5fe5d063f2e6a9c04fceb5e"
+    },
+    {
+      "path": "independent-final-r1-binding.json",
+      "sha256": "f7f6320d079e4fc6a5fd14338b2328287d8d462e94eda4055d6e0710fd270864"
+    },
+    {
+      "path": "independent-final-r2-binding.json",
+      "sha256": "44bad6de5fabbb8a912d02683c29d3f11edb5fc771bf8c4bb33683c9d4a7df44"
+    },
+    {
+      "path": "independent-prefreeze-r1-binding.json",
+      "sha256": "1628600d66ef5698cdd88bd15b768415205e17e318395dee9078bd2634afd1d6"
+    },
+    {
+      "path": "independent-prefreeze-r1-probes.json",
+      "sha256": "628d42b583fef7a0b62783dbd2c9f4a20db98c672e4474fd1cbe93db40b04557"
+    },
+    {
+      "path": "mutations-binding.json",
+      "sha256": "ac82ec376ef297417f838dcc7a58c4cfaba29f8177fe0ba8eeeaf973ecb43f3b"
+    },
+    {
+      "path": "mutations.cjs",
+      "sha256": "5845ac8a293f16b0337c6b3f5287bf15ee23bf0070a335e073f9c9b439c0487f"
+    },
+    {
+      "path": "recurring-1280.png",
+      "sha256": "9d99a991d844cab66c2ae1c251bdfad64630e17fa7f5e00aec368e864ad916a0"
+    },
+    {
+      "path": "recurring-360.png",
+      "sha256": "1094db9d949b3f2d91c7a27694084854c990e3882cea8bc10a3cd3d674764d41"
+    },
+    {
+      "path": "recurring-768.png",
+      "sha256": "a8884c03f47813358e0a0aa072f7c4002a3d4b25cc638ea84daee0173da9f5ce"
+    },
+    {
+      "path": "verification-prefinal.json",
+      "sha256": "b54b4ecece2e912545f85d9d47bfbc09c1903e3e8aaaa4a0ed34f363dca0184d"
+    },
+    {
+      "path": "verification.json",
+      "sha256": "04736d2d1158828ba314fff0e0a870a20bf6c3f2af594771028fc762ed5c9968"
+    }
+  ]
+}

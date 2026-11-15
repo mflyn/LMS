@@ -1,0 +1,258 @@
+{
+  "approvedCandidatePatchSha256": "dd58f6480900ab1bec1679043e7441ebae5cfb732a98f5569a5332df0807756b",
+  "gate": "OPEN",
+  "acceptance": "FINAL_INTEGRATION_ACCEPTED",
+  "cleanupP2": "CLOSED_BY_USER",
+  "records": [
+    {
+      "file": "recurring-final-user-review-audit.json",
+      "rawSha256": "1a95953a8179cb9c8fdfd5d9ea8bd83f3e94302a72e1f0ca0e6edde292919fe1",
+      "kind": "review-audit-historical",
+      "result": {
+        "candidatePatchSha256": "dd58f6480900ab1bec1679043e7441ebae5cfb732a98f5569a5332df0807756b",
+        "candidateFilesMatched": 37,
+        "archiveFilesMatched": 7,
+        "originalReportsMatched": 29,
+        "rebuiltFiles": 37,
+        "unchangedB3SourceFiles": 30,
+        "decision": "No new reproducible P1/P2; cleanup P2 fix verified; batch approval and overall gate remain user decisions",
+        "executed": {
+          "relatedJest": {
+            "suites": 4,
+            "passed": 18
+          },
+          "mutations": {
+            "audit": 1,
+            "date": 1,
+            "cleanup": 3,
+            "expectedExit": 1
+          },
+          "chromium": {
+            "passed": 5,
+            "retries": 0,
+            "seconds": 42.4
+          },
+          "docsGate": "passed",
+          "diffCheck": "passed"
+        },
+        "limits": [
+          "Cross-day generation uses injected service clock, not automatic midnight timer",
+          "Cleanup counterexamples use controlled async fakes, not real Mongo rollback injection",
+          "Chromium is not WebKit/device/human acceptance",
+          "No project file edits, commits, pushes, deployment or human test entry changes"
+        ],
+        "evidence": [
+          {
+            "file": "<TMP>/recurring-final-review-18.json",
+            "sha256": "aa032edad37884150cd1373eb546166034bf80c0530047ac2b7c0a9dadb0ab37"
+          },
+          {
+            "file": "<TMP>/recurring-final-review-mutant-audit.json",
+            "sha256": "79caf9d8c6281b584310d38c6f89b459fb40bac8b7b1afc510bac5fac0d34e24"
+          },
+          {
+            "file": "<TMP>/recurring-final-review-mutant-date.json",
+            "sha256": "48bcf64a4edae59859edfdc975fed55a89923718092456b60bae775a69260073"
+          },
+          {
+            "file": "<TMP>/recurring-final-review-mutant-cleanup.json",
+            "sha256": "73bab497ea9ebb32e4ff997410661ad0b72eeb359e5cdaf56d5945eab97574fe"
+          },
+          {
+            "file": "<TMP>/recurring-final-review-browser.log",
+            "sha256": "621eaec3fa7447d46398ce71e3afa3205a9ffcfee3856cb5f656bcc5998078ba"
+          }
+        ]
+      }
+    },
+    {
+      "file": "recurring-final-review-18.json",
+      "rawSha256": "aa032edad37884150cd1373eb546166034bf80c0530047ac2b7c0a9dadb0ab37",
+      "kind": "jest",
+      "suites": 4,
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "pending": 0,
+      "assertions": [
+        {
+          "name": "T2 real login and official HTTP completion protocol seed exposes known synthetic identities and details without tokens; core reads are write-free",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "T2 real login and official HTTP completion protocol upload -> complete -> refresh -> version confirmation -> child review has one ledger and first audit",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "T2 real login and official HTTP completion protocol a replacement snapshot clears omitted compatibility values and replays without republishing or changing first audit",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "T2 real login and official HTTP completion protocol parent entry without images records the real actor; enabled protocol rejects legacy completion bodies",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "T2 real login and official HTTP completion protocol losing a committed public completion response retries the same UUID without republishing",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "T2 real login and official HTTP completion protocol real remote COMMITTED lost acknowledgement is discovered read-only after login and only original actor can recover",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "T2 real login and official HTTP completion protocol parent cannot confirm an unseen replacement version; lost confirmation response preserves one ledger and audit",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "T2 real login and official HTTP completion protocol sibling, foreign family and stale child cannot read or change work; public internal endpoints stay closed",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "T2 real login and official HTTP completion protocol normal privacy deletion invalidates a prior capability without changing teaching state, reward or first deletion audit",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "formal Gateway plan lifecycle preserves actual estimator, scopes, task business fields and all other collections",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "lost committed PUT is recovered with original version conflict and read, never a second write",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "completion and confirmation are projected without a plan save changing completion, help, media or rewards",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "anonymous, sibling, foreign, forged identity and removed coparent cannot read or mutate the plan",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "recurring barrier awaits rollback and full session cleanup without requiring a success record",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "recurring barrier preserves body and execution failures and waits even before the insert hook is reached",
+          "status": "passed",
+          "failures": []
+        },
+        {
+          "name": "recurring barrier lawful success returns the body result only after full execution cleanup",
+          "status": "passed",
+          "failures": []
+        }
+      ]
+    },
+    {
+      "file": "recurring-final-review-mutant-audit.json",
+      "rawSha256": "79caf9d8c6281b584310d38c6f89b459fb40bac8b7b1afc510bac5fac0d34e24",
+      "kind": "jest",
+      "suites": 1,
+      "total": 2,
+      "passed": 0,
+      "failed": 1,
+      "pending": 1,
+      "assertions": [
+        {
+          "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+          "status": "failed",
+          "failures": [
+            "Error: expect(received).toMatchObject(expected)\n\n- Expected  - 3\n+ Received  + 3\n\n  Object {\n-   \"confirmedAt\": \"2026-11-15T13:40:44.676Z\",\n-   \"confirmedByParentId\": \"6af9b65aff090e4a1c06842a\",\n-   \"parentFeedback\": \"Synthetic first review\",\n+   \"confirmedAt\": \"2026-11-15T13:40:44.740Z\",\n+   \"confirmedByParentId\": \"6af9b65aff090e4a1c06842f\",\n+   \"parentFeedback\": \"Must not replace\",\n    \"starAwardState\": \"awarded\",\n  }\n    at Object.<anonymous> (<WORKTREE>/backend/tests/t2/recurringPlans.integration.test.js:76:55)"
+          ]
+        },
+        {
+          "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+          "status": "pending",
+          "failures": []
+        }
+      ]
+    },
+    {
+      "file": "recurring-final-review-mutant-date.json",
+      "rawSha256": "48bcf64a4edae59859edfdc975fed55a89923718092456b60bae775a69260073",
+      "kind": "jest",
+      "suites": 1,
+      "total": 2,
+      "passed": 0,
+      "failed": 1,
+      "pending": 1,
+      "assertions": [
+        {
+          "name": "recurring image completion survives lost response; real star loss resumes through coparent with first audit and private readback",
+          "status": "pending",
+          "failures": []
+        },
+        {
+          "name": "two injected local dates generate distinct instances and independent rewards; rescans and stop never duplicate or alter work",
+          "status": "failed",
+          "failures": [
+            "Error: expect(received).not.toBe(expected) // Object.is equality\n\nExpected: not \"6af9b666a5b4b34a0f08558f\"\n    at Object.<anonymous> (<WORKTREE>/backend/tests/t2/recurringPlans.integration.test.js:110:41)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "recurring-final-review-mutant-cleanup.json",
+      "rawSha256": "73bab497ea9ebb32e4ff997410661ad0b72eeb359e5cdaf56d5945eab97574fe",
+      "kind": "jest",
+      "suites": 1,
+      "total": 3,
+      "passed": 0,
+      "failed": 3,
+      "pending": 0,
+      "assertions": [
+        {
+          "name": "recurring barrier awaits rollback and full session cleanup without requiring a success record",
+          "status": "failed",
+          "failures": [
+            "Error: expect(received).not.toBe(expected) // Object.is equality\n\nExpected: not [Function execute]\n    at Object.<anonymous> (<WORKTREE>/backend/tests/t2/recurringBarrier.integration.test.js:18:33)"
+          ]
+        },
+        {
+          "name": "recurring barrier preserves body and execution failures and waits even before the insert hook is reached",
+          "status": "failed",
+          "failures": [
+            "Error: expect(received).toBeInstanceOf(expected)\n\nExpected constructor: AggregateError\nReceived constructor: Error\n\n    at Object.<anonymous> (<WORKTREE>/backend/tests/t2/recurringBarrier.integration.test.js:38:25)"
+          ]
+        },
+        {
+          "name": "recurring barrier lawful success returns the body result only after full execution cleanup",
+          "status": "failed",
+          "failures": [
+            "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true\n    at Object.<anonymous> (<WORKTREE>/backend/tests/t2/recurringBarrier.integration.test.js:48:49)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "recurring-final-review-browser.log",
+      "rawSha256": "621eaec3fa7447d46398ce71e3afa3205a9ffcfee3856cb5f656bcc5998078ba",
+      "kind": "browser-log",
+      "text": "\nRunning 5 tests using 1 worker\n\n(node:95642) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n✅ 配置加载成功 (环境: test)\n  ✓  1 tests/e2e/t2/recurringFinal.spec.js:45:41 › patch committed response lost: relogin resolves original UUID with GET only (9.1s)\n  ✓  2 tests/e2e/t2/recurringFinal.spec.js:45:41 › stop committed response lost: relogin resolves original UUID with GET only (7.3s)\n  ✓  3 tests/e2e/t2/recurringFinal.spec.js:81:1 › abort response loss retains original marker across relogin; confirmed tombstone rejects a late original POST (7.3s)\n  ✓  4 tests/e2e/t2/recurringFinal.spec.js:111:1 › transaction is still in flight during logout: not_found cannot unlock, late commit is recovered without a second POST (7.3s)\n  ✓  5 tests/e2e/t2/recurringFinal.spec.js:145:1 › recurring work real pages: child uploads, coparent views and confirms, child reloads readonly picture and feedback (8.6s)\n\n  5 passed (42.4s)\n"
+    }
+  ]
+}
