@@ -35,6 +35,31 @@
 
 ## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
 
+### 当前交付摘要（2026-11-15）
+
+**已合并、自动化通过、真人／真机待验。** 当前固定代码候选为 main
+`1abb623da7eed3bd27b159da3216189952586f1e`，与本轮核对的 origin/main 一致。
+
+| 最近交付 | 合并提交 | CI 与证据边界 |
+| --- | --- | --- |
+| [PR #49](https://github.com/mflyn/LMS/pull/49)：求助焦点、WebKit 导航测试、44px 触控区域 | `a1cf74f3` | [原分批验收](evidence/functional-p2-followup-20261114/README.md)保留；[合并后 CI 43614031778](https://github.com/mflyn/LMS/actions/runs/43614031778)曾失败，13b 为 94 通过／3 失败，不改写 |
+| [PR #51](https://github.com/mflyn/LMS/pull/51)：合成任务日期按家庭时区生成 | `5c1bec39` | [CI 43623034340](https://github.com/mflyn/LMS/actions/runs/43623034340)通过；[日期夹具修订](evidence/t2-seed-date-20261115/README.md)保留原失败，不是业务功能或真人验收 |
+| [PR #50](https://github.com/mflyn/LMS/pull/50)：T5 补测、计划及知识点接续 | `1abb623d` | [main CI 43665482647](https://github.com/mflyn/LMS/actions/runs/43665482647)通过；[冻结补丁与分批证据](evidence/t5-nb-page-continuation-20261114/README.md)不改绑 |
+
+上述最新 main CI 的前端为 78 套件／1279 项，07b 为 10 套件／113 项，13b 为 102 项通过；
+这是该次自动化结果，不与旧开发、独立复验或分批结果相加。可选性能、安全扫描、镜像发布和部署任务跳过，不计为通过。
+T5-NB-001／002 当前为 **SCOPED_AUTOMATION_COMPLETE**，已移出当前自动化待办；
+历史 OPEN_NONBLOCKING 快照保持，AI2-VIEW-NB-001 及其他非阻断项不因此关闭。
+
+[当前差异交接](family-child-entry-test-plan.md#8-main-1abb623d-差异验收交接2026-11-15)只准备测试／评审线程后续接续，
+不更新真人入口、不重跑浏览器、不改变现有合成数据。原 `2ac06898` 三页面证据不转记为本候选受测结果。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、MANUAL_PENDING、DEVICE_PENDING、历史 Docker INCOMPLETE_FAILED、历史失败及后置范围不变；
+不扩展 WP1/T8 执行器，不新增 Git、模型、服务器或部署授权。
+
+### 2026-11-14 交付摘要快照
+
+以下按原日期保留，旧“当前”指当时状态，不覆盖上方 2026-11-15 摘要。
+
 **当前交付摘要（2026-11-14）：专属入口＋PIN 已合并、真人待验。**
 [PR #46](https://github.com/mflyn/LMS/pull/46) 已使用 merge commit 合入 main
 `2ac0689881a62d97bd79b731a8712ca4023406b5`；[合并后 CI 43554728658](https://github.com/mflyn/LMS/actions/runs/43554728658)
