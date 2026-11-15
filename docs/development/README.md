@@ -53,6 +53,12 @@ T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_
 
 ### 历史交付与授权快照
 
+2026-11-14 T5 非阻断建议后续：T5-NB-001／002 已补齐固定候选内自动化覆盖并纳入永久回归，
+仅记 SCOPED_AUTOMATION_COMPLETE，见[补测、今日计划与知识点接续记录](evidence/t5-nb-page-continuation-20261114/README.md)。
+该记录区分测试线程分批结果、开发纳入复验及历史失败；不关闭真人／真机或其他总门禁，不更新原测试入口。
+知识点加载态误判 P2 已补真实响应与稳定页面校验，并新增错误响应永久反例；2026-11-14 用户批准本批限定自动化验收及 P2 关闭，ACCEPTED / USER_APPROVED、P2 CLOSED，受验补丁和 44 份冻结证据绑定见同记录第 7 节。第 6 节待验收文字保留为历史快照，不将旧 R1 通过当作该缺口已被保护，也不将自动化通过写为真人／真机通过。
+下方旧记录中的两项 OPEN_NONBLOCKING 保留为当时快照，其他非阻断及后置义务不变；本批不提交推送或改写 PR #49。
+
 2026-11-14 后续功能复评：求助焦点恢复、WebKit 业务导航与 44px 触控区域三项 P2
 已获限定关闭授权，见[固定候选、独立复评及关闭记录](evidence/functional-p2-followup-20261114/README.md)。
 受验身份为 `e5aea7e5` 加九文件未提交补丁，不是已合并版本；本轮仅补文档收口。
