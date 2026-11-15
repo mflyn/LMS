@@ -28,19 +28,21 @@ const FamilyProbe = () => {
 };
 beforeEach(() => { localStorage.clear(); sessionStorage.clear(); jest.clearAllMocks(); });
 
-test.each(['parent', 'student'])('%s context follows cross-tab replacement and unknown clearing without discarding commands', async role => {
+test.each(['parent', 'student'])('%s context follows its credential store changes and unknown removal preserves commands', async role => {
   const save = role === 'parent' ? session.saveParentSession : session.saveChildSession;
   const make = role === 'parent' ? parent : student;
   const key = role === 'parent' ? session.PARENT_SESSION_KEY : session.CHILD_SESSION_KEY;
+  const credentialStore = role === 'parent' ? localStorage : sessionStorage;
   save(make('a'));
   render(role === 'parent' ? <AuthProvider><AuthProbe /></AuthProvider> : <ChildAuthProvider><ChildProbe /></ChildAuthProvider>);
   act(() => {
-    localStorage.setItem(key, JSON.stringify(make('b')));
-    window.dispatchEvent(new StorageEvent('storage', { key, newValue: localStorage.getItem(key) }));
+    credentialStore.setItem(key, JSON.stringify(make('b')));
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: credentialStore.getItem(key), storageArea: credentialStore }));
   });
   await waitFor(() => expect(screen.getByTestId(role)).toHaveTextContent('b'));
   const own = command('b', role);
-  act(() => { localStorage.clear(); window.dispatchEvent(new StorageEvent('storage', { key: null })); });
+  act(() => { credentialStore.removeItem(key); credentialStore.removeItem(`family-growth.session-change.v1:${role}`);
+    window.dispatchEvent(new StorageEvent('storage', { key: null, storageArea: credentialStore })); });
   await waitFor(() => expect(screen.getByTestId(role)).toHaveTextContent('none'));
   expect(sessionStorage.getItem(own)).not.toBeNull();
 });

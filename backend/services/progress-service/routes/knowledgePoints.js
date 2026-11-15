@@ -7,6 +7,7 @@ const { authenticateGateway } = require('../../../common/middleware/auth');
 const { parsePagination, sendFamilyError } = require('../../../common/utils/familyResponse');
 const { logFamilyOperation } = require('../../../common/utils/familyAudit');
 const { requireParentChild, resolveChildAccess } = require('../services/growthAccess');
+const { revisionOf, revisionMatch } = require('../services/knowledgePointState');
 
 const router = express.Router();
 const DIMENSIONS = ['moral', 'academic', 'physical', 'artistic', 'labor'];
@@ -166,28 +167,37 @@ router.patch('/:knowledgePointId', authenticateGateway, async (req, res) => {
     if (hasUnknownField(req.body, UPDATE_FIELDS)) {
       return sendError(res, 400, 'VALIDATION_ERROR', 'Request contains unsupported fields');
     }
-    const point = await KnowledgePoint.findById(req.params.knowledgePointId);
-    if (!point) return sendError(res, 404, 'RESOURCE_NOT_FOUND', 'Knowledge point not found');
-    const access = await requireParentChild(req.user, point.childId.toString());
-    if (!access || access.familyId.toString() !== point.familyId.toString()) {
-      return sendError(res, 403, 'CHILD_ACCESS_DENIED', 'Cannot access this knowledge point');
-    }
-    const previousMasteryLevel = point.masteryLevel;
-    UPDATE_FIELDS.forEach((field) => {
-      if (Object.prototype.hasOwnProperty.call(req.body, field)) point[field] = req.body[field];
-    });
-    point.updatedByParentId = req.user.id;
-    const shouldAppendMasteryEvent = Object.prototype.hasOwnProperty.call(req.body, 'masteryLevel')
-      && req.body.masteryLevel !== previousMasteryLevel;
+    let point;
+    const operationId = operationIdFor(req);
     const session = await mongoose.startSession();
     try {
       await session.withTransaction(async () => {
-        await point.save({ session });
-        if (shouldAppendMasteryEvent) {
-          await createMasteryEvent(point, operationIdFor(req), session);
+        point = await KnowledgePoint.findById(req.params.knowledgePointId).session(session);
+        if (!point) throw Object.assign(new Error('Knowledge point not found'), { status: 404, code: 'RESOURCE_NOT_FOUND' });
+        const access = await requireParentChild(req.user, point.childId.toString(), { session });
+        if (!access || String(access.familyId) !== String(point.familyId)) {
+          throw Object.assign(new Error('Cannot access this knowledge point'), { status: 403, code: 'CHILD_ACCESS_DENIED' });
         }
-      });
+        const revision = revisionOf(point), previousMasteryLevel = point.masteryLevel;
+        const update = { updatedByParentId: req.user.id };
+        for (const field of UPDATE_FIELDS) {
+          if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+            point[field] = req.body[field]; update[field] = point[field];
+          }
+        }
+        await point.validate();
+        const shouldAppendMasteryEvent = Object.prototype.hasOwnProperty.call(req.body, 'masteryLevel')
+          && point.masteryLevel !== previousMasteryLevel;
+        point = await KnowledgePoint.findOneAndUpdate({ _id: point._id, familyId: point.familyId,
+          childId: point.childId, ...revisionMatch(revision) }, { $set: update, $inc: { stateRevision: 1 } },
+        { session, new: true, runValidators: true });
+        if (!point) throw Object.assign(new Error('Knowledge point state changed'), { status: 409, code: 'RESOURCE_CONFLICT' });
+        if (shouldAppendMasteryEvent) {
+          await createMasteryEvent(point, operationId, session);
+        }
+      }, { readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' } });
     } catch (error) {
+      if ([403, 404, 409].includes(error.status)) return sendError(res, error.status, error.code, error.message);
       if (error.name === 'ValidationError' || error.name === 'CastError') {
         return sendError(res, 400, 'VALIDATION_ERROR', error.message);
       }

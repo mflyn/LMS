@@ -1,0 +1,146 @@
+{
+  "scope": "AI1_A_LOCAL_NO_MODEL",
+  "status": "A_ACCEPTANCE_PENDING",
+  "totalGate": "OPEN",
+  "singleRunFullGreen": false,
+  "runtime": {
+    "development": "Node 22.15.0 / MongoDB 7.0.14 temporary replica set",
+    "independentContractReview": "Node 24.22.1",
+    "correctedGit": "native arm64 Git 2.55.0",
+    "dependencies": "existing local dependencies; temporary link removed"
+  },
+  "commands": [
+    {
+      "command": "node node_modules/jest/bin/jest.js --config backend/services/homework-service/jest.config.js --runInBand --runTestsByPath backend/services/homework-service/__tests__/services/ai1Contract.test.js backend/services/homework-service/__tests__/services/ai1Service.test.js",
+      "exitCode": 0,
+      "suitesPassed": 2,
+      "testsPassed": 48,
+      "log": "targeted-reviewed-node22.log"
+    },
+    {
+      "command": "npm run test:family-regression",
+      "exitCode": 1,
+      "suitesPassed": 161,
+      "suitesFailed": 2,
+      "testsPassed": 4980,
+      "testsFailed": 2,
+      "seconds": 840.08,
+      "log": "family-regression-node22-final.log",
+      "failures": [
+        "releaseBuildInput.test.js: old x86 Git selected by PATH, spawn error -86",
+        "checkGitClean.test.js: same old x86 Git, spawnSync error -86"
+      ]
+    },
+    {
+      "command": "node node_modules/jest/bin/jest.js --config=backend/jest.config.js --selectProjects family-common homework-service --runInBand --runTestsByPath backend/common/deployment/__tests__/releaseBuildInput.test.js backend/common/deployment/__tests__/checkGitClean.test.js backend/common/deployment/__tests__/familyDocumentationGate.test.js backend/services/homework-service/__tests__/services/ai1Contract.test.js backend/services/homework-service/__tests__/services/ai1Service.test.js",
+      "environment": "Node22-only PATH shim followed by native arm64 Git",
+      "exitCode": 0,
+      "suitesPassed": 5,
+      "testsPassed": 461,
+      "log": "final-affected-native-git.log",
+      "scope": "failed environment suites plus all affected AI1/documentation suites; NOT a second full regression"
+    },
+    {
+      "command": "npm run docs:family:check",
+      "exitCode": 0,
+      "aiContracts": 23,
+      "contractFixtureCases": 412
+    },
+    {
+      "command": "ESLint affected JavaScript files",
+      "exitCode": 0,
+      "log": "lint.log"
+    },
+    {
+      "command": "git diff --check; new regular files whitespace/newline/JSON checks; AJV production lock closure check",
+      "exitCode": 0
+    }
+  ],
+  "redEvidence": [
+    {
+      "log": "url-p2-red.log",
+      "exitCode": 1,
+      "testsFailed": 5,
+      "testsPassed": 15
+    },
+    {
+      "log": "url-punctuation-p2-red.log",
+      "exitCode": 1,
+      "testsFailed": 2,
+      "testsPassed": 21
+    },
+    {
+      "log": "family-regression-node22.log",
+      "exitCode": 130,
+      "reason": "stopped after worktree test-log EPERM; partial run not counted as passed"
+    },
+    {
+      "log": "family-regression-node22-controlled.log",
+      "exitCode": 130,
+      "reason": "stopped after existing relative node_modules import failed; partial run not counted as passed"
+    },
+    {
+      "location": "development conversation output",
+      "reason": "initial missing implementation modules; synthetic User username fixture failure (15); disabled-branch source-error precedence failure (1 failed / 14 passed); retained, not hidden"
+    }
+  ],
+  "mutations": {
+    "log": "alias-mutations.log",
+    "englishOnlyAlias": "CAUGHT",
+    "substringAlias": "CAUGHT",
+    "method": "in-memory module replacement; source unchanged"
+  },
+  "independentReview": {
+    "initial": "read-only domain/contract/model review; 35 targeted tests passed before final expanded coverage; one P2 URL issue and two assertion gaps found",
+    "p2": "FIXED_REVIEW_PASS",
+    "finalContractTestsPassed": 23,
+    "finalContractExitCode": 0,
+    "firstAbsentCommandRace": "source-reviewed; parent Node22 execution passed",
+    "winnerDependentArtifactConsistency": "source-reviewed; parent Node22 execution passed",
+    "digest": "independently recomputed SHA-256 from explicitly ordered canonical JSON",
+    "newActionableAFindings": "NONE_REPORTED",
+    "notPerformed": "independent full family regression / real HTTP / browser / Provider validation",
+    "limitation": "URL text filter is conservative; not automatic de-identification or a transport security boundary"
+  },
+  "boundaries": {
+    "sources": "synthetic reader",
+    "outcomes": "synthetic internal domain port",
+    "database": "real temporary replica set",
+    "providerRequests": 0,
+    "productionRoutes": "NOT_MOUNTED",
+    "remoteProtocol": "B_PENDING",
+    "ui": "C_PENDING",
+    "httpBrowserAcceptance": "D_PENDING",
+    "paidCalls": "NOT_AUTHORIZED",
+    "gitProjectCommits": 0,
+    "pushes": 0,
+    "deployments": 0
+  },
+  "retained": [
+    "AI0_PARENT_REVIEW_AND_CORRECTIONS_REQUIRED",
+    "T4_OPEN",
+    "T8_OPEN",
+    "T9_NOT_STARTED",
+    "DEVICE_PENDING",
+    "Docker_INCOMPLETE_FAILED",
+    "T5-NB-001_OPEN_NONBLOCKING",
+    "T5-NB-002_OPEN_NONBLOCKING",
+    "ADVANCED_RECOVERY_AND_NEW_CLEANUP_REMAINDER_DEFERRED",
+    "HISTORICAL_FAILURES"
+  ],
+  "rawLogs": {
+    "storage": "LOCAL_PRIVATE_ONLY",
+    "sha256": {
+      "url-p2-red.log": "2019f3cd90d3fbf3fcdc311f0a441eea14d8ce5092378a4a1790827a6431d9c1",
+      "url-punctuation-p2-red.log": "33c4809de62d8b92aa302a0daf0af3d0a72ad6b27a6fa7be193936293097a69f",
+      "targeted-reviewed-node22.log": "d1f0171989731bdf07b9f479cea686c121d3327d2ab60678b550e1a2b4bc0346",
+      "alias-mutations.log": "5a5168b3312bc5f7f77fc45b49663fc2808496def48a0fe3905feaa9f0f1fbca",
+      "family-regression-node22.log": "f5e3c19fc9fac406cdd400ff0a27549b16f09219d7e27d9136ca1927edbbc6c4",
+      "family-regression-node22-controlled.log": "aefbb0f583a8b12a5699dd0cc14027ecf2ecd02d4807e8c2af977a8ebfcf4cdb",
+      "family-regression-node22-final.log": "e60d8fbd03bd421a91b6dbd003cd54df9aebc3ed369008b11074a88d328e9090",
+      "final-affected-native-git.log": "3d21062e6e7c1eafa45b0b0d02ebfc0af3c3723047560818a4e1a9478f0d310c",
+      "release-build-input-arm-git.log": "4de1c8eac976573816bac9c3e78aba1d24161656e7ceca700eb70bcccdba7cf6",
+      "lint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

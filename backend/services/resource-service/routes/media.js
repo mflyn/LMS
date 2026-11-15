@@ -28,8 +28,10 @@ const createMediaRouter = ({
   }
 
   const router = express.Router();
-  const readContent = asyncRoute(async (req, res) => {
-    const content = await mediaService.readContent({
+  const contentHandler = (authenticated = false) => asyncRoute(async (req, res) => {
+    const read = authenticated ? mediaService.readAuthenticatedContent : mediaService.readContent;
+    const content = await read({
+      ...(authenticated ? { identity: req.user } : {}),
       mediaId: req.params.mediaId,
       path: `${req.baseUrl}${req.path}`,
       expires: req.query.expires,
@@ -47,10 +49,12 @@ const createMediaRouter = ({
     });
     res.status(200).send(content.bytes);
   });
+  const readContent = contentHandler();
   router.get('/:mediaId/content', readContent);
   router.get('/:mediaId/content/', readContent);
 
   router.use(authenticate);
+  router.get('/:mediaId/authenticated-content', contentHandler(true));
   router.get('/:mediaId/access', asyncRoute(async (req, res) => {
     const { access, media } = await mediaService.issueAccess({
       identity: req.user,
@@ -79,6 +83,7 @@ const createMediaRouter = ({
         suppliedChildId: req.body.childId,
         purpose: req.body.purpose,
         bytes,
+        declaredMimeType: req.file.mimetype,
         originalName: req.file.originalname
       });
     } finally {

@@ -1,11 +1,22 @@
 # 家庭 AI 学习管理平台完整设计
 
+AI-1 最小版本的运行时闭合契约为 [ai1-min.schema.json](../../backend/common/contracts/ai1-min.schema.json)；
+仅适用于批准的 AI1-MIN-1，不改变下述旧 Tutor v1 草案及后置范围。
+
 - **Document status:** DRAFT FOR REVIEW
 - **Version:** 1.11
 - **Updated:** 2026-08-26
 - **Scope:** LMS + DeepTutor + K12-KGraph
 - **Target users:** 单个家庭、少于 10 名孩子、孩子主要使用 iPad + Apple Pencil
 - **Target host:** ThinkPad X230i，8 GB RAM，250 GB SATA SSD，Ubuntu Server；云端提供 LLM 与 embedding
+
+> 2026-10-31 AI-1 最小增量评审入口：
+> [AI1-MIN-1 设计](../superpowers/specs/2026-10-31-family-ai1-minimal-design.md)、
+> [API 契约](../api/family-ai1-api.md)、[测试方案](../development/family-ai1-test-plan.md)。
+> 用户已选定单次 Provider、任务/错题纯文字和人工修订新版本，详细契约仍 READY_FOR_REVIEW。
+> AI-1 采用上述候选中的明确差异，不照搬本草案的 WS Agent、K12 必填证据及 AI-2/3 全流程。
+> 本文及原 Tutor v1 JSON Schema 保留为完整平台草案，不是最小 profile 已实现或已批准的证明。
+> AI-0 只支持人工核验/修订后的家长备课；2026-11-01 已授权 AI-1 A批本地无模型实现，未授权模型调用或部署。
 
 相关现有文档：
 

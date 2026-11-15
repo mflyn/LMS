@@ -1,6 +1,18 @@
 # 家庭自主学习 MVP 开发计划
 
-> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8-T9 待执行）；T5/T6 已交付 main，T6 合成关闭范围见 Gate §26.6。T7 的0bddeb7e固定候选14–17分项通过（§27.39），新一次连续完整01–18含07b/13b及收尾通过（§27.41）；§27.40及全部原失败保留；Git交付已转为脱敏候选待复审（§27.44），不推送、合并或部署。T7 限定合成工程总门禁已批准 CLOSED（§27.42），T4 总门禁仍 OPEN，DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留。
+> **2026-11-08 任务列表局部收口：** 基于已合并PR #42的main `01a61c63`，用户已批准本次分页修订及筛选外/页外回看P2验收关闭，见[验收与交付记录](../../development/evidence/mvp-task-list-20261108/acceptance.md)。本次仅授权专用分支提交推送、Draft PR及CI；不合并、不部署、不操作服务器或调用模型。后续按实际缺陷修复，不恢复WP1/T8底层执行器开发；T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING及历史/后置状态保持。下方旧交付授权与验证结论保留历史身份。
+
+> **本批交付权限（2026-11-08）：** 用户已授权已验收MVP局部修订的专用分支、Draft PR与CI，详见[交付范围](../../development/evidence/mvp-closeout-20261108/public-delivery.md)。不合并、不部署、不调用模型或操作服务器；下方原禁止Git描述保留历史身份，不扩大WP1/T8范围。
+
+> **2026-11-08 最新开发优先级：先完成MVP。** 以[联合验收清单§0](../../development/t4-t8-joint-acceptance.md#0-mvp-优先与后置范围2026-11-08)为当前范围入口：复用T1–T7，只修影响学习闭环的实际缺陷；WP1底层执行器剩余范围REMAINDER_DEFERRED / NOT_COMPLETE，不再阻塞产品开发。真实恢复/回滚与真机等启用条件不取消，T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED和历史/后置状态保持。本次不授权服务器、模型、Git提交推送或部署；下方历史“继续实现”不构成自动恢复工具开发的指令。
+
+> **2026-11-04 当前AI-2交付：** PR #38已按授权以merge commit `a4f051e26f3514da051910a3495e11b149a32c45`合入main，
+> 合并后CI 41801096578成功，见[合并后记录](../../development/evidence/ai2-5-20261103/postmerge.md)。默认关闭、限定合成工程；
+> 下方分批Git限制是原快照。本轮仅本地收口T8与文档，不新增提交推送/模型调用/部署授权，不关闭T4/T8/AI-1。
+
+> AI2-5 / AI-2最新批准：2026-11-04用户批准关闭AI2-5汇总及AI-2限定合成工程总门禁，CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY，见[关闭批准记录](../../development/evidence/ai2-5-20261103/closure-readiness.md)。保留31项核心覆盖、冻结候选、分层回归和历史失败；后续真机、Git交付、真实启用须单独授权，不自动启动其他开发，不授权模型/Git/部署。下方实施进度保留历史身份。
+
+> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）；2026-11-03 当前交付：T8 限定本地交付和 AI-1 默认关闭合成工程已按授权合入 main，双仓 merge SHA、合并后 CI 及保留边界见 Gate §29.34。T5/T6/T7 已交付 main；T7 脱敏交付见 §27.45，限定合成工程总门禁 CLOSED（§27.42）。全部历史失败保留，不以最新 CI 改写原失败快照。T4/T8/AI-1 总门禁仍 OPEN，DEVICE_PENDING、Docker INCOMPLETE_FAILED、两项非阻断补测、T8_PENDING / NOT_AUTHORIZED 和 REMAINDER_DEFERRED 保留；未部署、未启用真实 AI 发送。
 > 日期：2026-10-21
 > 执行约定：按仓库 AGENTS.md 逐包实施、验证和交付；不要求自动创建工作树、启动子智能体、提交或推送。
 > T0 契约基线及后续评审已获用户确认；R3-LEARNING 与门禁 P2 已关闭，T1 按用户指令开始分阶段实施，证据见增量 Gate §17–§18。
@@ -921,7 +933,58 @@ ENGINEERING_SYNTHETIC_ONLY，绑定0bddeb7e及§27.41本轮完整验收、独立
 
 ### T8：家庭 Ubuntu 发布、备份恢复和回滚验收
 
+**2026-11-08范围裁决：** 保留本节真实启用前的备份、恢复、权限、重启和回滚验收目标；
+自研可信启动器、claim/代次管理及原生监督链的未完成增强先记录后置，不要求为MVP开发完成先做完该平台。
+已取得的本地/分批证据不升级为完整发布通过，T8仍OPEN。后续最小演练方式另行评估和授权，
+不以有人监督替代必要的隔离、预算、停止或原业务断言；详见[当前范围与后置项](../../development/t4-t8-joint-acceptance.md#0-mvp-优先与后置范围2026-11-08)。
+
 依赖：发布需 T7；只读环境清点可从 T0 开始。模式：严格。对应 SL-07。
+
+**当前交付（2026-11-03）：** PR #36 已以 merge commit `c0e16594762fca194c1a51fcf518fd4024b41180`
+合入 main，[合并后 CI 41559078175](https://github.com/mflyn/LMS/actions/runs/41559078175)通过。
+仅本地准备/合成工程入库，T8 总门禁 OPEN；NAS、目标 Ubuntu、真机、
+删除证据恢复、RPO/RTO 与回滚待验不变。以下按日期保留的是当时授权和执行快照，
+其中“未授权提交/合并”不再描述当前 Git 状态；服务器执行和真实部署仍需单独授权。详见 Gate §29.34。
+
+同日获批继续不依赖 NAS 的本机合成验证（Gate §28.5）：正式恢复增加 user-service，清空会话后
+真实密码/PIN 登录，原命令、作品、版本审核、三孩子隔离与 PIN 重置的限定 HTTP 验证通过；
+同步归档工具阻塞修订及失败历史保留。两类显式演练共 15 项通过，不代替下列真实环境清单。
+完整[剩余发布条件](../../development/evidence/t8-nonnas-20261103/README.md#剩余发布条件)区分
+已完成的本机浏览器、需授权的 Ubuntu/回滚、NAS 暂缓及删除恢复硬阻断；T8 总门禁仍 OPEN。
+
+同日按授权优先补齐[恢复后真实浏览器闭环](../../development/evidence/t8-browser-20261103/README.md)
+（Gate §28.6）：当前前端构建和七个正式应用工厂，在真实恢复的新库上完成孩子重登与原命令恢复、
+家长版本冲突/审核、孩子刷新回看及账号切换拒绝。Chromium/WebKit 各 11 项、默认 HTTP 10 项通过。
+两项测试 P2 经修订与独立只读复核通过；失败历史不覆盖，不将模拟视为 iPad 真机、独立容器、NAS 或发布验收。
+本机后续记录尚未提交；T4/T8/AI-1 OPEN、DEVICE_PENDING 及全部后置义务保持。
+
+2026-11-04基于最新main `a4f051e2`完成[本地收口复验](../../development/evidence/t8-closeout-20261104/README.md)（Gate §28.7）：
+原190件归档核验、当前前端构建、修订后双引擎各11项和默认归档/HTTP15项通过。
+仅修复迟到浏览器关闭失败传播的夹具P2，新增两反例且独立单测13项通过，待用户验收；不冒称独立浏览器复验。
+本批与AI-1文档、AI-2合并后记录分组，尚未提交；同版本合成恢复不替代跨版本/目标机/NAS/删除证据恢复。
+
+同日后续复审通过并获用户批准：本批T8本地收口ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY，
+迟到浏览器关闭失败传播P2 CLOSED / USER_APPROVED；上段待验收为历史快照。
+原候选/补丁及97/27件归档与本轮13项单测0.521秒复验绑定，见[批准记录](../../development/evidence/t8-closeout-20261104/README.md#用户批准及本轮复验证据)。
+T8及T4/AI-1总门禁仍OPEN，DEVICE_PENDING、历史失败和后置责任不变；AI-2合并状态与交付分组保持，未授权Git写入或部署。
+
+2026-11-05另获专用分支/Draft PR交付授权，见[本地收口交付](../../development/evidence/t8-closeout-20261104/public-delivery.md)。
+仅保存已验收合成增量，不合并、不部署；历史权限快照和T8 OPEN / RELEASE_NOT_READY保持。
+
+当前仅本地准备获批（Gate §28），不等于真实发布或恢复执行获批。先修订 §7.4 与只读前置检查，
+补 NAS/容量/停写/卷归属/竞态/脱敏反例并自查；独立复评后再明确合成备份恢复的环境与预算。
+前置检查不会创建备份或自动停止/恢复服务，不能代替下列实测验收。后续采集必须包含独立删除日志卷，
+全站写入者排除不能只靠完成协议暂停开关。失败保留受限证据，不自动清理缓存或旧备份。
+
+2026-10-30 用户明确 NAS 暂不准备，先做不依赖 NAS 的本机合成归档往返（Gate §28.1）。
+该预演不替代下列发布/恢复验收；NAS 上传、异机恢复、Ubuntu 版本兼容与业务恢复仍待验证。
+
+后续用户批准本机正式应用恢复验证（Gate §28.2）：真实 dump/restore 后，经原预检及正式四服务 HTTP
+验证作品、持久原命令、权限、审核版本和发星幂等；此限定合成路径当前 6/6 通过。
+严格删除恢复发现 v1 证据不足 `LEGACY_USER_DELETION_EVIDENCE_INSUFFICIENT`，不扩展后置恢复。
+不替代 NAS、目标 Ubuntu、登录/浏览器、最新删除日志重放或 RPO/RTO，下列真实验收项不据此勾选。
+本地交付已按用户要求核对并整理（Gate §28.3），仅 LOCAL_TECHNICAL_ACCEPTANCE_PASS；
+完整范围/摘要与原始结果副本已准备，尚无本批 Git 提交或服务器执行授权，T8 总门禁保持 OPEN。
 
 修改（确有需要时）：`docker-compose.ubuntu.yml`、本地 Ubuntu 部署指南、本轮 Gate。
 部署目标：既有家庭电脑与局域网，不新开公网端口，不启动 DeepTutor/K12。
@@ -1028,12 +1091,183 @@ ENGINEERING_SYNTHETIC_ONLY，绑定0bddeb7e及§27.41本轮完整验收、独立
 
 ## 9. DeepTutor 与 K12 最小对接路线（2026-10-26 补充）
 
+**当前入口（2026-11-03）：** AI-1 为 ENGINEERING_SYNTHETIC_ACCEPTED / MERGED_DEFAULT_OFF，B/D/AI-1 OPEN；
+LMS PR #37 已合入 main：`4655d30f1b61b55f400b67f16f9143dd191de1d2`，
+[合并后 CI 41564246688](https://github.com/mflyn/LMS/actions/runs/41564246688)通过；
+个人 fork mflyn/DeepTutor PR #1 已合入 main：`a5e64ca49667ddba2a0ba80c02ac1c59959dc2f9`，
+[合并后 Tests 第3次运行](https://github.com/mflyn/DeepTutor/actions/runs/41466687632/attempts/3)通过。
+前两次 runner 分配失败保留，既有外部 fixture 浏览器作业 skipped，不算通过；不是向 HKUDS 上游交付。
+35项本地合成工程已验收，双仓 CI 与限定合并已完成，详见 Gate §29.34。
+下文按日期保留演进记录，不将旧待办、旧 Git 禁止条件或旧分支状态当成当前状态。
+剩余计数资格、另行费用授权、真实调用及人工价值验收见[测试方案§17](../../development/family-ai1-test-plan.md#17-当前35项工程归并与外部待验2026-11-01)；
+双仓交付核对和小批真实验收准备见该方案§17.2～§17.3，当前不实现counter、不调用模型、不提交推送或部署。
+三组已批准适配文本及完整Provider正文已冻结，主线程与独立复核证据见该方案§17.5～§17.6及Gate §29.30～§29.31；
+当前仍缺合格计数依据，冻结及复核不构成真实发送、费用授权或总门禁关闭。
+原提交/PR授权见测试方案§17.7及Gate §29.32；后续用户单独批准限定合并，记录见 Gate §29.34。
+技术计数资格仅暂缓而未豁免，QUALIFIED_COUNTER_PENDING、另行费用授权、人工审核和未知结果边界保持；
+AI-0 的费用/人工价值证据不移作 AI-1 验收，真实发送关闭，未部署。
+
 状态：路线已获用户同意并纳入规划，尚未执行能力验证或对接开发。本次仅修订文档，
 不授权安装服务、外部模型调用/费用、上传资料、真实部署或自动启动以下任务。
+以上为 2026-10-26 的历史状态。2026-10-31 当前增量：AI-0 单次 Provider 合成初测及家长审核已完成，
+结论为有条件继续（人工核验、修订后才可作家长备课候选），不代表完整页面/Agent/K12 验收。
+用户已选择 AI-1 三项最小方向；2026-11-01 已批准详细设计/API/测试方案及 A 批验收，当前 B_IMPLEMENTING。
+已授权 B 批本地无真实模型实现、测试和评审，未授权真实模型调用、提交推送或部署；AI-1 总门禁 OPEN。
+B 本地候选复审已获用户批准，矛盾退款 P1 / 原始 JSON 大小 P2 CLOSED；三版本详情已纳入永久测试。
+B 整体仍 OPEN / EXTERNAL_IMPLEMENTATION_PENDING；剩余任务与源码/授权前置见 Gate §29.6，C/D 不自动启动。
+随后用户以持续目标明确授权 LMS 本地 B/C/D 开发与合成验证，现 C_IMPLEMENTING；这项新授权替代上一句的后续启动限制，
+不扩展为外部服务修改或付费/部署授权。C 页面证据及未完成范围见 Gate §29.7；
+D 正式装配进行中，默认关闭读取/传输边界见 Gate §29.8，发送准入和完整跨层验收仍待完成。
+后续D2本地运行态、启动预检与正式HTTP生成/只查询恢复见Gate §29.9；外部实际实现、正式浏览器和完整矩阵仍未完成。
+后续D3真实LMS页面的双入口/共管审核/原命令及重登恢复已合成验证，35项逐行核对见测试方案§11和Gate §29.10。
+远端仍是协议替身；正式浏览器剩余权限/失败组合、实际DeepTutor/Provider和人工价值验收未齐备，B/D/AI-1不关闭。
+后续 D4/D5 已补本地正式浏览器权限、账号切换和失败组合，仍不能替代真实外部组合验收。
+用户随后批准 DeepTutor v1.7.1 固定基线本地实现：持久层、独立 operation app 与受限 SDK 路径进度见 Gate §29.13～§29.15。
+正式 main 本地装配和生命周期验证随后完成，见 Gate §29.16；SDK 验证仅使用合成计数器与网络/响应替身，
+实际 LMS client→正式 main TCP 组合随后补齐用例并通过独立复评，见 Gate §29.17；完整 v4 token 上界、
+LMS业务费用/页面到实际远端的本地组合随后补齐，冻结候选及独立验收进度见Gate §29.19；
+旧快照隔离的分层反例和三项测试保护补强见Gate §29.20；不等同双端同轮备份恢复验收，不改变B/D/AI-1 OPEN。
+后续实际双端合成恢复组合见Gate §29.21，区分局部事务准备、正式HTTP及Provider替身；不授权生产恢复或解除隔离。
+当前工程归并以测试方案§17和Gate §29.22为准；实际双端合成恢复已验证，不再列作未实现前置。
+2026-11-01用户批准上述限定合成工程候选验收，当前ENGINEERING_SYNTHETIC_ACCEPTED，见Gate §29.24；不关闭AI-1总门禁。
+本轮补七项既有要求的故障窗口反例，不增加业务能力；独立结果以Gate最终记录为准。
+实际v4计数/费用核验及人工价值验收仍待完成，B/D/AI-1 OPEN；
+缺真实计数依据时默认拒绝发送，不将 AI-0 预算或历史 1.7.0 验证转为新版本启用许可。
+详见 [AI-1 设计](../specs/2026-10-31-family-ai1-minimal-design.md)、
+[API 契约](../../api/family-ai1-api.md)、[测试方案](../../development/family-ai1-test-plan.md)。
+AI-0 的 10 元费用授权不转为 AI-1 预算；主线未关闭/后置义务不变。
 T1～T9 是自主学习基础 MVP，不是整个 AI 平台交付清单；其任务编号、关闭条件和当前实施顺序不变。
 AI/K12 任务独立编号，不把它们塞入 T3～T7，也不把高级恢复/回收重新作为前置。
 
 ### 9.1 与主线的衔接及启动条件
+
+2026-11-03 AI2-1 文档工作已获授权：仅完成[最小差异设计](../specs/2026-11-03-family-ai2-minimal-design.md)、
+[API 候选](../../api/family-ai2-api.md)、[测试方案](../../development/family-ai2-test-plan.md)，设计待用户批准，
+AI2-2～5 未编码/未执行。当前入口见 Gate §30，不将旧完整设计或 AI1 合并视为孩子发布权限。
+后续顺序：AI2-2 学习包/审核事务 → AI2-3 合法媒体类型/持久提交恢复 → AI2-4 页面及会话隔离 →
+AI2-5 正式 HTTP/浏览器/相关回归。计数资格/NAS不阻塞本轮合成设计，但真实调用/使用仍受AI1/T8约束。
+随后2026-11-03用户批准AI2-1三稿及产品取舍，关闭两项设计P1，授权AI2-2本地合成实施；当前AI2-1 APPROVED、AI2-2 IMPLEMENTING。
+AI2-3～5仍NOT_STARTED，正式装配/媒体完整提交尚未实现；独立路由工厂验收不等同完整页面或AI-2总门禁关闭。
+AI2-2后续本地候选已完成测试/自查/独立评审修复，READY_FOR_ACCEPTANCE；定向33项、homework全量1519项和文档313项通过。
+证据与失败保留见测试方案§6/Gate§30，待用户批次验收；不自动进入AI2-3，不关闭AI-2总门禁。
+后续用户批准AI2-2限定合成验收及本次P2关闭，授权AI2-3实施；当前AI2-2 ACCEPTED、AI2-3 IMPLEMENTING、AI2-4/5 NOT_STARTED。
+AI2-3后续本地候选已完成持久提交/精确补偿、认证媒体及正常删除边界验证，当前READY_FOR_ACCEPTANCE；两项本批P2 FIXED_REVIEWED。
+homework1576、resource1931及新权限49项、最终专项60/HTTP3、文档313项分别通过，保留失败历史，不累计重叠覆盖。
+49文件累计补丁重建/哈希一致，交付及独立复核见[AI2-3索引](../../development/evidence/ai2-3-20261103/README.md)。
+正式装配及跨进程metadata transport尚待AI2-5；AI2-4/5 NOT_STARTED、AI-2 OPEN，不以本批替代页面/真机/生产验收。
+
+后续用户批准AI2-3限定本地合成验收及两项测试保护P2关闭；绑定最终候选与独立复验证据见测试方案§7.5。
+当前AI2-3 ACCEPTED、AI2-4 IMPLEMENTING（家长发布/审核、孩子订正/回看、原命令及身份隔离），
+AI2-5 NOT_STARTED、AI-2 OPEN；正式装配/浏览器整体验收另批，不变更历史失败、DEVICE_PENDING及既有后置范围。
+
+AI2-4后续页面候选已完成本地实现、自查与聚焦独立复核，当前READY_FOR_ACCEPTANCE，未由用户批准验收。
+家长发布/撤回/按所见版本审核、孩子图片订正/历史反馈、原命令与身份隔离已接入前端；
+63套996项前端回归及生产构建通过；浏览器是生产React+显式API替身，非正式端到端。
+最终两个测试globalThis机械修订的定向验证、冻结哈希及失败历史见[AI2-4索引](../../development/evidence/ai2-4-20261103/README.md)。
+下一批AI2-5仍需正式runtime/Gateway/metadata transport、真实HTTP及浏览器闭环；不以本批关闭AI-2或其他OPEN门禁。
+绑定冻结候选与独立33项复跑证据，旧送审/失败快照保留；AI-2总门禁及既有未关闭、后置状态不变。
+AI2-4后续复审发现普通刷新丢失部分上传失败状态的P2，授权最小生命周期修订和真实组件反例。
+新候选66文件、前端64套1000项通过，原996/95及失败保留；新浏览器仍是API替身，正式验收不提前。
+修订及独立复核状态以[草稿刷新P2索引](../../development/evidence/ai2-4-20261103/draft-refresh-p2.md)为准，
+AI2-4仍待用户验收、AI2-5 NOT_STARTED、AI-2 OPEN；不自动启动下一批。
+
+2026-11-03最新用户批准AI2-4限定合成批次验收、草稿刷新P2及其他本批已复审P2限定关闭，并授权AI2-5正式应用接线。
+当前AI2-4 ACCEPTED、草稿刷新P2 CLOSED / USER_APPROVED、AI2-5 IMPLEMENTING、AI-2 OPEN；以上送审记录保留为历史快照。
+绑定66文件候选`b1a52ef373fe8df1b3a7299e62be7c38f88786720cc674c549058805e63b9dc3`及最新主线程复验：
+4套90通过、旧行为变异2失败/2通过、还原后2套10通过，零skip；临时探针不计永久覆盖，重叠运行不累计。
+原始证据另存冻结候选目录的`review/main-8PwilZ/`，新manifest绑定、不覆盖旧哈希，详见[验收记录](../../development/evidence/ai2-4-20261103/draft-refresh-p2.md#用户批准与最新主线程复验)。
+
+AI2-5按[设计§7](../specs/2026-11-03-family-ai2-minimal-design.md#7-开关启用与回退)接入正式应用：
+`AI2_MODE=off|enabled`默认off、`AI2_STORE_CONTINUOUS`默认false；启用及安全关闭后历史读写需连续性true且completion enabled；
+启动事务/索引和正式connection检查，Gateway raw JSON 32 KiB+JWT，homework正式公共/内部媒体授权路由，
+resource受现有服务凭据保护的`POST /api/internal/media/ai2/inspect`只读metadata接口，禁路径/正文bytes。
+off且连续性false不降级旧协议，maintenance保持隔离。接口请求/响应见[API§5.1](../../api/family-ai2-api.md#51-ai2-5-正式metadata-inspect接线契约)。
+实际实现、正式HTTP/浏览器及相关回归/构建结果由主线程另补[测试方案§9](../../development/family-ai2-test-plan.md#9-ai2-5-正式应用接线)，
+本次只记录文档，不预写通过、不新设审批框架、不调用模型/Git/部署。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、
+高级恢复/新回收REMAINDER_DEFERRED与T9 NOT_STARTED保持。
+不自动启动AI3/K12；T4/T8/AI1 OPEN、DEVICE_PENDING及既有失败/后置状态保持。
+
+AI2-5正式接线子批已形成86文件修订候选，完成三服务正式HTTP实现与本批连续性返回边界P2补强；
+具体验证和剩余项以[本批索引](../../development/evidence/ai2-5-20261103/README.md)为准。
+异步隔离P2为FIXED_REVIEWED待复审；AI2-5仍IMPLEMENTING，下一步是正式浏览器闭环及最终验收，
+不将本批接线或既有API替身浏览器视为全部AI2-5完成。
+
+2026-11-03最新用户批准：AI2-5正式接线限定合成子批ACCEPTED / USER_APPROVED，
+异步连续性P2 CLOSED / USER_APPROVED；上述待复审记录保留为历史快照，AI2-5整体仍IMPLEMENTING、AI-2 OPEN。
+批准绑定86文件候选`b6b22e3c6992bc12da0fdcbcb6742cd4c416c7def64a0ef9bf0a03ea310920cf`及最新独立复核：
+homework 4套86、resource 3套68、Gateway 2套87，共9套241项通过，零失败/跳过。
+家庭全量185套5554项、Gateway全量14套132项及历史变异仅核验归档，不重跑、不累计为新覆盖。
+verification及原始复核产物另存新review子目录，不覆盖133份旧证据manifest或旧文档manifest，
+见[正式接线批准记录](../../development/evidence/ai2-5-20261103/README.md#正式接线用户批准与浏览器接续)。
+
+用户授权下一步正式浏览器：由主线程独立实现browser fixture/test并执行正式服务闭环、刷新/重登、
+原命令未知结果恢复、账号隔离/审核冲突及对应前端回归/构建；本次只更新批准文档，不增加代码/测试，不宣称浏览器通过。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、T5-NB-001/002 OPEN_NONBLOCKING、
+高级恢复/新回收REMAINDER_DEFERRED与T9 NOT_STARTED保持，不调用模型、不执行Git或部署。
+
+AI2-5正式浏览器最新候选：Chromium最终8项一次通过、零跳过/重试，runtime 6、共享T2 HTTP 6套36、
+前端64套1003通过，构建成功保留旧caniuse警告；正式七服务及Mongo/media/fs/auth/login，不以业务成功替身完成闭环。
+AI1仅人工批准合成artifact预置，query-only与拒绝sentinel零调用；network故障限丢真实响应/延迟/abort一上传，无Provider调用。
+同URL回看P2的3永久组件反例已红绿、独立组件35通过、逐handler变异分别2失败/33通过和1失败/34通过；
+recovery四例unchanged保护缺口已补并静态复核，主线程最终8项实际通过。两项P2待本轮用户复审，不CLOSED。
+Kepler独立WebKit初轮执行中已报告四项主/边界场景在最终健康断言失败，完整结果待补，不计全绿；接线ACCEPTED及原连续性P2 CLOSED保持，
+AI2-5整体IMPLEMENTING、浏览器候选待用户复审、AI-2 OPEN。
+pre-WebKit快照92文件hash `06c6d407c0a002f79f40287c0baed354ec21d6c4279d0bc02ad127f2b96b9b32`，相对接线9变更/新增，排除无关T8；
+patch、全部已知结果/失败历史与待补WebKit归档见[浏览器验收候选](../../development/evidence/ai2-5-20261103/browser-acceptance.md)。
+只归档log/JSON到新validation，不复制build或独立临时源码、不改旧approval manifest；旧全量不重跑、重叠计数不累计。
+WebKit当前观察为登录后硬导航中断Today请求产生access-control pageerror；待本轮结束后再修测试helper等待初始化响应，
+保留errors断言，修订后新冻结候选。当前不改helper、不写最终hash，旧06c6及失败保留。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、T5-NB-001/002及其他后置边界不变，无模型/Git/部署。
+
+AI2-5 WebKit修订后最新事实：初轮独立7失败/1通过、exit1，七项均在初始化请求被硬导航中断的errors健康断言失败；
+旧92源码/构建指纹前后一致，无本轮新增进程遗留。main只改login夹具，注册真实Today初始化任务/通知/dailyplan（明确childId），
+parent另等weekly/mistakes，每个200且finished为null后导航；产品、原健康断言及超时不动。
+main定向WebKit1通过14.7秒；随后独立完整WebKit8通过101.656秒、零跳过/重试，收尾核验已完成。
+新92文件candidate `54fac3b191715cb90343774aac7c8e87691201018852017d0986665e5e3c219a`，
+patch `9a760baacb605d94fc5fdc7efe8ee0eb9ba9721dbdea145caf56830fe295aeee`；相对assembly9项、较pre-WebKit仅fixture变化。
+main同候选Chromium最终8通过、exit0、99.541秒（`chromium-verified.json/.log`），零跳过/重试；lint-final全仓0无输出。
+独立`webkit-final-verification.json`确认92源码/8构建文件/config前后哈希一致，无本轮process/root残留，旧root不动。
+两项本轮P2 FIXED_REVIEWED / USER_REVIEW_PENDING，不CLOSED；本地正式浏览器候选已完成待复审。
+实际命令见[Node22与Playwright入口](../../development/evidence/ai2-5-20261103/browser-acceptance.md#实际命令入口)：既有NODE_PATH/T2_WEB_BUILD、playwright.t2.config.js及三个正式spec，WebKit加`--browser=webkit`。
+`execution-summary.json`中frontend 64/1003、HTTP 6/36为本批已有执行，非最终双浏览器阶段新重跑；旧backend 185/5554为接线历史证据，本轮未重跑。
+旧06c6、最初pre-WebKit Chromium8、独立WebKit7失败/1通过及approval manifest保持；最终validation/manifest由main统一归档并另补哈希。
+本次仅文档不重复归档或运行校验；AI2-5 IMPLEMENTING、AI-2 OPEN及旧边界不变。
+
+2026-11-03后续用户批准正式浏览器限定合成子批ACCEPTED / USER_APPROVED，同URL回看及recovery不变量保护
+两项P2 CLOSED / USER_APPROVED，绑定上述54fac3b1候选及最新独立组件35/WebKit8（110.124秒）复验。
+原始复验20文件另存候选`review/user-approved-20261103/`，manifest为
+`7cff9dafe168f9f24532a33d0b0d6735fba28abcd6706bdf60f5cac982677886`，旧失败/manifest不覆盖。
+AI2-5汇总IMPLEMENTING、AI-2 OPEN；下一步仅需补真实AI1人工修订/批准→Tutor入口发布的合成连接证据，
+将测试矩阵逐项关联既有永久用例/结果，缺项补验后准备总门禁关闭评审材料，再由用户批准。
+本批浏览器从预置approved制品开始，不替代测试方案§1及AI2-PUB-01/FLOW-01的连接要求；
+可复用既有Provider替身，不需要计数资格或真实调用，不增高级恢复/新回收或测试框架。
+真机、真实家庭启用和T8/AI1义务仍待验，所有历史失败、OPEN/DEVICE_PENDING/后置边界保持。
+详见[当前剩余条件表](../../development/evidence/ai2-5-20261103/browser-acceptance.md#总门禁剩余条件)，本次不授权Git或部署。
+
+2026-11-03接续实施：完成31行矩阵归并，新增两文件正式AI1→AI2合成连接，任务/错题双来源各通过
+Chromium/WebKit，共4项66.36秒；组件6套224、服务/正式HTTP2套30通过。复用真实DeepTutor operation/SDK和
+合成Provider，实际人工修订/共管批准而非预置；无业务改动或真实发送。候选94文件、旧92源码不变，
+冻结及当前独立复验见[连接记录](../../development/evidence/ai2-5-20261103/bridge-acceptance.md)。
+三项测试保护P2经静态复核、作者四格及独立WebKit两格（37.474秒）通过；2026-11-04再复审原四格4通过79.73秒，用户批准连接批次及三项P2 CLOSED / USER_APPROVED。
+最新31项17核心覆盖/14部分，剩余提交竞争、终态重放和特定权限/删除组合须继续最小补验或明确裁决；
+不将连接通过当作矩阵全覆盖。AI2-5 IMPLEMENTING、AI-2 OPEN及历史失败/DEVICE_PENDING/后置范围不变。
+
+2026-11-04接续：用户批准连接批次及三项P2；只在两测试新增9个竞争/终态反例，homework全部AI2 10套188通过，
+五项隔离变异有效；新测试异常收尾P2补强不提前关闭。最新矩阵20核心/11部分，详见[增量记录](../../development/evidence/ai2-5-20261103/concurrency-acceptance.md)。
+无需新业务/API/审批框架；本增量待复审，未授权Git/部署或总门禁关闭，保留全部历史与后置范围。
+
+2026-11-04后续：用户已批准上述竞争/终态增量及屏障异常收尾P2关闭，绑定独立9项最新复验。
+继续按授权补发布版本变化、来源快照、输入边界：四测试新增21项，homework AI2 206项和相关组件204项通过，
+四项变异有效，产品源码不变。冻结、独立复评和剩余分类见[本批记录](../../development/evidence/ai2-5-20261103/publication-boundaries.md)。
+本批仍待用户验收；不擅自后置剩余矩阵要求，不关闭AI-2总门禁，不执行Git/模型/部署。
+
+2026-11-04后续用户已批准该发布/快照/输入补验，绑定原冻结与最新独立18/3证据，见上述记录批准节。
+继续仅本地补AUTH-01、RECOVER-04、SESSION-02；历史失败及未关闭/DEVICE_PENDING/后置范围不变。
+
+本批补验新增后端9/组件7；真实PIN重置、原actor撤权恢复及recover拒绝隔离均有永久反例，业务源码不变。
+开发215/211与独立定向结果、P3测试收尾修订分开，见[验收候选](../../development/evidence/ai2-5-20261103/auth-recovery-boundaries.md)。
+矩阵26核心/5部分，剩余五项不自动后置；本批待复审，不关闭AI-2或启动下一业务范围。
 
 | 轨道 | 与 T1～T9 的关系 | 启动条件 |
 | --- | --- | --- |
@@ -1078,6 +1312,9 @@ K12 不通过不否定 DeepTutor：可先使用家长确认的章节资料及手
 | K12-1 | 先静态版本化章节卡片/有限索引；确需查询时才加只读 Adapter；家长确认/解除课程映射 | 返回可追溯版本与来源；缺失节点明确提示；不接收或保存 familyId/childId/孩子答案，不推断掌握度；关闭后手工流程可继续 |
 
 各项遵守既有 AI 设计及契约，不重建通用编排、上传协议或新常驻微服务。
+AI-1 的已批准最小 profile 明确替代旧完整平台中与本轮不兼容的必填课程节点、WS Agent 和
+只支持 approve/reject 的版本规则，采用纯文字来源、持久单次 operation 和人工修订新版本。
+以新设计/API/测试稿共同评审为准；旧 v1 schema 不原地放宽，也不能将本段当成实现验收。
 只落实该项使用的最少模型/API 和必要失败路径；不以“最小”绕过 candidate、批准、Attempt 版本、幂等和最终审核规则。
 正式编码前对照当前实现确认复用点和差异，避免照搬旧设计中已由 T1～T7 完成的基础能力。
 不因旧 AI 分期提到 PDF、打印、周报扩展或 Graph API 而一并实施；本路线仍使用当前图片范围。
@@ -1092,3 +1329,45 @@ K12 不通过不否定 DeepTutor：可先使用家长确认的章节资料及手
 AI/K12 不可用时保留手工讲解、选题和审核，不拖垮任务服务。已有数据不得因关闭扩展而删除。
 任务状态区分未启动、验证中、可行/有限可行/不继续、工程完成、真实使用验证；
 某项完成不自动启动下一项，也不修改 T1～T9 原验收结论。
+
+### 9.5 AI3 当前批次进度（2026-11-04）
+
+当前状态以§9.5.3的2026-11-05用户批准为准；本节及§9.5.1/§9.5.2保留各批次历史。
+
+AI3-D 限定合成批次及完整请求32KiB P2/历史UNKNOWN P3已获批准，
+见[独立冻结与验收绑定](../../development/evidence/ai3-d-size-20261104/acceptance.md)。
+AI3-E 继续既定孩子作答与私有媒体：持久原命令、所见发布内容绑定、精确媒体代次、
+实时认证读取、撤回竞争与删除后占位；当前为本地工程候选，待本批用户验收。
+本批无公开路由或页面装配，不将服务调用与内部真实HTTP组合测试称为正式浏览器验收。
+后续仍需家长最终审核、复习效果写回、前端和正式应用组合验收，不扩大高级恢复或回收。
+AI-3、T4/T8/AI-1 OPEN；DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、
+非阻断补测、计数资格待验及后置范围不变。无真实模型、提交推送、合并或部署授权。
+
+#### 9.5.1 后续集成进展（2026-11-05）
+
+以上9.5保留E候选当时的装配边界。当前后续代码已接入最终人工审核、analytics/progress效果、
+家长/孩子页面及LMS正式应用；[当前进展与验证分层](../../development/evidence/ai3-integration-20261105/README.md)
+记录真实AI1→AI2→AI3四组浏览器闭环、原命令恢复、历史失败及修订后完整回归。
+当前家庭210套6331项、前端71套1163项、正式HTTP入口50应用/HTTP加57断言项和最后四组浏览器通过；
+双仓145+14源码累计补丁已重建验证，28项覆盖与独立复评见[验收准备](../../development/evidence/ai3-integration-20261105/engineering-readiness.md)。
+这不是E用户批准，也不是AI-3总门禁关闭；AI-3保持OPEN / ENGINEERING_VERIFIED / USER_ACCEPTANCE_PENDING，其他既有未关闭状态不变。
+
+#### 9.5.2 完整候选复审修订（2026-11-05）
+
+先修复历史超限预留退款、pending草稿生命周期和分页未决锁三处问题，并将遗漏的analytics测试
+接入现有家庭回归；永久反例、复验和新冻结身份见[修订记录](../../development/evidence/ai3-integration-20261105/review-fixes.md)。
+上述9.5.1数量与补丁保留为原候选快照；本次修订后再评审AI3-E和总门禁，不提前关闭。
+本轮修订限定复核已通过；新累计源码147+14文件。家庭全量6406过/2项Git启动失败、exit 1；
+系统Git优先原两套定向106项通过，仍保留全量失败与JSON导出失败，不能合称全绿。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、历史失败、非阻断补测及后置范围保持，不扩展高级恢复或新回收。
+
+#### 9.5.3 AI3-E及限定合成工程总门禁批准关闭（2026-11-05）
+
+- [x] 三项行为修订、遗漏analytics回归接入及永久反例验收通过。
+- [x] 系统Git优先，原家庭入口213套6408项一次通过、exit0，旧失败原样保留。
+- [x] AI3-E及后续工程ACCEPTED / USER_APPROVED；AI-3 CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY。
+
+见[关闭批准与证据](../../development/evidence/ai3-integration-20261105/closure-review.md)。
+这是当前已批准合成范围的工程关闭，不是新一轮真实模型、真机、Git交付或部署授权。
+T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、
+QUALIFIED_COUNTER_PENDING与REMAINDER_DEFERRED保持；无关T8和AI1/AI2文档增量继续分组。

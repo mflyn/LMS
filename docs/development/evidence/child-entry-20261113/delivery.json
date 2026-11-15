@@ -1,0 +1,171 @@
+{
+  "status": "ACCEPTED_USER_APPROVED_LOCAL_SYNTHETIC_ONLY",
+  "date": "2026-11-14",
+  "base": "0ec8b746ef5a549bbae57c3f0289e6dec342556d",
+  "branch": "codex/child-entry-pin-delivery",
+  "originalCandidate": "16ec823756df48834d52ca11cf5366758c38aadb3f5f2a746f4a9d20e8d4cd4b",
+  "originalManifest": "bb7da8cbd90dd218fadaaf6ee120a8c22eb914a2d4899265fcd0dafb46a2caca",
+  "codeUnchangedFromAcceptedCandidate": true,
+  "originalEvidenceFilesVerified": 56,
+  "closed": [
+    "P2-UNMOUNT",
+    "P2-SETTLEMENT"
+  ],
+  "deliveryFiles": [
+    {
+      "file": "docs/development/README.md",
+      "sha256": "421937fab9d2b69843cf4939c637633ea279dc140a586e913b943a7718b8c4a3"
+    },
+    {
+      "file": "docs/development/evidence/child-entry-20261113/README.md",
+      "sha256": "d91df9dfc5697b80b41a6c56e4a9c01b24a0c3b0f3f8eda973f5851aa1363dd4"
+    },
+    {
+      "file": "docs/development/family-child-entry-test-plan.md",
+      "sha256": "2e43d39b31e0ae615ab2a6392b587c727632c26a5ce5c38ee01e8caf4bf8790e"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-11-13-family-child-entry-design.md",
+      "sha256": "c977a9ed1703ba5e54a448b4ed9b4bd248b2b2c76a0b1f46a7da1cb80d08f3fd"
+    },
+    {
+      "file": "eslint.config.js",
+      "sha256": "c56cedbeea135a939691a210e92845c622b3ab6e2ca541ae467a834aa48e9d63"
+    },
+    {
+      "file": "frontend/web/src/__tests__/child/ChildEntry.test.js",
+      "sha256": "00b046907bcab22d44dcc6e38a22966b340254c3e25167a49f05a9f16bb14255"
+    },
+    {
+      "file": "frontend/web/src/__tests__/child/ChildLogin.test.js",
+      "sha256": "217ab6def4eb57a1402b848415aca6fe21b4fd647330bb4d8aca0494dd0fca86"
+    },
+    {
+      "file": "frontend/web/src/__tests__/child/ChildSwitch.test.js",
+      "sha256": "580d631f98ea117314b909e2da21133f55122fa741a59e49ab01e9602d3b277d"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/ChildEntryActions.test.js",
+      "sha256": "655da273c872fd6cf482d10687ddc14a62184bd5522d8bc44978f687b782272b"
+    },
+    {
+      "file": "frontend/web/src/child-shell.css",
+      "sha256": "b1daf0a025566eb4233c099fcc6e8c09fa21ea341fb165f4f6329ba1c7a31cf5"
+    },
+    {
+      "file": "frontend/web/src/components/family/ChildEntryActions.js",
+      "sha256": "a74d34926d4d41e507cb54b7793869414d805008376d5dfcf9a3d79b30f0dbf1"
+    },
+    {
+      "file": "frontend/web/src/contexts/ChildAuthContext.js",
+      "sha256": "d62e887d7241ce29e34d180f7e01a901ec2a75874cd2da7e5deca0bd5caec9a2"
+    },
+    {
+      "file": "frontend/web/src/family-shell.css",
+      "sha256": "1af253d015c6299457bfded2530e4ba9e5a4ef4ad0fded7fc30f5018056cb62c"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildPinLoginPage.js",
+      "sha256": "e427ae088181a07283887d648f854b75aa42fb08ba23cc5560f5835f86c450c2"
+    },
+    {
+      "file": "frontend/web/src/pages/family/ChildrenPage.js",
+      "sha256": "cd31c4257e45c3b3c9c52aa1c0c3beb8a816775ebba0e39f3758b22053e0c283"
+    },
+    {
+      "file": "frontend/web/src/services/childEntry.js",
+      "sha256": "de8eb781c333848f3a4f6e99057d558aa6e76f74e6508f517f4f37ebc081499f"
+    },
+    {
+      "file": "tests/e2e/t2/ai2Fixture.js",
+      "sha256": "44da4815a327b4c4b6e071968affc05589a901e532dfc1dd2609f2682efffc07"
+    },
+    {
+      "file": "tests/e2e/t2/checklist.spec.js",
+      "sha256": "17bff77d90de7222aa968a3536c876c870d4ba2da25c6c9df4ff4d32e797cba9"
+    },
+    {
+      "file": "tests/e2e/t2/childEntry.spec.js",
+      "sha256": "14d3f8fbe6675e58bd277cd96dfffdbc79ceba6ceba5f9c115384a5ebd3af62c"
+    },
+    {
+      "file": "tests/e2e/t2/childLoginRace.spec.js",
+      "sha256": "cd84e37b4ce5f1011c51c5606015649f03bffedc1c3bbd7fb5da60080acbc520"
+    },
+    {
+      "file": "tests/e2e/t2/completion.spec.js",
+      "sha256": "b72558ea5306d106d2292f804806b6e4dd498df23956e75d19754300f0c2b635"
+    },
+    {
+      "file": "tests/e2e/t2/dailyLearningPlan.spec.js",
+      "sha256": "1f5adb45b5ef9702a380a11ba440da45b4e6f0a18fff487842302745510c18e5"
+    },
+    {
+      "file": "tests/e2e/t2/help.spec.js",
+      "sha256": "771d7332a79edb7f6ad74a77222259a73387f83c5e3454f8026685bd4da8c7b4"
+    },
+    {
+      "file": "tests/e2e/t2/learningSources.spec.js",
+      "sha256": "526058bb7efd0ccf0e31d3807abc875b2e18c4a2c1d652ff724e769ba89e8640"
+    },
+    {
+      "file": "tests/e2e/t2/weeklyMathLoop.spec.js",
+      "sha256": "fa6ec9d7078d8cad71ceb559d660b2bf8ed6ee739541a90bad1f0e928411217d"
+    },
+    {
+      "file": "tests/e2e/t2/weeklyReflection.spec.js",
+      "sha256": "92100df8a911a1aa1dfb93187d144104720a4f6b9f9b7ec906ae14fc04ece5b9"
+    },
+    {
+      "file": "tests/e2e/task11/family-growth-flow.spec.js",
+      "sha256": "6893751f44e02be92f8914ddb27778800ae42540d448b52b13bf6f3f1887edcb"
+    },
+    {
+      "file": "tests/e2e/task11/family-growth-security.spec.js",
+      "sha256": "b18eacdf8dee5356462452e25e08cc35117ec68ec792fafa5beb3bcec64cf4bd"
+    },
+    {
+      "file": "docs/development/evidence/child-entry-20261113/candidate.patch",
+      "sha256": "16ec823756df48834d52ca11cf5366758c38aadb3f5f2a746f4a9d20e8d4cd4b"
+    },
+    {
+      "file": "docs/development/evidence/child-entry-20261113/manifest.json",
+      "sha256": "bb7da8cbd90dd218fadaaf6ee120a8c22eb914a2d4899265fcd0dafb46a2caca"
+    }
+  ],
+  "validation": {
+    "componentSuites": 2,
+    "tests": 33,
+    "logs": [
+      {
+        "file": "delivery-tests.log",
+        "sha256": "ac60c09710d25a8b4461ed2ac00a9f231602f4d26baed63c12c6bff2e69f26a5",
+        "exitCode": 0
+      },
+      {
+        "file": "delivery-lint.log",
+        "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+        "exitCode": 0
+      },
+      {
+        "file": "delivery-docs.log",
+        "sha256": "d9175aafe05dcfe86d6f3bec6a621be1cfabcc5177ab41d53f209df80969c842",
+        "exitCode": 0
+      }
+    ],
+    "sensitiveScan": "PASS; synthetic fixtures only"
+  },
+  "retained": [
+    "NO_SERVER",
+    "NO_MODEL",
+    "NO_DEPLOYMENT",
+    "HUMAN_QA_UNCHANGED",
+    "T4/T8/AI-1 OPEN",
+    "SERVER_TIMING_UNVERIFIED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "HISTORICAL_FAILURES_RETAINED",
+    "DEFERRED_SCOPE_UNCHANGED"
+  ],
+  "authorization": "dedicated branch / Draft PR / CI only; no merge or human-preview update"
+}

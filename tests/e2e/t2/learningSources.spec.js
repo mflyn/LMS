@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { createT2WebRuntime } = require('./webRuntime');
 const { openParentTasks } = require('./parentNavigation');
+const { openChildTask } = require('./businessNavigation');
 const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
 let runtime, fixture, parent;
 test.beforeEach(async () => {
@@ -11,6 +12,7 @@ async function login(page, name) {
   const actor = fixture.actors[name], child = Boolean(actor.pin);
   await page.goto(runtime.webUrl + (child ? '/child/login' : '/login'));
   if (child) {
+    await page.getByRole('button', { name: '手工填写标识', exact: true }).click();
     await page.getByLabel('家庭 ID').fill(actor.familyId); await page.getByLabel('孩子 ID').fill(actor.childId);
     await page.getByLabel('PIN').fill(actor.pin); await page.getByRole('button', { name: '进入我的成长空间' }).click();
     await expect(page).toHaveURL(/\/child\/today$/);
@@ -19,6 +21,37 @@ async function login(page, name) {
     await page.getByRole('button', { name: '登录', exact: true }).click(); await expect(page).toHaveURL(/\/app\/today$/);
   }
 }
+
+test('parent clears a review date persistently without changing mastery or disabling undated reminders', async ({ page }) => {
+  const childId = fixture.actors.child.childId;
+  const mistake = expectData(await parent.post('/api/mistakes', {
+    childId, subject: 'Math', reason: 'calculation', knowledgePointName: 'Synthetic clear date',
+    reviewReminderDate: '2026-12-20'
+  }), 201).mistake;
+  const reminders = async () => expectData(await parent.get(
+    `/api/notifications/family?childId=${childId}&date=2026-11-08`
+  )).items.filter(item => item.sourceId === mistake.mistakeId);
+  expect(await reminders()).toHaveLength(0);
+  await login(page, 'parent');
+  await page.goto(`${runtime.webUrl}/app/mistakes?mistakeId=${mistake.mistakeId}`);
+  await expect(page.getByLabel('提醒复习日期')).toHaveValue('2026-12-20');
+  await page.getByLabel('提醒复习日期').fill('');
+  const saved = page.waitForResponse(response => response.request().method() === 'PATCH'
+    && new URL(response.url()).pathname === `/api/mistakes/${mistake.mistakeId}`);
+  await page.getByRole('button', { name: '保存复盘', exact: true }).click();
+  expect((await saved).status()).toBe(200);
+  await expect(page.getByText('复盘已保存。', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '查看已保存错题' }).click();
+  await expect(page.getByLabel('提醒复习日期')).toHaveValue('');
+  await page.reload();
+  await page.getByRole('button', { name: '复盘 Synthetic clear date', exact: true }).click();
+  await expect(page.getByLabel('提醒复习日期')).toHaveValue('');
+  const stored = expectData(await parent.get(`/api/mistakes/${mistake.mistakeId}`)).mistake;
+  expect(stored.reviewReminderDate).toBe('');
+  expect(stored).toMatchObject({ corrected: false, reviewed: false, mastered: false });
+  expect(await reminders()).toHaveLength(1);
+  expect((await runtime.inspect()).database.Ledger).toEqual([]);
+});
 
 test('child lost create keeps its lock across close, failed list read, reload and account return without repost', async ({ page }, info) => {
   await login(page, 'child');
@@ -78,7 +111,7 @@ test('real pages connect source work, manual mistake image, correction review an
   for (const target of [page, childPage]) target.on('pageerror', error => errors.push(error.message));
   try {
     await login(childPage, 'child');
-    await childPage.goto(runtime.webUrl + `/child/tasks/${fixture.tasks.child.taskId}`);
+    await openChildTask(childPage, runtime.webUrl, fixture.tasks.child.taskId);
     await childPage.getByLabel('添加完成图片').setInputFiles({ name: fixture.image.name,
       mimeType: fixture.image.mimeType, buffer: fixture.image.bytes });
     await expect(childPage.getByText('已添加 1/10')).toBeVisible();
@@ -119,6 +152,7 @@ test('real pages connect source work, manual mistake image, correction review an
     const createdResponse = await created; expect(createdResponse.status()).toBe(201);
     const task = (await createdResponse.json()).data.task;
     expect(task.sourceMistakeId).toBe(mistake.mistakeId);
+    // This dated correction is outside today's list; retain its original deep-link coverage.
     await childPage.goto(runtime.webUrl + `/child/tasks/${task.taskId}`);
     await expect(childPage.getByRole('link', { name: /查看来源错题/ })).toHaveAttribute('href', `/child/mistakes?mistakeId=${mistake.mistakeId}`);
     await childPage.getByLabel('我的一句话').fill('Synthetic correction reflection');

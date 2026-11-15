@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import TodayPage from '../../pages/family/TodayPage';
 import ChildTodayPage from '../../pages/child/ChildTodayPage';
+import FamilyShell from '../../components/family/FamilyShell';
+import { PARENT_NAV_ITEMS } from '../../config/familyNavigation';
 import * as parentApi from '../../services/familyApi';
 import * as childApi from '../../services/childApi';
 import { saveChildSession, saveParentSession } from '../../services/familySession';
@@ -12,9 +14,10 @@ const id = n => String(n).padStart(24, '0');
 const mockFamily = {
   family: { familyId: id(1), timezone: 'Asia/Shanghai' },
   selectedChild: { childId: id(2), name: '合成孩子' },
-  selectedChildId: id(2), childScopeVersion: 1
+  selectedChildId: id(2), childScopeVersion: 1, familyStatus: 'ready', children: []
 };
 jest.mock('../../contexts/FamilyContext', () => ({ useFamily: () => mockFamily }));
+jest.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: { name: '合成家长' }, logout: jest.fn() }) }));
 jest.mock('../../services/familyApi');
 jest.mock('../../services/childApi');
 // Existing plan/recovery workflows have their own integration and browser coverage.
@@ -69,4 +72,21 @@ test('child home does not invent a next task when all tasks have been submitted'
   expect(await screen.findByText('等待家长确认')).toBeInTheDocument();
   expect(screen.queryByRole('region', { name: '接下来可以做' })).not.toBeInTheDocument();
   expect(screen.queryByRole('link', { name: '我需要帮助' })).not.toBeInTheDocument();
+});
+
+test('parent navigation preserves every configured entry including learning packages', () => {
+  renderPage(<FamilyShell />);
+  const navigation = screen.getByRole('navigation', { name: '家长导航' });
+  for (const item of PARENT_NAV_ITEMS) {
+    expect(within(navigation).getByRole('link', { name: item.label })).toHaveAttribute('href', item.path);
+  }
+  expect(within(navigation).getByRole('link', { name: '学习包' })).toHaveAttribute('href', '/app/learning');
+});
+
+test('child home preserves weekly reflection and learning package entry points', async () => {
+  saveChildSession({ token: 'synthetic-only', child: { childId: id(2), familyId: id(1), name: '合成孩子' } });
+  childApi.listOwnTasks.mockResolvedValue({ items: [] });
+  renderPage(<ChildTodayPage />);
+  expect(await screen.findByRole('link', { name: /本周反思/ })).toHaveAttribute('href', '/child/reflection');
+  expect(screen.getByRole('link', { name: '我的学习包' })).toHaveAttribute('href', '/child/learning');
 });

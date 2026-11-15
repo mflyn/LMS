@@ -242,3 +242,9 @@ T5-NB-001/002 是未完成的非阻断补测，不计入已覆盖，DEVICE_PENDI
 批准绑定、验证及边界见 [T5 批准记录](evidence/t5-numeric-fix-2026-10-27/approved-closure.md)与 Gate §25.5。
 SL-04 总体仍 PLANNED，T7 综合验收、DEVICE_PENDING、T5-NB-001/002 OPEN_NONBLOCKING、
 T8/T9 和 REMAINDER_DEFERRED 保留；不以工程关闭声明真机、部署或学习效果通过。
+
+2026-11-14 后续限定补测：T5-NB-001／002 已在固定 `174f6695` 上补齐自动化并纳入永久回归，
+状态 SCOPED_AUTOMATION_COMPLETE；见[测试与页面接续证据](evidence/t5-nb-page-continuation-20261114/README.md)。
+覆盖估计分钟无效输入后的快捷值恢复、保存内部第二道校验及合法边界；今日计划和知识点页面接续单独记录。
+知识点读取 P2 的修订见同索引第 6 节；2026-11-14 用户批准本批限定自动化验收及 P2 关闭，当前 ACCEPTED / USER_APPROVED、P2 CLOSED，受验候选及证据绑定见第 7 节。准确响应、稳定页面及延迟错误集合反例已补齐；正式 HTTP 与响应替身反例、开发实跑与独立静态复评分开，原待验收快照不改写。
+上文未补测状态保留为历史快照，测试线程分批失败与开发复验不混算；SL-04 产品／学习效果、真人／真机及其他未关闭、后置义务不因两项自动化补测而升级。

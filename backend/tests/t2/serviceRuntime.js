@@ -19,6 +19,7 @@ const dependencies = () => {
     const homework = require('../../services/homework-service/server');
     const gateway = require('../../gateway/server');
     const analytics = require('../../services/analytics-service/app');
+    const analyticsProduction = require('../../services/analytics-service/server');
     const notification = require('../../services/notification-service/app');
     const models = {
       Role: require('../../common/models/Role'), Family: require('../../common/models/Family'),
@@ -35,9 +36,15 @@ const dependencies = () => {
       RemoteOperation: require('../../services/resource-service/models/MediaReferenceOperation'),
       Tombstone: require('../../services/resource-service/models/MediaDeletionTombstone'),
       Receipt: require('../../services/resource-service/models/MediaDeletionReceipt'),
-      Ledger: require('../../services/progress-service/models/StarLedgerEntry')
+      UserDeletionRecovery: require('../../services/resource-service/models/MediaUserDeletionRecovery'),
+      Ledger: require('../../services/progress-service/models/StarLedgerEntry'),
+      ...Object.fromEntries(Object.entries(require('../../services/homework-service/models/Ai3')).map(([key, model]) => ['Ai3' + key, model])),
+      Ai3MistakeReceipt: require('../../services/analytics-service/models/Ai3ReviewEffectReceipt'),
+      Ai3MasteryReceipt: require('../../services/progress-service/models/Ai3MasteryEffectReceipt'),
+      KnowledgePoint: require('../../services/progress-service/models/KnowledgePoint'),
+      KnowledgePointMasteryEvent: require('../../services/progress-service/models/KnowledgePointMasteryEvent')
     };
-    return { user, progress, resource, homework, gateway, analytics, notification, models };
+    return { user, progress, resource, homework, gateway, analytics, analyticsProduction, notification, models };
   } finally { logging.createLogger = original; }
 };
 
@@ -116,11 +123,12 @@ const createT2Runtime = async ({ beforeStart } = {}) => {
     for (const directory of [mediaRoot, journalRoot]) await fs.mkdir(directory, { mode: 0o700 });
     state.mongo = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } });
     const mongoURI = state.mongo.getUri('t2_synthetic');
-    const resourceAddress = await reserve(), homeworkAddress = await reserve(), analyticsAddress = await reserve();
+    const resourceAddress = await reserve(), homeworkAddress = await reserve(), analyticsAddress = await reserve(), progressAddress = await reserve();
     restoreEnvironment = configureEnvironment({ MONGO_URI: mongoURI, USER_SERVICE_MONGO_URI: mongoURI,
+      AI3_MODE: 'off', AI3_STORE_CONTINUOUS: 'false', AI3_EVIDENCE_TOKEN: 't2-synthetic-ai3-evidence-token-32-characters',
       PRIVATE_MEDIA_ROOT: mediaRoot, COMPLETION_DELETION_JOURNAL_ROOT: journalRoot,
       RESOURCE_SERVICE_URL: resourceAddress.url, HOMEWORK_SERVICE_URL: homeworkAddress.url,
-      ANALYTICS_SERVICE_URL: analyticsAddress.url });
+      ANALYTICS_SERVICE_URL: analyticsAddress.url, PROGRESS_SERVICE_URL: progressAddress.url });
     const deps = dependencies(), { models } = deps;
     const instances = [...new Set(Object.values(models).map(model => model.db.base))];
     if (instances.some(instance => instance.connection.readyState !== 0)) throw safeError({ code: 'T2_CONNECTION_ALREADY_OPEN' });
@@ -134,15 +142,23 @@ const createT2Runtime = async ({ beforeStart } = {}) => {
       resourceConnection: models.Asset.db, homeworkConnection: models.Task.db, servers: state.servers };
     if (beforeStart) await beforeStart(context);
     const env = { ...process.env };
+    const ai3Continuous = require('../../common/services/ai3Activation').validateAi3Environment(env).continuousStore;
     await add('user-service', await deps.user.startServer({ port: 0, appLogger: quietLogger,
       app: loopbackOnly(deps.user.createProductionApp({ env, appLogger: quietLogger })),
       connect: async () => { const value = await deps.user.connectDatabase({ mongooseInstance: models.User.db.base, mongoURI });
         state.prechecks.push('user'); return value; } }));
-    env.PROGRESS_SERVICE_URL = await add('progress-service', await deps.progress.startServer({ port: 0,
-      app: loopbackOnly(deps.progress.createApp()), connect: async () => {
-        const value = await deps.progress.connectDatabase({ mongooseInstance: models.Ledger.db.base, mongoURI });
-        state.prechecks.push('progress'); return value;
-      } }));
+    await close(progressAddress.server);
+    if (ai3Continuous) {
+      env.PROGRESS_SERVICE_URL = await add('progress-service', await deps.progress.startServer({ env,
+        connection: models.Ledger.db, port: progressAddress.port, host: '127.0.0.1' }));
+      state.prechecks.push('progress', 'ai3-progress');
+    } else {
+      env.PROGRESS_SERVICE_URL = await add('progress-service', await deps.progress.startServer({ port: progressAddress.port,
+        app: loopbackOnly(deps.progress.createApp()), connect: async () => {
+          const value = await deps.progress.connectDatabase({ mongooseInstance: models.Ledger.db.base, mongoURI });
+          state.prechecks.push('progress'); return value;
+        } }));
+    }
     await close(resourceAddress.server);
     await add('resource-service', await deps.resource.startServer({ env, connection: models.Asset.db,
       host: '127.0.0.1', port: resourceAddress.port, appLogger: quietLogger }));
@@ -153,12 +169,14 @@ const createT2Runtime = async ({ beforeStart } = {}) => {
     state.prechecks.push('homework');
     const { createMediaReferenceClient } = require('../../common/services/mediaReferenceClient');
     const { createFamilyMistakeMediaService } = require('../../services/analytics-service/services/familyMistakeMediaService');
-    const analytics = deps.analytics.createApp({ env, logger: quietLogger, familyMistakeMediaService: createFamilyMistakeMediaService({
+    const analytics = ai3Continuous ? deps.analyticsProduction.createProductionApp({ env, connection: models.Mistake.db, appLogger: quietLogger })
+      : deps.analytics.createApp({ env, logger: quietLogger, familyMistakeMediaService: createFamilyMistakeMediaService({
       FamilyMistakeModel: require('../../services/analytics-service/models/FamilyMistake'),
       FamilyMistakeStateEventModel: require('../../services/analytics-service/models/FamilyMistakeStateEvent'),
       mediaReferenceClient: createMediaReferenceClient({ resourceServiceUrl: env.RESOURCE_SERVICE_URL,
         serviceToken: env.MEDIA_REFERENCE_SERVICE_TOKEN, timeout: 2000 }), randomUUID, logger: quietLogger
     }) });
+    if (ai3Continuous) { await analytics.locals.assertAi3Ready(); state.prechecks.push('ai3-analytics'); }
     await close(analyticsAddress.server);
     await add('analytics-service', analytics.listen(analyticsAddress.port, '127.0.0.1'));
     await add('notification-service', deps.notification.createApp({ logger: quietLogger }).listen(0, '127.0.0.1'));
@@ -202,7 +220,9 @@ const createT2Runtime = async ({ beforeStart } = {}) => {
       mode: 'enabled', cleanupEnabled: false, mongoHello, prechecks: state.prechecks,
       modelConnectionsMatch: models.Task.db === models.Operation.db && models.Task.db === models.Guard.db
         && models.Asset.db === models.Reference.db && models.Asset.db === models.RemoteOperation.db
-        && models.Asset.db === models.UploadGuard.db && models.User.db === models.Family.db,
+        && models.Asset.db === models.UploadGuard.db && models.User.db === models.Family.db
+        && models.Ai3Round.db === models.Task.db && models.Ai3MistakeReceipt.db === models.Mistake.db
+        && models.Ai3MasteryReceipt.db === models.KnowledgePoint.db,
       composition: { core: ['gateway', 'user production factory', 'homework enabled production factory',
         'resource enabled production factory', 'progress official factory'],
       auxiliary: ['analytics existing app/routes', 'notification existing app/routes'],

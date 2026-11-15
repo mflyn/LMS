@@ -1,0 +1,264 @@
+{
+  "scope": "Actual LMS client to formal DeepTutor main TCP; synthetic Provider; no LMS business service or browser",
+  "base": "f7aed0744c36c5afef16a4261c31ebee1208cac2",
+  "parentRuntimePatchSha256": "ae7ff1746cff44fdc237e490bdec169b480483b7e7fe8580eb9366380c600fb8",
+  "patchSha256": "a7422393e0ab98fa6d36d78607df41dbf8ca83ce40e5693d0ae957b237118786",
+  "files": [
+    {
+      "path": "deeptutor/services/ai1_store.py",
+      "sha256": "4843f804a8aa9089c20d08575e8302f37f27a9306c131e92edc65f639d0ed1ee"
+    },
+    {
+      "path": "deeptutor/services/ai1_contract.py",
+      "sha256": "323ce761ba3482db3c6183f6e6a692ac232db16ccf2ab553bcb6c0f293e6d66f"
+    },
+    {
+      "path": "deeptutor/services/ai1_operation.py",
+      "sha256": "6d7d966382d6bda9f38e42edb7f331fd5e6d335bf45fc2118e4345d87510b7cd"
+    },
+    {
+      "path": "deeptutor/services/ai1_http.py",
+      "sha256": "41b43ae028453e95762e737171f4a144e8e12fcefe2a24a77a816f378cbcbeaa"
+    },
+    {
+      "path": "deeptutor/services/ai1_provider.py",
+      "sha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9"
+    },
+    {
+      "path": "deeptutor/services/ai1_runtime.py",
+      "sha256": "64bc386bd216afea6723b42b07a8c56a17679fd4fd349686da0f59f7335cc746"
+    },
+    {
+      "path": "deeptutor/api/main.py",
+      "sha256": "a43db30cdf75fe813a70f1e0c8b95ec296699ee2c5259e3e06ef445254f51cde"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_store.py",
+      "sha256": "0d2c5a64e490047a3c93587b3191a961f1b8882854afa5e7b133470571504e9b"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_contract.py",
+      "sha256": "beb4e41271e30c7d507095630628384fda695be78b9c53144c40562dcb066eef"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_service.py",
+      "sha256": "b67904872b725eeffb8a44338a4c00084304fb6a12e1ab0f28ff6a24211da1a7"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_http.py",
+      "sha256": "16951c4b65d6ac3dd3d0ebdb6b5de1bb08e27f8e53a9c9e4d41456645ad57111"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_provider.py",
+      "sha256": "e7487f36ba148c73f8a18aa06b211e285b3803259a122844f679f9888b9a2c9e"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_runtime.py",
+      "sha256": "2bd83f9f4d10b573b3b56c73fb5e1facf06dc12899dfddfec5bc7bff8d1fdf0a"
+    },
+    {
+      "path": "tests/services/ai1/lms_wire_golden.json",
+      "sha256": "1e8ab327e8615b06d533b9c3e1940575bc6c21d0705a42f5ce721a54b8d907d5"
+    },
+    {
+      "path": "deeptutor/modules/manifests/core.json",
+      "sha256": "a394187f896719cfc5b8a654399fc24ca07cf772732fca25f9caed209ffd1521"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "07fb3259fda62dfc0a6ebcd2b7385733e404929db1c2814c92cd5a2ba83e17ed"
+    },
+    {
+      "path": "requirements/core.txt",
+      "sha256": "9b1de45f769d220ffaddf24e0449a863aca7b493e15fe06b12d0c2518c95dee5"
+    },
+    {
+      "path": "tests/services/ai1/lms_acceptance.py",
+      "sha256": "a7d326aa7a0ec2ccbdef3f9c6522d1154dcfc708feb3bf549d499f944f1c341e"
+    }
+  ],
+  "lmsDocuments": [
+    {
+      "path": "docs/api/family-ai1-api.md",
+      "sha256": "f1981517458508f8e5fb41ae9aa8ddb225e819eb7c30f6507bb4e2f8648236dd"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "02892d0f0a07af41831c76a86f6190fd389edc2f4f2b12e5cb2cdf4673c6a54b"
+    },
+    {
+      "path": "docs/development/family-ai1-test-plan.md",
+      "sha256": "1ebf1ae5d8fc8d098f74b06214176c9a238d70a971a235af77858a76afb4eeed"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "a8522ca51b22d2f035b77e38245d7598816490beea45319daa44f9b5316e8b10"
+    }
+  ],
+  "independentFingerprints": [
+    {
+      "label": "DeepTutor/deeptutor/services/ai1_store.py",
+      "sha256": "4843f804a8aa9089c20d08575e8302f37f27a9306c131e92edc65f639d0ed1ee"
+    },
+    {
+      "label": "DeepTutor/deeptutor/services/ai1_contract.py",
+      "sha256": "323ce761ba3482db3c6183f6e6a692ac232db16ccf2ab553bcb6c0f293e6d66f"
+    },
+    {
+      "label": "DeepTutor/deeptutor/services/ai1_operation.py",
+      "sha256": "6d7d966382d6bda9f38e42edb7f331fd5e6d335bf45fc2118e4345d87510b7cd"
+    },
+    {
+      "label": "DeepTutor/deeptutor/services/ai1_http.py",
+      "sha256": "41b43ae028453e95762e737171f4a144e8e12fcefe2a24a77a816f378cbcbeaa"
+    },
+    {
+      "label": "DeepTutor/deeptutor/services/ai1_provider.py",
+      "sha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9"
+    },
+    {
+      "label": "DeepTutor/deeptutor/services/ai1_runtime.py",
+      "sha256": "64bc386bd216afea6723b42b07a8c56a17679fd4fd349686da0f59f7335cc746"
+    },
+    {
+      "label": "DeepTutor/deeptutor/api/main.py",
+      "sha256": "a43db30cdf75fe813a70f1e0c8b95ec296699ee2c5259e3e06ef445254f51cde"
+    },
+    {
+      "label": "DeepTutor/tests/services/ai1/lms_acceptance.py",
+      "sha256": "a7d326aa7a0ec2ccbdef3f9c6522d1154dcfc708feb3bf549d499f944f1c341e"
+    },
+    {
+      "label": "DeepTutor/tests/services/ai1/lms_wire_golden.json",
+      "sha256": "1e8ab327e8615b06d533b9c3e1940575bc6c21d0705a42f5ce721a54b8d907d5"
+    },
+    {
+      "label": "DeepTutor/deeptutor/modules/manifests/core.json",
+      "sha256": "a394187f896719cfc5b8a654399fc24ca07cf772732fca25f9caed209ffd1521"
+    },
+    {
+      "label": "DeepTutor/deeptutor/modules/manifests/server.json",
+      "sha256": "696596f12e650945a4a28bcf7a47168b62722fdd3dc3ea0774aa8ec6514b0623"
+    },
+    {
+      "label": "DeepTutor/pyproject.toml",
+      "sha256": "07fb3259fda62dfc0a6ebcd2b7385733e404929db1c2814c92cd5a2ba83e17ed"
+    },
+    {
+      "label": "DeepTutor/requirements/core.txt",
+      "sha256": "9b1de45f769d220ffaddf24e0449a863aca7b493e15fe06b12d0c2518c95dee5"
+    },
+    {
+      "label": "DeepTutor/requirements/server.txt",
+      "sha256": "0475c2e2c3d82d327af628f832458fabcecf17fc66158cd88c12ed74aa9bf205"
+    },
+    {
+      "label": "LMS/backend/services/homework-service/services/ai1Operation.js",
+      "sha256": "ec29b41e2647a8262de40a662218d5d3be05cb743329598535406b6afd3c27aa"
+    },
+    {
+      "label": "LMS/backend/services/homework-service/services/ai1Contract.js",
+      "sha256": "f4b00611a71ce3b4bc3572564bfa71f2bc848d65020d6faec8b1a9503d399ab2"
+    },
+    {
+      "label": "LMS/backend/common/contracts/ai1-min.schema.json",
+      "sha256": "5b18f95600c450fd58c7a487a667c190ab0ff122d818797359e86e29668820ee"
+    },
+    {
+      "label": "LMS/package.json",
+      "sha256": "a8a732b23fc49e8b0132f3d8f32a80d5d62f8d7d429f89875b59e7de5cce317f"
+    },
+    {
+      "label": "LMS/package-lock.json",
+      "sha256": "9880c08a472da57fb1ed9f68677c08e0d3996d4f7638ee6ddbfa975fb36bb0a6"
+    },
+    {
+      "label": "NodeDependency/axios/entry",
+      "sha256": "09e0015de3f902ea8dc3f6176e58e4081a76de33cc2116dc015e7770d7f4dafd"
+    },
+    {
+      "label": "NodeDependency/axios/package.json",
+      "sha256": "8e105085a5e8d16b173912b7804ee4a6ece462f055003bea7fa0b7c6a5bdd7a1"
+    },
+    {
+      "label": "NodeDependency/json-canonicalize/entry",
+      "sha256": "34dc5977ccd255022d7576ada50e34262005cc0f9b85b58cf5e9f672ee8ef48d"
+    },
+    {
+      "label": "NodeDependency/json-canonicalize/package.json",
+      "sha256": "452c53aa6cb8fc0486e11b9bc8bd322d64560e8b6d4b37aaae9198298514c9f8"
+    },
+    {
+      "label": "NodeDependency/ajv/entry",
+      "sha256": "edaed56fc546f5551b0d6dc2ff2a9cc25c2d6c83318a086eaa8c3ad0b2479297"
+    },
+    {
+      "label": "NodeDependency/ajv/package.json",
+      "sha256": "1f9033ee5a6515e7d76938b7072941862d1ed228a6879cc7fe10cdeb75107989"
+    },
+    {
+      "label": "PythonDependency/openai/RECORD",
+      "sha256": "e8ba833c8fe42a0ca10bca08191738cf20f4cd7bb0501e64a7a1b240303c388b"
+    },
+    {
+      "label": "PythonDependency/httpx/RECORD",
+      "sha256": "36d157ce78e04ace44b090b4249c3527dec73608cdbf9797725260b03d7e6052"
+    },
+    {
+      "label": "PythonDependency/httpcore/RECORD",
+      "sha256": "857d1792fa6969c1fc4169b68159fc032a65f8de14e067d6ea5f3c7a464babed"
+    },
+    {
+      "label": "PythonDependency/h11/RECORD",
+      "sha256": "38f9d4e04b4ffd3b889098c3cac68a9854db8b06f2fdd501157c89cdbf0d80f6"
+    },
+    {
+      "label": "PythonDependency/fastapi/RECORD",
+      "sha256": "acc664f1ce9b0e9008f0f942125c8c55d350c9bb753a55a95d77bb516e0d17e5"
+    },
+    {
+      "label": "PythonDependency/starlette/RECORD",
+      "sha256": "f826c8e84be3fc29e9893a3b306c983b40d2b8e0d43bd8ca6f0df42729100166"
+    },
+    {
+      "label": "PythonDependency/uvicorn/RECORD",
+      "sha256": "c3252864148381045cbeb1dab7176ab5e3a3c33818ad5cab345fdace8d410534"
+    },
+    {
+      "label": "PythonDependency/rfc8785/RECORD",
+      "sha256": "edb4738f7d9ce5e0a72e2674e6692913a6b17f49152ace5f0df711692b41c912"
+    },
+    {
+      "label": "PythonDependency/pytest/RECORD",
+      "sha256": "6700b0f0d701de14fc2c67b49a963d29331f6fea1e258f2d8826b15982ef089d"
+    },
+    {
+      "label": "PythonDependency/anyio/RECORD",
+      "sha256": "0d5dfa32ea438f6af206f453bd08a9b25684a68f4661d1eb74b1d7554100a588"
+    },
+    {
+      "label": "PythonDependency/openai._base_client/source",
+      "sha256": "56334327ea0f342df81773511db452551a6c40cfac6b32f87e58f169dff9b4b4"
+    },
+    {
+      "label": "PythonDependency/openai._client/source",
+      "sha256": "b9996e7b7e6688eff3bfce30a9a091bea7216fa587dd468a3db64622f22cd06c"
+    },
+    {
+      "label": "PythonDependency/httpx._client/source",
+      "sha256": "c43f941baefe58c91e96d00039e1868fe719d91453026d7db1647194563bff8d"
+    },
+    {
+      "label": "PythonDependency/httpx._transports.default/source",
+      "sha256": "03379a454c95c0271c4f2c8d25ec437f49f57457f3cf2769748420bf0ecf2e79"
+    },
+    {
+      "label": "PythonDependency/httpcore._async.http11/source",
+      "sha256": "faa33d6d5ecf8d2405e6fc6cdfbf9e5173881706c88cf7196cd962b97f53b41c"
+    },
+    {
+      "label": "PythonDependency/httpcore._trace/source",
+      "sha256": "724e99a08cd84e474d0087eae4c19e2aa0570edaa3397faa7d8c266456eb19ca"
+    }
+  ]
+}

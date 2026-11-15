@@ -1,0 +1,25 @@
+{
+  "status": "PASS_LOCAL_ARTIFACT_CHECK_NOT_BATCH_CLOSURE",
+  "manifestSha256": "77024c4d888c948aa75137c50afea26e20aa38929efe9046d5393a71d4efce99",
+  "verificationSha256": "8bd23863e2955430832862fffa1e70b23a656416892238b53eb8f341955de371",
+  "patchSha256": "68638ef24e79355488e53f8a7d51210f804973ab2b9980be746c4a2b01cb62ed",
+  "files": 14,
+  "independentMatchesCurrent": true,
+  "documentsMatchCurrent": true,
+  "patchRebuild": {
+    "checkExit": 0,
+    "applyExit": 0,
+    "hashesMatch": true
+  },
+  "documentationCheckExit": 0,
+  "documentationTests": {
+    "exit": 0,
+    "passed": 312
+  },
+  "diffCheck": {
+    "lms": 0,
+    "deeptutor": 0
+  },
+  "realModelCalls": 0,
+  "gitPublication": false
+}

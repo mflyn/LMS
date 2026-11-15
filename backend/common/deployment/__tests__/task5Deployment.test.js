@@ -34,6 +34,15 @@ const environmentMap = (entries) => Object.fromEntries(
 );
 
 describe('Task 5 deployment contracts', () => {
+  test('family release discovery includes AI3 analytics effects, revision and startup cleanup tests', () => {
+    const output = execFileSync(process.execPath, [require.resolve('jest/bin/jest'),
+      '--config=backend/jest.config.js', '--selectProjects', 'analytics-family', 'analytics-attachments',
+      '--runInBand', '--listTests', '--json'], { cwd: repositoryRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const discovered = JSON.parse(output).map(file => path.relative(repositoryRoot, file));
+    for (const file of ['ai3MistakeEffects.test.js', 'ai3MistakeRevision.test.js', 'startupCleanup.test.js']) {
+      expect(discovered.filter(value => value === `backend/services/analytics-service/__tests__/${file}`)).toHaveLength(1);
+    }
+  });
   test('TC-T5-REG-003 root regression isolates family Mongo suites from legacy projects', () => {
     const packageJson = require('../../../../package.json');
 

@@ -108,6 +108,7 @@
 .home-child .home-heading { min-height: 116px; }
 .home-companion { flex: 0 0 auto; object-fit: contain; width: 180px; height: 116px; }
 .home-child .home-intro { font-size: 17px; }
+.home-learning-entry { display: inline-flex; align-items: center; min-height: 44px; }
 .home-child .home-choices { margin-bottom: 24px; }
 .home-child .home-task-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .home-task-choice { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--home-line); border-radius: 12px; background: #fffefa; }

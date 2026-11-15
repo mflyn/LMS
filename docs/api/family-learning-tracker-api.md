@@ -4,6 +4,10 @@
 **Baseline candidate:** FGT-MVP-1.7
 **Normative requirements:** `docs/product/family-learning-tracker.md` section 10.4
 
+**独立增量（不属于本页已实现基线）：**
+[AI-1 最小 API 契约](family-ai1-api.md) 为已单独批准的 `ai1-min-v1` 契约，
+仅家长纯文字候选生成/人工修订/审核；A批为本地无模型领域实现，尚未注册路由，AI-1 总门禁 OPEN。
+
 ## 1. 基本约定
 
 第一阶段 API 服务于家庭成长跟踪 MVP，覆盖家长 Web 端和孩子简化入口。

@@ -4,6 +4,7 @@ export const PARENT_NAV_ITEMS = [
   { path: '/app/logs', label: '记录' },
   { path: '/app/points', label: '知识与能力点' },
   { path: '/app/mistakes', label: '错题' },
+  { path: '/app/learning', label: '学习包' },
   { path: '/app/reports', label: '周报' },
   { path: '/app/reminders', label: '提醒' },
   { path: '/app/rewards', label: '星星与奖励' },

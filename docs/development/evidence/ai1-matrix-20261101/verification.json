@@ -1,0 +1,170 @@
+{
+  "status": "LOCAL_MATRIX_REVIEWED_NOT_GATE_CLOSURE",
+  "productChanges": false,
+  "scope": "Existing requirements, synthetic engineering only",
+  "realModelCalls": 0,
+  "currentMatrix": {
+    "requirements": 35,
+    "localPass": 35,
+    "partial": 0,
+    "totalGate": "OPEN"
+  },
+  "candidate": {
+    "manifestSha256": "7d67a6c535b0c85014bc4e6b36c30ffebff6aee1588248b6f10d8fa2b68b0fa2",
+    "patchSha256": "aefea19d6aaba833b2b8f693cdc32071fcc6d9e2ea57c36a80b9326a0319e855",
+    "sourceFingerprints": 68,
+    "reconstruction": "PASS"
+  },
+  "author": {
+    "lms": {
+      "passed": 50,
+      "seconds": 9.539,
+      "exitCode": 0
+    },
+    "remote": {
+      "passed": 76,
+      "seconds": 1.64,
+      "warnings": 2,
+      "exitCode": 0
+    },
+    "documentation": {
+      "passed": 313,
+      "exitCode": 0
+    }
+  },
+  "independent": {
+    "lms": {
+      "passed": 50,
+      "seconds": 9.327,
+      "exitCode": 0
+    },
+    "remote": {
+      "passed": 76,
+      "seconds": 1.16,
+      "warnings": 1,
+      "exitCode": 0
+    },
+    "hashesUnchanged": true,
+    "ownedLive": [],
+    "repeatedHistoricalBrowserOrMutations": false
+  },
+  "failuresRetained": [
+    {
+      "name": "matrix-doc-red.log",
+      "expected": true,
+      "failed": 1,
+      "exitCode": 1
+    },
+    {
+      "name": "matrix-documentation-author.log",
+      "expected": false,
+      "failed": 8,
+      "passed": 305,
+      "exitCode": 1,
+      "reason": "Historical section anchor renamed; original anchor restored"
+    },
+    {
+      "name": "matrix-documentation-final.log",
+      "expected": false,
+      "failed": 1,
+      "passed": 312,
+      "exitCode": 1,
+      "reason": "Restore evidence row missing explicit HTTP label; documented actual layer"
+    }
+  ],
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "externalPending": [
+    "QUALIFIED_COUNTER_PENDING",
+    "CURRENT_PRICE_AND_BUDGET_PENDING",
+    "HUMAN_VALUE_PENDING",
+    "DEVICE_PENDING"
+  ],
+  "rawEvidence": [
+    {
+      "name": "matrix-service-author.log",
+      "sha256": "84ad512b111a5cf2a9db2a6497fa8ef37eff1e940bd3bbf667c0576f03e1726a"
+    },
+    {
+      "name": "matrix-service-author-result.json",
+      "sha256": "8c65f8615cbab02a32123adb3a1bd3af1a632f225b275025e8bb2011154a6ba0"
+    },
+    {
+      "name": "matrix-remote-author.log",
+      "sha256": "638a4c5276b8d8b95dbe83818f5ceb65afaa81c21f541e5a2dff360fb36bf3a0"
+    },
+    {
+      "name": "matrix-remote-author-result.json",
+      "sha256": "fb0fa9c20e53744e754f19b93ea3ab2035c223814bc2f97e2049ff3261832063"
+    },
+    {
+      "name": "matrix-doc-red.log",
+      "sha256": "8ddf16292588c4d24cf2154658c63e8f6fe3dce8a08a7a1790a2d6fb8a899264"
+    },
+    {
+      "name": "matrix-documentation-author.log",
+      "sha256": "a63723d89dbea2585784b1fe39b80d8435c3b76143c6a30a193fbd1e967e125c"
+    },
+    {
+      "name": "matrix-documentation-author-result.json",
+      "sha256": "b6d9e27777c9f8c8fe6abc61e3d51bef48277fbaacde62ed8abcb9b79258ba5b"
+    },
+    {
+      "name": "matrix-documentation-final.log",
+      "sha256": "ada49ee4c52f1266c71d1b66b1300cf874753283b6b188de7b64de31513b55ca"
+    },
+    {
+      "name": "matrix-documentation-final-result.json",
+      "sha256": "635c5078eaa7c2f30b76cbd7c5a68600aafdb056b504d2c6154f702780cbe4f1"
+    },
+    {
+      "name": "matrix-documentation-v3.log",
+      "sha256": "fb8a8baa8a2ca474b59f5005ca08fc88a176ba6e369eb440fd88a99008499b25"
+    },
+    {
+      "name": "matrix-documentation-v3-result.json",
+      "sha256": "982848f1a0f3977c33ef721fb685654d408e163b154e1916748b81e0d99b29b1"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/commands.json",
+      "sha256": "8a08dfbf1158dd7d760dc6f5f09f925849f08f5a82ae33ffcbaaa55ab98694bc"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/result.json",
+      "sha256": "c7228d35db32beb70dae4df6e636ab41794cc8620c28d1992dfbe1ad35897890"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/lms.log",
+      "sha256": "e28d569ceed5d7619844564d77e8b40daad6ff7f3229f494e657e713ffc9560e"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/deeptutor.log",
+      "sha256": "e8e6f6e440974d919c8b87c079ecf998bd65294a9876283dca3f397c89c9033a"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/lms-jest.json",
+      "sha256": "898eb75d59cec05643638125dc873137d207735be3eea66ab40239d2a614fa14"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/deeptutor-junit.xml",
+      "sha256": "971afac91026e29d081e83a25ba3e4c3d14023a2edbe0d87830e7ba34d280546"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/hashes-before.json",
+      "sha256": "94ad9aa636613fcebda6598f92af764572d565bdd4256843f3af74e5135bf07b"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/hashes-after.json",
+      "sha256": "94ad9aa636613fcebda6598f92af764572d565bdd4256843f3af74e5135bf07b"
+    },
+    {
+      "name": "independent-matrix-20261101T145647Z/processes-final.json",
+      "sha256": "678015626be11531bb4a94cc1aab9d67503bfdc76dbe9c771e4e528a447dcd05"
+    }
+  ]
+}

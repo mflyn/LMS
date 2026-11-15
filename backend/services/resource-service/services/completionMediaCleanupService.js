@@ -4,12 +4,15 @@ const Reference = require('../models/MediaReference');
 const Receipt = require('../models/MediaDeletionReceipt');
 const Retirement = require('../models/MediaOrphanRetirement');
 const { loadDeletionEvidence, assertRecoveryProtocolAvailable } = require('./mediaDeletionEvidence');
+const { protocolPurposes, validPair, purposeFor, isAttemptPurpose } = require('../../../common/services/completionMediaProtocol');
 const DAY_MS = 86400000;
 const inconsistent = () => new AppError('MEDIA_OPERATION_INCONSISTENT', 409, 'MEDIA_OPERATION_INCONSISTENT', true, []);
 
-const createCompletionMediaCleanupService = ({ transactionRunner, journal, recoveryJournal, mediaStore, now = Date.now } = {}) => {
+const createCompletionMediaCleanupService = ({ transactionRunner, journal, recoveryJournal, mediaStore, now = Date.now,
+  assertAi3Continuous = () => { throw new AppError('AI3_NOT_READY', 503, 'AI3_NOT_READY', true, []); } } = {}) => {
   if (typeof transactionRunner !== 'function' || typeof journal?.persist !== 'function'
-    || typeof mediaStore?.remove !== 'function' || typeof now !== 'function') throw new Error('Cleanup dependencies are required');
+    || typeof mediaStore?.remove !== 'function' || typeof now !== 'function'
+    || typeof assertAi3Continuous !== 'function') throw new Error('Cleanup dependencies are required');
   if (recoveryJournal !== undefined && (typeof recoveryJournal?.persist !== 'function'
     || typeof recoveryJournal?.read !== 'function')) throw Error('Recovery journal is required');
   if (recoveryJournal !== undefined && typeof mediaStore.syncDirectory !== 'function') {
@@ -20,19 +23,23 @@ const createCompletionMediaCleanupService = ({ transactionRunner, journal, recov
     if (!session?.inTransaction()) throw new Error('Active MongoDB transaction is required');
     const cutoff = new Date(Number(now()) - 30 * DAY_MS);
     if (!Number.isFinite(cutoff.getTime())) throw new Error('Invalid cleanup clock');
-    const asset = await Asset.findOne({ _id: mediaId, purpose: 'task_completion', status: 'deleted',
+    const asset = await Asset.findOne({ _id: mediaId, purpose: { $in: protocolPurposes }, status: 'deleted',
       privacyDeletionRecorded: true }).session(session).lean();
     if (!asset || !asset.deletedAt || asset.deletedAt > cutoff) return null;
+    if (asset.purpose === 'ai3_practice') await assertAi3Continuous();
+    if (recovery && isAttemptPurpose(asset.purpose)) throw inconsistent();
     await assertRecoveryProtocolAvailable(mediaId, session, Boolean(recovery));
     const retirement = await Retirement.findOne({ mediaId }).session(session).lean();
     if (asset.orphanRetirementId || retirement && retirement.state !== 'SUPERSEDED') throw inconsistent();
     const evidence = await loadDeletionEvidence(mediaId, session);
     if (!evidence || evidence.tombstone.familyId !== String(asset.familyId) || evidence.tombstone.childId !== String(asset.childId)
-      || evidence.tombstone.deletedAt !== asset.deletedAt.toISOString()) throw inconsistent();
+      || evidence.tombstone.purpose !== asset.purpose || evidence.tombstone.deletedAt !== asset.deletedAt.toISOString()) throw inconsistent();
+    if (isAttemptPurpose(asset.purpose) && (evidence.tombstone.mimeType !== asset.mimeType
+      || evidence.tombstone.sizeBytes !== asset.sizeBytes)) throw inconsistent();
     const references = await Reference.find({ mediaId }).session(session).lean();
     if (references.some(r => r.state === 'prepared' || r.state === 'bound')) return null;
     if (references.some(r => String(r.familyId) !== String(asset.familyId) || String(r.childId) !== String(asset.childId)
-      || r.resourceType !== 'growth_task' || r.field !== 'completionMediaIds' || r.state !== 'released' || !r.releasedAt)) throw inconsistent();
+      || !validPair(r.resourceType, r.field) || purposeFor(r.resourceType) !== asset.purpose || r.state !== 'released' || !r.releasedAt)) throw inconsistent();
     if (references.some(r => r.releasedAt > cutoff)
       || evidence.receipts.some(r => new Date(r.releasedAt) > cutoff)) return null;
     if (await Receipt.countDocuments({ mediaId }).session(session) !== evidence.receipts.length) throw inconsistent();
@@ -43,7 +50,7 @@ const createCompletionMediaCleanupService = ({ transactionRunner, journal, recov
     if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
       throw new AppError('Invalid cleanup limit', 400, 'VALIDATION_ERROR', true, []);
     }
-    const candidates = await Asset.find({ purpose: 'task_completion', status: 'deleted', privacyDeletionRecorded: true,
+    const candidates = await Asset.find({ purpose: { $in: protocolPurposes }, status: 'deleted', privacyDeletionRecorded: true,
       deletedAt: { $lte: new Date(Number(now()) - 30 * DAY_MS) } }).sort({ deletedAt: 1, _id: 1 }).limit(limit).select('_id').lean();
     const mediaIds = [];
     for (const candidate of candidates) {

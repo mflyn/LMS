@@ -33,10 +33,92 @@
 旧 Task Gate 只证明对应历史范围。FGT-MVP-1.7 发布判定使用已纳入 Task 12 的统一
 发布 Gate；目标环境启用前还必须完成 Task 12 Gate 规定的数据修复检查。
 
-## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8-T9 待执行）
+## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
+
+### 当前交付摘要（2026-11-15）
+
+**已合并、自动化通过、真人／真机待验。** 当前固定代码候选为 main
+`1abb623da7eed3bd27b159da3216189952586f1e`，与本轮核对的 origin/main 一致。
+
+| 最近交付 | 合并提交 | CI 与证据边界 |
+| --- | --- | --- |
+| [PR #49](https://github.com/mflyn/LMS/pull/49)：求助焦点、WebKit 导航测试、44px 触控区域 | `a1cf74f3` | [原分批验收](evidence/functional-p2-followup-20261114/README.md)保留；[合并后 CI 43614031778](https://github.com/mflyn/LMS/actions/runs/43614031778)曾失败，13b 为 94 通过／3 失败，不改写 |
+| [PR #51](https://github.com/mflyn/LMS/pull/51)：合成任务日期按家庭时区生成 | `5c1bec39` | [CI 43623034340](https://github.com/mflyn/LMS/actions/runs/43623034340)通过；[日期夹具修订](evidence/t2-seed-date-20261115/README.md)保留原失败，不是业务功能或真人验收 |
+| [PR #50](https://github.com/mflyn/LMS/pull/50)：T5 补测、计划及知识点接续 | `1abb623d` | [main CI 43665482647](https://github.com/mflyn/LMS/actions/runs/43665482647)通过；[冻结补丁与分批证据](evidence/t5-nb-page-continuation-20261114/README.md)不改绑 |
+
+上述最新 main CI 的前端为 78 套件／1279 项，07b 为 10 套件／113 项，13b 为 102 项通过；
+这是该次自动化结果，不与旧开发、独立复验或分批结果相加。可选性能、安全扫描、镜像发布和部署任务跳过，不计为通过。
+T5-NB-001／002 当前为 **SCOPED_AUTOMATION_COMPLETE**，已移出当前自动化待办；
+历史 OPEN_NONBLOCKING 快照保持，AI2-VIEW-NB-001 及其他非阻断项不因此关闭。
+
+[当前差异交接](family-child-entry-test-plan.md#8-main-1abb623d-差异验收交接2026-11-15)只准备测试／评审线程后续接续，
+不更新真人入口、不重跑浏览器、不改变现有合成数据。原 `2ac06898` 三页面证据不转记为本候选受测结果。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、MANUAL_PENDING、DEVICE_PENDING、历史 Docker INCOMPLETE_FAILED、历史失败及后置范围不变；
+不扩展 WP1/T8 执行器，不新增 Git、模型、服务器或部署授权。
+
+### 2026-11-14 交付摘要快照
+
+以下按原日期保留，旧“当前”指当时状态，不覆盖上方 2026-11-15 摘要。
+
+**当前交付摘要（2026-11-14）：专属入口＋PIN 已合并、真人待验。**
+[PR #46](https://github.com/mflyn/LMS/pull/46) 已使用 merge commit 合入 main
+`2ac0689881a62d97bd79b731a8712ca4023406b5`；[合并后 CI 43554728658](https://github.com/mflyn/LMS/actions/runs/43554728658)
+的家庭发布回归和证据上传通过。可选性能、安全扫描、镜像发布及部署未启用，不计为通过。
+合并树与已验收 head `4c3ad7b96c83594d15f421d80b932e9cd990a216` 一致；
+[原候选与分批验证](evidence/child-entry-20261113/README.md)、冻结补丁/manifest 哈希及历史失败保持原样。
+使用步骤见[快速开始](../user-guide/quick-start.md)、[家长指南](../user-guide/parent-guide.md)和[孩子指南](../user-guide/child-guide.md)。
+本机真人入口由测试／评审线程先核对并保留既有合成数据后更新，实际版本与结果以该线程记录为准；
+不将代码合并、CI 或本次文档更新写成入口已更新、真人通过或部署完成。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置状态不变。
+
+2026-11-14 测试线程另交接[三页面业务闭环自动浏览器证据](evidence/browser-business-loop-20261114/README.md)：
+固定受测 SHA 仍为 `2ac06898`，复用已登录家长及两个孩子页面，完成求助、两版作品、按所见版本审核和回看；
+结果 PASS_BROWSER_BUSINESS_LOOP，25 份冻结文件核验通过，26 条基线文档未变。2026-11-14 复审通过并获用户批准本批证据收口，绑定原受测 SHA 及索引中的原 manifest 哈希；仅文档状态已批准，
+不是新的专属入口登录测试、真人/iPad 验收或全量通过，不改绑最新 main、不关闭门禁；[测试记录](family-child-entry-test-plan.md#6-后续三页面业务接续记录2026-11-14)区分原专项与本轮范围。
+
+### 历史交付与授权快照
+
+2026-11-14 T5 非阻断建议后续：T5-NB-001／002 已补齐固定候选内自动化覆盖并纳入永久回归，
+仅记 SCOPED_AUTOMATION_COMPLETE，见[补测、今日计划与知识点接续记录](evidence/t5-nb-page-continuation-20261114/README.md)。
+该记录区分测试线程分批结果、开发纳入复验及历史失败；不关闭真人／真机或其他总门禁，不更新原测试入口。
+知识点加载态误判 P2 已补真实响应与稳定页面校验，并新增错误响应永久反例；2026-11-14 用户批准本批限定自动化验收及 P2 关闭，ACCEPTED / USER_APPROVED、P2 CLOSED，受验补丁和 44 份冻结证据绑定见同记录第 7 节。第 6 节待验收文字保留为历史快照，不将旧 R1 通过当作该缺口已被保护，也不将自动化通过写为真人／真机通过。
+下方旧记录中的两项 OPEN_NONBLOCKING 保留为当时快照，其他非阻断及后置义务不变；本批不提交推送或改写 PR #49。
+
+2026-11-14 后续功能复评：求助焦点恢复、WebKit 业务导航与 44px 触控区域三项 P2
+已获限定关闭授权，见[固定候选、独立复评及关闭记录](evidence/functional-p2-followup-20261114/README.md)。
+受验身份为 `e5aea7e5` 加九文件未提交补丁，不是已合并版本；本轮仅补文档收口。
+两引擎原 65 项与新增 7 项分别运行，开发端口冲突与补验、独立 QA 记录错误均保留。
+现有真人入口仍是旧构建、没有应用修复；自动浏览器通过不等于真人或 iPad 验收，也不关闭总门禁。
+
+以下各日期内容保留当时身份，其中 Draft PR／未授权合并等描述不覆盖上方已合并事实，也不授予新的执行权限。
+
+2026-11-14 [孩子专属入口 + PIN 最小设计](../superpowers/specs/2026-11-13-family-child-entry-design.md)及[测试方案](family-child-entry-test-plan.md)对应的限定合成工程已获用户验收，两项测试保护缺口批准关闭；[本批证据与评审记录](evidence/child-entry-20261113/README.md)区分开发实跑、独立复评与历史失败。现授权专用分支、Draft PR 和 CI，不授权合并或替换真人入口；下列已合并快照及 OPEN/DEVICE_PENDING 等状态不变。
+
+**当前交付摘要（2026-11-13）：已合并、真人待验。** 本次核对的 main 代码基线为 `ce264b9dec6fb469dd78154f507bba8e997b7e90`。
+
+| 已合并范围 | PR | merge commit |
+| --- | --- | --- |
+| MVP 两项 P2 与使用指引 | [#42](https://github.com/mflyn/LMS/pull/42) | `01a61c63` |
+| 任务列表分页与回看 | [#43](https://github.com/mflyn/LMS/pull/43) | `a383eb30` |
+| 孩子标签页隔离与在途 PIN 响应保护 | [#44](https://github.com/mflyn/LMS/pull/44) | `ce264b9d` |
+
+PR #44 及合并后 main 的 CI 已通过，固定 SHA 与分批验证依据见[交付证据索引](./evidence/child-tab-session-20261113/README.md)。
+真人测试由测试／评审线程核对并保留既有合成数据后继续，入口和实际结果以该线程记录为准；Git 合并和 CI 通过不等于真人、iPad 或部署验收。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测及后置状态不变，WP1/T8 执行器不恢复开发。
+以下按日期保留候选及授权快照；其中“待复评／不合并”等不覆盖对应模块的后续批准和已合并事实，也不授予新的执行权限。
+
+2026-11-08任务列表交付快照（合并前）：[任务列表分页与回看P2验收关闭](./evidence/mvp-task-list-20261108/acceptance.md)。
+基于已合并PR #42的main `01a61c63`，仅提交本次三文件修订、关闭记录及脱敏证据索引；专用分支/Draft PR/CI已授权，合并与部署未授权。以下MVP两项P2及其交付权限保留为上一批快照。
+
+2026-11-08本批已验收：[MVP两项P2及使用指引关闭记录](./evidence/mvp-closeout-20261108/acceptance.md)。
+反思跨入口未知写入保护及错题日期清空两项P2已关闭，原冻结、开发分批及独立复验证据分别保留。
+当前[MVP优先级摘录](./t4-t8-joint-acceptance.md#0-mvp-优先与后置范围2026-11-08)将WP1执行器未完增强后置，不取消必要恢复/回滚、真机和真实启用验收。
+本轮只授权[专用分支/Draft PR交付](./evidence/mvp-closeout-20261108/public-delivery.md)，不合并、部署、调用模型或操作服务器。
+T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、历史失败、非阻断补测及后置状态不变。
 
 [T7 限定合成工程关闭记录](./family-self-directed-learning-mvp-gate.md#2742-t7-限定合成工程总门禁批准关闭2026-10-30)
-经用户批准关闭，不连带关闭T4、真机或后置义务；当前Git交付为脱敏候选待复审（Gate §27.44），不推送、合并或部署。
+经用户批准关闭，不连带关闭T4、真机或后置义务；T7 脱敏交付已合并（Gate §27.45），未部署。
+当前 T8 本地交付范围与证据见[本地验收清单](./evidence/t8-local-preparation-2026-10-30/README.md#本地交付验收与范围清单)，总门禁 OPEN；已授权专用分支及 PR（Gate §28.4），不合并、不部署。
 
 [T6 工程总门禁关闭记录](./evidence/t6-reload-denied-p2-2026-10-27/engineering-closure.md)
 仅关闭合成工程范围；DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测及后置责任不变。
@@ -71,6 +153,12 @@ T2-1 基线修复与门禁 P2、T2-R 公开恢复后端及 owner/pending P2 已�
 2026-10-26 已补充[DeepTutor/K12 最小路线](../superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md#9-deeptutor-与-k12-最小对接路线2026-10-26-补充)：
 AI-0 可提前做单章节能力验证；AI-1～AI-3 和 K12-1 按基础闭环、家庭需求及独立授权启动。
 T1～T9 不因此增加 AI 验收；本次只有路线文档，没有已执行的验证或接入。正式使用仍满足 T8，默认 T9 后启动。
+
+上述为路线建立时的历史状态。2026-10-31：AI-0 单 Provider 小样本经家长确认，人工核验并修订后
+有条件可作备课候选；完整 Agent/页面及 K12 未验证。2026-11-01 AI-1 已获设计批准及 A 批本地实现授权：
+[最小设计](../superpowers/specs/2026-10-31-family-ai1-minimal-design.md)、
+[API 契约](../api/family-ai1-api.md)、[测试方案](family-ai1-test-plan.md) 均 APPROVED，
+仅本地无模型实现，不开放孩子使用、不沿用 AI-0 预算，未注册接口；AI-1 总门禁 OPEN。当前状态见主线 Gate §29；其他门禁不变。
 
 [家庭 AI 学习平台设计](../architecture/family-ai-learning-platform-design.md)是后续
 DeepTutor、K12-KGraph 和家长人工审核教学闭环的设计草案。

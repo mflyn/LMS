@@ -1,0 +1,240 @@
+{
+  "author": {
+    "remote": {
+      "passed": 8,
+      "warnings": 1,
+      "seconds": 40.85,
+      "status": 0
+    },
+    "lmsInitial": {
+      "passed": 11,
+      "seconds": 6.871,
+      "status": 0
+    },
+    "lmsFinal": {
+      "passed": 11,
+      "seconds": 6.576,
+      "status": 0
+    },
+    "mutation": {
+      "expectedFailures": 2,
+      "seconds": 6.24,
+      "pytestStatus": 1,
+      "wrapperStatus": 0
+    },
+    "p2Final": {
+      "passed": 10,
+      "warnings": 1,
+      "seconds": 46.59,
+      "status": 0
+    },
+    "p2Mutants": [
+      {
+        "kind": "remove guard",
+        "failed": 4,
+        "seconds": 9.95,
+        "status": 1
+      },
+      {
+        "kind": "default missing true",
+        "failed": 2,
+        "seconds": 5.15,
+        "status": 1
+      }
+    ]
+  },
+  "independent": "PENDING",
+  "checks": [
+    {
+      "name": "documentation",
+      "status": 0,
+      "log": "recovery-documentation.log",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "lms-diff",
+      "status": 0,
+      "log": "recovery-lms-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "deeptutor-diff",
+      "status": 0,
+      "log": "recovery-deeptutor-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "recovery-author.log",
+      "sha256": "7e9c3917c26906a6450815ecb6b4616efb6ce9fd6136820740b3ed04bd39f883"
+    },
+    {
+      "name": "recovery-author-result.json",
+      "sha256": "af6de32ad2282b2bde4293b16228b7cd18d521e51a7e6bbbf0aaaa2328b119d1"
+    },
+    {
+      "name": "recovery-lms-author.log",
+      "sha256": "b01c5002781b56ca1372bd2c4b62f8bc76a0e7e474b2272948a35e5d6791cde3"
+    },
+    {
+      "name": "recovery-lms-author-result.json",
+      "sha256": "847bc68323fa7fc6c1a5f0e11c08f202945c73926a83ec86488804be5db66a89"
+    },
+    {
+      "name": "recovery-lms-final.log",
+      "sha256": "76121e1dceda3803f301b8713b2eb2c1ee6bc9249e08cdeb6679e130f084f65f"
+    },
+    {
+      "name": "recovery-lms-final-result.json",
+      "sha256": "847bc68323fa7fc6c1a5f0e11c08f202945c73926a83ec86488804be5db66a89"
+    },
+    {
+      "name": "recovery-continuity-mutant.log",
+      "sha256": "bc64ed6f30a028cde8b3137cf5414a0c2650d4120b3f50d930d36dfc92a3ee70"
+    },
+    {
+      "name": "recovery-continuity-mutant-result.json",
+      "sha256": "f1c0c2dafee1bba74f238900c6ad90fecf5d0acafed9f82524be2f53d557b6b2"
+    },
+    {
+      "name": "independent-recovery-20261101T141824Z/result.json",
+      "sha256": "ebdded513fc56f6c17a6fc3c9992ef935f85d0fb7ca797c9225cdb2ffe15eb7b"
+    },
+    {
+      "name": "independent-recovery-20261101T141824Z/hashes-before.json",
+      "sha256": "796258dc7bbab29e2b7604f26e4fd6bd73fb1abeb49b9c1b7fe0633977a2fa28"
+    },
+    {
+      "name": "independent-recovery-20261101T141824Z/hashes-after.json",
+      "sha256": "796258dc7bbab29e2b7604f26e4fd6bd73fb1abeb49b9c1b7fe0633977a2fa28"
+    },
+    {
+      "name": "independent-recovery-20261101T141824Z/deeptutor.log",
+      "sha256": "23fd2ead1a94c8a14041b3ff5d6f0462b980f5e8b742b5fa75927d078e1ecf61"
+    },
+    {
+      "name": "independent-recovery-20261101T141824Z/deeptutor-junit.xml",
+      "sha256": "e33b3244e996312560d5e02a532b6ac345ca46a5c43c8a249ad5e165dcd63431"
+    },
+    {
+      "name": "independent-recovery-20261101T141824Z/lms.log",
+      "sha256": "8975ad0a3766aa7a919faa42fc29066ed45eabf1032967d605eafd0cdf4ae198"
+    },
+    {
+      "name": "independent-recovery-20261101T141824Z/lms-jest.json",
+      "sha256": "11744be59c072ac297c1259b23ab472d2ee45d23c14930ded0f342f6bdfed8a6"
+    },
+    {
+      "name": "independent-recovery-20261101T141824Z/processes-final.json",
+      "sha256": "a24d1ac5ba65491812083e5a5b86fa6481aa864ffd232cd629964b8f00ed0777"
+    },
+    {
+      "name": "recovery-p2-author.log",
+      "sha256": "5acb81feb336410abc58731ddd93bc9826fc1f99a123f2930a3dd740ef3c7d6f"
+    },
+    {
+      "name": "recovery-p2-author-result.json",
+      "sha256": "b6e58b32253631d17445622464d86b9ef92d9844e1131120f5c7cc53392096e6"
+    },
+    {
+      "name": "recovery-p2-mutant-guard.log",
+      "sha256": "32f6c0c316db908c6cbbd69d64517b5b91f506e2815804d21d9aa5695003d285"
+    },
+    {
+      "name": "recovery-p2-mutant-missing.log",
+      "sha256": "08daadf79b25a762bec786513a4a3f5eacf8c18a9a9db1d03b72d0ca53f3a7cc"
+    },
+    {
+      "name": "recovery-p2-mutants-result.json",
+      "sha256": "71c6c6ecaac11de60479190abb3e567c867483db2411282cc0ccd10f59d70989"
+    },
+    {
+      "name": "independent-recovery-p2-20261101T142603Z/result.json",
+      "sha256": "5217a9b0bd2a7875a6a4ef52d7914acf8e784a8b5dc9a31bb605db61c26e6f36"
+    },
+    {
+      "name": "independent-recovery-p2-20261101T142603Z/hashes-before.json",
+      "sha256": "9ddbd020de9d3da84504c6c748b6c9164f59e22e7c5074c0e4c83669199906ec"
+    },
+    {
+      "name": "independent-recovery-p2-20261101T142603Z/hashes-after.json",
+      "sha256": "9ddbd020de9d3da84504c6c748b6c9164f59e22e7c5074c0e4c83669199906ec"
+    },
+    {
+      "name": "independent-recovery-p2-20261101T142603Z/deeptutor.log",
+      "sha256": "b5ec3bb2fc595c28625541ef1d5691a5dd65f1c6546bc3ba5110e465b129b4a2"
+    },
+    {
+      "name": "independent-recovery-p2-20261101T142603Z/deeptutor-junit.xml",
+      "sha256": "13e67391e3b84e791285663029b0dbc9cf50d8b4f7567d744144ebb03b0235a1"
+    },
+    {
+      "name": "independent-recovery-p2-20261101T142603Z/processes-final.json",
+      "sha256": "5e2ba59d239d6590da3d0eb2e547fd9be7f55ae6f0e9715a5bc654eff9b7f469"
+    }
+  ],
+  "retainedPreparationFailure": {
+    "command": "node scripts/check-family-docs.js without NODE_PATH",
+    "status": 1,
+    "reason": "dotenv unavailable through worktree default module resolution",
+    "evidence": "session tool output; rerun uses existing original-checkout dependency directory"
+  },
+  "independentInitial": {
+    "remote": {
+      "passed": 8,
+      "warnings": 1,
+      "seconds": 35.71,
+      "status": 0
+    },
+    "lms": {
+      "passed": 11,
+      "seconds": 5.884,
+      "status": 0
+    },
+    "fingerprints": 66,
+    "unchanged": true,
+    "ownedLive": 0,
+    "forcedCleanup": 0
+  },
+  "independentCurrent": {
+    "remote": {
+      "passed": 10,
+      "warnings": 1,
+      "seconds": 46.76,
+      "status": 0
+    },
+    "lms": {
+      "reusedPriorIndependent": true,
+      "passed": 11,
+      "seconds": 5.884,
+      "status": 0,
+      "unchangedFiles": 44
+    },
+    "fingerprints": 66,
+    "unchanged": true,
+    "ownedLive": 0,
+    "forcedCleanup": 0,
+    "review": "three scoped test protection gaps resolved; no new concrete issue; whole recovery matrix and B/D/AI-1 remain open"
+  },
+  "finalChecks": [
+    {
+      "name": "documentation",
+      "status": 0,
+      "log": "recovery-final-documentation.log",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "lms-diff",
+      "status": 0,
+      "log": "recovery-final-lms-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "deeptutor-diff",
+      "status": 0,
+      "log": "recovery-final-deeptutor-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

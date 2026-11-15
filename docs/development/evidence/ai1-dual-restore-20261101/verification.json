@@ -1,0 +1,161 @@
+{
+  "status": "ACTUAL_DUAL_RESTORE_LOCAL_REVIEWED",
+  "author": {
+    "initial": {
+      "passed": 2,
+      "failed": 1,
+      "seconds": 33.47,
+      "status": 1,
+      "reason": "new test expected200 for nonterminal recover; existing contract202"
+    },
+    "intermediate": {
+      "passed": 6,
+      "seconds": 75.62,
+      "status": 0
+    },
+    "callbackPreparation": {
+      "status": 1,
+      "reason": "sandbox psutil PermissionError; not valid red"
+    },
+    "callbackRed": {
+      "failed": 1,
+      "seconds": 0.64,
+      "status": 1,
+      "reason": "DID NOT RAISE TimeoutExpired"
+    },
+    "final": {
+      "passed": 13,
+      "warnings": 1,
+      "seconds": 107.76,
+      "status": 0,
+      "scope": "7 new plus6 existing business/executor"
+    },
+    "mutation": {
+      "failed": 1,
+      "seconds": 15.58,
+      "status": 1,
+      "expected": true,
+      "reason": "isolated accepted GET unexpectedly succeeds when coerced to query-only"
+    }
+  },
+  "independent": {
+    "passed": 7,
+    "warnings": 1,
+    "seconds": 74.69,
+    "status": 0,
+    "fingerprints": 68,
+    "unchanged": true,
+    "ownedLive": 0,
+    "forcedCleanup": 0,
+    "scope": "new seven only; old business six and author mutation not repeated",
+    "review": "two scoped P2 protections resolved; no production recovery or total gate closure"
+  },
+  "artifacts": [
+    {
+      "name": "dual-restore-author.log",
+      "sha256": "1730d4b192e751520f35c7c03f6879a8b27692a343076525a078744220267f70"
+    },
+    {
+      "name": "dual-restore-author-result.json",
+      "sha256": "502a31a8c8796673e86dafba458310a720536b4566915803bc37fb2128c4a1f1"
+    },
+    {
+      "name": "dual-restore-v2.log",
+      "sha256": "dd153e63f8919fbadd4309a5ad825c85eccc7f0e3a42e9f610d7901e83d9e025"
+    },
+    {
+      "name": "dual-restore-v2-result.json",
+      "sha256": "64e89affe7e4ed7a86c9bd7f471568beee99fde70f2149031d09ddbc88cdc62c"
+    },
+    {
+      "name": "dual-callback-red.log",
+      "sha256": "f6d84a3df957548be22a8edf931a33e77f8ee9f2aa7ce553dc34051b36f7e501"
+    },
+    {
+      "name": "dual-callback-red-result.json",
+      "sha256": "bb802d0d752bf274f9784b1e2c71e647fbe9e9a629ecc7aacff21cfe7672c6b9"
+    },
+    {
+      "name": "dual-callback-red-v2.log",
+      "sha256": "ef89a0e243d223cf5def3d25726a86930c724cae529d86c72ea73d69396b884b"
+    },
+    {
+      "name": "dual-callback-red-v2-result.json",
+      "sha256": "5fddbcf62d47e59aa9e3b17d483e8fe23f92e61a8c0371e0f2881f2565b9056d"
+    },
+    {
+      "name": "dual-restore-final.log",
+      "sha256": "345d3202dce72a40eb93b40e49a9b2c5c10d748224ba864bdea5980816e7f3b2"
+    },
+    {
+      "name": "dual-restore-final-result.json",
+      "sha256": "36b288a00a58bfb1f4cdde58e441f45760a5c115fc9313a10de50d00ee6cc422"
+    },
+    {
+      "name": "dual-isolation-mutant.log",
+      "sha256": "d3396fa42e76e23d094c0c8344e74568e677d525967d9edf81448f25993ef22f"
+    },
+    {
+      "name": "dual-isolation-mutant-result.json",
+      "sha256": "dfdb1232e11b66c13ac1a438886dd4de9b8b50e84936a7d8ecb693b1c9212dc4"
+    },
+    {
+      "name": "independent-dual-restore-20261101T144042Z/result.json",
+      "sha256": "c62642911e444f9e059fe5edd6772ce7babc851060c681bd876f6f648d71624c"
+    },
+    {
+      "name": "independent-dual-restore-20261101T144042Z/hashes-before.json",
+      "sha256": "17ea80ad061542b9a90e3eaabc2fdd3d8ed23d9297f017215e7e2f86fd85c5b6"
+    },
+    {
+      "name": "independent-dual-restore-20261101T144042Z/hashes-after.json",
+      "sha256": "17ea80ad061542b9a90e3eaabc2fdd3d8ed23d9297f017215e7e2f86fd85c5b6"
+    },
+    {
+      "name": "independent-dual-restore-20261101T144042Z/deeptutor.log",
+      "sha256": "bbe42c2e01427619825781d75bc84e4d94bfc4548f7970c3decb4e0778f88167"
+    },
+    {
+      "name": "independent-dual-restore-20261101T144042Z/deeptutor-junit.xml",
+      "sha256": "9da76c47eb2eacb311776f9cdbef8b039cb3a4674e4f35415473a49ba33a09e4"
+    },
+    {
+      "name": "independent-dual-restore-20261101T144042Z/processes-final.json",
+      "sha256": "912c01182aca17ea6e4a7f88064f39d3a2dc3e3147a0d059b7da218765dd09b3"
+    },
+    {
+      "name": "dual-documentation-matrix.log",
+      "sha256": "b65a7e010dfb10fecd9bcb4710c27407b33da4f0b769b2bded65460d0834a799"
+    },
+    {
+      "name": "dual-documentation-matrix-result.json",
+      "sha256": "78ee49d8af1f9f32e02af7877848fde1159ff9810de83e1683c7c0cca41a74a5"
+    }
+  ],
+  "documentationMatrix": {
+    "passed": 1,
+    "notSelected": 311,
+    "status": 0,
+    "scope": "explicit testNamePattern for35row matrix; not full312rerun"
+  },
+  "finalChecks": [
+    {
+      "name": "documentation",
+      "status": 0,
+      "log": "dual-final-documentation.log",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "lms-diff",
+      "status": 0,
+      "log": "dual-final-lms-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "deeptutor-diff",
+      "status": 0,
+      "log": "dual-final-deeptutor-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

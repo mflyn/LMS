@@ -24,12 +24,12 @@ test('a current 401 before reload preserves expiry feedback on provider reconstr
       .rejects.toMatchObject({ response: { status: 401 } });
   });
   expect(screen.getByTestId('error')).toHaveTextContent('会话已过期，请重新登录');
-  expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+  expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
   first.unmount();
   mount();
   expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
   expect(screen.getByTestId('error')).toHaveTextContent('会话已过期，请重新登录');
-  expect(localStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
+  expect(sessionStorage.getItem(CHILD_SESSION_KEY)).toBeNull();
   expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(parent);
   act(() => window.dispatchEvent(new Event('focus')));
   expect(screen.getByTestId('error')).toHaveTextContent('会话已过期，请重新登录');
@@ -62,7 +62,7 @@ test('replacement login and a late old 401 cannot restore the old expiry notice 
 });
 
 test.each(['missing', 'malformed', 'logout'])('%s change metadata never invents expiry feedback', kind => {
-  if (kind === 'malformed') localStorage.setItem('family-growth.session-change.v1:student', '{bad');
+  if (kind === 'malformed') sessionStorage.setItem('family-growth.session-change.v1:student', '{bad');
   if (kind === 'logout') { saveChild(); clearChildSession(); }
   mount();
   expect(screen.getByTestId('status')).toHaveTextContent('anonymous');

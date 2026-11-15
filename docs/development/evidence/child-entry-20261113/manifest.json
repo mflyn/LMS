@@ -1,0 +1,551 @@
+{
+  "version": 1,
+  "baseCommit": "f8073fcd52bc4d2b4b2c94b0a3e292d171d8d600",
+  "status": "ENGINEERING_ACCEPTANCE_PENDING",
+  "patch": {
+    "file": "candidate.patch",
+    "sha256": "16ec823756df48834d52ca11cf5366758c38aadb3f5f2a746f4a9d20e8d4cd4b",
+    "files": 28,
+    "reconstruction": "PASS"
+  },
+  "sources": [
+    {
+      "file": "docs/development/README.md",
+      "bytes": 14714,
+      "sha256": "761568dd942442273818c01aad897bd1908029fc0a9bac468c8217c89d83c449"
+    },
+    {
+      "file": "docs/development/evidence/child-entry-20261113/README.md",
+      "bytes": 9850,
+      "sha256": "8e84e92b68ef738261e60013021c77d1fe0b39f6d0f476f0a56a7d314dcafcc1"
+    },
+    {
+      "file": "docs/development/family-child-entry-test-plan.md",
+      "bytes": 15023,
+      "sha256": "31fa1596bdf3eed28b640f3b0d7ccd7edb7201179df5ba9fbc38d36e1e3add66"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-11-13-family-child-entry-design.md",
+      "bytes": 18767,
+      "sha256": "36f3ad1f567d5e068bc57551d2fc193304832896fad7ea0e53d0be602cc89e02"
+    },
+    {
+      "file": "eslint.config.js",
+      "bytes": 3832,
+      "sha256": "c56cedbeea135a939691a210e92845c622b3ab6e2ca541ae467a834aa48e9d63"
+    },
+    {
+      "file": "frontend/web/src/__tests__/child/ChildEntry.test.js",
+      "bytes": 10849,
+      "sha256": "00b046907bcab22d44dcc6e38a22966b340254c3e25167a49f05a9f16bb14255"
+    },
+    {
+      "file": "frontend/web/src/__tests__/child/ChildLogin.test.js",
+      "bytes": 4438,
+      "sha256": "217ab6def4eb57a1402b848415aca6fe21b4fd647330bb4d8aca0494dd0fca86"
+    },
+    {
+      "file": "frontend/web/src/__tests__/child/ChildSwitch.test.js",
+      "bytes": 4965,
+      "sha256": "580d631f98ea117314b909e2da21133f55122fa741a59e49ab01e9602d3b277d"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/ChildEntryActions.test.js",
+      "bytes": 6419,
+      "sha256": "655da273c872fd6cf482d10687ddc14a62184bd5522d8bc44978f687b782272b"
+    },
+    {
+      "file": "frontend/web/src/child-shell.css",
+      "bytes": 9878,
+      "sha256": "b1daf0a025566eb4233c099fcc6e8c09fa21ea341fb165f4f6329ba1c7a31cf5"
+    },
+    {
+      "file": "frontend/web/src/components/family/ChildEntryActions.js",
+      "bytes": 3014,
+      "sha256": "a74d34926d4d41e507cb54b7793869414d805008376d5dfcf9a3d79b30f0dbf1"
+    },
+    {
+      "file": "frontend/web/src/contexts/ChildAuthContext.js",
+      "bytes": 4336,
+      "sha256": "d62e887d7241ce29e34d180f7e01a901ec2a75874cd2da7e5deca0bd5caec9a2"
+    },
+    {
+      "file": "frontend/web/src/family-shell.css",
+      "bytes": 15933,
+      "sha256": "1af253d015c6299457bfded2530e4ba9e5a4ef4ad0fded7fc30f5018056cb62c"
+    },
+    {
+      "file": "frontend/web/src/pages/child/ChildPinLoginPage.js",
+      "bytes": 7463,
+      "sha256": "e427ae088181a07283887d648f854b75aa42fb08ba23cc5560f5835f86c450c2"
+    },
+    {
+      "file": "frontend/web/src/pages/family/ChildrenPage.js",
+      "bytes": 13580,
+      "sha256": "cd31c4257e45c3b3c9c52aa1c0c3beb8a816775ebba0e39f3758b22053e0c283"
+    },
+    {
+      "file": "frontend/web/src/services/childEntry.js",
+      "bytes": 1193,
+      "sha256": "de8eb781c333848f3a4f6e99057d558aa6e76f74e6508f517f4f37ebc081499f"
+    },
+    {
+      "file": "tests/e2e/t2/ai2Fixture.js",
+      "bytes": 11646,
+      "sha256": "44da4815a327b4c4b6e071968affc05589a901e532dfc1dd2609f2682efffc07"
+    },
+    {
+      "file": "tests/e2e/t2/checklist.spec.js",
+      "bytes": 22340,
+      "sha256": "17bff77d90de7222aa968a3536c876c870d4ba2da25c6c9df4ff4d32e797cba9"
+    },
+    {
+      "file": "tests/e2e/t2/childEntry.spec.js",
+      "bytes": 11225,
+      "sha256": "14d3f8fbe6675e58bd277cd96dfffdbc79ceba6ceba5f9c115384a5ebd3af62c"
+    },
+    {
+      "file": "tests/e2e/t2/childLoginRace.spec.js",
+      "bytes": 4310,
+      "sha256": "cd84e37b4ce5f1011c51c5606015649f03bffedc1c3bbd7fb5da60080acbc520"
+    },
+    {
+      "file": "tests/e2e/t2/completion.spec.js",
+      "bytes": 39490,
+      "sha256": "b72558ea5306d106d2292f804806b6e4dd498df23956e75d19754300f0c2b635"
+    },
+    {
+      "file": "tests/e2e/t2/dailyLearningPlan.spec.js",
+      "bytes": 19602,
+      "sha256": "1f5adb45b5ef9702a380a11ba440da45b4e6f0a18fff487842302745510c18e5"
+    },
+    {
+      "file": "tests/e2e/t2/help.spec.js",
+      "bytes": 21603,
+      "sha256": "771d7332a79edb7f6ad74a77222259a73387f83c5e3454f8026685bd4da8c7b4"
+    },
+    {
+      "file": "tests/e2e/t2/learningSources.spec.js",
+      "bytes": 18675,
+      "sha256": "526058bb7efd0ccf0e31d3807abc875b2e18c4a2c1d652ff724e769ba89e8640"
+    },
+    {
+      "file": "tests/e2e/t2/weeklyMathLoop.spec.js",
+      "bytes": 12358,
+      "sha256": "fa6ec9d7078d8cad71ceb559d660b2bf8ed6ee739541a90bad1f0e928411217d"
+    },
+    {
+      "file": "tests/e2e/t2/weeklyReflection.spec.js",
+      "bytes": 13401,
+      "sha256": "92100df8a911a1aa1dfb93187d144104720a4f6b9f9b7ec906ae14fc04ece5b9"
+    },
+    {
+      "file": "tests/e2e/task11/family-growth-flow.spec.js",
+      "bytes": 16235,
+      "sha256": "6893751f44e02be92f8914ddb27778800ae42540d448b52b13bf6f3f1887edcb"
+    },
+    {
+      "file": "tests/e2e/task11/family-growth-security.spec.js",
+      "bytes": 8748,
+      "sha256": "b18eacdf8dee5356462452e25e08cc35117ec68ec792fafa5beb3bcec64cf4bd"
+    }
+  ],
+  "evidence": [
+    {
+      "file": "backend-child-permitted.log",
+      "bytes": 10063,
+      "sha256": "eb40d85c87a5da5992db302d46d6afdd95e88dae711f39edabc80a067f1f49b5",
+      "visibility": "local-only"
+    },
+    {
+      "file": "backend-child.log",
+      "bytes": 2154,
+      "sha256": "26d411d9156deb6b47a4d4e87b68c6a1d5ae0f71583f19178956212db46bf672",
+      "visibility": "local-only"
+    },
+    {
+      "file": "browser-mutant.log",
+      "bytes": 2243,
+      "sha256": "0c70e7d12e9872edaf5699bf0773f9b1a088c72514a228a0e754e9c5ef36d3e0",
+      "visibility": "local-only"
+    },
+    {
+      "file": "build-browser-mutant.cjs",
+      "bytes": 990,
+      "sha256": "3f610699099e5ac30c9272da64e987cd48485cd094e6e36cfebf3cc2ecd9ac23",
+      "visibility": "local-only"
+    },
+    {
+      "file": "build-browser-mutant.log",
+      "bytes": 945,
+      "sha256": "4c94c2ec736d1f9d001a6d06a68b382d699edd986804f9808375865a9b585f1e",
+      "visibility": "local-only"
+    },
+    {
+      "file": "build-final.log",
+      "bytes": 1083,
+      "sha256": "b1e1743692910495a2926f9d0030e125b5b85fc657a55fd00c531e112e3b0718",
+      "visibility": "local-only"
+    },
+    {
+      "file": "build-layout.log",
+      "bytes": 1081,
+      "sha256": "6a46a2a606a4a780faa7ad010c5dd7e7aae6a4511808cd791b3502e68e384849",
+      "visibility": "local-only"
+    },
+    {
+      "file": "build-strict-fixed.log",
+      "bytes": 1081,
+      "sha256": "3d3169de4a6502161b9b6b405567d55cde2b73f1aac0d401d71edc159f0c1f62",
+      "visibility": "local-only"
+    },
+    {
+      "file": "build.log",
+      "bytes": 1067,
+      "sha256": "13765b5bd81138acd9bb67ec1ddbd8e0b7f88ee979182baeb9ae2d83083bde06",
+      "visibility": "local-only"
+    },
+    {
+      "file": "chromium-final.log",
+      "bytes": 3770,
+      "sha256": "da509e2effe405d64ca901dd0964082b1c4642651d80dfd9ce37af458e435221",
+      "visibility": "local-only"
+    },
+    {
+      "file": "chromium-reviewed.log",
+      "bytes": 961,
+      "sha256": "8ea3612baf0a8d7fbf29563ff79df23d75381d157455b95313c216d5c3cf37ce",
+      "visibility": "local-only"
+    },
+    {
+      "file": "chromium.log",
+      "bytes": 5396,
+      "sha256": "ed511836a57491c0d5910e284aa72011d9fb7c519244d846b115d4dd880a3522",
+      "visibility": "local-only"
+    },
+    {
+      "file": "docs-baseline-verified.log",
+      "bytes": 382,
+      "sha256": "d9175aafe05dcfe86d6f3bec6a621be1cfabcc5177ab41d53f209df80969c842",
+      "visibility": "local-only"
+    },
+    {
+      "file": "docs-delivery.log",
+      "bytes": 382,
+      "sha256": "d9175aafe05dcfe86d6f3bec6a621be1cfabcc5177ab41d53f209df80969c842",
+      "visibility": "local-only"
+    },
+    {
+      "file": "docs-final.log",
+      "bytes": 382,
+      "sha256": "d9175aafe05dcfe86d6f3bec6a621be1cfabcc5177ab41d53f209df80969c842",
+      "visibility": "local-only"
+    },
+    {
+      "file": "docs-first.log",
+      "bytes": 204,
+      "sha256": "c752591213cd81565ccaad67624ec28453b34abe9c1672fbcc2de07d9a4b50dd",
+      "visibility": "local-only"
+    },
+    {
+      "file": "entry-first.log",
+      "bytes": 1972,
+      "sha256": "8c971a97d9c0caf7cfe27de0fb58f984fe04f2180f10bfaf72c0d6f7bdcbd4ee",
+      "visibility": "local-only"
+    },
+    {
+      "file": "entry-strict-fixed.log",
+      "bytes": 418,
+      "sha256": "4f4a948f131c77f5db30d5d1ddd74c2d07a694b5e76cc44e0fef1fa7aa2a542d",
+      "visibility": "local-only"
+    },
+    {
+      "file": "focused-expanded.log",
+      "bytes": 1630,
+      "sha256": "abe31300a7e20aa1a5c28e0d05809dfc39a203c768208fa69c00e1aeee3dcb1d",
+      "visibility": "local-only"
+    },
+    {
+      "file": "focused-first.log",
+      "bytes": 917,
+      "sha256": "5d61a2644cd59b16e70284660c7c00743bd4329605c0295f2bf6f539260bbc81",
+      "visibility": "local-only"
+    },
+    {
+      "file": "freeze.cjs",
+      "bytes": 5816,
+      "sha256": "834721bfaac78277e3c62d8bff4aa8e2b250b3aba5da416f1782f33377b8fcb7",
+      "visibility": "local-only"
+    },
+    {
+      "file": "frontend-final.log",
+      "bytes": 4158,
+      "sha256": "67c6856a53960c4929ec4d87557c58db38c41f557c3a7561ea70eac02f017276",
+      "visibility": "local-only"
+    },
+    {
+      "file": "frontend-full.log",
+      "bytes": 4132,
+      "sha256": "801abc248bec9f805593722ba05ba10d7d1209af3a04d812e244150c1849e802",
+      "visibility": "local-only"
+    },
+    {
+      "file": "frontend-reviewed.log",
+      "bytes": 4150,
+      "sha256": "eda0c99b59188ccbd362faa14aa71f2e05e86767e241ad334c06b427b162a4b4",
+      "visibility": "local-only"
+    },
+    {
+      "file": "lint-delivery.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+      "visibility": "local-only"
+    },
+    {
+      "file": "lint-entry-included.log",
+      "bytes": 241,
+      "sha256": "e4fe4b6d4380b1e8348d4ab6301ec949d1e5008b6ee22962008895625a7d28da",
+      "visibility": "local-only"
+    },
+    {
+      "file": "lint-final-scoped.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+      "visibility": "local-only"
+    },
+    {
+      "file": "lint-final.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+      "visibility": "local-only"
+    },
+    {
+      "file": "lint-first.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+      "visibility": "local-only"
+    },
+    {
+      "file": "lint-reviewed.log",
+      "bytes": 36,
+      "sha256": "53b3cdba7e5b40c8c5bce95b07c09d955f6d714463d8d0017991d8c14ce3913a",
+      "visibility": "local-only"
+    },
+    {
+      "file": "mutation-before-save-intent.log",
+      "bytes": 3296,
+      "sha256": "552ca6e2cbc61184466bbdcfc75eea7662abf9c53746b591ce88d070018b85d0",
+      "visibility": "local-only"
+    },
+    {
+      "file": "mutation-check.cjs",
+      "bytes": 3003,
+      "sha256": "dd793ee82e983f59cf671d08b025d1312789eaf39b4c9a3ab6540c104f22ed4f",
+      "visibility": "local-only"
+    },
+    {
+      "file": "mutation-different-identity.log",
+      "bytes": 4053,
+      "sha256": "0c77f8c6db2bee0ac26f9bc8d4726fcd9b8ca685adf0e711f621c230984a26dc",
+      "visibility": "local-only"
+    },
+    {
+      "file": "mutation-pin-reset.log",
+      "bytes": 10724,
+      "sha256": "2b29ea20db7976fe0b885cfc5acc08265f35445b6b0a45fb70b0f56805474f23",
+      "visibility": "local-only"
+    },
+    {
+      "file": "mutation-pre-dispatch-intent.log",
+      "bytes": 3722,
+      "sha256": "d6e66477ded3679d5bf82ba829a00c60b8c5606bfdee1cc29207eece871236e5",
+      "visibility": "local-only"
+    },
+    {
+      "file": "mutation-unmount-invalidation.log",
+      "bytes": 4736,
+      "sha256": "84c1d415981853434054e7fe8683c78f8aa5ed320f8d46fb7f59c07a5154afdd",
+      "visibility": "local-only"
+    },
+    {
+      "file": "mutations-reviewed.log",
+      "bytes": 422,
+      "sha256": "a8e30f33dabd09f202b94f6ddc80670f83bfb7cb793533e386c6dcb20989616c",
+      "visibility": "local-only"
+    },
+    {
+      "file": "mutations.json",
+      "bytes": 421,
+      "sha256": "6afd0f737c0995630af99c87f2c47c4c4360d70929fb60faa848939f4c8640f2",
+      "visibility": "local-only"
+    },
+    {
+      "file": "parent-red.log",
+      "bytes": 1665,
+      "sha256": "ae621c83da451704bc7b0c0230846016fe407c38a887914a995c2a8d42e7e4fb",
+      "visibility": "local-only"
+    },
+    {
+      "file": "red-behavior.log",
+      "bytes": 13052,
+      "sha256": "9944905cb7c8a1019a8aa3c3e492978eefe4f3522f0f350bca9bb5db4226a4c2",
+      "visibility": "local-only"
+    },
+    {
+      "file": "red.log",
+      "bytes": 62009,
+      "sha256": "ee2d22e083ac668e76912695de6a9a9f382999dac7eab71b5e2afee9f42a2505",
+      "visibility": "local-only"
+    },
+    {
+      "file": "review-focused.log",
+      "bytes": 561,
+      "sha256": "87a35f3d8b9d57651d312969ae512e3873129147b2ebbd6508595991b9efb563",
+      "visibility": "local-only"
+    },
+    {
+      "file": "webkit-final.log",
+      "bytes": 1030,
+      "sha256": "e451f81748719b4541f0247c9991809e894258f4fdc0914aa32ef29d2fececd2",
+      "visibility": "local-only"
+    },
+    {
+      "file": "webkit.log",
+      "bytes": 5570,
+      "sha256": "823205124cbc57b19e35428b26d7a4d0fa9ba5aad1bf1578dac9b125c83a382b",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/artifacts.sha256",
+      "bytes": 1320,
+      "sha256": "7b821b061ae0a0be06ce1deccafc788fb5d9ece9f794644d7d7fe123e1bf9d8a",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/browser-mutation-evidence.json",
+      "bytes": 1864,
+      "sha256": "7e5f7fabc07149398f7e5af66054b795989537df61289483f9f328e0adda9825",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/developer-evidence.sha256",
+      "bytes": 1553,
+      "sha256": "afe9da036cd5fc10ae7b4c7becd632e040d55bb8667932217b7f1c7a7d61dad4",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/eslint-reviewed.diff",
+      "bytes": 1378,
+      "sha256": "7d372ff46aecb860255de1547543594bce1b183413b61a745ea6ef9f2571e709",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/hashes-after.sha256",
+      "bytes": 1511,
+      "sha256": "b4d45a4fd892fb609d0f037858eba91ea74ae7c61d861480b535e2d894147df3",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/hashes-before.sha256",
+      "bytes": 1511,
+      "sha256": "b4d45a4fd892fb609d0f037858eba91ea74ae7c61d861480b535e2d894147df3",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/hashes-final-static-v2.sha256",
+      "bytes": 1121,
+      "sha256": "a42e48b2d7df85e63dd0f7e7d3ad82a98b0cb9fdd7cfb05821c06e12bdd0d30b",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/hashes-final-static.sha256",
+      "bytes": 1121,
+      "sha256": "a42e48b2d7df85e63dd0f7e7d3ad82a98b0cb9fdd7cfb05821c06e12bdd0d30b",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/independent-review.md",
+      "bytes": 12068,
+      "sha256": "6c36b6b0b78856968caed9f05b7a688b6fd7917471c2ea7a1f8fb9b6b09312bd",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/jest-results.json",
+      "bytes": 9525,
+      "sha256": "fd429e866ac4d4d4a999555f8342dee8e8e4b39781a594b5bfa82b7e7c287965",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/jest.log",
+      "bytes": 849,
+      "sha256": "f23fcad361130aa57ac9e5852ed0e61e973f7c291d3e45f04675b473ec193cf2",
+      "visibility": "local-only"
+    },
+    {
+      "file": "independent/verification.json",
+      "bytes": 3189,
+      "sha256": "50b263ac4b152f9b5d4642020f186a6b38d9e0e3bc5ded5d4a9f8ae6672e57da",
+      "visibility": "local-only"
+    }
+  ],
+  "verification": {
+    "frontend": {
+      "suites": 77,
+      "tests": 1251,
+      "exitCode": 0
+    },
+    "backendChildren": {
+      "tests": 10,
+      "exitCode": 0
+    },
+    "chromiumRelated": {
+      "passed": 22,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "chromiumFinalEntry": {
+      "passed": 4,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "webkitFirst": {
+      "passed": 21,
+      "failed": 1,
+      "exitCode": 1
+    },
+    "webkitFinalEntry": {
+      "passed": 4,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "componentMutationsDetected": 5,
+    "browserMutation": {
+      "failedAtOldSessionAssertion": true,
+      "exitCode": 1
+    },
+    "independent": {
+      "suites": 2,
+      "tests": 33,
+      "exitCode": 0,
+      "browserExecution": false,
+      "findingResolution": [
+        "P2-UNMOUNT RESOLVED_PENDING_ACCEPTANCE",
+        "P2-SETTLEMENT RESOLVED_PENDING_ACCEPTANCE"
+      ]
+    }
+  },
+  "boundaries": [
+    "NO_GIT_WRITE",
+    "NO_SERVER",
+    "NO_MODEL",
+    "NO_DEPLOYMENT",
+    "HUMAN_QA_UNCHANGED",
+    "T4/T8/AI-1 OPEN",
+    "SERVER_TIMING_UNVERIFIED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "HISTORICAL_FAILURES_RETAINED",
+    "DEFERRED_SCOPE_UNCHANGED"
+  ],
+  "sensitiveScan": "No private key, JWT, provider key or private host/user path in delivery patch; synthetic fixture PIN/ID references only."
+}

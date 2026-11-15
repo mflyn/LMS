@@ -1,0 +1,94 @@
+{
+  "scope": "Formal DeepTutor main; synthetic counter and Provider network; actual LMS TCP combination pending",
+  "base": "f7aed0744c36c5afef16a4261c31ebee1208cac2",
+  "parentSdkPatchSha256": "68638ef24e79355488e53f8a7d51210f804973ab2b9980be746c4a2b01cb62ed",
+  "patchSha256": "ae7ff1746cff44fdc237e490bdec169b480483b7e7fe8580eb9366380c600fb8",
+  "files": [
+    {
+      "path": "deeptutor/services/ai1_store.py",
+      "sha256": "4843f804a8aa9089c20d08575e8302f37f27a9306c131e92edc65f639d0ed1ee"
+    },
+    {
+      "path": "deeptutor/services/ai1_contract.py",
+      "sha256": "323ce761ba3482db3c6183f6e6a692ac232db16ccf2ab553bcb6c0f293e6d66f"
+    },
+    {
+      "path": "deeptutor/services/ai1_operation.py",
+      "sha256": "6d7d966382d6bda9f38e42edb7f331fd5e6d335bf45fc2118e4345d87510b7cd"
+    },
+    {
+      "path": "deeptutor/services/ai1_http.py",
+      "sha256": "41b43ae028453e95762e737171f4a144e8e12fcefe2a24a77a816f378cbcbeaa"
+    },
+    {
+      "path": "deeptutor/services/ai1_provider.py",
+      "sha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9"
+    },
+    {
+      "path": "deeptutor/services/ai1_runtime.py",
+      "sha256": "64bc386bd216afea6723b42b07a8c56a17679fd4fd349686da0f59f7335cc746"
+    },
+    {
+      "path": "deeptutor/api/main.py",
+      "sha256": "a43db30cdf75fe813a70f1e0c8b95ec296699ee2c5259e3e06ef445254f51cde"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_store.py",
+      "sha256": "0d2c5a64e490047a3c93587b3191a961f1b8882854afa5e7b133470571504e9b"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_contract.py",
+      "sha256": "beb4e41271e30c7d507095630628384fda695be78b9c53144c40562dcb066eef"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_service.py",
+      "sha256": "b67904872b725eeffb8a44338a4c00084304fb6a12e1ab0f28ff6a24211da1a7"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_http.py",
+      "sha256": "16951c4b65d6ac3dd3d0ebdb6b5de1bb08e27f8e53a9c9e4d41456645ad57111"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_provider.py",
+      "sha256": "e7487f36ba148c73f8a18aa06b211e285b3803259a122844f679f9888b9a2c9e"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_runtime.py",
+      "sha256": "2bd83f9f4d10b573b3b56c73fb5e1facf06dc12899dfddfec5bc7bff8d1fdf0a"
+    },
+    {
+      "path": "tests/services/ai1/lms_wire_golden.json",
+      "sha256": "1e8ab327e8615b06d533b9c3e1940575bc6c21d0705a42f5ce721a54b8d907d5"
+    },
+    {
+      "path": "deeptutor/modules/manifests/core.json",
+      "sha256": "a394187f896719cfc5b8a654399fc24ca07cf772732fca25f9caed209ffd1521"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "07fb3259fda62dfc0a6ebcd2b7385733e404929db1c2814c92cd5a2ba83e17ed"
+    },
+    {
+      "path": "requirements/core.txt",
+      "sha256": "9b1de45f769d220ffaddf24e0449a863aca7b493e15fe06b12d0c2518c95dee5"
+    }
+  ],
+  "lmsDocuments": [
+    {
+      "path": "docs/api/family-ai1-api.md",
+      "sha256": "cff7c5c46e24d6d4a799d9e43a376cea296170c82e3590a97dea5cda8a8ef0bf"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "7a7b0e1877d7964f773375855a71e253f16858a4a734dd094d4bcbcd02b70b69"
+    },
+    {
+      "path": "docs/development/family-ai1-test-plan.md",
+      "sha256": "7793ab3907ac25cb43981077425d74e17892159140dcf8f48a77f141459962aa"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "646842c3cbcaac21cf775997c0220570396a95c26b1e6d3f616ee683c9c27bbc"
+    }
+  ]
+}

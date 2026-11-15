@@ -1,0 +1,78 @@
+{
+  "scope": "AI1_B_POST_REVIEW_LOCAL_CLOSURE_INCREMENT",
+  "verificationType": "AUTHOR_SELF_CHECK_NOT_INDEPENDENT_REVIEW",
+  "reviewedPatchSha256": "1c7d7707777ef0ee4cf67c9991c5c7d1e416bfda01bf2f8ef4472632c9c25fc9",
+  "originalFrozenArtifacts": "UNCHANGED",
+  "businessImplementation": "UNCHANGED",
+  "runtime": "Node 22.15.0 / MongoDB 7.0.14 temporary replica set / native ARM Git",
+  "regression": {
+    "suites": 8,
+    "tests": 542,
+    "exitCode": 0,
+    "seconds": 59.725,
+    "fullFamilyRerun": false,
+    "command": "node node_modules/jest/bin/jest.js --config backend/jest.config.js --selectProjects homework-service family-common --runInBand --runTestsByPath backend/services/homework-service/__tests__/services/ai1Service.test.js backend/services/homework-service/__tests__/services/ai1Operation.test.js backend/services/homework-service/__tests__/services/ai1Http.test.js backend/services/homework-service/__tests__/services/ai1Contract.test.js backend/common/deployment/__tests__/familyDocumentationGate.test.js backend/common/deployment/__tests__/releaseBuildInput.test.js backend/common/deployment/__tests__/checkGitClean.test.js backend/common/services/__tests__/learningSource.test.js"
+  },
+  "mutation": {
+    "method": "Temporary Jest transform in memory; change version sort from ascending to descending",
+    "target": "AI1-B detail preserves three-version lineage, first review and authorized read-only access",
+    "selectedFailures": 1,
+    "exitCode": 1,
+    "expected": true,
+    "sourceFilesUnchanged": true
+  },
+  "checks": {
+    "eslint": "PASS: two changed test files",
+    "documentation": "PASS: node scripts/check-family-docs.js",
+    "whitespace": "PASS: git diff --check"
+  },
+  "singleRunFullGreen": false,
+  "batchGate": "OPEN",
+  "totalGate": "OPEN",
+  "external": "IMPLEMENTATION_PENDING",
+  "rawLogs": "LOCAL_PRIVATE_ONLY",
+  "files": [
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Service.test.js",
+      "sha256": "9fc60064f8e758652fb6a7788c4c86c43c2b3ce106519e6482ac5a06efb04b51"
+    },
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "sha256": "bc29a9c45e150b008fbbd9af16ff92df2ab0eb022c24ec2c6386dc90ec555d3d"
+    },
+    {
+      "file": "docs/development/family-ai1-test-plan.md",
+      "sha256": "b9c848e393b9b6195e9fda82162496ac5c206cc68fef8805ab909bca3c51734c"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "157dc3e5032e036ce508d6e2c3274d490ff9bffe4cd33b42fa2896267553c2c2"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "e3a1374980ef2a9dbd9b356033b3a543f730228c34acb8f5c0a1f68c3985ffed"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md",
+      "sha256": "5cd9becf5ed88da3117dffa0d439d30255ff345a4aa80539898a44cbca772b36"
+    },
+    {
+      "file": "docs/development/evidence/ai1-b-20261101/README.md",
+      "sha256": "73f0a05681fa07aa8cd44998f1058fb46774c24a03e0253f556bde0e5b775453"
+    },
+    {
+      "file": "docs/development/evidence/ai1-b-20261101/closure.json",
+      "sha256": "f8ac9ac1f185d1d01f40120978f6eea0f95abc5720586caee42eeae9b827bba2"
+    }
+  ],
+  "logs": [
+    {
+      "file": "ai1-b-closure-regression.log",
+      "sha256": "e2809dd15d9c413be8ad3ca05e48dea2fe80070939600c3bd75647fe9bde522a"
+    },
+    {
+      "file": "ai1-b-closure-detail-mutation.log",
+      "sha256": "83a2de27c937651a576a53138e1503505537413b7a28132da48b917bfee32ac7"
+    }
+  ]
+}

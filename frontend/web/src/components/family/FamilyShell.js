@@ -7,6 +7,18 @@ import { useFamily } from '../../contexts/FamilyContext';
 import ChildSelector from './ChildSelector';
 import FamilyPageState from './FamilyPageState';
 
+const NAV_GROUPS = {
+  '/app/logs': '成长回顾', '/app/points': '成长回顾', '/app/mistakes': '成长回顾',
+  '/app/reports': '成长回顾', '/app/rewards': '成长回顾',
+  '/app/children': '家庭', '/app/family-members': '家庭'
+};
+const NAV_ICONS = {
+  '/app/today': HomeOutlined, '/app/tasks': CheckSquareOutlined, '/app/logs': BookOutlined,
+  '/app/points': ReadOutlined, '/app/mistakes': CalendarOutlined, '/app/learning': ReadOutlined,
+  '/app/reports': LineChartOutlined, '/app/reminders': BellOutlined, '/app/rewards': GiftOutlined,
+  '/app/children': UserOutlined, '/app/family-members': TeamOutlined
+};
+
 const FamilyShell = () => {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const { logout, user } = useAuth();
@@ -63,16 +75,11 @@ const FamilyShell = () => {
           aria-label="家长导航"
           className={`family-navigation ${mobileNavigationOpen ? 'is-open' : ''}`}
         >
-          {[
-            { label: '日常学习', indexes: [0, 1, 6] },
-            { label: '成长回顾', indexes: [2, 3, 4, 5, 7] },
-            { label: '家庭', indexes: [8, 9] }
-          ].map(group => (
-            <div className="home-nav-group" key={group.label || 'navigation'}>
-              {group.label && <p className="home-nav-label">{group.label}</p>}
-              {group.indexes.map(index => {
-                const item = PARENT_NAV_ITEMS[index];
-                const Icon = [HomeOutlined, CheckSquareOutlined, BookOutlined, ReadOutlined, CalendarOutlined, LineChartOutlined, BellOutlined, GiftOutlined, UserOutlined, TeamOutlined][index];
+          {['日常学习', '成长回顾', '家庭'].map(group => (
+            <div className="home-nav-group" key={group}>
+              <p className="home-nav-label">{group}</p>
+              {PARENT_NAV_ITEMS.filter(item => (NAV_GROUPS[item.path] || '日常学习') === group).map(item => {
+                const Icon = NAV_ICONS[item.path] || ReadOutlined;
                 return (
                   <NavLink
                     key={item.path}

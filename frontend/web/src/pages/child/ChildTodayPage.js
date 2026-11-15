@@ -62,6 +62,7 @@ const ChildTodayContent = ({ session, child }) => {
           <p className="child-eyebrow">今天也向前一步</p>
           <h1 id="child-today-title" aria-label="今天">{child.name}，今天想先做哪一件？</h1>
           <p className="home-intro">自己安排，一步一步来。</p>
+          <Link className="child-back-link home-learning-entry" to="/child/learning">我的学习包</Link>
         </div>
         <img className="home-companion" src={readingCompanion} width="180" height="116" alt="" />
       </div>

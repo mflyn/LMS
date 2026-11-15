@@ -1,0 +1,119 @@
+{
+  "status": "LOCAL_REVIEW_PENDING_EXTERNAL_IMPLEMENTATION_PENDING",
+  "singleRunFullGreen": false,
+  "runtime": "Node22.15.0 Mongo7.0.14 temporary replica set native ARM Git",
+  "finalRelated": {
+    "suites": 8,
+    "tests": 540,
+    "exitCode": 0,
+    "seconds": 58.721,
+    "log": "ai1-b-related-final.log",
+    "scope": "AI1 four suites plus documentation, releaseBuildInput, checkGitClean, learningSource"
+  },
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "independentReview": {
+    "initialFindings": [
+      "P1 remote-claim contradiction refund",
+      "P2 raw JSON byte limit",
+      "detail read-model gap",
+      "deadline competing-path test gap"
+    ],
+    "independentTests": "2 suites / 60 tests passed; HTTP EPERM not passed",
+    "disposition": "FIXED_LOCAL_REVERIFY; independent re-review pending"
+  },
+  "mutations": {
+    "method": "Temporary Jest transform in memory; project source hashes unchanged",
+    "removeClaimRefundGuard": {
+      "exitCode": 1,
+      "selectedTestsFailed": 2
+    },
+    "removeRawByteLimit": {
+      "exitCode": 1,
+      "selectedTestsFailed": 1
+    }
+  },
+  "rawLogs": {
+    "storage": "LOCAL_PRIVATE_ONLY",
+    "files": [
+      {
+        "name": "ai1-b-wire-red.log",
+        "sha256": "af98c964c2ed791d976703f6dc486df71016251c57924516f8c4ddb19b94ff1c"
+      },
+      {
+        "name": "ai1-b-domain-red.log",
+        "sha256": "9dbbce5f2dad9af58b0244b902cabdc37919fd3d04a1a605657e9f45c5089a94"
+      },
+      {
+        "name": "ai1-b-domain-green.log",
+        "sha256": "f09405b6962029aae4f7f0a7f324fe6168359cee6c7bbf9b91eec942ff2b587d"
+      },
+      {
+        "name": "ai1-b-http-red.log",
+        "sha256": "58d8228a60d3b836f7d76e7ec4e97bfd945f92409d6c915757318d6b6b54af4f"
+      },
+      {
+        "name": "ai1-b-http-green.log",
+        "sha256": "d83bee2ae0bf6d5297fd3a00e78d7b00e55c6d3f738444877d8194b7fcea0077"
+      },
+      {
+        "name": "ai1-b-http-controlled.log",
+        "sha256": "3ada1cc84b5f9845162751a2dc9f98d19e740c4dd4569a2f53e833a0dedc5ce6"
+      },
+      {
+        "name": "ai1-b-http-fixed.log",
+        "sha256": "f5c0155591bfd08ede5a30db26b62ae56db7ff09e5b0a3e379045bdaf0b75b97"
+      },
+      {
+        "name": "ai1-b-self-review-red.log",
+        "sha256": "7b6c5397930cb805136db185c39e8f809b5864c58b12c26fe0c75400490f938b"
+      },
+      {
+        "name": "ai1-b-targeted-final.log",
+        "sha256": "447a5cd79929dc4111e72867c86e44ceb3f24b32550c78ec13d7e061d350ad48"
+      },
+      {
+        "name": "ai1-b-related-regression.log",
+        "sha256": "00abd89418de2bf8d6377172b9ebbe89e163f02d3b01e86631b4af13c032b23d"
+      },
+      {
+        "name": "ai1-b-independent-findings-red.log",
+        "sha256": "57ed897c7350e754c3e73e18d133955d59a8e7f886eb3a3aa09add9d76873078"
+      },
+      {
+        "name": "ai1-b-review-fixes-green.log",
+        "sha256": "99af809e51f97e588fae65383f59c9ce8b9e58eb8fe4dce251330a37b71d766d"
+      },
+      {
+        "name": "ai1-b-related-final.log",
+        "sha256": "ea1bf45a4b1a5c564b9079d5dee18c663f4277ada8061d1749ec4c3bebea0760"
+      },
+      {
+        "name": "ai1-b-lint-final.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "ai1-b-claim-mutation.log",
+        "sha256": "77fb85149b8ed9451233d06b37cc1c0830397fbf2963d2f0747bc7094deb3dc3"
+      },
+      {
+        "name": "ai1-b-raw-mutation.log",
+        "sha256": "53ebe360ccb7c936a6cf9677785d77e221f54b226973c8c44be2bade7ac2641b"
+      }
+    ]
+  },
+  "limitations": [
+    "Remote durable Mongo endpoint is a protocol double, not DeepTutor",
+    "No real Provider/tokenizer/worker/crash acceptance",
+    "No production factory or Gateway activation",
+    "No full-family rerun",
+    "AI0 human review required",
+    "DEVICE_PENDING",
+    "T4/T8 OPEN; T9 NOT_STARTED; Docker INCOMPLETE_FAILED; T5 nonblocking suggestions retained; advanced recovery and cleanup deferred"
+  ]
+}

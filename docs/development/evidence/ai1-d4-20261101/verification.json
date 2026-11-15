@@ -1,0 +1,186 @@
+{
+  "scope": "LOCAL_FORMAL_BROWSER_PERMISSION_REVIEW_EXTENSION",
+  "singleRunFullGreen": false,
+  "author": {
+    "browser": {
+      "tests": 10,
+      "businessScenarios": 9,
+      "reportedDuration": "1.2m",
+      "exitCode": 0
+    },
+    "components": {
+      "suites": 2,
+      "tests": 49,
+      "seconds": 3.536,
+      "exitCode": 0
+    }
+  },
+  "independent": {
+    "browser": {
+      "tests": 10,
+      "reportedDuration": "1.1m",
+      "exitCode": 0
+    },
+    "sourceFilesUnchanged": 5,
+    "review": "NO_NEW_P1_P2_IN_REVIEWED_SCOPE",
+    "specSha256": "495f2f9d87b1afa48dd0059519d47fe544b57dcbf8722d3f7983aa674baef9ed"
+  },
+  "actual": [
+    "Gateway",
+    "formal LMS factories",
+    "temporary Mongo replica set",
+    "synthetic real login and membership revoke",
+    "loopback HTTP",
+    "Chromium"
+  ],
+  "substitutes": [
+    "in-memory external operation protocol; no actual DeepTutor or Provider"
+  ],
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "commands": {
+    "browser": "T2_WEB_BUILD=<verified-D3-build> T2_BROWSER_OUTPUT=<temporary-output> node node_modules/@playwright/test/cli.js test --config=playwright.t2.config.js tests/e2e/t2/ai1FormalPage.spec.js",
+    "components": "CI=true node node_modules/react-scripts/scripts/test.js --watchAll=false --runInBand --runTestsByPath src/__tests__/family/TutorPage.test.js src/__tests__/family/ai1Client.test.js (frontend/web)",
+    "docs": "node scripts/check-family-docs.js; jest --config=backend/jest.config.js --selectProjects family-common --runInBand --coverage=false --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+    "lint": "eslint tests/e2e/t2/ai1FormalPage.spec.js",
+    "diff": "git diff --check"
+  },
+  "privateLogs": [
+    {
+      "name": "ai1-d4-browser-first.log",
+      "exitCode": 0,
+      "result": "two initial new tests passed",
+      "sha256": "55113e59f1a3a555c89ca1459866d7736978d785406a9c2242e0e11dbf926b1a"
+    },
+    {
+      "name": "ai1-d4-session-first.log",
+      "exitCode": 1,
+      "result": "one passed and wrong heading locator failed",
+      "sha256": "d0cd3c1dfc6ddeb00b6be0d97d9d3e093157c56f47cec2a2f5d8583f7ef74394"
+    },
+    {
+      "name": "ai1-d4-session-second.log",
+      "exitCode": 1,
+      "result": "one passed and unsupported automatic navigation expectation failed",
+      "sha256": "52c16e83d980f4ebb2b561c548d75b5ae39ccd26e4d0a5662171d558c5199148"
+    },
+    {
+      "name": "ai1-d4-expanded.log",
+      "exitCode": 1,
+      "result": "seven passed and three failed from repeated real PIN login rate limit",
+      "sha256": "5be34c3c70c29b97c0b41fc8ee0d945008108bcb98c38ce5ddd0ccc3ffc8c3ed"
+    },
+    {
+      "name": "ai1-d4-expanded-second.log",
+      "exitCode": 0,
+      "result": "author full ten tests",
+      "sha256": "72810429084241db2225fe1a3ffc2c5248e6cbbec7c357256aa3957ffbaaebeb"
+    },
+    {
+      "name": "ai1-d4-independent-browser.log",
+      "exitCode": 0,
+      "result": "independent ten tests",
+      "sha256": "73f06f36a33c99591dc0b600375bd6ad4cec0b3ac9b71f9a29750ea0966736a1"
+    },
+    {
+      "name": "ai1-d4-independent-hash-before.json",
+      "result": "independent pre-run source hashes",
+      "sha256": "566a04ff42653db53325e99665a04d0ce312b00e19134951449c5f4c20be5776"
+    },
+    {
+      "name": "ai1-d4-independent-hash-after.json",
+      "result": "independent post-run source hashes unchanged",
+      "sha256": "566a04ff42653db53325e99665a04d0ce312b00e19134951449c5f4c20be5776"
+    },
+    {
+      "name": "ai1-d4-ui.log",
+      "exitCode": 1,
+      "result": "wrong existing dependency path; no test executed",
+      "sha256": "0778ad94031b334068333c4e280ac12bbd339cb9afbd1a70864d07c0f583bf33"
+    },
+    {
+      "name": "ai1-d4-ui-second.log",
+      "exitCode": 0,
+      "result": "two suites 49 tests",
+      "sha256": "217a3b07d9588fa502b10e429285c396ab1224bcc5cc54f8a7d1de343edd8e07"
+    },
+    {
+      "name": "ai1-d4-lint.log",
+      "exitCode": 0,
+      "result": "affected spec",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ai1-d4-doc-check.log",
+      "exitCode": 0,
+      "result": "documentation path and state check",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "ai1-d4-doc-gate.log",
+      "exitCode": 0,
+      "result": "312 documentation gate tests before final review annotation",
+      "sha256": "e5cf65ebd7940633d6181c37954b7767f2abb2d43ba8575779d147802ea555c6"
+    }
+  ],
+  "remaining": [
+    "formal browser child switch, late 401, network refresh failure",
+    "actual DeepTutor local source and change authorization",
+    "actual remote persistence, unique claim and process restart",
+    "actual Provider control and separate budget authorization",
+    "human end-to-end value acceptance"
+  ],
+  "preserved": [
+    "AI-0 human review",
+    "B/D/AI-1 OPEN",
+    "T4/T8 OPEN",
+    "T9 NOT_STARTED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "T5-NB-001/002 OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED"
+  ],
+  "build": {
+    "rerun": false,
+    "sourceUnchanged": true,
+    "files": [
+      {
+        "file": "asset-manifest.json",
+        "sha256": "c62dbf038b4338e5d64149df14066159cb55be2b06f5a35b2b2ccda6ef01db68"
+      },
+      {
+        "file": "index.html",
+        "sha256": "0038cb87fc46e2dc1c6249bc032eb826848a2816b2b467d35946a4e555962eb5"
+      },
+      {
+        "file": "manifest.json",
+        "sha256": "ff7923e959200fe2ca0e6450a39002ae26e9d62e0ef69c40186ebe172835fa76"
+      },
+      {
+        "file": "static/css/main.403096e2.css",
+        "sha256": "bb41ff6bb7a33c1d74837e75bb681868541e1b847c8b5920c58b5992da09ea6b"
+      },
+      {
+        "file": "static/css/main.403096e2.css.map",
+        "sha256": "d33372e02a6efffa4f5271985b2f05ffc8e34a1d4cfc18de06fcb0b572d0d7be"
+      },
+      {
+        "file": "static/js/main.33b598fb.js",
+        "sha256": "0ab88917f8c77d03069d36c5c8dde79915e2d745624d8b557b3bbe1362ccf97a"
+      },
+      {
+        "file": "static/js/main.33b598fb.js.LICENSE.txt",
+        "sha256": "776626e2a539bae6c6ffdae382b2fc62045dcd76b3f6b6e40c37726056e87f22"
+      },
+      {
+        "file": "static/js/main.33b598fb.js.map",
+        "sha256": "36e030f4c09443989785f7378aeb23daee4c30522bf932e79a0187795046f571"
+      }
+    ]
+  }
+}

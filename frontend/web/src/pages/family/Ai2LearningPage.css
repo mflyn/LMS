@@ -1,0 +1,11 @@
+.ai2-page { min-width: 0; }
+.ai2-page > section { border-top: 1px solid #d6dadd; padding: 20px 0; margin-top: 20px; }
+.ai2-page h2 { font-size: 20px; }
+.ai2-page h3 { font-size: 17px; }
+.ai2-page button { min-height: 44px; }
+.ai2-page .ai2-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+.ai2-page fieldset { min-width: 0; margin: 16px 0; }
+.ai2-page textarea { min-height: 100px; width: 100%; box-sizing: border-box; }
+.ai2-page .ai2-attempt { border-top: 1px solid #d6dadd; padding: 16px 0; }
+.ai2-page .family-button { margin: 4px; white-space: normal; }
+.ai2-page label { display: block; margin: 8px 0; overflow-wrap: anywhere; }

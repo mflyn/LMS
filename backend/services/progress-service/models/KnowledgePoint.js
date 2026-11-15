@@ -29,6 +29,8 @@ const knowledgePointSchema = new Schema({
     enum: ['not_started', 'learning', 'basic', 'skilled', 'needs_review'],
     default: 'not_started'
   },
+  stateRevision: { type: Number, default: 0, min: 0, max: Number.MAX_SAFE_INTEGER,
+    validate: { validator: Number.isSafeInteger, message: 'stateRevision must be a safe integer' } },
   practiceCount: { type: Number, min: 0, default: 0, validate: nonNegativeInteger },
   mistakeCount: { type: Number, min: 0, default: 0, validate: nonNegativeInteger },
   lastReviewedAt: Date,

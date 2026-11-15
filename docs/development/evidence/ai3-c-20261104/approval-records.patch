@@ -1,0 +1,53 @@
+diff --git a/docs/development/evidence/ai3-b-20261104/README.md b/docs/development/evidence/ai3-b-20261104/README.md
+--- a/docs/development/evidence/ai3-b-20261104/README.md
++++ b/docs/development/evidence/ai3-b-20261104/README.md
+@@ -1,12 +1,22 @@
+ # AI3-B 共享费用账本与发送占位基础
+ 
+-**Status:** IMPLEMENTED / USER_REVIEW_PENDING (local shared-budget foundation only)
++**Status:** ACCEPTED / USER_APPROVED (local shared-budget foundation only, 2026-11-04)
+ **AI3-A:** ACCEPTED / USER_APPROVED，readiness P2已关闭
+ **AI-3:** OPEN
+ **Base:** `a4f051e26f3514da051910a3495e11b149a32c45` + 已批准AI3-A候选
+ 
+ ## 范围与实施顺序
+ 
++### 本轮批准与独立复验
++
++用户批准限定合成批次验收；绑定原候选补丁
++`83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8`，不改写冻结清单或历史日志。
++本轮独立复审核对26项源码/文档/补丁/日志哈希，反向补丁检查通过；账本及AI1服务73项、AI1 runtime 47项通过。
++独立重跑两项变异，移除owner校验3项拒绝断言失败，无条件释放槽位2项断言失败；是有效拦截，不计候选失败。
++八文件ESLint、文档状态校验、diff check通过。开发51套1776项全量不冒充本轮独立全量。
++本批自查游标收尾及保护补强随批次通过；冷初始化确定性重试继续由下一批实际AI3调用方补齐。
++下文待审表述保留为当时快照；本节为当前状态。AI-3总门禁仍OPEN，其余未关闭/后置范围不变。
++
+ 依据[批准设计§5](../../../superpowers/specs/2026-11-04-family-ai3-minimal-design.md#5-生成费用与未知结果)、
+ [API§3/4](../../../api/family-ai3-api.md#3-内容生成和角色-dto)、[测试计划GEN-02](../../family-ai3-test-plan.md#2-永久用例矩阵)。
+ 首批批准见[AI3-A当前记录](../ai3-a-20261104/README.md#用户批准与复审绑定2026-11-04)，原冻结补丁和历史失败不改。
+diff --git a/docs/development/family-self-directed-learning-mvp-gate.md b/docs/development/family-self-directed-learning-mvp-gate.md
+--- a/docs/development/family-self-directed-learning-mvp-gate.md
++++ b/docs/development/family-self-directed-learning-mvp-gate.md
+@@ -8115,3 +8115,22 @@
+ 冷竞争11000条件分支未保证每轮必触发，实际AI3公开编排重试仍属后批，不扩大本次验收。
+ T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数资格待验及后置范围不变。
+ 无真实模型、Git提交推送、合并或部署，不提前关闭AI-3。
++
++### AI3-B 限定合成验收批准（2026-11-04）
++
++AI3-B ACCEPTED / USER_APPROVED，绑定[批准与独立复验记录](evidence/ai3-b-20261104/README.md#本轮批准与独立复验)
++及原补丁`83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8`。
++本轮独立73+47项通过、两项变异3/2条目标反例拦截，与开发51套1776项和所有历史失败分开。
++继续AI3-C本地生成预览/原命令编排及冷初始化确定性重试；远端发送仍未装配，不调用真实模型。
++AI-3、T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数待验及后置范围保持。
++
++### AI3-C 本地生成准备候选（2026-11-04）
++
++AI3-C IMPLEMENTED / USER_REVIEW_PENDING；[本批证据](evidence/ai3-c-20261104/README.md)绑定九文件增量补丁
++`48b5d5cf71a23dd3062eed5a8797b25fc82f67d7674f93a78cd563b90a235c89`，不改写A/B旧冻结与失败快照。
++完整预览/共享预留/原actor持久命令/单次内部claim及冷初始化原ID重试已实现；无公开路由、远端发送或完整终态恢复。
++末端开关/报价重检P2修复后开发与独立各46项通过，独立不是全量；两项开发变异各3条反例实际拦截。
++P2 FIXED_AND_INDEPENDENTLY_REVIEWED，C批待验收；完整回归候选时点与其他限制见证据页，不提前关闭AI-3。
++最终冻结后原homework完整52套1799项通过，258.17秒、退出0，独立46项与开发全量分开；旧红灯及中途修改候选的早轮回归保持。
++T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、两项非阻断补测、计数资格待验及后置范围不变。
++仅本地合成，无真实模型、Git提交推送、合并或部署。

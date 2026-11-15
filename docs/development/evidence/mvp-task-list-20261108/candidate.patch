@@ -1,0 +1,200 @@
+diff --git a/frontend/web/src/__tests__/family/Task9TodayTasks.test.js b/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
+index a91e3553..c36ce785 100644
+--- a/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
++++ b/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
+@@ -341 +341,5 @@ describe('Task 9 today and task workflows', () => {
+-    createGrowthTask.mockResolvedValueOnce({ task: task({ dimension, title }) });
++    createGrowthTask.mockImplementationOnce(async () => {
++      const created = task({ dimension, title });
++      listGrowthTasks.mockResolvedValue({ items: [created], total: 1 });
++      return { task: created };
++    });
+@@ -360,0 +365,131 @@ describe('Task 9 today and task workflows', () => {
++  test('refreshes server pagination after a successful create without another POST', async () => {
++    const user = userEvent.setup();
++    const existing = Array.from({ length: 20 }, (_, index) => task({
++      taskId: String(index + 10).padStart(24, '0'), title: `Existing task ${index}`
++    }));
++    const created = task({ title: 'New page boundary task' });
++    listGrowthTasks.mockResolvedValueOnce({ items: existing, total: 20 })
++      .mockResolvedValue({ items: [created, ...existing.slice(0, 19)], total: 21 });
++    createGrowthTask.mockResolvedValueOnce({ task: created });
++    renderPage(<TasksPage />);
++
++    await screen.findByText('第 1 页 · 共 20 项');
++    expect(screen.getByRole('button', { name: '下一页任务' })).toBeDisabled();
++    await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await user.type(screen.getByLabelText('任务标题'), created.title);
++    await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
++    await user.click(screen.getByRole('button', { name: '保存任务' }));
++
++    expect(await screen.findByText('第 1 页 · 共 21 项')).toBeInTheDocument();
++    expect(screen.getAllByRole('article')).toHaveLength(20);
++    expect(screen.queryByText('Existing task 19')).not.toBeInTheDocument();
++    expect(screen.getByRole('button', { name: '下一页任务' })).toBeEnabled();
++    expect(createGrowthTask).toHaveBeenCalledTimes(1);
++    expect(listGrowthTasks).toHaveBeenLastCalledWith(expect.objectContaining({
++      childId: '000000000000000000000002', page: 1, pageSize: 20
++    }), expect.any(AbortSignal));
++  });
++
++  test('keeps a newly created task outside the current filter out of the list', async () => {
++    const user = userEvent.setup();
++    const created = task({ title: 'New academic task', dimension: 'academic' });
++    let saved = false;
++    listGrowthTasks.mockImplementation(async ({ dimension }) => ({
++      items: dimension === 'physical' || !saved ? [] : [created], total: dimension === 'physical' || !saved ? 0 : 1
++    }));
++    createGrowthTask.mockImplementationOnce(async () => { saved = true; return { task: created }; });
++    renderPage(<TasksPage />);
++    await screen.findByText('暂无成长任务');
++    await user.selectOptions(screen.getByLabelText('筛选维度'), 'physical');
++    await screen.findByText('暂无成长任务');
++    const readsBeforeSave = listGrowthTasks.mock.calls.length;
++    await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await user.type(screen.getByLabelText('任务标题'), created.title);
++    await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
++    await user.click(screen.getByRole('button', { name: '保存任务' }));
++
++    await screen.findByText('任务已创建。');
++    await waitFor(() => expect(listGrowthTasks).toHaveBeenCalledTimes(readsBeforeSave + 1));
++    expect(await screen.findByText('暂无成长任务')).toBeInTheDocument();
++    expect(screen.queryByRole('heading', { name: created.title })).not.toBeInTheDocument();
++    expect(screen.getByText('第 1 页 · 共 0 项')).toBeInTheDocument();
++    expect(screen.getByRole('button', { name: '查看已保存任务' })).toBeEnabled();
++    getGrowthTask.mockResolvedValueOnce({ task: created });
++    const readsBeforeDetail = listGrowthTasks.mock.calls.length;
++    await user.click(screen.getByRole('button', { name: '查看已保存任务' }));
++    const dialog = screen.getByRole('dialog', { name: '作品查看与审核' });
++    expect(await within(dialog).findByRole('heading', { name: created.title })).toBeInTheDocument();
++    await user.click(within(dialog).getByRole('button', { name: '关闭', exact: true }));
++    expect(screen.getByLabelText('筛选维度')).toHaveValue('physical');
++    expect(screen.queryByRole('heading', { name: created.title })).not.toBeInTheDocument();
++    expect(screen.queryAllByRole('article')).toHaveLength(0);
++    expect(screen.getByText('暂无成长任务')).toBeInTheDocument();
++    expect(screen.getByText('第 1 页 · 共 0 项')).toBeInTheDocument();
++    expect(listGrowthTasks).toHaveBeenCalledTimes(readsBeforeDetail);
++    await user.selectOptions(screen.getByLabelText('筛选维度'), '');
++    expect(await screen.findByRole('heading', { name: created.title })).toBeInTheDocument();
++    expect(screen.getByText('第 1 页 · 共 1 项')).toBeInTheDocument();
++    expect(createGrowthTask).toHaveBeenCalledTimes(1);
++  });
++
++  test('viewing a saved task outside the current page preserves its membership and size', async () => {
++    const user = userEvent.setup();
++    const existing = Array.from({ length: 40 }, (_, index) => task({
++      taskId: String(index + 10).padStart(24, '0'), title: `Paged task ${index}`
++    }));
++    const created = task({ title: 'New task on another page', dimension: 'academic', dueDate: '2026-07-12' });
++    let saved = false;
++    listGrowthTasks.mockImplementation(async ({ page }) => ({
++      items: existing.slice((page - 1) * 20, page * 20), total: saved ? 41 : 40
++    }));
++    createGrowthTask.mockImplementationOnce(async () => { saved = true; return { task: created }; });
++    getGrowthTask.mockResolvedValueOnce({ task: created });
++    renderPage(<TasksPage />);
++    await screen.findByText('第 1 页 · 共 40 项');
++    await user.click(screen.getByRole('button', { name: '下一页任务' }));
++    await screen.findByText('第 2 页 · 共 40 项');
++    await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await user.type(screen.getByLabelText('任务标题'), created.title);
++    await user.type(screen.getByLabelText('截止日期'), created.dueDate);
++    await user.click(screen.getByRole('button', { name: '保存任务' }));
++    await screen.findByText('第 2 页 · 共 41 项');
++    const readsBeforeDetail = listGrowthTasks.mock.calls.length;
++    await user.click(screen.getByRole('button', { name: '查看已保存任务' }));
++    const dialog = screen.getByRole('dialog', { name: '作品查看与审核' });
++    expect(await within(dialog).findByRole('heading', { name: created.title })).toBeInTheDocument();
++    await user.click(within(dialog).getByRole('button', { name: '关闭', exact: true }));
++
++    expect(screen.getAllByRole('article')).toHaveLength(20);
++    expect(screen.getAllByRole('article').map(article => within(article).getByRole('heading').textContent))
++      .toEqual(existing.slice(20).map(item => item.title));
++    expect(screen.queryByRole('heading', { name: created.title })).not.toBeInTheDocument();
++    expect(screen.getByText('第 2 页 · 共 41 项')).toBeInTheDocument();
++    expect(listGrowthTasks).toHaveBeenCalledTimes(readsBeforeDetail);
++    expect(listGrowthTasks).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, pageSize: 20 }), expect.any(AbortSignal));
++    expect(createGrowthTask).toHaveBeenCalledTimes(1);
++  });
++
++  test('retries only the list when its refresh fails after a confirmed create', async () => {
++    const user = userEvent.setup();
++    const created = task({ title: 'Saved before list outage' });
++    listGrowthTasks.mockResolvedValueOnce({ items: [], total: 0 })
++      .mockRejectedValueOnce({ response: { status: 503 } })
++      .mockResolvedValue({ items: [created], total: 1 });
++    createGrowthTask.mockResolvedValueOnce({ task: created });
++    renderPage(<TasksPage />);
++    await screen.findByText('暂无成长任务');
++    await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await user.type(screen.getByLabelText('任务标题'), created.title);
++    await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
++    await user.click(screen.getByRole('button', { name: '保存任务' }));
++
++    await screen.findByRole('button', { name: '重新加载数据' });
++    expect(screen.getByText('任务已创建。')).toBeInTheDocument();
++    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
++    await user.click(screen.getByRole('button', { name: '重新加载数据' }));
++    expect(await screen.findByRole('heading', { name: created.title })).toBeInTheDocument();
++    expect(screen.getByText('第 1 页 · 共 1 项')).toBeInTheDocument();
++    expect(createGrowthTask).toHaveBeenCalledTimes(1);
++    expect(listGrowthTasks).toHaveBeenCalledTimes(3);
++  });
++
+@@ -514,0 +650 @@ describe('Task 9 today and task workflows', () => {
++    expect(listGrowthTasks).toHaveBeenCalledTimes(1);
+diff --git a/frontend/web/src/pages/family/TasksPage.js b/frontend/web/src/pages/family/TasksPage.js
+index 1e091260..6fe85b25 100644
+--- a/frontend/web/src/pages/family/TasksPage.js
++++ b/frontend/web/src/pages/family/TasksPage.js
+@@ -211,0 +212,6 @@ const ScopedTasksPage = () => {
++  const updateListedTask = useCallback((nextTask) => {
++    setItems((current) => current.map((item) => (
++      item.taskId === nextTask.taskId ? nextTask : item
++    )));
++  }, []);
++
+@@ -276,0 +283,2 @@ const ScopedTasksPage = () => {
++      // New tasks can change filtered totals and page membership.
++      if (editor.mode === 'create') resource.reload();
+@@ -458 +466 @@ const ScopedTasksPage = () => {
+-          initialMode={review.mode} onClose={() => setReview(null)} onTask={replaceTask} />
++          initialMode={review.mode} onClose={() => setReview(null)} onTask={updateListedTask} />
+diff --git a/tests/e2e/t2/checklist.spec.js b/tests/e2e/t2/checklist.spec.js
+index 6c4daf7b..68924514 100644
+--- a/tests/e2e/t2/checklist.spec.js
++++ b/tests/e2e/t2/checklist.spec.js
+@@ -70,0 +71,33 @@ async function screenshot(page, info, name) {
++test('task creation refreshes the real filtered list and pagination without reposting', async ({ page }, info) => {
++  const errors = monitor(page), creates = [];
++  page.on('request', request => {
++    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/growth-tasks') creates.push(request);
++  });
++  await login(page, 'parent');
++  const visible = await createViaPage(page, 'Synthetic pagination visible task');
++  await expect(page.getByText('第 1 页 · 共 2 项', { exact: true })).toBeVisible();
++  await expect(page.getByRole('heading', { name: visible.title, exact: true })).toBeVisible();
++  await page.getByRole('combobox', { name: '筛选维度', exact: true }).selectOption('physical');
++  await expect(page.getByText('暂无成长任务', { exact: true })).toBeVisible();
++  const excluded = await createViaPage(page, 'Synthetic academic task outside physical filter');
++  await expect(page.getByRole('combobox', { name: '筛选维度', exact: true })).toHaveValue('physical');
++  await expect(page.getByText('暂无成长任务', { exact: true })).toBeVisible();
++  await expect(page.getByText('第 1 页 · 共 0 项', { exact: true })).toBeVisible();
++  await expect(page.getByRole('heading', { name: excluded.title, exact: true })).toHaveCount(0);
++  await page.getByRole('button', { name: '查看已保存任务', exact: true }).click();
++  await expect(page.getByRole('dialog', { name: '作品查看与审核', exact: true })).toContainText(excluded.title);
++  await page.getByRole('dialog').getByRole('button', { name: '关闭', exact: true }).click();
++  await expect(page.getByRole('combobox', { name: '筛选维度', exact: true })).toHaveValue('physical');
++  await expect(page.getByRole('heading', { name: excluded.title, exact: true })).toHaveCount(0);
++  await expect(page.getByRole('article')).toHaveCount(0);
++  await expect(page.getByText('暂无成长任务', { exact: true })).toBeVisible();
++  await expect(page.getByText('第 1 页 · 共 0 项', { exact: true })).toBeVisible();
++  await screenshot(page, info, 'task-filter-after-detail-close.png');
++  await page.getByRole('combobox', { name: '筛选维度', exact: true }).selectOption('');
++  await expect(page.getByText('第 1 页 · 共 3 项', { exact: true })).toBeVisible();
++  await expect(page.getByRole('heading', { name: excluded.title, exact: true })).toBeVisible();
++  expect(creates).toHaveLength(2);
++  await screenshot(page, info, 'task-pagination-after-save.png');
++  expect(errors).toEqual([]);
++});
++

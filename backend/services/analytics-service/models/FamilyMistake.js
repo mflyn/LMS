@@ -49,6 +49,7 @@ const mediaBindingSchema = new Schema({
 }, { _id: false, strict: 'throw' });
 
 const familyMistakeSchema = new Schema({
+  stateRevision: { type: Number, default: 0, min: 0, validate: Number.isSafeInteger },
   familyId: {
     type: Schema.Types.ObjectId,
     required: true,

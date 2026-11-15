@@ -73,3 +73,21 @@ test('returns to a surviving sibling action if confirmation removes its original
   const view = render(dialog(<button>Close</button>));
   trigger.remove(); view.unmount(); expect(fallback).toHaveFocus();
 });
+
+test.each(['disabled', 'hidden', 'inert', 'aria-disabled'])('scoped return skips an unavailable %s target and uses the safe heading', kind => {
+  const target = document.createElement('button'), heading = document.createElement('h1');
+  heading.tabIndex = -1; root.append(target, heading);
+  const view = render(<FamilyDialog labelledBy="title" onClose={jest.fn()} returnFocusTargets={() => [target, heading]}>
+    <h2 id="title">Review</h2><button>Close</button>
+  </FamilyDialog>);
+  target.setAttribute(kind, kind === 'aria-disabled' ? 'true' : '');
+  view.unmount(); expect(heading).toHaveFocus(); expect(trigger).not.toHaveFocus();
+});
+
+test('latest scoped refusal never falls back to the captured private trigger', () => {
+  const props = { labelledBy: 'title', onClose: jest.fn() };
+  const content = <><h2 id="title">Review</h2><button>Close</button></>;
+  const view = render(<FamilyDialog {...props} returnFocusTargets={() => [trigger]}>{content}</FamilyDialog>);
+  view.rerender(<FamilyDialog {...props} returnFocusTargets={() => []}>{content}</FamilyDialog>);
+  view.unmount(); expect(trigger).not.toHaveFocus();
+});

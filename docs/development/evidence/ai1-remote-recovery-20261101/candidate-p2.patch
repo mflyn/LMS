@@ -1,0 +1,56 @@
+diff --git a/DeepTutor/tests/services/ai1/lms_acceptance.py b/DeepTutor/tests/services/ai1/lms_acceptance.py
+index 95211e5..695663e 100644
+--- a/DeepTutor/tests/services/ai1/lms_acceptance.py
++++ b/DeepTutor/tests/services/ai1/lms_acceptance.py
+@@ -96,6 +96,8 @@ def client(origin, method="put", *, payload=PAYLOAD, token=TOKEN, operation_id=I
+ def serve(root, *, mode="enabled", fault="none", profile=PROFILE, now=NOW, store_continuous=True):
+     config = {"mode": mode, "storeContinuous": store_continuous, "storePath": str(root / "operations.sqlite"),
+               "serviceTokenFile": str(root / "service-token")}
++    if store_continuous is None:
++        config.pop("storeContinuous")
+     if mode == "enabled":
+         config.update({"providerKeyFile": str(root / "provider-token"), "profile": profile})
+     private_json(root / "runtime.json", config)
+diff --git a/DeepTutor/tests/services/ai1/lms_recovery_acceptance.py b/DeepTutor/tests/services/ai1/lms_recovery_acceptance.py
+index 85d590c..0e1fb11 100644
+--- a/DeepTutor/tests/services/ai1/lms_recovery_acceptance.py
++++ b/DeepTutor/tests/services/ai1/lms_recovery_acceptance.py
+@@ -77,6 +77,10 @@ def test_historical_success_query_after_quote_expiry_is_exact_and_never_sends(lo
+     root, store = local
+     with serve(root) as (origin, _):
+         original = client(origin)["operation"]
++    assert original["status"] == "succeeded" and original["sendClaimed"] is True
++    assert original["result"]["text"] == "6180"
++    assert original["usage"] == {"inputTokens": 100, "outputTokens": 50}
++    assert store.get(ID) == original
+     before = store.path.read_bytes()
+     with serve(root, mode="query-only", now=NOW + 7200000) as (origin, _):
+         assert client(origin, "get")["operation"] == original
+@@ -85,13 +89,25 @@ def test_historical_success_query_after_quote_expiry_is_exact_and_never_sends(lo
+ 
+ 
+ @pytest.mark.parametrize("mode", ["enabled", "query-only"])
+-def test_formal_start_without_external_continuity_cannot_open_ready_endpoint(local, mode):
++@pytest.mark.parametrize("continuity", [False, None], ids=["false", "missing"])
++def test_formal_start_without_external_continuity_cannot_open_ready_endpoint(local, mode, continuity):
+     root, store = local
+     with serve(root, fault="after-accept") as (origin, process):
+         assert client(origin)["error"] == "AI_REMOTE_UNAVAILABLE"
+         assert process.wait(timeout=3) == 73
+     before = store.path.read_bytes()
++    logs = set(root.glob("server-*.log"))
+     with pytest.raises(AssertionError, match="Formal main exited before readiness"):
+-        with serve(root, mode=mode, store_continuous=False):
++        with serve(root, mode=mode, store_continuous=continuity):
+             pytest.fail("Unknown continuity must fail actual main startup")
++    failure_logs = set(root.glob("server-*.log")) - logs
++    assert len(failure_logs) == 1
++    failure = next(iter(failure_logs)).read_text()
++    assert "deeptutor.services.ai1_contract.ContractError: AI_PROFILE_UNAVAILABLE" in failure
++    assert "Application startup failed" in failure
++    assert store.path.read_bytes() == before and calls(root) == []
++    # Same mode/store/profile/credentials; only the external declaration differs.
++    with serve(root, mode=mode, store_continuous=True) as (origin, _):
++        assert client(origin, "get")["operation"] == store.get(ID)
++        assert store.get(ID)["status"] == "accepted"
+     assert store.path.read_bytes() == before and calls(root) == []

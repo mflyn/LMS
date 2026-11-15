@@ -4,7 +4,8 @@ const User = require('../../../common/models/User');
 
 const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
-const resolveChildAccess = async (identity, childId) => {
+const resolveChildAccess = async (identity, childId, { session } = {}) => {
+  const scoped = query => session ? query.session(session) : query;
   if (!identity || !isObjectId(childId)) return null;
 
   if (identity.role === 'student') {
@@ -12,27 +13,28 @@ const resolveChildAccess = async (identity, childId) => {
     if (!isObjectId(identityChildId) || identityChildId.toString() !== childId.toString()) return null;
     if (identity.id && identity.id.toString() !== childId.toString()) return null;
 
-    const child = await User.findOne({ _id: childId, role: 'student' });
+    const child = await scoped(User.findOne({ _id: childId, role: 'student' }));
     if (!child || !child.familyId) return null;
     if (identity.familyId && child.familyId.toString() !== identity.familyId.toString()) return null;
     return { familyId: child.familyId, child };
   }
 
   if (identity.role !== 'parent' || !isObjectId(identity.id)) return null;
+  if (session && !await User.exists({ _id: identity.id, role: 'parent' }).session(session)) return null;
 
-  const family = await Family.findOne({
+  const family = await scoped(Family.findOne({
     $or: [{ ownerParentId: identity.id }, { memberParentIds: identity.id }],
     childIds: childId
-  });
+  }));
   if (!family) return null;
 
-  const child = await User.findOne({ _id: childId, role: 'student', familyId: family._id });
+  const child = await scoped(User.findOne({ _id: childId, role: 'student', familyId: family._id }));
   return child ? { familyId: family._id, family, child } : null;
 };
 
-const requireParentChild = async (identity, childId) => {
+const requireParentChild = async (identity, childId, options) => {
   if (!identity || identity.role !== 'parent') return null;
-  return resolveChildAccess(identity, childId);
+  return resolveChildAccess(identity, childId, options);
 };
 
 module.exports = { requireParentChild, resolveChildAccess };

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import TutorSourceLink from '../../components/family/TutorSourceLink';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import FamilyDataState from '../../components/family/FamilyDataState';
 import FamilyDialog from '../../components/family/FamilyDialog';
@@ -93,6 +94,8 @@ const ScopedTasksPage = () => {
   const [action, setAction] = useState(null);
   const [review, setReview] = useState(null);
   const [helpTask, setHelpTask] = useState(null);
+  const helpTriggers = useRef(new Map());
+  const headingRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const [mediaBusy, setMediaBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -208,6 +211,12 @@ const ScopedTasksPage = () => {
     });
   }, []);
 
+  const updateListedTask = useCallback((nextTask) => {
+    setItems((current) => current.map((item) => (
+      item.taskId === nextTask.taskId ? nextTask : item
+    )));
+  }, []);
+
   const openCreate = () => {
     if (writing.current || sourceTarget) return;
     editorGeneration.current += 1;
@@ -273,6 +282,8 @@ const ScopedTasksPage = () => {
       setSavedTaskId(result.task.taskId);
       setEditor(null);
       setMessage(editor.mode === 'create' ? '任务已创建。' : '任务已更新。');
+      // New tasks can change filtered totals and page membership.
+      if (editor.mode === 'create') resource.reload();
     } catch (taskError) {
       if (!current()) return;
       if ([401, 403].includes(taskError?.response?.status)) {
@@ -390,8 +401,9 @@ const ScopedTasksPage = () => {
   return (
     <section className="family-page family-page-wide" aria-labelledby="tasks-page-title">
       <div className="family-page-heading">
-        <div>{!accessBlocked && <p className="family-eyebrow">{selectedChild.name}的成长安排</p>}<h1 id="tasks-page-title">任务</h1></div>
-        <button type="button" className="family-button primary" disabled={accessBlocked || resource.state === 'loading'} onClick={openCreate}>新建任务</button>
+        <div>{!accessBlocked && <p className="family-eyebrow">{selectedChild.name}的成长安排</p>}<h1 id="tasks-page-title" ref={headingRef} tabIndex={-1}>任务</h1></div>
+        <div className="family-inline-actions"><Link className="family-button secondary" to="/app/tutor">讲解记录</Link>
+          <button type="button" className="family-button primary" disabled={accessBlocked || resource.state === 'loading'} onClick={openCreate}>新建任务</button></div>
       </div>
 
       <div className="family-filter-bar" aria-label="任务筛选">
@@ -422,8 +434,11 @@ const ScopedTasksPage = () => {
               {item.helpRequest && <p>{item.helpRequest.status === 'pending' ? '待处理求助' : '求助已处理'} · {HELP_LABELS[item.helpRequest.helpType]}</p>}
             </div>
             <div className="family-inline-actions">
+              <TutorSourceLink type="task" id={item.taskId} childId={selectedChildId} subject={item.subject} />
               <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`查看 ${item.title}`} onClick={event => openAction('review', item, event.currentTarget)}>查看作品</button>
-              <button type="button" className="family-button secondary" aria-label={`求助 ${item.title}`} onClick={event => { event.currentTarget.focus(); setHelpTask(item.taskId); }}>求助</button>
+              <button type="button" className="family-button secondary" aria-label={`求助 ${item.title}`}
+                ref={node => { if (node) helpTriggers.current.set(item.taskId, node); else helpTriggers.current.delete(item.taskId); }}
+                onClick={event => { event.currentTarget.focus(); setHelpTask(item.taskId); }}>求助</button>
               {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`编辑 ${item.title}`} onClick={() => openEdit(item)}>编辑</button>}
               {item.status === 'pending' && <button type="button" className="family-button secondary" disabled={resource.state === 'loading'} aria-label={`完成 ${item.title}`} onClick={event => openAction('complete', item, event.currentTarget)}>完成</button>}
               {item.status === 'completed' && <button type="button" className="family-button primary" disabled={resource.state === 'loading'} aria-label={`确认 ${item.title}`} onClick={event => openAction('confirm', item, event.currentTarget)}>确认</button>}
@@ -441,7 +456,9 @@ const ScopedTasksPage = () => {
           disabled={page * 20 >= (resource.data?.total ?? 0) || resource.state === 'loading'} onClick={() => setPage(value => value + 1)}><RightOutlined /></button>
       </nav>
 
-      {helpTask && !accessBlocked && <FamilyDialog labelledBy="task-help-title" onClose={() => setHelpTask(null)}>
+      {helpTask && !accessBlocked && <FamilyDialog labelledBy="task-help-title" onClose={() => setHelpTask(null)}
+        returnFocusTargets={() => [!denied.current && isSessionCurrent(ownerSession.current)
+          ? helpTriggers.current.get(helpTask) : null, headingRef.current]}>
         <div className="family-page-heading"><h2 id="task-help-title">{selectedChild.name}的求助</h2>
           <button type="button" className="family-button secondary" onClick={() => setHelpTask(null)}>关闭</button></div>
         <TaskHelpPanel role="parent" taskId={helpTask} familyId={family?.familyId} childId={selectedChildId} onUpdated={resource.reload} />
@@ -452,7 +469,7 @@ const ScopedTasksPage = () => {
       {!accessBlocked && review && review.childId === selectedChildId && (
         <TaskCompletionReview key={`${family?.familyId}-${selectedChildId}-${childScopeVersion}-${review.taskId}`}
           taskId={review.taskId} familyId={family?.familyId} childId={selectedChildId}
-          initialMode={review.mode} onClose={() => setReview(null)} onTask={replaceTask} />
+          initialMode={review.mode} onClose={() => setReview(null)} onTask={updateListedTask} />
       )}
 
       {editor && !accessBlocked && (

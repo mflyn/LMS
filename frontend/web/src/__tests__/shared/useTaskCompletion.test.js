@@ -23,6 +23,7 @@ beforeEach(() => {
     recover: jest.fn(), confirm: jest.fn() };
 });
 const mount = () => renderHook(props => useTaskCompletion(props), { initialProps: { scope, session, api } });
+const completionKeys = () => Object.keys(sessionStorage).filter(key => key.startsWith('family-growth.completion-command.v1:'));
 
 test.each([['student', 401], ['student', 403], ['parent', 401], ['parent', 403]])(
   'detail denial keeps the original %s command and storage after %s while clearing private state', async (role, status) => {
@@ -51,8 +52,8 @@ test.each([['student', 401], ['student', 403], ['parent', 401], ['parent', 403]]
 
 test('freezes one persisted command before HTTP and retries its exact body after lost response', async () => {
   api.complete.mockImplementationOnce(async (_id, body) => {
-    expect(sessionStorage.length).toBe(1);
-    expect(JSON.parse(sessionStorage.getItem(sessionStorage.key(0))).body).toEqual(body);
+    expect(completionKeys()).toHaveLength(1);
+    expect(JSON.parse(sessionStorage.getItem(completionKeys()[0])).body).toEqual(body);
     throw pending();
   }).mockImplementationOnce(async (_id, body) => result(body));
   const h = mount(); await waitFor(() => expect(h.result.current.state).toBe('ready'));
@@ -62,7 +63,8 @@ test('freezes one persisted command before HTTP and retries its exact body after
   expect(api.complete).toHaveBeenCalledTimes(1);
   await act(async () => h.result.current.retry());
   expect(api.complete.mock.calls[1][1]).toEqual(api.complete.mock.calls[0][1]);
-  expect(sessionStorage.length).toBe(0);
+  expect(completionKeys()).toHaveLength(0);
+  expect(captureSession('student')).toBe(session);
 });
 
 test('refresh restores a local command but never automatically resends it', async () => {
@@ -190,7 +192,8 @@ test('malformed success remains uncertain with original command', async () => {
   api.complete.mockResolvedValue({ task: task({ status: 'completed', completionVersion: 99 }) });
   const h = mount(); await waitFor(() => expect(h.result.current.state).toBe('ready'));
   await act(async () => h.result.current.submit({ completionMediaIds: [], checkedItemIds: [] }));
-  expect(h.result.current.state).toBe('uncertain'); expect(sessionStorage.length).toBe(1);
+  expect(h.result.current.state).toBe('uncertain'); expect(completionKeys()).toHaveLength(1);
+  expect(JSON.parse(sessionStorage.getItem(completionKeys()[0])).body).toEqual(api.complete.mock.calls[0][1]);
 });
 
 test('missing protocol versions do not become editable historical version zero', async () => {

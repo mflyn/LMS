@@ -1,0 +1,13 @@
+{
+  "results": [
+    {
+      "repo": "DeepTutor",
+      "reconstruction": "PASS"
+    },
+    {
+      "repo": "LMS",
+      "reconstruction": "PASS"
+    }
+  ],
+  "priorAttempt": "Git parent discovery caused skipped paths; no reconstruction pass claimed until explicit ceiling isolation"
+}

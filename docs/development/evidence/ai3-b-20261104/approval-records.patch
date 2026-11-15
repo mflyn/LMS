@@ -1,0 +1,65 @@
+diff --git a/docs/development/evidence/ai3-a-20261104/README.md b/docs/development/evidence/ai3-a-20261104/README.md
+--- a/docs/development/evidence/ai3-a-20261104/README.md
++++ b/docs/development/evidence/ai3-a-20261104/README.md
+@@ -1,10 +1,12 @@
+ # AI3-A 首批本地合成候选
+ 
+-**Status:** IMPLEMENTED / USER_REVIEW_PENDING (local service batch only)
++**Status:** ACCEPTED / USER_APPROVED (local service batch only, 2026-11-04)
+ **AI3-1:** ACCEPTED / USER_APPROVED
+ **AI-3:** OPEN
+ **Base:** `a4f051e26f3514da051910a3495e11b149a32c45`
+ 
++当前批准结论见文末“用户批准与复审绑定”；下方原交付正文中的待审表述保留为批准前历史快照，不代表当前批次仍未验收。
++
+ ## 范围
+ 
+ 批准依据：[最小设计](../../../superpowers/specs/2026-11-04-family-ai3-minimal-design.md)、
+@@ -84,3 +86,16 @@
+ 
+ T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、
+ QUALIFIED_COUNTER_PENDING及REMAINDER_DEFERRED均保留。无真实模型、提交、推送、合并或部署。
++
++## 用户批准与复审绑定（2026-11-04）
++
++用户在本轮复审通过后明确批准AI3-A限定合成批次验收及readiness P2关闭。
++AI3-A ACCEPTED / USER_APPROVED；readiness P2及祖先事务竞争、孩子DTO两项保护缺口 CLOSED / USER_APPROVED。
++绑定原[candidate.json](candidate.json)与补丁SHA256 `63b488422575bdc4a63b66c475184040b8e58bf34bdb1a93ce1d43e649d7a0ae`，
++不改原补丁、原日志摘要或当时待审文字。后批源码若变化，以新候选为准，不覆盖本批冻结身份。
++
++本轮只读复审独立运行原两套AI3测试：2 suites / 41 tests passed，8.61秒，退出0；
++该结果来自评审线程工具输出，与此前独立5项选择器、开发41项及完整homework1751项分开。
++核对10文件/补丁/门禁片段/4原始日志哈希全部匹配，补丁reverse check、七JS ESLint、文档校验及diff check均退出0。
++首轮23失败suite/142失败test及EPERM、Mongo弃用警告、未运行变异与正式HTTP/浏览器边界继续保留。
++AI-3仍OPEN；本批准不包括完整生成、孩子作答、最终审核/复习写回、页面或真实发送。
+diff --git a/docs/development/family-self-directed-learning-mvp-gate.md b/docs/development/family-self-directed-learning-mvp-gate.md
+--- a/docs/development/family-self-directed-learning-mvp-gate.md
++++ b/docs/development/family-self-directed-learning-mvp-gate.md
+@@ -8091,3 +8091,27 @@
+ 无AI3生产路由、真实模型、媒体写入、复习效果写回或页面验收，不将局部通过等同完整28行或总门禁通过。
+ T4/T8/AI-1 OPEN、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、非阻断补测、计数资格待验及后置范围保持。
+ 本次仅追加此段，既有未提交T8及合并后状态记录不覆盖；不提交推送、部署或提前关闭AI-3。
++
++### AI3-A 批次批准与后续共享账本实施（2026-11-04）
++
++用户在本轮只读复审后批准AI3-A ACCEPTED / USER_APPROVED，readiness P2及相关两项测试保护缺口 CLOSED / USER_APPROVED。
++绑定[首批批准记录](evidence/ai3-a-20261104/README.md#用户批准与复审绑定2026-11-04)、原10文件冻结候选与
++补丁`63b488422575bdc4a63b66c475184040b8e58bf34bdb1a93ce1d43e649d7a0ae`；本轮独立41项通过与开发完整1751项分开。
++原权限失败、其他历史红灯与当时待审记录不回写。下一批为AI3-B共享费用账本/发送占位基础，未获批前不自动验收。
++AI-3 OPEN；T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、非阻断补测、计数待验及后置范围保持。
++仅本地合成实现与验证，无真实模型、提交推送或部署。
++
++### AI3-B 共享预算基础候选（2026-11-04）
++
++AI3-B IMPLEMENTED / USER_REVIEW_PENDING，AI-3 OPEN。范围及证据见[本批记录](evidence/ai3-b-20261104/README.md)。
++复用原AI1 Account/Reservation/Slot，封闭ai1/ai3 owner分派、旧字段缺失兼容、未知归属拒绝与精确释放；
++AI1实际接入，AI3仅内部事务consumer夹具，不宣称公共生成、Provider或原命令远端恢复已完成。
++候选8文件增量补丁SHA256 `83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8`，
++以上一批冻结为前置；未混入T8或既有AI1/AI2文档增量。
++开发相关19套445项在最后四补测前通过；最终完整homework 51套1776项通过、退出0。
++独立最终20项通过，与此前69项及开发全量分开；两项开发变异分别3/2反例拦截，独立仅核验日志未重跑变异。
++自查close脱敏及三项保护建议 FIXED_AND_INDEPENDENTLY_REVIEWED，随本批待用户验收。
++首轮EPERM（112断言通过但suite失败）、旧过期夹具1/19失败及完整1/1775失败、初始缺模块/变异工具失败均保留。
++冷竞争11000条件分支未保证每轮必触发，实际AI3公开编排重试仍属后批，不扩大本次验收。
++T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、计数资格待验及后置范围不变。
++无真实模型、Git提交推送、合并或部署，不提前关闭AI-3。

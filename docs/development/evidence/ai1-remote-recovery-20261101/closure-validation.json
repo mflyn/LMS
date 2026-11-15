@@ -1,0 +1,66 @@
+{
+  "status": "LOCAL_REVIEW_COMPLETE_NOT_GATE_APPROVAL",
+  "sourceFingerprints": 66,
+  "files": [
+    {
+      "path": "docs/development/evidence/ai1-remote-recovery-20261101/README.md",
+      "sha256": "e0d2137818576ae03f564a1f3c8285643dd493d8217c636ffad1c1db692962eb"
+    },
+    {
+      "path": "docs/development/evidence/ai1-remote-recovery-20261101/verification.json",
+      "sha256": "008d128ba5fd36cfeac1bb86a26ff024931d652463c7e58db1bf392dd4f03154"
+    },
+    {
+      "path": "docs/development/evidence/ai1-remote-recovery-20261101/manifest.json",
+      "sha256": "09c4cabfa0fc8fbf237ef57e09fdd5665a16f32b72d9765867f2ee5df2a23c87"
+    },
+    {
+      "path": "docs/development/evidence/ai1-remote-recovery-20261101/manifest-p2.json",
+      "sha256": "39f7f66549dd557f9a716e7045f9ea617f907d2f891621529f13ae66b684b45e"
+    },
+    {
+      "path": "docs/development/evidence/ai1-remote-recovery-20261101/candidate.patch",
+      "sha256": "005df25b9ad234718e78872cf6f98850e8d8af886c8db5f403960bf395f8aa5a"
+    },
+    {
+      "path": "docs/development/evidence/ai1-remote-recovery-20261101/candidate-p2.patch",
+      "sha256": "394606ce2dded6482488979c51da18e398bbe29c0b80fd0ec7835c296c453835"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "11fefd87b7fd1fd285e1bc81374d4cc479526a298be2eb25cffc61fb9ecd6e64"
+    },
+    {
+      "path": "docs/development/family-ai1-test-plan.md",
+      "sha256": "2df16bf36f151151ff5a8fe1d007a0ff8b088767ecd83ded97bf364ea3befe8a"
+    },
+    {
+      "path": "docs/api/family-ai1-api.md",
+      "sha256": "9fa93cfbafa630f00639efda52f2bf4bbc656fb9611fa450383e520abbd02f76"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "1fcb5ab9e5b25f573478a43dfe1073f0e340aa452c5d647e441e6698fe8e6514"
+    }
+  ],
+  "checks": [
+    {
+      "name": "documentation",
+      "status": 0,
+      "log": "recovery-final-documentation.log",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "lms-diff",
+      "status": 0,
+      "log": "recovery-final-lms-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "deeptutor-diff",
+      "status": 0,
+      "log": "recovery-final-deeptutor-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

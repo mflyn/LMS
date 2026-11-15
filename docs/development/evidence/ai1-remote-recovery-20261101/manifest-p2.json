@@ -1,0 +1,343 @@
+{
+  "status": "FROZEN_P2_PENDING_REVIEW",
+  "previousManifest": "manifest.json",
+  "previousManifestSha256": "09c4cabfa0fc8fbf237ef57e09fdd5665a16f32b72d9765867f2ee5df2a23c87",
+  "patch": {
+    "name": "candidate-p2.patch",
+    "sha256": "394606ce2dded6482488979c51da18e398bbe29c0b80fd0ec7835c296c453835",
+    "reconstruction": "PASS"
+  },
+  "sourceFingerprints": [
+    {
+      "repo": "LMS",
+      "path": "backend/common/contracts/ai1-min.schema.json",
+      "sha256": "5b18f95600c450fd58c7a487a667c190ab0ff122d818797359e86e29668820ee"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/common/createBaseApp.js",
+      "sha256": "6fd3e24a83343d7370c87b0fb1a952a8c955b4a58fd2dd4c1a3d1be6229e1ae5"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "sha256": "0a25fc3122637d7e9c8a7f4d0030fa0c88f3d8057ea5bb94b39a4e8b7fa7d339"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/gateway/__tests__/ai1Routes.test.js",
+      "sha256": "1600f1dbfb93a8e8ffcebc698be0f77dc40d36410d5dc1b9d16755ae1df1d78e"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/gateway/ai1ProxyInput.js",
+      "sha256": "ec4e9fe0088e91056061bbca76af31b25222bf70c1c9261423fa2088b2f711cc"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/gateway/identityMiddleware.js",
+      "sha256": "ef5d2953cc348a3dfdf6214a17d8a3378d06aaed3f4f4bf071dec06f4436620f"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/gateway/server.js",
+      "sha256": "7b8d13f2bb148e525b21388000dbe6ccd312614b52d3b05da376a7e7109f1a03"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/__tests__/services/ai1Contract.test.js",
+      "sha256": "7e2a1f12def7a295e2e8d3671bfaf7f83941b2abc7b1cdbb3112e40bd05a1a99"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/__tests__/services/ai1Http.test.js",
+      "sha256": "d104bbc567eef3833e3652c5b3c354a15662ba3c643e60c8237a4b64aeb09bb6"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/__tests__/services/ai1Operation.test.js",
+      "sha256": "f85716df9191bc987e52e83746e4d9c3171f7660ec2e81189f4a96c53fa4e0be"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/__tests__/services/ai1Production.test.js",
+      "sha256": "91be878cd0e2f6a1b41365b9b44268f8b2ea91f37fb4e24b2b0a2ac89f881f38"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/__tests__/services/ai1Runtime.test.js",
+      "sha256": "8a05a046b6485a2817dad625938307fae222e5b23828b4f76b46c2e27e212e28"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/__tests__/services/ai1Service.test.js",
+      "sha256": "49c976e25120877cfd13b2072887cc13426b8f337d925d9ba25cb2a8e52d7de7"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/__tests__/setup.js",
+      "sha256": "04290986f92750705b2c9f30d8dc36bb8cab36ae79f65c3bafe8d66acf6bc470"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/models/Ai1.js",
+      "sha256": "24195d2928e98ec1b1f975483019f31954a8e503b2707324ba7ffc88a5fb5e0c"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/routes/ai1.js",
+      "sha256": "cd1bc21284786f41d4d9fbf10cb2b379d034a5c43a5212aa1b5b84c1cdd1d155"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/server.js",
+      "sha256": "a324072b5d2aa2ef2aaa67b7188ae36ba1fc761904fc4c1839b8ff0c55835c58"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/services/ai1Contract.js",
+      "sha256": "f4b00611a71ce3b4bc3572564bfa71f2bc848d65020d6faec8b1a9503d399ab2"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/services/ai1Operation.js",
+      "sha256": "ec29b41e2647a8262de40a662218d5d3be05cb743329598535406b6afd3c27aa"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/services/ai1Readiness.js",
+      "sha256": "c6532fd8beaf88a31791b22d8e84f0c14d0e55af9c304549cb75ec7e2f2917e2"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/services/ai1Runtime.js",
+      "sha256": "14d1e19cf2c507337e0456082ade8cdae42ac8b77aea868a937a56b67cfebbca"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/services/homework-service/services/ai1Service.js",
+      "sha256": "3b96d02b9eeb73adf601348bc2430c3d9a8dff8aa7ab66c7f2f52ac43660fb13"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/tests/t2/runtime.integration.test.js",
+      "sha256": "ba575c47e1c568149ebc7525601bedd1f45b544431e1992d8fc8291ec4ab15e0"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/tests/t2/testEnvironment.js",
+      "sha256": "2fa0b5a20091bcf9d938c39ea50d24e7568b14fcbcc5d9765bb3a44cbcf3f402"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/App.js",
+      "sha256": "88eb40a2fdf28df5fb973e16202f7bf08ae02c370df07c2ad1fc7e54aa1d9faa"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/__tests__/family/TutorPage.test.js",
+      "sha256": "6ae2fb4ef14ef0b1476370b658a3313dd8acc88e762708109f4caf9bdce8a18b"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/__tests__/family/ai1Client.test.js",
+      "sha256": "f67544ce40dbf82bcf1d00a5233635768d1f9bdb222595a8b9e33456eaab4ea0"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/components/family/TutorSourceLink.js",
+      "sha256": "397da0155357a5a54ab040cd7029c820b28864c211036601d2c14a0444bdcd9b"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/family-shell.css",
+      "sha256": "96570bd143dfa997f19382c5ce986ba1f161eccb16ca3f3122167ebf39ab65a9"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/pages/family/MistakesPage.js",
+      "sha256": "fe8e0ca11223710e9af0deddb002f6ffc296acc3a8c86c114074d4e77641ad7b"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/pages/family/TasksPage.js",
+      "sha256": "76a37a0bce8cc19b46de62b8bdd4d2c7eff53cbfdc2027fb21e3c38750a1c368"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/pages/family/TutorPage.js",
+      "sha256": "b7cc4009ab2d7ef02af49a954664a344fa234998352402126548e2ba93cb60de"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/services/familySession.js",
+      "sha256": "76df948b66e4243897cb5ffcfdb612e025da02b4caab6351804324f310c36f14"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/services/tutorApi.js",
+      "sha256": "fef871dd49f5d76415452941a5907a29c9645fc8aeed3419409403cf13fb3dad"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/services/tutorCommands.js",
+      "sha256": "adc3e460b5ab213ad98f7a5f5408fc2d8747a77767da93e989a8136125d34cd1"
+    },
+    {
+      "repo": "LMS",
+      "path": "frontend/web/src/services/tutorResponse.js",
+      "sha256": "b5e850933835a7a65b244cd72da0fa6e15277f2873178886944282cc58f4f9cd"
+    },
+    {
+      "repo": "LMS",
+      "path": "package-lock.json",
+      "sha256": "9880c08a472da57fb1ed9f68677c08e0d3996d4f7638ee6ddbfa975fb36bb0a6"
+    },
+    {
+      "repo": "LMS",
+      "path": "package.json",
+      "sha256": "a8a732b23fc49e8b0132f3d8f32a80d5d62f8d7d429f89875b59e7de5cce317f"
+    },
+    {
+      "repo": "LMS",
+      "path": "scripts/check-family-docs.js",
+      "sha256": "aff25677ba6665e0213440ac118ed02238d81a16ece70c6cdc1f2fbccd2ab484"
+    },
+    {
+      "repo": "LMS",
+      "path": "tests/e2e/t2/ai1FormalPage.spec.js",
+      "sha256": "e8965578cafabf6d0083984e1452207d6e7f285e0b99774702c5442cf7b51c50"
+    },
+    {
+      "repo": "LMS",
+      "path": "tests/e2e/t2/ai1ParentPage.spec.js",
+      "sha256": "fe853b05909b0d59d991d1375162689a692c60aa874eef4b9f855dbcca0b0caa"
+    },
+    {
+      "repo": "LMS",
+      "path": "tests/e2e/t2/webRuntime.js",
+      "sha256": "e1dd67fb0971e458a5c4aa61b5cc2ee06ba79402aec77b0b2ebe57ca41caf926"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/services/ai1_store.py",
+      "sha256": "4843f804a8aa9089c20d08575e8302f37f27a9306c131e92edc65f639d0ed1ee"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/services/ai1_contract.py",
+      "sha256": "323ce761ba3482db3c6183f6e6a692ac232db16ccf2ab553bcb6c0f293e6d66f"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/services/ai1_operation.py",
+      "sha256": "6d7d966382d6bda9f38e42edb7f331fd5e6d335bf45fc2118e4345d87510b7cd"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/services/ai1_http.py",
+      "sha256": "41b43ae028453e95762e737171f4a144e8e12fcefe2a24a77a816f378cbcbeaa"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/services/ai1_provider.py",
+      "sha256": "2f5ba88c49bce1ae6a5d83aaedb7f5d79563ba453ac0072d07ecc8ced55c58b9"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/services/ai1_runtime.py",
+      "sha256": "64bc386bd216afea6723b42b07a8c56a17679fd4fd349686da0f59f7335cc746"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/api/main.py",
+      "sha256": "a43db30cdf75fe813a70f1e0c8b95ec296699ee2c5259e3e06ef445254f51cde"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/test_operation_store.py",
+      "sha256": "0d2c5a64e490047a3c93587b3191a961f1b8882854afa5e7b133470571504e9b"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/test_operation_contract.py",
+      "sha256": "beb4e41271e30c7d507095630628384fda695be78b9c53144c40562dcb066eef"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/test_operation_service.py",
+      "sha256": "b67904872b725eeffb8a44338a4c00084304fb6a12e1ab0f28ff6a24211da1a7"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/test_operation_http.py",
+      "sha256": "16951c4b65d6ac3dd3d0ebdb6b5de1bb08e27f8e53a9c9e4d41456645ad57111"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/test_operation_provider.py",
+      "sha256": "e7487f36ba148c73f8a18aa06b211e285b3803259a122844f679f9888b9a2c9e"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/test_operation_runtime.py",
+      "sha256": "2bd83f9f4d10b573b3b56c73fb5e1facf06dc12899dfddfec5bc7bff8d1fdf0a"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/lms_wire_golden.json",
+      "sha256": "1e8ab327e8615b06d533b9c3e1940575bc6c21d0705a42f5ce721a54b8d907d5"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/modules/manifests/core.json",
+      "sha256": "a394187f896719cfc5b8a654399fc24ca07cf772732fca25f9caed209ffd1521"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "pyproject.toml",
+      "sha256": "07fb3259fda62dfc0a6ebcd2b7385733e404929db1c2814c92cd5a2ba83e17ed"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "requirements/core.txt",
+      "sha256": "9b1de45f769d220ffaddf24e0449a863aca7b493e15fe06b12d0c2518c95dee5"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/lms_acceptance.py",
+      "sha256": "4afe8d89402b1089d3eaac416baafad4ad2566e71158edb96abdd7bd3e6825f9"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/lms_business_acceptance.py",
+      "sha256": "244ef60f78483179fec64e24c3db66d006aef08428b0a7e92bdc48d6455851c9"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/lms_browser_acceptance.py",
+      "sha256": "230042936f8f9b3010568a5e3f17e70010b877f7fad37091c7d24a7c8ca8c3c7"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/node_owned_group.cjs",
+      "sha256": "996bd1ecf4694ea7a08afc923980a7be09d553c003c20407916c3f2e51c63f47"
+    },
+    {
+      "repo": "LMS",
+      "path": "backend/tests/t2/ai1ActualRemote.acceptance.js",
+      "sha256": "6d00f30ec26d1205b94b7dd922006ac72ec66fa310ab5dbd43b82dc0ca71a61e"
+    },
+    {
+      "repo": "LMS",
+      "path": "tests/e2e/t2/ai1ActualRemote.acceptance.js",
+      "sha256": "411c065352375e163072fffc3ad31613e8c1b4f15c897d381995ee1634a96a75"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/lms_recovery_acceptance.py",
+      "sha256": "f5dac11417cfa137328818b886f3a137f5bc5934cc7ea822036ad1d21aa99a19",
+      "priorSha256": null
+    }
+  ]
+}

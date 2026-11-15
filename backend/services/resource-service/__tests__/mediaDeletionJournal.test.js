@@ -181,3 +181,29 @@ test.each(['../escape', `${mediaId}\n`, '', null])('invalid media identity %j wr
     tombstone: { ...evidence.tombstone, mediaId: invalid } })).rejects.toThrow('Invalid deletion journal identity');
   expect(await fs.readdir(base)).toEqual([]);
 });
+
+const ai2Evidence = () => ({
+  tombstone: { ...evidence.tombstone, purpose: 'ai2_correction', mimeType: 'image/jpeg', sizeBytes: 15 },
+  receipts: evidence.receipts.map(r => ({ ...r, resourceType: 'ai2_attempt', field: 'correctionMediaIds' }))
+});
+test('AI2 journal preserves immutable descriptor and never overwrites the first evidence', async () => {
+  const record = ai2Evidence(), journal = createMediaDeletionJournal({ root });
+  await journal.persist(record); await journal.persist(record);
+  expect(await fs.readFile(destination, 'utf8')).toBe(JSON.stringify(record) + '\n');
+  await expect(journal.persist({ ...record, tombstone: { ...record.tombstone, sizeBytes: 16 } })).rejects.toThrow('evidence conflict');
+  expect(await fs.readFile(destination, 'utf8')).toBe(JSON.stringify(record) + '\n');
+});
+test.each(['missing', 'MIME', 'size', 'extra key', 'wrong field', 'wrong family', 'wrong purpose', 'sparse receipt'])(
+  'AI2 journal rejects %s typed metadata/evidence before writing', async kind => {
+  const record = ai2Evidence();
+  if (kind === 'missing') delete record.tombstone.sizeBytes;
+  if (kind === 'MIME') record.tombstone.mimeType = 'application/pdf';
+  if (kind === 'size') record.tombstone.sizeBytes = '15';
+  if (kind === 'extra key') record.tombstone.storageKey = 'not-allowed';
+  if (kind === 'wrong field') record.receipts[0].field = 'completionMediaIds';
+  if (kind === 'wrong family') record.receipts[0].familyId = 'f'.repeat(24);
+  if (kind === 'wrong purpose') record.tombstone.purpose = 'task_completion';
+  if (kind === 'sparse receipt') record.receipts = Array(1);
+  await expect(createMediaDeletionJournal({ root }).persist(record)).rejects.toThrow('Invalid AI2 deletion evidence');
+  expect(await fs.readdir(base)).toEqual([]);
+});

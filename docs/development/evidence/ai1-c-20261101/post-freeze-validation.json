@@ -1,0 +1,33 @@
+{
+  "scope": "AI1_C_POST_FREEZE_VALIDATION_ONLY",
+  "candidatePatchSha256": "01a1d7d4a23614d3395ec1c547ebd7048fe8512a83c50d9070339ab7e32a7997",
+  "manifestSha256": "cfd119af7e36a93edf27697a66e71a3871dc1a8a25fea0c6f32892d12b75bd8c",
+  "verificationSha256": "ce51448025c5ee9772ea12f98957df9c8a70dd84dc35e471519f667dd254b519",
+  "currentSourceFiles": 44,
+  "currentHashes": "MATCH",
+  "parentBFrozenSnapshot": "UNCHANGED",
+  "documentation": {
+    "command": "node scripts/check-family-docs.js",
+    "exitCode": 0,
+    "log": "ai1-c-docs-frozen.log",
+    "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+  },
+  "documentationGate": {
+    "command": "jest --config backend/jest.config.js --selectProjects family-common --runInBand --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+    "exitCode": 0,
+    "suites": 1,
+    "tests": 309,
+    "seconds": 40.513,
+    "log": "ai1-c-doc-gate-frozen.log",
+    "sha256": "521caabe0bcab5d193e7f0ede7a55349c07912baecca82799df606b01b7ff126"
+  },
+  "diffCheck": { "command": "git diff --check", "exitCode": 0 },
+  "targetedSensitivePatternScan": "NO_MATCH",
+  "rawLogStorage": "LOCAL_PRIVATE_ONLY",
+  "batchGate": "OPEN",
+  "totalGate": "OPEN",
+  "realModelCalls": 0,
+  "commits": 0,
+  "pushes": 0,
+  "deployments": 0
+}

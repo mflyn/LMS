@@ -56,6 +56,7 @@ const proposedSelfDirectedDocuments = [
 const selfDirectedContractProbes = 16;
 
 const proposedAiContracts = [
+  'backend/common/contracts/ai1-min.schema.json',
   'docs/contracts/curriculum-ref.schema.json',
   'docs/contracts/curriculum-ref-snapshot.schema.json',
   'docs/contracts/error-classification.schema.json',
@@ -2446,6 +2447,12 @@ function validateContractFixtures(ajv, errors) {
     .filter(fileName => fileName.endsWith('.cases.json'))
     .sort();
   for (const requiredFixture of [
+    'ai1-create.cases.json',
+    'ai1-generate.cases.json',
+    'ai1-recover.cases.json',
+    'ai1-revise.cases.json',
+    'ai1-review.cases.json',
+    'ai1-close.cases.json',
     'tutor-finalization-batch.cases.json',
     'tutor-artifact-review-cas.cases.json',
     'tutor-artifact-review-request.cases.json',
@@ -2650,6 +2657,17 @@ function validate() {
       `${relativePath}: unresolved placeholder marker`,
       errors
     );
+  }
+
+  for (const relativePath of [
+    'docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md',
+    'docs/api/family-ai1-api.md',
+    'docs/development/family-ai1-test-plan.md'
+  ]) {
+    const markdown = read(relativePath);
+    checkLocalLinks(relativePath, markdown, errors);
+    checkMarkdownStructure(relativePath, markdown, errors);
+    assert(markdown.includes('**Document status:** APPROVED / A_'), `${relativePath}: AI-1 approved batch status missing`, errors);
   }
 
   for (const relativePath of proposedSelfDirectedDocuments) {
@@ -3359,10 +3377,10 @@ function validate() {
       `reconciliation ${task} must be CLOSED`, errors);
   }
   for (const [document, marker, message] of [
-    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8-T9 待执行）', 'approved T1 plan status and bounded T2/T3/T5/T6 closure'],
+    [selfDirectedPlan, '> 状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）', 'approved T1 plan status and bounded T2/T3/T5/T6 closure'],
     [selfDirectedPlan, '- [x] R4 入口验收及 T1 关闭：CLOSED', 'approved R4 plan checkbox'],
     [reconciliation, '| R4 正式入口验收及 T1 关闭 | CLOSED |', 'approved R4 reconciliation row'],
-    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8-T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2/T3/T5/T6 closure'],
+    [read('docs/development/README.md'), '## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）', 'navigation must reflect T1 backend closure and bounded T2/T3/T5/T6 closure'],
     [read('docs/deployment/completion-operations.md'), '**Status:** CLOSED（R1–R4 及 T1 后端工程总门禁', 'operations must reflect T1 backend closure']
   ]) {
     assert(document.includes(marker), message, errors);
@@ -3545,7 +3563,7 @@ function validate() {
   const t7Section = selfDirectedGate.slice(selfDirectedGate.indexOf('## 27. T7 '));
   for (const [key, value] of [['engineering gate', 'CLOSED'], ['approval', 'APPROVED'],
     ['scope', 'ENGINEERING_SYNTHETIC_ONLY'], ['candidate', '0bddeb7e18200d3fd9e5879c096dd7229df538a2'],
-    ['Git', 'SANITIZED_REVIEW_PENDING / NO_PUSH / NO_MERGE / NO_DEPLOY'], ['deployment', 'T8_PENDING / NOT_AUTHORIZED'],
+    ['Git', 'MERGED / NO_DEPLOY'], ['deployment', 'T8_PENDING / NOT_AUTHORIZED'],
     ['device', 'DEVICE_PENDING'],
     ['Docker audit', 'INCOMPLETE_FAILED'], ['nonblocking', 'T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING'],
     ['deferred', 'REMAINDER_DEFERRED'], ['historical failures', 'PRESERVED']]) {
@@ -3553,19 +3571,99 @@ function validate() {
     const lines = t7Section.split('\n').map(line => line.trim()).filter(line => line.startsWith(prefix));
     assert(lines.length === 1 && lines[0] === `${prefix} ${value}`, `T7 ${key} must remain uniquely ${value}`, errors);
   }
-  for (const task of ['T8', 'T9']) {
+  for (const [task, state] of [['T8', 'IN_PROGRESS'], ['T9', 'NOT_STARTED']]) {
     const rows = taskStatusRows.filter(cells => cells[1] === task);
     assert(
-      rows.length === 1 && rows[0][2] === 'NOT_STARTED',
-      `self-directed Gate must keep ${task} as NOT_STARTED`,
+      rows.length === 1 && rows[0][2] === state,
+      `self-directed Gate must keep ${task} as ${state}`,
       errors
     );
   }
+  const t8Section = selfDirectedGate.slice(selfDirectedGate.indexOf('## 28. T8 '));
+  for (const [key, value] of [['scope', 'LOCAL_PREPARATION_ONLY'], ['gate', 'OPEN'],
+    ['approval', 'LOCAL_IMPLEMENTATION_APPROVED'], ['server execution', 'NOT_AUTHORIZED'],
+    ['Git', 'BRANCH_PR_ONLY / NO_MERGE / NO_DEPLOY'], ['independent review', 'LOCAL_PASS']]) {
+    const prefix = `**T8 ${key}:**`;
+    const lines = t8Section.split('\n').map(line => line.trim()).filter(line => line.startsWith(prefix));
+    assert(lines.length === 1 && lines[0] === `${prefix} ${value}`, `T8 ${key} must remain uniquely ${value}`, errors);
+  }
+
+  // Current closure declarations are separate from retained historical OPEN snapshots.
+  const ai2ClosureStates = [
+    ['AI2-5 status', 'CLOSED'],
+    ['AI-2 gate', 'CLOSED'],
+    ['AI-2 approval', 'USER_APPROVED'],
+    ['AI-2 scope', 'ENGINEERING_SYNTHETIC_ONLY'],
+    ['AI-2 device', 'DEVICE_PENDING'],
+    ['AI-2 retained gates', 'T4 OPEN / T8 OPEN / AI-1 OPEN'],
+    ['AI-2 Docker audit', 'INCOMPLETE_FAILED'],
+    ['AI-2 nonblocking', 'AI2-VIEW-NB-001 OPEN_NONBLOCKING / T5-NB-001 OPEN_NONBLOCKING / T5-NB-002 OPEN_NONBLOCKING'],
+    ['AI-2 historical failures', 'PRESERVED'],
+    ['AI-2 deferred', 'REMAINDER_DEFERRED'],
+    ['AI-2 real model', 'NOT_AUTHORIZED / QUALIFIED_COUNTER_PENDING'],
+    ['AI-2 Git', 'MERGED_DEFAULT_OFF / NO_NEW_GIT_AUTHORIZATION'],
+    ['AI-2 deployment', 'NOT_AUTHORIZED']
+  ];
+  const hasAi2ClosureStates = source => ai2ClosureStates.every(([key, value]) => {
+    const prefix = `**${key}:**`;
+    const lines = source.split('\n').map(line => line.trim()).filter(line => line.startsWith(prefix));
+    return lines.length === 1 && lines[0] === `${prefix} ${value}`;
+  });
+  const ai2Closure = read('docs/development/evidence/ai2-5-20261103/closure-readiness.md');
+  for (const [name, source] of [['Gate', selfDirectedGate], ['closure', ai2Closure]]) {
+    assert(hasAi2ClosureStates(source), `${name}: AI-2 closure must retain unique approved synthetic scope and pending boundaries`, errors);
+  }
+  const ai2StateFixture = ai2ClosureStates.map(([key, value]) => `**${key}:** ${value}`).join('\n');
+  assert(hasAi2ClosureStates(ai2StateFixture), 'AI-2 state checker must accept the approved bounded closure', errors);
+  for (const [key, value] of ai2ClosureStates) {
+    const line = `**${key}:** ${value}`;
+    for (const [kind, source] of [
+      ['missing', ai2StateFixture.replace(line, '')],
+      ['changed', ai2StateFixture.replace(line, `**${key}:** INVALID`)],
+      ['duplicate', `${ai2StateFixture}\n${line}`]
+    ]) {
+      assert(!hasAi2ClosureStates(source), `AI-2 state checker must reject ${kind} ${key}`, errors);
+    }
+  }
+  const ai2ClosureProbes = 3 + ai2ClosureStates.length * 3;
+
+  const ai3EngineeringStates = [
+    ['AI-3 gate', 'CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY'],
+    ['AI3-E acceptance', 'ACCEPTED / USER_APPROVED'],
+    ['AI-3 scope', 'LOCAL_SYNTHETIC_ONLY'],
+    ['AI-3 real model', 'NOT_AUTHORIZED / QUALIFIED_COUNTER_PENDING'],
+    ['AI-3 device', 'DEVICE_PENDING'],
+    ['AI-3 retained gates', 'T4 OPEN / T8 OPEN / AI-1 OPEN'],
+    ['AI-3 Docker audit', 'INCOMPLETE_FAILED'],
+    ['AI-3 historical failures', 'PRESERVED'],
+    ['AI-3 nonblocking', 'PRESERVED'],
+    ['AI-3 deferred', 'REMAINDER_DEFERRED'],
+    ['AI-3 delivery', 'NOT_AUTHORIZED / NO_GIT / NO_DEPLOY']
+  ];
+  const hasAi3EngineeringStates = source => ai3EngineeringStates.every(([key, value]) => {
+    const prefix = `**${key}:**`;
+    const lines = source.split('\n').map(line => line.trim()).filter(line => line.startsWith(prefix));
+    return lines.length === 1 && lines[0] === `${prefix} ${value}`;
+  });
+  for (const [name, source] of [['Gate', selfDirectedGate], ['readiness',
+    read('docs/development/evidence/ai3-integration-20261105/engineering-readiness.md')]]) {
+    assert(hasAi3EngineeringStates(source), `${name}: AI-3 engineering states must retain unique approved closure and synthetic-only boundaries`, errors);
+  }
+  const ai3StateFixture = ai3EngineeringStates.map(([key, value]) => `**${key}:** ${value}`).join('\n');
+  assert(hasAi3EngineeringStates(ai3StateFixture), 'AI-3 engineering states must accept the current bounded scope', errors);
+  for (const [key, value] of ai3EngineeringStates) {
+    const line = `**${key}:** ${value}`;
+    for (const [kind, source] of [['missing', ai3StateFixture.replace(line, '')],
+      ['changed', ai3StateFixture.replace(line, `**${key}:** INVALID`)], ['duplicate', `${ai3StateFixture}\n${line}`]]) {
+      assert(!hasAi3EngineeringStates(source), `AI-3 engineering states must reject ${kind} ${key}`, errors);
+    }
+  }
+  const ai3EngineeringProbes = 3 + ai3EngineeringStates.length * 3;
 
   for (const [name, markdown, marker] of [
     ['research', selfDirectedResearch, '状态：拟议方案'],
     ['design', selfDirectedDesign, '状态：拟议设计'],
-    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8-T9 待执行）'],
+    ['plan', selfDirectedPlan, '状态：执行中（T0 已完成，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）'],
     ['Gate', selfDirectedGate, '**Status:** T0 CONTRACT BASELINE']
   ]) {
     assert(markdown.includes(marker), `self-directed ${name} must remain explicitly planned`, errors);
@@ -3699,7 +3797,7 @@ function validate() {
   assert(
     implementationStatus.includes('T0 已完成契约基线') &&
       implementationStatus.includes('T1 后端工程已关闭，仅限既定合成验收') &&
-      implementationStatus.includes('T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8–T9 待执行'),
+      implementationStatus.includes('T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行'),
     'system design must record T0 complete, T1 closed and T2 closed in section 15',
     errors
   );
@@ -4444,6 +4542,8 @@ function validate() {
     proposedAiDocuments: aiDocuments.size,
     proposedSelfDirectedDocuments: selfDirectedDocuments.size,
     selfDirectedContractProbes,
+    ai2ClosureProbes,
+    ai3EngineeringProbes,
     valueGateContractProbes: valueGateTextRules.length + valueGateExamples.length + valueGateStructuralMutants.length,
     proposedAiContracts: proposedAiContracts.length,
     contractFixtureCases,
@@ -4458,6 +4558,8 @@ if (require.main === module) {
       `Family documentation gate passed: ${result.documents} baseline documents, ` +
         `${result.proposedSelfDirectedDocuments} proposed self-directed-learning documents, ` +
         `${result.selfDirectedContractProbes} self-directed contract probes, ` +
+        `${result.ai2ClosureProbes} AI-2 closure probes, ` +
+        `${result.ai3EngineeringProbes} AI-3 engineering-state probes, ` +
         `${result.valueGateContractProbes} value-gate text probes, ` +
         `${result.proposedAiDocuments} proposed AI documents, ` +
         `${result.proposedAiContracts} AI contracts, ` +

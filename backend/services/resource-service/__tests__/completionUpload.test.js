@@ -55,6 +55,90 @@ beforeEach(async () => {
 afterEach(async () => { if (root) await fs.rm(root, { recursive: true, force: true }); });
 afterAll(async () => { await mongoose.disconnect(); if (mongo) await mongo.stop(); });
 
+describe('AI2 durable upload guard', () => {
+  const childUpload = () => ({
+    identity: { id: scope.childId, role: 'student', tokenVersion: 0 },
+    metadata: { ...metadata, purpose: 'ai2_correction', uploadedBy: scope.childId }
+  });
+  const enabled = options => make({ ai2Mode: () => 'enabled', ...options });
+  test('child upload persists a typed journal and guard without enrolling AI2 in orphan retirement', async () => {
+    const asset = await enabled().upload(childUpload()), record = await readRecord();
+    expect(asset.purpose).toBe('ai2_correction');
+    expect(record.metadata).toMatchObject({ purpose: 'ai2_correction', uploadedBy: scope.childId, displayName: 'task-completion' });
+    expect(await Guard.findOne({ mediaId: asset._id }).lean()).toMatchObject({ state: 'REGISTERED', metadataHash: record.metadataHash });
+    expect(asset.retentionPolicyVersion).toBeUndefined(); expect(asset.orphanEligibleAt).toBeUndefined();
+    expect(String((await enabled().resume(record))._id)).toBe(String(asset._id));
+  });
+  test.each(['parent', 'other child', 'oversize', 'PDF', 'string size'])('direct helper refuses %s before journal or metadata writes', async kind => {
+    const input = childUpload();
+    if (kind === 'parent') { input.identity = identity; input.metadata.uploadedBy = identity.id; }
+    if (kind === 'other child') input.metadata.childId = String(id());
+    if (kind === 'oversize') input.metadata.sizeBytes = 10 * 1024 * 1024 + 1;
+    if (kind === 'PDF') input.metadata.mimeType = 'application/pdf';
+    if (kind === 'string size') input.metadata.sizeBytes = '15';
+    const persist = jest.spyOn(journal, 'persist');
+    await expect(enabled().upload(input)).rejects.toMatchObject({ code: 'MEDIA_UPLOAD_PENDING' });
+    expect(persist).not.toHaveBeenCalled(); expect(await Asset.countDocuments()).toBe(0); expect(await Guard.countDocuments()).toBe(0);
+  });
+  test('off blocks new AI2 upload before journal but old task upload remains supported', async () => {
+    const persist = jest.spyOn(journal, 'persist');
+    await expect(make({ ai2Mode: () => 'off' }).upload(childUpload())).rejects.toMatchObject({ code: 'AI2_DISABLED' });
+    expect(persist).not.toHaveBeenCalled(); expect(await Asset.countDocuments()).toBe(0);
+    const stored = await store.writeCanonical(Buffer.from('synthetic-image'));
+    expect((await make({ ai2Mode: () => 'off' }).upload({ identity, metadata: { ...metadata, storageKey: stored.storageKey } })).purpose)
+      .toBe('task_completion');
+  });
+  test('environment alone cannot enable AI2 uploads without injected readiness mode', async () => {
+    const previous = process.env.AI2_MODE; process.env.AI2_MODE = 'enabled';
+    try {
+      const persist = jest.spyOn(journal, 'persist');
+      await expect(make().upload(childUpload())).rejects.toMatchObject({ code: 'AI2_DISABLED' });
+      expect(persist).not.toHaveBeenCalled(); expect(await Guard.countDocuments()).toBe(0);
+    } finally {
+      if (previous === undefined) delete process.env.AI2_MODE; else process.env.AI2_MODE = previous;
+    }
+  });
+  test('mode change after journaling blocks new metadata without discarding durable intent', async () => {
+    let mode = 'enabled'; const persist = journal.persist;
+    const service = enabled({ ai2Mode: () => mode, journal: { persist: async record => { await persist(record); mode = 'off'; } } });
+    await expect(service.upload(childUpload())).rejects.toMatchObject({ code: 'AI2_DISABLED' });
+    const record = await readRecord();
+    expect(await Asset.countDocuments()).toBe(0); expect(await Guard.countDocuments()).toBe(0);
+    expect(await store.read(metadata.storageKey)).toEqual(Buffer.from('synthetic-image'));
+    await expect(make({ ai2Mode: () => 'off' }).resume(record)).rejects.toMatchObject({ code: 'AI2_DISABLED' });
+  });
+  test('lost commit acknowledgement uses same guarded identity and privacy deletion cannot resurrect it', async () => {
+    let first = true;
+    await expect(enabled({ transactionRunner: async work => {
+      const result = await runner(work); if (first) { first = false; throw Error('lost upload response'); } return result;
+    } }).upload(childUpload())).rejects.toMatchObject({ code: 'MEDIA_UPLOAD_PENDING' });
+    const record = await readRecord(), asset = await enabled().resume(record);
+    expect(String(asset._id)).toBe(record.mediaId); expect(await Guard.countDocuments()).toBe(1);
+    const privacy = createCompletionMediaPrivacyService({ transactionRunner: runner,
+      journal: createMediaDeletionJournal({ root: path.join(root, 'deletions') }) });
+    await privacy.deleteMedia({ identity: { ...childUpload().identity, familyId: scope.familyId, childId: scope.childId }, mediaId: record.mediaId });
+    await expect(enabled().resume(record)).rejects.toMatchObject({ code: 'RESOURCE_NOT_FOUND' });
+    expect((await Guard.findOne().lean()).state).toBe('RETIRED');
+  });
+  test('mixed AI2/task upload guards pass read-only readiness; missing AI2 guard fails closed', async () => {
+    const { assertCompletionRetentionReadiness } = require('../services/completionRetentionReadiness');
+    for (const name of ['MediaReferenceOperation', 'MediaReference', 'MediaDeletionReceipt', 'MediaOrphanRetirement']) {
+      await require('../models/' + name).init();
+    }
+    await make().upload({ identity, metadata });
+    const input = childUpload(), stored = await store.writeCanonical(Buffer.from('synthetic-image'));
+    input.metadata.storageKey = stored.storageKey;
+    const asset = await enabled().upload(input);
+    const rows = await Asset.find().sort({ _id: 1 }).lean(), guards = await Guard.find().sort({ _id: 1 }).lean();
+    const check = () => assertCompletionRetentionReadiness({ connection: mongoose.connection, writesPaused: true });
+    expect((await check()).ready).toBe(true);
+    expect(await Asset.find().sort({ _id: 1 }).lean()).toEqual(rows);
+    expect(await Guard.find().sort({ _id: 1 }).lean()).toEqual(guards);
+    await Guard.deleteOne({ mediaId: asset._id });
+    await expect(check()).rejects.toMatchObject({ code: 'COMPLETION_RETENTION_NOT_READY', issues: expect.arrayContaining(['UPLOAD_GUARD_INVALID']) });
+  });
+});
+
 test('T2-G-010 persists fixed identity before metadata, excludes original name, and retains at least 24 hours', async () => {
   const service = make();
   const asset = await service.upload({ identity, metadata });

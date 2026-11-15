@@ -2,6 +2,9 @@ export const PARENT_SESSION_KEY = 'family-growth.parent-session.v1';
 export const CHILD_SESSION_KEY = 'family-growth.child-session.v1';
 export const PARENT_SESSION_EXPIRED_EVENT = 'family-growth:parent-session-expired';
 export const CHILD_SESSION_EXPIRED_EVENT = 'family-growth:child-session-expired';
+export const TUTOR_COMMAND_PREFIX = 'family-growth.ai1-command.v1:';
+export const AI2_COMMAND_PREFIX = 'family-growth.ai2-command.v1:';
+export const AI3_COMMAND_PREFIX = 'family-growth.ai3-command.v1:';
 
 const toParentSession = (value) => {
   if (!value || typeof value.token !== 'string' || !value.token.trim()) return null;
@@ -44,6 +47,7 @@ const toChildSession = (value) => {
 const keys = { parent: PARENT_SESSION_KEY, student: CHILD_SESSION_KEY };
 const changeKey = role => `family-growth.session-change.v1:${role}`;
 const exitKey = (role, actorId) => `family-growth.session-exit.v1:${role}:${actorId}`;
+const ai3ExpiryKey = (role, actorId) => `family-growth.ai3-session-expiry.v1:${role}:${actorId}`;
 const COMMAND_PREFIX = 'family-growth.completion-command.v1:';
 const observers = new Set();
 const observed = new Map();
@@ -53,15 +57,56 @@ let sequence = 0;
 // A revision is an invalidation nonce, never an authentication credential.
 const revision = () => `${Date.now()}-${++sequence}-${Math.random().toString(36).slice(2)}`;
 const parse = raw => { try { return JSON.parse(raw); } catch { return null; } };
-const stored = key => { try { return localStorage.getItem(key); } catch { return null; } };
+const sessionStore = role => role === 'student' ? sessionStorage : localStorage;
+const stored = (key, role = 'parent') => { try { return sessionStore(role).getItem(key); } catch { return null; } };
 const actor = (role, session) => role === 'parent' ? session?.user.id : session?.child.childId;
 
-const clearCommands = (role, actorId) => {
+const canonicalLoginId = value => typeof value === 'string' && /^[0-9a-f]{24}$/i.test(value)
+  ? value.toLowerCase() : value;
+const readChildLoginExit = actorId => {
+  try { return localStorage.getItem(exitKey('student', actorId)); }
+  catch {
+    throw Object.assign(new Error('Child login marker unavailable'), { code: 'CHILD_SESSION_STORAGE_UNAVAILABLE' });
+  }
+};
+// Anonymous tabs have no session snapshot; bind invalidation to the requested actor before sending PIN.
+export const captureChildLogin = credentials => {
+  const actorId = canonicalLoginId(credentials.childId);
+  return Object.freeze({ actorId, familyId: canonicalLoginId(credentials.familyId),
+    exitRevision: readChildLoginExit(actorId) });
+};
+export const assertChildLoginCurrent = (login, session) => {
+  if (readChildLoginExit(login.actorId) !== login.exitRevision
+    || (session && (canonicalLoginId(session.child.childId) !== login.actorId
+      || canonicalLoginId(session.child.familyId) !== login.familyId))) {
+    throw Object.assign(new Error('Child login changed'), { code: 'CHILD_LOGIN_CHANGED' });
+  }
+};
+
+const clearCommands = (role, actorId, ai3Only = false) => {
   if (!actorId) return;
   try {
     const remove = [];
     for (let index = 0; index < sessionStorage.length; index += 1) {
       const key = sessionStorage.key(index);
+      if (ai3Only && !key?.startsWith(AI3_COMMAND_PREFIX)) continue;
+      const aiPrefix = [AI2_COMMAND_PREFIX, AI3_COMMAND_PREFIX].find(prefix => key?.startsWith(prefix));
+      if (aiPrefix) {
+        const suffix = key.slice(aiPrefix.length), parts = parse(suffix);
+        if (Array.isArray(parts) && parts.length === 4 && JSON.stringify(parts) === suffix
+          && ['parent', 'student'].includes(parts[0])
+          && parts.slice(1).every(value => typeof value === 'string' && /^[0-9a-f]{24}$/.test(value))
+          && (parts[0] !== 'student' || parts[1] === parts[3])
+          && parts[0] === role && parts[1] === actorId) remove.push(key);
+        continue;
+      }
+      if (role === 'parent' && key?.startsWith(TUTOR_COMMAND_PREFIX)) {
+        const suffix = key.slice(TUTOR_COMMAND_PREFIX.length), parts = parse(suffix);
+        if (Array.isArray(parts) && parts.length === 3 && JSON.stringify(parts) === suffix
+          && parts.every(value => typeof value === 'string' && /^[0-9a-f]{24}$/.test(value))
+          && parts[0] === actorId) remove.push(key);
+        continue;
+      }
       if (!key?.startsWith(COMMAND_PREFIX)) continue;
       const suffix = key.slice(COMMAND_PREFIX.length), parts = parse(suffix);
       // Canonical keys own their entries, even if the body is damaged or claims another actor.
@@ -80,32 +125,49 @@ const clearCommands = (role, actorId) => {
 };
 
 // Persistent non-secret exit markers let a suspended tab clear its own command store on resume.
-const reconcileExit = (role, actorId) => {
+const reconcileExit = (role, actorId, ai3Only = false) => {
   if (!actorId) return;
-  const marker = stored(exitKey(role, actorId));
+  const marker = stored((ai3Only ? ai3ExpiryKey : exitKey)(role, actorId));
   if (!marker) return;
   try {
-    const seen = `family-growth.session-exit-seen.v1:${role}:${actorId}`;
+    const seen = ai3Only ? `family-growth.ai3-session-expiry-seen.v1:${role}:${actorId}`
+      : `family-growth.session-exit-seen.v1:${role}:${actorId}`;
     if (sessionStorage.getItem(seen) !== marker) {
-      if (clearCommands(role, actorId)) sessionStorage.setItem(seen, marker);
+      if (clearCommands(role, actorId, ai3Only)) sessionStorage.setItem(seen, marker);
     }
-  } catch { clearCommands(role, actorId); }
+  } catch { clearCommands(role, actorId, ai3Only); }
 };
 
 const read = role => {
   if (!keys[role]) throw new TypeError('Session role must be parent or student');
-  const raw = stored(keys[role]), value = parse(raw);
-  const session = deniedRaw.has(role) && deniedRaw.get(role) === raw ? null
+  // Shared legacy child credentials are never imported into a new tab.
+  if (role === 'student') { try { localStorage.removeItem(CHILD_SESSION_KEY); } catch { /* Never fall back to shared credentials. */ } }
+  let raw = stored(keys[role], role);
+  const value = parse(raw);
+  let session = deniedRaw.has(role) && deniedRaw.get(role) === raw ? null
     : (role === 'parent' ? toParentSession : toChildSession)(value);
+  if (role === 'student' && session
+    && (value.exitRevision ?? null) !== stored(exitKey(role, session.child.childId))) {
+    const actorId = session.child.childId, marker = parse(stored(exitKey(role, actorId)));
+    reconcileExit(role, actorId);
+    deniedRaw.set(role, raw);
+    try {
+      sessionStorage.setItem(changeKey(role), JSON.stringify({ revision: revision(), actorId,
+        reason: ['explicit_logout', 'account_switch'].includes(marker?.reason) ? marker.reason : 'external_change' }));
+      sessionStorage.removeItem(keys[role]);
+    } catch { /* The in-memory denial still invalidates the captured credential. */ }
+    session = null;
+    raw = stored(keys[role], role);
+  }
   const previous = observed.get(role);
-  const change = parse(stored(changeKey(role)));
+  const change = parse(stored(changeKey(role), role));
   const previousActor = previous?.snapshot?.actorId;
   if (session && previousActor && previousActor !== actor(role, session)) clearCommands(role, previousActor);
-  reconcileExit(role, previous?.snapshot?.actorId);
-  reconcileExit(role, change?.previousActorId);
-  reconcileExit(role, change?.actorId);
-  reconcileExit(role, actor(role, session));
-  if (raw && !session) { try { localStorage.removeItem(keys[role]); } catch { /* Unavailable storage is anonymous. */ } }
+  for (const actorId of new Set([previousActor, change?.previousActorId, change?.actorId, actor(role, session)])) {
+    reconcileExit(role, actorId);
+    reconcileExit(role, actorId, true);
+  }
+  if (raw && !session) { try { sessionStore(role).removeItem(keys[role]); } catch { /* Unavailable storage is anonymous. */ } }
   if (previous?.raw === raw && Boolean(previous.session) === Boolean(session)) return previous;
   const snapshot = session ? Object.freeze({ role, actorId: actor(role, session),
     revision: nonEmptyString(value.revision) ? value.revision : revision(), token: session.token }) : null;
@@ -134,38 +196,61 @@ const notify = (role, reason, previousActorId) => {
 };
 const recordExit = (role, actorId, reason) => {
   if (!actorId) return;
-  clearCommands(role, actorId);
+  const ai3Only = reason === 'expired';
+  clearCommands(role, actorId, ai3Only);
   try {
-    localStorage.setItem(exitKey(role, actorId), JSON.stringify({ revision: revision(), reason }));
+    // Expiry must not overwrite a prior explicit-exit marker or change older command recovery policies.
+    localStorage.setItem((ai3Only ? ai3ExpiryKey : exitKey)(role, actorId), JSON.stringify({ revision: revision(), reason }));
   } catch { /* Sign-out must remain possible when storage becomes unavailable. */ }
-  reconcileExit(role, actorId);
+  reconcileExit(role, actorId, ai3Only);
 };
-const save = (role, value) => {
+const save = (role, value, login) => {
   const session = (role === 'parent' ? toParentSession : toChildSession)(value);
   if (!session) throw new Error(role === 'parent'
     ? 'Only parent sessions can be persisted in the parent session store'
     : 'Only child sessions can be persisted in the child session store');
+  if (login) assertChildLoginCurrent(login, session);
   const previous = captureSession(role);
-  const lastActor = previous?.actorId || parse(stored(changeKey(role)))?.actorId;
+  const lastActor = previous?.actorId || parse(stored(changeKey(role), role))?.actorId;
   const nextActor = actor(role, session), nextRevision = revision();
   const switched = lastActor && lastActor !== nextActor;
   if (switched) recordExit(role, lastActor, 'account_switch');
-  localStorage.setItem(changeKey(role), JSON.stringify({ revision: nextRevision,
-    reason: switched ? 'account_switch' : 'authenticated', actorId: nextActor, previousActorId: lastActor || null }));
-  localStorage.setItem(keys[role], JSON.stringify({ ...session, revision: nextRevision }));
+  if (login) assertChildLoginCurrent(login, session);
+  const serialized = JSON.stringify({ ...session, revision: nextRevision,
+    ...(role === 'student' ? { exitRevision: login ? login.exitRevision : stored(exitKey(role, nextActor)) } : {}) });
+  try {
+    sessionStore(role).setItem(changeKey(role), JSON.stringify({ revision: nextRevision,
+      reason: switched ? 'account_switch' : 'authenticated', actorId: nextActor, previousActorId: lastActor || null }));
+    sessionStore(role).setItem(keys[role], serialized);
+    if (role === 'student' && stored(keys[role], role) !== serialized) throw new Error('Session storage write failed');
+  } catch (error) {
+    if (role !== 'student') throw error;
+    clear(role, 'storage_unavailable');
+    throw Object.assign(new Error('Child session storage unavailable'), { code: 'CHILD_SESSION_STORAGE_UNAVAILABLE' });
+  }
+  if (login) {
+    try { assertChildLoginCurrent(login, session); }
+    catch (error) {
+      deniedRaw.set(role, serialized);
+      // Roll back only this attempted credential, never a newer session or its commands.
+      try { if (sessionStore(role).getItem(keys[role]) === serialized) sessionStore(role).removeItem(keys[role]); }
+      catch { /* The in-memory denial remains effective if storage becomes unavailable. */ }
+      throw error;
+    }
+  }
   notify(role, switched ? 'account_switch' : 'authenticated', lastActor);
   return session;
 };
 const clear = (role, reason, expected) => {
   if (expected !== undefined && !isSessionCurrent(expected)) return false;
   const current = captureSession(role);
-  const actorId = current?.actorId || parse(stored(changeKey(role)))?.actorId;
-  if (reason === 'explicit_logout' || reason === 'account_switch') recordExit(role, actorId, reason);
-  deniedRaw.set(role, stored(keys[role]));
+  const actorId = current?.actorId || parse(stored(changeKey(role), role))?.actorId;
+  if (['explicit_logout', 'account_switch', 'expired'].includes(reason)) recordExit(role, actorId, reason);
+  deniedRaw.set(role, stored(keys[role], role));
   try {
-    localStorage.setItem(changeKey(role), JSON.stringify({ revision: revision(), reason, actorId, previousActorId: actorId }));
+    sessionStore(role).setItem(changeKey(role), JSON.stringify({ revision: revision(), reason, actorId, previousActorId: actorId }));
   } catch { /* Other tabs may only observe an unclassified removal. */ }
-  try { localStorage.removeItem(keys[role]); } catch { /* Keep the local credential denied. */ }
+  try { sessionStore(role).removeItem(keys[role]); } catch { /* Keep the local credential denied. */ }
   notify(role, reason, actorId);
   return true;
 };
@@ -173,9 +258,9 @@ export const loadParentSession = () => read('parent').session;
 export const loadChildSession = () => read('student').session;
 // A reload can follow an already handled 401; retain only its non-private explanation.
 export const wasChildSessionExpired = () => !captureSession('student')
-  && parse(stored(changeKey('student')))?.reason === 'expired';
+  && parse(stored(changeKey('student'), 'student'))?.reason === 'expired';
 export const saveParentSession = value => save('parent', value);
-export const saveChildSession = value => save('student', value);
+export const saveChildSession = (value, login) => save('student', value, login);
 export const clearParentSession = () => clear('parent', 'explicit_logout');
 export const clearChildSession = () => clear('student', 'explicit_logout');
 const expire = (role, expected) => {
@@ -187,13 +272,21 @@ export const expireParentSession = expected => expire('parent', expected);
 export const expireChildSession = expected => expire('student', expected);
 
 window.addEventListener('storage', event => {
-  if (event.storageArea && event.storageArea !== localStorage) return;
   for (const role of Object.keys(keys)) {
+    if (role === 'student') {
+      const actorId = observed.get(role)?.snapshot?.actorId || parse(stored(changeKey(role), role))?.actorId;
+      const localEvent = event.storageArea === sessionStorage;
+      if (localEvent ? event.key !== null && event.key !== keys[role] && event.key !== changeKey(role)
+        : !actorId || (event.key !== exitKey(role, actorId) && event.key !== ai3ExpiryKey(role, actorId))) continue;
+    } else if (event.storageArea && event.storageArea !== localStorage) continue;
     if (event.key !== null && event.key !== keys[role] && event.key !== changeKey(role)
-      && !event.key?.startsWith(`family-growth.session-exit.v1:${role}:`)) continue;
+      && !event.key?.startsWith(`family-growth.session-exit.v1:${role}:`)
+      && !event.key?.startsWith(`family-growth.ai3-session-expiry.v1:${role}:`)) continue;
     const previousActor = observed.get(role)?.snapshot?.actorId;
-    const change = parse(stored(changeKey(role)));
     const current = captureSession(role);
+    // Anonymous tabs can retain an unrelated last actor. PIN attempts validate their target marker on settlement.
+    if (role === 'student' && !previousActor && !current) continue;
+    const change = parse(stored(changeKey(role), role));
     // Unknown external removal is not evidence of an explicit user sign-out.
     const matchingChange = change && (current ? current.revision === change.revision
       : ['expired', 'explicit_logout', 'account_switch'].includes(change.reason));

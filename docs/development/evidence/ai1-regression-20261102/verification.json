@@ -1,0 +1,185 @@
+{
+  "status": "REGRESSION_EVIDENCE_REVIEWED",
+  "totalGate": "OPEN",
+  "productOrTestChanges": false,
+  "candidate": {
+    "manifestSha256": "7d67a6c535b0c85014bc4e6b36c30ffebff6aee1588248b6f10d8fa2b68b0fa2",
+    "patchSha256": "aefea19d6aaba833b2b8f693cdc32071fcc6d9e2ea57c36a80b9326a0319e855",
+    "fingerprints": 68,
+    "drift": []
+  },
+  "familyFull": {
+    "exitCode": 0,
+    "suitesPassed": 168,
+    "suitesFailed": 0,
+    "testsPassed": 5135,
+    "testsFailed": 0,
+    "pending": [
+      {
+        "file": "backend/common/deployment/__tests__/task5Deployment.test.js",
+        "title": "Task 5 deployment contracts TC-T5-DEPLOY-002 Secret dry-run validates without exposing credentials"
+      }
+    ],
+    "seconds": 828.388,
+    "reason": "Existing kubectl omitted from controlled PATH; existing conditional skip, no assertion edits",
+    "originalGitFailures": [
+      {
+        "file": "backend/common/deployment/__tests__/releaseBuildInput.test.js",
+        "status": "passed"
+      },
+      {
+        "file": "backend/common/deployment/__tests__/checkGitClean.test.js",
+        "status": "passed"
+      }
+    ]
+  },
+  "supplement": {
+    "exitCode": 0,
+    "suites": 1,
+    "testsPassed": 18,
+    "testsFailed": 0,
+    "pending": 0,
+    "seconds": 0.452,
+    "scope": "existing kubectl 1.34.1, original full task5Deployment suite; separate run, not combined full success"
+  },
+  "deepTutorRootFixture": {
+    "exitCode": 0,
+    "testsPassed": 16,
+    "warnings": 1,
+    "pytestSeconds": 1.55,
+    "junit": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "16",
+      "time": "1.551",
+      "timestamp": "2026-11-02T11:36:31.020414+08:00",
+      "hostname": "Mac"
+    },
+    "suite": "tests/services/ai1/test_operation_store.py",
+    "rootFixturesLoaded": true,
+    "confcutdir": false,
+    "fullRepository": false,
+    "isolation": "fresh HOME and DEEPTUTOR_HOME, no inherited credentials, no dependency installation",
+    "dependencyInstall": false
+  },
+  "lint": {
+    "exitCode": 0,
+    "diagnostics": 0,
+    "evidence": "tool execution 3eeef9 / 5bd09f; no archived raw lint log"
+  },
+  "cleanup": {
+    "dependencyLinkRemoved": true,
+    "knownNpmAndJestPidsAbsent": true,
+    "completeDescendantInventory": false
+  },
+  "evidenceCorrections": [
+    "command.json providerCalls=0 is a preset intent, not measured network/request count; retained unchanged",
+    "result.json failures array includes a pending row; authoritative Jest failed counts are zero and pending count is one",
+    "family run did not inherit parent model credentials but retained HOME and existing test environment files; not a filesystem credential-isolation guarantee"
+  ],
+  "independentReview": {
+    "executorReview": "COMPLETED_WITH_EVIDENCE_WORDING_CORRECTION",
+    "resultReview": "PASS_NO_NEW_P1_P2",
+    "rawFileHashesVerified": 12,
+    "executorHashesVerified": 3,
+    "currentSourceFingerprintsVerified": 68,
+    "pidExitCheck": "author verified; independent ps denied by sandbox",
+    "lintIndependentlyRepeated": false,
+    "independentTestRerun": false
+  },
+  "historicalFailures": {
+    "familySuitesPassed": 161,
+    "familySuitesFailed": 2,
+    "familyTestsPassed": 4980,
+    "familyTestsFailed": 2,
+    "deepTutorRootFixtureSetupErrors": 14,
+    "overwritten": false
+  },
+  "rawEvidence": [
+    {
+      "name": "full-regression-20261102-sApdwX/run.log",
+      "sha256": "5812f552724027c92b9dfe65b393a61641ba03396637ede72e934993ae782251"
+    },
+    {
+      "name": "full-regression-20261102-sApdwX/jest.json",
+      "sha256": "6c02f3269561223c3f389235c1f2293a17bf1113c1e83b2535005e2e683a55cc"
+    },
+    {
+      "name": "full-regression-20261102-sApdwX/result.json",
+      "sha256": "257e6e638cc00bb91d8da5b2e090eb572f1ed81396bfdf928a07f39a65e6c02a"
+    },
+    {
+      "name": "full-regression-20261102-sApdwX/command.json",
+      "sha256": "fe11b99d0862c7ea6cb0be585987cadb7cac9939c19292d2e62f78b84aa754e4"
+    },
+    {
+      "name": "full-regression-20261102-sApdwX/source-before.json",
+      "sha256": "c76efc646daa22e6adce80c25711d6d0e599aebc2c16134ca31a85d09ae7e36a"
+    },
+    {
+      "name": "full-regression-20261102-sApdwX/source-after.json",
+      "sha256": "c76efc646daa22e6adce80c25711d6d0e599aebc2c16134ca31a85d09ae7e36a"
+    },
+    {
+      "name": "root-fixture-20261102-0dKHZ9/run.log",
+      "sha256": "dd3b7b2878c560156922123eaff2ef9e1c1dfd87ed71b365bc76a79fe55b2afd"
+    },
+    {
+      "name": "root-fixture-20261102-0dKHZ9/result.json",
+      "sha256": "ac66d132dd794d5cf7183c90aa82e48a470c8f0053c02fe4a6bca7a81d416d5c"
+    },
+    {
+      "name": "root-fixture-20261102-0dKHZ9/junit.xml",
+      "sha256": "bfefe977365b1f702e517e2993324e5b7def2cf71491a762051bf6afc98eee4a"
+    },
+    {
+      "name": "deployment-supplement-20261102-5Yf8gU/run.log",
+      "sha256": "8451889a8d2862c71cce38b8d8e9db94ebec1b3ecc5e5c96292ee42905c5f742"
+    },
+    {
+      "name": "deployment-supplement-20261102-5Yf8gU/result.json",
+      "sha256": "2ed37913d795c930db172b20886ff77a2d9075411dfb68a92a53506cce6aa1c7"
+    },
+    {
+      "name": "deployment-supplement-20261102-5Yf8gU/jest.json",
+      "sha256": "29d2b6867f90eb31feefce68d162c06dda897b85561d5eccb254ec76d476c27e"
+    }
+  ],
+  "executors": [
+    {
+      "name": "ai1-nonmodel-regression-20261102.cjs",
+      "sha256": "062bda4d5b2f842e07565b3b324b65dc53b81efe3fbf5ee5d30ec88b87b5ec02"
+    },
+    {
+      "name": "ai1-root-fixture-recheck-20261102.cjs",
+      "sha256": "b27f0e09b5194851ffc9f2ea3e838aac77a0e88e70ea829a43775e016fd961a2"
+    },
+    {
+      "name": "ai1-deployment-supplement-20261102.cjs",
+      "sha256": "645259706337b07485474e99df4d247b69f7087c008b4a3025db607a2d3b5c98"
+    }
+  ],
+  "documentationValidation": {
+    "stateCheckExit": 0,
+    "diffCheckExit": 0,
+    "relativeLinksBroken": 0,
+    "targetedMatrixTestsPassed": 2,
+    "testsNotSelected": 311,
+    "independentTestRerun": false
+  },
+  "retained": [
+    "QUALIFIED_COUNTER_PENDING",
+    "CURRENT_PRICE_AND_BUDGET_PENDING",
+    "HUMAN_VALUE_PENDING",
+    "AI0_PARENT_REVIEW_REQUIRED",
+    "T4_OPEN",
+    "T8_OPEN",
+    "T9_NOT_STARTED",
+    "DEVICE_PENDING",
+    "Docker_INCOMPLETE_FAILED",
+    "T5-NB-001/002_OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED"
+  ]
+}

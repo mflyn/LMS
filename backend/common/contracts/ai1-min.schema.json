@@ -1,0 +1,437 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/ai1-min-v1.json",
+  "$defs": {
+    "create": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "childId",
+        "source",
+        "input",
+        "chapter",
+        "deidentifiedConfirmed"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "ai1-min-v1"
+        },
+        "operationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "childId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "task",
+                "mistake"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{24}$"
+            }
+          }
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "questionText",
+            "answerText",
+            "parentContext"
+          ],
+          "properties": {
+            "questionText": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "answerText": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000,
+                  "pattern": "\\S"
+                }
+              ]
+            },
+            "parentContext": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 500
+            }
+          }
+        },
+        "chapter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provenance",
+            "subject",
+            "grade",
+            "term",
+            "textbookLabel",
+            "chapterLabel"
+          ],
+          "properties": {
+            "provenance": {
+              "const": "parent_declared"
+            },
+            "subject": {
+              "const": "math"
+            },
+            "grade": {
+              "const": 4
+            },
+            "term": {
+              "const": "upper"
+            },
+            "textbookLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "chapterLabel": {
+              "const": "多位数乘两位数"
+            }
+          }
+        },
+        "deidentifiedConfirmed": {
+          "const": true
+        }
+      }
+    },
+    "generate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "expectedCycleStateVersion",
+        "generationInputHash",
+        "modelProfileVersion",
+        "pricingProfileVersion",
+        "maxAuthorizedCostMicros",
+        "externalSendConfirmed"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "ai1-min-v1"
+        },
+        "operationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "expectedCycleStateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "generationInputHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "modelProfileVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "\\S"
+        },
+        "pricingProfileVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "\\S"
+        },
+        "maxAuthorizedCostMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "externalSendConfirmed": {
+          "const": true
+        }
+      }
+    },
+    "recover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "ai1-min-v1"
+        },
+        "operationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        }
+      }
+    },
+    "revise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "artifactId",
+        "artifactVersion",
+        "artifactContentHash",
+        "expectedArtifactReviewVersion",
+        "expectedCycleStateVersion",
+        "revisedText",
+        "revisionReason"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "ai1-min-v1"
+        },
+        "operationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        },
+        "artifactVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "artifactContentHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "expectedArtifactReviewVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "expectedCycleStateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "revisedText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000,
+          "pattern": "\\S"
+        },
+        "revisionReason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "artifactId",
+        "artifactVersion",
+        "artifactContentHash",
+        "expectedArtifactReviewVersion",
+        "expectedCycleStateVersion",
+        "decision",
+        "comment",
+        "checks"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "ai1-min-v1"
+        },
+        "operationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        },
+        "artifactVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "artifactContentHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "expectedArtifactReviewVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "expectedCycleStateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "decision": {
+          "enum": [
+            "approve",
+            "reject"
+          ]
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mathCorrect",
+            "gradeAppropriate",
+            "chapterAppropriate",
+            "wordingReviewed"
+          ],
+          "properties": {
+            "mathCorrect": {
+              "type": "boolean"
+            },
+            "gradeAppropriate": {
+              "type": "boolean"
+            },
+            "chapterAppropriate": {
+              "type": "boolean"
+            },
+            "wordingReviewed": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "approve"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "type": "object",
+                "properties": {
+                  "mathCorrect": {
+                    "const": true
+                  },
+                  "gradeAppropriate": {
+                    "const": true
+                  },
+                  "chapterAppropriate": {
+                    "const": true
+                  },
+                  "wordingReviewed": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "reject"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "comment": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "pattern": "\\S"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "close": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "expectedCycleStateVersion",
+        "reason"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "ai1-min-v1"
+        },
+        "operationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "expectedCycleStateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "\\S"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/create"
+    },
+    {
+      "$ref": "#/$defs/generate"
+    },
+    {
+      "$ref": "#/$defs/recover"
+    },
+    {
+      "$ref": "#/$defs/revise"
+    },
+    {
+      "$ref": "#/$defs/review"
+    },
+    {
+      "$ref": "#/$defs/close"
+    }
+  ]
+}

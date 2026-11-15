@@ -1,0 +1,154 @@
+{
+  "base": "7ff9b9d91fe46cd64e2e0eaaf3f39d79ef66fbd0",
+  "scope": "T8_LOCAL_SYNTHETIC_ONLY",
+  "archives": [
+    {
+      "directory": "t8-nonnas-20261103",
+      "index": "archive-index.json",
+      "indexSha256": "4bcf262b65bfd325c65ee64dd2bf20494d0dc0115e8e4bb82c248e8e089f1fce",
+      "count": 64,
+      "errors": []
+    },
+    {
+      "directory": "t8-browser-20261103",
+      "index": "archive-index.json",
+      "indexSha256": "ec1996bbbbf7e55da123dfa48c09900a32dcc5008b8157497db0d775cae2bc6a",
+      "count": 126,
+      "errors": []
+    },
+    {
+      "directory": "t8-closeout-20261104",
+      "index": "archive-index.json",
+      "indexSha256": "b7da682e0295e22dfb28af779625dee7e405fcb33910d358d50078fc7442ced4",
+      "count": 97,
+      "errors": []
+    },
+    {
+      "directory": "t8-closeout-20261104",
+      "index": "followup-index.json",
+      "indexSha256": "5cb88032265f3e11083f3100425a457c9516858b1e52bef74c62f8b21324d385",
+      "count": 27,
+      "errors": []
+    }
+  ],
+  "source": [
+    {
+      "path": "backend/common/deployment/fixtures/familyLocalBackup.drill.js",
+      "bytes": 11034,
+      "sha256": "52f5c59eb7b4a0ace33294bc286044c93fc208d37890e38da6ea082d16967156"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/familyProductRestore.drill.js",
+      "bytes": 35397,
+      "sha256": "fb9edd398d9b8301a1a743bf19ee1c5b376684a9fccc68f595a5b5b82f96683b"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/localProductRestoreBrowser.js",
+      "bytes": 13216,
+      "sha256": "f34661eb9a1d9ecd8b3a1fa4c540adbc3a1323cbdd55114014b86ab00f3af9f1"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/localProductRestoreSupport.js",
+      "bytes": 2924,
+      "sha256": "12fa3050ff9faf7fd95cbfd81cc09c916c61a86cd05a8f85e3ca2dbca7f2797d"
+    },
+    {
+      "path": "backend/common/deployment/__tests__/localProductRestoreSupport.test.js",
+      "bytes": 8170,
+      "sha256": "a2b340d5bf7e2304de82d5ea16ff101be2c78bd96dd4743262c212a8787a3e89"
+    }
+  ],
+  "files": [
+    {
+      "path": "backend/common/deployment/fixtures/familyLocalBackup.drill.js",
+      "bytes": 11034,
+      "sha256": "52f5c59eb7b4a0ace33294bc286044c93fc208d37890e38da6ea082d16967156"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/familyProductRestore.drill.js",
+      "bytes": 35397,
+      "sha256": "fb9edd398d9b8301a1a743bf19ee1c5b376684a9fccc68f595a5b5b82f96683b"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/localProductRestoreBrowser.js",
+      "bytes": 13216,
+      "sha256": "f34661eb9a1d9ecd8b3a1fa4c540adbc3a1323cbdd55114014b86ab00f3af9f1"
+    },
+    {
+      "path": "backend/common/deployment/fixtures/localProductRestoreSupport.js",
+      "bytes": 2924,
+      "sha256": "12fa3050ff9faf7fd95cbfd81cc09c916c61a86cd05a8f85e3ca2dbca7f2797d"
+    },
+    {
+      "path": "backend/common/deployment/__tests__/localProductRestoreSupport.test.js",
+      "bytes": 8170,
+      "sha256": "a2b340d5bf7e2304de82d5ea16ff101be2c78bd96dd4743262c212a8787a3e89"
+    },
+    {
+      "path": "docs/development/evidence/t8-closeout-20261104/README.md",
+      "bytes": 10298,
+      "sha256": "547c23a26d29e19756a0b23d9197adb77e840763d6290a94e726c2104eff6760"
+    },
+    {
+      "path": "docs/development/evidence/t8-browser-20261103/README.md",
+      "bytes": 10534,
+      "sha256": "b418001356659f5b6f0edb266a52d79b8f20b2dee9508423c7291bc94978b33c"
+    },
+    {
+      "path": "docs/development/evidence/t8-nonnas-20261103/README.md",
+      "bytes": 9901,
+      "sha256": "6ab234711f4bf8f713bf94fc9918f6c57c5e4c226ffe6b6ad478bdb1c07ab9c1"
+    },
+    {
+      "path": "docs/development/evidence/t8-local-preparation-2026-10-30/README.md",
+      "bytes": 31283,
+      "sha256": "40f3f6db29b38f75f83892e545dc7593eb77ffd95d5a3b3fabcc2f285c8e82e2"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 787857,
+      "sha256": "5ca2b6362159fc597ee524d877ed04896dfe4f6ad45dac9f9d088f9c32c092b0"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "bytes": 135290,
+      "sha256": "52184884ab941ba1140ed25c3308c40a1b398053ca9d53e06b43fca42f45bd63"
+    },
+    {
+      "path": "docs/development/evidence/t8-closeout-20261104/public-delivery.md",
+      "bytes": 3385,
+      "sha256": "826ee707220bbeb0330a5dd9ae781885038e32837f8f7c7648e29485a7592512"
+    }
+  ],
+  "validations": [
+    {
+      "label": "current-main-targeted",
+      "sha256": "c4732c4b2d0140d1b953ea27f3ebb367b6398fd14a7945f983fd8e1f9f19980c",
+      "suites": 4,
+      "passed": 412,
+      "failed": 0,
+      "pending": 0,
+      "success": true
+    },
+    {
+      "label": "current-main-real-http-drills",
+      "sha256": "9bfb2505d3d34a5d673ce1737067047cfc1b5648d15777f56bfc876cfe812f62",
+      "suites": 2,
+      "passed": 15,
+      "failed": 0,
+      "pending": 0,
+      "success": true
+    }
+  ],
+  "checks": {
+    "sensitiveAddedLines": [],
+    "brokenLocalLinks": []
+  },
+  "excludes": [
+    "raw logs",
+    "database/media/backup archives",
+    "AI-3 implementation",
+    "AI-1 and AI-2 separate document increments",
+    "node_modules"
+  ]
+}

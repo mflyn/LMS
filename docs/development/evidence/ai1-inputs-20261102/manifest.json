@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "ai1-input-freeze-manifest-v1",
+  "status": "FROZEN_PENDING_REVIEW_NOT_AUTHORIZED",
+  "approvedScope": "Three adapted AI-1 system/user texts; no real sending authorization",
+  "files": {
+    "inputs.json": "b466c648208fdd67f256d98de700ecc729e0d4669884cc9f9cd08fe64a92af44",
+    "requests.json": "016075d9d3a36563d903e4727e6e8c1659e8a337eca50b48a1a53786d8e39ffb"
+  },
+  "serialization": "RFC 8785 canonical JSON, UTF-8, no BOM or trailing newline in wireBodyUtf8; artifact files have a trailing LF",
+  "requests": [
+    {
+      "id": "concept",
+      "systemSha256": "2de251e3a17114b607860a114bec9ec29ffa0071b3f6faa068b6b9a8ee438565",
+      "userSha256": "04253add36ec5c12914124a9cf2c5634110388ef7039a00ea0d72351ad389e9e",
+      "messagesSha256": "80ec685d25ee53a60e1c51ef38b9d9f858fa1e20bf69303efd338ef8d120a44c",
+      "wireBodySha256": "df20476f5e6315bebaa9a0c54586c5c43e109a2d1750a2a93489bee3241ee32a",
+      "wireBodyUtf8Bytes": 1556
+    },
+    {
+      "id": "mistake",
+      "systemSha256": "2de251e3a17114b607860a114bec9ec29ffa0071b3f6faa068b6b9a8ee438565",
+      "userSha256": "47aff001c454482bd57ee60c5fef536cd31fef4044a46753a358f9331af04106",
+      "messagesSha256": "d0fcf0795a7aa86cd545598792b8cbdc6e48c193304369109cadda491c6273d2",
+      "wireBodySha256": "c8bfcc9988131932931cda968e9cc832fc2b08d9792cf127e15f466037a13aff",
+      "wireBodyUtf8Bytes": 1561
+    },
+    {
+      "id": "application",
+      "systemSha256": "2de251e3a17114b607860a114bec9ec29ffa0071b3f6faa068b6b9a8ee438565",
+      "userSha256": "c19930ab318b5ff0fe16b2a65295cf4e824d63d312d5ea6306dd07fb9fc9ecce",
+      "messagesSha256": "11af781bb8ed6c63afbddb055ab9ed3c3181cb86ddabd033e0ddb17ceb4cc6e3",
+      "wireBodySha256": "0f5709cde7d4bb7751604d5bafb744bf3349f17907685d283c2256b69501b869",
+      "wireBodyUtf8Bytes": 1551
+    }
+  ],
+  "historicalSources": {
+    "originalApprovedConversationSha256": "72bba5bbf61f31c82ae599cae9a722f05217a1a7c15c71fd0b10fc0d8695eddf",
+    "ai0HistoricalInputsFileSha256": "1df9c3764429b287c347e9448a8419cafca9cd57b1c96239d6ae8161149ce7d6"
+  },
+  "implementationReference": {
+    "manifest": "../ai1-matrix-20261101/manifest.json",
+    "sha256": "7d67a6c535b0c85014bc4e6b36c30ffebff6aee1588248b6f10d8fa2b68b0fa2"
+  },
+  "boundaries": {
+    "qualifiedCounter": "PENDING",
+    "inputTokenUpperBound": null,
+    "realSendingAuthorized": false,
+    "pricingAndBudgetAuthorized": false,
+    "remoteOperationEnvelope": "NOT_FROZEN",
+    "generationInputHash": "NOT_FROZEN",
+    "requestHash": "NOT_FROZEN",
+    "humanReview": "REQUIRED_BEFORE_USE",
+    "unknownResult": "KEEP_ORIGINAL_JOB_MAPPING_AND_RESERVATION_NO_RESEND",
+    "ai1Gate": "OPEN"
+  }
+}

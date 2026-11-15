@@ -41,6 +41,9 @@ const createLegacyUpload = () => multer({
 });
 
 const createApp = ({
+  ai2MediaInspectRouter = null,
+  ai3MediaInspectRouter = null,
+  assertAi3Ready,
   internalMediaRouter = null,
   logger = createLogger('resource-service'),
   mediaSecurity = { profile: 'trusted-local', scanner: null },
@@ -59,12 +62,15 @@ const createApp = ({
   app.locals.serviceName = 'resource-service';
   app.locals.upload = createLegacyUpload();
   app.locals.userModel = userModel;
+  app.locals.assertAi3Ready = assertAi3Ready;
   app.locals.mediaSecurity = Object.freeze({
     profile: mediaSecurity.profile,
     scanner: mediaSecurity.profile === 'secure-production' ? mediaSecurity.scanner : null
   });
 
   app.use(cors());
+  if (ai2MediaInspectRouter) app.use('/api/internal/media/ai2', ai2MediaInspectRouter);
+  if (ai3MediaInspectRouter) app.use('/api/internal/media/ai3', ai3MediaInspectRouter);
   app.use(express.json());
   app.use(requestTracker);
   app.use(requestTimeout());

@@ -4,11 +4,11 @@ const http = require('http');
 const express = require('express');
 const { createT2Runtime } = require('../../../backend/tests/t2/serviceRuntime');
 
-const createT2WebRuntime = async () => {
+const createT2WebRuntime = async ({ beforeStart } = {}) => {
   const build = process.env.T2_WEB_BUILD;
   if (!build || !path.isAbsolute(build)) throw new Error('T2_WEB_BUILD must name an existing absolute frontend build');
   await fs.access(path.join(build, 'index.html'));
-  const runtime = await createT2Runtime();
+  const runtime = await createT2Runtime({ beforeStart });
   let server;
   const stop = async () => {
     try {

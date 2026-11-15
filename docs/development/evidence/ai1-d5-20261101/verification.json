@@ -1,0 +1,178 @@
+{
+  "scope": "LOCAL_FORMAL_BROWSER_SESSION_EXTENSION_NOT_EXTERNAL_ACCEPTANCE",
+  "singleRunFullGreen": false,
+  "author": {
+    "browser": {
+      "tests": 14,
+      "businessScenarios": 13,
+      "reportedDuration": "1.8m",
+      "exitCode": 0
+    },
+    "components": {
+      "suites": 3,
+      "tests": 79,
+      "seconds": 3.114,
+      "exitCode": 0
+    }
+  },
+  "independent": {
+    "browser": {
+      "tests": 14,
+      "reportedDuration": "1.7m",
+      "exitCode": 0
+    },
+    "review": "NO_NEW_REPRODUCIBLE_P1_P2_IN_SCOPE",
+    "sourceFilesUnchanged": 5,
+    "specSha256": "e8965578cafabf6d0083984e1452207d6e7f285e0b99774702c5442cf7b51c50"
+  },
+  "matrix": {
+    "total": 35,
+    "localLayerPass": 14,
+    "partial": 21,
+    "notACompletionPercentage": true
+  },
+  "actual": [
+    "Gateway and formal LMS factories",
+    "temporary Mongo replica set",
+    "synthetic login and real JWT expiry",
+    "loopback HTTP",
+    "Chromium"
+  ],
+  "substitutes": [
+    "in-memory external operation protocol; no DeepTutor or Provider"
+  ],
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "commands": {
+    "browser": "T2_WEB_BUILD=<verified-D3-build> T2_BROWSER_OUTPUT=<temporary-output> node node_modules/@playwright/test/cli.js test --config=playwright.t2.config.js tests/e2e/t2/ai1FormalPage.spec.js",
+    "components": "CI=true node node_modules/react-scripts/scripts/test.js --watchAll=false --runInBand --runTestsByPath src/__tests__/family/TutorPage.test.js src/__tests__/family/ai1Client.test.js src/__tests__/family/sessionApi.t2.test.js (frontend/web)",
+    "docs": "node scripts/check-family-docs.js; jest --config=backend/jest.config.js --selectProjects family-common --runInBand --coverage=false --runTestsByPath backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+    "lint": "eslint tests/e2e/t2/ai1FormalPage.spec.js",
+    "diff": "git diff --check"
+  },
+  "privateLogs": [
+    {
+      "name": "ai1-d5-first.log",
+      "exitCode": 1,
+      "result": "two passed; last new token probe used nonexistent path, got 404",
+      "sha256": "c5cb1ad2e6ed651a2c9a90cc800921805704f2f40fb2aa575ae208d7510d8b77"
+    },
+    {
+      "name": "ai1-d5-full.log",
+      "exitCode": 0,
+      "result": "thirteen tests before explicit approval loss branch",
+      "sha256": "162372cc496beb3a2fd9c64c507c7b4e5f9860a1b91bea675654c6cc77e51b43"
+    },
+    {
+      "name": "ai1-d5-final.log",
+      "exitCode": 0,
+      "result": "author final fourteen tests",
+      "sha256": "7c38a5f77c2ba6f6ac50a29c829273a0023ca2a95ba15a979614a7b40cb6dcd5"
+    },
+    {
+      "name": "ai1-d5-independent-browser.log",
+      "exitCode": 0,
+      "result": "independent final fourteen tests",
+      "sha256": "b815805f76a5f9fe9684d9a6e7b63571e63df9e05650d70cea6daf1616aa6244"
+    },
+    {
+      "name": "ai1-d5-independent-hash-before.json",
+      "result": "independent pre-run hashes",
+      "sha256": "063e1c0640a91cbf11195007cf88682c6b56c990c1a10eab0cb3772228292d94"
+    },
+    {
+      "name": "ai1-d5-independent-hash-after.json",
+      "result": "independent post-run hashes unchanged",
+      "sha256": "063e1c0640a91cbf11195007cf88682c6b56c990c1a10eab0cb3772228292d94"
+    },
+    {
+      "name": "ai1-d5-ui.log",
+      "exitCode": 0,
+      "result": "three suites seventy-nine tests",
+      "sha256": "5fa784032c6a024856bd1c2bf2588ee8efe384d09c305674b3a256e5830e3e56"
+    },
+    {
+      "name": "ai1-d5-lint-final.log",
+      "exitCode": 0,
+      "result": "final spec lint",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ai1-d5-doc-check.log",
+      "exitCode": 0,
+      "result": "documentation structure",
+      "sha256": "31efe573cad652cc9c91455422840f1bd29eba9516880d9cd42c1bff0a7acf22"
+    },
+    {
+      "name": "ai1-d5-doc-gate.log",
+      "exitCode": 0,
+      "result": "312 document tests before final review annotation",
+      "sha256": "cd4279ee1e148320847c232d0db045fa0e62e466ca0d06e68de6f0016468bd36"
+    }
+  ],
+  "nonblockingTestObservations": [
+    "short JWT preparation can expire early in slow environments",
+    "held fetch has no separate rejection channel; unexpected transport failure can report at test timeout"
+  ],
+  "remaining": [
+    "actual DeepTutor fixed source and local modification authorization",
+    "actual remote claim, persistent terminal, crash restart and old backup isolation",
+    "actual Provider full payload, token bounds, retry and deadline controls",
+    "two-side continuity and enable/rollback with actual remote",
+    "separate paid authorization and human end-to-end value acceptance",
+    "real device"
+  ],
+  "preserved": [
+    "AI-0 human review",
+    "B/D/AI-1 OPEN",
+    "T4/T8 OPEN",
+    "T9 NOT_STARTED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "T5-NB-001/002 OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED"
+  ],
+  "build": {
+    "rerun": false,
+    "sourceUnchanged": true,
+    "files": [
+      {
+        "file": "asset-manifest.json",
+        "sha256": "c62dbf038b4338e5d64149df14066159cb55be2b06f5a35b2b2ccda6ef01db68"
+      },
+      {
+        "file": "index.html",
+        "sha256": "0038cb87fc46e2dc1c6249bc032eb826848a2816b2b467d35946a4e555962eb5"
+      },
+      {
+        "file": "manifest.json",
+        "sha256": "ff7923e959200fe2ca0e6450a39002ae26e9d62e0ef69c40186ebe172835fa76"
+      },
+      {
+        "file": "static/css/main.403096e2.css",
+        "sha256": "bb41ff6bb7a33c1d74837e75bb681868541e1b847c8b5920c58b5992da09ea6b"
+      },
+      {
+        "file": "static/css/main.403096e2.css.map",
+        "sha256": "d33372e02a6efffa4f5271985b2f05ffc8e34a1d4cfc18de06fcb0b572d0d7be"
+      },
+      {
+        "file": "static/js/main.33b598fb.js",
+        "sha256": "0ab88917f8c77d03069d36c5c8dde79915e2d745624d8b557b3bbe1362ccf97a"
+      },
+      {
+        "file": "static/js/main.33b598fb.js.LICENSE.txt",
+        "sha256": "776626e2a539bae6c6ffdae382b2fc62045dcd76b3f6b6e40c37726056e87f22"
+      },
+      {
+        "file": "static/js/main.33b598fb.js.map",
+        "sha256": "36e030f4c09443989785f7378aeb23daee4c30522bf932e79a0187795046f571"
+      }
+    ]
+  }
+}

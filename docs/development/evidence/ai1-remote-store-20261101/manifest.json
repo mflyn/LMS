@@ -1,0 +1,27 @@
+{
+  "scope": "DeepTutor operation store only; no mounted route or Provider",
+  "base": "f7aed0744c36c5afef16a4261c31ebee1208cac2",
+  "patchSha256": "fdd6b9bbf3f7de1760bfabc3258782f84b3711193dbbdb4acde95b5c00472045",
+  "files": [
+    {
+      "repo": "DeepTutor",
+      "path": "deeptutor/services/ai1_store.py",
+      "sha256": "02a751951cb4a526b8e94eecf3420baa439c913a2e78b6f1322866ff42d16e21"
+    },
+    {
+      "repo": "DeepTutor",
+      "path": "tests/services/ai1/test_operation_store.py",
+      "sha256": "fb91def8e6388c9eef4dd7f7b3bfe6b155b343c1f00dde8b3132da2a02254e86"
+    }
+  ],
+  "lmsDocuments": [
+    {
+      "path": "docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md",
+      "sha256": "3698e61bb52819587db6fc5fd934587185af85694bb444f54dcf5e84042de6f5"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "684569227c42959ad2c4f8af98fcf476800d2db97505eb33dc4dae953f57e6dc"
+    }
+  ]
+}

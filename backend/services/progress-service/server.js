@@ -10,6 +10,8 @@ const internalStarRoutes = require('./routes/internalStars');
 const rewardRoutes = require('./routes/rewards');
 const { errorHandler, requestTracker, requestTimeout } = require('../../common/middleware/errorHandler');
 const { createLogger } = require('../../common/config/logger');
+const { createAi3Runtime } = require('./services/ai3Runtime');
+const { validateAi3Environment } = require('../../common/services/ai3Activation');
 
 const logger = createLogger('progress-service');
 
@@ -28,12 +30,13 @@ const assertTransactionCapability = async (connection) => {
   return hello;
 };
 
-const createApp = () => {
+const createApp = ({ ai3EvidenceRouter } = {}) => {
   const app = express();
   app.locals.logger = logger;
   app.locals.serviceName = 'progress-service';
 
   app.use(cors());
+  if (ai3EvidenceRouter) app.use('/api/internal/ai3', ai3EvidenceRouter);
   app.use(express.json());
   app.use(requestTracker);
   app.use(requestTimeout());
@@ -52,11 +55,13 @@ const createApp = () => {
 };
 
 const connectDatabase = async ({
+  env = process.env,
   mongooseInstance = mongoose,
   mongoURI = config.db.uri
 } = {}) => {
   if (mongooseInstance.connection.readyState === 0) {
-    await mongooseInstance.connect(mongoURI, config.db.options);
+    const options = validateAi3Environment(env).continuousStore ? { ...config.db.options, autoIndex: false, autoCreate: false } : config.db.options;
+    await mongooseInstance.connect(mongoURI, options);
   }
 
   const hello = await assertTransactionCapability(mongooseInstance.connection);
@@ -64,21 +69,54 @@ const connectDatabase = async ({
   return mongooseInstance.connection;
 };
 
+const createProductionApp = ({ env = process.env, connection = mongoose.connection } = {}) => {
+  const runtime = createAi3Runtime({ env, connection });
+  const app = createApp({ ai3EvidenceRouter: runtime.router });
+  app.locals.assertAi3Ready = runtime.assertReady;
+  return app;
+};
+
 const startServer = async ({
-  app = createApp(),
+  app = null,
+  env = process.env,
+  connection = mongoose.connection,
+  host,
   port = config.server.port,
   connect = connectDatabase
 } = {}) => {
-  await connect();
-  return app.listen(port, () => {
+  const ai3Config = validateAi3Environment(env);
+  if (ai3Config.continuousStore && (app || connection !== mongoose.connection || connect !== connectDatabase)) {
+    throw Object.assign(new Error('AI3_NOT_READY'), { code: 'AI3_NOT_READY' });
+  }
+  const ownsConnection = connection.readyState === 0;
+  let runtimeApp, server;
+  try {
+    await connect({ env, mongoURI: env.MONGO_URI || config.db.uri });
+    runtimeApp = app || createProductionApp({ env, connection });
+    if (runtimeApp.locals.assertAi3Ready) await runtimeApp.locals.assertAi3Ready();
+    let onError;
+    await new Promise((resolve, reject) => {
+      onError = reject;
+      server = host === undefined ? runtimeApp.listen(port, resolve) : runtimeApp.listen(port, host, resolve);
+      server.once('error', onError);
+    });
+    server.removeListener('error', onError);
     logger.info(`Progress service running on port ${port}`);
-  });
+    return server;
+  } catch (cause) {
+    // A failed listener belongs to this startup, even when the database belongs to its caller.
+    try {
+      if (server) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+    } catch (_) { /* Continue to the owned database even if HTTP cleanup fails. */ }
+    try { if (ownsConnection) await connection.close(); } catch (_) { /* Keep the original startup failure. */ }
+    throw cause;
+  }
 };
 
 const app = createApp();
 
 if (require.main === module) {
-  startServer({ app }).catch((error) => {
+  startServer().catch((error) => {
     logger.error('Progress service failed to start', { error: error.message, stack: error.stack });
     process.exitCode = 1;
   });
@@ -88,4 +126,5 @@ module.exports = app;
 module.exports.assertTransactionCapability = assertTransactionCapability;
 module.exports.connectDatabase = connectDatabase;
 module.exports.createApp = createApp;
+module.exports.createProductionApp = createProductionApp;
 module.exports.startServer = startServer;

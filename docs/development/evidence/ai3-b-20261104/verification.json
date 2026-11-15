@@ -1,0 +1,197 @@
+{
+  "sourcePatchSha256": "83eb9d63f92833b48b00a79e398c142fe261d392186d644e8dfee1bac3f8bad8",
+  "rawLogsLocalOnly": "private-evidence/ai3-b-steUF8/",
+  "records": [
+    {
+      "name": "red-initial.log",
+      "exitCode": 1,
+      "kind": "missing new module; zero tests executed",
+      "sha256": "16d333964aabc176c2264639096c1004f8b93c043e99cab984c34355516b89c0",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       0 total",
+        "Snapshots:   0 total",
+        "Time:        1.173 s"
+      ]
+    },
+    {
+      "name": "red-owner.log",
+      "exitCode": 1,
+      "kind": "owner-profile regression before extraction",
+      "sha256": "77008a589dde498c2662e7c56de1e8e060ca64ac85780ac7f2226c993f563b69",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       3 failed, 50 skipped, 53 total",
+        "Snapshots:   0 total",
+        "Time:        4.361 s, estimated 10 s"
+      ]
+    },
+    {
+      "name": "first-green.log",
+      "exitCode": 1,
+      "kind": "restricted permissions: runtime suite EPERM despite 112 passing assertions",
+      "sha256": "73dfd722fcc41bcbb7fd9fac39976eb4c486daa13c6caa7c9ac3aea3e7fda1b9",
+      "summary": [
+        "Test Suites: 1 failed, 2 passed, 3 total",
+        "Tests:       112 passed, 112 total",
+        "Snapshots:   0 total",
+        "Time:        17.53 s"
+      ]
+    },
+    {
+      "name": "red-close.log",
+      "exitCode": 1,
+      "kind": "cursor close sanitization red",
+      "sha256": "9bc55c820d177a399e716d87681b88aac3818b7002e72658f21aaef0b5d88510",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 14 skipped, 1 passed, 16 total",
+        "Snapshots:   0 total",
+        "Time:        2.726 s, estimated 5 s"
+      ]
+    },
+    {
+      "name": "ai-regression.log",
+      "exitCode": 0,
+      "kind": "development AI1/AI2/AI3 before last four tests",
+      "sha256": "76b6e611e4d404aa2d62cbf740ff341b93466fc18d814460afa29e6f162a5a46",
+      "summary": [
+        "Test Suites: 19 passed, 19 total",
+        "Tests:       445 passed, 445 total",
+        "Snapshots:   0 total",
+        "Time:        85.151 s"
+      ]
+    },
+    {
+      "name": "budget-final.log",
+      "exitCode": 1,
+      "kind": "new expiry fixture did not reach stored deadline",
+      "sha256": "4c6e8b2cb9442a5c521b2053a98a5a4ee3b337e96faab7af012a5cbb9dd77a6e",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 19 passed, 20 total",
+        "Snapshots:   0 total",
+        "Time:        5.423 s, estimated 6 s"
+      ]
+    },
+    {
+      "name": "budget-final-corrected.log",
+      "exitCode": 0,
+      "kind": "development final shared budget tests",
+      "sha256": "92c0c870d6ba9e68588c3061c947f786efcb9a3364480cf02bebcda889ad63d4",
+      "summary": [
+        "Test Suites: 1 passed, 1 total",
+        "Tests:       20 passed, 20 total",
+        "Snapshots:   0 total",
+        "Time:        5.253 s, estimated 6 s"
+      ]
+    },
+    {
+      "name": "homework-regression.log",
+      "exitCode": 1,
+      "kind": "full service with earlier expiry fixture failure",
+      "sha256": "37ad3a0eb21755d1d9168c664ebd3e57e971aa0cc9cb8ec07ee7806aa9cc2390",
+      "summary": [
+        "Test Suites: 1 failed, 50 passed, 51 total",
+        "Tests:       1 failed, 1775 passed, 1776 total",
+        "Snapshots:   0 total",
+        "Time:        273.272 s"
+      ]
+    },
+    {
+      "name": "mutation-owner.log",
+      "exitCode": 1,
+      "kind": "invalid harness: missing generated mutant; not a killed mutation",
+      "sha256": "96e53dde4cd8b2baecb36e9503c114b52734ea3e4e5c3cc9fb2a81be19e39673",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       0 total",
+        "Snapshots:   0 total",
+        "Time:        0.824 s"
+      ]
+    },
+    {
+      "name": "mutation-owner-valid.log",
+      "exitCode": 1,
+      "kind": "invalid harness: missing generated mutant; not a killed mutation",
+      "sha256": "8766079d7ec480250dae1d663269aae678e347049beb4a0f134c161b45fbb1e4",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       0 total",
+        "Snapshots:   0 total",
+        "Time:        0.587 s"
+      ]
+    },
+    {
+      "name": "mutation-owner-confirmed.log",
+      "exitCode": 1,
+      "kind": "valid owner-profile guard mutation killed by three assertions",
+      "sha256": "0201d91c4263b8e1ee576007edb21a3e8aab38ee99ea585275a0d9b1865fe3ac",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       3 failed, 50 skipped, 53 total",
+        "Snapshots:   0 total",
+        "Time:        3.844 s"
+      ]
+    },
+    {
+      "name": "mutation-release.log",
+      "exitCode": 1,
+      "kind": "valid unconditional slot release mutation killed by two assertions",
+      "sha256": "f5f292a89c12909112f5deda9f1ea9f2f4976f185b1feba5d48ed78746315ba9",
+      "summary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       2 failed, 18 skipped, 20 total",
+        "Snapshots:   0 total",
+        "Time:        2.786 s, estimated 5 s"
+      ]
+    },
+    {
+      "name": "homework-regression-final.log",
+      "exitCode": 0,
+      "kind": "development final full homework configuration",
+      "sha256": "0b24376bf76bd89ea736deaba99f10e28574d0e46778dc1e98d6806eb7052358",
+      "summary": [
+        "Test Suites: 51 passed, 51 total",
+        "Tests:       1776 passed, 1776 total",
+        "Snapshots:   0 total",
+        "Time:        310.565 s"
+      ]
+    }
+  ],
+  "independent": {
+    "source": "read-only reviewer tool outputs; no separate raw reviewer logs archived",
+    "initial": {
+      "testsPassed": 67,
+      "exitCode": 0
+    },
+    "afterCloseFix": {
+      "testsPassed": 69,
+      "exitCode": 0
+    },
+    "final": {
+      "testsPassed": 20,
+      "exitCode": 0,
+      "seconds": 4.856,
+      "scope": "ai3Budget.test.js only"
+    },
+    "mutations": "reviewer inspected actual assertion failures in logs, did not rerun mutations"
+  },
+  "reconstruction": {
+    "files": 8,
+    "matched": true,
+    "scope": "source delta on HEAD plus AI3-A; not a whole-repo clean execution"
+  },
+  "preservation": {
+    "unrelatedOriginalFileHashesUnchanged": 30,
+    "gateOriginalPrefixPreserved": true
+  },
+  "notClaimed": [
+    "public AI3 generate or recovery",
+    "real model calls",
+    "AI3 HTTP or browser acceptance",
+    "family backend complete regression",
+    "device validation",
+    "AI-3 gate closure"
+  ]
+}

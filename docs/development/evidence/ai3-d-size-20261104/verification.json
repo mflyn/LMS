@@ -1,0 +1,167 @@
+{
+  "candidateSha256": "fc1198ea802ef13fba2e02d187a4a36c5cf2c7596e2ad454d82006431b579d6d",
+  "rawEvidence": [
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/before-result.json",
+      "sha256": "32398b49c4fb68604338b8d60855baf43d8d0a1cd5e2a188376e97690366f27c"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/before.log",
+      "sha256": "983c2d681761610409f3e67586f6bd3c8f3bad1273f8717fefaae10c93d99a62"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/characters-result.json",
+      "sha256": "f6d5e07092a79a82986665a4c466704c2cdc6c34c8445702efee6199fed60702"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/characters.log",
+      "sha256": "8c9c79c22054e1ea90352be6ad16745d688662cdf86c45972fb71ec5a0bb132f"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/cross-http.log",
+      "sha256": "e5328c4ea8b896639cb57194314131cfb73d0f4dc1f0b87f2c5e47fcc0f8435d"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/diff-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/docs-check-with-deps.log",
+      "sha256": "c99d8e3cf284e08b9b40260db33ea495b331c97d6bbf14cfb2d3165449711f2d"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/docs-check.log",
+      "sha256": "269e76c2b276027c3768f280c64bd284382ba5e761f2a97335bb51d5d64e9e92"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/docs-final.log",
+      "sha256": "c99d8e3cf284e08b9b40260db33ea495b331c97d6bbf14cfb2d3165449711f2d"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/eslint-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/eslint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/final-five.log",
+      "sha256": "f1ed2b553ef551119c87dbe1fd4424423ac8e32bdb4adfd7ce94e612c217139a"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/final-no-size-result.json",
+      "sha256": "d2f9d8d1392a796f1fc97d8bc50ee95f8790b78c73596a62ad9a29ea153bfe68"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/final-no-size.log",
+      "sha256": "942c86761842c170b3d4339558d068b1cddc3076019a2bec5667f662a4fe92bf"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/full-homework-authorized.log",
+      "sha256": "e09596ae40989e58c761e786d7e90b3b1a742554b10ca569f81fe20d0c19323b"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/full-homework.log",
+      "sha256": "0694a633cd4b75c9fc590ca88c0bbe35d57b0844d99916ca2c648c24ae39865b"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/green-five.log",
+      "sha256": "f5cf6657f81a3ba5dbb8c1a8dc483db0208ef4d711045a059dbcf00561b58538"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/green-fixture-corrected.log",
+      "sha256": "518e4b38afb781ee0c295b4506df86276e4e4029532e068dfdc2a660cf9169ca"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/green-focused.log",
+      "sha256": "f517ab7ec96d6481ccab972bdb2d746a876412acef99f11e530658d32e8a7ccb"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/message-only-result.json",
+      "sha256": "1737d36645ef2f076404f18213d811f9e4a2412cce1b3b04af2d32421b883f88"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/message-only.log",
+      "sha256": "ee140a5cc580489269d9a76e2665851957832cb7660c6c7435770addf37eb7ed"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/mutate.cjs",
+      "sha256": "241fca872a5b7f9da6721954daea4f64f676c8bb6e1d7dd5498b553b31782b0d"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/no-claim-result.json",
+      "sha256": "7c4aa9de6422075f974a0aede82e509162dc0104c9305e3645e0be287a35081f"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/no-claim.log",
+      "sha256": "1e1727f7d7dc9788b72a6c743303846c2a49176b1a32754f91baef0310b1ba04"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/no-size-result.json",
+      "sha256": "0978b57a7c4309929ea589290f55181154994b3f522908cf759d3892a04210de"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/no-size.log",
+      "sha256": "81a7d46436334094f1a331ce63b93cdf9013fe0fa51f0b2b9d2d9e2bbe5e1f9b"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/red-fixture-fixed.log",
+      "sha256": "270b3db6be51103b5545562c893e7f9846aa4824a5cbc65698d0d2b9fe19b601"
+    },
+    {
+      "path": "private-evidence/ai3-d-size-T5kSuk/red.log",
+      "sha256": "82863d0a5e46e399f99727d50b8968703540a5f2f0a3952d254b3a07ee4f9c05"
+    },
+    {
+      "path": "private-evidence/ai3-d-independent-size-tPqRZl/jest-results.json",
+      "sha256": "c342ccba6858397b9e613b83da578e022c8e5ec591cd355e2b3493602ef19f0b",
+      "classification": "independent"
+    },
+    {
+      "path": "private-evidence/ai3-d-independent-size-tPqRZl/jest.log",
+      "sha256": "7811e36ca7aac1dbd1c46860b64f0a3676915fcb0f950b6c3cd67d8f5e126114",
+      "classification": "independent"
+    },
+    {
+      "path": "private-evidence/ai3-d-independent-size-tPqRZl/probe.cjs",
+      "sha256": "b45bc6d6594e7e404ba2a0ee110b73394a9743c6c32bed7d25719a9eda777c9b",
+      "classification": "independent"
+    },
+    {
+      "path": "private-evidence/ai3-d-independent-size-tPqRZl/probe.log",
+      "sha256": "ac2f9b9e6a8be109b7db1a1bf6f444ba24bca6db323e3f7fe9b392e666579ba8",
+      "classification": "independent"
+    },
+    {
+      "path": "private-evidence/ai3-d-independent-final-6yRp3E/delta-check.log",
+      "sha256": "febca639170536f8f0405831930cc6e4eb85e8f6b716a29b0be47330cb23d8eb",
+      "classification": "independent"
+    },
+    {
+      "path": "private-evidence/ai3-d-independent-final-6yRp3E/final.sha256",
+      "sha256": "e56d79fee063fdf5bad8b9ad3e8f4eb12cebc80599bf4b09f725effabc5f9156",
+      "classification": "independent"
+    },
+    {
+      "path": "private-evidence/ai3-d-independent-final-6yRp3E/jest-results.json",
+      "sha256": "e734c95e6f70d0606bd8a3cdf3b163ed505ad1d530015b79cc1b6c5845d5eea5",
+      "classification": "independent"
+    },
+    {
+      "path": "private-evidence/ai3-d-independent-final-6yRp3E/jest.log",
+      "sha256": "9bd40a7b279db7dc83dac1ef1a1390729e95760a9b44b7507779b5a4f71844a8",
+      "classification": "independent"
+    }
+  ],
+  "reconstructed": {
+    "directory": "private-evidence/ai3-size-rebuild-HQiVfb",
+    "files": 7,
+    "matched": true
+  },
+  "preservedEntries": 54,
+  "notes": [
+    "Raw logs are local only; red, fixture failures, environment failures and green runs remain separate.",
+    "Full homework is developer regression, not full family backend or release. Cross HTTP uses synthetic Provider, not browser/real model acceptance."
+  ]
+}

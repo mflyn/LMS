@@ -1,0 +1,583 @@
+{
+  "status": "USER_REVIEW_PENDING",
+  "candidateSha256": "0b6cfaf8a33550c3a47a08dc3d91f3f345689559940fca87a7a11404f62e6554",
+  "currentResults": {
+    "developmentLmsFull": {
+      "log": "homework-final.log",
+      "suites": 53,
+      "tests": 1845,
+      "exitCode": 0,
+      "seconds": 257.197,
+      "sourceUnchangedBeforeAfter": [
+        {
+          "path": "backend/services/homework-service/services/ai3Service.js",
+          "sha256": "a174a502472305e13c7960f2fc30cac74d9ef6200ec64de6b3ab41a70d11102a"
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3Contract.js",
+          "sha256": "2f823aa9a80b3139da54cc49f27d441b5d77c9475096c0bfe7cd5c169b92e13b"
+        },
+        {
+          "path": "backend/services/homework-service/services/ai3Operation.js",
+          "sha256": "cbeae06436fbaed3d6eaa3070b9174fd1ef3aa8fdc4ad1a29deb04a282f5bcca"
+        },
+        {
+          "path": "backend/services/homework-service/models/Ai3.js",
+          "sha256": "a875ac5c76ca46c1c127c86887600c05d9670ee6373a35dbd0d5af658adc50df"
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Service.test.js",
+          "sha256": "64f3d3362aa31c5b3af79370e40fe1261de57d4c8cd7f44e75800e285d1ab04d"
+        },
+        {
+          "path": "backend/services/homework-service/__tests__/services/ai3Operation.test.js",
+          "sha256": "22a6d575211820a9505e1db6ce2c836117ab2cee7eb53d15e02b92f428eef00c"
+        }
+      ]
+    },
+    "developmentFocused": {
+      "log": "final-focused.log",
+      "suites": 3,
+      "tests": 104,
+      "exitCode": 0,
+      "seconds": 16.786
+    },
+    "independentLms": {
+      "log": "private-evidence/ai3-d-independent-final-jest.log",
+      "suites": 2,
+      "tests": 86,
+      "exitCode": 0,
+      "seconds": 14.834
+    },
+    "independentDeepTutor": {
+      "log": "private-evidence/ai3-d-independent-final-deeptutor-pytest.log",
+      "tests": 236,
+      "exitCode": 0,
+      "seconds": 14.83
+    },
+    "independentCrossHttp": {
+      "log": "private-evidence/ai3-d-independent-final-cross-http.log",
+      "tests": 6,
+      "exitCode": 0,
+      "seconds": 8.29,
+      "node": "22.15.0"
+    },
+    "developmentDeepTutor": {
+      "tests": 242,
+      "ai1": 170,
+      "ai3": 66,
+      "explicitCrossHttp": 6,
+      "nodeCrossHttp": "26.9.0",
+      "exitCode": 0
+    },
+    "mutations": {
+      "scope": "development only; not independently re-executed",
+      "targetFailuresEach": 1,
+      "logs": [
+        "mutation-mapping.log",
+        "mutation-refund.log",
+        "mutation-result-reference.log",
+        "mutation-late-accepted.log",
+        "mutation-nesting-final.log",
+        "mutation-crlf.log"
+      ]
+    }
+  },
+  "retainedFailures": [
+    "red.log: missing runGeneration 8 failures",
+    "first.log: no-client readonly compatibility 1 failure",
+    "self-red.log: resultReference and missing mapping 2 failures",
+    "late-red.log: late accepted budget halt 1 failure",
+    "nested-red.log: deep output 1 failure",
+    "crlf-red.log: normalized CRLF 1 failure",
+    "homework.log: sandbox EPERM writing existing ignored logs; interrupted exit130; not a completed green run",
+    "DeepTutor red/configured/fixture logs preserved; independent first reviews retained"
+  ],
+  "earlierGreenNotFinal": [
+    "homework-controlled.log: 53/1844 before final CRLF case",
+    "third.log: 81 before late/deep/CRLF coverage",
+    "independent review 82 and rereview85 do not replace final86"
+  ],
+  "boundary": {
+    "remoteHttp": "LMS production client -> actual local DeepTutor HTTP factory/service/SQLite; Provider substitute",
+    "settlement": "real local Mongo replica set with injected operation port, separately from the Python HTTP tests",
+    "notCovered": [
+      "public AI3 app assembly",
+      "browser",
+      "child submission/review/effects",
+      "real Provider/counter qualification"
+    ],
+    "unrelatedInitialFilesPreserved": 45,
+    "oldEvidenceOverwritten": false,
+    "statuses": [
+      "AI-3 OPEN",
+      "T4/T8/AI-1 OPEN",
+      "DEVICE_PENDING",
+      "Docker INCOMPLETE_FAILED",
+      "QUALIFIED_COUNTER_PENDING",
+      "REMAINDER_DEFERRED"
+    ],
+    "realModelCalls": 0,
+    "gitCommitPushDeploy": false
+  },
+  "artifacts": [
+    {
+      "file": "candidate.patch",
+      "sha256": "8d59ea59bc5d6b3f5c1d37b2ccdaab2c82ba8c2cf6bc0c19603dc2223289f05e"
+    },
+    {
+      "file": "approval-records.patch",
+      "sha256": "1414470121bcdef433a0a9965a08d41fe7b567245c237d191f3770d469383fc8"
+    },
+    {
+      "file": "deeptutor.patch",
+      "sha256": "685075d998702babacf9e68b038ec39dfbcde4aefc80a9007c9cecf35f4b22cf"
+    }
+  ],
+  "rawEvidence": [
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/crlf-red.log",
+      "sha256": "e4dda1316ed1b4c36154d937efc6684363cd17c7d47bbdc5a98671686b0ba100",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 60 skipped, 61 total",
+        "Time:        4.011 s, estimated 6 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/docs-check-final.log",
+      "sha256": "c99d8e3cf284e08b9b40260db33ea495b331c97d6bbf14cfb2d3165449711f2d",
+      "scope": "development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/docs-check.log",
+      "sha256": "c99d8e3cf284e08b9b40260db33ea495b331c97d6bbf14cfb2d3165449711f2d",
+      "scope": "development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/eslint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "scope": "development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/final-focused.log",
+      "sha256": "bfee688a88cc6f1aabf5d30a698f3f5243e288a45e3540cfdce7cd96c64b99de",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 3 passed, 3 total",
+        "Tests:       104 passed, 104 total",
+        "Time:        16.786 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/first.log",
+      "sha256": "31767d5e4656c177ee96045c2b31498f257bb32d424b37b4fac9d347caf52d54",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 passed, 2 total",
+        "Tests:       1 failed, 54 passed, 55 total",
+        "Time:        12.808 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/freeze.log",
+      "sha256": "bb7233e1592379a1ead022fa9ec403fb271d6b88be2bfc9a879b382d72350b40",
+      "scope": "development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/homework-controlled.log",
+      "sha256": "c4fab02c5fee88ae8ba0acd2860027c6af823e7702243eb204612b2ebdedc7e7",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 53 passed, 53 total",
+        "Tests:       1844 passed, 1844 total",
+        "Time:        297.203 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/homework-final.log",
+      "sha256": "715335b11670de1ffcd923545e44c014e6aace837df02b08e81649d5352a2504",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 53 passed, 53 total",
+        "Tests:       1845 passed, 1845 total",
+        "Time:        257.197 s, estimated 265 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/homework.log",
+      "sha256": "66a722f474cadd917ac1bba97014bfc3ba1275ed9e276f09ffbc2771a498aeaa",
+      "scope": "development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/late-red.log",
+      "sha256": "43aec19e7c081d7fe6fd83336b43db62a1bdccbf395a79c37cd6da9fd722305f",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 56 skipped, 57 total",
+        "Time:        4.546 s, estimated 15 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/mutation-crlf.log",
+      "sha256": "9903ef04e7ca4dc39dc2a61d216a23a0ea1edf1b4ff77843a9ee7eea70c347f5",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 60 skipped, 61 total",
+        "Time:        4.163 s, estimated 13 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/mutation-late-accepted.log",
+      "sha256": "7179608eb225be9fc2a9118ac65f47c4e0b6b4aea65d61d7341c8b2556aedbf7",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 56 skipped, 57 total",
+        "Time:        5.072 s, estimated 6 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/mutation-mapping.log",
+      "sha256": "3721d427943d5e099763d9ee797c36c548c38393a374406ae93bd061279dcc78",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 56 skipped, 57 total",
+        "Time:        5.061 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/mutation-nesting-final.log",
+      "sha256": "a581dbf5cc0e2e35245e58f75df064460689f381f98ef0eb6ab189ff9edba8a4",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 57 skipped, 3 passed, 61 total",
+        "Time:        4.442 s, estimated 13 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/mutation-nesting.log",
+      "sha256": "b310071bcbbb9a954255ede5cd2fa000e9631234b36f0d4809114f81d8355353",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 56 skipped, 3 passed, 60 total",
+        "Time:        5.833 s, estimated 16 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/mutation-refund.log",
+      "sha256": "80e2f5798c76bdf762524b02dda334f0888c508aa2670a6d825c09135901130e",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 56 skipped, 57 total",
+        "Time:        5.631 s, estimated 6 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/mutation-result-reference.log",
+      "sha256": "cbd4a8d627b9f36b2503385b5c571d9ac8579a7093d8ea8c342b0db9c1624d47",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 56 skipped, 57 total",
+        "Time:        5.246 s, estimated 6 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/nested-red.log",
+      "sha256": "006220efdb8b2d250a75fbedfab6594bc18ab151a04020f1134b3efbfb3795bb",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       1 failed, 56 skipped, 3 passed, 60 total",
+        "Time:        5.683 s, estimated 6 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/red.log",
+      "sha256": "5b648c3587e0774149bfea30bae731b8b8245125b5aaa94afe2922cebfac09a9",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       8 failed, 40 skipped, 1 passed, 49 total",
+        "Time:        5.701 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/review-green.log",
+      "sha256": "a78cb907d5d3573e06b4b7bdabac016edb8fb60075516ec818d6067f44626b36",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 2 passed, 2 total",
+        "Tests:       85 passed, 85 total",
+        "Time:        17.143 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/second.log",
+      "sha256": "4dac237b335bcc6cd5d6320d92829b4662089a83586c78efabbb15c9f64ddfec",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 3 passed, 3 total",
+        "Tests:       86 passed, 86 total",
+        "Time:        17.002 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/self-red.log",
+      "sha256": "d0fa89c8824dd38f24629699805610d321981e9e469dcdfd26d9f2012ba08bdc",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 1 failed, 1 total",
+        "Tests:       2 failed, 54 skipped, 56 total",
+        "Time:        4.347 s, estimated 13 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-uDLiRt/third.log",
+      "sha256": "8de87c5be25022ed39e94bedff618d24f7cf03fc04c4727aac2bf3f16e4f0f35",
+      "scope": "development",
+      "observedSummary": [
+        "Test Suites: 2 passed, 2 total",
+        "Tests:       81 passed, 81 total",
+        "Time:        14.762 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/cross-language-first.log",
+      "sha256": "7e6b2e759b0019052eb447e13ef6abee641e91db0e59720197e21eee6c89a254",
+      "scope": "DeepTutor development",
+      "observedSummary": [
+        "66 passed, 1 warning in 2.56s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/final-ai3.log",
+      "sha256": "7d368aa38a28a7156442f6fe3f92b5d0112328f979e4dcf4c64b39aa04516bff",
+      "scope": "DeepTutor development",
+      "observedSummary": [
+        "66 passed, 1 warning in 2.12s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/final-all-related.log",
+      "sha256": "aa72734675035afdd7eb6d21aa08dc1e177d517b11acd1e50a1ef8980ea4ff18",
+      "scope": "DeepTutor development",
+      "observedSummary": [
+        "242 passed, 3 warnings in 27.24s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/final-cross-language-only.log",
+      "sha256": "5f3a2d78112388718d7c3a5231377a7eed91b9105239205ad46a6296a8f8fb1f",
+      "scope": "DeepTutor development",
+      "observedSummary": [
+        "========================= 6 passed, 1 warning in 8.37s ========================="
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/final-format.log",
+      "sha256": "75b7030be9d7de96bf4e76e79b1f03f14af8899d169fd8d79564d59167d1ab80",
+      "scope": "DeepTutor development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/final-ruff.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "scope": "DeepTutor development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/green-initial.log",
+      "sha256": "7dd3ef72480ce10e1c22aee1784e90de1024c94afaa86db4cd34120c510adb7b",
+      "scope": "DeepTutor development",
+      "observedSummary": [
+        "33 passed, 1 warning in 1.90s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/red-configured.log",
+      "sha256": "6005206b6a64962daec6f3ebb64474433a86d5a1f3e4b45916b4d8521c705245",
+      "scope": "DeepTutor development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/red-fixture.log",
+      "sha256": "50bcbd82b834b25eeeecc842f24cdc409bad3d86b1df48f66430485e0705daf5",
+      "scope": "DeepTutor development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/red.log",
+      "sha256": "ea41a9329dff1f0301f1937445553072b5892d0d639c8cf66d0a4ff64d1fd77c",
+      "scope": "DeepTutor development",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-deeptutor-42Pyf3/regression-first.log",
+      "sha256": "183543222bca4447ac79c0b28a026bbdb5ecd60764e37457338bc6fa416a791c",
+      "scope": "DeepTutor development",
+      "observedSummary": [
+        "213 passed, 3 warnings in 22.21s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-deeptutor-source.sha256.log",
+      "sha256": "168e505361ba672585ca27cd7c4ddd9051e423bca0de8a58f9527b47c6364f9c",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-boundaries.log",
+      "sha256": "d1481a5b596f6cb9d64d88566f29039b88985ddc20774516efa953b0d6d03aa3",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-collection.log",
+      "sha256": "7e7fcb3ca5efcce922c43dec379e56b2e1e39ec7128dff556e587d53f177d27e",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-cross-http.log",
+      "sha256": "3900c179d1ae266422760d99a564939c0d27bfa078bd80957ef0fffa92d3189e",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": [
+        "========================= 6 passed, 1 warning in 8.29s ========================="
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-deeptutor-hashcheck.log",
+      "sha256": "409e0081360b1fab1fbee68fb120295c9ed60d30b5c25d5fe47018d579779c18",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-deeptutor-pytest.log",
+      "sha256": "89a0fd936b91f8d10e9f3af53aba99299029503ccd5c30e62bee4e81a8af7ec6",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": [
+        "236 passed, 3 warnings in 14.83s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-deeptutor-source.sha256.log",
+      "sha256": "93bc533c64ac5d55dd4d9d84156a96fff35e7c607792bc7270d3ab649dd6b5b8",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-jest.log",
+      "sha256": "fcd551dc58d32a2544e1b7922dd58c206d3212ecd899aa3f8aa1162b545b58f1",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": [
+        "Test Suites: 2 passed, 2 total",
+        "Tests:       86 passed, 86 total",
+        "Time:        14.834 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-lms-hashcheck.log",
+      "sha256": "8d5d081413f88c05e0f1d20793a6e65dddf2e8df6568b69fd1e07f97beb0bcb0",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-final-source.sha256.log",
+      "sha256": "5ccea066d61066b58bc65d9f3180ef9f004e4e525489160f90a3bf2eba026c23",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-freeze-check.log",
+      "sha256": "9b5859163ab4952ef5c76a812a04f11e6dac5ad0d212687c79591641e6efb319",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-freeze-final.log",
+      "sha256": "243a1646b029c4ba3752c9760de5619e6515839e1891c39e0e46d667f3dc9708",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-freeze-verified.log",
+      "sha256": "a8b3ca99bf7c6b81d03186e12c67435f656a4eb8c5a89547543590cf308ab275",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-rereview-jest.log",
+      "sha256": "e93d8437695c1093d8ddaaed91f521a5028fcd4d86dbcfbd18056468f17054ac",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": [
+        "Test Suites: 2 passed, 2 total",
+        "Tests:       85 passed, 85 total",
+        "Time:        18.496 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-rereview-normalization.log",
+      "sha256": "6d214a39c6c2edc5c4bbf84508e4fcb3745d16899a0be2e7efec142d8027d953",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-rereview-source.sha256.log",
+      "sha256": "c8ed43585f9053f2b1b4128236f2a75ebe2396fd23be523f8cf6698a38589a4a",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-review-final-jest.log",
+      "sha256": "02b855cc1d37a4835598da772cd643cea5f5256df27500e1d48e72b1a8d4fa60",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": [
+        "Test Suites: 2 passed, 2 total",
+        "Tests:       82 passed, 82 total",
+        "Time:        17.54 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-review-jest.log",
+      "sha256": "13048402299b3e85c85b580f2f333894dcde4d5c9990fdf31051777fe3e85225",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": [
+        "Test Suites: 2 passed, 2 total",
+        "Tests:       81 passed, 81 total",
+        "Time:        17.658 s"
+      ]
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-review-nested-output.log",
+      "sha256": "1253203b8b14f4ea8714695a17d6198b1ac031d91e58e6b7a28a5aec2394ba80",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-review-parser.log",
+      "sha256": "598f7007d741f5e8af82facbb57a48c108ab0842f706d878c03bf58f4d538cb1",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    },
+    {
+      "localPath": "private-evidence/ai3-d-independent-review-source.sha256.log",
+      "sha256": "3ee21b52764ffa7b1b7faf00201dd940b1838d7dc2ce08a55e28183264758311",
+      "scope": "independent; historical and final explicitly distinguished by filename",
+      "observedSummary": []
+    }
+  ]
+}

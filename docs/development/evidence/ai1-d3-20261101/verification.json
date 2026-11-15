@@ -1,0 +1,239 @@
+{
+  "scope": "FORMAL_LMS_BROWSER_NOT_ACTUAL_REMOTE_ACCEPTANCE",
+  "singleRunFullGreen": false,
+  "author": {
+    "browser": {
+      "tests": 6,
+      "businessScenarios": 5,
+      "seconds": 41.6,
+      "exitCode": 0
+    },
+    "runtime": {
+      "tests": 6,
+      "seconds": 26.81,
+      "exitCode": 0
+    }
+  },
+  "independent": {
+    "browser": {
+      "tests": 6,
+      "seconds": 41.6,
+      "exitCode": 0
+    },
+    "review": "SOURCE_AND_TEARDOWN_P2_REREVIEW_PASSED",
+    "mutations": {
+      "groups": 2,
+      "failuresPerGroup": 1,
+      "exitCode": 1,
+      "sourceUnchanged": true
+    },
+    "sourceMutationRunnerSummary": "max-failures early stop plus outside-test summary preserved; exact source assertion failed"
+  },
+  "build": {
+    "exitCode": 0,
+    "matchesActuallyTestedBuildByteForByte": true,
+    "frontendSourceFilesUnchangedFromC": 12,
+    "fullFrontendRegression": "prior C evidence, not rerun",
+    "files": [
+      {
+        "file": "asset-manifest.json",
+        "sha256": "c62dbf038b4338e5d64149df14066159cb55be2b06f5a35b2b2ccda6ef01db68"
+      },
+      {
+        "file": "index.html",
+        "sha256": "0038cb87fc46e2dc1c6249bc032eb826848a2816b2b467d35946a4e555962eb5"
+      },
+      {
+        "file": "manifest.json",
+        "sha256": "ff7923e959200fe2ca0e6450a39002ae26e9d62e0ef69c40186ebe172835fa76"
+      },
+      {
+        "file": "static/css/main.403096e2.css",
+        "sha256": "bb41ff6bb7a33c1d74837e75bb681868541e1b847c8b5920c58b5992da09ea6b"
+      },
+      {
+        "file": "static/css/main.403096e2.css.map",
+        "sha256": "d33372e02a6efffa4f5271985b2f05ffc8e34a1d4cfc18de06fcb0b572d0d7be"
+      },
+      {
+        "file": "static/js/main.33b598fb.js",
+        "sha256": "0ab88917f8c77d03069d36c5c8dde79915e2d745624d8b557b3bbe1362ccf97a"
+      },
+      {
+        "file": "static/js/main.33b598fb.js.LICENSE.txt",
+        "sha256": "776626e2a539bae6c6ffdae382b2fc62045dcd76b3f6b6e40c37726056e87f22"
+      },
+      {
+        "file": "static/js/main.33b598fb.js.map",
+        "sha256": "36e030f4c09443989785f7378aeb23daee4c30522bf932e79a0187795046f571"
+      }
+    ]
+  },
+  "actual": [
+    "Gateway",
+    "user/homework/resource/progress formal factories",
+    "analytics/notification existing apps",
+    "real login and membership",
+    "temporary Mongo replica set",
+    "private media upload",
+    "browser",
+    "loopback HTTP"
+  ],
+  "substitutes": [
+    "external in-memory operation protocol only; no DeepTutor/Provider"
+  ],
+  "historicalFamilyFull": {
+    "suitesPassed": 161,
+    "suitesFailed": 2,
+    "testsPassed": 4980,
+    "testsFailed": 2,
+    "exitCode": 1
+  },
+  "commands": {
+    "browser": "T2_WEB_BUILD=<absolute-build> T2_BROWSER_OUTPUT=<temporary-output> node node_modules/@playwright/test/cli.js test --config=playwright.t2.config.js tests/e2e/t2/ai1FormalPage.spec.js",
+    "runtime": "node node_modules/jest/bin/jest.js --config backend/tests/t2/jest.config.js --runInBand --runTestsByPath backend/tests/t2/runtime.integration.test.js",
+    "build": "CI=true BUILD_PATH=<temporary-build> node node_modules/react-scripts/scripts/build.js (frontend/web)",
+    "lint": "eslint tests/e2e/t2/ai1FormalPage.spec.js tests/e2e/t2/webRuntime.js backend/tests/t2/testEnvironment.js backend/tests/t2/runtime.integration.test.js",
+    "docs": "node scripts/check-family-docs.js; existing familyDocumentationGate.test.js; git diff --check"
+  },
+  "preserved": [
+    "AI-0 human review and separate budget authorization",
+    "B/D/AI-1 OPEN",
+    "T4/T8 OPEN",
+    "T9 NOT_STARTED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "T5-NB-001/002 OPEN_NONBLOCKING",
+    "REMAINDER_DEFERRED"
+  ],
+  "remaining": [
+    "formal browser remaining permission/failure combinations in test plan section 11",
+    "actual DeepTutor persistence/claim/restart",
+    "actual Provider pricing and retries",
+    "paid and human value acceptance"
+  ],
+  "privateLogs": [
+    {
+      "name": "ai1-d3-browser-red.log",
+      "exitCode": 1,
+      "result": "missing beforeStart forwarding",
+      "sha256": "a1916042afe6f73c30b38f3a51560b8665858c1642648166571daf51a3d03fc6"
+    },
+    {
+      "name": "ai1-d3-browser-first.log",
+      "exitCode": 1,
+      "result": "two ambiguous cost locator failures",
+      "sha256": "81a25c471e79aeac82cbe6ad75fedef89c88320468c173a92ddadab3b5cb5e1f"
+    },
+    {
+      "name": "ai1-d3-browser-second.log",
+      "exitCode": 0,
+      "result": "two real source loops",
+      "sha256": "4b505123646b10e4171b69f3e02e593da1fe3ae0dc91e9d0dc43b9bf97c25fac"
+    },
+    {
+      "name": "ai1-d3-browser-recovery.log",
+      "exitCode": 1,
+      "result": "two failures reading before request finished / two passed",
+      "sha256": "97460f2485c21a5a4485a74b5a2140968edd818f29902c22020a341d24f86054"
+    },
+    {
+      "name": "ai1-d3-browser-recovery-wait.log",
+      "exitCode": 0,
+      "result": "two fault tests after waiting for enabled retry",
+      "sha256": "814884ee82bdc71b130c6584061e146a0ad9aa59a4c0fd37df25e749492654cc"
+    },
+    {
+      "name": "ai1-d3-browser-expanded.log",
+      "exitCode": 0,
+      "result": "author six tests",
+      "sha256": "fe7a81b6fde186049a3f5a01bfac3d05e702dbc7d874b9e21bb0ec05cd4d4ee1"
+    },
+    {
+      "name": "ai1-d3-runtime.log",
+      "exitCode": 0,
+      "result": "six lifecycle tests",
+      "sha256": "85aa93cfc8c38d371bb5a5ccb83da87977e00084bc8606efae61589781009982"
+    },
+    {
+      "name": "ai1-d3-lint-expanded.log",
+      "exitCode": 0,
+      "result": "affected four files",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ai1-d3-matrix-red.log",
+      "exitCode": 1,
+      "result": "missing row mapping guard",
+      "sha256": "04e28ad4a7d63e7a283997a36ac11aff3b9c62df8894d06c6aedb21844331747"
+    },
+    {
+      "name": "ai1-d3-matrix-green.log",
+      "exitCode": 0,
+      "result": "all 35 IDs accounted for",
+      "sha256": "46a9940cd82467c263a9d826b3da027c3bd81aff6493ebbed03d4621c49302db"
+    },
+    {
+      "name": "ai1-d3-build.log",
+      "exitCode": 0,
+      "result": "current frontend build",
+      "sha256": "1efac71702f506d3c7fbdf0bf4ee3f4fcd3d435679be72173e49dad1bf879c1a"
+    },
+    {
+      "name": "ai1-d3-independent-baseline.log",
+      "exitCode": 1,
+      "result": "restricted Chromium permission blocked browser; teardown-only test passed",
+      "sha256": "6fbf2021acaf8d8f1087057e013c3742ae9fadf40d16b6fb4db62d9781c116a0"
+    },
+    {
+      "name": "ai1-d3-independent-source-mutation.log",
+      "exitCode": 1,
+      "result": "restricted Chromium blocked; not valid mutation evidence",
+      "sha256": "bed5b64064b6e607366208a193c2a330dda3a9122a11f02d54cfc3fe3e225999"
+    },
+    {
+      "name": "ai1-d3-independent-baseline-r2.log",
+      "exitCode": 0,
+      "result": "independent six tests",
+      "sha256": "808f496fe4805247dbeaf5ee51c11d53515dd8ab368c5e4b40fc691479bc358c"
+    },
+    {
+      "name": "ai1-d3-independent-source-mutation-r2.log",
+      "exitCode": 1,
+      "result": "valid wrong-source permanent assertion failed; runner summary retained",
+      "sha256": "c70db32d5032ed4ca3744c3987a366061e3fb5b71a05732284851d8a2769a8bb"
+    },
+    {
+      "name": "ai1-d3-independent-close-mutation.log",
+      "exitCode": 1,
+      "result": "environment restoration permanent assertion failed after listener closed",
+      "sha256": "0c9ec187de7629f887a5d4c8e65ab72f10b7b37a1591de85216cfcf3bf5f4ec7"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "ai1FormalPage-AI1-formal-m-76e06-o-parent-review-and-relogin/mistakes-1280.png",
+      "sha256": "872723c73fb3ae93a4713475478570ba6c745662776a14b8cb68fc40f00e708f"
+    },
+    {
+      "file": "ai1FormalPage-AI1-formal-m-76e06-o-parent-review-and-relogin/mistakes-390.png",
+      "sha256": "44aead4261319e6bad3c1665d6cb9463b1b62051218ead4ba054c89790db6d73"
+    },
+    {
+      "file": "ai1FormalPage-AI1-formal-m-76e06-o-parent-review-and-relogin/mistakes-768.png",
+      "sha256": "e0e596b55ac5c4f9d6c5c3d09bca19ee6aee11e6f74f35078cb6dacac66c3e21"
+    },
+    {
+      "file": "ai1FormalPage-AI1-formal-t-f926f-o-parent-review-and-relogin/tasks-1280.png",
+      "sha256": "0ce6f9cc990aa7a86e2623cff772d055f3d0ff487c1fd61256d6ff84a4fe1021"
+    },
+    {
+      "file": "ai1FormalPage-AI1-formal-t-f926f-o-parent-review-and-relogin/tasks-390.png",
+      "sha256": "cca5da686d512f41e40e8968a27537b44350233852c56d39fddfe510436ddc74"
+    },
+    {
+      "file": "ai1FormalPage-AI1-formal-t-f926f-o-parent-review-and-relogin/tasks-768.png",
+      "sha256": "1a56c10e5fbcc3e04d9d83ffc62a72414669df677bf8065df38902ea150ec9fe"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ const createApp = ({
   env = process.env,
   logger = createLogger('analytics-service'),
   io = null,
+  ai3EvidenceRouter,
   familyMistakeMediaService = null,
   learningSourceReader = createLearningSourceReader({
     MistakeModel: FamilyMistake,
@@ -33,6 +34,7 @@ const createApp = ({
   app.locals.io = io;
 
   app.use(cors());
+  if (ai3EvidenceRouter) app.use('/api/internal/ai3', ai3EvidenceRouter);
   app.use(express.json());
   app.use('/api/internal/learning-sources', createLearningSourceRouter({
     kind: 'mistakes', Model: FamilyMistake, serviceToken: env.INTERNAL_SERVICE_TOKEN

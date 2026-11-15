@@ -1,0 +1,125 @@
+{
+  "scope": "AI1_A_LOCAL_NO_MODEL",
+  "baseline": "1d49abb11580172fa86a7e282cb31588bf682027",
+  "patchSha256": "9af97f1648340a6938597e7f79c950a1f6fce5dbbe89536303afae2fc36d214d",
+  "files": [
+    {
+      "file": "backend/common/contracts/ai1-min.schema.json",
+      "sha256": "5b18f95600c450fd58c7a487a667c190ab0ff122d818797359e86e29668820ee"
+    },
+    {
+      "file": "backend/common/deployment/__tests__/familyDocumentationGate.test.js",
+      "sha256": "31d7497192b2420cabfd7efb0cca58c651c422c62d6c0445c50fceff7588b99a"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Contract.test.js",
+      "sha256": "7e2a1f12def7a295e2e8d3671bfaf7f83941b2abc7b1cdbb3112e40bd05a1a99"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/services/ai1Service.test.js",
+      "sha256": "d3885a1f8c31d31921d9409372afa431d58b0033704f96ece56dbdba157f0c6a"
+    },
+    {
+      "file": "backend/services/homework-service/__tests__/setup.js",
+      "sha256": "04290986f92750705b2c9f30d8dc36bb8cab36ae79f65c3bafe8d66acf6bc470"
+    },
+    {
+      "file": "backend/services/homework-service/models/Ai1.js",
+      "sha256": "4266b3fb206b12e7f90177f13aee5f62b9e17e080d294c0a3872eeda1821f0b0"
+    },
+    {
+      "file": "backend/services/homework-service/services/ai1Contract.js",
+      "sha256": "f4b00611a71ce3b4bc3572564bfa71f2bc848d65020d6faec8b1a9503d399ab2"
+    },
+    {
+      "file": "backend/services/homework-service/services/ai1Readiness.js",
+      "sha256": "c6532fd8beaf88a31791b22d8e84f0c14d0e55af9c304549cb75ec7e2f2917e2"
+    },
+    {
+      "file": "backend/services/homework-service/services/ai1Service.js",
+      "sha256": "fbcd982c125a1d88d4f5721bd36804a2400c5cc52b406608bfca66b6cca0bbd5"
+    },
+    {
+      "file": "docs/README.md",
+      "sha256": "b526dce4febeba494653e12633dcb0fbd78cfd88fa239e2f87b6d1feec98d86b"
+    },
+    {
+      "file": "docs/api/family-ai1-api.md",
+      "sha256": "638d16116c89969ae50cea79763a470d34381afdef51e6fbd9583dd55ac286a9"
+    },
+    {
+      "file": "docs/api/family-learning-tracker-api.md",
+      "sha256": "78b5d151be63f53b0762bb1d98cd365700c207708af226e41c3f1a184e952456"
+    },
+    {
+      "file": "docs/architecture/family-ai-learning-platform-design.md",
+      "sha256": "8432f79187c0b6bd981eedb3ce56467296ae9779a816be12fda43c4e24e1c218"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-close.cases.json",
+      "sha256": "2878439e8bbf57a34af2d9232b6ec4669916ad34e25855d2bc27217dad46a320"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-create.cases.json",
+      "sha256": "e6deec330f87a27916734fdb9ba2777f418283743932d74d0b275e1b58348a58"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-generate.cases.json",
+      "sha256": "eaf8dde8d414ad197b8dc93289a3f2a38e470b88e2bdcc8198be87b7ffd4530b"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-recover.cases.json",
+      "sha256": "a7c165d89a9218613099537a2c4a8acc4e555f4f285ab622b3bea9610f872e3a"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-review.cases.json",
+      "sha256": "8038174c8345944478a2dc61ebda16b1b341df97bd101465730f9b30f155d334"
+    },
+    {
+      "file": "docs/contracts/fixtures/ai1-revise.cases.json",
+      "sha256": "fefbbf3623cf473b78afe814e46ffcd7b04a794bc4599ee3c42aff7d329eb76f"
+    },
+    {
+      "file": "docs/development/README.md",
+      "sha256": "838273e4b693e7b5a707eb97f489d3a031f6e499b95222dbdb06355f7d16db52"
+    },
+    {
+      "file": "docs/development/family-ai1-test-plan.md",
+      "sha256": "933d5080f8662a2a42211f70f6f02194ba6aaa04915ddae090e05f4d4523427e"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "sha256": "03518e85b7a111b785cf91af99d8fbe141a1c86737cc46b1b9830f0e7e5fe6b1"
+    },
+    {
+      "file": "docs/superpowers/plans/2026-10-21-family-self-directed-learning-mvp.md",
+      "sha256": "6ce00c88d0c7b121880fd393f8f31f693d972314b3de4eb72fe26398d5685470"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md",
+      "sha256": "4d2be523c0f1030d0803ea97b192524937fd331c757bdf10c760b807ec07cf06"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "9880c08a472da57fb1ed9f68677c08e0d3996d4f7638ee6ddbfa975fb36bb0a6"
+    },
+    {
+      "file": "package.json",
+      "sha256": "a8a732b23fc49e8b0132f3d8f32a80d5d62f8d7d429f89875b59e7de5cce317f"
+    },
+    {
+      "file": "scripts/check-family-docs.js",
+      "sha256": "aff25677ba6665e0213440ac118ed02238d81a16ece70c6cdc1f2fbccd2ab484"
+    }
+  ],
+  "boundaries": {
+    "routes": "NOT_MOUNTED",
+    "providerCalls": 0,
+    "gate": "OPEN",
+    "batch": "ACCEPTANCE_PENDING",
+    "device": "DEVICE_PENDING",
+    "advancedRecoveryAndCleanup": "REMAINDER_DEFERRED",
+    "gitWrites": false,
+    "deployment": false
+  }
+}

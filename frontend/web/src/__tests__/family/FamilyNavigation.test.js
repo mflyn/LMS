@@ -88,7 +88,7 @@ describe('family parent navigation', () => {
   });
 
   test('does not accept a child session on a parent route', async () => {
-    localStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
+    sessionStorage.setItem(CHILD_SESSION_KEY, JSON.stringify({ token: 'child-token' }));
     openRoute('/app/today');
 
     expect(await screen.findByRole('heading', { name: '家长登录' })).toBeInTheDocument();
