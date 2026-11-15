@@ -1,5 +1,9 @@
 # 家庭自主学习 MVP 增量 Gate
 
+> **2026-11-15 当前交付状态校正：已合并、自动化通过、真人／真机待验。** 固定 main 为 `1abb623da7eed3bd27b159da3216189952586f1e`，PR #49／#51／#50 已合并；[main CI 43665482647](https://github.com/mflyn/LMS/actions/runs/43665482647)通过，前端 78 套件／1279 项、07b 10 套件／113 项、13b 102 项。可选任务跳过不计通过，PR #49 合并后 94 通过／3 失败及后续分批修订保持历史身份，不改写为一次全绿。当前范围及证据见[开发交付摘要](README.md#当前交付摘要2026-11-15)，[测试线程差异交接](family-child-entry-test-plan.md#8-main-1abb623d-差异验收交接2026-11-15)仅准备，不更新入口或执行验收。
+>
+> T5-NB-001／002 当前 **SCOPED_AUTOMATION_COMPLETE**，从当前自动化待办移出；下方各批批准时的 OPEN_NONBLOCKING 字段只保留历史快照，不能据此重新列为未完成补测。AI2-VIEW-NB-001 OPEN_NONBLOCKING 不变。T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、MANUAL_PENDING、DEVICE_PENDING、历史 Docker INCOMPLETE_FAILED、历史失败及后置状态均保持；本次不关闭总门禁、不扩展执行器、不授权提交推送、模型、服务器或部署。旧 `2ac06898` 业务闭环证据不改绑到新 main。
+
 > **2026-11-14 知识点接续限定验收批准：** 用户复审通过，批准本批 LOCAL_SYNTHETIC_AUTOMATION_ONLY 验收（ACCEPTED / USER_APPROVED）及加载态误判测试保护 P2 关闭（CLOSED / USER_APPROVED）。[批准记录第 7 节](evidence/t5-nb-page-continuation-20261114/README.md#7-用户批准与限定关闭)绑定 R4 六文件候选补丁及 44 份冻结证据；第 6 节待验收文字保留为历史快照。开发两引擎各 5 项通过与独立静态复评分开，保留 R1 误判诊断、R2 304 失败和 R3 被替代的调度取样证据。不关闭真人／真机或其他总门禁，不改变既有未关闭／后置状态，不新增 Git、真人入口、模型或部署授权。
 
 > **2026-11-14 T5 非阻断补测限定收口：** 用户授权核实并纳入永久回归，T5-NB-001／002 当前为 SCOPED_AUTOMATION_COMPLETE，见[固定候选、独立分批结果与开发纳入复验](evidence/t5-nb-page-continuation-20261114/README.md)。仅关闭固定候选内的自动化补测缺口；下方 T5／T6／T7／AI-2 等批准时的 OPEN_NONBLOCKING 字段及历史失败仍为当时快照，不改写历史。T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING/MANUAL_PENDING、历史 Docker INCOMPLETE_FAILED、AI2-VIEW-NB-001 及其他后置范围不变；不更新真人入口、不新增总门禁放行或 Git／模型／服务器／部署授权。
