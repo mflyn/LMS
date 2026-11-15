@@ -115,6 +115,21 @@ export const setChildPin = (childId, pin) => parentPost(
 );
 
 export const listGrowthTasks = (params, signal) => parentGet('/api/growth-tasks', params, signal);
+export const listRecurringPlans = (params, options) => parentGet('/api/recurring-task-plans', params, options);
+export const getRecurringPlan = (planId, options) => parentGet(`/api/recurring-task-plans/${encodeURIComponent(planId)}`, undefined, options);
+export const listRecurringCommands = (params, options) => parentGet('/api/recurring-task-plan-commands', params, options);
+export const getRecurringCommand = (operationId, childId, options) => parentGet(
+  `/api/recurring-task-plan-commands/${encodeURIComponent(operationId)}`, { childId }, options
+);
+export const sendRecurringCommand = (command, options) => command.marker.action === 'create'
+  ? parentPost('/api/recurring-task-plans', command.body, options)
+  : command.marker.action === 'patch'
+    ? parentPatch(`/api/recurring-task-plans/${encodeURIComponent(command.marker.targetPlanId)}`, command.body, options)
+    : parentPost(`/api/recurring-task-plans/${encodeURIComponent(command.marker.targetPlanId)}/stop`, command.body, options);
+export const abortRecurringCommand = (marker, options) => parentPost(
+  `/api/recurring-task-plan-commands/${encodeURIComponent(marker.operationId)}/abort`,
+  { childId: marker.childId, action: marker.action, targetPlanId: marker.targetPlanId, requestDigest: marker.requestDigest }, options
+);
 export const getDailyLearningPlan = (childId, localDate, signal, expectedSession) => parentGet(
   `/api/children/${encodeURIComponent(childId)}/daily-learning-plans/${encodeURIComponent(localDate)}`,
   undefined, signal, expectedSession

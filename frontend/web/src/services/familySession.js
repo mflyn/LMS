@@ -5,6 +5,7 @@ export const CHILD_SESSION_EXPIRED_EVENT = 'family-growth:child-session-expired'
 export const TUTOR_COMMAND_PREFIX = 'family-growth.ai1-command.v1:';
 export const AI2_COMMAND_PREFIX = 'family-growth.ai2-command.v1:';
 export const AI3_COMMAND_PREFIX = 'family-growth.ai3-command.v1:';
+export const RECURRING_BODY_PREFIX = 'family-growth.recurring-body.v1:';
 
 const toParentSession = (value) => {
   if (!value || typeof value.token !== 'string' || !value.token.trim()) return null;
@@ -69,6 +70,22 @@ const readChildLoginExit = actorId => {
     throw Object.assign(new Error('Child login marker unavailable'), { code: 'CHILD_SESSION_STORAGE_UNAVAILABLE' });
   }
 };
+const recurringBodyOwner = key => {
+  if (!key?.startsWith(RECURRING_BODY_PREFIX)) return null;
+  const suffix = key.slice(RECURRING_BODY_PREFIX.length), p = parse(suffix);
+  return Array.isArray(p) && [3, 4].includes(p.length) && JSON.stringify(p) === suffix
+    && p.slice(0, 3).every(v => typeof v === 'string' && /^[0-9a-f]{24}$/.test(v))
+    && (p.length === 3 || (typeof p[3] === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(p[3]))) ? p[0] : null;
+};
+const clearRecurringBodies = (actorId, keepRevision) => {
+  try {
+    for (const key of Object.keys(sessionStorage)) {
+      if (recurringBodyOwner(key) === actorId && (!keepRevision || parse(sessionStorage.getItem(key))?.revision !== keepRevision)) {
+        sessionStorage.removeItem(key);
+      }
+    }
+  } catch { /* An unreadable body is never recovered across authentication revisions. */ }
+};
 // Anonymous tabs have no session snapshot; bind invalidation to the requested actor before sending PIN.
 export const captureChildLogin = credentials => {
   const actorId = canonicalLoginId(credentials.childId);
@@ -89,6 +106,10 @@ const clearCommands = (role, actorId, ai3Only = false) => {
     const remove = [];
     for (let index = 0; index < sessionStorage.length; index += 1) {
       const key = sessionStorage.key(index);
+      if (role === 'parent' && key?.startsWith(RECURRING_BODY_PREFIX)) {
+        if (recurringBodyOwner(key) === actorId) remove.push(key);
+        continue;
+      }
       if (ai3Only && !key?.startsWith(AI3_COMMAND_PREFIX)) continue;
       const aiPrefix = [AI2_COMMAND_PREFIX, AI3_COMMAND_PREFIX].find(prefix => key?.startsWith(prefix));
       if (aiPrefix) {
@@ -162,6 +183,7 @@ const read = role => {
   const previous = observed.get(role);
   const change = parse(stored(changeKey(role), role));
   const previousActor = previous?.snapshot?.actorId;
+  if (role === 'parent' && session) clearRecurringBodies(actor(role, session), value.revision);
   if (session && previousActor && previousActor !== actor(role, session)) clearCommands(role, previousActor);
   for (const actorId of new Set([previousActor, change?.previousActorId, change?.actorId, actor(role, session)])) {
     reconcileExit(role, actorId);
@@ -213,6 +235,7 @@ const save = (role, value, login) => {
   const previous = captureSession(role);
   const lastActor = previous?.actorId || parse(stored(changeKey(role), role))?.actorId;
   const nextActor = actor(role, session), nextRevision = revision();
+  if (role === 'parent') clearRecurringBodies(nextActor);
   const switched = lastActor && lastActor !== nextActor;
   if (switched) recordExit(role, lastActor, 'account_switch');
   if (login) assertChildLoginCurrent(login, session);

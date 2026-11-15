@@ -1,0 +1,106 @@
+{
+  "scope": "Development delivery verification on latest main; not a new independent review or manual/device acceptance",
+  "deliveryBase": "b2c5266393c1ef6a5dac788bbf28211c6171e225",
+  "acceptedBase": "3816c3f2a45daff8b66221cfffb322de11bdce33",
+  "node": "v26.9.0",
+  "originalFilesUnchanged": 85,
+  "frozenNonDocumentSources": 34,
+  "originalArchiveHashChecks": 27,
+  "docs": {
+    "command": "npm run docs:family:check",
+    "exitCode": 0
+  },
+  "lint": {
+    "command": "npm run lint",
+    "exitCode": 0
+  },
+  "whitespace": {
+    "fullStagedCheckExitCode": 2,
+    "reason": "Archived unified-diff context blank lines contain one required space. All findings are inside historical candidate.patch artifacts; preserved rather than reformatted.",
+    "nonPatchStagedCheckExitCode": 0
+  },
+  "frontend": {
+    "command": "npm run test:ci -- --runInBand --json --outputFile=<private-run>/frontend.json",
+    "suites": 82,
+    "tests": 1320,
+    "passed": 1320,
+    "failed": 0,
+    "pending": 0,
+    "exitCode": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "initialAttempt": "EPERM creating build directory; exit 1 retained. No product failure or assertion changed.",
+    "authorizedWorkspaceWriteAttempt": "Compiled successfully; exit 0",
+    "warning": "Existing caniuse-lite data age warning; no dependency update"
+  },
+  "browser": {
+    "command": "T2_WEB_BUILD=<delivery-build> playwright test --config=playwright.t2.config.js recurringFinal.spec.js",
+    "passed": 5,
+    "retries": 0,
+    "exitCode": 0,
+    "engine": "Chromium",
+    "scope": "Existing formal Gateway/services, temporary replica set and synthetic media; no real model, human entry or server changes",
+    "result": [
+      "✓  1 tests/e2e/t2/recurringFinal.spec.js:45:41 › patch committed response lost: relogin resolves original UUID with GET only (11.6s)",
+      "✓  2 tests/e2e/t2/recurringFinal.spec.js:45:41 › stop committed response lost: relogin resolves original UUID with GET only (7.3s)",
+      "✓  3 tests/e2e/t2/recurringFinal.spec.js:81:1 › abort response loss retains original marker across relogin; confirmed tombstone rejects a late original POST (7.2s)",
+      "✓  4 tests/e2e/t2/recurringFinal.spec.js:111:1 › transaction is still in flight during logout: not_found cannot unlock, late commit is recovered without a second POST (7.2s)",
+      "✓  5 tests/e2e/t2/recurringFinal.spec.js:145:1 › recurring work real pages: child uploads, coparent views and confirms, child reloads readonly picture and feedback (7.3s)",
+      "5 passed (43.5s)"
+    ]
+  },
+  "previousFamilyRegression": {
+    "suites": 215,
+    "tests": 6502,
+    "source": "../recurring-tasks-family-regression-20261115/README.md",
+    "rerunThisDelivery": false,
+    "rationale": "Backend implementation/tests unchanged from accepted candidate; new main overlap only App.js. CI runs original release gate separately."
+  },
+  "sensitiveReview": {
+    "redactedLocalDependencyPathFiles": 6,
+    "privateKeysOrTokens": 0,
+    "actualFamilyData": 0,
+    "syntheticScreenshotsReviewed": 4,
+    "falsePositive": "CSS task-checklist-editor-row matched substring sk-; not a credential",
+    "rawLogsPublished": false
+  },
+  "rawEvidence": [
+    {
+      "name": "recurring-public-frontend.json",
+      "sha256": "da7e328c6767a49e5b08cd51c6ab6cc1e2ed52ce52c28ffbfb255fd5fc821258",
+      "location": "retained local private run, not published"
+    },
+    {
+      "name": "recurring-public-frontend.log",
+      "sha256": "dbf38559cb445ef0e78e7ddc89b8b19a3e3c73806606e480940b7688bf92ef0d",
+      "location": "retained local private run, not published"
+    },
+    {
+      "name": "recurring-public-build.log",
+      "sha256": "c8379190c0e58d15c82c62db235bc10aeb08638db7b7303883bee5a787c07cde",
+      "location": "retained local private run, not published"
+    },
+    {
+      "name": "recurring-public-build-authorized.log",
+      "sha256": "db163dcb80a4fbc4fb57dc4c032c5f673a6f44107bcb0a670eccf82806900df3",
+      "location": "retained local private run, not published"
+    },
+    {
+      "name": "recurring-public-browser.log",
+      "sha256": "8d57c2e46feff05e16f30c2aa9223104f2bfa655c91265a44a197d0937d742c2",
+      "location": "retained local private run, not published"
+    }
+  ],
+  "preserved": [
+    "historical failures",
+    "MANUAL_PENDING",
+    "DEVICE_PENDING",
+    "nonblocking timer multi-cycle coverage",
+    "T4/T8/AI-1 OPEN",
+    "SERVER_TIMING_UNVERIFIED",
+    "Docker INCOMPLETE_FAILED",
+    "deferred scopes",
+    "default disabled"
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "sourceFile": "recurring-b2-independent-frozen-6ef0c80d-probes.json",
+  "sourceSha256": "a7c5ecc43ba7489fbbfe8432347ba8cc71bf210264b3365e46193ec11540a615",
+  "note": "Historical review diagnostics, not the latest acceptance conclusion. Late known-success stop is distinguished from unresolved/UNKNOWN.",
+  "evidence": {
+    "candidatePatchSha256": "6ef0c80d1ba622982ff4e430bca11b71d4b19b5e99a95a290163577a780635b2",
+    "fileCount": 22,
+    "fileMismatches": [],
+    "firstPatchMatches": true,
+    "sourceReports": [
+      {
+        "id": "first-accepted-independent",
+        "matches": true
+      },
+      {
+        "id": "first-rollback-mutation",
+        "matches": true
+      },
+      {
+        "id": "first-promotion-mutation",
+        "matches": true
+      },
+      {
+        "id": "second-missing-module-red",
+        "matches": true
+      },
+      {
+        "id": "second-startup-red",
+        "matches": true
+      },
+      {
+        "id": "second-expanded-82",
+        "matches": true
+      },
+      {
+        "id": "second-related-clock-failure",
+        "matches": true
+      },
+      {
+        "id": "second-runtime-37",
+        "matches": true
+      },
+      {
+        "id": "second-related-198",
+        "matches": true
+      },
+      {
+        "id": "shared-190",
+        "matches": true
+      },
+      {
+        "id": "independent-pre-p2-88",
+        "matches": true
+      },
+      {
+        "id": "independent-guard-38",
+        "matches": true
+      },
+      {
+        "id": "second-p2-red",
+        "matches": true
+      },
+      {
+        "id": "second-p2-green-92",
+        "matches": true
+      },
+      {
+        "id": "second-final-related-200",
+        "matches": true
+      },
+      {
+        "id": "mutation-cursor",
+        "matches": true
+      },
+      {
+        "id": "mutation-drain",
+        "matches": true
+      },
+      {
+        "id": "mutation-body",
+        "matches": true
+      },
+      {
+        "id": "mutation-partial",
+        "matches": true
+      },
+      {
+        "id": "mutation-unknown",
+        "matches": true
+      },
+      {
+        "id": "mutation-health",
+        "matches": true
+      }
+    ],
+    "probes": [
+      {
+        "name": "timeout_remains_sticky_after_late_success",
+        "expected": {
+          "firstStop": "RECURRING_SCAN_STOP_UNKNOWN",
+          "secondStop": "RECURRING_SCAN_STOP_UNKNOWN"
+        },
+        "actual": {
+          "firstStop": "RECURRING_SCAN_STOP_UNKNOWN",
+          "secondStop": "RESOLVED"
+        },
+        "passed": false
+      },
+      {
+        "name": "committed_final_occurrence_unknown_is_eventually_reconciled",
+        "expected": {
+          "eventualHealthy": true,
+          "stop": "RESOLVED",
+          "taskCount": 1
+        },
+        "actual": {
+          "rounds": [
+            {
+              "processed": 1,
+              "failures": 1,
+              "healthWriteFailures": 0,
+              "complete": true,
+              "healthy": false
+            },
+            {
+              "processed": 0,
+              "failures": 0,
+              "healthWriteFailures": 0,
+              "complete": true,
+              "healthy": false
+            },
+            {
+              "processed": 0,
+              "failures": 0,
+              "healthWriteFailures": 0,
+              "complete": true,
+              "healthy": false
+            }
+          ],
+          "calls": 1,
+          "stop": "RECURRING_SCAN_STOP_UNKNOWN",
+          "taskCount": 1,
+          "lastEvaluatedDate": "2026-11-16",
+          "endDate": "2026-11-16"
+        },
+        "passed": false
+      }
+    ],
+    "success": false,
+    "note": "Both probes used an isolated real loopback Mongo replica set. Controlled delay and response loss were injected at the service boundary. These probes are separate from the existing Jest suite."
+  }
+}

@@ -403,6 +403,7 @@ const ScopedTasksPage = () => {
       <div className="family-page-heading">
         <div>{!accessBlocked && <p className="family-eyebrow">{selectedChild.name}的成长安排</p>}<h1 id="tasks-page-title" ref={headingRef} tabIndex={-1}>任务</h1></div>
         <div className="family-inline-actions"><Link className="family-button secondary" to="/app/tutor">讲解记录</Link>
+          <Link className="family-button secondary" to="/app/recurring-plans">重复计划</Link>
           <button type="button" className="family-button primary" disabled={accessBlocked || resource.state === 'loading'} onClick={openCreate}>新建任务</button></div>
       </div>
 

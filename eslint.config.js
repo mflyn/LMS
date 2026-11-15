@@ -48,6 +48,7 @@ module.exports = [
       'backend/common/utils/**/*{family,Family,dailyLearningPlan}*.js',
       'backend/gateway/**/*.js',
       'backend/services/homework-service/{models,services,routes,__tests__/services}/[Aa]i2*.js',
+      'backend/services/homework-service/{models,services,routes,__tests__/services}/[Rr]ecurringTask*.js',
       'backend/services/**/*{family,Family,growth,Growth,media,Media,child,Child,notification,Notification,reminder,Reminder,dailyLearningPlan,DailyLearningPlan}*.js',
       'backend/tests/t2/dailyLearningPlan.integration.test.js',
       'backend/tests/t2/weeklyReflection.integration.test.js',
@@ -82,7 +83,7 @@ module.exports = [
       'frontend/web/src/contexts/{AuthContext,ChildAuthContext,FamilyContext}.js',
       'frontend/web/src/hooks/{useAsyncResource,useChildDataResource,useChildResource}.js',
       'frontend/web/src/pages/{child,family}/**/*.{js,jsx}',
-      'frontend/web/src/services/{childApi,childEntry,childScope,childSession,familyApi,familySession,dailyLearningPlan,reflection}.js',
+      'frontend/web/src/services/{childApi,childEntry,childScope,childSession,familyApi,familySession,dailyLearningPlan,reflection,recurringCommands}.js',
       'frontend/web/src/__tests__/{child,family,shared}/**/*.{js,jsx}'
     ],
     languageOptions: {

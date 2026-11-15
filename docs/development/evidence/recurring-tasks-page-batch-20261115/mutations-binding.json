@@ -1,0 +1,82 @@
+{
+  "files": [
+    {
+      "file": "frontend/web/src/services/recurringCommands.js",
+      "sha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae"
+    },
+    {
+      "file": "frontend/web/src/services/familySession.js",
+      "sha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c"
+    },
+    {
+      "file": "frontend/web/src/pages/family/RecurringPlansPage.js",
+      "sha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/recurringCommands.test.js",
+      "sha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/RecurringPlansPage.test.js",
+      "sha256": "3d60796b115519a438c148552066b0d207e8c7f272c0e222c7a1802648929a89"
+    }
+  ],
+  "results": [
+    {
+      "name": "marker",
+      "exitCode": 1,
+      "failed": 1,
+      "passed": 0,
+      "skippedByFocusedSelection": 32
+    },
+    {
+      "name": "notfound",
+      "exitCode": 1,
+      "failed": 1,
+      "passed": 0,
+      "skippedByFocusedSelection": 32
+    },
+    {
+      "name": "scope",
+      "exitCode": 1,
+      "failed": 3,
+      "passed": 0,
+      "skippedByFocusedSelection": 30
+    },
+    {
+      "name": "slots",
+      "exitCode": 1,
+      "failed": 1,
+      "passed": 0,
+      "skippedByFocusedSelection": 32
+    },
+    {
+      "name": "reauth",
+      "exitCode": 1,
+      "failed": 1,
+      "passed": 0,
+      "skippedByFocusedSelection": 32
+    },
+    {
+      "name": "logout",
+      "exitCode": 1,
+      "failed": 1,
+      "passed": 0,
+      "skippedByFocusedSelection": 32
+    },
+    {
+      "name": "late",
+      "exitCode": 1,
+      "failed": 1,
+      "passed": 0,
+      "skippedByFocusedSelection": 32
+    },
+    {
+      "name": "abort",
+      "exitCode": 1,
+      "failed": 1,
+      "passed": 0,
+      "skippedByFocusedSelection": 32
+    }
+  ]
+}

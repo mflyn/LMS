@@ -1,0 +1,87 @@
+[
+  {
+    "oldFile": "recurring-b3-mutation-abort.json",
+    "preservedFile": "recurring-b3-mutation-abort-previous.json",
+    "rawSha256": "e2e822f54bc241af6fc62d4eabc7e008852cdf6be0c125566cfab756b3318ffc"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-abort.log",
+    "preservedFile": "recurring-b3-mutation-abort-previous.log",
+    "rawSha256": "5547f6c6a91268a26fb4a3258fdf0cb8b38473f11b17e4403580161a22555b62"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-late.json",
+    "preservedFile": "recurring-b3-mutation-late-previous.json",
+    "rawSha256": "20e5ad8e46d2803175d387ca8a3d0fc887fda6049f1c53c58e44f637a33ee957"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-late.log",
+    "preservedFile": "recurring-b3-mutation-late-previous.log",
+    "rawSha256": "4a38529b47d5779d676873327beb63e72cbdda744aed96f5a5c6c18234a2b6f2"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-logout.json",
+    "preservedFile": "recurring-b3-mutation-logout-previous.json",
+    "rawSha256": "86454b7a39a30e37a2ca0ac86e29b02e2d4de377f55f7512b9394f017bccfbb6"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-logout.log",
+    "preservedFile": "recurring-b3-mutation-logout-previous.log",
+    "rawSha256": "5228ecae96f478c70b1dbf0b39edfdb9a61e838da896cd1cd51476b3a5c73381"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-marker.json",
+    "preservedFile": "recurring-b3-mutation-marker-previous.json",
+    "rawSha256": "2a7001dab4210be3a59ad3ac7f526b4dc3f26a6d52c6361bd383ab04c26a9b0f"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-marker.log",
+    "preservedFile": "recurring-b3-mutation-marker-previous.log",
+    "rawSha256": "4ad485ad695810d5088e6a1805effeff2b4cea301310b9b496739cc3c960664f"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-notfound.json",
+    "preservedFile": "recurring-b3-mutation-notfound-previous.json",
+    "rawSha256": "3d513c012d68babf6084737ab1f95cb2dfa8fa78db931267b48dc6b6d4064d78"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-notfound.log",
+    "preservedFile": "recurring-b3-mutation-notfound-previous.log",
+    "rawSha256": "74f3caf864cc182544edfa8cdb5369c7e8a50e7bb68a966140103d2aaccdbdd1"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-reauth.json",
+    "preservedFile": "recurring-b3-mutation-reauth-previous.json",
+    "rawSha256": "0661f0980639bec9266aa58c190e310696bb2bf0285827a117347c7649a22874"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-reauth.log",
+    "preservedFile": "recurring-b3-mutation-reauth-previous.log",
+    "rawSha256": "016df788d9110a9fc3636e107bd6646b39c95b846dfe0b35b194f4402e3e39e9"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-scope.json",
+    "preservedFile": "recurring-b3-mutation-scope-previous.json",
+    "rawSha256": "be39816273a4d0a106334c7e11357ca76245340613f59e2c4a693018288b0770"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-scope.log",
+    "preservedFile": "recurring-b3-mutation-scope-previous.log",
+    "rawSha256": "7d876d67d7141906026d1c83a8af79d1a9f11fb893820f65e9e5f5706d7492c0"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-slots.json",
+    "preservedFile": "recurring-b3-mutation-slots-previous.json",
+    "rawSha256": "1c9d4ce09a1addaf2b2a8fe9546d3124b5699c5d4c2d324cd819381033832d68"
+  },
+  {
+    "oldFile": "recurring-b3-mutation-slots.log",
+    "preservedFile": "recurring-b3-mutation-slots-previous.log",
+    "rawSha256": "85834a248d3018863bf627f3e0ce802e3fdc36e44e9d3f6f5558eea6ce74164d"
+  },
+  {
+    "oldFile": "recurring-b3-mutations-summary.json",
+    "preservedFile": "recurring-b3-mutations-summary-recovered.json",
+    "rawSha256": "6eaa0d87ce22a52489fe5c09f808f2a421258641778005439b7d3fa0c01c23b5"
+  }
+]

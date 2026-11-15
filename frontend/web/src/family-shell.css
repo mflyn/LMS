@@ -130,6 +130,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .family-dialog { width: min(100%, 720px); max-height: 88vh; overflow: auto; padding: 24px; border: 1px solid var(--family-border); border-radius: 8px; background: var(--family-surface); box-shadow: 0 24px 70px rgba(28, 39, 51, 0.24); }
 .family-dialog form { display: grid; gap: 16px; }
 .family-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.recurring-fields { border: 0; margin: 0 0 16px; padding: 0; min-width: 0; }
+.recurring-plans-page .family-button,
+.family-dialog[aria-labelledby="recurring-editor"] .family-button,
+.family-dialog[aria-labelledby="recurring-confirm"] .family-button { min-width: 44px; min-height: 44px; }
+.recurring-fields > label { min-width: 0; }
+.recurring-fields input, .recurring-fields select { box-sizing: border-box; width: 100%; min-width: 0; }
+.recurring-fields > fieldset { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
+.recurring-fields > fieldset label { display: flex; align-items: center; min-height: 44px; gap: 8px; padding: 0 8px; }
+.recurring-fields input[type="checkbox"] { width: 18px; min-height: 18px; }
+.recurring-plan-list { list-style: none; padding: 0; }
+.recurring-plan-list > li { border-bottom: 1px solid var(--family-border); padding: 16px 0; overflow-wrap: anywhere; }
+.recurring-plan-list h2 { font-size: 18px; margin: 0 0 8px; }
 .family-field-wide { grid-column: 1 / -1; }
 .family-checkbox { display: flex !important; align-items: center; gap: 8px !important; }
 .family-success-message { color: var(--family-primary-dark) !important; font-weight: 700; }

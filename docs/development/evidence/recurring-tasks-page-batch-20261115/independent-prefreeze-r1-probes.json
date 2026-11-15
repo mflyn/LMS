@@ -1,0 +1,96 @@
+{
+  "startedAt": "2026-11-15T12:47:38.864Z",
+  "sourcesBefore": [
+    {
+      "file": "services/recurringCommands.js",
+      "sha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae"
+    },
+    {
+      "file": "services/familySession.js",
+      "sha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c"
+    },
+    {
+      "file": "services/familyApi.js",
+      "sha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c"
+    },
+    {
+      "file": "pages/family/RecurringPlansPage.js",
+      "sha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80"
+    },
+    {
+      "file": "__tests__/family/recurringCommands.test.js",
+      "sha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093"
+    },
+    {
+      "file": "__tests__/family/RecurringPlansPage.test.js",
+      "sha256": "741710164ba5fd8fa1d75c7485ab4bb1354cde1d664fcfbba2f6f13f48c74f78"
+    }
+  ],
+  "checks": [
+    {
+      "name": "same_actor_direct_reauth_deletes_raw_body_preserves_marker_and_unrelated_command",
+      "passed": true
+    },
+    {
+      "name": "cross_tab_revision_read_deletes_raw_body_and_old_snapshot_cannot_settle",
+      "passed": true
+    },
+    {
+      "name": "interleaved_distinct_UUIDs_preserved_exact_nonfirst_assert_and_sequential_settlement",
+      "passed": true
+    },
+    {
+      "name": "create_digest_matches_actual_backend",
+      "passed": true
+    },
+    {
+      "name": "create_wrong_child_or_target_rejected_valid_terminal_settles",
+      "passed": true
+    },
+    {
+      "name": "patch_digest_matches_actual_backend",
+      "passed": true
+    },
+    {
+      "name": "patch_wrong_child_or_target_rejected_valid_terminal_settles",
+      "passed": true
+    },
+    {
+      "name": "stop_digest_matches_actual_backend",
+      "passed": true
+    },
+    {
+      "name": "stop_wrong_child_or_target_rejected_valid_terminal_settles",
+      "passed": true
+    }
+  ],
+  "mode": "Synthetic JSDOM storage; actual service modules; no HTTP or browser server",
+  "sourcesAfter": [
+    {
+      "file": "services/recurringCommands.js",
+      "sha256": "6e0ede90d8a30286908cab7f4a040bc3ef3a67f68245072c4e0a90c0d361d8ae"
+    },
+    {
+      "file": "services/familySession.js",
+      "sha256": "6d5df727d109432de05103ef88690cee4cc6d0f1f4bcb3aa1743bff58ca1627c"
+    },
+    {
+      "file": "services/familyApi.js",
+      "sha256": "92a4a10d29f000d9c4970c7bb1c1d31afa788c8eec96ffef259fb76f99ddb22c"
+    },
+    {
+      "file": "pages/family/RecurringPlansPage.js",
+      "sha256": "615e25a852e238ea85244db502e001b04c2bbd7d29055171240be7884a61fc80"
+    },
+    {
+      "file": "__tests__/family/recurringCommands.test.js",
+      "sha256": "747160367b69f5cbae8333335c3d87e2cec6a6f7a5304623a48fe223679d3093"
+    },
+    {
+      "file": "__tests__/family/RecurringPlansPage.test.js",
+      "sha256": "741710164ba5fd8fa1d75c7485ab4bb1354cde1d664fcfbba2f6f13f48c74f78"
+    }
+  ],
+  "success": true,
+  "finishedAt": "2026-11-15T12:47:39.098Z"
+}

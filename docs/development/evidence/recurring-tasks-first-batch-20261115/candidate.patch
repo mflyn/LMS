@@ -1,0 +1,1413 @@
+diff --git a/backend/common/utils/familyDate.js b/backend/common/utils/familyDate.js
+index b28c2ef4..05e2759c 100644
+--- a/backend/common/utils/familyDate.js
++++ b/backend/common/utils/familyDate.js
+@@ -48,6 +48,7 @@ const getWeekRange = (localDate) => {
+ 
+ module.exports = {
+   LOCAL_DATE_PATTERN,
++  assertLocalDate,
+   addLocalDateDays,
+   formatLocalDate,
+   getWeekRange,
+diff --git a/backend/services/homework-service/__tests__/setup.js b/backend/services/homework-service/__tests__/setup.js
+index fd1b8f3e..335baceb 100644
+--- a/backend/services/homework-service/__tests__/setup.js
++++ b/backend/services/homework-service/__tests__/setup.js
+@@ -13,7 +13,7 @@ const createMongoServer = async () => {
+   let lastError;
+   for (let attempt = 1; attempt <= 3; attempt += 1) {
+     try {
+-      return /\/services\/(?:ai[123]|growthTask(?:Completion|Help|Sources)|dailyLearningPlan)/.test(expect.getState().testPath)
++      return /\/services\/(?:ai[123]|growthTask(?:Completion|Help|Sources)|dailyLearningPlan|recurringTaskPlan)/.test(expect.getState().testPath)
+         ? await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } })
+         : await MongoMemoryServer.create();
+     } catch (error) {
+diff --git a/backend/services/homework-service/models/GrowthTask.js b/backend/services/homework-service/models/GrowthTask.js
+index f0e3d2b8..52902d10 100644
+--- a/backend/services/homework-service/models/GrowthTask.js
++++ b/backend/services/homework-service/models/GrowthTask.js
+@@ -1,6 +1,6 @@
+ const mongoose = require('mongoose');
+ const { Schema } = mongoose;
+-const { LOCAL_DATE_PATTERN } = require('../../../common/utils/familyDate');
++const { LOCAL_DATE_PATTERN, assertLocalDate } = require('../../../common/utils/familyDate');
+ 
+ const OPERATION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+ const MAX_ATTACHMENT_MEDIA = 100;
+@@ -33,6 +33,9 @@ const requireArrayInput = (path, { allowUndefined = false } = {}) => (value) =>
+ };
+ 
+ const growthTaskSchema = new Schema({
++  recurringPlanId: { type: Schema.Types.ObjectId, immutable: true },
++  occurrenceDate: { type: String, immutable: true },
++  planRevision: { type: Number, min: 1, validate: Number.isSafeInteger, immutable: true },
+   sourceTaskId: { type: Schema.Types.ObjectId, immutable: true },
+   sourceMistakeId: { type: Schema.Types.ObjectId, immutable: true },
+   childId: {
+@@ -238,11 +241,18 @@ const growthTaskSchema = new Schema({
+ });
+ 
+ growthTaskSchema.index({ familyId: 1, childId: 1, dueDate: 1 });
++growthTaskSchema.index({ recurringPlanId: 1, occurrenceDate: 1 }, { name: 'recurring_occurrence_identity', unique: true,
++  partialFilterExpression: { recurringPlanId: { $type: 'objectId' }, occurrenceDate: { $type: 'string' } } });
+ growthTaskSchema.add(require('./growthTaskCompletionFields'));
+ growthTaskSchema.add(require('./growthTaskHelpFields').fields);
+ growthTaskSchema.index({ familyId: 1, childId: 1, dimension: 1, status: 1 });
+ 
+ growthTaskSchema.pre('validate', function validateMediaReferenceInvariants(next) {
++  if ([this.recurringPlanId, this.occurrenceDate, this.planRevision].some(value => value != null)) {
++    let valid = Boolean(this.recurringPlanId && this.occurrenceDate && Number.isSafeInteger(this.planRevision) && this.planRevision >= 1);
++    try { assertLocalDate(this.occurrenceDate); } catch { valid = false; }
++    if (!valid || this.sourceTaskId || this.sourceMistakeId) this.invalidate('recurringPlanId', 'Invalid recurring task identity');
++  }
+   if (this.sourceTaskId && this.sourceMistakeId) {
+     this.invalidate('sourceMistakeId', 'Only one learning source is permitted');
+   }
+diff --git a/eslint.config.js b/eslint.config.js
+index bccef4c4..2ad58d22 100644
+--- a/eslint.config.js
++++ b/eslint.config.js
+@@ -48,6 +48,7 @@ module.exports = [
+       'backend/common/utils/**/*{family,Family,dailyLearningPlan}*.js',
+       'backend/gateway/**/*.js',
+       'backend/services/homework-service/{models,services,routes,__tests__/services}/[Aa]i2*.js',
++      'backend/services/homework-service/{models,services,__tests__/services}/[Rr]ecurringTaskPlan*.js',
+       'backend/services/**/*{family,Family,growth,Growth,media,Media,child,Child,notification,Notification,reminder,Reminder,dailyLearningPlan,DailyLearningPlan}*.js',
+       'backend/tests/t2/dailyLearningPlan.integration.test.js',
+       'backend/tests/t2/weeklyReflection.integration.test.js',
+diff --git a/backend/services/homework-service/models/RecurringTaskPlan.js b/backend/services/homework-service/models/RecurringTaskPlan.js
+new file mode 100644
+index 00000000..1a2244ef
+--- /dev/null
++++ b/backend/services/homework-service/models/RecurringTaskPlan.js
+@@ -0,0 +1,45 @@
++const mongoose = require('mongoose');
++const { isValidTimeZone, assertLocalDate } = require('../../../common/utils/familyDate');
++const Task = require('./GrowthTask');
++const { fields } = require('../services/recurringTaskPlanCommand');
++const { Schema } = mongoose;
++const options = { _id: false, strict: 'throw' };
++const localDate = { type: String, required: true, validate: value => {
++  if (value == null) return true;
++  try { assertLocalDate(value); return true; } catch { return false; }
++} };
++const integer = { type: Number, required: true, min: 0, validate: Number.isSafeInteger };
++const rule = new Schema({ kind: { type: String, enum: ['daily', 'weekly'], required: true },
++  weekdays: { type: [Number], default: undefined, castNonArrays: false } }, options);
++rule.pre('validate', function validateRule(next) {
++  if (this.kind === 'daily' ? this.weekdays !== undefined : !Array.isArray(this.weekdays)
++    || !this.weekdays.length || this.weekdays.length > 7
++    || this.weekdays.some(day => !Number.isInteger(day) || day < 1 || day > 7)
++    || new Set(this.weekdays).size !== this.weekdays.length) this.invalidate('weekdays', 'Invalid recurrence');
++  next();
++});
++const template = new Schema(Object.fromEntries(fields.map(key => {
++  const { index: _index, ...validation } = Task.schema.path(key).options;
++  return [key, { ...validation, default: undefined }];
++})), options);
++const revision = new Schema({ revisionNumber: { ...integer, min: 1 }, effectiveFrom: localDate,
++  endDate: { ...localDate, required: false, default: null },
++  schedule: { type: rule, required: true }, template: { type: template, required: true } }, options);
++const range = new Schema({ from: localDate, to: localDate, count: integer }, options);
++const schema = new Schema({
++  familyId: { type: Schema.Types.ObjectId, required: true, immutable: true },
++  childId: { type: Schema.Types.ObjectId, required: true, immutable: true },
++  createdByParentId: { type: Schema.Types.ObjectId, required: true, immutable: true },
++  timezone: { type: String, required: true, immutable: true, validate: isValidTimeZone },
++  startDate: { ...localDate, immutable: true },
++  status: { type: String, enum: ['active', 'stopped'], default: 'active', required: true },
++  version: { ...integer, min: 1, default: 1 }, generationFence: { ...integer, default: 0 },
++  currentRevision: { type: revision, required: true }, pendingRevision: { type: revision, default: null },
++  lastEvaluatedDate: localDate, skippedOccurrenceCount: { ...integer, default: 0 },
++  lastSkippedRange: { type: range, default: null }, lastSucceededAt: { type: Date, default: null },
++  lastFailureCode: { type: String, default: null }, stoppedAt: { type: Date, default: null },
++  stoppedByParentId: { type: Schema.Types.ObjectId, default: null }
++}, { timestamps: true, strict: 'throw' });
++schema.index({ status: 1, _id: 1 });
++schema.index({ familyId: 1, childId: 1, _id: 1 });
++module.exports = mongoose.models.RecurringTaskPlan || mongoose.model('RecurringTaskPlan', schema);
+diff --git a/backend/services/homework-service/models/RecurringTaskPlanCommand.js b/backend/services/homework-service/models/RecurringTaskPlanCommand.js
+new file mode 100644
+index 00000000..531ef9c7
+--- /dev/null
++++ b/backend/services/homework-service/models/RecurringTaskPlanCommand.js
+@@ -0,0 +1,25 @@
++const mongoose = require('mongoose');
++const { UUID } = require('../services/growthTaskCompletionCommand');
++const { Schema } = mongoose;
++const schema = new Schema({
++  schemaVersion: { type: Number, enum: [1], required: true },
++  familyId: { type: Schema.Types.ObjectId, required: true }, actorId: { type: Schema.Types.ObjectId, required: true },
++  childId: { type: Schema.Types.ObjectId, required: true },
++  operationId: { type: String, required: true, match: UUID },
++  action: { type: String, enum: ['create', 'patch', 'stop'], required: true },
++  targetPlanId: { type: Schema.Types.ObjectId, default: null },
++  requestDigest: { type: String, required: true, match: /^[a-f0-9]{64}$/ },
++  state: { type: String, enum: ['succeeded', 'aborted'], required: true },
++  command: { type: Schema.Types.Mixed, default: null }, result: { type: Schema.Types.Mixed, default: null },
++  settledAt: { type: Date, required: true }
++}, { strict: 'throw' });
++schema.index({ familyId: 1, actorId: 1, operationId: 1 }, { unique: true, name: 'recurring_command_identity' });
++schema.index({ familyId: 1, actorId: 1, childId: 1, settledAt: -1, _id: -1 });
++schema.pre('validate', function validateTerminal(next) {
++  if (this.state === 'aborted' ? this.command !== null || this.result !== null : !this.command || !this.result) {
++    this.invalidate('state', 'Invalid terminal payload');
++  }
++  if (this.action === 'create' ? this.targetPlanId !== null : !this.targetPlanId) this.invalidate('targetPlanId', 'Invalid target');
++  next();
++});
++module.exports = mongoose.models.RecurringTaskPlanCommand || mongoose.model('RecurringTaskPlanCommand', schema);
+diff --git a/backend/services/homework-service/services/recurringTaskPlanCommand.js b/backend/services/homework-service/services/recurringTaskPlanCommand.js
+new file mode 100644
+index 00000000..f32be996
+--- /dev/null
++++ b/backend/services/homework-service/services/recurringTaskPlanCommand.js
+@@ -0,0 +1,91 @@
++const { createHash } = require('crypto');
++const { canonicalize } = require('json-canonicalize');
++const { assertLocalDate } = require('../../../common/utils/familyDate');
++const { error, ID, UUID, matches } = require('./growthTaskCompletionCommand');
++
++const invalid = () => error(400, 'VALIDATION_ERROR');
++const fields = ['dimension', 'area', 'subject', 'title', 'taskType', 'description',
++  'estimatedMinutes', 'targetAmount', 'unit', 'priority'];
++const object = value => value !== null && typeof value === 'object' && !Array.isArray(value)
++  && [Object.prototype, null].includes(Object.getPrototypeOf(value));
++const allowed = (value, keys, required = keys) => {
++  if (!object(value) || Object.keys(value).some(key => !keys.includes(key))
++    || required.some(key => !Object.prototype.hasOwnProperty.call(value, key))) throw invalid();
++};
++const date = value => {
++  if (typeof value !== 'string') throw invalid();
++  try { assertLocalDate(value); } catch { throw invalid(); }
++  return value;
++};
++const template = input => {
++  allowed(input, fields, ['dimension', 'title', 'taskType']);
++  const result = {};
++  for (const [key, value] of Object.entries(input)) {
++    if (['estimatedMinutes', 'targetAmount'].includes(key)) {
++      if (value !== null && (typeof value !== 'number' || !Number.isFinite(value) || value < 0)) throw invalid();
++      result[key] = value;
++    } else {
++      if (value !== null && typeof value !== 'string') throw invalid();
++      result[key] = typeof value === 'string' ? value.trim() : value;
++    }
++  }
++  if (!['moral', 'academic', 'physical', 'artistic', 'labor'].includes(result.dimension)
++    || !result.title || result.title.length > 100 || !result.taskType
++    || result.priority != null && !['low', 'medium', 'high'].includes(result.priority)) throw invalid();
++  return result;
++};
++const schedule = value => {
++  if (value?.kind === 'daily') { allowed(value, ['kind']); return { kind: 'daily' }; }
++  allowed(value, ['kind', 'weekdays']);
++  if (value.kind !== 'weekly' || !Array.isArray(value.weekdays) || !value.weekdays.length
++    || value.weekdays.length > 7 || Array.from(value.weekdays).some(day => !Number.isInteger(day) || day < 1 || day > 7)
++    || new Set(value.weekdays).size !== value.weekdays.length) throw invalid();
++  return { kind: 'weekly', weekdays: [...value.weekdays].sort((a, b) => a - b) };
++};
++const normalize = (action, body) => {
++  if (!['create', 'patch', 'stop'].includes(action)) throw invalid();
++  const keys = action === 'create' ? ['operationId', 'childId', 'startDate', 'endDate', 'schedule', 'template']
++    : action === 'patch' ? ['operationId', 'expectedVersion', 'endDate', 'schedule', 'template']
++      : ['operationId', 'expectedVersion'];
++  allowed(body, keys);
++  if (!matches(body.operationId, UUID)) throw invalid();
++  const result = { operationId: body.operationId.toLowerCase() };
++  if (action === 'create') {
++    if (!matches(body.childId, ID)) throw invalid();
++    Object.assign(result, { childId: body.childId.toLowerCase(), startDate: date(body.startDate) });
++  } else {
++    if (!Number.isSafeInteger(body.expectedVersion) || body.expectedVersion < 1
++      || body.expectedVersion === Number.MAX_SAFE_INTEGER) throw invalid();
++    result.expectedVersion = body.expectedVersion;
++  }
++  if (action !== 'stop') {
++    Object.assign(result, { endDate: body.endDate === null ? null : date(body.endDate),
++      schedule: schedule(body.schedule), template: template(body.template) });
++    if (action === 'create' && result.endDate !== null && result.endDate < result.startDate) throw invalid();
++  }
++  return result;
++};
++const normalizeAbort = (operationId, body) => {
++  allowed(body, ['childId', 'action', 'targetPlanId', 'requestDigest']);
++  if (!matches(operationId, UUID) || !matches(body.childId, ID)
++    || !['create', 'patch', 'stop'].includes(body.action)
++    || (body.action === 'create' ? body.targetPlanId !== null : !matches(body.targetPlanId, ID))
++    || !matches(body.requestDigest, /^[a-f0-9]{64}$/)) throw invalid();
++  return { ...body, childId: body.childId.toLowerCase(), operationId: operationId.toLowerCase(),
++    targetPlanId: body.targetPlanId?.toLowerCase() ?? null };
++};
++const digest = (scope, action, targetPlanId, body) => createHash('sha256').update(canonicalize({
++  schemaVersion: 1, ...scope, operationId: body.operationId, action, targetPlanId, body
++})).digest('hex');
++const matchesDate = (value, rule) => rule.kind === 'daily'
++  || rule.weekdays.includes(assertLocalDate(value).getUTCDay() || 7);
++const countDays = (from, to, rule) => {
++  if (from > to) return 0;
++  const start = assertLocalDate(from), length = (assertLocalDate(to) - start) / 86400000 + 1;
++  if (rule.kind === 'daily') return length;
++  const first = start.getUTCDay() || 7;
++  let count = Math.floor(length / 7) * rule.weekdays.length;
++  for (let n = 0; n < length % 7; n++) if (rule.weekdays.includes((first - 1 + n) % 7 + 1)) count++;
++  return count;
++};
++module.exports = { normalize, normalizeAbort, digest, countDays, matchesDate, fields, invalid };
+diff --git a/backend/services/homework-service/services/recurringTaskPlanService.js b/backend/services/homework-service/services/recurringTaskPlanService.js
+new file mode 100644
+index 00000000..56c395b6
+--- /dev/null
++++ b/backend/services/homework-service/services/recurringTaskPlanService.js
+@@ -0,0 +1,228 @@
++const mongoose = require('mongoose');
++const Plan = require('../models/RecurringTaskPlan');
++const Command = require('../models/RecurringTaskPlanCommand');
++const Task = require('../models/GrowthTask');
++const Family = require('../../../common/models/Family');
++const User = require('../../../common/models/User');
++const { resolveChildAccess } = require('../../../common/utils/familyAccess');
++const { addLocalDateDays, formatLocalDate } = require('../../../common/utils/familyDate');
++const { error, ID, UUID, matches } = require('./growthTaskCompletionCommand');
++const { normalize, normalizeAbort, digest, countDays, matchesDate, invalid } = require('./recurringTaskPlanCommand');
++const denied = () => error(403, 'CHILD_ACCESS_DENIED');
++const unknown = () => error(503, 'RECURRING_PLAN_WRITE_UNKNOWN');
++const conflict = () => error(409, 'RECURRING_PLAN_COMMAND_CONFLICT');
++const clone = value => JSON.parse(JSON.stringify(value));
++const key = value => ({ familyId: value.familyId, actorId: value.actorId, operationId: value.operationId });
++const identityView = value => ({ familyId: String(value.familyId), actorId: String(value.actorId),
++  childId: String(value.childId), operationId: value.operationId, action: value.action,
++  targetPlanId: value.targetPlanId ? String(value.targetPlanId) : null, requestDigest: value.requestDigest });
++const terminalView = value => ({ state: value.state, identity: identityView(value), command: value.command,
++  result: value.result, settledAt: new Date(value.settledAt).toISOString() });
++const planView = plan => ({ id: String(plan._id), childId: String(plan.childId), timezone: plan.timezone,
++  startDate: plan.startDate, status: plan.status, version: plan.version,
++  currentRevision: clone(plan.currentRevision), pendingRevision: plan.pendingRevision ? clone(plan.pendingRevision) : null,
++  createdAt: plan.createdAt?.toISOString(), updatedAt: plan.updatedAt?.toISOString(), stoppedAt: plan.stoppedAt?.toISOString() || null,
++  generationHealth: { lastEvaluatedDate: plan.lastEvaluatedDate, lastSucceededAt: plan.lastSucceededAt?.toISOString() || null,
++    lastFailureCode: plan.lastFailureCode, skippedOccurrenceCount: plan.skippedOccurrenceCount,
++    lastSkippedRange: plan.lastSkippedRange ? clone(plan.lastSkippedRange) : null } });
++
++// Account for missed dates before replacing the old rule. Never create historical tasks.
++const advance = (plan, today) => {
++  // The initial watermark is a future start's previous day, not an evaluated day.
++  if (plan.lastEvaluatedDate >= plan.startDate && today < plan.lastEvaluatedDate) throw unknown();
++  if (today < plan.startDate) {
++    if (plan.pendingRevision && plan.pendingRevision.effectiveFrom <= today) {
++      plan.currentRevision = plan.pendingRevision;
++      plan.pendingRevision = null;
++    }
++    return;
++  }
++  const from = [addLocalDateDays(plan.lastEvaluatedDate, 1), plan.startDate].sort().at(-1);
++  const yesterday = addLocalDateDays(today, -1), pending = plan.pendingRevision;
++  let count = 0;
++  for (const [rule, until] of [[plan.currentRevision, pending ? addLocalDateDays(pending.effectiveFrom, -1) : yesterday],
++    ...(pending ? [[pending, yesterday]] : [])]) {
++    const begin = [from, rule.effectiveFrom].sort().at(-1);
++    const end = [yesterday, until, rule.endDate || yesterday].sort()[0];
++    count += countDays(begin, end, rule.schedule);
++  }
++  if (count) {
++    plan.skippedOccurrenceCount += count;
++    plan.lastSkippedRange = { from, to: yesterday, count };
++  }
++  if (pending && pending.effectiveFrom <= today) { plan.currentRevision = pending; plan.pendingRevision = null; }
++  const last = [yesterday, plan.currentRevision.endDate || yesterday].sort()[0];
++  if (last > plan.lastEvaluatedDate) plan.lastEvaluatedDate = last;
++};
++
++const createRecurringTaskPlanService = ({ transactionRunner, now = Date.now, enabled = () => false } = {}) => {
++  if (typeof transactionRunner !== 'function' || typeof now !== 'function' || typeof enabled !== 'function') {
++    throw new TypeError('Recurring transaction runner, clock and enable predicate required');
++  }
++  const at = () => { const value = new Date(now()); if (!Number.isFinite(value.getTime())) throw unknown(); return value; };
++  const requireEnabled = () => { if (enabled() !== true) throw error(503, 'RECURRING_TASKS_DISABLED'); };
++  const tx = async work => {
++    // Duplicate terminal insertions and a crossed local midnight are re-read in a fresh transaction.
++    for (let attempt = 0; attempt < 3; attempt++) {
++      try { return await transactionRunner(async session => {
++        if (!session?.inTransaction()) throw unknown();
++        return work(session);
++      }); } catch (cause) {
++        if (cause?.code === 'RECURRING_DATE_CHANGED'
++          || cause?.code === 11000 && cause?.keyPattern?.familyId && cause?.keyPattern?.actorId && cause?.keyPattern?.operationId) continue;
++        if (cause?.statusCode < 500 || cause?.code === 'RECURRING_TASKS_DISABLED') throw cause;
++        throw unknown();
++      }
++    }
++    throw unknown();
++  };
++  const authorize = async (identity, childId, session) => {
++    if (identity?.role !== 'parent' || !matches(identity.id, ID) || !matches(childId, ID)) throw denied();
++    const actor = await User.findOne({ _id: identity.id, role: 'parent' }).session(session).lean();
++    const access = await resolveChildAccess(identity, childId, {
++      FamilyModel: { findOne: query => Family.findOne(query).session(session) },
++      UserModel: { findOne: query => User.findOne(query).session(session) }
++    });
++    if (!actor || actor.status && actor.status !== 'active' || !access
++      || access.child.status && access.child.status !== 'active') throw denied();
++    return access;
++  };
++  const target = async (identity, planId, session) => {
++    if (!matches(planId, ID)) throw denied();
++    const plan = await Plan.findById(planId).session(session).lean();
++    if (!plan) throw denied();
++    const access = await authorize(identity, String(plan.childId), session);
++    if (String(plan.familyId) !== String(access.familyId)) throw denied();
++    return { plan, access };
++  };
++  const findTerminal = async (intent, session) => {
++    const row = await Command.findOne(key(intent)).session(session).lean();
++    if (row && JSON.stringify(identityView(row)) !== JSON.stringify(identityView(intent))) throw conflict();
++    return row;
++  };
++  const boundary = (plan, today) => {
++    requireEnabled();
++    if (formatLocalDate(at(), plan.timezone) !== today) throw error(503, 'RECURRING_DATE_CHANGED');
++  };
++  const generateToday = async (plan, today, session) => {
++    const revision = plan.currentRevision;
++    if (plan.status !== 'active' || today < plan.startDate || today < revision.effectiveFrom
++      || revision.endDate && today > revision.endDate || !matchesDate(today, revision.schedule)) return null;
++    let task = await Task.findOne({ recurringPlanId: plan._id, occurrenceDate: today }).session(session).lean();
++    if (task && (String(task.familyId) !== String(plan.familyId) || String(task.childId) !== String(plan.childId))) throw unknown();
++    if (!task) {
++      [task] = await Task.create([{ ...revision.template, familyId: plan.familyId, childId: plan.childId,
++        createdByParentId: plan.createdByParentId, dueDate: today, recurringPlanId: plan._id,
++        occurrenceDate: today, planRevision: revision.revisionNumber }], { session });
++    }
++    return String(task._id);
++  };
++  const savePlan = async (plan, old, session) => {
++    if (!Number.isSafeInteger(old.generationFence) || old.generationFence >= Number.MAX_SAFE_INTEGER) throw unknown();
++    plan.generationFence = old.generationFence + 1;
++    plan.updatedAt = at();
++    await Plan.hydrate(plan).validate();
++    const { _id, __v, ...values } = plan;
++    const changed = await Plan.updateOne({ _id, version: old.version, generationFence: old.generationFence },
++      { $set: values }, { session });
++    if (changed.matchedCount !== 1) throw unknown();
++  };
++  const execute = ({ identity, action, planId = null, body } = {}) => tx(async session => {
++    const found = action === 'create' ? { access: await authorize(identity, body?.childId, session) }
++      : await target(identity, planId, session);
++    requireEnabled();
++    const normalized = normalize(action, body), access = found.access;
++    const scope = { familyId: String(access.familyId), actorId: identity.id.toLowerCase(), childId: String(access.child._id) };
++    const intent = { schemaVersion: 1, ...scope, action, targetPlanId: action === 'create' ? null : String(found.plan._id),
++      operationId: normalized.operationId };
++    intent.requestDigest = digest(scope, action, intent.targetPlanId, normalized);
++    const existing = await findTerminal(intent, session);
++    if (existing) {
++      if (existing.state === 'aborted') throw error(409, 'RECURRING_PLAN_COMMAND_ABORTED');
++      return clone(existing.result);
++    }
++    const stamp = at(), timezone = found.plan?.timezone || access.family.timezone;
++    const today = formatLocalDate(stamp, timezone);
++    let plan = found.plan, generatedTaskId = null, effectiveFrom;
++    if (action === 'create') {
++      if (normalized.startDate < today) throw invalid();
++      plan = new Plan({ familyId: scope.familyId, childId: scope.childId, createdByParentId: scope.actorId,
++        timezone, startDate: normalized.startDate, lastEvaluatedDate: addLocalDateDays(normalized.startDate, -1),
++        currentRevision: { revisionNumber: 1, effectiveFrom: normalized.startDate,
++          template: normalized.template, schedule: normalized.schedule, endDate: normalized.endDate },
++        createdAt: stamp, updatedAt: stamp }).toObject();
++      generatedTaskId = await generateToday(plan, today, session);
++      if (today >= plan.startDate) { plan.lastEvaluatedDate = today; plan.lastSucceededAt = stamp; }
++      await Plan.create([plan], { session });
++    } else {
++      const old = { ...plan };
++      advance(plan, today);
++      if (plan.version !== normalized.expectedVersion) throw error(409, 'RECURRING_PLAN_VERSION_CONFLICT');
++      if (plan.status !== 'active') throw error(409, 'RECURRING_PLAN_STATE_CONFLICT');
++      plan.version++;
++      if (action === 'patch') {
++        if (plan.currentRevision.endDate && today > plan.currentRevision.endDate) throw error(409, 'RECURRING_PLAN_STATE_CONFLICT');
++        effectiveFrom = addLocalDateDays(today, 1);
++        if (normalized.endDate !== null && normalized.endDate < [effectiveFrom, plan.startDate].sort().at(-1)) throw invalid();
++        plan.pendingRevision = { revisionNumber: plan.version, effectiveFrom,
++          template: normalized.template, schedule: normalized.schedule, endDate: normalized.endDate };
++      } else { plan.status = 'stopped'; plan.stoppedAt = stamp; plan.stoppedByParentId = new mongoose.Types.ObjectId(scope.actorId); }
++      await savePlan(plan, old, session);
++    }
++    const result = { httpStatus: action === 'create' ? 201 : 200,
++      data: { operationId: normalized.operationId, plan: planView(plan),
++        ...(action === 'create' ? { generatedTaskId } : action === 'patch' ? { effectiveFrom } : { existingTasksPreserved: true }) } };
++    await Command.create([{ ...intent, state: 'succeeded', command: normalized, result, settledAt: stamp }], { session });
++    boundary(plan, today);
++    return result;
++  });
++  const abort = ({ identity, operationId, body } = {}) => tx(async session => {
++    const access = await authorize(identity, body?.childId, session);
++    requireEnabled();
++    const parsed = normalizeAbort(operationId, body);
++    if (parsed.action !== 'create') {
++      const found = await target(identity, parsed.targetPlanId, session);
++      if (String(found.plan.childId) !== parsed.childId || String(found.plan.familyId) !== String(access.familyId)) throw denied();
++    }
++    const intent = { schemaVersion: 1, ...parsed, familyId: String(access.familyId), actorId: identity.id.toLowerCase() };
++    const existing = await findTerminal(intent, session);
++    if (existing) return terminalView(existing);
++    const [row] = await Command.create([{ ...intent, state: 'aborted', settledAt: at() }], { session });
++    requireEnabled();
++    return terminalView(row.toObject());
++  });
++  const getCommand = ({ identity, childId, operationId } = {}) => tx(async session => {
++    const access = await authorize(identity, childId, session);
++    if (!matches(operationId, UUID)) throw invalid();
++    const scope = { familyId: String(access.familyId), actorId: identity.id.toLowerCase(), childId: childId.toLowerCase(),
++      operationId: operationId.toLowerCase() };
++    const row = await Command.findOne({ ...key(scope), childId: scope.childId }).session(session).lean();
++    return row ? terminalView(row) : { state: 'not_found', identity: scope };
++  });
++  const getPlan = ({ identity, planId } = {}) => tx(async session => planView((await target(identity, planId, session)).plan));
++  const generate = ({ planId } = {}) => tx(async session => {
++    requireEnabled();
++    if (!matches(planId, ID)) throw invalid();
++    const plan = await Plan.findById(planId).session(session).lean();
++    if (!plan) throw denied();
++    if (plan.status === 'stopped') return { generatedTaskId: null };
++    const family = await Family.findOne({ _id: plan.familyId, childIds: plan.childId }).session(session).lean();
++    const child = await User.findOne({ _id: plan.childId, familyId: plan.familyId, role: 'student' }).session(session).lean();
++    if (!family || !child || child.status && child.status !== 'active') throw denied();
++    const stamp = at(), today = formatLocalDate(stamp, plan.timezone), old = { ...plan };
++    advance(plan, today);
++    if (today < plan.startDate) {
++      if (old.pendingRevision && !plan.pendingRevision) await savePlan(plan, old, session);
++      boundary(plan, today);
++      return { generatedTaskId: null };
++    }
++    const generatedTaskId = await generateToday(plan, today, session);
++    plan.lastEvaluatedDate = [today, plan.currentRevision.endDate || today].sort()[0];
++    plan.lastSucceededAt = stamp; plan.lastFailureCode = null;
++    await savePlan(plan, old, session);
++    boundary(plan, today);
++    return { generatedTaskId };
++  });
++  return { execute, abort, getCommand, getPlan, generate };
++};
++module.exports = { createRecurringTaskPlanService, planView };
+diff --git a/backend/services/homework-service/__tests__/services/recurringTaskPlan.test.js b/backend/services/homework-service/__tests__/services/recurringTaskPlan.test.js
+new file mode 100644
+index 00000000..a2928152
+--- /dev/null
++++ b/backend/services/homework-service/__tests__/services/recurringTaskPlan.test.js
+@@ -0,0 +1,515 @@
++const mongoose = require('mongoose');
++const { randomUUID } = require('crypto');
++const Family = require('../../../../common/models/Family');
++const User = require('../../../../common/models/User');
++const Task = require('../../models/GrowthTask');
++const Plan = require('../../models/RecurringTaskPlan');
++const Command = require('../../models/RecurringTaskPlanCommand');
++const { runMongoTransaction } = require('../../../../common/services/mongoTransaction');
++const { createRecurringTaskPlanService } = require('../../services/recurringTaskPlanService');
++const { normalize, digest, countDays } = require('../../services/recurringTaskPlanCommand');
++
++const id = () => String(new mongoose.Types.ObjectId());
++let parent, coparent, child, family, clock, service;
++const command = extra => ({ operationId: randomUUID(), childId: child.id, startDate: '2026-11-16',
++  endDate: null, schedule: { kind: 'weekly', weekdays: [1, 2, 3, 4, 5] },
++  template: { title: 'Synthetic exercise', dimension: 'physical', taskType: 'exercise', targetAmount: 500 }, ...extra });
++const build = options => createRecurringTaskPlanService({ transactionRunner: work => runMongoTransaction({ mongooseInstance: mongoose, work }),
++  now: () => clock, enabled: () => true, ...options });
++const create = (body = command(), actor = parent, api = service) => api.execute({ identity: actor, action: 'create', body });
++const scope = (_body, actor = parent) => ({ familyId: String(family._id), actorId: actor.id, childId: child.id });
++const abortBody = (body, action = 'create', targetPlanId = null) => ({ childId: child.id, action, targetPlanId,
++  requestDigest: digest(scope(body), action, targetPlanId, normalize(action, body)) });
++const abort = (body, api = service) => api.abort({ identity: parent, operationId: body.operationId, body: abortBody(body) });
++const counts = async () => [await Plan.countDocuments(), await Task.countDocuments(), await Command.countDocuments()];
++beforeAll(async () => { for (const model of [Family, User, Task, Plan, Command]) await model.init(); });
++beforeEach(async () => {
++  clock = Date.parse('2026-11-16T04:00:00Z');
++  parent = { id: id(), role: 'parent' }; coparent = { id: id(), role: 'parent' }; child = { id: id(), role: 'student' };
++  family = await Family.create({ familyName: 'Synthetic recurring family', ownerParentId: parent.id,
++    memberParentIds: [parent.id, coparent.id], childIds: [child.id], timezone: 'Asia/Shanghai' });
++  await User.collection.insertMany([parent, coparent, child].map(actor => ({ _id: new mongoose.Types.ObjectId(actor.id),
++    role: actor.role, username: actor.id, email: actor.id + '@example.test',
++    ...(actor.role === 'student' ? { familyId: family._id } : {}) })));
++  service = build();
++});
++afterEach(() => jest.restoreAllMocks());
++const patchBody = (version = 1, extra = {}) => ({ operationId: randomUUID(), expectedVersion: version,
++  endDate: null, schedule: { kind: 'daily' }, template: { title: 'Changed exercise', dimension: 'physical', taskType: 'exercise' }, ...extra });
++const change = (planId, body = patchBody(), action = 'patch', api = service) => api.execute({ identity: parent, action, planId, body });
++const stopped = (planId, version = 1) => change(planId, { operationId: randomUUID(), expectedVersion: version }, 'stop');
++const query = (body, api = service, actor = parent) => api.getCommand({ identity: actor, childId: child.id, operationId: body.operationId });
++
++test('creates today once and replays the exact original result without extra tasks or commands', async () => {
++  const body = command(), first = await create(body);
++  expect(first.httpStatus).toBe(201);
++  expect(first.data.generatedTaskId).toMatch(/^[a-f0-9]{24}$/);
++  expect(await create(body)).toEqual(first);
++  expect(await counts()).toEqual([1, 1, 1]);
++  const task = await Task.findOne().lean();
++  expect(task).toMatchObject({ status: 'pending', dueDate: '2026-11-16', occurrenceDate: '2026-11-16',
++    starAwardState: 'not_applicable', planRevision: 1 });
++});
++
++test('a preemptive abort prevents the original request arriving later and never creates business rows', async () => {
++  const body = command(), settled = await abort(body);
++  expect(settled.state).toBe('aborted');
++  expect(await abort(body)).toEqual(settled);
++  await expect(create(body)).rejects.toMatchObject({ code: 'RECURRING_PLAN_COMMAND_ABORTED' });
++  expect(await counts()).toEqual([0, 0, 1]);
++});
++
++test('successful business wins over abort, with full canonical body and immutable result', async () => {
++  const body = command(), original = await create(body), settled = await abort(body);
++  expect(settled).toMatchObject({ state: 'succeeded', command: normalize('create', body), result: original });
++  expect(await counts()).toEqual([1, 1, 1]);
++});
++
++test.each([
++  { schedule: { kind: 'weekly', weekdays: [1, 1] } },
++  { schedule: { kind: 'daily', weekdays: [1] } },
++  { startDate: '2026-02-30' }, { familyId: 'forged' },
++  { template: { title: 'x', taskType: 'x', dimension: 'physical', targetAmount: -1 } },
++  { template: { title: 'x', taskType: 'x', dimension: 'physical', attachmentMediaIds: [] } }
++])('invalid command rejects with zero side effects %j', async extra => {
++  await expect(create(command(extra))).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
++  expect(await counts()).toEqual([0, 0, 0]);
++});
++
++test('week counting is inclusive and bounded across leap days and long outages', () => {
++  expect(countDays('2026-11-16', '2026-11-22', { kind: 'weekly', weekdays: [1, 2, 3, 4, 5] })).toBe(5);
++  expect(countDays('2024-02-28', '2024-03-01', { kind: 'daily' })).toBe(3);
++  expect(countDays('2000-01-01', '2099-12-31', { kind: 'daily' })).toBe(36525);
++  expect(countDays('2026-11-17', '2026-11-16', { kind: 'daily' })).toBe(0);
++});
++
++test('canonical digest preserves null/omission, scope and target while normalizing order and trim', () => {
++  const body = command(), a = normalize('create', body);
++  const b = normalize('create', { ...body, template: { ...body.template, title: ' Synthetic exercise ' },
++    schedule: { weekdays: [5, 4, 3, 2, 1], kind: 'weekly' } });
++  expect(digest(scope(body), 'create', null, a)).toBe(digest(scope(body), 'create', null, b));
++  expect(digest(scope(body), 'create', null, a)).not.toBe(digest(scope(body, coparent), 'create', null, a));
++  expect(digest(scope(body), 'create', null, a)).not.toBe(digest(scope(body), 'create', null,
++    normalize('create', { ...body, template: { ...body.template, description: null } })));
++});
++
++test('future start stays empty and generates only its first actual date; ordinary tasks are not indexed together', async () => {
++  const first = await create(command({ startDate: '2026-11-20' })), planId = first.data.plan.id;
++  expect(first.data.generatedTaskId).toBeNull();
++  expect(await service.generate({ planId })).toEqual({ generatedTaskId: null });
++  clock = Date.parse('2026-11-20T04:00:00Z');
++  const result = await service.generate({ planId });
++  expect(result.generatedTaskId).not.toBeNull();
++  await Task.create([1, 2].map(() => ({ familyId: family._id, childId: child.id, createdByParentId: parent.id,
++    title: 'ordinary', dimension: 'physical', taskType: 'exercise', dueDate: '2026-11-20' })));
++  expect(await Task.countDocuments()).toBe(3);
++});
++
++test.each(['cancelled', 'archived', 'confirmed'])('an existing %s task with edited dueDate is not recreated or overwritten', async status => {
++  const first = await create(), planId = first.data.plan.id;
++  await Task.updateOne({ _id: first.data.generatedTaskId }, { $set: { status, dueDate: '2026-11-25', parentFeedback: 'Keep history' } });
++  const before = await Task.findOne().lean();
++  await service.generate({ planId });
++  expect(await Task.findOne().lean()).toEqual(before);
++  expect(await Task.countDocuments()).toBe(1);
++});
++
++test('edits take effect tomorrow and never modify today; two edits supersede only pending rule', async () => {
++  const first = await create(), planId = first.data.plan.id, before = await Task.findOne().lean();
++  const one = patchBody(), result = await change(planId, one);
++  expect(result.data.effectiveFrom).toBe('2026-11-17');
++  expect(result.data.plan.currentRevision.template.title).toBe('Synthetic exercise');
++  expect(result.data.plan.pendingRevision.template.title).toBe('Changed exercise');
++  const two = patchBody(2, { template: { ...one.template, title: 'Last revision' } });
++  await change(planId, two);
++  expect(await change(planId, one)).toEqual(result);
++  expect(await Task.findOne().lean()).toEqual(before);
++  clock = Date.parse('2026-11-17T04:00:00Z');
++  await service.generate({ planId });
++  expect(await Task.findOne({ occurrenceDate: '2026-11-17' }).lean()).toMatchObject({ title: 'Last revision', planRevision: 3 });
++  expect(await Task.findById(before._id).lean()).toEqual(before);
++});
++
++test('outage crosses revision and end boundaries without backfill or double-counting', async () => {
++  const first = await create(), planId = first.data.plan.id;
++  await change(planId, patchBody(1, { endDate: '2026-11-22' }));
++  clock = Date.parse('2026-11-24T04:00:00Z');
++  await service.generate({ planId });
++  let plan = await service.getPlan({ identity: parent, planId });
++  expect(plan.generationHealth).toMatchObject({ skippedOccurrenceCount: 6, lastEvaluatedDate: '2026-11-22' });
++  expect(await Task.countDocuments()).toBe(1);
++  await service.generate({ planId });
++  plan = await service.getPlan({ identity: parent, planId });
++  expect(plan.generationHealth.skippedOccurrenceCount).toBe(6);
++  await expect(change(planId, patchBody(2))).rejects.toMatchObject({ code: 'RECURRING_PLAN_STATE_CONFLICT' });
++});
++
++test('stopping catches historical gaps but creates no today task and preserves all existing rows', async () => {
++  const first = await create(), planId = first.data.plan.id, before = await Task.find().lean();
++  clock = Date.parse('2026-11-19T04:00:00Z');
++  const result = await stopped(planId);
++  expect(result.data.plan.generationHealth.skippedOccurrenceCount).toBe(2);
++  expect(result.data.existingTasksPreserved).toBe(true);
++  await service.generate({ planId });
++  expect(await Task.find().lean()).toEqual(before);
++  await expect(stopped(planId, 2)).rejects.toMatchObject({ code: 'RECURRING_PLAN_STATE_CONFLICT' });
++});
++
++test('a weekday outage generates only today and retries keep gaps unchanged', async () => {
++  const first = await create(), planId = first.data.plan.id;
++  clock = Date.parse('2026-11-23T04:00:00Z');
++  await service.generate({ planId }); await service.generate({ planId });
++  expect((await Task.find().sort({ dueDate: 1 }).lean()).map(t => t.dueDate)).toEqual(['2026-11-16', '2026-11-23']);
++  expect((await Plan.findById(planId).lean()).skippedOccurrenceCount).toBe(4);
++});
++
++test('plan timezone remains fixed and DST/local day is not host time', async () => {
++  await Family.updateOne({ _id: family._id }, { $set: { timezone: 'America/New_York' } });
++  clock = Date.parse('2026-11-16T04:30:00Z');
++  const first = await create(command({ startDate: '2026-11-15', schedule: { kind: 'daily' } }));
++  expect((await Task.findOne().lean()).dueDate).toBe('2026-11-15');
++  await Family.updateOne({ _id: family._id }, { $set: { timezone: 'Asia/Shanghai' } });
++  await service.generate({ planId: first.data.plan.id });
++  expect(await Task.countDocuments()).toBe(1);
++});
++
++test('default disabled is fail closed but terminal reads remain read-only', async () => {
++  const body = command(); await create(body);
++  const api = createRecurringTaskPlanService({ transactionRunner: work => runMongoTransaction({ mongooseInstance: mongoose, work }) });
++  const before = await Command.find().lean();
++  await expect(create(command(), parent, api)).rejects.toMatchObject({ code: 'RECURRING_TASKS_DISABLED' });
++  await expect(abort(body, api)).rejects.toMatchObject({ code: 'RECURRING_TASKS_DISABLED' });
++  expect((await query(body, api)).state).toBe('succeeded');
++  expect(await Command.find().lean()).toEqual(before);
++});
++
++test('replay checks live authorization and the same UUID belongs to different actors independently', async () => {
++  const body = command(); await create(body); await create(body, coparent);
++  expect(await Plan.countDocuments()).toBe(2);
++  await Family.updateOne({ _id: family._id }, { $pull: { memberParentIds: coparent.id } });
++  await expect(query(body, service, coparent)).rejects.toMatchObject({ code: 'CHILD_ACCESS_DENIED' });
++  await expect(create(body, coparent)).rejects.toMatchObject({ code: 'CHILD_ACCESS_DENIED' });
++  await expect(create(body, child)).rejects.toMatchObject({ code: 'CHILD_ACCESS_DENIED' });
++});
++
++test('inactive child and changed family relationship block generation without touching its previous task', async () => {
++  const first = await create(), before = await Task.find().lean();
++  clock = Date.parse('2026-11-17T04:00:00Z');
++  await User.collection.updateOne({ _id: new mongoose.Types.ObjectId(child.id) }, { $set: { status: 'inactive' } });
++  await expect(service.generate({ planId: first.data.plan.id })).rejects.toMatchObject({ code: 'CHILD_ACCESS_DENIED' });
++  expect(await Task.find().lean()).toEqual(before);
++});
++
++test('different body, target or abort digest cannot overwrite a terminal', async () => {
++  const body = command(); await create(body);
++  const before = await Command.findOne().lean();
++  await expect(create({ ...body, template: { ...body.template, title: 'different' } })).rejects.toMatchObject({ code: 'RECURRING_PLAN_COMMAND_CONFLICT' });
++  await expect(service.abort({ identity: parent, operationId: body.operationId,
++    body: { ...abortBody(body), requestDigest: 'a'.repeat(64) } })).rejects.toMatchObject({ code: 'RECURRING_PLAN_COMMAND_CONFLICT' });
++  expect(await Command.findOne().lean()).toEqual(before);
++});
++
++test('rollback after business writes leaves no task or plan and allows a durable abort', async () => {
++  const body = command(), original = Command.create.bind(Command);
++  jest.spyOn(Command, 'create').mockImplementationOnce(() => { throw new Error('synthetic terminal write failure'); });
++  await expect(create(body)).rejects.toMatchObject({ code: 'RECURRING_PLAN_WRITE_UNKNOWN' });
++  expect(await counts()).toEqual([0, 0, 0]);
++  Command.create.mockImplementation(original);
++  expect((await query(body)).state).toBe('not_found');
++  expect((await abort(body)).state).toBe('aborted');
++  await expect(create(body)).rejects.toMatchObject({ code: 'RECURRING_PLAN_COMMAND_ABORTED' });
++});
++
++test('a lost commit response is discovered and replayed with the original command and no extra business writes', async () => {
++  const body = command(); let lose = true;
++  const api = build({ transactionRunner: async work => {
++    const result = await runMongoTransaction({ mongooseInstance: mongoose, work });
++    if (lose) { lose = false; throw new Error('synthetic lost commit response'); }
++    return result;
++  } });
++  await expect(create(body, parent, api)).rejects.toMatchObject({ code: 'RECURRING_PLAN_WRITE_UNKNOWN' });
++  const saved = await query(body);
++  expect(saved.state).toBe('succeeded');
++  expect(await create(body)).toEqual(saved.result);
++  expect(await counts()).toEqual([1, 1, 1]);
++});
++
++test.each(['create', 'patch', 'stop'])('abort wins at final %s command insertion and rolls back every business write', async action => {
++  let planId = null;
++  if (action !== 'create') planId = (await create()).data.plan.id;
++  const body = action === 'create' ? command() : action === 'patch' ? patchBody() : { operationId: randomUUID(), expectedVersion: 1 };
++  const beforePlans = await Plan.find().lean(), beforeTasks = await Task.find().lean();
++  let release, arrived, held = false;
++  const hold = new Promise(resolve => { release = resolve; }), reached = new Promise(resolve => { arrived = resolve; });
++  const original = Command.create.bind(Command);
++  jest.spyOn(Command, 'create').mockImplementation(async (rows, options) => {
++    if (!held && rows[0].state === 'succeeded' && rows[0].operationId === body.operationId) {
++      held = true; arrived(); await hold;
++    }
++    return original(rows, options);
++  });
++  const running = service.execute({ identity: parent, action, planId, body }).then(value => ({ value }), cause => ({ cause }));
++  try {
++    await Promise.race([reached, running.then(() => { throw new Error('command failed before race barrier'); })]);
++    expect((await query(body)).state).toBe('not_found');
++    const result = await service.abort({ identity: parent, operationId: body.operationId, body: abortBody(body, action, planId) });
++    expect(result.state).toBe('aborted');
++  } finally { release(); await running; }
++  expect((await running).cause).toMatchObject({ code: 'RECURRING_PLAN_COMMAND_ABORTED' });
++  expect(await Plan.find().lean()).toEqual(beforePlans);
++  expect(await Task.find().lean()).toEqual(beforeTasks);
++  expect(await Command.countDocuments({ operationId: body.operationId })).toBe(1);
++});
++
++test('concurrent original retries commit one result and one occurrence', async () => {
++  const body = command();
++  const results = await Promise.all([create(body), create(body)]);
++  expect(results[0]).toEqual(results[1]); expect(await counts()).toEqual([1, 1, 1]);
++});
++
++test('concurrent scans create one occurrence and co-parent edits reject the stale management version', async () => {
++  const planId = (await create()).data.plan.id;
++  clock = Date.parse('2026-11-17T04:00:00Z');
++  await Promise.all([service.generate({ planId }), service.generate({ planId })]);
++  expect(await Task.countDocuments({ occurrenceDate: '2026-11-17' })).toBe(1);
++  const results = await Promise.allSettled([change(planId), service.execute({ identity: coparent, action: 'patch', planId, body: patchBody() })]);
++  expect(results.filter(x => x.status === 'fulfilled')).toHaveLength(1);
++  expect(results.find(x => x.status === 'rejected').reason.code).toBe('RECURRING_PLAN_VERSION_CONFLICT');
++});
++
++test('midnight crossing rolls back and recomputes the effective date, while a committed replay keeps its date', async () => {
++  const planId = (await create()).data.plan.id, body = patchBody(), original = Command.create.bind(Command);
++  let crossed = false;
++  jest.spyOn(Command, 'create').mockImplementation(async (rows, options) => {
++    const result = await original(rows, options);
++    if (!crossed) { crossed = true; clock = Date.parse('2026-11-17T04:00:00Z'); }
++    return result;
++  });
++  const result = await change(planId, body);
++  expect(result.data.effectiveFrom).toBe('2026-11-18');
++  clock = Date.parse('2026-11-20T04:00:00Z');
++  expect(await change(planId, body)).toEqual(result);
++  expect(await Command.countDocuments({ operationId: body.operationId })).toBe(1);
++});
++
++test.each(['stop', 'patch'].flatMap(action => [true, false].map(managementFirst => ({ action, managementFirst }))))(
++  'generation fence serializes $action and generation, managementFirst=$managementFirst', async ({ action, managementFirst }) => {
++    const planId = (await create()).data.plan.id;
++    const previous = await Task.findOne().lean();
++    clock = Date.parse('2026-11-17T04:00:00Z');
++    let release, arrived, held = false;
++    const hold = new Promise(resolve => { release = resolve; });
++    const reached = new Promise(resolve => { arrived = resolve; });
++    const original = Plan.updateOne.bind(Plan);
++    jest.spyOn(Plan, 'updateOne').mockImplementation(async (filter, update, options) => {
++      if (!held) { held = true; arrived(); await hold; }
++      return original(filter, update, options);
++    });
++    const manage = () => action === 'stop' ? stopped(planId) : change(planId);
++    const generate = () => service.generate({ planId });
++    const running = (managementFirst ? generate() : manage()).then(value => ({ value }), cause => ({ cause }));
++    try {
++      await Promise.race([reached, running.then(() => { throw new Error('race barrier not reached'); })]);
++      await (managementFirst ? manage() : generate());
++    } finally { release(); await running; }
++    expect((await running).cause).toBeUndefined();
++    expect(await Task.findById(previous._id).lean()).toEqual(previous);
++    const today = await Task.find({ occurrenceDate: '2026-11-17' }).lean();
++    expect(today).toHaveLength(action === 'stop' && managementFirst ? 0 : 1);
++    if (today.length) expect(today[0]).toMatchObject({ title: 'Synthetic exercise', planRevision: 1, starAwardState: 'not_applicable' });
++    const plan = await Plan.findById(planId).lean();
++    expect(plan.version).toBe(2);
++    expect(plan.status).toBe(action === 'stop' ? 'stopped' : 'active');
++    if (action === 'patch') expect(plan.pendingRevision.effectiveFrom).toBe('2026-11-18');
++  }
++);
++
++test('abort lost response is recoverable and concurrent retries preserve its first terminal audit', async () => {
++  const body = command();
++  const lost = build({ transactionRunner: async work => {
++    await runMongoTransaction({ mongooseInstance: mongoose, work });
++    throw new Error('synthetic lost response');
++  } });
++  await expect(abort(body, lost)).rejects.toMatchObject({ code: 'RECURRING_PLAN_WRITE_UNKNOWN' });
++  const first = await query(body);
++  expect(first.state).toBe('aborted');
++  clock += 60000;
++  const results = await Promise.all([abort(body), abort(body)]);
++  expect(results).toEqual([first, first]);
++  expect(await counts()).toEqual([0, 0, 1]);
++  await expect(create(body)).rejects.toMatchObject({ code: 'RECURRING_PLAN_COMMAND_ABORTED' });
++});
++
++test('read-only calls, stop replay and clock rollback preserve exact persisted rows', async () => {
++  const planId = (await create()).data.plan.id;
++  const before = await Plan.findById(planId).lean();
++  clock -= 86400000;
++  await expect(service.generate({ planId })).rejects.toMatchObject({ code: 'RECURRING_PLAN_WRITE_UNKNOWN' });
++  clock += 2 * 86400000;
++  await service.generate({ planId });
++  const evaluated = await Plan.findById(planId).lean();
++  clock -= 86400000;
++  await expect(service.generate({ planId })).rejects.toMatchObject({ code: 'RECURRING_PLAN_WRITE_UNKNOWN' });
++  expect(await Plan.findById(planId).lean()).toEqual(evaluated);
++  clock += 86400000;
++  const body = { operationId: randomUUID(), expectedVersion: 1 };
++  const result = await change(planId, body, 'stop');
++  const rows = await Plan.findById(planId).lean();
++  clock += 86400000;
++  expect(await change(planId, body, 'stop')).toEqual(result);
++  await service.getPlan({ identity: parent, planId });
++  await query(body);
++  expect(await Plan.findById(planId).lean()).toEqual(rows);
++  expect(rows.createdByParentId).toEqual(before.createdByParentId);
++  await expect(stopped(planId, 2)).rejects.toMatchObject({ code: 'RECURRING_PLAN_STATE_CONFLICT' });
++});
++
++test('child, cross-family parent, revoked parent and wrong child cannot inspect or abort the original command', async () => {
++  const body = command(); await create(body);
++  const alien = { id: id(), role: 'parent' };
++  const before = await counts();
++  for (const actor of [child, alien]) {
++    await expect(query(body, service, actor)).rejects.toMatchObject({ statusCode: 403 });
++    await expect(service.abort({ identity: actor, operationId: body.operationId, body: abortBody(body) }))
++      .rejects.toMatchObject({ statusCode: 403 });
++  }
++  await expect(service.getCommand({ identity: parent, childId: id(), operationId: body.operationId }))
++    .rejects.toMatchObject({ statusCode: 403 });
++  await Family.updateOne({ _id: family._id }, { $set: { ownerParentId: coparent.id, memberParentIds: [coparent.id] } });
++  await expect(query(body)).rejects.toMatchObject({ statusCode: 403 });
++  expect(await counts()).toEqual(before);
++  clock += 86400000;
++  const plan = await Plan.findOne();
++  await service.generate({ planId: String(plan._id) });
++  expect(await Task.countDocuments()).toBe(2);
++});
++
++test('occurrence index is unique and recurrence identity is complete, immutable and separate from ordinary tasks', async () => {
++  const first = await create(), row = await Task.findById(first.data.generatedTaskId).lean();
++  const index = (await Task.collection.indexes()).find(entry => entry.name === 'recurring_occurrence_identity');
++  expect(index).toMatchObject({ unique: true, key: { recurringPlanId: 1, occurrenceDate: 1 },
++    partialFilterExpression: { recurringPlanId: { $type: 'objectId' }, occurrenceDate: { $type: 'string' } } });
++  const { _id: _ignored, ...duplicate } = row;
++  await expect(Task.create(duplicate)).rejects.toMatchObject({ code: 11000 });
++  for (const malformed of [{ planRevision: null }, { occurrenceDate: '2026-02-30' }, { sourceMistakeId: id() }]) {
++    await expect(new Task({ ...duplicate, ...malformed }).validate()).rejects.toBeDefined();
++  }
++  const task = await Task.findById(row._id);
++  task.occurrenceDate = '2026-11-17'; task.recurringPlanId = id(); task.planRevision = 99;
++  await task.save();
++  expect(await Task.findById(row._id).lean()).toMatchObject({ recurringPlanId: row.recurringPlanId,
++    occurrenceDate: row.occurrenceDate, planRevision: row.planRevision });
++  expect((await Plan.collection.indexes()).some(entry => Object.keys(entry.key).some(key => key.includes('template.')))).toBe(false);
++});
++
++test('future plan edits retain startDate and activate the latest rule only at the real start', async () => {
++  const planId = (await create(command({ startDate: '2026-11-20' }))).data.plan.id;
++  await change(planId);
++  clock = Date.parse('2026-11-19T04:00:00Z');
++  expect(await service.generate({ planId })).toEqual({ generatedTaskId: null });
++  expect((await Plan.findById(planId)).lastEvaluatedDate).toBe('2026-11-19');
++  clock = Date.parse('2026-11-20T04:00:00Z');
++  await service.generate({ planId });
++  expect(await Task.findOne().lean()).toMatchObject({ title: 'Changed exercise', occurrenceDate: '2026-11-20', planRevision: 2 });
++  expect((await Plan.findById(planId)).skippedOccurrenceCount).toBe(0);
++});
++
++test('final enable boundary rolls back all business writes and replays only after explicit re-enable', async () => {
++  const body = command(), original = Command.create.bind(Command);
++  let enabled = true;
++  jest.spyOn(Command, 'create').mockImplementation(async (...args) => {
++    const rows = await original(...args); enabled = false; return rows;
++  });
++  const api = build({ enabled: () => enabled });
++  await expect(create(body, parent, api)).rejects.toMatchObject({ code: 'RECURRING_TASKS_DISABLED' });
++  expect(await counts()).toEqual([0, 0, 0]);
++  expect((await query(body, api)).state).toBe('not_found');
++  jest.restoreAllMocks(); enabled = true;
++  await create(body, parent, api);
++  expect(await counts()).toEqual([1, 1, 1]);
++});
++
++test.each(['patch', 'stop', 'generate'])('clock rollback before start after evaluation rejects %s with zero writes', async action => {
++  const planId = (await create(command({ startDate: '2026-11-20' }))).data.plan.id;
++  clock = Date.parse('2026-11-23T04:00:00Z');
++  await service.generate({ planId });
++  const before = await Plan.find().lean(), tasks = await Task.find().lean(), commands = await Command.find().lean();
++  clock = Date.parse('2026-11-19T04:00:00Z');
++  const run = action === 'generate' ? service.generate({ planId }) : action === 'patch' ? change(planId) : stopped(planId);
++  await expect(run).rejects.toMatchObject({ code: 'RECURRING_PLAN_WRITE_UNKNOWN' });
++  expect(await Plan.find().lean()).toEqual(before);
++  expect(await Task.find().lean()).toEqual(tasks);
++  expect(await Command.find().lean()).toEqual(commands);
++});
++
++test.each([true, false])('elapsed future rule is promoted before a later edit, explicit scan=%s', async scan => {
++  const planId = (await create(command({ startDate: '2026-11-20' }))).data.plan.id;
++  const firstBody = patchBody(), first = await change(planId, firstBody);
++  clock = Date.parse('2026-11-18T04:00:00Z');
++  if (scan) {
++    await service.generate({ planId });
++    const promoted = await Plan.findById(planId).lean();
++    expect(promoted.currentRevision.revisionNumber).toBe(2);
++    expect(promoted.pendingRevision).toBeNull();
++  }
++  const second = await change(planId, patchBody(2, { template: { title: 'Third rule', dimension: 'physical', taskType: 'exercise' } }));
++  expect(second.data.plan.currentRevision).toMatchObject({ revisionNumber: 2, effectiveFrom: '2026-11-17', template: firstBody.template });
++  expect(second.data.plan.pendingRevision).toMatchObject({ revisionNumber: 3, effectiveFrom: '2026-11-19' });
++  expect(second.data.plan.generationHealth.lastEvaluatedDate).toBe('2026-11-19');
++  expect(await Task.countDocuments()).toBe(0);
++  expect(await change(planId, firstBody)).toEqual(first);
++  clock = Date.parse('2026-11-20T04:00:00Z');
++  await service.generate({ planId });
++  expect(await Task.findOne().lean()).toMatchObject({ title: 'Third rule', planRevision: 3 });
++});
++
++test.each(['create', 'patch', 'stop'])('business %s wins while abort is in flight and both return the original success', async action => {
++  const planId = action === 'create' ? null : (await create()).data.plan.id;
++  const body = action === 'create' ? command() : action === 'patch' ? patchBody() : { operationId: randomUUID(), expectedVersion: 1 };
++  let release, arrived, held = false;
++  const hold = new Promise(resolve => { release = resolve; });
++  const reached = new Promise(resolve => { arrived = resolve; });
++  const original = Command.create.bind(Command);
++  jest.spyOn(Command, 'create').mockImplementation(async (rows, options) => {
++    if (!held && rows[0].state === 'aborted') { held = true; arrived(); await hold; }
++    return original(rows, options);
++  });
++  const running = service.abort({ identity: parent, operationId: body.operationId, body: abortBody(body, action, planId) })
++    .then(value => ({ value }), cause => ({ cause }));
++  let success;
++  try {
++    await Promise.race([reached, running.then(() => { throw new Error('abort barrier not reached'); })]);
++    success = await service.execute({ identity: parent, action, planId, body });
++  } finally { release(); await running; }
++  expect((await running).cause).toBeUndefined();
++  expect((await running).value).toMatchObject({ state: 'succeeded', result: success, command: normalize(action, body) });
++  expect(await Command.countDocuments({ operationId: body.operationId })).toBe(1);
++  expect(await Plan.countDocuments()).toBe(1);
++  expect(await Task.countDocuments()).toBe(1);
++});
++
++test('two first aborts race from not_found and settle one immutable tombstone', async () => {
++  const body = command();
++  let release, arrived, waiting = 0;
++  const hold = new Promise(resolve => { release = resolve; });
++  const reached = new Promise(resolve => { arrived = resolve; });
++  const original = Command.create.bind(Command);
++  jest.spyOn(Command, 'create').mockImplementation(async (rows, options) => {
++    if (rows[0].state === 'aborted' && waiting < 2) {
++      waiting++;
++      if (waiting === 2) arrived();
++      await hold;
++    }
++    return original(rows, options);
++  });
++  const runs = [abort(body), abort(body)].map(run => run.then(value => ({ value }), cause => ({ cause })));
++  try {
++    await Promise.race([reached, ...runs.map(run => run.then(() => { throw new Error('first abort race barrier not reached'); }))]);
++    expect((await query(body)).state).toBe('not_found');
++  } finally { release(); await Promise.all(runs); }
++  const results = await Promise.all(runs);
++  expect(results.every(result => !result.cause)).toBe(true);
++  expect(results[0].value).toEqual(results[1].value);
++  expect(results[0].value.state).toBe('aborted');
++  expect(await counts()).toEqual([0, 0, 1]);
++});
+diff --git a/docs/api/family-recurring-tasks-api.md b/docs/api/family-recurring-tasks-api.md
+new file mode 100644
+index 00000000..77ff5c05
+--- /dev/null
++++ b/docs/api/family-recurring-tasks-api.md
+@@ -0,0 +1,121 @@
++# 重复计划 API 增量（待评审）
++
++**状态：** APPROVED / IMPLEMENTATION_IN_PROGRESS；2026-11-15。用户已批准契约，首批本地核心实现中；不是现有可调用接口。
++**P2 修订：** 最小标记、同身份重登及原命令终态化设计已复审批准，DESIGN_P2_CLOSED；未批准新接口上线。
++配套：[设计](../superpowers/specs/2026-11-15-family-recurring-tasks-design.md)、[测试方案](../development/family-recurring-tasks-test-plan.md)。
++沿用[现有 API](family-learning-tracker-api.md)认证、家庭隔离、LocalDate、公共错误包络；不删除现有 repeatRule 拒绝和历史记录。
++
++## 1. 入口与共同规则
++
++新增路径由 Gateway 依既有身份封装转发 homework；仅已登录且实时仍有权限的家长使用。familyId/actorId 均取服务端，不接受正文覆盖。
++跨家庭、失去孩子权限、未知目标统一 `403 CHILD_ACCESS_DENIED`；孩子调用管理接口 `403 FORBIDDEN`，失效身份沿用现有认证错误。先鉴权再返回命令/计划详情。
++
++| 方法与路径 | 请求 | 成功 |
++| --- | --- | --- |
++| POST `/api/recurring-task-plans` | 创建命令 | 201，首次及原命令重放一致 |
++| GET `/api/recurring-task-plans` | childId 必填，page/pageSize 可选 | 200 列表，默认1/20，最大50 |
++| GET `/api/recurring-task-plans/:planId` | 无正文/查询 | 200 当前计划 |
++| PATCH `/api/recurring-task-plans/:planId` | 完整替换未来规则命令 | 200，原命令重放历史结果 |
++| POST `/api/recurring-task-plans/:planId/stop` | 停止命令 | 200，保留首次停止事实 |
++| GET `/api/recurring-task-plan-commands` | childId、page/pageSize | 200 当前 actor 的终态命令索引，按 settledAt 倒序 |
++| GET `/api/recurring-task-plan-commands/:operationId` | childId 必填 | 200 原 actor 的 succeeded/aborted/not_found |
++| POST `/api/recurring-task-plan-commands/:operationId/abort` | childId、action、targetPlanId、requestDigest | 200 原成功结果或持久 aborted；不是撤销计划 |
++
++不公开任意日期补生成、直接发星、删除计划/命令记录接口。所有 GET 零业务写、零生成、零恢复。
++正文、query 均严格白名单，重复 query 键/未知字段拒绝，不接收客户端 status、planRevision、生成健康等服务端字段。
++
++## 2. 创建
++
++合成示例（日期仅说明格式，实测需随固定测试时钟生成）：
++
++```json
++{
++  "operationId": "6193a7ef-43da-4a5e-a120-c0a95140c1c2",
++  "childId": "507f1f77bcf86cd799439011",
++  "startDate": "2026-11-16",
++  "endDate": null,
++  "schedule": { "kind": "weekly", "weekdays": [1, 2, 3, 4, 5] },
++  "template": {
++    "dimension": "physical",
++    "area": "体育锻炼",
++    "title": "跳绳",
++    "taskType": "exercise",
++    "description": "按自己的节奏完成",
++    "estimatedMinutes": 10,
++    "targetAmount": 500,
++    "unit": "次",
++    "priority": "medium"
++  }
++}
++```
++
++operationId 为合法 UUID。schedule 为 daily（不得带 weekdays）或 weekly（1=周一至7=周日，非空、去重整数数组）；重复星期拒绝，合法不同顺序规范排序。
++startDate/endDate 严格有效 YYYY-MM-DD，endDate 为 null 或不早于 startDate。家庭时区服务器读取并固定，禁止正文 timezone。
++template 仅设计 §3 白名单；可选字段省略与 null 按既有任务字段校验处理，不将不合法输入静默变成默认。空字符串/负数/非法维度/图片或奖励字段均按既有校验或未知字段拒绝。
++
++成功包络：`{success:true,data:{operationId,plan,generatedTaskId}}`。plan 为下节 DTO；generatedTaskId 仅创建事务当日确实生成时为 ID，否则 null。重放返回原结果，即使实例后来已完成/计划已停止；UI 随后 GET 当前详情，不将历史快照覆盖当前页面。
++
++## 3. 计划 DTO、修改与停止
++
++plan 白名单：id、childId、timezone、startDate、status、version、currentRevision、pendingRevision、createdAt、updatedAt、stoppedAt；不输出内部 fence、数据库日志、其他家长的命令正文。
++revision：revisionNumber、effectiveFrom、endDate、schedule、template。尚未生效的明日版本放 pendingRevision，不能把它投影为今日规则。
++额外 generationHealth：`lastEvaluatedDate`、`lastSucceededAt`、`lastFailureCode`（脱敏或 null）、`skippedOccurrenceCount`、`lastSkippedRange`。日期为空不能显示“生成正常”；计划结束可由 revision endDate 派生显示，不新增任务终态。
++列表包络：`{success:true,data:{items,page,pageSize,total}}`；命令索引采用同包络，items 只含 operationId/action/targetPlanId/state/settledAt（create 的 targetPlanId=null）。成功生成的 planId 在成功 result 内返回，不用它替换原创建命令的空目标。
++
++PATCH 正文为 `{operationId,expectedVersion,schedule,endDate,template}`；四项业务/版本字段都必填，template 是完整替换而非隐式合并。expectedVersion 为正安全整数。
++服务端成功事务确定生效日为计划当地明天；不可修改 childId、startDate、timezone。endDate 为 null 或不早于 max(startDate,生效日)。已结束或已停止计划拒绝修改。
++成功：`{success:true,data:{operationId,plan,effectiveFrom}}`。不更新今天及任何已生成任务。
++
++stop 正文仅 `{operationId,expectedVersion}`，成功：`{success:true,data:{operationId,plan,existingTasksPreserved:true}}`。
++停止与生成共用计划事务栅栏，生效以提交顺序为准；先生成后停止的实例保留。不能用 stop 代替取消任务或归档完成记录。无恢复接口。
++
++## 4. 原命令与错误契约
++
++### 4.1 身份与摘要
++
++requestDigest 为小写64位十六进制 SHA-256，输入为 UTF-8 的规范JSON：`{schemaVersion:1,familyId,actorId,childId,operationId,action,targetPlanId,body}`。复用现有 JSON canonicalize 规则，不按普通JSON键插入顺序计算；action 为 create/patch/stop，create目标为null，其他目标为计划ID；ID/UUID小写。scope取认证身份和实时归属，服务端不能信任客户端提交的actor/family字段。
++body 为该业务接口完整规范白名单正文（含原operationId、create的childId及适用的expectedVersion），不含 requestDigest。前后端共同明确：已知字符串按既有规则trim、weekly星期排序、可选字段省略与显式null保留区别、不补动态默认值；未知字段、重复星期及非法输入拒绝而非归一化丢弃。摘要不包含时钟、计划最新版本、服务端生成ID；同命令跨午夜摘要不变。
++前端保存最小标记前完成规范化并计算摘要，发送该规范正文；后端独立计算和验证。成功记录必须保存这份规范正文，不能从后来已修改的计划重建。
++先鉴权和结构规范化，再查原 actor/ID 终态和摘要，最后验证最新版本/日期；已成功命令不因日期过期被误拒。匹配aborted时返回 `RECURRING_PLAN_COMMAND_ABORTED`；原ID异正文/目标/动作返回冲突。
++
++### 4.2 最小标记及结果查询
++
++localStorage专用键对应 `{schemaVersion:1,familyId,actorId,childId,operationId,action,targetPlanId,requestDigest}`，不存正文/认证凭据；回读校验成功后才发送。退出清会话正文及所有私有UI，但有意保留这份最小标记；未经原actor重新认证和实时授权不加载、不显示、不处理。坏标记或持久化失败不得静默移除/降级后发送。
++同actor/child的未决标记阻止新的计划管理意图；原命令查询、原正文还在时的显式原ID重试及显式abort例外。新身份的迟到回调既不能恢复旧UI，也不能删除原标记；storage/focus与写前复核复用既有会话隔离方式。
++
++结果接口的200 data：
++- succeeded：`{state,identity,command,result,settledAt}`。identity 为上述标记除schemaVersion外的完整字段；command为原规范正文；result为原业务成功 `{httpStatus,data}`。当前计划另行GET，不能用历史result覆盖当前页。
++- aborted：`{state,identity,command:null,result:null,settledAt}`。墓碑没有原正文，不能伪造可重发正文；settledAt为首次中止时间。
++- not_found：`{state,identity:{familyId,actorId,childId,operationId}}`。只说明此刻未见终态，不含推测摘要/动作或可解锁标记。
++
++只有succeeded/aborted与本地完整身份、摘要相等且当前会话epoch仍有效时，才条件删除该原标记；not_found、超时、403、503、损坏回执或身份/摘要冲突均不解除。不以相同operationId跨actor/child误匹配。原业务201/200不增加identity字段，客户端成功后也GET命令终态完成核验；GET失败保留结果待核对标记，不重新创建。
++重登发现not_found但正文丢失时，仅提供只读重查或下节显式abort，不自动重建正文/换UUID。清站点存储、换设备不保证本地在途标记仍在；不得推荐此操作作为解除办法。命令索引能发现已落盘终态，但不是全量在途查询。
++
++### 4.3 显式终止未确定命令
++
++abort 路径沿用原operationId，无新命令UUID、无额外query。正文严格为 `{childId,action,targetPlanId,requestDigest}`；摘要格式及目标规则同上。create没有已知计划ID，仍须实时家长/孩子授权；patch/stop须验证目标归属。actor/family取当前认证scope，其他字段拒绝。
++复用本功能命令集合、唯一键和Mongo事务：若已有相同身份/摘要的succeeded或aborted，返回上节同形状200终态；无记录则插入aborted墓碑，不写计划、任务或奖励。存在同ID异意图返回409，不覆盖任何终态。
++所有业务写必须在同一事务中排他插入succeeded记录，禁止upsert覆盖墓碑。业务先提交则abort返回succeeded，不撤销原业务；abort先提交则在途业务最终日志插入冲突，整笔业务回滚，重读墓碑后返回409 aborted。不能只在业务开始查询墓碑，也不能业务提交后再写成功记录。
++只有确认事务持久终态后才返回200；abort提交未知为503，原标记保留，原最小正文可重试或GET，无TTL、无“等够时间就未提交”的判断。已确定未发送/回滚但保留标记时，也可通过该墓碑永久禁止原UUID再执行，从而安全解除。
++这不是计划stop，也不是撤销已成功命令。UI显式提示“若原操作已成功，将返回原结果，不会撤销”；只有确认aborted后才可由用户新建不同意图/UUID，不自动重发。撤权或功能关闭时不进行abort，保留隔离标记；恢复授权/能力后再处理。
++
++| HTTP / error.code | 意义及客户端动作 |
++| --- | --- |
++| 400 `VALIDATION_ERROR` | 类型、日期、枚举、字段、分页非法；占位前拒绝 |
++| 403 `CHILD_ACCESS_DENIED` / `FORBIDDEN` | 清理当前私有计划/命令视图，迟到响应不能恢复；不自动再写 |
++| 409 `RECURRING_PLAN_VERSION_CONFLICT` | 共管或旧预览，重新查看后显式决定；不自动覆盖 |
++| 409 `RECURRING_PLAN_STATE_CONFLICT` | 结束/停止状态不允许修改 |
++| 409 `RECURRING_PLAN_COMMAND_CONFLICT` | 原 ID 的动作/目标/正文不同，不覆盖已保存结果 |
++| 409 `RECURRING_PLAN_COMMAND_ABORTED` | 原业务写已被墓碑终止，禁止再执行；该错误本身不代替完整终态回执，GET核验后才清标记 |
++| 503 `RECURRING_PLAN_WRITE_UNKNOWN` | 提交结果未确定；保留原命令，查询或原命令重试 |
++| 503 `RECURRING_TASKS_DISABLED` | 新能力未启用；禁止绕过为一组旧 POST，保留未知命令，查询仍可用 |
++
++错误包络 `{success:false,error:{code,message,details}}`，details 不暴露家庭、孩子内容或其他 actor。鉴权失败优先于返回功能关闭/目标状态。
++开关关闭时计划及命令 GET 可用，业务写重放和abort均返回功能关闭，不偷偷执行；启用后再处理原命令。发出过请求后收到400/版本冲突也不直接移除标记，避免另一个在途重试仍成功；放弃意图先显式abort取得终态，之后用户才能提交新意图。仅本地校验未发送的表单错误无需创建标记或墓碑。
++
++## 5. 实例与旧客户端兼容
++
++实例 DTO 增加可选 `recurrence:{planId,occurrenceDate,planRevision}`。不增加状态、不替换 taskId、不允许客户端写这三个字段。
++任务编辑、取消、完成、确认和原命令恢复沿用既有正式契约，包括确认 expectedCompletionVersion 与媒体代次。plan version 不能用作完成版本。
++普通单次任务无 recurrence，旧单次 repeatRule 仍400；既有今日计划/分页/筛选只纳入真实任务，不将计划或未生成日期混入 total。
++计划日期缺口不进入任务完成率分母；计划页必须提示“未生成不代表已完成”。生成/修改/停止不调用发星，确认依 taskId 去重。
+diff --git a/docs/development/family-recurring-tasks-test-plan.md b/docs/development/family-recurring-tasks-test-plan.md
+new file mode 100644
+index 00000000..d061464d
+--- /dev/null
++++ b/docs/development/family-recurring-tasks-test-plan.md
+@@ -0,0 +1,139 @@
++# 重复计划测试方案与设计自查
++
++**状态：** APPROVED / FIRST_BATCH_PENDING_ACCEPTANCE；2026-11-15。用户批准测试设计与首批限定本地实现；矩阵是完整验收要求，首批核心服务实跑证据见§6，不代表全部交付。
++**P2：** 退出后原命令身份与安全解除设计已获用户批准关闭，DESIGN_P2_CLOSED；本批已实现服务端终态竞争，页面持久标记、退出重登及HTTP恢复尚待后续实现。
++基线 `3816c3f2a45daff8b66221cfffb322de11bdce33`。
++入口：[设计](../superpowers/specs/2026-11-15-family-recurring-tasks-design.md)、[API](../api/family-recurring-tasks-api.md)。
++
++## 1. 验证方式
++
++复用现有 Jest、副本集合成库、正式应用工厂、Testing Library 和 `playwright.t2.config.js`，不新建框架。扫描器必须可注入时钟和显式触发，测试不等待真实午夜、不用 sleep 掩盖竞争。
++单元可用替身；事务/HTTP使用真实临时 Mongo，明确是否真实 resource/progress。最终浏览器用新隔离合成实例，不能更新真人入口或重播种其数据。自动浏览器不替代真人/iPad。
++普通生成不涉媒体；至少一个完成图片到家长审核的验收仍使用正式媒体和发星接口，不能以 mock 成功替代。
++
++## 2. 永久用例矩阵
++
++| ID | 场景与不可削弱断言 |
++| --- | --- |
++| RP-01 | daily/weekly、周一至周五、起止含边界、未来开始、无结束；0匹配日不得造任务，结束后不得再生成 |
++| RP-02 | 非法日期、空/重复/小数星期、daily带weekdays、未知/媒体/actor/奖励字段、负目标；零计划/命令/实例/账本写入 |
++| RP-03 | 真实家庭时区及DST/月底/闰日；固定计划时区不随家庭改时区移动。宿主时区不同结果一致 |
++| RP-04 | 同计划同日期多副本并发/定时重复/启动扫描，仅一个taskId；普通任务不受部分唯一索引误伤，索引缺失启动拒绝 |
++| RP-05 | 单次编辑dueDate、取消、归档后再扫，旧occurrence身份保留，不重建不覆盖；实例详情不混入筛选/页外列表total |
++| RP-06 | 创建事务故障、插入后回滚、提交成功丢响应，原UUID仅一计划/当天一实例；异正文/目标/动作冲突，两个actor同UUID不串结果 |
++| RP-07 | 计划修改只影响明日起；同日第二次修改替换pending规则，旧命令历史快照仍可重放；过午夜首次提交与已提交重放分别断言生效日 |
++| RP-08 | 修改/生成、停止/生成双向屏障竞争；同文档fence保护，停止先提交零新实例，生成先提交的实例保留；旧version拒绝零写 |
++| RP-09 | 停止不可恢复，原停止命令保留首次审计，新命令不覆盖；已有pending/completed/confirmed任务及作品/星星完全不变 |
++| RP-10 | 停机一天/多周/跨修改生效日/跨结束日；只补今天，过去匹配日只记录缺口且累计一次；已结束计划最终扫描不能漏掉缺口 |
++| RP-11 | 时钟回退拒绝，最终写前跨午夜回滚重算；失败不推进水位。丢响应后原身份收敛，其他唯一键错误不当成功 |
++| RP-12 | 50计划分页超过一页、公平继续扫描、多个副本；失败可见且其他计划不永久饥饿；停机不新开批次、收尾失败不假成功 |
++| RP-13 | 真实家长/共管/孩子/兄弟姐妹/跨家庭/撤权身份；命令结果与重放也实时授权。创建者离家不导致有效家庭计划自动删除 |
++| RP-14 | 创建成功丢响应、修改成功丢响应、停止成功丢响应；不换UUID、不自动第二次POST。刷新及退出重登原actor只读发现成功结果 |
++| RP-15 | not_found但原请求仍在途：保留最小标记及锁，原正文尚存可原ID重试；退出清正文但不丢标记，正文丢失只能重查或显式abort。详见RP-15a至15f |
++| RP-16 | GET列表/详情/命令零写零生成；历史结果重放不能覆盖当前计划页。关闭功能时仅查询可用，未开启不产生扫描副作用 |
++| RP-17 | 同实例重复确认、共管接续、progress成功丢响应仅一星；两日期分别确认两星。生成/修改/停止/取消均零额外发星 |
++| RP-18 | 每日任务独立完成版本/owner/材料/清单/求助/反馈；完成未知结果仍用原完成命令，确认旧作品版本拒绝，计划版本不能代替完成版本 |
++| RP-19 | 家长设置工作日跳绳→当天任务→孩子带图片提交→家长查看确认→孩子回看→次日新任务；刷新后仍可读，前一天审计不变 |
++| RP-20 | 页面显示次日生效、立即停止但保留已有任务、仅今天生成、无节假日规则及缺口提示；普通移除/隐私删除仍走原媒体规则 |
++| RP-21 | 双孩子标签页隔离、共管冲突、切换清私有草稿与命令；原成功结果晚到不得恢复旧孩子UI；触控44px、键盘与焦点和长标题不回退 |
++
++### RP-15 退出后恢复的永久反例细化
++
++以下是完整场景的验收要求；首批仅实现并验证服务端事务子集，覆盖边界见§6，含页面/HTTP的完整场景仍 NOT_IMPLEMENTED。使用确定性事务屏障、真实临时副本集和前端存储/会话测试，禁止靠sleep或重复运行碰运气；不影响真人实例。
++
++| ID | 必须构造的时序 | 关键正/负断言 |
++| --- | --- | --- |
++| RP-15a 在途后成功 | 先写最小标记，阻塞原创建事务于提交前；退出清正文，原actor重登；GET仍not_found，随后释放原事务成功并丢响应 | 从localStorage恢复原operationId/摘要，不凭空注入旧组件内存；新创建零POST、未知锁保留；重查succeeded匹配后仅清原标记，原计划/当天实例各1，零发星；refresh后当前详情可读 |
++| RP-15b 确定未提交 | 分别制造标记已持久但请求未到服务端、业务事务明确回滚；退出重登后正文不存在，GETnot_found | 等待/空列表不会解除；显式abort落盘aborted，计划/实例/账本均0；核验终态后可人工新建，新ID恰好一次。旧业务请求随后到达仍409 aborted、零业务写，不能永久卡死等待成功记录 |
++| RP-15c 终态竞争 | 同一个原命令分别固定业务提交先于abort、abort先于业务最终成功日志插入；create/patch/stop参数化 | 前者abort返回原succeeded、业务仅一次；后者全部业务变更及实例回滚，原计划版本/停止审计不变；成功日志和墓碑不得同时存在、不得覆盖。并发相同abort保留首次时间；不同摘要/动作/目标409 |
++| RP-15d 中止未知 | abort事务提交成功后丢响应、明确回滚、超时、返回错误身份/摘要；另有旧回执晚于新意图 | 未取得完整终态前保锁；原UUID/最小正文重试或GET收敛，不新建abort ID、不新POST业务；旧回执不能删新标记，not_found/400/409/503不能作为清理依据 |
++| RP-15e 身份与清理 | 原actor退出，换共管家长/另一孩子，再原actor重登；原查询/abort成功或401在换号后迟到；撤权后查询/abort403 | 退出后无正文/图片/Token残留在标记；他人不显示/重放/中止原命令，未授权零恢复写；迟到响应不清标记、不恢复UI，403清私有视图且保留隔离标记；恢复授权后原actor可继续查询 |
++| RP-15f 存储与摘要 | 持久写失败、回读不等、标记损坏/版本未知；正文键序/星期顺序/空白规范化、显式null与省略、不同scope/动作/目标/expectedVersion；正常201后结果GET成功/失败 | 写入并回读之前业务请求为0；坏标记不静默移除后新建。前后端有效规范向量摘要一致，异意图不同；成功记录持久完整正文，原计划后续修改不改查询正文。201不绕过身份核验，GET失败保锁；终态完整匹配且epoch有效的合法正例才清标记 |
++
++RP-15a/15b 必须通过实际logout/login与持久标记重读衔接，不用测试直接恢复旧内存对象绕过问题。至少一条正式HTTP+浏览器组合验证退出后恢复；Provider/模型不参与。
++定向变异要求：移除发送前标记写入门槛、让logout删标记、将not_found当解除、移除业务事务的最终墓碑竞争保护、将终态清理降为仅operationId比较；对应反例均应失败。此处是待实施要求，不宣称已运行变异。
++
++## 3. 实施分批与验收
++
++本次首批具体顺序：先以失败测试固定规范化、日期计数、原命令及abort竞争；新增两模型和GrowthTask可选生成身份，再实现同事务服务及显式单次扫描；运行新专项和受影响原回归、自查并独立复评。模块不接生产路由、不自动启动timer，不改真人入口。原§3第一阶段的生命周期/启动接线与页面留后续，不能将核心专项通过计为全部RP-01至21完成。只复用既有Jest及Mongo副本集入口，不新建框架。
++
++1. 计划模型/事务命令/生成器：RP-01至13、16及RP-15b/c/d的终态事务；先建立重复插入、停止竞争、回滚和过午夜永久反例，再接正式服务生命周期。
++2. 家长页面与现有实例衔接：RP-14/15（含15a至15f）、18/20/21；恢复/权限改动扩大到受影响共享请求和会话调用方，不只测试新表单。
++3. 正式HTTP/浏览器及集成回归：RP-17/19；复用现有入口，记录真实服务与替身、固定候选及分批结果，自查后申请独立评审和工程验收。
++
++实现时用受影响 Jest suites 先跑，再运行 `npm run test:family-regression`、前端现有 `test:ci`/build，以及相关 T2 HTTP/Playwright 专项（以届时实际已注册用例为准）。不为每个内部步骤新建审批/框架，不宣称尚不存在的测试命令已经执行。
++并发用屏障固定顺序并保证 finally 收尾；关键测试应验证移除唯一身份、计划fence、确认版本、身份epoch等相应保护后会失败。只对风险关键点做定向变异，不机械重跑全部历史变异。
++首轮失败单独保留，不增加timeout、跳过用例或放宽原断言。改既有回归时只调整必要导航，不能删除旧单次任务/PDF/求助/错题测试。
++
++## 4. 设计候选历史自查记录
++
++以下保留批准前快照；其中“待复审/尚未编码”描述当时状态，不代表当前。仅静态自查，不是独立评审或工程验收。自查关注点及设计处置：
++
++| 风险 | 已写入的设计保护 | 后续反例 |
++| --- | --- | --- |
++| 提前生成后批量改写碰到完成/媒体锁 | 首版只生成当天；计划修改次日生效且不回写实例 | RP-07/18 |
++| 停止与扫描各自成功却仍产生新任务 | 同一计划事务fence，明确两个提交顺序 | RP-08/09 |
++| 修改截止日或取消后同一天重新生成 | 生成身份独立于dueDate/status且不释放唯一键 | RP-04/05 |
++| 停机跨pending版本/结束日漏记缺口 | 旧/新规则分段，再提升版本；结束计划完成最后扫描 | RP-10 |
++| 重登not_found被当作原请求失败 | 原稿仅声明保锁，复审指出身份不可恢复；现补最小持久标记与succeeded/aborted终态，待复审 | RP-14/15a-f |
++| 自动生成伪造家长动作或提前发星 | 保留创建来源，生成零progress；确认仍用真实actor/taskId | RP-13/17 |
++| 原能力历史约定被文档宣称已替换 | 独立设计/API增量，原repeatRule拒绝保留 | RP-16 |
++
++待评审重点是设计 §1 的范围取舍，尤其“只生成当天/明日起修改/停机不补过去/停止保留已有任务/固定计划时区”。尚未编码、执行业务测试或接入运行环境。
++
++### 本轮文档校验记录
++
++以下先保留原候选校验快照，不能冒充P2修订后的复验：
++
++- `npm run docs:family:check` 首轮退出1：当前工作树没有 dotenv，校验脚本未启动；保留失败，不算契约失败或通过。
++- `NODE_PATH='<EXISTING_DEPENDENCIES>' npm run docs:family:check` 复用现有依赖退出0；原门禁报告23份基线、4份自主学习设计、16项自主学习契约、42项AI-2关闭、36项AI-3状态、35项价值门禁、8份AI规划、23项AI契约、412项fixture及38条需求通过。未安装依赖，未改校验器；这不是本功能业务测试计数。
++- 三份新增文档另外用 Node 内置 fs/path 检查 READY_FOR_REVIEW、7个相对文件链接、1份JSON示例解析、代码围栏配对与行尾空白，均通过。原文档门禁没有自动收录新功能契约，故不声称新接口已受其保护。
++- `git diff --check` 退出0；新增未跟踪文件的空白检查由上一项单独覆盖，不以空 diff 代替新增文档检查。仅新增本设计/API/测试方案三份文件，无历史证据或业务源码改动。
++
++### P2 修订自查与复审入口
++
++- 复审发现：原稿“清退出数据 + 仅存成功命令 + 重登保未知锁”缺少可恢复身份；原RP-15未验证锁的来源。此发现保留，不改写成初稿已闭环。
++- 本次最小补充只涉及同一功能的存储标记、同一命令集合aborted终态及一个显式abort接口；不加通用恢复平台、后台补偿服务、远端operation或新测试框架。它不撤销成功业务，不等同于停止计划。
++- 自查已逐项核对：发送前标记持久化；退出清正文而保最小身份；同actor重新授权；not_found保锁；两种事务先后顺序；中止丢响应；最终插入与业务同事务；回执完整身份/摘要/epoch后条件清理；成功记录保存原正文；关闭开关和撤权保守拒绝。
++- 损坏标记、清站点存储、换设备及无权限的边界明确，不宣称任意丢失本地状态都能恢复。不同actor的正常业务不受原标记阻塞。
++- 这份静态自查不是独立复评，也不是新增永久反例已经执行。P2保持DESIGN_REVISED_PENDING_REVIEW，设计与实现总门禁不关闭。
++
++本次P2文档复验（与上面的原候选快照分开）：
++- 使用既有依赖路径执行 `npm run docs:family:check`，退出0，原文档门禁通过；仍不代表新接口及RP-15a至15f已实现或运行。
++- Node内置模块检查三份文档的READY_FOR_REVIEW及DESIGN_REVISED_PENDING_REVIEW、7个文件链接、1份JSON示例、围栏/行尾空白，以及设计/API中的标记与终态术语和六个反例条目，全部通过。这只是文档结构/文本一致性检查，不是行为或并发证明。
++- `git diff --check` 退出0；三份仍为未跟踪设计文件，另外直接检查其内容，未改业务源码、已有证据或测试入口。
++
++## 5. 不变的验收边界
++
++设计已获用户批准，不再使用批准前 READY_FOR_REVIEW 作为当前状态。首批核心服务为 FIRST_BATCH_PENDING_ACCEPTANCE；全功能总门禁保持 OPEN。当前覆盖及独立复评结论以§6和证据入口为准，不能将服务层通过当成退出重登/HTTP/浏览器通过。
++历史证据、冻结哈希、分批验证及失败不改写；T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING/MANUAL_PENDING、Docker INCOMPLETE_FAILED及后置范围保持。
++真人测试由测试/评审线程继续，本批不更新入口、不操作服务器、不调用模型、不提交推送或部署。
++
++## 6. 首批限定本地实现记录
++
++### 6.1 批准与范围
++
++2026-11-15用户批准设计、API及测试方案，关闭退出后最小标记P2设计问题，并授权首批限定本地实现、自查与独立复评。本条是批准记录，不补写任何历史候选为已通过。
++
++本批包含计划/命令模型、GrowthTask可选不可变生成身份及部分唯一索引、规范化摘要、事务create/patch/stop/abort、原actor终态查询、只读详情、显式单计划当天生成及分段缺口计数。事务复用现有runner，默认enabled谓词为false；不引入远端operation或通用恢复框架。
++
++尚未包含：正式HTTP路由与列表分页、启动索引预检/生命周期和公平50计划扫描、扫描失败健康落盘、前端最小标记/原命令缓存与退出重登、生成实例的图片完成和真实发星闭环、正式浏览器。新增索引已在合成库核验，不声称正式启动已检查其存在。本批没有独立运行的调度器，也没有修改现有app/server或真人入口。
++
++### 6.2 实际覆盖
++
++- RP-01/02/03/04/05/06/07/08/09/10/11/13/16 的核心服务子集：今日与未来开始、含边界的daily/weekly、无历史回填、时区固定、唯一实例、旧dueDate/取消/归档保留、两个actor同UUID、事务回滚与丢响应、明日起修改、双向生成竞争和只读查询。
++- RP-15b/c/d服务端子集：create/patch/stop两种终态竞争顺序；两个首次abort同键竞争；成功/中止首审计与原正文不可变；中止丢响应后原ID重查。未通过前端内存模拟冒充退出重登。
++- 初始生成保持pending、完成版本默认值及starAwardState=not_applicable；不导入progress客户端。RP-17真实发星集成仍待后续，不能仅凭此断言标为COVERED。
++- 生成身份与单次任务完成/材料/清单逻辑分离，原7套件308项针对性回归通过；不是家庭后端全量。
++
++### 6.3 分批结果与自查
++
++1. 初始红灯：新模型未实现时suite加载失败；首次实现后4失败/6通过，暴露既有日期校验未导出，最小导出后修复。原失败保留，不称一次通过。
++2. 开发核心测试依次32、40、42项通过；独立复评随后发现两项日期P2，原42项不是最终候选的完整证明。
++3. 两项P2先新增真实副本集反例：3种开始日前时钟回退和2种未来规则折叠，5项全部失败；修订后47项通过。随后补3种业务先赢竞争及首次abort竞争，最终开发专项51项通过，0 skipped。
++4. 定向变异：临时Jest transform分别撤掉开始日前水位拒绝、未来规则提升，3项和2项对应反例失败，退出1；原源码未替换、断言/超时未放宽。定向执行未选中的用例不冒充通过。
++5. 旧回归首轮7套件中5通过/2失败，306项通过/2失败，原因是既有logger写工作树被EPERM拒绝；允许仅本地日志写入后同7套件308项通过。两轮JSON与失败摘要分开归档，不合写全量一次通过。
++6. 自查修订测试屏障finally等待在途事务；模板复用只复制字段校验、不复制查询索引；命令模型复用已有UUID格式；新模块加入现有lint范围。未新增框架或依赖。
++7. 第二轮独立复评实跑真实临时副本集专项51/51通过、0 skipped，确认两项日期实现P2修复有效、限定范围内无新发现，建议关闭。本批及新实现P2等待用户验收；独立方未重跑原308项或两项变异，不冒充独立全量。
++
++独立复评、冻结清单、补丁与验证命令：[首批证据入口](evidence/recurring-tasks-first-batch-20261115/README.md)。本批仅申请核心服务验收，不关闭重复计划整体门禁；历史OPEN/待验/后置状态继续保留。
+diff --git a/docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md b/docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md
+new file mode 100644
+index 00000000..940b838b
+--- /dev/null
++++ b/docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md
+@@ -0,0 +1,123 @@
++# 重复计划与每日独立任务：最小设计
++
++**状态：** APPROVED / IMPLEMENTATION_IN_PROGRESS。2026-11-15 用户批准设计、API、测试方案及本次P2设计问题关闭，授权首批限定本地实现；未授权部署。
++**核对基线：** `3816c3f2a45daff8b66221cfffb322de11bdce33`，本轮开始工作区干净。
++**配套：** [API 增量](../../api/family-recurring-tasks-api.md)、[测试方案与自查](../../development/family-recurring-tasks-test-plan.md)。
++**P2 修订：** 退出后未知命令身份及安全解除设计复审通过，DESIGN_P2_CLOSED；这是设计关闭，不是实现验收。原READY_FOR_REVIEW与DESIGN_REVISED_PENDING_REVIEW历史见测试方案记录。
++
++## 1. 产品范围与待批准取舍
++
++目标：家长设置“每周一至周五跳绳”，孩子每日完成、提交作品，家长按所见版本确认，孩子回看；不再每天手工创建。
++一份计划对应多个 GrowthTask，每条仍只代表一次发生。既有任务、求助、作品、审核、错题、周报及星星规则不重做。
++
++以下取舍已获用户本轮设计批准，不代表已实现：
++
++| 决策 | 最小行为 |
++| --- | --- |
++| 重复 | 每天，或每周指定星期；周一至周五仅为快捷选项，不处理节假日/调休 |
++| 日期 | 开始日不得早于计划当地今天；结束日可空，含结束当日 |
++| 生成范围 | 仅生成当地今天，不提前生成未来任务；任务列表未来日期不显示虚拟任务 |
++| 计划修改 | 从当地次日生效，不回写任何已生成任务；界面不用含糊的“修改全部” |
++| 单次修改 | 走既有任务编辑/取消接口，保留最终 owner/版本 CAS；不影响计划 |
++| 停止 | 立即禁止新增实例，永久停止本计划；已有实例原样保留，需要时逐条取消，不自动清空今日待办 |
++| 停机 | 恢复后只补今天，过去未生成的执行日记录为生成缺口，不自动补为逾期/未完成，不补发星 |
++| 材料 | 首版计划只包含文字及目标参数，不复制附件、清单、来源链接；每日任务仍可按既有能力单独加材料和提交作品 |
++| 时区 | 创建时从家庭读取并固定 IANA 时区；计划不可改时区，家庭后续改时区不静默移动既有计划。界面显示计划时区；需换时区时停止后新建 |
++
++无结束日期不代表一次生成无限任务。暂不做暂停/恢复、节假日日历、次数补签、跨日时段、通知推送、连续打卡奖励、通用调度/恢复框架。停机缺口需要家长补记时，沿用手工单次任务，不自动关联或反向填补计划历史。
++计划固定时区与家庭新时区可能不同；提示须明确，今日计划/周报沿用既有任务 dueDate 规则，不将计划改时区作为隐式迁移。
++
++## 2. 现有实现衔接
++
++- `GrowthTask` 已有 familyId/childId、dueDate、五育维度、目标、状态及完成/材料/求助版本；确认与 progress 账本按 taskId 去重。
++- `growthTasks.js` 及正式 mutation 路径拒绝 repeatRule。保留这项旧契约；新能力走独立计划 API，不给旧单任务请求偷偷增加语义。
++- 家长任务页增加“单次/重复”选择及计划列表；孩子仍使用当天任务、详情和回看页，不新增孩子计划管理入口。
++- 日期复用 `backend/common/utils/familyDate.js`。星期按 LocalDate 计算，不用宿主时区或 24 小时毫秒加法跨 DST。
++- homework 当前没有重复任务调度器；只在原服务生命周期加一个轻量串行扫描器，不能把“复用入口”写成已有后台能力。
++
++## 3. 持久化与权限
++
++新增 homework 自有 `RecurringTaskPlan`：familyId、childId、createdByParentId、timezone、startDate、status(active/stopped)、version、stoppedAt/stoppedByParentId；currentRevision 和至多一份 pendingRevision。
++revision 包含 revisionNumber、effectiveFrom、完整 template、schedule、endDate；首次为 1，后续取本次计划 version。明日修改尚未生效时，再次修改覆盖整份 pendingRevision，但原命令日志保留每次成功快照；到期才提升为 currentRevision。
++计划 DTO 的版本是管理 CAS，不等于单次任务 completionVersion。
++
++template 白名单：dimension、area、subject、title、taskType、description、estimatedMinutes、targetAmount、unit、priority；类型及长度/枚举沿用现有创建校验，不接收 actor、状态、奖励、媒体、清单、sourceTaskId/sourceMistakeId。
++生成时显式构造任务，不 spread 整份计划或复制完成状态。实例新增只读 recurringPlanId、occurrenceDate、planRevision；dueDate 初值为 occurrenceDate。
++允许家长依现有接口改单次 dueDate，但 occurrenceDate 永不变，不重新生成原日期；它是生成身份，不是可编辑截止日。
++
++唯一索引：GrowthTask 上 `(recurringPlanId, occurrenceDate)`，仅对合法 ObjectId/string 两字段的重复任务生效；普通任务无这两个字段。不能将 status 放入唯一键，取消/归档也持续占用原日期。启动前验证索引真实可用，不做历史任务自动迁移。
++
++管理命令新增小型 `RecurringTaskPlanCommand`，仅本功能使用，不建通用 operation 平台：
++唯一 `(familyId, actorId, operationId)`，保存 schemaVersion=1、childId、动作/目标、requestDigest、state 和终态时间。state 仅有 succeeded/aborted，不新增通用排队或远端恢复平台。
++succeeded 额外保存完整规范命令正文、服务端生效日期、planId、原成功HTTP状态及快照，与所有计划/实例修改同事务提交。不能仅保存摘要后声称能返回原正文。
++aborted 为不可变拒绝墓碑，只保存原最小身份/摘要和中止时间，不保存未知正文、不创建/修改计划或实例。成功和中止共用上述唯一键，无 TTL 自动删除记录。
++相同命令同正文重放历史结果；相同 ID 异动作/目标/正文冲突。不同 actor 同 UUID 相互独立；两个独立创建命令可创建同名计划，UI 防双击但不按标题猜测合并。匹配 aborted 的原业务写永远拒绝，不能覆盖墓碑或复用该 UUID。
++
++每次管理、重放和查询实时校验家长成员资格及孩子归属，撤权后不得因旧命令存在返回私有快照。孩子只能读/完成自己实例，无计划管理权。
++扫描器每次事务核对家庭/孩子仍有效且归属一致；创建家长退出家庭不会自动删除共管家庭计划，创建审计不伪造为当前在线家长。不跨服务写数据库，复用 homework 既有授权读取方式。
++
++## 4. 生成、去重与停机
++
++创建计划事务若今天命中，原子生成今天实例；否则仅存计划。之后服务启动成功及每 60 秒触发一次串行扫描，不在 import 或 GET 中启动/写入，不要求孩子登录才生成。时间间隔不是 SLA；失败要可见而非假成功。
++扫描按持久公平分页每页最多 50 计划、一次只执行一个计划事务；批次串行并让出事件循环，不引入队列、Redis或新服务。游标推进失败不得跳过该页；单计划失败记为本轮失败并继续其他计划，下一轮重新尝试，不永久饿死后续计划。多副本无需全局锁，但必须靠同计划事务写冲突与唯一索引去重。未遍历完不把扫描标为健康完成。
++
++每个计划持久保存 lastEvaluatedDate、generationFence、最近成功/失败状态及 skippedRange 摘要（起止、匹配执行日数）；仅保存日期/错误码，不记录孩子内容。初始水位 startDate 前一天。首次开始日在未来时不提前推进水位。
++计划事务流程：
++1. 重新读取计划、归属及服务端时钟。拒绝无效时区或时钟回退到水位之前，不删除/重建历史。
++2. 当明日版本已到期，使用其生效日起的规则；停机跨版本时缺口按旧/新规则分段计算，完成后才提升并清 pendingRevision。
++3. 对水位之后、今天之前且在计划起止范围内的匹配日只累记缺口，不创建任务。重复扫描不得重复计数；计划结束后仍需最终扫至结束日一次，才退出候选集合。按整周及不足一周的余数计算匹配日数，不遍历多年日期或写逐日缺口记录。
++4. 今天匹配且未停止时，用唯一生成身份插入实例；已存在时只读取，不覆盖其材料、任务状态、日期或审计；不匹配则仅推进已评估水位。
++5. 对计划 generationFence 做条件写，与实例插入/水位/缺口同一 Mongo 事务提交。修改、停止和扫描都写同一计划，不能只读计划后无栅栏插入。
++
++跨午夜必须在最终写前再采样；日期与事务开头不同则回滚重算，不把昨天提交成今天。重算次数有界，持续不稳返回/记录可重试失败。事务提交未知时按原唯一身份查询/重试，不能新建 taskId 当成另一条发生。
++唯一键冲突仅在核对已存在行完整生成身份/家庭/孩子一致后视为已生成，其他异常均失败；不吞掉所有 duplicate key。
++
++修改与停止事务也必须先折叠到期版本、记录截止今天之前的未评估缺口，再变更规则，以免丢失停机历史。它们不补旧任务。
++停止不依赖补生成成功，也不为停止创建今天任务；并发扫描若先提交，该实例保留；停止若先提交，扫描重试见 stopped 必须零插入。响应和 UI 明确“已生成任务保留”，不承诺撤销先于停止成功发布的实例。
++计划列表提供 generationHealth 与缺口提示；生成缺口不计入既有任务完成率分母，也不能被解释为执行率100%。周报不改统计口径，计划页单独说明缺口。
++
++## 5. 修改、停止和未知结果
++
++计划修改必须 expectedVersion；服务端以本次事务日期计算 effectiveFrom=明天。startDate/childId/timezone 不可改，endDate 可空或不早于 max(startDate,明天)。已结束计划不可延长/恢复，停止或新建；停止已结束计划允许，用于明确终止管理。
++旧预览/共管竞争返回版本冲突，用户重新查看后再决定，不自动套用新版本。修改不改今天任何实例；需要改今天时使用“仅这一次”。
++停止必须 expectedVersion；已停止的原 operationId 重放保留首次审计；新命令针对已停止计划返回状态冲突，不改变停止人/时间。
++命令全部仅本地事务，不增加远端 operation。503/断网不得推测失败或换 UUID；前端保留原命令和禁重复发送状态，显式原命令重试/查询。跨午夜重放命中已提交日志时返回原生效日期，不顺延；未提交的命令第一次真正成功时用当日服务端日期。
++
++### 5.1 退出保留的最小标记
++
++有效意图首次发送前，将 `{schemaVersion:1,familyId,actorId,childId,operationId,action,targetPlanId,requestDigest}` 写入本功能 localStorage 专用键并回读相等后，才允许 HTTP 写入；create 的 targetPlanId 为 null，patch/stop 为目标计划 ID。摘要算法及目标绑定见 API §4。不保存标题、描述、目标参数、PIN、Token、Cookie或完整正文；该标记不是授权凭据，也不记录日志。
++键包含 schemaVersion/familyId/actorId/childId/operationId，值与键必须一致；持久写入失败、损坏、版本未知或身份不一致时零业务 POST/PATCH，不降级成内存标记后发送。正文仅留当前会话内的原命令缓存。
++主动退出/切换身份清除正文、私有视图和已载入回执，但保留上述最小标记，不被通用命令清理误删；这是本次明示的清理例外。采用已有请求 epoch/会话隔离方式，不改其他功能的退出策略。
++仅同一 actor 重新认证且 family/child 实时授权成功后，才加载其标记并逐个只读查询；其他家长（包括共管）和孩子不能看到或处理它。403/迟到401清当前私有视图但不把未知标记当成功移除；撤权期间禁止恢复，保留隔离标记，不承诺无权限时解除。
++当前 actor/child 有未决标记时，阻止其发起新的计划创建/修改/停止命令，仅允许查询、正文仍在且摘要一致的原ID重试、或显式终止原命令。其他孩子/actor 的正常工作不被该标记阻塞。多标签页在写前及 storage/focus 接续时重新核对标记；独立新意图不是跨标签页自动去重对象。
++清除浏览器站点存储会丢失本地保护，不能承诺此时恢复尚未到达服务器的请求；UI 不推荐清缓存解除未知状态。服务端成功命令索引仍可发现已提交结果，但不能冒充在途列表。
++
++### 5.2 重登恢复与安全解除
++
++GET 为 succeeded 时，验证回执的完整 scope、原 operationId、动作/目标及摘要，再读取当前计划；历史成功快照不能覆盖最新状态。GET 为 not_found 时只说明当前未查到终态，仍保留标记；不能因列表为空、等待时长、网络恢复或本地 AbortController 而换 UUID。
++正文已因退出丢失且结果未定时，不凭摘要重建正文、不自动重发。用户可继续只读查询，或显式选择“终止这次未确定的提交”；这不是停止计划，也不撤销已成功的操作。
++新增仅本功能的 abort 入口，接受最小标记（认证身份仍取服务端）：在同一唯一键上，若 succeeded 已提交则原样返回成功；若 aborted 已提交则原样返回中止；若尚无记录，则事务插入 aborted 墓碑。身份/动作/目标/摘要不匹配一律冲突，不能返回另一个意图的成功或中止结果。
++业务写与成功记录必须同事务，事务开始检查终态且最终成功记录排他插入，不得 upsert 覆盖 aborted。abort 与在途业务写竞争：业务事务先提交则 abort 只能返回 succeeded；abort 先提交则原业务事务因唯一键/写冲突整体回滚，重读 aborted 后拒绝。不能先提交计划再补写命令日志。
++只有取得并核验 succeeded 或 aborted 持久终态，才条件删除完全匹配的本地标记。原业务201/200仍沿用原响应形状，没有完整命令identity，因此也先GET命令终态再清标记；这次GET失败可提示业务响应已成功但结果核对待完成，不能自动再次发新命令。原身份 epoch 已失效的迟到响应不得清标记或恢复私有UI；同身份稍后重新查询再解除。not_found、503、403、摘要冲突及 abort 丢响应均保锁。一个旧终态回执不能删除新 operationId 的标记。
++aborted 的含义是“该原命令未产生已提交业务变更，且以后也不能提交”，不是根据观察猜测“当时没请求”。确定未发送/回滚但标记仍在的命令也走同一墓碑路径解除，避免永远等待不存在的成功记录；取得终态后才允许用户另建新意图、新 UUID，绝不自动新建。
++发出过请求后，即使收到校验或版本冲突，也不能凭这一份响应证明不存在另一在途重试；需要放弃意图时同样终态化后解除。本地校验应在写标记前完成，未开始发送、尚未持久化标记的普通表单错误不受此限制。
++abort 超时/提交未知仍使用原 operationId 和同一最小正文重试/查询，不生成第二个 abort 命令 ID。命令功能关闭时保留 GET，abort 也停止写入并保锁，等待能力恢复；此限制不取消任何已有任务。
++
++## 6. 单次闭环与奖励
++
++生成实例初始 pending、完成版本按既有默认、starAwardState=not_applicable；不生成完成作品、不调用 progress。
++编辑/取消、材料准备、完成和确认完全复用正式服务及 owner/阶段/版本互斥，不能为重复任务走旁路。计划修改/停止不读取或写奖励，不修改确认审计。
++同一实例重复确认/共管接续只发一次星；不同日期是不同 taskId，各自首次确认可各发一颗。已取消实例不重新生成；已归档实例仍可用作去重，不删账本。未知完成结果仍按原完成 operationId 恢复，不使用计划命令替代。
++
++## 7. 接入、失败与回退
++
++新增默认关闭功能开关 `RECURRING_TASKS_ENABLED=false`，管理写入与生成同开关；关闭时计划读/原命令结果查询可用，实例旧业务仍工作，管理写返回明确关闭错误。不开启计划能力不改变旧 repeatRule 拒绝。
++启用需事务能力及唯一索引就绪，使用既有服务启动预检，不跳过上传/媒体/凭据等原检查。关闭扫描器不清记录，不宣称按时生成；重新启用遵循只补今天规则。
++扫描器停止时停止新批次并等待本轮事务有界收尾，未知提交保留证据；导入模块和单测不得自动监听或扫描。运行错误仅记录脱敏代码及生成健康，不自动放宽规则。
++回退是关闭新能力并保留模型/索引及生成字段兼容，不回滚到会丢字段或忽略 aborted 墓碑的旧写入路径；不能删除实例、去重/命令记录或已发星流水。
++首批仅本地核心实现及合成测试，HTTP/页面/服务定时接线尚未启用。实现必须先通过对应合成事务/HTTP/浏览器测试再申请交付，不影响当前真人入口。
++
++## 8. 状态边界
++
++这是新增功能设计候选，不改写 PRD/API 中当前已实现的单次任务历史约定。审批通过后实施时再追加正式能力状态，不把设计视为接口已上线。
++保留历史失败、T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、MANUAL_PENDING、Docker INCOMPLETE_FAILED及所有后置范围。登录限流暂搁置并非已修复。不扩大 WP1/T8、不调用模型、不操作服务器、不提交推送或部署。

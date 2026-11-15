@@ -18,6 +18,8 @@ const { createGrowthTaskRouter } = growthTaskRoutes;
 const GrowthTask = require('./models/GrowthTask');
 const { createLearningSourceReader, createLearningSourceRouter } = require('../../common/services/learningSource');
 const { createDailyLearningPlanRouter } = require('./routes/dailyLearningPlans');
+const { createRecurringTaskPlanRuntime, recurringEnabled } = require('./services/recurringTaskPlanRuntime');
+const { createRecurringTaskPlanRouter } = require('./routes/recurringTaskPlans');
 const { createAi1Router, createAi1JsonParser } = require('./routes/ai1');
 const { createAi1Service } = require('./services/ai1Service');
 const { createAi1Runtime } = require('./services/ai1Runtime');
@@ -102,6 +104,7 @@ const createApp = ({
   ai3Router,
   ai3EvidenceRouter,
   ai3MediaAccessRouter,
+  recurringTaskRouter,
   learningSourceRouter = createLearningSourceRouter({ kind: 'tasks', Model: GrowthTask,
     serviceToken: process.env.INTERNAL_SERVICE_TOKEN }),
   appLogger = logger
@@ -130,6 +133,10 @@ const createApp = ({
   app.use('/api/homework', homeworkRouter);
   app.use('/api/growth-tasks', growthTaskRouter);
   app.use('/api/children', createDailyLearningPlanRouter());
+  if (recurringTaskRouter) app.use('/api', (req, res, next) => {
+    if (!/^\/recurring-task-(?:plans|plan-commands)(?=\/|$)/i.test(req.path)) return next();
+    return recurringTaskRouter(req, res, next);
+  });
   app.use('/api/internal/learning-sources', learningSourceRouter);
   if (retirementRouter) app.use('/api/internal/completion-media-retirements', retirementRouter);
   if (ai2MediaAccessRouter) app.use('/api/internal/ai2', ai2MediaAccessRouter);
@@ -158,6 +165,7 @@ const createProductionApp = ({
   const ai2Runtime = createAi2Runtime({ env, connection });
   const ai3Config = validateAi3Environment(env);
   const ai3Runtime = createAi3Runtime({ env, connection, ai1Runtime });
+  const recurringTasks = createRecurringTaskPlanRuntime({ env, connection, logger: appLogger });
   const { attachmentMediaService } = (createMediaDependencies || createTask6MediaDependencies)({
     env, appLogger, completionIsolation: mode === 'enabled' });
   const sourceReader = createLearningSourceReader({ TaskModel: GrowthTask,
@@ -222,6 +230,7 @@ const createProductionApp = ({
   const app = createApp({
     growthTaskRouter,
     retirementRouter,
+    recurringTaskRouter: createRecurringTaskPlanRouter({ service: recurringTasks.service }),
     tutorRouter: createAi1Router({ service: createAi1Service({ sourceReader, ...ai1Runtime.dependencies }) }),
     ai2Router: createAi2Router({ service: guardedAi2Service }),
     ai3Router: createAi3Router({ service: guardedAi3Service }),
@@ -243,6 +252,7 @@ const createProductionApp = ({
   app.locals.assertAi1Ready = ai1Runtime.assertReady;
   app.locals.assertAi2Ready = ai2Runtime.assertReady;
   app.locals.assertAi3Ready = ai3Runtime.assertReady;
+  app.locals.recurringTasks = recurringTasks;
   return withCompletionMode(app, { mode, service: 'homework', env });
 };
 
@@ -307,6 +317,9 @@ const starAwardConfig = (env = process.env) => ({
 const validateStarAwardEnvironment = (env = process.env) => validateClientConfig(starAwardConfig(env));
 
 const validateStartupEnvironment = env => {
+  if (recurringEnabled(env) && resolveCompletionMode(env) !== 'enabled') {
+    throw Object.assign(new Error('RECURRING_TASKS_NOT_READY'), { code: 'RECURRING_TASKS_NOT_READY' });
+  }
   validateAi2Environment(env);
   validateAi3Environment(env);
   createAi1Runtime({ env });
@@ -330,9 +343,14 @@ const startServer = async ({
   validateEnvironment = validateStartupEnvironment,
   appLogger = logger
 } = {}) => {
-  return startCompletionService({ service: 'homework', env, connection, app, port, host, appLogger,
+  let recurringTasks;
+  const server = await startCompletionService({ service: 'homework', env, connection, app, port, host, appLogger,
     connect: () => connect({ mongoURI: env.MONGO_URI, connection }), createRuntimeApp,
     validateEnvironment: runtimeEnv => {
+      if (recurringEnabled(runtimeEnv) && (app || connect !== connectDatabase || createRuntimeApp !== createProductionApp
+        || validateEnvironment !== validateStartupEnvironment)) {
+        throw Object.assign(new Error('RECURRING_TASKS_NOT_READY'), { code: 'RECURRING_TASKS_NOT_READY' });
+      }
       const ai3 = validateAi3Environment(runtimeEnv);
       if (ai3.continuousStore && (app || connect !== connectDatabase || createRuntimeApp !== createProductionApp
         || validateEnvironment !== validateStartupEnvironment)) throw ai2Error(503, 'AI3_NOT_READY');
@@ -356,10 +374,25 @@ const startServer = async ({
       if (runtimeApp.locals.assertAi1Ready) await runtimeApp.locals.assertAi1Ready();
       if (runtimeApp.locals.assertAi2Ready) await runtimeApp.locals.assertAi2Ready();
       if (runtimeApp.locals.assertAi3Ready) await runtimeApp.locals.assertAi3Ready();
+      recurringTasks = runtimeApp.locals.recurringTasks;
+      if (recurringTasks) await recurringTasks.assertReady();
       return initializeQueue({ app: runtimeApp,
         enableRabbitMQ: env.ENABLE_RABBITMQ !== 'false' && env.NODE_ENV !== 'test',
         connect: () => connectRabbitMQ({ rabbitUrl: env.RABBITMQ_URL, appLogger }) });
     } });
+  if (recurringTasks) {
+    const close = server.close.bind(server);
+    server.close = callback => {
+      recurringTasks.scanner.stop().then(() => close(callback), cause => {
+        // Do not close the database while the generation transaction may still be committing.
+        appLogger.error('Recurring scanner shutdown unresolved', { code: cause.code });
+        if (callback) callback(cause); else server.emit('error', cause);
+      });
+      return server;
+    };
+    recurringTasks.scanner.start();
+  }
+  return server;
 };
 
 const app = createApp();
@@ -368,7 +401,8 @@ if (require.main === module) {
   setupUncaughtExceptionHandler(logger);
   startServer().then((server) => {
     process.on('SIGTERM', () => {
-      server.close(() => {
+      server.close(error => {
+        if (error) { process.exitCode = 1; return; }
         mongoose.connection.close(false).finally(() => {
           process.exitCode = 0;
         });

@@ -1,4 +1,5 @@
 const { assertTransactionCapability } = require('./mongoTransaction');
+const { canonicalize } = require('json-canonicalize');
 
 // No model imports: preflight must not create collections or indexes as a side effect.
 const READ = Object.freeze({ maxTimeMS: 5000, readPreference: 'primary' });
@@ -32,7 +33,7 @@ const completeIndex = index => finalized(index) && !index.sparse && index.partia
   && (!index.collation || index.collation.locale === 'simple');
 const assertCollections = async (db, specs) => {
   const issues = new Set();
-  for (const [name, { unique = [], indexes = [] }] of Object.entries(specs)) {
+  for (const [name, { unique = [], indexes = [], partialUnique = [] }] of Object.entries(specs)) {
     const cursor = db.listCollections({ name }, { ...READ, nameOnly: false });
     let definition;
     try { definition = await cursor.next(); } finally { await cursor.close(); }
@@ -49,10 +50,15 @@ const assertCollections = async (db, specs) => {
     if (list.some(index => index.expireAfterSeconds !== undefined)) issues.add('TTL_FORBIDDEN');
     const valid = (index, key, isUnique) => sameKey(index.key, key) && completeIndex(index)
       && (isUnique ? index.unique === true : index.unique !== true && index.hidden !== true);
+    const validPartial = (index, spec) => sameKey(index.key, spec.key) && finalized(index)
+      && index.unique === true && !index.sparse && !index.hidden && index.expireAfterSeconds === undefined
+      && (!index.collation || index.collation.locale === 'simple')
+      && canonicalize(index.partialFilterExpression || null) === canonicalize(spec.partialFilterExpression);
     for (const key of unique) if (!list.some(index => valid(index, key, true))) issues.add('INDEX_INVALID');
     for (const key of indexes) if (!list.some(index => valid(index, key, false))) issues.add('INDEX_INVALID');
     if (list.some(index => (index.unique === true || index.prepareUnique === true)
-      && !sameKey(index.key, { _id: 1 }) && !unique.some(key => valid(index, key, true)))) issues.add('UNEXPECTED_UNIQUE_INDEX');
+      && !sameKey(index.key, { _id: 1 }) && !unique.some(key => valid(index, key, true))
+      && !partialUnique.some(spec => validPartial(index, spec)))) issues.add('UNEXPECTED_UNIQUE_INDEX');
   }
   if (issues.size) fail(issues);
 };

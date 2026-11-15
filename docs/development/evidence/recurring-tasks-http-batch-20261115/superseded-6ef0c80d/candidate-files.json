@@ -1,0 +1,95 @@
+{
+  "base": "3816c3f2a45daff8b66221cfffb322de11bdce33",
+  "patchSha256": "6ef0c80d1ba622982ff4e430bca11b71d4b19b5e99a95a290163577a780635b2",
+  "historicalFirstPatchSha256": "30dcffb21678db42faa96f410a6abe4f102113bb08a0072596900bcebc939bbe",
+  "files": [
+    {
+      "path": "backend/common/services/completionActivation.js",
+      "sha256": "35f5f2a8f1ad28b50ead931793886eb6c1e9ae5c83826fad68bc1c68fcff35c1"
+    },
+    {
+      "path": "backend/common/services/completionRetentionReadinessHelpers.js",
+      "sha256": "8767782af8914107cb30f2adcd94a742b72d99277cbf5d9a3820ac33049fbc0a"
+    },
+    {
+      "path": "backend/common/utils/familyDate.js",
+      "sha256": "7a062d31beeffb2ce2b8439549404bf4d76d641c1aef9e766554d08095adc617"
+    },
+    {
+      "path": "backend/gateway/server.js",
+      "sha256": "8ffa389959ed234f95dbf9c53a75665ad6ec489c651ba76fa2a6102176efc983"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/recurringTaskPlan.test.js",
+      "sha256": "7e780883487dd0a1a74fbb72ff33b1530a51fd63e0ed6cc5c50ff20fe88456eb"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/recurringTaskPlanRuntime.test.js",
+      "sha256": "770c89ec20cf82d278a22f9da94420a199431389af1b88a1ce608f5799fcddd7"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/setup.js",
+      "sha256": "1035a9b1e25d4bf442fb39c01b0def4be77677fd838eed969515dcc34431ea3d"
+    },
+    {
+      "path": "backend/services/homework-service/models/GrowthTask.js",
+      "sha256": "3c298172493775eea4eacb61d82395cf81ceba1294d3efc5461d9eeb74cf35bd"
+    },
+    {
+      "path": "backend/services/homework-service/models/RecurringTaskPlan.js",
+      "sha256": "eee932022a16dd5dbcc86738739bc5b2b534ed287a7d41566342aaf5880c007c"
+    },
+    {
+      "path": "backend/services/homework-service/models/RecurringTaskPlanCommand.js",
+      "sha256": "58abba080fde683bd00245a53b38ca6f5ca8bbbea29781017511b91065cae2f8"
+    },
+    {
+      "path": "backend/services/homework-service/models/RecurringTaskScanState.js",
+      "sha256": "44a383f83c13e33c304afa183806ec879c59ec675bcea9318fa9c7d3827f635e"
+    },
+    {
+      "path": "backend/services/homework-service/routes/recurringTaskPlans.js",
+      "sha256": "6797b0baea775890209c73eec809124cd90e6a4988d81f41dbfba2484eab3b04"
+    },
+    {
+      "path": "backend/services/homework-service/server.js",
+      "sha256": "ff6b3cb6873bce70255aa37b2151c1c4dca03fbfcbfb04f2914409ba8b1e5a9f"
+    },
+    {
+      "path": "backend/services/homework-service/services/completionMediaGuardReadiness.js",
+      "sha256": "74dd4040b7bbe2730bcfe77992237e25972ba5f3eb40c4cdb83b50878e71d755"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanCommand.js",
+      "sha256": "b0b09d28e09b89305f72b4c72d98dfd5c278a6121936659524755dbcfcd4efa1"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanRuntime.js",
+      "sha256": "3534b2464836666649d1614b1fbdbc41cd963c853f5d62eb7227b505986d6ea2"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanScanner.js",
+      "sha256": "08b46557b71694e19060ed9acede6e03e9980b5fb953350d3161ee5f521125ec"
+    },
+    {
+      "path": "backend/services/homework-service/services/recurringTaskPlanService.js",
+      "sha256": "b48f2c11b50af9975673f5ae1847417709c0a71260cb0b03bd940ef296b628be"
+    },
+    {
+      "path": "docs/api/family-recurring-tasks-api.md",
+      "sha256": "4d94f929e1be7cff707d289f50adabae5cdaa2095e9a001b99aed10f1da71e6f"
+    },
+    {
+      "path": "docs/development/family-recurring-tasks-test-plan.md",
+      "sha256": "8d23cb7dbcc42282f06c208c913bc07438ba0544335ea8a00c5faaf3e57f0a01"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md",
+      "sha256": "cec2fdb9353a66e95fd10f7f8457194c1e1f84f717ba7d7fa31d52b8866bf313"
+    },
+    {
+      "path": "eslint.config.js",
+      "sha256": "c1c48779b86c83c9dc8495e7866f3cf620bb2c80cbaf8335d1c62bb67f072747"
+    }
+  ]
+}
