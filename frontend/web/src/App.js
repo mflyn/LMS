@@ -37,6 +37,7 @@ import ChildMistakesPage from './pages/child/ChildMistakesPage';
 import ChildAchievementsPage from './pages/child/ChildAchievementsPage';
 import ChildProfilePage from './pages/child/ChildProfilePage';
 import ChildReflectionPage from './pages/child/ChildReflectionPage';
+import './growth-theme.css';
 
 const ParentFamilyBoundary = () => (
   <FamilyProvider>

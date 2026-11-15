@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
 import { NavLink, Navigate, Outlet } from 'react-router-dom';
+import { BellOutlined, BookOutlined, CalendarOutlined, CheckSquareOutlined, GiftOutlined, HomeOutlined, LineChartOutlined, ReadOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
 import { PARENT_NAV_ITEMS } from '../../config/familyNavigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFamily } from '../../contexts/FamilyContext';
 import ChildSelector from './ChildSelector';
 import FamilyPageState from './FamilyPageState';
+
+const NAV_GROUPS = {
+  '/app/logs': '成长回顾', '/app/points': '成长回顾', '/app/mistakes': '成长回顾',
+  '/app/reports': '成长回顾', '/app/rewards': '成长回顾',
+  '/app/children': '家庭', '/app/family-members': '家庭'
+};
+const NAV_ICONS = {
+  '/app/today': HomeOutlined, '/app/tasks': CheckSquareOutlined, '/app/logs': BookOutlined,
+  '/app/points': ReadOutlined, '/app/mistakes': CalendarOutlined, '/app/learning': ReadOutlined,
+  '/app/reports': LineChartOutlined, '/app/reminders': BellOutlined, '/app/rewards': GiftOutlined,
+  '/app/children': UserOutlined, '/app/family-members': TeamOutlined
+};
 
 const FamilyShell = () => {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
@@ -31,11 +44,14 @@ const FamilyShell = () => {
   }
 
   return (
-    <div className="family-shell">
+    <div className="family-shell home-shell">
       <header className="family-header">
-        <div>
-          <p className="family-eyebrow">家庭成长追踪</p>
-          <strong>{family?.familyName || '我的家庭'}</strong>
+        <div className="home-brand">
+          <ReadOutlined aria-hidden="true" />
+          <div>
+            <p className="family-eyebrow">家庭成长追踪</p>
+            <strong>{family?.familyName || '我的家庭'}</strong>
+          </div>
         </div>
         <div className="family-header-actions">
           <ChildSelector />
@@ -49,23 +65,33 @@ const FamilyShell = () => {
           className="family-mobile-nav-toggle"
           aria-label="打开导航"
           aria-expanded={mobileNavigationOpen}
+          aria-controls="family-parent-navigation"
           onClick={() => setMobileNavigationOpen((open) => !open)}
         >
           导航
         </button>
         <nav
+          id="family-parent-navigation"
           aria-label="家长导航"
           className={`family-navigation ${mobileNavigationOpen ? 'is-open' : ''}`}
         >
-          {PARENT_NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) => (isActive ? 'is-active' : undefined)}
-              onClick={() => setMobileNavigationOpen(false)}
-            >
-              {item.label}
-            </NavLink>
+          {['日常学习', '成长回顾', '家庭'].map(group => (
+            <div className="home-nav-group" key={group}>
+              <p className="home-nav-label">{group}</p>
+              {PARENT_NAV_ITEMS.filter(item => (NAV_GROUPS[item.path] || '日常学习') === group).map(item => {
+                const Icon = NAV_ICONS[item.path] || ReadOutlined;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) => (isActive ? 'is-active' : undefined)}
+                    onClick={() => setMobileNavigationOpen(false)}
+                  >
+                    <Icon aria-hidden="true" /><span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
           ))}
         </nav>
         <main className="family-content">
