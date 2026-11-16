@@ -1,0 +1,33 @@
+{
+  "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+  "patchSha256": "d1b5fa514de3844c7532fa191653a1471ec2ab358003bda73806b45fda5cbf8d",
+  "files": [
+    {
+      "file": "frontend/web/src/pages/family/TutorPage.js",
+      "bytes": 21833,
+      "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+      "bytes": 12881,
+      "sha256": "4f4672d7c55a9aefa1dbdd8b9380909b17749d4c6d01901b447f9ebf75fcfb04"
+    },
+    {
+      "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+      "bytes": 50270,
+      "sha256": "33f454f362a5c426eeb4e727051a9ca615220063c0c6eb9dd5473054be334acc"
+    },
+    {
+      "file": "docs/development/family-ai1-test-plan.md",
+      "bytes": 64955,
+      "sha256": "8181b7342f53d28f546d92ac9a2dda5940d7ca00d129834196b8c759cc50b758"
+    },
+    {
+      "file": "docs/development/evidence/ai1-preview-feedback-20261116/README.md",
+      "bytes": 8255,
+      "sha256": "f035764b82ee61797030b533878c0290c2b6fcff6e27474343992fba65623b19"
+    }
+  ],
+  "sourceManifestSha256": "4d69264b7632f5761b8f8a9b0991c9f8d97d86c4e1f2b3b2d46d36f5275e6844",
+  "note": "Frozen pre-approval candidate; current approval documents are later increments. Local reconstruction path omitted."
+}

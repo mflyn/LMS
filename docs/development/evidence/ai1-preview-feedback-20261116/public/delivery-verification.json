@@ -1,0 +1,116 @@
+{
+  "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+  "patchSha256": "d1b5fa514de3844c7532fa191653a1471ec2ab358003bda73806b45fda5cbf8d",
+  "codeMatchesFrozenCandidate": true,
+  "publicPatchReconstructionMatches": true,
+  "sensitiveCheck": {
+    "scope": "Added tracked lines and complete new/public files; pattern scan plus manual scope review, not a universal secret guarantee",
+    "patterns": [
+      "localPath",
+      "privateNetwork",
+      "privateKey",
+      "githubToken",
+      "apiKey",
+      "awsKey",
+      "jwt"
+    ],
+    "findings": 0
+  },
+  "validation": [
+    {
+      "name": "docs",
+      "exitCode": 0
+    },
+    {
+      "name": "lint",
+      "exitCode": 0
+    },
+    {
+      "name": "diff-check",
+      "exitCode": 0
+    },
+    {
+      "name": "staged-full-diff-check",
+      "exitCode": 2,
+      "note": "Two immutable unified-diff blank context lines in candidate.patch at 246 and 251; original bytes retained"
+    },
+    {
+      "name": "staged-source-and-doc-diff-check",
+      "exitCode": 0,
+      "note": "Excludes only frozen candidate.patch; no Git rules changed"
+    }
+  ],
+  "files": [
+    {
+      "file": "frontend/web/src/pages/family/TutorPage.js",
+      "bytes": 21833,
+      "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+      "bytes": 12881,
+      "sha256": "4f4672d7c55a9aefa1dbdd8b9380909b17749d4c6d01901b447f9ebf75fcfb04"
+    },
+    {
+      "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+      "bytes": 50270,
+      "sha256": "33f454f362a5c426eeb4e727051a9ca615220063c0c6eb9dd5473054be334acc"
+    },
+    {
+      "file": "docs/development/family-ai1-test-plan.md",
+      "bytes": 65341,
+      "sha256": "ec8329b795bb452d8a7b136aab477149e8d12d3a668aadccf9059bb7668813ea"
+    },
+    {
+      "file": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 794975,
+      "sha256": "1bdc1dcbfb1def85a672aab9a2535b733174b7e2ad1533ca6f9d41907eee03b5"
+    },
+    {
+      "file": "docs/development/evidence/ai1-preview-feedback-20261116/README.md",
+      "bytes": 11678,
+      "sha256": "5f520ce7d86817cec2c1ef4e35c77f951994d8ec855c1777cc3725f03f185834"
+    },
+    {
+      "file": "docs/development/evidence/ai1-preview-feedback-20261116/public/README.md",
+      "bytes": 3209,
+      "sha256": "437d7c019c9567730e87c96a3bf7d4d56b4cb6cb0146f23691bc9b45f8967735"
+    },
+    {
+      "file": "docs/development/evidence/ai1-preview-feedback-20261116/public/candidate.patch",
+      "bytes": 37980,
+      "sha256": "d1b5fa514de3844c7532fa191653a1471ec2ab358003bda73806b45fda5cbf8d"
+    },
+    {
+      "file": "docs/development/evidence/ai1-preview-feedback-20261116/public/candidate-files.json",
+      "bytes": 1303,
+      "sha256": "32c825d9c50b3b0330ce242ffa8924ed80bfaa736813980fa669bb6757743aba"
+    },
+    {
+      "file": "docs/development/evidence/ai1-preview-feedback-20261116/public/preserved-archive-files.json",
+      "bytes": 22318,
+      "sha256": "10be14d9bae5004697e9795e4156a74d1ccf7e4cf97170a214aa07b47ea1b4e4"
+    },
+    {
+      "file": "docs/development/evidence/ai1-preview-feedback-20261116/public/validation-summary.json",
+      "bytes": 11712,
+      "sha256": "a5b95982f9cda1ded36faffbc87c7f222dec9405fb78caa899e488e33a1e2c52"
+    }
+  ],
+  "exclusions": [
+    "raw logs",
+    "screenshots",
+    "local absolute paths",
+    "WP1/T8 executor changes",
+    "runtime configuration",
+    "dependency changes"
+  ],
+  "retained": [
+    "WebKit related 4 pass / 15 fail",
+    "REAL_REQUEST_EVIDENCE_PENDING",
+    "DEVICE_PENDING",
+    "T4/T8/AI-1 OPEN",
+    "deferred scope"
+  ],
+  "ci": "Must be checked against the pushed SHA; local verification is not CI."
+}

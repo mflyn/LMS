@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const express = require('express');
 const { createHash } = require('crypto');
 const { createT2WebRuntime } = require('./webRuntime');
+const { openParentTasks } = require('./parentNavigation');
 const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
 
 // Real LMS services and login; only the external operation protocol is a double. No Provider exists here.
@@ -130,6 +131,83 @@ async function capture(page, info, name) {
   expect(await page.locator('html').evaluate(el => el.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: info.outputPath(name), fullPage: true });
 }
+
+for (const lost of ['create', 'detail']) test(`AI1 formal preview feedback survives late lists after lost ${lost} response`, async ({ page }, info) => {
+  const seen = await observe(page);
+  await login(page);
+  await openParentTasks(page, runtime.webUrl);
+  await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+  let release, injected = false, created;
+  const held = new Promise(resolve => { release = resolve; }), handlers = [], failures = [], waitingLists = new Set();
+  const interceptor = async route => {
+    const request = route.request(), url = new URL(request.url());
+    const list = request.method() === 'GET' && ['/api/tutor-cycles', '/api/tutor-jobs'].includes(url.pathname);
+    const loseCreate = lost === 'create' && request.method() === 'POST' && url.pathname === '/api/tutor-cycles';
+    const loseDetail = lost === 'detail' && request.method() === 'GET' && /^\/api\/tutor-cycles\/[a-f0-9]{24}$/.test(url.pathname);
+    if (!list && !loseCreate && !loseDetail) return route.fallback();
+    let finish;
+    handlers.push(new Promise(resolve => { finish = resolve; }));
+    try {
+      const response = await route.fetch();
+      if (list) {
+        expect(response.status()).toBe(200); waitingLists.add(url.pathname);
+        await held; return await route.fulfill({ response });
+      }
+      if (injected) return await route.fulfill({ response });
+      expect(response.status()).toBe(loseCreate ? 201 : 200);
+      const data = (await response.json()).data; created = data.cycle;
+      expect(created.childId).toBe(fixture.actors.child.childId);
+      expect(data.preview.messages).toHaveLength(2); injected = true;
+      // The real service committed/read successfully. Replace only its response with a controlled transport failure.
+      return await route.fulfill({ status: 503, contentType: 'application/json',
+        body: JSON.stringify({ success: false, error: { code: 'SERVICE_UNAVAILABLE' } }) });
+    } catch (error) { failures.push(error); throw error; }
+    finally { finish(); }
+  };
+  await page.route('**/api/tutor-**', interceptor);
+  try {
+    await page.getByRole('link', { name: '准备讲解', exact: true }).click();
+    await page.getByLabel('题目文字', { exact: true }).fill('Explain 206 * 30.');
+    await page.getByLabel('已核对文字，不含个人信息或链接').check();
+    await page.getByRole('button', { name: '创建外发预览', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('本次结果暂未确认');
+    expect(injected).toBe(true);
+    const command = await page.evaluate(() => Object.entries(sessionStorage).filter(([key]) => key.startsWith('family-growth.ai1-command.v1:')));
+    expect(command).toHaveLength(lost === 'create' ? 1 : 0);
+    await expect.poll(() => [...waitingLists].sort()).toEqual(['/api/tutor-cycles', '/api/tutor-jobs']);
+    release(); await Promise.all(handlers);
+    await expect(page.getByText('正在读取', { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('alert')).toContainText('本次结果暂未确认');
+    expect(await page.evaluate(() => Object.entries(sessionStorage).filter(([key]) => key.startsWith('family-growth.ai1-command.v1:')))).toEqual(command);
+    expect(seen.writes).toHaveLength(1); expect(remote.puts).toEqual([]); expect(remote.gets).toEqual([]);
+    await expect(page.getByRole('region', { name: '完整外发预览' })).toHaveCount(0);
+    await capture(page, info, `preview-${lost}-feedback.png`);
+    if (lost === 'create') {
+      await expect(page.getByRole('button', { name: '创建外发预览' })).toBeDisabled();
+      await page.getByRole('button', { name: '重试原命令' }).click();
+    } else await page.getByRole('button', { name: '刷新详情' }).click();
+    const full = page.getByRole('region', { name: '完整外发预览' });
+    await expect(full).toBeVisible(); await expect(page.getByRole('alert')).toHaveCount(0);
+    const actual = expectData(await parent.get(`/api/tutor-cycles/${created.id}`));
+    expect(await full.locator('pre').allTextContents()).toEqual(actual.preview.messages.map(m => m.content));
+    await expect(full).toContainText(actual.preview.modelProfileVersion);
+    await expect(full).toContainText(actual.preview.pricingProfileVersion);
+    await expect(full).toContainText(actual.preview.sendNotAfter);
+    await expect(full).toContainText('费用上界 0.184320 元');
+    await expect(full).toContainText('输入上限 8192 tokens'); await expect(full).toContainText('输出上限 4096 tokens');
+    expect(seen.writes).toHaveLength(lost === 'create' ? 2 : 1);
+    if (lost === 'create') expect(seen.writes[1]).toEqual(seen.writes[0]);
+    expect(actual.job).toBeNull(); expect(actual.artifacts).toEqual([]);
+    expect(remote.puts).toEqual([]); expect(remote.gets).toEqual([]);
+    expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
+    expect(seen.console).toHaveLength(1); expect(seen.console[0]).toContain('503');
+    await expect(page.getByRole('button', { name: '生成候选讲解' })).toBeDisabled();
+    await capture(page, info, `preview-${lost}-recovered.png`);
+  } finally {
+    release(); await Promise.all(handlers); await page.unroute('**/api/tutor-**', interceptor);
+    expect(failures).toEqual([]);
+  }
+});
 
 async function assertPrivateVersions(cycleId) {
   const detail = expectData(await parent.get(`/api/tutor-cycles/${cycleId}`));
@@ -491,7 +569,10 @@ test('AI1 formal network refresh failure retains unknown command until explicit 
   const failed = page.waitForEvent('requestfailed', { predicate: request => new URL(request.url()).pathname === detailPath });
   await page.getByRole('button', { name: '刷新详情', exact: true }).click();
   expect((await failed).failure().errorText).toBe('net::ERR_FAILED');
-  await expect(page.getByRole('alert')).toHaveText('本次结果暂未确认，请保留原命令并显式核对。');
+  await expect(page.getByRole('alert').locator('p')).toHaveText([
+    '本次结果暂未确认，请保留原命令并显式核对。',
+    '讲解详情读取失败：本次结果暂未确认，请保留原命令并显式核对。'
+  ]);
   await expect(page.getByRole('region', { name: '讲解详情', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
   expect(await commands()).toEqual(saved); expect(seen.writes).toHaveLength(2);
@@ -500,7 +581,8 @@ test('AI1 formal network refresh failure retains unknown command until explicit 
   await page.unroute(`**${detailPath}`, failRead);
   const read = page.waitForResponse(r => new URL(r.url()).pathname === detailPath && r.status() === 200);
   await page.getByRole('button', { name: '刷新详情', exact: true }).click(); await read;
-  await expect(page.getByRole('alert')).toHaveCount(0);
+  // A successful GET clears its read error, not the unresolved generation result.
+  await expect(page.getByRole('alert').locator('p')).toHaveText(['本次结果暂未确认，请保留原命令并显式核对。']);
   expect(await commands()).toEqual(saved); expect(seen.writes).toHaveLength(2); expect(remote.gets).toEqual([]);
   await page.getByRole('button', { name: '重试原命令', exact: true }).click();
   await expect(page.getByText(generated, { exact: true })).toBeVisible();

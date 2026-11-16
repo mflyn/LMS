@@ -561,3 +561,30 @@ DeepTutor交付使用用户随后明确批准创建的公开fork mflyn/DeepTutor
 CI只执行测试，不启用性能/安全外部扫描、镜像发布或部署。CI与本地结果按实际范围记录。
 B/D/AI-1 OPEN、历史失败、DEVICE_PENDING及全部未关闭/后置状态保持，不能将PR创建当总验收通过。
 本轮交付范围、基线、公开检查及验证索引见[双仓交付记录](evidence/ai1-delivery-20261102/README.md)。
+
+## 18. 外发预览反馈隔离修订（2026-11-16）
+
+`QA-AI1-PREVIEW-FEEDBACK-001`：本机已确认列表晚成功清掉创建错误的P2。
+2026-11-16用户批准限定本地验收及P2关闭，当前为 **CLOSED / USER_APPROVED / LOCAL_ONLY**；
+绑定补丁 `d1b5fa514de3844c7532fa191653a1471ec2ab358003bda73806b45fda5cbf8d` 及冻结重建目录2套件38项复验，
+详见[关闭记录](evidence/ai1-preview-feedback-20261116/README.md#限定关闭记录2026-11-16)。本轮未重跑浏览器；
+开发Chromium相关19项通过、最终两引擎各2项专项、WebKit相关4通过/15失败分别保留，不能合写为全绿。
+iPad原请求仍为 `REAL_REQUEST_EVIDENCE_PENDING`，不能将合成503当作真实响应。
+[本轮核实、最小方案、红绿记录及证据入口](evidence/ai1-preview-feedback-20261116/README.md)。
+
+| 永久用例 | 保护点 |
+| --- | --- |
+| FEEDBACK-01 | 原独立顺序对照：列表先完成正常；创建拒绝后两列表晚成功不清写错误 |
+| FEEDBACK-02 | cycles/jobs各自晚成功、503 AI_DISABLED/网络未知均保留可见错误及精确原命令；重挂载不自动POST |
+| FEEDBACK-03 | 创建中有可见状态；合法创建只POST一次，导航详情并展示完整文字、模型、价格版本、费用、期限及上限，零自动生成 |
+| FEEDBACK-04 | 创建成功后的详情失败遇晚列表仍可见；详情重读只清详情错误，不清另一读取错误 |
+| FEEDBACK-05 | 当前401/403清私有界面并隔离迟到成功；退出/换孩子清草稿，旧会话拒绝，旧成功不恢复界面或命令 |
+| FEEDBACK-06 | 正式应用真实创建/详情成功后丢响应，明确等到两类列表响应及界面读取结束再断言；恢复只重试原创建或只GET详情，零远端生成 |
+| FEEDBACK-07 | 写错误与读错误同时存在后，成功GET仅清自身读错误；未知写提示、原命令及新建锁保留，原命令显式重试才继续 |
+
+复用现有组件测试和 `ai1FormalPage.spec.js`，原命令/业务/请求次数断言、原预算、workers=1/retries=0均保留。
+旧网络刷新用例两处全局提示断言改为精确读写分离断言，失败归因与旧日志均保留，不以删除断言或放宽匹配通过。
+不修改 `isDefinitiveTutorRejection`、完整回执校验、费用配置、身份epoch或原命令存储；
+AI_DISABLED/基础设施503仍不证明未提交，不清命令、不换UUID、不自动发送。
+开发实跑与独立验收分开记录；真人/真机待验、历史失败、T4/T8/AI-1 OPEN、
+SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED及全部后置范围不变。
