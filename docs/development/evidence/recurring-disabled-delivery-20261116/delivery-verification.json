@@ -1,0 +1,75 @@
+{
+  "scope": "Local delivery revalidation; not independent review, full historical regression or manual/device acceptance",
+  "base": "d39bf8223667b557fd910c3b2812daaafd438714",
+  "node": "v22.15.0",
+  "frontend": {
+    "command": "CI=true node node_modules/react-scripts/scripts/test.js --watchAll=false --runInBand --testPathPattern=RecurringPlansPage.test.js|recurringCommands.test.js|recurringApi.test.js",
+    "passed": 61,
+    "failed": 0,
+    "pending": 0,
+    "suites": 3,
+    "exitCode": 0,
+    "rawJsonSha256": "35832334af4f9b657a4ac7aadcbae20ed8319014f386b616838728cf77ddc2ae",
+    "rawLogSha256": "c5089926347029ee09836ab53421b053f677cea08d7c87777827b74be1d38c50"
+  },
+  "backendRuntime": {
+    "command": "jest --config=backend/jest.config.js --coverage=false --selectProjects homework-service --runInBand --testPathPattern=recurringTaskPlan(Service|Runtime).test.js",
+    "note": "Pattern matched Runtime only; 49 executed, not 100",
+    "passed": 49,
+    "failed": 0,
+    "pending": 0,
+    "suites": 1,
+    "exitCode": 0,
+    "rawJsonSha256": "03f5f7b87b28ba6165c087e45c1785446ca1a20488c093b6311197bd5519e266",
+    "rawLogSha256": "9c4bb9f4b68de9d3cf58e4e3d122a93d1d61663492cf7fe29bb3f383ec8b9234"
+  },
+  "backendCore": {
+    "command": "jest --config=backend/jest.config.js --coverage=false --selectProjects homework-service --runInBand --testPathPattern=recurringTaskPlan.test.js",
+    "passed": 51,
+    "failed": 0,
+    "pending": 0,
+    "suites": 1,
+    "exitCode": 0,
+    "rawJsonSha256": "7e4555109b7b194d683a1e34ddc41e7210413d16c23208d813a92434ec60a226",
+    "rawLogSha256": "c93c6f11b35d9cf28b0a21d3baa6eaad3e148c501b0fe1b6e31193dad49d98e0"
+  },
+  "lint": {
+    "command": "eslint .",
+    "exitCode": 0,
+    "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "build": {
+    "command": "CI=true BUILD_PATH=<LOCAL_BUILD> node node_modules/react-scripts/scripts/build.js",
+    "exitCode": 0,
+    "logSha256": "739893490d3e6dcce1839e5f22c33ca5c2c383c4bd7ae88aef61ccb42f6f464a",
+    "note": "Existing browser database age warnings retained; no dependency update"
+  },
+  "docs": {
+    "command": "node scripts/check-family-docs.js",
+    "exitCode": 0,
+    "branchDirectAttempt": { "exitCode": 1, "reason": "MODULE_NOT_FOUND dotenv: delivery worktree has no node_modules" },
+    "branchWithExistingDependencies": { "command": "NODE_PATH=<EXISTING_DEPENDENCIES> node scripts/check-family-docs.js", "exitCode": 0, "installedDependencies": false }
+  },
+  "browserRerun": false,
+  "whitespace": { "nonPatchFilesExitCode": 0, "frozenPatchArtifactsExitCode": 2, "reason": "Only mandatory unified-diff blank context lines contain one space; frozen patches preserved byte-for-byte, not reformatted" },
+  "scopeChecks": {
+    "nonDocumentFilesByteIdentical": 6,
+    "originalArchiveHashesVerified": 180,
+    "WP1T8Excluded": true
+  },
+  "sensitiveData": {
+    "method": "Changed-file pattern scan plus manual credential and fixture review",
+    "findings": "No real credentials or child data found; synthetic fixture references retained; local paths redacted",
+    "rawLogsPublished": false
+  },
+  "notClosed": [
+    "original WebKit failures",
+    "real instance missing recurring collections/indexes",
+    "T4/T8/AI-1 OPEN",
+    "SERVER_TIMING_UNVERIFIED",
+    "DEVICE_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "nonblocking followups",
+    "deferred scope"
+  ]
+}

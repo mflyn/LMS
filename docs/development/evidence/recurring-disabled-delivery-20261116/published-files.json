@@ -1,0 +1,77 @@
+[
+  {
+    "path": "backend/services/homework-service/services/recurringTaskPlanService.js",
+    "frozenCandidateSha256": "d5ab26972094ef950edaaa3db7d8da1c11bfb3fbb220c1d0cbd43e203c31e789",
+    "approvedSourceSha256": "d5ab26972094ef950edaaa3db7d8da1c11bfb3fbb220c1d0cbd43e203c31e789",
+    "publishedSha256": "d5ab26972094ef950edaaa3db7d8da1c11bfb3fbb220c1d0cbd43e203c31e789",
+    "change": "byte-identical"
+  },
+  {
+    "path": "backend/services/homework-service/services/recurringTaskPlanRuntime.js",
+    "frozenCandidateSha256": "2a6128dfad379490d5a1737c08b288dd67c55cc4d59177b79ac34b997b26ea6e",
+    "approvedSourceSha256": "2a6128dfad379490d5a1737c08b288dd67c55cc4d59177b79ac34b997b26ea6e",
+    "publishedSha256": "2a6128dfad379490d5a1737c08b288dd67c55cc4d59177b79ac34b997b26ea6e",
+    "change": "byte-identical"
+  },
+  {
+    "path": "backend/services/homework-service/__tests__/services/recurringTaskPlanRuntime.test.js",
+    "frozenCandidateSha256": "9cb2d4dc7b1a096dd5bfde96b17033f900a9f4d50d5e29ef95909d08e3e3031a",
+    "approvedSourceSha256": "9cb2d4dc7b1a096dd5bfde96b17033f900a9f4d50d5e29ef95909d08e3e3031a",
+    "publishedSha256": "9cb2d4dc7b1a096dd5bfde96b17033f900a9f4d50d5e29ef95909d08e3e3031a",
+    "change": "byte-identical"
+  },
+  {
+    "path": "frontend/web/src/pages/family/RecurringPlansPage.js",
+    "frozenCandidateSha256": "df41aceaee83ae93a1410b8057aaafc1dd833b7b0ab6346ded4851116cd25ad3",
+    "approvedSourceSha256": "df41aceaee83ae93a1410b8057aaafc1dd833b7b0ab6346ded4851116cd25ad3",
+    "publishedSha256": "df41aceaee83ae93a1410b8057aaafc1dd833b7b0ab6346ded4851116cd25ad3",
+    "change": "byte-identical"
+  },
+  {
+    "path": "frontend/web/src/__tests__/family/RecurringPlansPage.test.js",
+    "frozenCandidateSha256": "5effa4435292c27ffd81054b1caa1efb9ad16fecc15dba19158ce9ba63ef16aa",
+    "approvedSourceSha256": "5effa4435292c27ffd81054b1caa1efb9ad16fecc15dba19158ce9ba63ef16aa",
+    "publishedSha256": "5effa4435292c27ffd81054b1caa1efb9ad16fecc15dba19158ce9ba63ef16aa",
+    "change": "byte-identical"
+  },
+  {
+    "path": "tests/e2e/t2/recurringDisabled.spec.js",
+    "frozenCandidateSha256": "6edef10568acd2b3cfc592a0b0bfff01212cba008c556f36c62a674195778ee2",
+    "approvedSourceSha256": "6edef10568acd2b3cfc592a0b0bfff01212cba008c556f36c62a674195778ee2",
+    "publishedSha256": "6edef10568acd2b3cfc592a0b0bfff01212cba008c556f36c62a674195778ee2",
+    "change": "byte-identical"
+  },
+  {
+    "path": "docs/api/family-recurring-tasks-api.md",
+    "frozenCandidateSha256": "ea478f144b19225f639a667ffa64a3ddf35a46ead445803a5924baa41ad280b1",
+    "approvedSourceSha256": "ea478f144b19225f639a667ffa64a3ddf35a46ead445803a5924baa41ad280b1",
+    "publishedSha256": "ea478f144b19225f639a667ffa64a3ddf35a46ead445803a5924baa41ad280b1",
+    "change": "byte-identical"
+  },
+  {
+    "path": "docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md",
+    "frozenCandidateSha256": "70460fe6facc9e0a56e1770dd108479aa8edc5121c641570552ae652bd35055c",
+    "approvedSourceSha256": "70460fe6facc9e0a56e1770dd108479aa8edc5121c641570552ae652bd35055c",
+    "publishedSha256": "70460fe6facc9e0a56e1770dd108479aa8edc5121c641570552ae652bd35055c",
+    "change": "byte-identical"
+  },
+  {
+    "path": "docs/development/family-recurring-tasks-test-plan.md",
+    "frozenCandidateSha256": "5d3b127ffee64553eadead21fc97aa1ea46a618d0132dae5c7e8dd30bb281d24",
+    "approvedSourceSha256": "55384a0525faab79f50c51ace7500fa3941e256352dd5cb227cf42b9c8b630af",
+    "publishedSha256": "30720c265833ca329e8592cc9a30eae7a6112f011da01cebdcfcc07f8a31bd31",
+    "change": "approved-closure-and-public-index"
+  },
+  {
+    "path": "docs/development/evidence/recurring-disabled-delivery-20261116/candidate.patch",
+    "originalSha256": "7fb47c98ff5944f6795157810cd2be14d811f93305505ae88d66b171863d7cf2",
+    "publishedSha256": "7fb47c98ff5944f6795157810cd2be14d811f93305505ae88d66b171863d7cf2",
+    "change": "byte-identical"
+  },
+  {
+    "path": "docs/development/evidence/recurring-disabled-delivery-20261116/delta-from-f1ae9a9.patch",
+    "originalSha256": "8dde2e1c38c3ce5fb5437fb5ac4963e9f9947fce90e562f4622dd4e5b799dbda",
+    "publishedSha256": "8dde2e1c38c3ce5fb5437fb5ac4963e9f9947fce90e562f4622dd4e5b799dbda",
+    "change": "byte-identical"
+  }
+]

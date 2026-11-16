@@ -1,0 +1,59 @@
+[
+  {
+    "file": "digest-chromium.json",
+    "stats": {
+      "startTime": "2026-11-16T03:26:45.667Z",
+      "duration": 12666.601,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  {
+    "file": "digest-green-final.json",
+    "passed": 58,
+    "failed": 0,
+    "unselected": 0,
+    "suites": 3
+  },
+  {
+    "file": "digest-green-r2.json",
+    "passed": 61,
+    "failed": 0,
+    "unselected": 0,
+    "suites": 3
+  },
+  {
+    "file": "digest-green.json",
+    "passed": 58,
+    "failed": 0,
+    "unselected": 0,
+    "suites": 3
+  },
+  {
+    "file": "digest-inflight-red.json",
+    "passed": 0,
+    "failed": 3,
+    "unselected": 35,
+    "suites": 0
+  },
+  {
+    "file": "digest-red.json",
+    "passed": 5,
+    "failed": 6,
+    "unselected": 24,
+    "suites": 0
+  },
+  {
+    "file": "digest-webkit.json",
+    "stats": {
+      "startTime": "2026-11-16T03:27:33.474Z",
+      "duration": 14306.701,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  }
+]

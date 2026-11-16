@@ -1,0 +1,55 @@
+{
+  "base": "d39bf8223667b557fd910c3b2812daaafd438714",
+  "patchSha256": "7fb47c98ff5944f6795157810cd2be14d811f93305505ae88d66b171863d7cf2",
+  "deltaSha256": "8dde2e1c38c3ce5fb5437fb5ac4963e9f9947fce90e562f4622dd4e5b799dbda",
+  "developerThreadIndependentReview": {
+    "frontend": {
+      "passed": 61,
+      "failed": 0,
+      "unselected": 0,
+      "total": 61,
+      "originalSha256": "7d11832aaf6ce1faec72f91d96b86c423a43e8f282f935f7dd2bfaa550bcae9f"
+    },
+    "mutation": {
+      "passed": 5,
+      "failed": 9,
+      "unselected": 24,
+      "total": 38,
+      "originalSha256": "827fc6a848cda19a0892b0a64342cebef55b70f8cb866bf923782a75cff459fd"
+    },
+    "browserRerun": false,
+    "reportSha256": "28a2972e55110442765b55a1a59a068a533e226fbc0066a298d7021705fb8d19"
+  },
+  "testThreadIndependentR2": {
+    "reportSha256": "76548172d48214dbd4538e3a74c8dd4f5d594d704f0e8a322b67d3c42921cc37",
+    "manifestSha256": "08a0613da2deac065ff38eb3ff0e0394ee094554eb83ef9cedcc798cc92699b6",
+    "frontend": {
+      "passed": 61
+    },
+    "backend": {
+      "passed": 100,
+      "scope": "two related suites; not full family regression"
+    },
+    "originalCounterexamples": {
+      "passed": 3
+    },
+    "chromium": {
+      "passed": 13,
+      "failed": 0
+    },
+    "webkit": {
+      "passed": 12,
+      "failed": 1
+    },
+    "newDigestWindowsPerEngine": 3,
+    "disabledTestsPerEngine": 2,
+    "browserScope": "real local HTTP and synthetic Mongo; Mac headless, not iPad or Ubuntu acceptance",
+    "buildIdentity": "same source inputs, different build bytes; not binary reproduction"
+  },
+  "closure": {
+    "issue": "QA-RECURRING-DISABLED-001-DIGEST-P2",
+    "state": "CLOSED_USER_APPROVED",
+    "date": "2026-11-16",
+    "acceptanceSha256": "c8b69443218bf848d9132db36e359fb2b06eed1564e10ecd4b8e2ba4da659598"
+  }
+}

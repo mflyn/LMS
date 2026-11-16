@@ -60,7 +60,7 @@ template 仅设计 §3 白名单；可选字段省略与 null 按既有任务字
 plan 白名单：id、childId、timezone、startDate、status、version、currentRevision、pendingRevision、createdAt、updatedAt、stoppedAt；不输出内部 fence、数据库日志、其他家长的命令正文。
 revision：revisionNumber、effectiveFrom、endDate、schedule、template。尚未生效的明日版本放 pendingRevision，不能把它投影为今日规则。
 额外 generationHealth：`lastEvaluatedDate`、`lastSucceededAt`、`lastFailureCode`（脱敏或 null）、`skippedOccurrenceCount`、`lastSkippedRange`。日期为空不能显示“生成正常”；计划结束可由 revision endDate 派生显示，不新增任务终态。
-列表包络：`{success:true,data:{items,page,pageSize,total}}`；命令索引采用同包络，items 只含 operationId/action/targetPlanId/state/settledAt（create 的 targetPlanId=null）。成功生成的 planId 在成功 result 内返回，不用它替换原创建命令的空目标。
+计划列表包络：`{success:true,data:{items,page,pageSize,total,availability}}`。`availability` 为 `{writesEnabled:true,reason:null}`，或 `{writesEnabled:false,reason:"RECURRING_TASKS_DISABLED"|"RECURRING_TASKS_NOT_READY"}`；仅在当前家长/孩子授权通过后返回，反映本实例的开关和启动准入状态，不替代每次写入的服务端校验。客户端读取期间、字段缺失或不符合已启用形状时拒绝新建/修改/停止/原正文重试，显示原因，不先保存新标记。新建/修改/停止在摘要计算完成、持久化之前，必须重新核验当前身份和最新可写状态；此时已关闭/未就绪则零新标记、零请求并保留未提交表单，不能删除其他已保存原命令。命令索引仍为 `{items,page,pageSize,total}`，items 只含 operationId/action/targetPlanId/state/settledAt（create 的 targetPlanId=null）。成功生成的 planId 在成功 result 内返回，不用它替换原创建命令的空目标。
 
 PATCH 正文为 `{operationId,expectedVersion,schedule,endDate,template}`；四项业务/版本字段都必填，template 是完整替换而非隐式合并。expectedVersion 为正安全整数。
 服务端成功事务确定生效日为计划当地明天；不可修改 childId、startDate、timezone。endDate 为 null 或不早于 max(startDate,生效日)。已结束或已停止计划拒绝修改。
@@ -97,7 +97,7 @@ abort 路径沿用原operationId，无新命令UUID、无额外query。正文严
 复用本功能命令集合、唯一键和Mongo事务：若已有相同身份/摘要的succeeded或aborted，返回上节同形状200终态；无记录则插入aborted墓碑，不写计划、任务或奖励。存在同ID异意图返回409，不覆盖任何终态。
 所有业务写必须在同一事务中排他插入succeeded记录，禁止upsert覆盖墓碑。业务先提交则abort返回succeeded，不撤销原业务；abort先提交则在途业务最终日志插入冲突，整笔业务回滚，重读墓碑后返回409 aborted。不能只在业务开始查询墓碑，也不能业务提交后再写成功记录。
 只有确认事务持久终态后才返回200；abort提交未知为503，原标记保留，原最小正文可重试或GET，无TTL、无“等够时间就未提交”的判断。已确定未发送/回滚但保留标记时，也可通过该墓碑永久禁止原UUID再执行，从而安全解除。
-这不是计划stop，也不是撤销已成功命令。UI显式提示“若原操作已成功，将返回原结果，不会撤销”；只有确认aborted后才可由用户新建不同意图/UUID，不自动重发。撤权或功能关闭时不进行abort，保留隔离标记；恢复授权/能力后再处理。
+这不是计划stop，也不是撤销已成功命令。UI显式提示“若原操作已成功，将返回原结果，不会撤销”；只有确认aborted且当前服务可写后才可由用户新建不同意图/UUID，不自动重发。撤权时拒绝abort并保留隔离标记。正式装配在功能关闭时允许完整原标记的显式abort：先按实时权限及完整身份/摘要读取既有终态，成功结果优先；无终态时复用完整既有事务能力、正式模型连接、集合及索引预检，通过后才事务写入唯一aborted墓碑。缺集合/索引等返回503 `RECURRING_TASKS_NOT_READY`，不自动建表、建索引或清本地标记。旧的未注入此预检能力的独立服务工厂仍拒绝关闭态abort；关闭态不完整请求仍返回功能关闭。
 
 | HTTP / error.code | 意义及客户端动作 |
 | --- | --- |
@@ -109,9 +109,10 @@ abort 路径沿用原operationId，无新命令UUID、无额外query。正文严
 | 409 `RECURRING_PLAN_COMMAND_ABORTED` | 原业务写已被墓碑终止，禁止再执行；该错误本身不代替完整终态回执，GET核验后才清标记 |
 | 503 `RECURRING_PLAN_WRITE_UNKNOWN` | 提交结果未确定；保留原命令，查询或原命令重试 |
 | 503 `RECURRING_TASKS_DISABLED` | 新能力未启用；禁止绕过为一组旧 POST，保留未知命令，查询仍可用 |
+| 503 `RECURRING_TASKS_NOT_READY` | 安全终止或写入准入条件未满足；保留原标记，不自动初始化、降级或重发 |
 
 错误包络 `{success:false,error:{code,message,details}}`，details 不暴露家庭、孩子内容或其他 actor。鉴权失败优先于返回功能关闭/目标状态。
-开关关闭时计划及命令 GET 可用，业务写重放和abort均返回功能关闭，不偷偷执行；启用后再处理原命令。发出过请求后收到400/版本冲突也不直接移除标记，避免另一个在途重试仍成功；放弃意图先显式abort取得终态，之后用户才能提交新意图。仅本地校验未发送的表单错误无需创建标记或墓碑。
+开关关闭时计划及命令 GET 可用，新业务写及业务写重放均拒绝；仅§4.3的完整原命令安全终止例外，不执行计划/任务/发星写入。发出过请求后收到400/版本冲突/503也不直接移除标记，避免另一个在途重试仍成功；放弃意图先显式abort取得终态，之后当前服务可写时用户才能提交新意图。仅本地校验未发送的表单错误无需创建标记或墓碑。
 
 ## 5. 实例与旧客户端兼容
 
@@ -124,4 +125,4 @@ abort 路径沿用原operationId，无新命令UUID、无额外query。正文严
 
 第三批家长页面候选复用上述接口，未新增服务端契约。最小键使用版本前缀及JSON数组`[actorId,familyId,childId,operationId]`；并发标签各自UUID不会覆盖，处理一项终态不解除其他项。正文仅当前session revision可读，同actor重新认证也清原文；新会话仅凭原标记查询/中止，不能用摘要重建正文。中止确认绑定原marker，终态还核对结果plan.childId及patch/stop目标ID。
 
-规范摘要使用Web Crypto SHA-256，需要HTTPS或localhost安全上下文；不可用或存储失败不发送，不回退为弱摘要。此部署前提尚未在真实家庭入口验证；不修改服务配置。限定合成总门禁批准关闭及完整家庭回归、分批证据绑定以[测试方案§15](../development/family-recurring-tasks-test-plan.md)为准；原阶段及冻结归档保留历史待审/OPEN状态，不等于上线或真人验收。此次仅更新状态，无API契约变更。
+规范摘要使用Web Crypto SHA-256，需要HTTPS或localhost安全上下文；不可用或存储失败不发送，不回退为弱摘要。此部署前提尚未在真实家庭入口验证；不修改服务配置。限定合成总门禁批准关闭及完整家庭回归、分批证据绑定以[测试方案§15](../development/family-recurring-tasks-test-plan.md)为准；原阶段及冻结归档保留历史待审/OPEN状态，不等于上线或真人验收。2026-11-16增量为QA-RECURRING-DISABLED-001待独立复评候选（OPEN），新增列表availability及关闭态受准入保护的终止例外，不改变原冻结归档的契约快照或验收结论。失败后聚焦可见提示，刷新/重新登录仍显示能力与未决保护原因；not_found不解锁，跨身份及跨标签替换后的旧回执不清新标记。
