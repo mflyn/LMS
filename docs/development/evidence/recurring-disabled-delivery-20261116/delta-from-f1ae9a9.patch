@@ -1,0 +1,213 @@
+diff --git a/frontend/web/src/pages/family/RecurringPlansPage.js b/frontend/web/src/pages/family/RecurringPlansPage.js
+index 6d80e9ae..d03a1b64 100644
+--- a/frontend/web/src/pages/family/RecurringPlansPage.js
++++ b/frontend/web/src/pages/family/RecurringPlansPage.js
+@@ -32,6 +32,15 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
+   const [availability, setAvailability] = useState(null);
+   const availabilityRef = useRef(null), feedbackRef = useRef(null);
+   const canWrite = () => availabilityRef.current?.writesEnabled === true && availabilityRef.current.reason === null;
++  // prepare rechecks this after its async digest, before persisting a new intent.
++  const guardNewCommand = valid => () => {
++    if (!valid()) return false;
++    if (!canWrite()) {
++      const code = availabilityRef.current?.reason || 'RECURRING_TASKS_NOT_READY';
++      throw Object.assign(new Error(code), { code });
++    }
++    return true;
++  };
+   const alive = useRef(true), denied = useRef(false), epoch = useRef(0), readNumber = useRef(0), writing = useRef(false);
+   const current = useCallback(() => alive.current && !denied.current && scopeCurrent() && isSessionCurrent(session), [scopeCurrent, session]);
+   const clearPrivate = useCallback(() => {
+@@ -143,7 +152,7 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
+     const body = { operationId: newRecurringOperationId(), ...(editor.action === 'create'
+       ? { childId: scope.childId, startDate: form.startDate } : { expectedVersion: editor.target.version }), endDate: form.endDate || null,
+     schedule: form.kind === 'daily' ? { kind: 'daily' } : { kind: 'weekly', weekdays: form.weekdays }, template };
+-    const command = await prepareRecurringCommand(scope, editor.action, editor.target?.id || null, body, session, valid);
++    const command = await prepareRecurringCommand(scope, editor.action, editor.target?.id || null, body, session, guardNewCommand(valid));
+     if (!valid()) return; readMarker(); setEditor(null); setForm(null); await dispatch(command, valid);
+   }); };
+   const confirm = () => guarded(async valid => {
+@@ -157,7 +166,7 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
+       if (!canWrite()) return;
+       if (readMarker()) return;
+       const command = await prepareRecurringCommand(scope, 'stop', prompt.plan.id,
+-        { operationId: newRecurringOperationId(), expectedVersion: prompt.plan.version }, session, valid);
++        { operationId: newRecurringOperationId(), expectedVersion: prompt.plan.version }, session, guardNewCommand(valid));
+       if (!valid()) return; readMarker(); await dispatch(command, valid);
+     }
+   });
+diff --git a/frontend/web/src/__tests__/family/RecurringPlansPage.test.js b/frontend/web/src/__tests__/family/RecurringPlansPage.test.js
+index a3f112e4..c40cf9cd 100644
+--- a/frontend/web/src/__tests__/family/RecurringPlansPage.test.js
++++ b/frontend/web/src/__tests__/family/RecurringPlansPage.test.js
+@@ -30,6 +30,123 @@ beforeEach(() => { localStorage.clear(); sessionStorage.clear(); jest.resetAllMo
+   api.listRecurringPlans.mockResolvedValue({ availability: available, items: [], page: 1, pageSize: 20, total: 0 });
+   api.getRecurringCommand.mockResolvedValue({ state: 'not_found' }); });
+ 
++const pauseDigest = () => {
++  let release, entered = false;
++  const barrier = new Promise(resolve => { release = resolve; });
++  const original = window.crypto.subtle.digest.bind(window.crypto.subtle);
++  const spy = jest.spyOn(window.crypto.subtle, 'digest').mockImplementationOnce(async (...args) => {
++    const bytes = await original(...args); entered = true; await barrier; return bytes;
++  });
++  return { release, entered: () => entered, restore: () => spy.mockRestore() };
++};
++const beginDraft = async action => {
++  api.listRecurringPlans.mockResolvedValue({ availability: available, items: action === 'create' ? [] : [plan()], total: action === 'create' ? 0 : 1 });
++  api.getRecurringPlan.mockResolvedValue(plan());
++  const view = mount();
++  const entry = action === 'create' ? '新建重复计划' : action === 'patch' ? '修改计划' : '停止计划';
++  await enabled(entry); fireEvent.click(screen.getByRole('button', { name: entry }));
++  const submit = action === 'stop' ? '确认停止' : '保存计划'; await enabled(submit);
++  if (action === 'create') fireEvent.change(screen.getByLabelText('计划名称'), { target: { value: '合成摘要竞争' } });
++  return { view, submit };
++};
++
++const unavailableDraftCases = ['create', 'patch', 'stop'].flatMap(action =>
++  ['RECURRING_TASKS_DISABLED', 'RECURRING_TASKS_NOT_READY'].map(reason => [action, reason]));
++test.each(unavailableDraftCases)('digest %s: refreshed %s rejects before marker persistence and any write', async (action, reason) => {
++  const { view, submit } = await beginDraft(action), hold = pauseDigest();
++  try {
++    fireEvent.click(screen.getByRole('button', { name: submit }));
++    await waitFor(() => expect(hold.entered()).toBe(true));
++    api.listRecurringPlans.mockResolvedValue({ items: action === 'create' ? [] : [plan()], total: action === 'create' ? 0 : 1,
++      availability: { writesEnabled: false, reason } });
++    act(() => window.dispatchEvent(new Event('focus')));
++    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(reason === 'RECURRING_TASKS_DISABLED' ? '暂未启用' : '尚未就绪'));
++    await act(async () => hold.release());
++    expect(api.sendRecurringCommand).not.toHaveBeenCalled(); expect(api.abortRecurringCommand).not.toHaveBeenCalled();
++    expect(Object.keys(localStorage).filter(k => k.includes('recurring-marker'))).toEqual([]);
++    expect(Object.keys(sessionStorage).filter(k => k.includes('recurring-body'))).toEqual([]);
++    expect(screen.queryByText('有一项计划操作待核对')).not.toBeInTheDocument();
++    expect(screen.getByRole('dialog')).toHaveTextContent(reason === 'RECURRING_TASKS_DISABLED' ? '暂未启用' : '尚未就绪');
++    if (action !== 'stop') expect(screen.getByLabelText('计划名称')).toHaveValue(action === 'create' ? '合成摘要竞争' : '私有旧任务');
++  } finally { await act(async () => hold.release()); hold.restore(); view.unmount(); }
++});
++
++test.each(['create', 'patch', 'stop'])('digest %s: in-flight availability rejects before storage and releases busy for later retry', async action => {
++  const { view, submit } = await beginDraft(action), hold = pauseDigest(); let finishRead;
++  const fresh = { items: action === 'create' ? [] : [plan()], total: action === 'create' ? 0 : 1, availability: available };
++  try {
++    fireEvent.click(screen.getByRole('button', { name: submit })); await waitFor(() => expect(hold.entered()).toBe(true));
++    api.listRecurringPlans.mockImplementationOnce(() => new Promise(resolve => { finishRead = resolve; }));
++    act(() => window.dispatchEvent(new Event('focus')));
++    await waitFor(() => expect(api.listRecurringPlans).toHaveBeenCalledTimes(2));
++    expect(screen.getByText('正在读取计划…')).toBeVisible();
++    await act(async () => hold.release());
++    expect(api.sendRecurringCommand).not.toHaveBeenCalled();
++    expect(Object.keys(localStorage).filter(k => k.includes('recurring-marker'))).toEqual([]);
++    expect(Object.keys(sessionStorage).filter(k => k.includes('recurring-body'))).toEqual([]);
++    expect(screen.getByRole('dialog')).toHaveTextContent('尚未就绪');
++    await act(async () => finishRead(fresh));
++    await enabled(submit);
++    expect(screen.queryByText('有一项计划操作待核对')).not.toBeInTheDocument();
++    expect(api.sendRecurringCommand).not.toHaveBeenCalled();
++  } finally {
++    await act(async () => { hold.release(); finishRead?.(fresh); }); hold.restore(); view.unmount();
++  }
++});
++
++test.each(['create', 'patch', 'stop'])('digest %s: a fresh enabled result permits one original write and preserves an unknown marker', async action => {
++  api.sendRecurringCommand.mockRejectedValue(failed(503));
++  const { view, submit } = await beginDraft(action), hold = pauseDigest();
++  try {
++    fireEvent.click(screen.getByRole('button', { name: submit })); await waitFor(() => expect(hold.entered()).toBe(true));
++    await act(async () => { window.dispatchEvent(new Event('focus')); });
++    await waitFor(() => expect(api.listRecurringPlans).toHaveBeenCalledTimes(2));
++    await act(async () => hold.release());
++    await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(1));
++    const command = api.sendRecurringCommand.mock.calls[0][0];
++    expect(command.marker.action).toBe(action);
++    expect(command.body.operationId).toBe(command.marker.operationId);
++    const saved = { ...localStorage };
++    expect(Object.keys(saved).filter(k => k.includes('recurring-marker'))).toHaveLength(1);
++    await enabled('重试原命令');
++    api.listRecurringPlans.mockResolvedValue({ items: [], total: 0,
++      availability: { writesEnabled: false, reason: 'RECURRING_TASKS_DISABLED' } });
++    await act(async () => { window.dispatchEvent(new Event('focus')); });
++    expect(api.listRecurringPlans).toHaveBeenCalledTimes(3);
++    expect(screen.getByRole('button', { name: '重试原命令' })).toBeDisabled();
++    await waitFor(() => expect(screen.getAllByRole('alert')[0]).toHaveTextContent('请求未能确认'));
++    expect({ ...localStorage }).toEqual(saved); expect(api.sendRecurringCommand).toHaveBeenCalledTimes(1);
++  } finally { await act(async () => hold.release()); hold.restore(); view.unmount(); }
++});
++
++test('digest rejection preserves a marker saved by another tab while this draft was waiting', async () => {
++  const { view, submit } = await beginDraft('create'), hold = pauseDigest();
++  try {
++    fireEvent.click(screen.getByRole('button', { name: submit })); await waitFor(() => expect(hold.entered()).toBe(true));
++    await act(async () => { await prepareRecurringCommand(scope, 'create', null, body(), captureSession('parent')); });
++    const saved = { ...localStorage }, privateSaved = { ...sessionStorage };
++    api.listRecurringPlans.mockResolvedValue({ items: [], total: 0,
++      availability: { writesEnabled: false, reason: 'RECURRING_TASKS_DISABLED' } });
++    act(() => window.dispatchEvent(new Event('focus')));
++    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('暂未启用'));
++    await act(async () => hold.release());
++    expect({ ...localStorage }).toEqual(saved); expect({ ...sessionStorage }).toEqual(privateSaved);
++    expect(api.sendRecurringCommand).not.toHaveBeenCalled(); expect(api.abortRecurringCommand).not.toHaveBeenCalled();
++  } finally { await act(async () => hold.release()); hold.restore(); view.unmount(); }
++});
++
++test('digest completion after actor switch writes neither marker nor private body', async () => {
++  const { view, submit } = await beginDraft('create'), hold = pauseDigest();
++  try {
++    fireEvent.click(screen.getByRole('button', { name: submit })); await waitFor(() => expect(hold.entered()).toBe(true));
++    act(() => login('444444444444444444444444'));
++    await act(async () => hold.release());
++    expect(Object.keys(localStorage).filter(k => k.includes('recurring-marker'))).toEqual([]);
++    expect(Object.keys(sessionStorage).filter(k => k.includes('recurring-body'))).toEqual([]);
++    expect(api.sendRecurringCommand).not.toHaveBeenCalled(); expect(screen.queryByDisplayValue('合成摘要竞争')).not.toBeInTheDocument();
++  } finally { await act(async () => hold.release()); hold.restore(); view.unmount(); }
++});
++
+ test.each(['RECURRING_TASKS_DISABLED', 'RECURRING_TASKS_NOT_READY'])('unavailable %s explains zero-write creation without saving a marker', async reason => {
+   api.listRecurringPlans.mockResolvedValue({ items: [], total: 0, availability: { writesEnabled: false, reason } });
+   mount(); await screen.findByText('暂无重复计划');
+diff --git a/docs/api/family-recurring-tasks-api.md b/docs/api/family-recurring-tasks-api.md
+index 9ec8945f..2248d178 100644
+--- a/docs/api/family-recurring-tasks-api.md
++++ b/docs/api/family-recurring-tasks-api.md
+@@ -60,7 +60,7 @@ template 仅设计 §3 白名单；可选字段省略与 null 按既有任务字
+ plan 白名单：id、childId、timezone、startDate、status、version、currentRevision、pendingRevision、createdAt、updatedAt、stoppedAt；不输出内部 fence、数据库日志、其他家长的命令正文。
+ revision：revisionNumber、effectiveFrom、endDate、schedule、template。尚未生效的明日版本放 pendingRevision，不能把它投影为今日规则。
+ 额外 generationHealth：`lastEvaluatedDate`、`lastSucceededAt`、`lastFailureCode`（脱敏或 null）、`skippedOccurrenceCount`、`lastSkippedRange`。日期为空不能显示“生成正常”；计划结束可由 revision endDate 派生显示，不新增任务终态。
+-计划列表包络：`{success:true,data:{items,page,pageSize,total,availability}}`。`availability` 为 `{writesEnabled:true,reason:null}`，或 `{writesEnabled:false,reason:"RECURRING_TASKS_DISABLED"|"RECURRING_TASKS_NOT_READY"}`；仅在当前家长/孩子授权通过后返回，反映本实例的开关和启动准入状态，不替代每次写入的服务端校验。客户端读取期间、字段缺失或不符合已启用形状时拒绝新建/修改/停止/原正文重试，显示原因，不先保存新标记。命令索引仍为 `{items,page,pageSize,total}`，items 只含 operationId/action/targetPlanId/state/settledAt（create 的 targetPlanId=null）。成功生成的 planId 在成功 result 内返回，不用它替换原创建命令的空目标。
++计划列表包络：`{success:true,data:{items,page,pageSize,total,availability}}`。`availability` 为 `{writesEnabled:true,reason:null}`，或 `{writesEnabled:false,reason:"RECURRING_TASKS_DISABLED"|"RECURRING_TASKS_NOT_READY"}`；仅在当前家长/孩子授权通过后返回，反映本实例的开关和启动准入状态，不替代每次写入的服务端校验。客户端读取期间、字段缺失或不符合已启用形状时拒绝新建/修改/停止/原正文重试，显示原因，不先保存新标记。新建/修改/停止在摘要计算完成、持久化之前，必须重新核验当前身份和最新可写状态；此时已关闭/未就绪则零新标记、零请求并保留未提交表单，不能删除其他已保存原命令。命令索引仍为 `{items,page,pageSize,total}`，items 只含 operationId/action/targetPlanId/state/settledAt（create 的 targetPlanId=null）。成功生成的 planId 在成功 result 内返回，不用它替换原创建命令的空目标。
+ 
+ PATCH 正文为 `{operationId,expectedVersion,schedule,endDate,template}`；四项业务/版本字段都必填，template 是完整替换而非隐式合并。expectedVersion 为正安全整数。
+ 服务端成功事务确定生效日为计划当地明天；不可修改 childId、startDate、timezone。endDate 为 null 或不早于 max(startDate,生效日)。已结束或已停止计划拒绝修改。
+diff --git a/docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md b/docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md
+index 22771892..800f2076 100644
+--- a/docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md
++++ b/docs/superpowers/specs/2026-11-15-family-recurring-tasks-design.md
+@@ -113,6 +113,7 @@ abort 超时/提交未知仍使用原 operationId 和同一最小正文重试/
+ 
+ 新增默认关闭功能开关 `RECURRING_TASKS_ENABLED=false`，管理写入与生成同开关；关闭时计划读/原命令结果查询可用，实例旧业务仍工作，管理写返回明确关闭错误。不开启计划能力不改变旧 repeatRule 拒绝。
+ 计划列表追加已鉴权的 `availability`，区分DISABLED与NOT_READY；页面在读取期间或缺少明确可写状态时锁定新建/修改/停止/重试，展示持续原因，不先留新意图。原标记核对与上述显式abort独立保留；失败后聚焦提示，刷新/重登不丢失禁用说明，不把not_found当终态。本增量QA-RECURRING-DISABLED-001仍OPEN待独立复评，原批准和冻结快照不改写。
++本地复审发现并补修摘要等待窗口：仅在点击保存时检查不足，新意图必须在摘要完成、写入storage之前再次检查最新可写状态与原身份代次。复用现有prepare回调，不修改通用命令恢复；失败保留表单但不新增标记或发请求，也不清除已保存/已发送或其他标签的标记。创建/修改/停止均覆盖，待本次修订复审后再决定P2关闭。
+ 启用需事务能力及唯一索引就绪，使用既有服务启动预检，不跳过上传/媒体/凭据等原检查。关闭扫描器不清记录，不宣称按时生成；重新启用遵循只补今天规则。
+ 扫描器停止时停止新批次并等待本轮事务有界收尾，未知提交保留证据；导入模块和单测不得自动监听或扫描。运行错误仅记录脱敏代码及生成健康，不自动放宽规则。
+ 回退是关闭新能力并保留模型/索引及生成字段兼容，不回滚到会丢字段或忽略 aborted 墓碑的旧写入路径；不能删除实例、去重/命令记录或已发星流水。
+diff --git a/docs/development/family-recurring-tasks-test-plan.md b/docs/development/family-recurring-tasks-test-plan.md
+index adc515f7..1e3ee8f1 100644
+--- a/docs/development/family-recurring-tasks-test-plan.md
++++ b/docs/development/family-recurring-tasks-test-plan.md
+@@ -335,3 +335,17 @@ npm run test:family-regression -- --json --outputFile=<private-run>/jest.json
+ 浏览器复用正式应用及真实本机HTTP、临时库/存储/合成账号；只在临时启动配置切换开关复现竞争，未替换业务成功响应。360px/768px提示、焦点和无溢出断言及截图已检查；不是iPad真人/真机。没有重跑完整家庭回归、历史变异或无关WebKit用例；原断言/超时/重试/资源预算未放宽。冻结补丁、逐文件摘要、原始日志/JSON及命令退出码在交接包，交付前以干净基线应用补丁并逐文件比对，不覆盖历史冻结文件。
+ 
+ 自查结论：本地新行为与安全边界已由上述相关测试保护；缺初始化的真实实例仍不能安全终止，需后续独立授权处理。当前候选提交独立复评，P2未自行关闭。未提交/推送/合并/部署、未更新真人入口、未访问服务器或真实模型。T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED及非阻断补测/后置范围不变。
++
++### 17.1 摘要后持久化前可写状态P2补修候选
++
++原9文件补丁`f1ae9a977863c98b42d010a84251e144c8533608ce812e1cbdb559bc9968fb1d`及其全部红绿记录保留不改写。复审复验原前端47/后端100通过，但确定性诊断发现：摘要尚未返回时，焦点刷新已确认关闭，旧valid仅检查身份，仍落盘一个未发送命令，随后dispatch才拒绝。诊断首轮Router夹具告警与修正后真实零标记断言失败分别保留，不算已修复。
++
++用户授权限定本地修订：仅页面的新意图prepare回调复用`valid`并检查最新可写状态，摘要完成到持久化前拒绝DISABLED/NOT_READY，返回对应可感知错误；不修改共享命令helper、服务端、唯一约束或原命令清理规则。原命令即使已保存但未发出，也不在本次自动删除。身份失效优先，不恢复旧页面。
++
++永久测试先红后绿：创建/修改/停止 × DISABLED/NOT_READY共6项修复前均在零新标记处失败，5项正例/隔离通过；24项非专项按名称未选中，最终相关回归全部执行。新增正常可写原ID提交3项、摘要期间其他标签原标记不变1项、账号切换后零落盘1项，总计11项。摘要使用真实Web Crypto结果及可释放屏障，不提高超时或过滤控制台；finally释放并恢复spy。修复后页面/命令/API共3套件58项通过；原断言保留。新构建、lint、文档校验及两引擎关闭态专项结果绑定本次新冻结包，均属开发自验，不替代独立复审。
++
++后端源码/测试无变化，复用此前100项及复审100项，不为本次重复计数或冒充新完整家庭回归。原WebKit组合7通过/3失败及历史WebKit22 OPEN保留；新增专项通过不能关闭它们。真实实例缺集合/索引仍NOT_READY保锁，需另授权初始化，未更新真人入口。本次P2及关闭态修订继续待复审，不自行关闭其他门禁或扩大后置范围。
++
++首轮开发复验：3套件58项通过；Node22生产构建、2个受影响JS文件lint及文档状态校验通过；使用新构建的原关闭态正式HTTP浏览器专项Chromium/WebKit各2项通过，按原预算串行。首次lint仅因新增test.each换行触发规则失败，已修正且保留日志；正例再补显式等待刷新完成及重试按钮禁用断言后，58项重跑通过。两引擎专项不是新增摘要竞争的实机证明，摘要竞争由上述真实Web Crypto加确定性屏障的组件反例保护；不宣称全量或真人/真机通过。
++
++随后收到测试/评审线程对原`f1ae9a9`候选的独立R1：相同根因及列表刷新仍在途的另一反例成立，其后端100/前端47、Chromium10通过，WebKit9通过/1失败与开发原7/3分列，不相互覆盖。本次再将“列表在途且availability未知”固化为创建/修改/停止3项反例，保留原valid的finally收尾；只在落盘前追加可写检查。断开两处新guard调用的诊断均因新增标记失败（3红），恢复后相关3套件61项通过；断开诊断仅用于本机反例验证，最终页面文件与已构建/浏览器复验的修复文件哈希相同。共新增14项永久测试，包含在途拒绝后刷新完成、busy释放、原表单重新可提交且没有自动POST的断言。全部证据冻结于新候选，独立复评仍待进行。

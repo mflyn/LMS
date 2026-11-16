@@ -52,6 +52,104 @@ beforeEach(async () => {
 });
 afterEach(async () => { await harness.close(); jest.restoreAllMocks(); jest.useRealTimers(); });
 
+test('disabled and unready formal lists expose write availability; disabled POST makes zero writes', async () => {
+  for (const setting of ['false', 'true']) {
+    const app = createProductionApp({ env: { ...env(), RECURRING_TASKS_ENABLED: setting }, appLogger: logger });
+    const http = await gateway(app);
+    const listed = await http.get(`/api/recurring-task-plans?childId=${child.id}`).set('Authorization', 'Bearer ' + token(parent));
+    expect(listed.status).toBe(200);
+    expect(listed.body.data.availability).toEqual({ writesEnabled: false,
+      reason: setting === 'false' ? 'RECURRING_TASKS_DISABLED' : 'RECURRING_TASKS_NOT_READY' });
+    const created = await http.post('/api/recurring-task-plans').set('Authorization', 'Bearer ' + token(parent)).send(body());
+    expect(created.status).toBe(503);
+    expect(await Plan.countDocuments()).toBe(0); expect(await Task.countDocuments()).toBe(0); expect(await Command.countDocuments()).toBe(0);
+  }
+});
+
+const abortBody = input => ({ childId: child.id, action: 'create', targetPlanId: null,
+  requestDigest: require('../../services/recurringTaskPlanCommand').digest({ familyId: String(family._id), actorId: parent.id, childId: child.id },
+    'create', null, require('../../services/recurringTaskPlanCommand').normalize('create', input)) });
+
+test('disabled abort persists a tombstone, survives re-enable and cannot cancel succeeded history', async () => {
+  const successful = body(), result = await create(successful), pending = body();
+  const disabled = createRecurringTaskPlanRuntime({ env: { ...env(), RECURRING_TASKS_ENABLED: 'false' }, now: clock });
+  const old = await disabled.service.abort({ identity: parent, operationId: successful.operationId, body: abortBody(successful) });
+  expect(old.state).toBe('succeeded'); expect(old.result).toEqual(result);
+  const tombstone = await disabled.service.abort({ identity: parent, operationId: pending.operationId, body: abortBody(pending) });
+  expect(tombstone.state).toBe('aborted');
+  await expect(create(pending)).rejects.toMatchObject({ code: 'RECURRING_PLAN_COMMAND_ABORTED' });
+  expect(await Plan.countDocuments()).toBe(1); expect(await Task.countDocuments()).toBe(1);
+  expect((await disabled.service.abort({ identity: parent, operationId: pending.operationId, body: abortBody(pending) }))).toEqual(tombstone);
+});
+
+test('disabled abort refuses missing identity index without repairing it or assuming not_found is terminal', async () => {
+  const input = body(), disabled = createRecurringTaskPlanRuntime({ env: { ...env(), RECURRING_TASKS_ENABLED: 'false' } });
+  await Command.collection.dropIndex('recurring_command_identity');
+  try {
+    expect(await disabled.service.getCommand({ identity: parent, childId: child.id, operationId: input.operationId })).toMatchObject({ state: 'not_found' });
+    await expect(disabled.service.abort({ identity: parent, operationId: input.operationId, body: abortBody(input) }))
+      .rejects.toMatchObject({ code: 'RECURRING_TASKS_NOT_READY' });
+    expect(await Command.countDocuments()).toBe(0);
+    expect((await Command.collection.indexes()).some(i => i.name === 'recurring_command_identity')).toBe(false);
+  } finally { const [key, options] = Command.schema.indexes().find(([, o]) => o.name === 'recurring_command_identity');
+    await Command.collection.createIndex(key, options); }
+});
+
+test('disabled abort on absent collection returns NOT_READY, leaves collections absent and no plan/task writes', async () => {
+  const input = body();
+  await Command.collection.drop();
+  try {
+    const disabled = createRecurringTaskPlanRuntime({ env: { ...env(), RECURRING_TASKS_ENABLED: 'false' } });
+    await expect(disabled.service.abort({ identity: parent, operationId: input.operationId, body: abortBody(input) }))
+      .rejects.toMatchObject({ code: 'RECURRING_TASKS_NOT_READY' });
+    expect(await mongoose.connection.db.listCollections({ name: Command.collection.collectionName }).toArray()).toEqual([]);
+    expect(await Plan.countDocuments()).toBe(0); expect(await Task.countDocuments()).toBe(0);
+  } finally { await Command.createCollection(); await Command.createIndexes(); }
+});
+
+test('disabled formal abort preserves auth boundaries and a lost reply replays the exact tombstone', async () => {
+  const app = createProductionApp({ env: { ...env(), RECURRING_TASKS_ENABLED: 'false' }, appLogger: logger });
+  const http = await gateway(app), input = body(), payload = abortBody(input);
+  const route = `/api/recurring-task-plan-commands/${input.operationId}/abort`;
+  expect((await http.post(route).send(payload)).status).toBe(401);
+  expect((await auth(http, 'post', route, child).send(payload)).status).toBe(403);
+  expect((await auth(http, 'post', route, { id: id(), role: 'parent' }).send(payload)).status).toBe(403);
+  expect((await auth(http, 'post', route).send({ ...payload, childId: id() })).status).toBe(403);
+  expect(await Command.countDocuments()).toBe(0);
+  const json = app.response.json; let dropped = false;
+  app.response.json = function (value) { if (!dropped && value?.data?.state === 'aborted') {
+    dropped = true; this.destroy(); return this;
+  } return json.call(this, value); };
+  try {
+    expect((await auth(http, 'post', route).send(payload)).status).toBeGreaterThanOrEqual(500); expect(dropped).toBe(true);
+    const terminal = (await auth(http, 'get', `/api/recurring-task-plan-commands/${input.operationId}?childId=${child.id}`)).body.data;
+    expect(terminal.state).toBe('aborted');
+    expect((await auth(http, 'post', route).send(payload)).body.data).toEqual(terminal);
+    expect((await auth(http, 'post', route).send({ ...payload, requestDigest: 'f'.repeat(64) })).status).toBe(409);
+    expect(await Command.countDocuments()).toBe(1); expect(await Plan.countDocuments()).toBe(0); expect(await Task.countDocuments()).toBe(0);
+  } finally { app.response.json = json; }
+});
+
+test('disabled abort wins against a real in-flight create transaction; late original never publishes', async () => {
+  const input = body(); let release, reached, held = false;
+  const hold = new Promise(resolve => { release = resolve; }), barrier = new Promise(resolve => { reached = resolve; });
+  const originalCreate = Plan.create.bind(Plan);
+  jest.spyOn(Plan, 'create').mockImplementation(async (...args) => {
+    const result = await originalCreate(...args);
+    if (!held) { held = true; reached(); await hold; }
+    return result;
+  });
+  const pending = create(input).then(value => ({ value }), cause => ({ cause }));
+  try {
+    await Promise.race([barrier, pending.then(() => { throw new Error('create did not reach barrier'); })]);
+    const disabled = createRecurringTaskPlanRuntime({ env: { ...env(), RECURRING_TASKS_ENABLED: 'false' } });
+    expect((await disabled.service.abort({ identity: parent, operationId: input.operationId, body: abortBody(input) })).state).toBe('aborted');
+  } finally { release(); await pending; }
+  expect((await pending).cause).toMatchObject({ code: 'RECURRING_PLAN_COMMAND_ABORTED' });
+  await expect(create(input)).rejects.toMatchObject({ code: 'RECURRING_PLAN_COMMAND_ABORTED' });
+  expect(await Plan.countDocuments()).toBe(0); expect(await Task.countDocuments()).toBe(0); expect(await Command.countDocuments()).toBe(1);
+});
+
 test('formal gateway and homework HTTP preserve command bytes and read-only terminal replay', async () => {
   const app = createProductionApp({ env: env(), appLogger: logger });
   await app.locals.recurringTasks.assertReady();

@@ -16,7 +16,9 @@ const blank = zone => ({ title: '', dimension: 'physical', taskType: 'exercise',
 const message = error => {
   const code = error?.response?.data?.error?.code || error?.code;
   return ({ RECURRING_PLAN_VERSION_CONFLICT: '计划已被其他家长修改。请核对原命令，解除后重新查看再决定。',
-    RECURRING_TASKS_DISABLED: '重复计划暂未启用。待核对命令仍保留。', RECURRING_COMMAND_PENDING: '已有操作待核对，不能新建另一项操作。',
+    RECURRING_TASKS_DISABLED: '重复计划暂未启用，不能新建、修改、停止或重试计划。已有操作仍可核对。',
+    RECURRING_TASKS_NOT_READY: '重复计划服务尚未就绪，暂不能提交。请保留待核对记录，联系管理员检查初始化和索引。',
+    RECURRING_COMMAND_PENDING: '已有操作待核对，不能新建另一项操作。',
     RECURRING_CRYPTO_UNAVAILABLE: '当前浏览器无法安全保存命令。请使用 HTTPS 或本机安全入口。',
     RECURRING_COMMAND_INVALID: '命令或回执不一致，已保留保护，请重新核对。',
     VALIDATION_ERROR: '请检查日期、星期和任务内容。' })[code] || '请求未能确认，请重试读取或核对原命令。';
@@ -27,17 +29,36 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
   const [ready, setReady] = useState(false), [loading, setLoading] = useState(true), [busy, setBusy] = useState(false);
   const [pending, setPending] = useState(null), [editor, setEditor] = useState(null), [form, setForm] = useState(null);
   const [prompt, setPrompt] = useState(null), [error, setError] = useState(''), [notice, setNotice] = useState('');
+  const [availability, setAvailability] = useState(null);
+  const availabilityRef = useRef(null), feedbackRef = useRef(null);
+  const canWrite = () => availabilityRef.current?.writesEnabled === true && availabilityRef.current.reason === null;
+  // prepare rechecks this after its async digest, before persisting a new intent.
+  const guardNewCommand = valid => () => {
+    if (!valid()) return false;
+    if (!canWrite()) {
+      const code = availabilityRef.current?.reason || 'RECURRING_TASKS_NOT_READY';
+      throw Object.assign(new Error(code), { code });
+    }
+    return true;
+  };
   const alive = useRef(true), denied = useRef(false), epoch = useRef(0), readNumber = useRef(0), writing = useRef(false);
   const current = useCallback(() => alive.current && !denied.current && scopeCurrent() && isSessionCurrent(session), [scopeCurrent, session]);
   const clearPrivate = useCallback(() => {
     denied.current = true; epoch.current++; readNumber.current++;
     setItems([]); setTotal(0); setEditor(null); setForm(null); setPrompt(null); setPending(null); setNotice('');
     setReady(false); setLoading(false); setBusy(false); setError('当前身份无权访问这些计划，请重新登录或选择有权限的孩子。');
+    availabilityRef.current = null; setAvailability(null);
   }, []);
   const handleError = useCallback(cause => {
     if (!alive.current || !scopeCurrent() || !isSessionCurrent(session)) return;
     if ([401, 403].includes(cause?.response?.status)) { clearPrivate(); return; }
-    if (current()) setError(message(cause));
+    if (current()) {
+      const code = cause?.response?.data?.error?.code || cause?.code;
+      if (['RECURRING_TASKS_DISABLED', 'RECURRING_TASKS_NOT_READY'].includes(code)) {
+        availabilityRef.current = { writesEnabled: false, reason: code }; setAvailability(availabilityRef.current);
+      }
+      setError(message(cause));
+    }
   }, [clearPrivate, current, scopeCurrent, session]);
   const readMarker = useCallback(() => {
     try { const value = readRecurringCommand(scope, session); setPending(value); return value; }
@@ -46,6 +67,7 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
   const load = useCallback(async () => {
     if (!current()) return;
     const n = ++readNumber.current; setLoading(true);
+    availabilityRef.current = null; setAvailability(null);
     // Refresh protection before the request, but reveal it only after current server authorization.
     if (ready) readMarker();
     try {
@@ -53,6 +75,11 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
       if (!current() || n !== readNumber.current) return;
       if (!Array.isArray(result?.items) || !Number.isSafeInteger(result.total) || result.total < 0
         || result.items.some(p => p.childId !== scope.childId)) throw new Error('Invalid list');
+      const capability = result.availability;
+      availabilityRef.current = capability?.writesEnabled === true && capability.reason === null ? capability
+        : { writesEnabled: false, reason: capability?.reason === 'RECURRING_TASKS_DISABLED'
+          ? 'RECURRING_TASKS_DISABLED' : 'RECURRING_TASKS_NOT_READY' };
+      setAvailability(availabilityRef.current);
       setItems(result.items); setTotal(result.total); setReady(true); readMarker();
     } catch (cause) { handleError(cause); }
     finally { if (current() && n === readNumber.current) setLoading(false); }
@@ -68,6 +95,7 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
       window.removeEventListener('pageshow', refresh); window.removeEventListener('storage', storage); };
   }, [current]);
   useEffect(() => { void loadRef.current(); }, [page, current]);
+  useEffect(() => { if (error && !editor && !prompt) feedbackRef.current?.focus(); }, [error, editor, prompt]);
   const guarded = async work => {
     if (!current() || writing.current) return;
     writing.current = true; setBusy(true); setError(''); setNotice('');
@@ -88,6 +116,7 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
   };
   const dispatch = async (command, valid) => {
     await assertRecurringCommand(scope, command, session); if (!valid()) return;
+    if (!canWrite()) { setError(message({ code: availabilityRef.current?.reason || 'RECURRING_TASKS_NOT_READY' })); return; }
     await sendRecurringCommand(command, { session }); if (!valid()) return;
     const receipt = await getRecurringCommand(command.marker.operationId, scope.childId, { session });
     await terminal(command, receipt, valid);
@@ -98,6 +127,7 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
     await terminal(command, receipt, valid);
   });
   const open = target => guarded(async valid => {
+    if (!canWrite()) return;
     if (readMarker()) return;
     if (!target) { setEditor({ action: 'create', target: null }); setForm(blank(timezone)); return; }
     const value = await getRecurringPlan(target.id, { session }); if (!valid()) return;
@@ -111,6 +141,7 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
       kind: rule.schedule.kind, weekdays: rule.schedule.weekdays || [1, 2, 3, 4, 5] });
   });
   const save = e => { e.preventDefault(); void guarded(async valid => {
+    if (!canWrite()) return;
     if (readMarker()) return;
     const template = Object.fromEntries(['title', 'dimension', 'taskType', 'area', 'subject', 'description', 'unit', 'priority'].map(k => [k, form[k]]));
     for (const field of ['estimatedMinutes', 'targetAmount']) {
@@ -121,7 +152,7 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
     const body = { operationId: newRecurringOperationId(), ...(editor.action === 'create'
       ? { childId: scope.childId, startDate: form.startDate } : { expectedVersion: editor.target.version }), endDate: form.endDate || null,
     schedule: form.kind === 'daily' ? { kind: 'daily' } : { kind: 'weekly', weekdays: form.weekdays }, template };
-    const command = await prepareRecurringCommand(scope, editor.action, editor.target?.id || null, body, session, valid);
+    const command = await prepareRecurringCommand(scope, editor.action, editor.target?.id || null, body, session, guardNewCommand(valid));
     if (!valid()) return; readMarker(); setEditor(null); setForm(null); await dispatch(command, valid);
   }); };
   const confirm = () => guarded(async valid => {
@@ -132,26 +163,30 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
       }
       const receipt = await abortRecurringCommand(command.marker, { session }); await terminal(command, receipt, valid);
     } else {
+      if (!canWrite()) return;
       if (readMarker()) return;
       const command = await prepareRecurringCommand(scope, 'stop', prompt.plan.id,
-        { operationId: newRecurringOperationId(), expectedVersion: prompt.plan.version }, session, valid);
+        { operationId: newRecurringOperationId(), expectedVersion: prompt.plan.version }, session, guardNewCommand(valid));
       if (!valid()) return; readMarker(); await dispatch(command, valid);
     }
   });
-  const locked = !ready || busy || Boolean(pending) || denied.current;
+  const locked = !ready || loading || !canWrite() || busy || Boolean(pending) || denied.current;
+  const feedback = error || (ready && !loading && availability?.writesEnabled !== true
+    ? message({ code: availability?.reason || 'RECURRING_TASKS_NOT_READY' }) : '');
   const change = (key, value) => setForm(f => ({ ...f, [key]: value }));
   return <section className="family-page family-page-wide recurring-plans-page" aria-labelledby="recurring-title">
     <div className="family-page-heading"><div><h1 id="recurring-title">重复计划</h1>{ready && <p>{childName} · {timezone}</p>}</div>
       <div className="family-inline-actions"><Link className="family-button secondary" to="/app/tasks">返回任务</Link>
         <button className="family-button primary" disabled={locked} onClick={() => open(null)}>新建重复计划</button></div></div>
-    {error && <p role="alert" className="family-form-error">{error}</p>}{notice && <p role="status">{notice}</p>}
+    {feedback && <p ref={feedbackRef} tabIndex={-1} role="alert" className="family-form-error">{feedback}</p>}{notice && <p role="status">{notice}</p>}
     {!denied.current && <button className="family-button secondary" onClick={() => loadRef.current()} disabled={busy}><ReloadOutlined /> 重新加载计划</button>}
     {loading && <p role="status">正在读取计划…</p>}
     {ready && pending && <section aria-label="待核对计划操作">
       <h2>{pending.corrupt ? '本机命令记录损坏' : '有一项计划操作待核对'}</h2>
+      {!pending.corrupt && <p>为避免重复创建或覆盖，已暂停新操作。刷新或重新登录不会解除保护；请核对原命令，或明确终止尚未成功的命令。未查到结果不代表未提交。</p>}
       {pending.corrupt ? <p>不能安全发送新命令。请保留记录，勿通过清除站点数据解除。</p> : <div className="family-inline-actions">
         <button className="family-button secondary" disabled={busy} onClick={query}>核对原命令</button>
-        {pending.body && <button className="family-button secondary" disabled={busy} onClick={() => guarded(valid => dispatch(pending, valid))}>重试原命令</button>}
+        {pending.body && <button className="family-button secondary" disabled={busy || loading || !canWrite()} onClick={() => guarded(valid => dispatch(pending, valid))}>重试原命令</button>}
         <button className="family-button secondary" disabled={busy} onClick={() => setPrompt({ type: 'abort', marker: pending.marker })}>终止未确定命令</button>
       </div>}
     </section>}

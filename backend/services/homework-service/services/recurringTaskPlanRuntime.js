@@ -50,7 +50,10 @@ const createRecurringTaskPlanRuntime = ({ env = process.env, connection = mongoo
   if (configured && env.COMPLETION_PROTOCOL_MODE !== 'enabled') throw unavailable();
   let ready = false;
   const enabled = () => configured && ready && env.RECURRING_TASKS_ENABLED === 'true' && env.COMPLETION_PROTOCOL_MODE === 'enabled';
-  const service = createRecurringTaskPlanService({ transactionRunner: work => runMongoTransaction({ mongooseInstance: connection, work }), now, enabled });
+  const availability = () => ({ writesEnabled: enabled(), reason: enabled() ? null
+    : env.RECURRING_TASKS_ENABLED !== 'true' ? 'RECURRING_TASKS_DISABLED' : 'RECURRING_TASKS_NOT_READY' });
+  const service = createRecurringTaskPlanService({ transactionRunner: work => runMongoTransaction({ mongooseInstance: connection, work }), now, enabled,
+    availability, assertAbortReady: () => assertRecurringReady({ connection }) });
   const scanner = createRecurringTaskPlanScanner({ service, enabled, logger });
   return { service, scanner, assertReady: async () => {
     ready = false;

@@ -55,7 +55,9 @@ const advance = (plan, today) => {
   if (last > plan.lastEvaluatedDate) plan.lastEvaluatedDate = last;
 };
 
-const createRecurringTaskPlanService = ({ transactionRunner, now = Date.now, enabled = () => false } = {}) => {
+const createRecurringTaskPlanService = ({ transactionRunner, now = Date.now, enabled = () => false,
+  availability = () => ({ writesEnabled: enabled() === true, reason: enabled() === true ? null : 'RECURRING_TASKS_DISABLED' }),
+  assertAbortReady } = {}) => {
   if (typeof transactionRunner !== 'function' || typeof now !== 'function' || typeof enabled !== 'function') {
     throw new TypeError('Recurring transaction runner, clock and enable predicate required');
   }
@@ -70,7 +72,7 @@ const createRecurringTaskPlanService = ({ transactionRunner, now = Date.now, ena
       }); } catch (cause) {
         if (cause?.code === 'RECURRING_DATE_CHANGED'
           || cause?.code === 11000 && cause?.keyPattern?.familyId && cause?.keyPattern?.actorId && cause?.keyPattern?.operationId) continue;
-        if (cause?.statusCode < 500 || cause?.code === 'RECURRING_TASKS_DISABLED') throw cause;
+        if (cause?.statusCode < 500 || ['RECURRING_TASKS_DISABLED', 'RECURRING_TASKS_NOT_READY'].includes(cause?.code)) throw cause;
         throw unknown();
       }
     }
@@ -178,8 +180,13 @@ const createRecurringTaskPlanService = ({ transactionRunner, now = Date.now, ena
   });
   const abort = ({ identity, operationId, body } = {}) => tx(async session => {
     const access = await authorize(identity, body?.childId, session);
-    requireEnabled();
-    const parsed = normalizeAbort(operationId, body);
+    if (!assertAbortReady) requireEnabled();
+    let parsed;
+    try { parsed = normalizeAbort(operationId, body); }
+    catch (cause) {
+      // The disabled-mode exception is only for a complete original marker.
+      requireEnabled(); throw cause;
+    }
     if (parsed.action !== 'create') {
       const found = await target(identity, parsed.targetPlanId, session);
       if (String(found.plan.childId) !== parsed.childId || String(found.plan.familyId) !== String(access.familyId)) throw denied();
@@ -187,8 +194,10 @@ const createRecurringTaskPlanService = ({ transactionRunner, now = Date.now, ena
     const intent = { schemaVersion: 1, ...parsed, familyId: String(access.familyId), actorId: identity.id.toLowerCase() };
     const existing = await findTerminal(intent, session);
     if (existing) return terminalView(existing);
+    // Disabling generation is not proof that an earlier command never committed.
+    // Only a ready, unique terminal ledger may fence a not-yet-committed command.
+    if (assertAbortReady) await assertAbortReady(); else requireEnabled();
     const [row] = await Command.create([{ ...intent, state: 'aborted', settledAt: at() }], { session });
-    requireEnabled();
     return terminalView(row.toObject());
   });
   const getCommand = ({ identity, childId, operationId } = {}) => tx(async session => {
@@ -209,7 +218,7 @@ const createRecurringTaskPlanService = ({ transactionRunner, now = Date.now, ena
     const total = await Model.countDocuments(filter).session(session);
     const rows = await Model.find(filter).sort(commands ? { settledAt: -1, _id: -1 } : { _id: -1 })
       .skip((page - 1) * pageSize).limit(pageSize).session(session).lean();
-    return { items: rows.map(row => commands ? { operationId: row.operationId, action: row.action,
+    return { ...(!commands ? { availability: availability() } : {}), items: rows.map(row => commands ? { operationId: row.operationId, action: row.action,
       targetPlanId: row.targetPlanId ? String(row.targetPlanId) : null, state: row.state,
       settledAt: row.settledAt.toISOString() } : planView(row)), page, pageSize, total };
   });
