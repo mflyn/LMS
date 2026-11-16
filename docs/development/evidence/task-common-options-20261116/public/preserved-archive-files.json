@@ -1,0 +1,182 @@
+[
+  {
+    "file": "browser-chromium-1.log",
+    "sha256": "e189c3008c5a0c84b6d18f3140812ccec23680d8d40acc8cccd8b3ff05b34c50"
+  },
+  {
+    "file": "browser-chromium-2.log",
+    "sha256": "f0e9ebee8e1efaea505999a15652d93ecce9dae4fcc5fd3bbb678641be8028c6"
+  },
+  {
+    "file": "browser-chromium-final/.last-run.json",
+    "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+  },
+  {
+    "file": "browser-chromium-final/taskCommonOptions-formal-r-864b1-mmand-without-a-second-POST/recurring-options-360.png",
+    "sha256": "1ecd64e2e6617af4e9860353c9bcba888c5c21a302d4c3cc871210c6def14e71"
+  },
+  {
+    "file": "browser-chromium-final/taskCommonOptions-formal-r-864b1-mmand-without-a-second-POST/recurring-options-768.png",
+    "sha256": "2bb5f074d42fa9a233c057331e468b0b4a44f5175b4eeb32be2113b417d6d9fe"
+  },
+  {
+    "file": "browser-chromium-final/taskCommonOptions-formal-t-2678a-ains-usable-at-touch-widths/options-360.png",
+    "sha256": "b6a09c607360c09e5e7198ec93384f524f67427a06aadd934ba9165dc64a0319"
+  },
+  {
+    "file": "browser-chromium-final/taskCommonOptions-formal-t-2678a-ains-usable-at-touch-widths/options-768.png",
+    "sha256": "df51ac7a2d6e72f0096549e2651da87c9dec6816af71eb805ef5a8c983ceb6c0"
+  },
+  {
+    "file": "browser-chromium-final.log",
+    "sha256": "f2962e0cf6871fa906754899c179b53eeb69be6274d08e4e9f0238048910815f"
+  },
+  {
+    "file": "browser-chromium-regression.log",
+    "sha256": "636e0c77efda3d66f8d159a7fe866529e74e31423e9f519cf20a6ee7c539de1b"
+  },
+  {
+    "file": "browser-webkit-final/.last-run.json",
+    "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+  },
+  {
+    "file": "browser-webkit-final/taskCommonOptions-formal-r-864b1-mmand-without-a-second-POST/recurring-options-360.png",
+    "sha256": "88b364dfec00cb6c9dd9f6d93a28d5765b6706fbb1976966c8500f3fc676fd8b"
+  },
+  {
+    "file": "browser-webkit-final/taskCommonOptions-formal-r-864b1-mmand-without-a-second-POST/recurring-options-768.png",
+    "sha256": "bcebc2f8f8859b77d5d6d8238994e79933a8f5c9c96c9d125b77c55b7e5f0d00"
+  },
+  {
+    "file": "browser-webkit-final/taskCommonOptions-formal-t-2678a-ains-usable-at-touch-widths/options-360.png",
+    "sha256": "b961639a34644ece981302104167b3f723641611b65225ec5167219c4e427ef2"
+  },
+  {
+    "file": "browser-webkit-final/taskCommonOptions-formal-t-2678a-ains-usable-at-touch-widths/options-768.png",
+    "sha256": "8f01c1021749c213e95f5fe84404b4b16a1870d8d491b34ff99094032d420d3e"
+  },
+  {
+    "file": "browser-webkit-final.log",
+    "sha256": "f1496e69cb62bbcd30d19a1eeccf6588603d142d4ffed40f45aa80bfdd6bb2e9"
+  },
+  {
+    "file": "browser-webkit.log",
+    "sha256": "32e3901cbec91d1d3f2124fea09a5cecf0d439fc86ea21acade618cfb2124b36"
+  },
+  {
+    "file": "build-final.log",
+    "sha256": "8ee2e734b39cfb90908207f8b79c737027bb403b19f8840ddfb9eee17b9db99c"
+  },
+  {
+    "file": "build.log",
+    "sha256": "78a7efc3f854ba23d2e6158efbde2b05628ce36b9889956da835a97f002976b3"
+  },
+  {
+    "file": "candidate-files.json",
+    "sha256": "6b20ceefdcaa8ec2d971bca98222737baec23445a21363446b941d0f8d35754b"
+  },
+  {
+    "file": "candidate.patch",
+    "sha256": "ed17c46c7d3058744ad2cbaea8a3a846e5b719cf38624b650dea61d146b3844a"
+  },
+  {
+    "file": "delivery-index.md",
+    "sha256": "6fd885a9690ba0cd856013232f6d7866c2cc233b6235a32101062e1d18b580fb"
+  },
+  {
+    "file": "docs-final.log",
+    "sha256": "6b05489bae8f37e18dd5ca0711ec423b67e0caa01c6571107a4309adc87fa774"
+  },
+  {
+    "file": "execution-receipts.json",
+    "sha256": "a774673c4ebee7efc29a5c66c7fd4c50ae5544aaeab65421ad6d7fabd1df8ee7"
+  },
+  {
+    "file": "full-1.json",
+    "sha256": "b8541b5b94d2a0148f5a0c7efe5d3cc6e87d17906837b2bc3bbd47cc1a294670"
+  },
+  {
+    "file": "full-1.log",
+    "sha256": "f7d4062c87493db164468da7213d1cbf85918a7fe15aaa396ef213da8faa7a45"
+  },
+  {
+    "file": "full-2.json",
+    "sha256": "8bd8da51c63a54395bfe7403ac9b681295837b2ff2addab81af36258047ca272"
+  },
+  {
+    "file": "full-2.log",
+    "sha256": "80b6e5524ae9923053e292e17f6deea22750a4c43184e50d15ab9feb245662d1"
+  },
+  {
+    "file": "full-3.json",
+    "sha256": "1d6fe160a4e683b13510cb29d1410b41baf2581ebd0f533533d8cf003907f40e"
+  },
+  {
+    "file": "full-3.log",
+    "sha256": "5c89b4f6a7032a2fab4313afcf1d2cf48ae79b49901caa7b5209aff4906ad0d9"
+  },
+  {
+    "file": "full-4.json",
+    "sha256": "9cd0769171ad78d2c3d6ec94399bfc8e3f36e336119e2ee0a47205c65a2525ac"
+  },
+  {
+    "file": "full-4.log",
+    "sha256": "e692ce73ea21fb02c90d8ddfb584254beff26e94afeed29890c82f70f8e03832"
+  },
+  {
+    "file": "http-1.json",
+    "sha256": "a141ad3ff9bd0993679c13c2ad74b7f4926a17739f72752fa0ade4ac5208d6f6"
+  },
+  {
+    "file": "http-1.log",
+    "sha256": "fff54853aae286e8af82af8ecf44816af99c255984e547f19593df28cd39fa5c"
+  },
+  {
+    "file": "independent/jest.json",
+    "sha256": "a16ac55ef30556721aee974feffaf4d6464e5135d1445cbb4f6921f0087bfb36"
+  },
+  {
+    "file": "independent/jest.log",
+    "sha256": "19c76ee3e94a0ef9ab14fbd3f4b86e57e48603f19bc8cf7be287cb3bd847ef96"
+  },
+  {
+    "file": "independent/snapshot.json",
+    "sha256": "4fd57f7dd70ced8a3bfda4410b2e5a42b72bbd42a4cb026ecbeeccca2205aa5a"
+  },
+  {
+    "file": "independent-review.md",
+    "sha256": "df29380f1e41b677a51fa78fabb8c93a8bd56fa6925fde73f3cf84a5a1f430a8"
+  },
+  {
+    "file": "lint-final.log",
+    "sha256": "3c696c094e2a1323fa00cf0974a861af0cd6824b1672248c1d12791a70a61e4e"
+  },
+  {
+    "file": "playwright.task-options-webkit.config.js",
+    "sha256": "b0f3d6ecd920162b789e491fe4a5e88eed6f51d26c7713b8eb84e08c53aca1ea"
+  },
+  {
+    "file": "red.json",
+    "sha256": "4ae31a6a62ed3017b033929019ce49aabaadc468cd7fe3724cd212e1a2cca321"
+  },
+  {
+    "file": "targeted-3.json",
+    "sha256": "1a9a1d60221c205cb275203dc200a90d6d8741d4c11124c8c353e8ce69d2723b"
+  },
+  {
+    "file": "targeted-3.log",
+    "sha256": "6aea79897eada3bbd53b3fa7a830ce8866312eebe0ec2a80c3248282c4b0c7cc"
+  },
+  {
+    "file": "targeted.json",
+    "sha256": "09b5bd41272ffd3d31a619f99786fff399229821ddf7e35ed217e45ddcfe066b"
+  },
+  {
+    "file": "targeted.log",
+    "sha256": "a171e288a46e4b53f5c42f715a6048114a29c6122124ad992b4536f05e4eca2b"
+  },
+  {
+    "file": "task11.log",
+    "sha256": "650d78e666715fc7349255e4bb08e60391fa0c1c258eaff42855b5411ee5dd34"
+  }
+]

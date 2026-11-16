@@ -229,7 +229,7 @@ test('task-to-mistake reads authoritative scope and subject, never copies comple
   const user = userEvent.setup();
   parentApi.createMistake.mockResolvedValue({ mistake: mistake({ sourceTaskId: id(3) }) });
   show(`/app/mistakes?sourceTaskId=${id(3)}&subject=伪造`);
-  expect(await screen.findByLabelText('学科')).toHaveValue('数学');
+  expect(await screen.findByLabelText('学科')).toHaveDisplayValue('数学');
   expect(parentApi.getGrowthTask).toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: '保存错题' }));
   expect(parentApi.createMistake).toHaveBeenCalledWith(expect.objectContaining({ sourceTaskId: id(3), subject: '数学',
@@ -241,8 +241,8 @@ test.each(['sourceTaskId', 'sourceMistakeId'])('correction task uses %s only on 
   const user = userEvent.setup();
   parentApi.createGrowthTask.mockResolvedValue({ task: task({ taskId: id(6), [field]: field === 'sourceTaskId' ? id(3) : id(5) }) });
   show(`/app/tasks?${field}=${field === 'sourceTaskId' ? id(3) : id(5)}`);
-  expect(await screen.findByLabelText('任务类型')).toHaveValue('错题订正');
-  expect(screen.getByLabelText('学科')).toHaveValue('数学');
+  expect(await screen.findByLabelText('任务类型')).toHaveDisplayValue('错题订正');
+  expect(screen.getByLabelText('学科')).toHaveDisplayValue('数学');
   fireEvent.change(screen.getByLabelText('截止日期'), { target: { value: '2026-10-28' } });
   await user.click(screen.getByRole('button', { name: '保存任务' }));
   await waitFor(() => expect(parentApi.createGrowthTask).toHaveBeenCalledTimes(1));

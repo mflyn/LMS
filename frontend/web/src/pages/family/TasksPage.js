@@ -9,6 +9,8 @@ import TaskCompletionReview from '../../components/family/TaskCompletionReview';
 import TaskHelpPanel, { HELP_LABELS } from '../../components/family/TaskHelpPanel';
 import CompletionRecoveryList from '../../components/family/CompletionRecoveryList';
 import TaskChecklistEditor, { checklistForForm } from '../../components/family/TaskChecklistEditor';
+import TaskOptionFields from '../../components/family/TaskOptionFields';
+import { validateTaskOptions } from '../../components/family/taskCommonOptions';
 import { useFamily } from '../../contexts/FamilyContext';
 import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
 import { useDraftMedia } from '../../hooks/useDraftMedia';
@@ -39,6 +41,8 @@ const STATUS_LABELS = {
 };
 
 const emptyForm = () => ({
+  optionModes: {},
+  optionErrors: {},
   dimension: 'academic',
   subject: '',
   area: '',
@@ -237,6 +241,9 @@ const ScopedTasksPage = () => {
     event.preventDefault();
     if (!editor || writing.current || mediaBusy || editor.recovery || privateBlocked) return;
     if (editor?.mode === 'edit' && editor.task.childId !== selectedChildId) return;
+    const optionErrors = validateTaskOptions(form);
+    setForm(value => ({ ...value, optionErrors }));
+    if (Object.keys(optionErrors).length) return;
     const mutationScope = mutationGuard.captureScope();
     const session = captureSession('parent'), generation = ++editorGeneration.current;
     const current = () => generation === editorGeneration.current && isSessionCurrent(session)
@@ -488,11 +495,9 @@ const ScopedTasksPage = () => {
             <fieldset className="task-editor-fields" disabled={busy || Boolean(editor.recovery)}>
             <div className="family-form-grid">
               <label>成长维度<select value={form.dimension} onChange={(event) => setForm((value) => ({ ...value, dimension: event.target.value }))}>{DIMENSIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-              {form.dimension === 'academic' && <label>学科<input required value={form.subject} onChange={(event) => setForm((value) => ({ ...value, subject: event.target.value }))} /></label>}
               <label>任务标题<input required value={form.title} onChange={(event) => setForm((value) => ({ ...value, title: event.target.value }))} /></label>
-              <label>活动领域<input required value={form.area} onChange={(event) => setForm((value) => ({ ...value, area: event.target.value }))} /></label>
+              <TaskOptionFields form={form} setForm={setForm} />
               <label>截止日期<input required type="date" value={form.dueDate} onChange={(event) => setForm((value) => ({ ...value, dueDate: event.target.value }))} /></label>
-              <label>任务类型<select value={form.taskType} onChange={(event) => setForm((value) => ({ ...value, taskType: event.target.value }))}><option value="practice">练习</option><option value="错题订正">错题订正</option><option value="exercise">锻炼</option><option value="habit">习惯</option><option value="reading">阅读</option><option value="chore">劳动</option></select></label>
               <label>预计用时（分钟）<input type="number" min="0" value={form.estimatedMinutes} onChange={(event) => setForm((value) => ({ ...value, estimatedMinutes: event.target.value }))} /></label>
               <label>目标数量<input type="number" min="0" value={form.targetAmount} onChange={(event) => setForm((value) => ({ ...value, targetAmount: event.target.value }))} /></label>
               <label>单位<input value={form.unit} onChange={(event) => setForm((value) => ({ ...value, unit: event.target.value }))} /></label>

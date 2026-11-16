@@ -143,7 +143,7 @@ test('real pages connect source work, manual mistake image, correction review an
     await page.getByRole('button', { name: '创建订正任务', exact: true }).click();
     await expect(page).toHaveURL(/\/app\/tasks/);
     const taskDialog = page.getByRole('dialog', { name: '新建任务', exact: true });
-    await expect(taskDialog.getByLabel('学科', { exact: true })).toHaveValue('Math');
+    await expect(taskDialog.getByLabel('其他学科', { exact: true })).toHaveValue('Math');
     await taskDialog.getByLabel('任务标题').fill('Synthetic browser correction');
     await taskDialog.getByLabel('截止日期', { exact: true }).fill('2026-10-27');
     const created = page.waitForResponse(response => response.request().method() === 'POST'

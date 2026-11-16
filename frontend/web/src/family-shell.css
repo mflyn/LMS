@@ -260,3 +260,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .tutor-page fieldset > button { justify-self: start; }
 .tutor-page label:has(input[type="checkbox"]) { min-height: 44px; display: flex; align-items: center; gap: 8px; }
 .tutor-page input[type="checkbox"] { width: 20px; height: 20px; flex: 0 0 20px; }
+.task-option-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.task-option-field select,
+.task-option-field input {
+  height: 44px;
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}

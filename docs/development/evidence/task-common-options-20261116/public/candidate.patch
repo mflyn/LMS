@@ -1,0 +1,1063 @@
+diff --git a/backend/tests/t2/recurringPlans.integration.test.js b/backend/tests/t2/recurringPlans.integration.test.js
+index 1a57821d..f65fb5c0 100644
+--- a/backend/tests/t2/recurringPlans.integration.test.js
++++ b/backend/tests/t2/recurringPlans.integration.test.js
+@@ -25,6 +25,38 @@ const create = async () => {
+ };
+ const completion = (task, mediaIds = []) => ({ operationId: randomUUID(), expectedCompletionVersion: task.completionVersion,
+   expectedChecklistVersion: task.checklistVersion, checkedItemIds: [], completionMediaIds: mediaIds, childNote: 'Synthetic daily work' });
++
++test('common option strings stay literals through ordinary create/read/update; hidden omission does not erase legacy subject', async () => {
++  const body = { childId: fixture.actors.child.childId, title: 'Synthetic custom task', dimension: 'academic',
++    taskType: 'preset:0', area: 'custom', subject: 'Math', dueDate: '2026-11-20' };
++  const task = expectData(await parent.post('/api/growth-tasks', body), 201).task;
++  expect(expectData(await parent.get(url(task))).task).toMatchObject({ taskType: 'preset:0', area: 'custom', subject: 'Math' });
++  expectData(await parent.patch(url(task), { dimension: 'physical', title: 'Synthetic edited custom task' }));
++  expect(expectData(await parent.get(url(task))).task).toMatchObject({ dimension: 'physical', subject: 'Math', taskType: 'preset:0', area: 'custom' });
++  const baseline = await runtime.snapshot();
++  expect((await parent.patch(url(task), { dimension: 'custom' })).status).toBe(400);
++  for (const denied of [child, outsider]) expect((await denied.patch(url(task), { taskType: 'other' })).status).toBe(403);
++  expect(await runtime.snapshot()).toEqual(baseline);
++});
++
++test('common option recurring strings survive original replay and future revision; invalid dimensions and actors still reject', async () => {
++  const body = { operationId: randomUUID(), childId: fixture.actors.child.childId,
++    startDate: formatLocalDate(new Date(), 'Asia/Shanghai'), endDate: null, schedule: { kind: 'daily' },
++    template: { title: 'Synthetic custom plan', dimension: 'physical', taskType: 'other', area: 'custom', subject: 'math' } };
++  const first = expectData(await parent.post('/api/recurring-task-plans', body), 201);
++  expect(expectData(await parent.post('/api/recurring-task-plans', body), 201)).toEqual(first);
++  const daily = expectData(await child.get('/api/growth-tasks/' + first.generatedTaskId)).task;
++  expect(daily).toMatchObject({ taskType: 'other', area: 'custom', subject: 'math' });
++  const patch = { operationId: randomUUID(), expectedVersion: first.plan.version, endDate: null,
++    schedule: { kind: 'daily' }, template: { ...body.template, taskType: '亲子活动', area: '社区观察', subject: 'Math' } };
++  expectData(await parent.patch('/api/recurring-task-plans/' + first.plan.id, patch));
++  const changed = expectData(await parent.get('/api/recurring-task-plans/' + first.plan.id));
++  expect(changed.pendingRevision.template).toMatchObject(patch.template);
++  expect(expectData(await child.get('/api/growth-tasks/' + first.generatedTaskId)).task).toEqual(daily);
++  expect((await parent.post('/api/recurring-task-plans', { ...body, operationId: randomUUID(), template: { ...body.template, dimension: 'other' } })).status).toBe(400);
++  for (const denied of [child, outsider]) expect((await denied.post('/api/recurring-task-plans', { ...body, operationId: randomUUID() })).status).toBe(403);
++  expect(expectData(await parent.get('/api/recurring-task-plans/' + first.plan.id))).toEqual(changed);
++});
+ const upload = async () => {
+   const form = new FormData(); form.append('purpose', 'task_completion'); form.append('childId', fixture.actors.child.childId);
+   form.append('file', new Blob([fixture.image.bytes], { type: fixture.image.mimeType }), fixture.image.name);
+diff --git a/frontend/web/src/__tests__/family/RecurringPlansPage.test.js b/frontend/web/src/__tests__/family/RecurringPlansPage.test.js
+index c40cf9cd..ff4dc6af 100644
+--- a/frontend/web/src/__tests__/family/RecurringPlansPage.test.js
++++ b/frontend/web/src/__tests__/family/RecurringPlansPage.test.js
+@@ -50,6 +50,62 @@ const beginDraft = async action => {
+   return { view, submit };
+ };
+ 
++const chooseOption = (name, label) => {
++  const field = screen.getByRole('combobox', { name, exact: true });
++  const option = Array.from(field.options).find(o => o.textContent === label);
++  expect(option).toBeDefined(); fireEvent.change(field, { target: { value: option.value } });
++};
++test.each(['任务类型', '具体项目', '学科'])('common options: empty other %s writes no request or marker and releases busy', async label => {
++  await beginDraft('create'); chooseOption(label, '其他（手工输入）');
++  fireEvent.change(screen.getByLabelText(`其他${label}`), { target: { value: '   ' } });
++  fireEvent.submit(screen.getByRole('button', { name: '保存计划' }).closest('form'));
++  await enabled('保存计划'); expect(screen.getByText(`请填写其他${label}。`)).toBeInTheDocument();
++  expect(api.sendRecurringCommand).not.toHaveBeenCalled();
++  expect(Object.keys(localStorage).filter(k => k.includes('recurring-marker'))).toEqual([]);
++  expect(Object.keys(sessionStorage).filter(k => k.includes('recurring-body'))).toEqual([]);
++});
++test('common options: custom strings survive an unknown result and exact original replay', async () => {
++  api.sendRecurringCommand.mockRejectedValue(failed(503)); await beginDraft('create');
++  for (const [label, value] of [['任务类型', '亲子活动'], ['具体项目', '社区观察'], ['学科', 'math']]) {
++    chooseOption(label, '其他（手工输入）'); fireEvent.change(screen.getByLabelText(`其他${label}`), { target: { value } });
++  }
++  fireEvent.click(screen.getByRole('button', { name: '保存计划' }));
++  await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(1));
++  const original = JSON.parse(JSON.stringify(api.sendRecurringCommand.mock.calls[0][0]));
++  expect(original.body.template).toMatchObject({ taskType: '亲子活动', area: '社区观察', subject: 'math' });
++  expect(original.body.template).not.toHaveProperty('optionModes'); expect(original.body.template).not.toHaveProperty('optionErrors');
++  const markers = { ...localStorage }; await enabled('重试原命令');
++  fireEvent.click(screen.getByRole('button', { name: '重试原命令' }));
++  await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(2));
++  expect(api.sendRecurringCommand.mock.calls[1][0]).toEqual(original); expect({ ...localStorage }).toEqual(markers);
++});
++test('common options: future revision custom values are displayed and retained in the patch', async () => {
++  const p = plan(); p.pendingRevision = { ...p.currentRevision,
++    template: { ...p.currentRevision.template, taskType: 'other', area: 'custom', subject: 'Math' } };
++  api.listRecurringPlans.mockResolvedValue({ availability: available, items: [p], total: 1 });
++  api.getRecurringPlan.mockResolvedValue(p); api.sendRecurringCommand.mockRejectedValue(failed(503)); mount();
++  await enabled('修改计划'); fireEvent.click(screen.getByRole('button', { name: '修改计划' })); await enabled('保存计划');
++  expect(screen.getByLabelText('其他任务类型')).toHaveValue('other');
++  expect(screen.getByLabelText('其他具体项目')).toHaveValue('custom'); expect(screen.getByLabelText('其他学科')).toHaveValue('Math');
++  fireEvent.click(screen.getByRole('button', { name: '保存计划' }));
++  await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(1));
++  expect(api.sendRecurringCommand.mock.calls[0][0].body).toMatchObject({ expectedVersion: p.version,
++    template: { taskType: 'other', area: 'custom', subject: 'Math' } });
++});
++
++test.each([{}, { area: null, subject: '' }, { area: '', subject: null }])('common options: old command optional fields %j bypass new-form validation unchanged', async optional => {
++  const input = body(); input.template = { ...input.template, taskType: 'custom', ...optional };
++  const original = await prepareRecurringCommand(scope, 'create', null, input, captureSession('parent'));
++  api.sendRecurringCommand.mockRejectedValue(failed(503)); mount();
++  await enabled('重试原命令'); fireEvent.click(screen.getByRole('button', { name: '重试原命令' }));
++  await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(1));
++  expect(api.sendRecurringCommand.mock.calls[0][0]).toEqual(original);
++  for (const field of ['area', 'subject']) {
++    expect(Object.hasOwn(api.sendRecurringCommand.mock.calls[0][0].body.template, field)).toBe(Object.hasOwn(optional, field));
++    if (Object.hasOwn(optional, field)) expect(api.sendRecurringCommand.mock.calls[0][0].body.template[field]).toBe(optional[field]);
++  }
++});
++
+ const unavailableDraftCases = ['create', 'patch', 'stop'].flatMap(action =>
+   ['RECURRING_TASKS_DISABLED', 'RECURRING_TASKS_NOT_READY'].map(reason => [action, reason]));
+ test.each(unavailableDraftCases)('digest %s: refreshed %s rejects before marker persistence and any write', async (action, reason) => {
+@@ -347,14 +403,21 @@ test('403 clears private plan and draft; an earlier late success cannot restore
+   await screen.findByText('私有旧任务');
+   fireEvent.click(screen.getByRole('button', { name: '新建重复计划' })); await enabled('保存计划');
+   fireEvent.change(screen.getByLabelText('计划名称'), { target: { value: '未提交的私有草稿' } }); let late;
++  chooseOption('学科', '其他（手工输入）');
++  fireEvent.change(screen.getByLabelText('其他学科'), { target: { value: 'Private custom subject' } });
+   api.listRecurringPlans.mockImplementationOnce(() => new Promise(resolve => { late = resolve; })).mockRejectedValueOnce(failed(403));
+   act(() => window.dispatchEvent(new Event('focus')));
+   await waitFor(() => expect(api.listRecurringPlans).toHaveBeenCalledTimes(2));
+   act(() => window.dispatchEvent(new Event('focus')));
+   await waitFor(() => expect(screen.queryByText('私有旧任务')).not.toBeInTheDocument());
+   expect(screen.queryByDisplayValue('未提交的私有草稿')).not.toBeInTheDocument();
++  expect(screen.queryByDisplayValue('Private custom subject')).not.toBeInTheDocument();
+   await act(async () => late({ availability: available, items: [plan()], total: 1 }));
+   expect(screen.queryByText('私有旧任务')).not.toBeInTheDocument(); expect(api.sendRecurringCommand).not.toHaveBeenCalled();
++  act(() => { clearParentSession(); login(); });
++  await enabled('新建重复计划'); fireEvent.click(screen.getByRole('button', { name: '新建重复计划' }));
++  await enabled('保存计划'); expect(screen.queryByLabelText('其他学科')).not.toBeInTheDocument();
++  chooseOption('学科', '其他（手工输入）'); expect(screen.getByLabelText('其他学科')).toHaveValue('');
+ });
+ 
+ test('account switch and late command success cannot clear original actor marker', async () => {
+diff --git a/frontend/web/src/__tests__/family/T6AppNavigation.test.js b/frontend/web/src/__tests__/family/T6AppNavigation.test.js
+index 1f277a64..cd80757f 100644
+--- a/frontend/web/src/__tests__/family/T6AppNavigation.test.js
++++ b/frontend/web/src/__tests__/family/T6AppNavigation.test.js
+@@ -45,12 +45,12 @@ test('real App routes task evidence to mistake then correction form without losi
+   const record = await screen.findByRole('link', { name: '记录错题' });
+   expect(record).toHaveAttribute('href', `/app/mistakes?sourceTaskId=${id(3)}`);
+   await user.click(record);
+-  expect(await screen.findByLabelText('学科')).toHaveValue('数学');
++  expect(await screen.findByLabelText('学科')).toHaveDisplayValue('数学');
+   expect(window.location.pathname).toBe('/app/mistakes');
+   await user.click(screen.getByRole('button', { name: '保存错题' }));
+   await user.click(await screen.findByRole('button', { name: '查看已保存错题' }));
+   await user.click(await screen.findByRole('button', { name: '创建订正任务' }));
+-  expect(await screen.findByLabelText('任务类型')).toHaveValue('错题订正');
++  expect(await screen.findByLabelText('任务类型')).toHaveDisplayValue('错题订正');
+   expect(window.location.pathname).toBe('/app/tasks');
+   await user.click(screen.getByRole('button', { name: '关闭' }));
+   expect(api.createMistake).toHaveBeenCalledTimes(1);
+@@ -62,7 +62,7 @@ test('real App routes task evidence to mistake then correction form without losi
+ test('same-route task correction closes the evidence dialog and opens exactly one editor', async () => {
+   const user = userEvent.setup(); open(`/app/tasks?taskId=${id(3)}`);
+   await user.click(await screen.findByRole('link', { name: '创建订正任务' }));
+-  expect(await screen.findByLabelText('任务类型')).toHaveValue('错题订正');
++  expect(await screen.findByLabelText('任务类型')).toHaveDisplayValue('错题订正');
+   expect(screen.getAllByRole('dialog')).toHaveLength(1);
+   expect(screen.queryByText('作品查看与审核')).not.toBeInTheDocument();
+   expect(window.location.pathname).toBe('/app/tasks');
+@@ -84,13 +84,13 @@ test('SPA source navigation preserves the non-default selected child across task
+   const record = await screen.findByRole('link', { name: '记录错题' });
+   expect(record).toHaveAttribute('href', `/app/mistakes?sourceTaskId=${id(10)}`);
+   await user.click(record);
+-  expect(await screen.findByLabelText('学科')).toHaveValue('数学');
++  expect(await screen.findByLabelText('学科')).toHaveDisplayValue('数学');
+   expect(screen.getByLabelText('当前孩子')).toHaveValue(id(9));
+   expect(window.location.pathname).toBe('/app/mistakes');
+   await user.click(screen.getByRole('button', { name: '保存错题' }));
+   await user.click(await screen.findByRole('button', { name: '查看已保存错题' }));
+   await user.click(await screen.findByRole('button', { name: '创建订正任务' }));
+-  expect(await screen.findByLabelText('任务类型')).toHaveValue('错题订正');
++  expect(await screen.findByLabelText('任务类型')).toHaveDisplayValue('错题订正');
+   expect(window.location.pathname).toBe('/app/tasks');
+   expect(screen.getByLabelText('当前孩子')).toHaveValue(id(9));
+   expect(api.getMyFamily).toHaveBeenCalledTimes(1);
+diff --git a/frontend/web/src/__tests__/family/T6LearningSources.test.js b/frontend/web/src/__tests__/family/T6LearningSources.test.js
+index 99b4a088..7cc66f69 100644
+--- a/frontend/web/src/__tests__/family/T6LearningSources.test.js
++++ b/frontend/web/src/__tests__/family/T6LearningSources.test.js
+@@ -229,7 +229,7 @@ test('task-to-mistake reads authoritative scope and subject, never copies comple
+   const user = userEvent.setup();
+   parentApi.createMistake.mockResolvedValue({ mistake: mistake({ sourceTaskId: id(3) }) });
+   show(`/app/mistakes?sourceTaskId=${id(3)}&subject=伪造`);
+-  expect(await screen.findByLabelText('学科')).toHaveValue('数学');
++  expect(await screen.findByLabelText('学科')).toHaveDisplayValue('数学');
+   expect(parentApi.getGrowthTask).toHaveBeenCalled();
+   await user.click(screen.getByRole('button', { name: '保存错题' }));
+   expect(parentApi.createMistake).toHaveBeenCalledWith(expect.objectContaining({ sourceTaskId: id(3), subject: '数学',
+@@ -241,8 +241,8 @@ test.each(['sourceTaskId', 'sourceMistakeId'])('correction task uses %s only on
+   const user = userEvent.setup();
+   parentApi.createGrowthTask.mockResolvedValue({ task: task({ taskId: id(6), [field]: field === 'sourceTaskId' ? id(3) : id(5) }) });
+   show(`/app/tasks?${field}=${field === 'sourceTaskId' ? id(3) : id(5)}`);
+-  expect(await screen.findByLabelText('任务类型')).toHaveValue('错题订正');
+-  expect(screen.getByLabelText('学科')).toHaveValue('数学');
++  expect(await screen.findByLabelText('任务类型')).toHaveDisplayValue('错题订正');
++  expect(screen.getByLabelText('学科')).toHaveDisplayValue('数学');
+   fireEvent.change(screen.getByLabelText('截止日期'), { target: { value: '2026-10-28' } });
+   await user.click(screen.getByRole('button', { name: '保存任务' }));
+   await waitFor(() => expect(parentApi.createGrowthTask).toHaveBeenCalledTimes(1));
+diff --git a/frontend/web/src/__tests__/family/Task9TodayTasks.test.js b/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
+index c36ce785..d0e86681 100644
+--- a/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
++++ b/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
+@@ -1,4 +1,5 @@
+ import React from 'react';
++import { fillTaskOption } from '../../testSupport/taskOptionTestHelpers';
+ import { render, screen, waitFor, within } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { MemoryRouter } from 'react-router-dom';
+@@ -347,10 +348,12 @@ describe('Task 9 today and task workflows', () => {
+ 
+     await screen.findByText('暂无成长任务');
+     await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await fillTaskOption(user, '学科', '数学');
++    await fillTaskOption(user, '具体项目', '计算练习');
+     await user.selectOptions(screen.getByLabelText('成长维度'), dimension);
+     await user.clear(screen.getByLabelText('任务标题'));
+     await user.type(screen.getByLabelText('任务标题'), title);
+-    await user.type(screen.getByLabelText('活动领域'), dimension === 'academic' ? '数学' : '日常成长');
++    await fillTaskOption(user, '具体项目', dimension === 'academic' ? '数学' : '日常成长');
+     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+     await user.click(screen.getByRole('button', { name: '保存任务' }));
+ 
+@@ -376,6 +379,8 @@ describe('Task 9 today and task workflows', () => {
+     await screen.findByText('第 1 页 · 共 20 项');
+     expect(screen.getByRole('button', { name: '下一页任务' })).toBeDisabled();
+     await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await fillTaskOption(user, '学科', '数学');
++    await fillTaskOption(user, '具体项目', '计算练习');
+     await user.type(screen.getByLabelText('任务标题'), created.title);
+     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+     await user.click(screen.getByRole('button', { name: '保存任务' }));
+@@ -404,6 +409,8 @@ describe('Task 9 today and task workflows', () => {
+     await screen.findByText('暂无成长任务');
+     const readsBeforeSave = listGrowthTasks.mock.calls.length;
+     await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await fillTaskOption(user, '学科', '数学');
++    await fillTaskOption(user, '具体项目', '计算练习');
+     await user.type(screen.getByLabelText('任务标题'), created.title);
+     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+     await user.click(screen.getByRole('button', { name: '保存任务' }));
+@@ -449,6 +456,8 @@ describe('Task 9 today and task workflows', () => {
+     await user.click(screen.getByRole('button', { name: '下一页任务' }));
+     await screen.findByText('第 2 页 · 共 40 项');
+     await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await fillTaskOption(user, '学科', '数学');
++    await fillTaskOption(user, '具体项目', '计算练习');
+     await user.type(screen.getByLabelText('任务标题'), created.title);
+     await user.type(screen.getByLabelText('截止日期'), created.dueDate);
+     await user.click(screen.getByRole('button', { name: '保存任务' }));
+@@ -479,6 +488,8 @@ describe('Task 9 today and task workflows', () => {
+     renderPage(<TasksPage />);
+     await screen.findByText('暂无成长任务');
+     await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await fillTaskOption(user, '学科', '数学');
++    await fillTaskOption(user, '具体项目', '计算练习');
+     await user.type(screen.getByLabelText('任务标题'), created.title);
+     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+     await user.click(screen.getByRole('button', { name: '保存任务' }));
+@@ -515,6 +526,8 @@ describe('Task 9 today and task workflows', () => {
+ 
+     await screen.findByText('暂无成长任务');
+     await user.click(screen.getByRole('button', { name: '新建任务' }));
++    await fillTaskOption(user, '学科', '数学');
++    await fillTaskOption(user, '具体项目', '计算练习');
+     await user.upload(
+       screen.getByLabelText('任务附件'),
+       new File(['image'], 'task.png', { type: 'image/png' })
+@@ -536,9 +549,11 @@ describe('Task 9 today and task workflows', () => {
+ 
+     await screen.findByText('暂无成长任务');
+     await user.click(screen.getByRole('button', { name: '新建任务' }));
+-    await user.type(screen.getByLabelText('学科'), '体育');
++    await fillTaskOption(user, '学科', '数学');
++    await fillTaskOption(user, '具体项目', '计算练习');
++    await fillTaskOption(user, '学科', '体育');
+     await user.type(screen.getByLabelText('任务标题'), '记录两组训练');
+-    await user.type(screen.getByLabelText('活动领域'), '体能');
++    await fillTaskOption(user, '具体项目', '体能');
+     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+     await user.upload(screen.getByLabelText('任务附件'), [
+       new File(['first'], 'first.png', { type: 'image/png' }),
+@@ -567,9 +582,11 @@ describe('Task 9 today and task workflows', () => {
+ 
+     await screen.findByText('暂无成长任务');
+     await user.click(screen.getByRole('button', { name: '新建任务' }));
+-    await user.type(screen.getByLabelText('学科'), '体育');
++    await fillTaskOption(user, '学科', '数学');
++    await fillTaskOption(user, '具体项目', '计算练习');
++    await fillTaskOption(user, '学科', '体育');
+     await user.type(screen.getByLabelText('任务标题'), '阅读训练计划');
+-    await user.type(screen.getByLabelText('活动领域'), '体能');
++    await fillTaskOption(user, '具体项目', '体能');
+     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
+     await user.upload(
+       screen.getByLabelText('任务附件'),
+diff --git a/frontend/web/src/__tests__/family/TaskChecklistPages.test.js b/frontend/web/src/__tests__/family/TaskChecklistPages.test.js
+index 45ad6eb9..fb77a9cc 100644
+--- a/frontend/web/src/__tests__/family/TaskChecklistPages.test.js
++++ b/frontend/web/src/__tests__/family/TaskChecklistPages.test.js
+@@ -1,4 +1,5 @@
+ import React from 'react';
++import { fillTaskOption } from '../../testSupport/taskOptionTestHelpers';
+ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { MemoryRouter } from 'react-router-dom';
+@@ -109,8 +110,8 @@ test('checklist edit never sends an unchanged stale material snapshot owned by a
+ test('create supports five items and blocks whitespace without calling API', async () => {
+   const user = userEvent.setup(); render(tree());
+   await user.click(await screen.findByRole('button', { name: '新建任务' }));
+-  await user.type(screen.getByLabelText('学科'), '数学'); await user.type(screen.getByLabelText('任务标题'), '新任务');
+-  await user.type(screen.getByLabelText('活动领域'), '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
++  await fillTaskOption(user, '学科', '数学'); await user.type(screen.getByLabelText('任务标题'), '新任务');
++  await fillTaskOption(user, '具体项目', '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
+   for (let n = 1; n <= 5; n += 1) {
+     await user.click(screen.getByRole('button', { name: '添加检查项' }));
+     await user.type(screen.getByLabelText(`检查项 ${n}`), n === 1 ? '   ' : `检查${n}`);
+@@ -129,8 +130,8 @@ test('create supports five items and blocks whitespace without calling API', asy
+ test('create explicitly sends an empty checklist without a client version', async () => {
+   const user = userEvent.setup(); render(tree());
+   await user.click(await screen.findByRole('button', { name: '新建任务' }));
+-  await user.type(screen.getByLabelText('学科'), '数学'); await user.type(screen.getByLabelText('任务标题'), '无清单任务');
+-  await user.type(screen.getByLabelText('活动领域'), '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
++  await fillTaskOption(user, '学科', '数学'); await user.type(screen.getByLabelText('任务标题'), '无清单任务');
++  await fillTaskOption(user, '具体项目', '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
+   await user.click(screen.getByRole('button', { name: '保存任务' }));
+   expect(api.createGrowthTask).toHaveBeenCalledTimes(1);
+   expect(api.createGrowthTask.mock.calls[0][0]).toMatchObject({ checklistSnapshot: [] });
+@@ -162,8 +163,8 @@ test('legacy missing checklist starts at zero and optional null fields remain co
+ test.each([false, true])('unknown create never repeats POST; known resource=%s uses only the original attachment continuation', async known => {
+   const user = userEvent.setup(); render(tree());
+   await user.click(await screen.findByRole('button', { name: '新建任务' }));
+-  await user.type(screen.getByLabelText('学科'), '数学'); await user.type(screen.getByLabelText('任务标题'), '待恢复创建');
+-  await user.type(screen.getByLabelText('活动领域'), '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
++  await fillTaskOption(user, '学科', '数学'); await user.type(screen.getByLabelText('任务标题'), '待恢复创建');
++  await fillTaskOption(user, '具体项目', '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
+   await user.click(screen.getByRole('button', { name: '添加检查项' }));
+   await user.type(screen.getByLabelText('检查项 1'), '原创建清单');
+   await user.click(screen.getByRole('button', { name: '合成上传材料' }));
+diff --git a/frontend/web/src/family-shell.css b/frontend/web/src/family-shell.css
+index a3ba0093..a7be76da 100644
+--- a/frontend/web/src/family-shell.css
++++ b/frontend/web/src/family-shell.css
+@@ -260,3 +260,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
+ .tutor-page fieldset > button { justify-self: start; }
+ .tutor-page label:has(input[type="checkbox"]) { min-height: 44px; display: flex; align-items: center; gap: 8px; }
+ .tutor-page input[type="checkbox"] { width: 20px; height: 20px; flex: 0 0 20px; }
++.task-option-field {
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++  min-width: 0;
++}
++
++.task-option-field select,
++.task-option-field input {
++  height: 44px;
++  min-height: 44px;
++  width: 100%;
++  min-width: 0;
++  box-sizing: border-box;
++}
+diff --git a/frontend/web/src/pages/family/RecurringPlansPage.js b/frontend/web/src/pages/family/RecurringPlansPage.js
+index d03a1b64..21c797b9 100644
+--- a/frontend/web/src/pages/family/RecurringPlansPage.js
++++ b/frontend/web/src/pages/family/RecurringPlansPage.js
+@@ -1,4 +1,6 @@
+ import React, { useCallback, useEffect, useRef, useState } from 'react';
++import TaskOptionFields from '../../components/family/TaskOptionFields';
++import { validateTaskOptions } from '../../components/family/taskCommonOptions';
+ import { Link } from 'react-router-dom';
+ import { LeftOutlined, RightOutlined, ReloadOutlined } from '@ant-design/icons';
+ import FamilyDialog from '../../components/family/FamilyDialog';
+@@ -11,7 +13,7 @@ import { RECURRING_MARKER_PREFIX, prepareRecurringCommand, readRecurringCommand,
+ const dimensions = [['moral', '德育'], ['academic', '智育'], ['physical', '体育'], ['artistic', '美育'], ['labor', '劳育']];
+ const days = ['一', '二', '三', '四', '五', '六', '日'];
+ const today = zone => new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+-const blank = zone => ({ title: '', dimension: 'physical', taskType: 'exercise', area: '', subject: '', description: '',
++const blank = zone => ({ optionModes: {}, optionErrors: {}, title: '', dimension: 'physical', taskType: 'exercise', area: '', subject: '', description: '',
+   estimatedMinutes: '', targetAmount: '', unit: '', priority: 'medium', startDate: today(zone), endDate: '', kind: 'weekly', weekdays: [1, 2, 3, 4, 5] });
+ const message = error => {
+   const code = error?.response?.data?.error?.code || error?.code;
+@@ -143,6 +145,9 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
+   const save = e => { e.preventDefault(); void guarded(async valid => {
+     if (!canWrite()) return;
+     if (readMarker()) return;
++    const optionErrors = validateTaskOptions(form, true);
++    setForm(value => ({ ...value, optionErrors }));
++    if (Object.keys(optionErrors).length) return;
+     const template = Object.fromEntries(['title', 'dimension', 'taskType', 'area', 'subject', 'description', 'unit', 'priority'].map(k => [k, form[k]]));
+     for (const field of ['estimatedMinutes', 'targetAmount']) {
+       if (form[field] === '' || form[field] == null) continue;
+@@ -211,8 +216,8 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
+       <form onSubmit={save}><fieldset className="family-form-grid recurring-fields" disabled={locked}>
+         <label>计划名称<input value={form.title} required maxLength={100} onChange={e => change('title', e.target.value)} /></label>
+         <label>成长维度<select value={form.dimension} onChange={e => change('dimension', e.target.value)}>{dimensions.map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select></label>
+-        <label>任务类型<input required value={form.taskType} onChange={e => change('taskType', e.target.value)} /></label>
+-        {['area', 'subject', 'unit'].map((k, i) => <label key={k}>{['领域', '学科', '单位'][i]}<input value={form[k] || ''} onChange={e => change(k, e.target.value)} /></label>)}
++        <TaskOptionFields form={form} setForm={setForm} recurring />
++        <label>单位<input value={form.unit || ''} onChange={e => change('unit', e.target.value)} /></label>
+         <label>任务说明<textarea value={form.description || ''} onChange={e => change('description', e.target.value)} /></label>
+         {['estimatedMinutes', 'targetAmount'].map((k, i) => <label key={k}>{['预计分钟', '目标数量'][i]}<input inputMode="decimal" value={form[k] ?? ''} onChange={e => change(k, e.target.value)} /></label>)}
+         <label>优先级<select value={form.priority || 'medium'} onChange={e => change('priority', e.target.value)}><option value="low">低</option><option value="medium">中</option><option value="high">高</option></select></label>
+diff --git a/frontend/web/src/pages/family/TasksPage.js b/frontend/web/src/pages/family/TasksPage.js
+index 0a34aa05..e819dd3c 100644
+--- a/frontend/web/src/pages/family/TasksPage.js
++++ b/frontend/web/src/pages/family/TasksPage.js
+@@ -9,6 +9,8 @@ import TaskCompletionReview from '../../components/family/TaskCompletionReview';
+ import TaskHelpPanel, { HELP_LABELS } from '../../components/family/TaskHelpPanel';
+ import CompletionRecoveryList from '../../components/family/CompletionRecoveryList';
+ import TaskChecklistEditor, { checklistForForm } from '../../components/family/TaskChecklistEditor';
++import TaskOptionFields from '../../components/family/TaskOptionFields';
++import { validateTaskOptions } from '../../components/family/taskCommonOptions';
+ import { useFamily } from '../../contexts/FamilyContext';
+ import { useChildMutationGuard, useChildResource } from '../../hooks/useChildResource';
+ import { useDraftMedia } from '../../hooks/useDraftMedia';
+@@ -39,6 +41,8 @@ const STATUS_LABELS = {
+ };
+ 
+ const emptyForm = () => ({
++  optionModes: {},
++  optionErrors: {},
+   dimension: 'academic',
+   subject: '',
+   area: '',
+@@ -237,6 +241,9 @@ const ScopedTasksPage = () => {
+     event.preventDefault();
+     if (!editor || writing.current || mediaBusy || editor.recovery || privateBlocked) return;
+     if (editor?.mode === 'edit' && editor.task.childId !== selectedChildId) return;
++    const optionErrors = validateTaskOptions(form);
++    setForm(value => ({ ...value, optionErrors }));
++    if (Object.keys(optionErrors).length) return;
+     const mutationScope = mutationGuard.captureScope();
+     const session = captureSession('parent'), generation = ++editorGeneration.current;
+     const current = () => generation === editorGeneration.current && isSessionCurrent(session)
+@@ -488,11 +495,9 @@ const ScopedTasksPage = () => {
+             <fieldset className="task-editor-fields" disabled={busy || Boolean(editor.recovery)}>
+             <div className="family-form-grid">
+               <label>成长维度<select value={form.dimension} onChange={(event) => setForm((value) => ({ ...value, dimension: event.target.value }))}>{DIMENSIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+-              {form.dimension === 'academic' && <label>学科<input required value={form.subject} onChange={(event) => setForm((value) => ({ ...value, subject: event.target.value }))} /></label>}
+               <label>任务标题<input required value={form.title} onChange={(event) => setForm((value) => ({ ...value, title: event.target.value }))} /></label>
+-              <label>活动领域<input required value={form.area} onChange={(event) => setForm((value) => ({ ...value, area: event.target.value }))} /></label>
++              <TaskOptionFields form={form} setForm={setForm} />
+               <label>截止日期<input required type="date" value={form.dueDate} onChange={(event) => setForm((value) => ({ ...value, dueDate: event.target.value }))} /></label>
+-              <label>任务类型<select value={form.taskType} onChange={(event) => setForm((value) => ({ ...value, taskType: event.target.value }))}><option value="practice">练习</option><option value="错题订正">错题订正</option><option value="exercise">锻炼</option><option value="habit">习惯</option><option value="reading">阅读</option><option value="chore">劳动</option></select></label>
+               <label>预计用时（分钟）<input type="number" min="0" value={form.estimatedMinutes} onChange={(event) => setForm((value) => ({ ...value, estimatedMinutes: event.target.value }))} /></label>
+               <label>目标数量<input type="number" min="0" value={form.targetAmount} onChange={(event) => setForm((value) => ({ ...value, targetAmount: event.target.value }))} /></label>
+               <label>单位<input value={form.unit} onChange={(event) => setForm((value) => ({ ...value, unit: event.target.value }))} /></label>
+diff --git a/tests/e2e/t2/checklist.spec.js b/tests/e2e/t2/checklist.spec.js
+index 24a8b69f..b39662d4 100644
+--- a/tests/e2e/t2/checklist.spec.js
++++ b/tests/e2e/t2/checklist.spec.js
+@@ -45,8 +45,9 @@ async function createViaPage(page, title) {
+   await openParentTasks(page, runtime.webUrl);
+   await page.getByRole('button', { name: '新建任务', exact: true }).click();
+   await page.getByLabel('任务标题', { exact: true }).fill(title);
+-  await page.getByLabel('学科', { exact: true }).fill('数学');
+-  await page.getByLabel('活动领域', { exact: true }).fill('数学练习');
++  await page.getByLabel('学科', { exact: true }).selectOption({ label: '数学' });
++  await page.getByLabel('具体项目', { exact: true }).selectOption({ label: '其他（手工输入）' });
++  await page.getByLabel('其他具体项目', { exact: true }).fill('数学练习');
+   await page.getByLabel('截止日期', { exact: true }).fill('2026-10-26');
+   for (const [index, label] of ['再读题目', '检查答案'].entries()) {
+     await page.getByRole('button', { name: '添加检查项' }).click();
+diff --git a/tests/e2e/t2/learningSources.spec.js b/tests/e2e/t2/learningSources.spec.js
+index a3eaca96..d2c97cd3 100644
+--- a/tests/e2e/t2/learningSources.spec.js
++++ b/tests/e2e/t2/learningSources.spec.js
+@@ -143,7 +143,7 @@ test('real pages connect source work, manual mistake image, correction review an
+     await page.getByRole('button', { name: '创建订正任务', exact: true }).click();
+     await expect(page).toHaveURL(/\/app\/tasks/);
+     const taskDialog = page.getByRole('dialog', { name: '新建任务', exact: true });
+-    await expect(taskDialog.getByLabel('学科', { exact: true })).toHaveValue('Math');
++    await expect(taskDialog.getByLabel('其他学科', { exact: true })).toHaveValue('Math');
+     await taskDialog.getByLabel('任务标题').fill('Synthetic browser correction');
+     await taskDialog.getByLabel('截止日期', { exact: true }).fill('2026-10-27');
+     const created = page.waitForResponse(response => response.request().method() === 'POST'
+diff --git a/tests/e2e/task11/family-growth-flow.spec.js b/tests/e2e/task11/family-growth-flow.spec.js
+index a65c030d..8005bd40 100644
+--- a/tests/e2e/task11/family-growth-flow.spec.js
++++ b/tests/e2e/task11/family-growth-flow.spec.js
+@@ -85,11 +85,13 @@ const createTask = async (page, task, dueDate) => {
+   await page.getByRole('button', { name: '新建任务' }).click();
+   const dialog = page.getByRole('dialog', { name: '新建任务' });
+   await dialog.getByLabel('成长维度').selectOption(task.dimension);
+-  if (task.dimension === 'academic') await dialog.getByLabel('学科').fill('数学');
++  if (task.dimension === 'academic') await dialog.getByLabel('学科', { exact: true }).selectOption({ label: '数学' });
+   await dialog.getByLabel('任务标题').fill(task.title);
+-  await dialog.getByLabel('活动领域').fill(task.area);
++  await dialog.getByLabel('具体项目', { exact: true }).selectOption({ label: '其他（手工输入）' });
++  await dialog.getByLabel('其他具体项目').fill(task.area);
+   await dialog.getByLabel('截止日期').fill(dueDate);
+-  await dialog.getByLabel('任务类型').selectOption(task.taskType);
++  await dialog.getByLabel('任务类型', { exact: true }).selectOption({ label: '其他（手工输入）' });
++  await dialog.getByLabel('其他任务类型').fill(task.taskType);
+   await dialog.getByLabel('预计用时（分钟）').fill('20');
+   if (task.dimension === 'physical') {
+     await dialog.getByLabel('目标数量').fill('500');
+diff --git a/docs/superpowers/specs/2026-11-16-family-task-common-options-design.md b/docs/superpowers/specs/2026-11-16-family-task-common-options-design.md
+new file mode 100644
+index 00000000..b363d9c4
+--- /dev/null
++++ b/docs/superpowers/specs/2026-11-16-family-task-common-options-design.md
+@@ -0,0 +1,147 @@
++# 普通任务与重复计划：常用下拉及其他输入
++
++**状态：** DESIGN_APPROVED / LOCAL_CANDIDATE_PENDING_ACCEPTANCE。2026-11-16，用户已批准设计及限定本地实现；本地工程候选已完成实现、测试与复评，待用户验收，工程验收未关闭。
++**P2 复审修订：** DESIGN_P2_CLOSED，经复审通过并由用户批准，仅关闭隐藏学科设计问题。获批设计 SHA-256 为 `284a8da30c88de729e4f09c711b0a0279a82abd6896fd5f9e8f5344491d322cc`；上一轮受审文档 SHA-256 为 `c194a6fc2e4658c5167efddd29422d8a0b40f24e41551b119de5e9d8427ac821`。设计批准不代表工程测试已通过。
++**核对基线：** main `e9147b61`；当前开发分支 `da1d4384` 与该 main 的文件树无差异。本文是唯一新增文件，不改写已冻结证据。
++**授权边界：** 仅本地实现、合成验证、自查及独立复评；不提交推送、不更新真人测试入口、不操作服务器、不调用模型。历史失败、分批验证、非阻断补测、真人/真机待验、T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED 及后置范围保持原状态。
++
++## 1. 目标与取舍
++
++家长创建或修改普通任务、重复计划时，能选择常用任务类型、具体项目和学科，也能填写已有选项之外的内容。减少手输，不改变任务、奖励或命令协议。
++
++采用用户已选择的原生 select 加“其他（手工输入）”模式；选择其他才显示关联文本框。普通任务和重复计划使用相同选项与交互规则，但不强行统一原有必填性、字段可见性、请求拼装和恢复状态机。
++
++备选：datalist 更接近原自由文本，但“其他”入口和移动端候选交互不够明确；可搜索自定义组合框需要额外键盘/焦点治理，本次不采用。无需新控件依赖。
++
++范围仅限家长 `/app/tasks` 和 `/app/recurring-plans` 的创建/编辑表单。成长维度、单位、日期、任务标题、说明、数值输入保持原交互；不改错题、知识点、日志等其他表单，不新增分类管理、远端字典、家庭自定义词库、自动学习或本地持久化词库。
++
++## 2. 已核实的约束
++
++| 字段 | 普通任务当前 UI | 重复计划当前 UI | 后端事实 |
++| --- | --- | --- | --- |
++| dimension | 五维度下拉 | 同样五维度下拉 | 固定 moral/academic/physical/artistic/labor，不加“其他” |
++| taskType | 六个既有类型下拉，必填 | 手工文本，必填 | 两条路径都是非空字符串，没有类型枚举 |
++| area | “活动领域”手工文本，必填 | “领域”手工文本，可选 | 字符串，可选，没有项目枚举 |
++| subject | 仅 academic 显示，必填 | 各维度均显示，可选 | 字符串，可选，没有学科枚举 |
++
++来源：[任务模型](../../../backend/services/homework-service/models/GrowthTask.js)、[普通任务校验](../../../backend/services/homework-service/services/growthTaskPatch.js)、[重复计划规范化](../../../backend/services/homework-service/services/recurringTaskPlanCommand.js)、[普通任务页面](../../../frontend/web/src/pages/family/TasksPage.js)、[重复计划页面](../../../frontend/web/src/pages/family/RecurringPlansPage.js)。
++
++taskType、area、subject 均沿用后端 trim；这些字段当前没有独立 maxlength，不借本次控件改动新增枚举或长度上限，仍遵守既有请求体限制。title 的 100 长度限制不是这三个字段的限制。
++
++本批保留上述 UI 必填规则：普通任务的具体项目、智育学科必填；重复计划的两者可留空。旧空值显示空占位，绝不自动补第一项；普通任务原先必填的历史空值仍需用户补填，不能宣称本批实现了历史空值无编辑保存。重复计划可选空值继续合法。
++
++## 3. 最小选项表
++
++以下为本设计推荐的首批静态选项，待本设计批准后实现；不是新的服务端分类标准。
++
++| 字段 | 显示名称及提交值 |
++| --- | --- |
++| 任务类型 | 练习=`practice`；错题订正=`错题订正`；锻炼=`exercise`；习惯=`habit`；阅读=`reading`；劳动=`chore`；末项其他 |
++| 学科 | 数学、语文、英语、科学、道德与法治；提交所选中文文字；末项其他 |
++| 具体项目：德育 | 礼貌待人、遵守约定、情绪表达 |
++| 具体项目：智育 | 计算练习、课外阅读、朗读、写作、错题订正 |
++| 具体项目：体育 | 跳绳、跑步、球类、体能训练 |
++| 具体项目：美育 | 绘画、书法、钢琴、唱歌、手工 |
++| 具体项目：劳育 | 整理房间、整理书包、家务劳动、烹饪 |
++
++具体项目按当前成长维度提供常用项，每组末项均有其他；它们只供建议，不构成合法值白名单。任务类型不依维度自动改写，例如选体育不能把已有 practice 静默改成 exercise。
++
++“活动领域”和“领域”在这两张表单统一显示为“具体项目”，API 字段仍为 area。新增普通任务默认 practice、重复计划默认 exercise，其他新字段不预选第一项。学科不新增依赖模型的推断。
++
++## 4. 值与交互规则
++
++1. select 的选项身份与业务值分离，使用不混淆的 UI token/索引；“其他”是 UI 模式而非提交的哨兵值。历史字面值“其他”、`other` 或与 UI token 相同的自定义字符串仍按普通文本显示并可原样提交。
++2. 精确匹配常用提交值时选中该项；其余非空旧值显示“其他”及原文。不按大小写、别名或翻译替换旧值。旧 `math`、`Math` 显示为其他原文，保持现有数学讲解入口识别；新选数学提交 `数学`。不将旧中文“锻炼”强制改为 exercise。
++3. 空字段显示“请选择”占位；可选字段允许回到空占位。仅对本次新建/编辑请求适用的字段执行表单校验：选择“其他”后，文本 trim 为空时显示字段级错误，零保存请求、零新命令标记；可选字段若要留空必须明确回到空占位，而非提交未完成的“其他”。必填字段空占位同样拒绝。保存处理函数也必须执行这项检查，不能只依赖 HTML required。普通任务的学科仅在 `dimension === 'academic'` 时适用；隐藏的非智育学科不运行 required 或其他空白校验，不阻止保存，也不显示阻断性学科错误。不能用删除学科草稿来绕过校验。重复计划学科始终适用且可选，不因非智育而跳过“其他未填写”的检查。
++4. 普通重渲染、非破坏性列表刷新不重置未提交输入；不得用自动同步 effect 在选项变化时覆盖用户值。“其他→常用”明确切换时只采用所选值，清掉该字段旧自定义草稿；再次选其他为空，避免隐藏旧文本意外提交。这是显式编辑，不适用于身份切换或已冻结命令。
++5. 切换成长维度只更新项目建议，不修改当前 area/taskType/subject。原项目不在新建议表时转为其他显示原值，不选新组第一项；同一次编辑中“其他但未输入”的模式也保留。普通任务隐藏非智育学科时，保留同一身份、同一编辑会话内的选择模式和原始文本（包括空串、空白及旧别名），不只是保留解析后的业务值；切回智育恢复原模式与原文，重新按适用字段校验，不能自动选第一项。普通重渲染/列表刷新不清草稿；关闭表单、开启另一条任务编辑或身份失效后不得复活旧草稿。实际新建/编辑请求仍遵守非智育不发送 subject 的规则。重复计划学科仍可见且可选，不扩大联动逻辑。
++6. 编辑重复计划继续以 pendingRevision 优先、否则 currentRevision 初始化。下拉控件不更改明日起生效规则，也不覆盖今日任务。普通任务的来源预填“错题订正”、检查清单、附件与版本字段保持不变。
++7. 新控件受原 fieldset disabled/busy/recovery/pending/权限状态统一约束，不能通过其他输入框绕过。字段名和其他输入框均有唯一可访问 label（例如“具体项目”“其他具体项目”），错误关联对应字段。采用原生 select，触控高度至少 44px，在 360px 与平板宽度检查换行和遮挡；浏览器模拟不冒充 iPad 真机验收。
++
++实现建议：一个窄的共用选项输入组件和一个静态选项模块，父页面继续持有业务字段。编辑会话身份变化时重建组件；UI 模式只在当前表单内存在，不写 localStorage/sessionStorage。不得把整个表单重构成新框架。
++
++## 5. API、原命令与身份边界
++
++不新增接口、请求字段、数据库字段、schema 版本或迁移。普通任务仍发送既有 `taskType/area/subject`；重复计划仍使用 `template.taskType/template.area/template.subject`。显示名、选项索引、otherMode/customText 等 UI 元数据不得进入请求正文或摘要。正常新命令在字段校验成功后，使用当前表单的实际业务值进入既有规范化；不新增大小写折叠、同义词归一或字段默认。
++
++普通任务新建/编辑正文中，非智育时必须完全省略 `subject` 属性，不能发送隐藏草稿、空串或 null 代替；这沿用现有请求拼装，不意味着删除数据库中已有 subject。切回智育再提交时使用恢复的有效草稿；重复计划不套用该省略规则。此规则仅作用于新的表单提交，已保存的恢复 payload/原命令不得按当前维度删改字段或重算摘要。
++
++例：锻炼+跳绳提交 `taskType: "exercise", area: "跳绳"`；其他类型“亲子活动”与项目“社区观察”提交相应原文字段（沿用已有 trim），不是提交 `other`。
++
++沿用[普通任务 API](../../api/family-learning-tracker-api.md)及[重复计划 API](../../api/family-recurring-tasks-api.md)。本设计的前端选项不是 API 新白名单；不能据此将旧合法值拒绝或迁移。
++
++恢复边界：
++
++- 重复计划已保存的原命令正文、UUID、requestDigest、expectedVersion 不因打开下拉、刷新、选项表调整或重登而改变；查询/重试/安全终止继续走原命令模块。不得用当前表单或最新规则重建旧正文，亦不得对旧命令再跑新增 UI 必填检查。null/省略/空字符串的原命令区别继续保留。
++- 未决命令存在时不新建管理命令，不通过切换其他选项清掉标记。关闭/未就绪/刷新在途时仍阻止新操作；摘要完成、持久化前的最新可写及身份校验不移动、不削弱，busy 收尾仍有效。
++- 普通任务没有与重复计划完全相同的 UUID 恢复协议；只保留既有材料/编辑恢复 payload 和版本流程，不为控件改动引入通用恢复框架。不从恢复 payload 抽字段回填成一条新保存意图。
++- 当前身份遭遇 401/403、退出、换家长或换孩子时，新增自定义输入及隐藏草稿随原私有表单清理，包括业务文本、其他输入文本、选择模式及字段错误；不能只清可见输入。即使随后回到同一账号/孩子，也不恢复已失效编辑会话的草稿。迟到读取或写入不能恢复它们，不能删另一身份的原命令；同 actor 重登后的既有原命令恢复仍按原协议执行，与未提交草稿清理分开。普通任务沿用 editorGeneration/mutationGuard，重复计划沿用 session/epoch/scope 和 marker 规则。
++- 常用词是静态、非个人数据；不从其他孩子/家庭历史记录收集建议。后端实时家庭/孩子权限与拒绝顺序保持原样。
++
++旧字段为空时的普通 UI 提示不表示旧命令失效；已有命令恢复不经过本批新表单路径。回滚只撤回新控件和选项层，不回写历史数据、不删除命令或证据。
++
++## 6. 永久测试设计与验收范围
++
++下列均为待实施、待运行用例，本设计没有声称通过产品测试。
++
++| ID | 正例及永久反例 | 核心断言 |
++| --- | --- | --- |
++| OPT-01 | 两张表单常用类型/项目/学科创建与修改 | 实际请求为既有字符串；无 UI 元数据、无自动替换其他字段 |
++| OPT-02 | 中文自定义类型/项目/学科；历史非标准类型、math/Math、“其他”和 other 字面值 | 回显原值；编辑无关字段不把原值改成第一项/哨兵/中文别名；后端读回值正确 |
++| OPT-03 | 本次请求适用字段选择其他后空串、全空白；必填空占位；直接触发表单 submit；合法非空对照 | 普通零 create/update；重复零 POST/PATCH 且零新 marker；不只测浏览器 required；正例确实一次保存；非智育普通任务隐藏学科例外见 OPT-05A |
++| OPT-04 | 重复计划可选空值、普通智育必填；编辑旧空值 | 不意外新增重复计划必填；普通历史空值显示原必填提示，不自动填值；原命令空/null/省略不变 |
++| OPT-05 | 换维度、常用与其他切换、普通重渲染/焦点刷新 | 用户值按第4节保留；无隐式 onChange、无自动写；隐藏普通学科切回仍在；其他显式切换不带出旧草稿 |
++| OPT-05A | 合法保存：普通任务学科选择其他并保持空串/全空白/自定义文字，切到体育；其余字段有效，分别覆盖新建和编辑 | 保存成功且恰好一次 create/update；请求无 subject 自有属性（不是空串/null）；不显示隐藏学科错误；不新增重复计划 marker；不为成功保存自动删除已有命令；重复计划非智育“其他空白”仍拒绝，空占位允许 |
++| OPT-05B | 切回拒绝：普通任务智育“其他空串/全空白”→体育→智育，其间未成功提交；同一编辑会话内含重渲染/刷新；另设有效自定义文字及旧 math 对照 | 原选择模式、空白/原文准确恢复；空白在保存函数直接 submit 时零 create/update、零新 marker，字段错误可见且 busy 不挂起；补填后恰好一次合法提交；有效原文对照不变，已有原命令的 ID/正文/摘要及标记不变 |
++| OPT-06 | 旧自定义字段的已保存重复命令在未知结果、同 actor 重登、选项表改变后重试 | 原 UUID/摘要/正文/expectedVersion 完全一致；不创建新命令；not_found 不清锁，终态才沿原规则解除 |
++| OPT-07 | 摘要在途后关闭/未就绪/刷新在途、其他标签已有 marker、合法对照 | 沿用关闭态永久反例，零新 marker/零 POST、busy 复位；已保存原 marker 不被覆盖/删除 |
++| OPT-08 | 两页编辑自定义草稿时换孩子、退出/换家长、403、迟到成功 | 旧私有草稿及隐藏输入清理；新身份不被迟到响应覆盖；marker 属主规则不变 |
++| OPT-08A | 身份隔离：普通任务先填自定义学科再切体育隐藏；分别换孩子、退出/换家长、当前身份403，再释放旧读取/保存响应；回到原身份后开启新表单 | 旧选择模式、隐藏/自定义文本和错误均不复活，新身份私有界面不被污染；无自动保存/重发、无新 marker，不删除任何既有原命令；同 actor 重登后仍可走原恢复入口，原 ID/正文/摘要不变 |
++| OPT-09 | 普通任务恢复材料/编辑未知请求；重复计划 pendingRevision 修改 | 原 payload/版本恢复不受控件映射影响；未来规则选对，不改今日任务或奖励 |
++| OPT-10 | 真实正式 HTTP 自定义字段创建→读回→修改；非法 dimension 与孩子/跨家庭写拒绝 | 两条路径契约兼容，服务端仍拒绝原非法请求；不以页面 mock 冒充持久化 |
++| OPT-11 | Chromium/WebKit 两页常用和其他、旧值编辑、键盘选择、360px/平板布局 | 真实保存与读回；标签/焦点正常、44px、无新 console/pageerror；真机单列 DEVICE_PENDING |
++
++复用现有工具与入口：
++
++- 前端共享组件新增聚焦用例，页面扩充 `Task9TodayTasks.test.js`、`TaskChecklistPages.test.js`、`RecurringPlansPage.test.js`，API/原命令覆盖复用 `recurringApi.test.js`、`recurringCommands.test.js`；按实际修改扩大相关会话用例，不为本批创建测试框架。
++- 后端仅补必要的字段契约反例，复用 `backend/tests/t2` 的正式应用夹具与 `recurringPlans.integration.test.js`；普通任务使用同一既有 homework 应用路径，不改业务实现来配合测试。
++- 浏览器复用 `tests/e2e/t2/recurringPlans.spec.js`、`recurringDisabled.spec.js` 和现有普通任务用例，不改真人入口。先定向，交付前运行前端相关完整回归、构建、lint、文档检查；无需因仅前端改动重跑全部历史后端矩阵。
++- 既有入口：前端 `npm run test:ci -- --runInBand --testPathPattern='Task9TodayTasks|TaskChecklistPages|RecurringPlansPage|recurringApi|recurringCommands|TaskCommonOptions'`（新增组件用例名按实现确认）；前端 `npm run build`；根目录 `npm run test:t2:integration -- --runTestsByPath backend/tests/t2/recurringPlans.integration.test.js`；根目录 `npm run test:t2:e2e -- tests/e2e/t2/recurringPlans.spec.js`。现有 T2 配置默认 Desktop Chrome，未定义命名 projects，不能虚构 `--project=webkit`；WebKit 复用既有独立验收的隔离配置覆盖方式，固定 browserName 并保留原预算、workers=1、retries=0，执行时记录实际配置与命令。上述是后续计划，不在本轮执行。
++- 使用临时数据库与合成账号，保留失败日志，原断言/超时/重试预算不放宽。原 WebKit 失败、61项原回归和双引擎专项分开记录，不能将新增专项通过改写成旧组合全绿。真实实例缺集合限制不会因本次表单改善而解除。
++
++## 7. 设计阶段自查与评审记录
++
++以下保留设计阶段的自查结论；当时产品实现、组件/HTTP/浏览器验证均未执行。后续设计复审已通过，用户批准本地实现，不关闭其他门禁。
++
++自查已落实的设计约束：
++
++- 核对两条后端路径，确认自定义 taskType 无枚举冲突；维度不开放自定义。
++- 区分两页学科可见性及必填规则，不把普通表单规则施加到重复计划和原命令。
++- 下拉身份与原值分离，覆盖旧 math、中文类型、哨兵碰撞及其他空输入，避免只验证新建路径。
++- 明确维度联动不清值、显式其他切换清草稿、身份切换必须清草稿，三者不混为一谈。
++- P2 修订自查：适用字段才校验，普通非智育学科完全不发送；同编辑会话切回恢复模式和原文，身份/编辑会话失效则清理。OPT-05A/05B/08A 分别覆盖合法保存、切回拒绝与身份隔离，并保留重复计划可见字段反向对照和原命令不变断言。这些仍是待实施用例，不声称永久测试已经执行。
++- 保留持久化前最新可写检查和原命令恢复，未将普通任务误写为已有重复计划 UUID 协议。
++- 不改服务、奖励、模型发送、分类管理、执行器或历史证据；建议字段组选项仍需本次设计评审确认。
++
++本轮文档校验：首次 `npm run docs:family:check` 因当前工作树缺少 dotenv 退出1，校验器未执行，不算文档断言失败；使用原始 LMS 现有 node_modules 作为 NODE_PATH、现有 Node22 再执行同一 `scripts/check-family-docs.js` 退出0。未安装依赖。新文档另作全部7个相对链接存在性、标题结构和行尾空白检查；既有门禁并不自动证明本新设计已获批准。自查纠正了错误的命名 Playwright project 命令，未运行浏览器或产品测试。
++
++设计复审结论：第3节选项、第4节旧值/空值/切换规则、第5节命令与身份边界及第6节反例已通过本轮复审，隐藏学科设计P2由用户批准关闭。工程实现仍需单独验证及独立复评，不把设计自查称为工程复评。
++
++## 8. 限定本地实施顺序
++
++1. 在现有页面测试增加隐藏学科合法保存、切回拒绝及旧值等用例，记录旧实现红灯。
++2. 新增窄的共用字段组件和静态选项模块，接入 TasksPage/RecurringPlansPage；UI状态仅放当前表单，保留请求白名单与恢复模块。
++3. 补齐身份/原命令反例；对既有测试仅适配字段操作及必要必填夹具，不删除或放宽原断言。
++4. 在隔离副本复用既有依赖，运行相关/前端完整回归、构建、正式HTTP及浏览器；保留失败，检查候选差异。独立复评后再交付，未经批准不提交或关闭工程验收。
++
++## 9. 本地工程候选与验收边界
++
++2026-11-16：按用户批准，仅实现两张表单的静态常用选项与其他输入，共用 `TaskOptionFields` / `taskCommonOptions`。成长维度仍为固定五项；普通任务和重复计划的不同必填/可见规则未统一扩张。`optionModes/optionErrors` 只在父表单内存在，两个请求白名单和原命令模块未改变。未修改后端业务、接口、数据库、奖励、执行器、真实运行配置或真人入口。
++
++永久用例已落地：旧别名/哨兵原文、新建和编辑隐藏学科三类输入、切回空白拒绝与补填、读取刷新不清草稿、仅切换孩子并返回（会话不变）、换家长/退出/403及迟到成功、原命令 null/省略/空串精确保留、未来规则、自定义丢响应后重登查询恢复。沿用原关闭/未就绪/摘要在途和标签页竞争用例。两页 360px/768px、44px 和 Tab 焦点由真实浏览器专项保护。
++
++开发验证：前端完整基线最终84套件/1380项通过；正式HTTP 4项通过（2项新字段契约、2项原图片/奖励闭环）；既有清单与来源浏览器12项分别在Chromium/WebKit通过；最终新增专项各2项通过；Task11原五维度浏览器1项通过；生产构建通过。独立复评对同哈希源码/专项执行73项通过，不能称为独立浏览器复跑。完整命令、失败归因和冻结清单见[本批工程证据索引](../../development/evidence/task-common-options-20261116/README.md)。
++
++保留首轮测试选择器/夹具适配失败、空辅助套件误收集、沙箱拒绝浏览器启动及WebKit实际23px触控失败。触控修复为新控件显式44px高度，未放宽断言或测试预算。既有 Browserslist 数据过旧/CRA弃用警告登记保留，不在本批更新依赖。
++
++门禁：隐藏学科 DESIGN_P2_CLOSED 不等于工程自动批准；本批工程为 LOCAL_CANDIDATE_PENDING_ACCEPTANCE。此前原WebKit失败、61项与双引擎专项的历史区分及真实实例缺集合限制不变；T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、DEVICE_PENDING、Docker INCOMPLETE_FAILED、其他非阻断补测和后置状态不变。不提交/推送、不更新真人入口、不调用模型、不操作服务器或部署。
+diff --git a/frontend/web/src/__tests__/family/TaskCommonOptions.test.js b/frontend/web/src/__tests__/family/TaskCommonOptions.test.js
+new file mode 100644
+index 00000000..bdfb1cc0
+--- /dev/null
++++ b/frontend/web/src/__tests__/family/TaskCommonOptions.test.js
+@@ -0,0 +1,50 @@
++import React, { useState } from 'react';
++import { fireEvent, render, screen } from '@testing-library/react';
++import TaskOptionFields from '../../components/family/TaskOptionFields';
++import { validateTaskOptions } from '../../components/family/taskCommonOptions';
++
++const base = { dimension: 'academic', taskType: 'practice', area: '计算练习', subject: '数学' };
++function Harness({ dimension = 'academic', initial = {}, recurring = false, onSave = () => {} }) {
++  const [form, setForm] = useState({ ...base, ...initial });
++  const current = { ...form, dimension };
++  return <form onSubmit={e => { e.preventDefault(); const optionErrors = validateTaskOptions(current, recurring);
++    setForm(f => ({ ...f, optionErrors })); if (!Object.keys(optionErrors).length) onSave(current); }}>
++    <TaskOptionFields form={current} setForm={setForm} recurring={recurring} />
++    <button>Save</button>
++  </form>;
++}
++const select = (name, label) => {
++  const field = screen.getByRole('combobox', { name, exact: true });
++  const value = Array.from(field.options).find(o => o.textContent === label).value;
++  fireEvent.change(field, { target: { value } });
++};
++test.each(['math', 'Math', '其他', 'other', 'custom', 'preset:0', '锻炼'])('legacy subject %s stays literal without mount writes', value => {
++  const save = jest.fn(); render(<Harness initial={{ subject: value }} onSave={save} />);
++  expect(screen.getByLabelText('其他学科')).toHaveValue(value); expect(save).not.toHaveBeenCalled();
++  fireEvent.submit(screen.getByText('Save').closest('form'));
++  expect(save).toHaveBeenCalledWith(expect.objectContaining({ subject: value }));
++});
++test('dimension options change without overwriting the existing area or subject draft', () => {
++  const r = render(<Harness />); select('学科', '其他（手工输入）');
++  fireEvent.change(screen.getByLabelText('其他学科'), { target: { value: '  私有自定义  ' } });
++  r.rerender(<Harness dimension="physical" />);
++  expect(screen.getByLabelText('其他具体项目')).toHaveValue('计算练习');
++  expect(screen.queryByLabelText('其他学科')).not.toBeInTheDocument();
++  r.rerender(<Harness />); expect(screen.getByLabelText('其他学科')).toHaveValue('  私有自定义  ');
++  expect(screen.getByRole('combobox', { name: '具体项目', exact: true }).selectedOptions[0]).toHaveTextContent('计算练习');
++});
++test('explicit other to preset clears old text; ordinary rerender retains unfinished other mode', () => {
++  const r = render(<Harness />); select('学科', '其他（手工输入）');
++  fireEvent.change(screen.getByLabelText('其他学科'), { target: { value: 'old' } });
++  select('学科', '数学'); select('学科', '其他（手工输入）'); r.rerender(<Harness />);
++  expect(screen.getByLabelText('其他学科')).toHaveValue('');
++});
++test.each(['taskType', 'area', 'subject'])('direct submit rejects whitespace other %s', field => {
++  expect(validateTaskOptions({ ...base, [field]: '   ', optionModes: { [field]: true } })).toHaveProperty(field);
++});
++test('optional recurring empty/null values pass, but explicit empty other does not', () => {
++  expect(validateTaskOptions({ ...base, area: null, subject: '' }, true)).toEqual({});
++  expect(validateTaskOptions({ ...base, dimension: 'physical', subject: '', optionModes: { subject: true } }, true))
++    .toHaveProperty('subject');
++  expect(validateTaskOptions({ ...base, dimension: 'physical', subject: '', optionModes: { subject: true } })).toEqual({});
++});
+diff --git a/frontend/web/src/__tests__/family/TaskCommonOptionsPages.test.js b/frontend/web/src/__tests__/family/TaskCommonOptionsPages.test.js
+new file mode 100644
+index 00000000..d354a5df
+--- /dev/null
++++ b/frontend/web/src/__tests__/family/TaskCommonOptionsPages.test.js
+@@ -0,0 +1,150 @@
++import React from 'react';
++import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
++import { MemoryRouter } from 'react-router-dom';
++import TasksPage from '../../pages/family/TasksPage';
++import { useFamily } from '../../contexts/FamilyContext';
++import * as api from '../../services/familyApi';
++import { saveParentSession, clearParentSession, captureSession } from '../../services/familySession';
++
++jest.mock('../../contexts/FamilyContext', () => ({ useFamily: jest.fn() }));
++jest.mock('../../services/familyApi', () => ({ listGrowthTasks: jest.fn(), getGrowthTask: jest.fn(),
++  createGrowthTask: jest.fn(), updateGrowthTask: jest.fn(), cancelOrArchiveGrowthTask: jest.fn(),
++  getCompletionRecovery: jest.fn(), getPrivateMediaAccess: jest.fn(), deletePrivateMedia: jest.fn() }));
++const childId = '222222222222222222222222', actorId = '333333333333333333333333';
++const family = id => ({ family: { familyId: '111111111111111111111111' }, selectedChildId: id,
++  selectedChild: { childId: id, name: 'Synthetic child' }, childScopeVersion: 1 });
++const task = extra => ({ taskId: '444444444444444444444444', childId, title: 'Synthetic task', status: 'pending',
++  dimension: 'academic', subject: 'math', area: 'Old area', taskType: 'Old type', dueDate: '2026-11-20',
++  attachmentMediaIds: [], ...extra });
++const view = () => <MemoryRouter><TasksPage /></MemoryRouter>;
++const change = (name, value) => fireEvent.change(screen.getByLabelText(name), { target: { value } });
++const select = (name, label) => {
++  const field = screen.getByRole('combobox', { name, exact: true });
++  const option = Array.from(field.options).find(o => o.textContent === label);
++  expect(option).toBeDefined(); fireEvent.change(field, { target: { value: option.value } });
++};
++const submit = () => fireEvent.submit(screen.getByRole('button', { name: '保存任务' }).closest('form'));
++const create = async () => {
++  const rendered = render(view()); await screen.findByText('暂无成长任务');
++  fireEvent.click(screen.getByRole('button', { name: '新建任务' }));
++  change('任务标题', 'Synthetic new task'); change('截止日期', '2026-11-20');
++  select('具体项目', '计算练习');
++  return rendered;
++};
++beforeEach(() => {
++  jest.resetAllMocks(); localStorage.clear(); sessionStorage.clear();
++  saveParentSession({ token: 'synthetic', user: { id: actorId, role: 'parent' } });
++  useFamily.mockReturnValue(family(childId)); api.listGrowthTasks.mockResolvedValue({ items: [], total: 0 });
++  api.createGrowthTask.mockResolvedValue({ task: task() }); api.updateGrowthTask.mockResolvedValue({ task: task() });
++});
++
++test.each(['', '   ', 'Private subject'])('OPT-05A hidden subject %j does not block or enter a new request', async text => {
++  await create(); select('学科', '其他（手工输入）'); change('其他学科', text);
++  select('成长维度', '体育'); expect(screen.queryByLabelText('其他学科')).not.toBeInTheDocument();
++  submit(); await waitFor(() => expect(api.createGrowthTask).toHaveBeenCalledTimes(1));
++  const body = api.createGrowthTask.mock.calls[0][0]; expect(body).not.toHaveProperty('subject');
++  expect(body).toMatchObject({ dimension: 'physical', area: '计算练习', taskType: 'practice' });
++  expect(body).not.toHaveProperty('optionModes'); expect(body).not.toHaveProperty('optionErrors');
++});
++
++test.each(['', '   '])('OPT-05B restored other mode %j rejects direct submit then accepts a correction', async text => {
++  await create(); select('学科', '其他（手工输入）'); change('其他学科', text);
++  select('成长维度', '体育'); select('成长维度', '智育');
++  expect(screen.getByLabelText('其他学科')).toHaveValue(text); submit();
++  expect(api.createGrowthTask).not.toHaveBeenCalled(); expect(api.updateGrowthTask).not.toHaveBeenCalled();
++  expect(screen.getByText('请填写其他学科。')).toBeInTheDocument();
++  expect(screen.getByRole('button', { name: '保存任务' })).toBeEnabled();
++  change('其他学科', '自定义学科'); submit();
++  await waitFor(() => expect(api.createGrowthTask).toHaveBeenCalledTimes(1));
++  expect(api.createGrowthTask.mock.calls[0][0].subject).toBe('自定义学科');
++});
++
++test('OPT-02 editing an unrelated field preserves legacy custom values and the math alias', async () => {
++  api.listGrowthTasks.mockResolvedValue({ items: [task()], total: 1 }); render(view());
++  fireEvent.click(await screen.findByRole('button', { name: '编辑 Synthetic task' }));
++  expect(screen.getByLabelText('其他学科')).toHaveValue('math');
++  expect(screen.getByLabelText('其他具体项目')).toHaveValue('Old area');
++  expect(screen.getByLabelText('其他任务类型')).toHaveValue('Old type');
++  change('任务标题', 'Edited title'); submit();
++  await waitFor(() => expect(api.updateGrowthTask).toHaveBeenCalledTimes(1));
++  expect(api.updateGrowthTask.mock.calls[0][1]).toMatchObject({ subject: 'math', area: 'Old area', taskType: 'Old type' });
++});
++
++test.each(['', '   ', 'Private subject'])('OPT-05A editing non-academic omits hidden subject %j without clearing the original field', async text => {
++  api.listGrowthTasks.mockResolvedValue({ items: [task()], total: 1 }); render(view());
++  fireEvent.click(await screen.findByRole('button', { name: '编辑 Synthetic task' }));
++  change('其他学科', text); select('成长维度', '体育'); submit();
++  await waitFor(() => expect(api.updateGrowthTask).toHaveBeenCalledTimes(1));
++  expect(api.updateGrowthTask.mock.calls[0][1]).not.toHaveProperty('subject');
++  expect(api.updateGrowthTask.mock.calls[0][1].dimension).toBe('physical');
++});
++
++test('OPT-05B refresh while hidden preserves unfinished other mode and rejects on return', async () => {
++  await create(); select('学科', '其他（手工输入）'); change('其他学科', '   '); select('成长维度', '体育');
++  change('求助状态', 'pending');
++  await waitFor(() => expect(api.listGrowthTasks).toHaveBeenCalledTimes(2));
++  select('成长维度', '智育'); expect(screen.getByLabelText('其他学科')).toHaveValue('   ');
++  submit(); expect(screen.getByText('请填写其他学科。')).toBeInTheDocument();
++  expect(api.createGrowthTask).not.toHaveBeenCalled();
++});
++
++test('OPT-08A list denial clears hidden custom fields and fences a late successful save', async () => {
++  let finish;
++  api.createGrowthTask.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
++  await create(); select('学科', '其他（手工输入）'); change('其他学科', 'Private denied subject'); select('成长维度', '体育');
++  submit(); expect(api.createGrowthTask).toHaveBeenCalledTimes(1);
++  api.listGrowthTasks.mockRejectedValue({ response: { status: 403, data: { error: { message: 'Denied' } } } });
++  change('求助状态', 'pending');
++  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
++  await act(async () => finish({ task: task() }));
++  expect(screen.queryByText('任务已创建。')).not.toBeInTheDocument();
++  expect(screen.queryByText('Synthetic task')).not.toBeInTheDocument();
++  api.listGrowthTasks.mockResolvedValue({ items: [], total: 0 });
++  fireEvent.click(screen.getByRole('button', { name: '重新读取任务' }));
++  await waitFor(() => expect(screen.getByRole('button', { name: '新建任务' })).toBeEnabled());
++  fireEvent.click(screen.getByRole('button', { name: '新建任务' }));
++  select('学科', '其他（手工输入）'); expect(screen.getByLabelText('其他学科')).toHaveValue('');
++  expect(api.createGrowthTask).toHaveBeenCalledTimes(1);
++});
++
++test('OPT-08A child switch clears hidden subject mode and late save cannot revive it', async () => {
++  let finish;
++  api.createGrowthTask.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
++  const rendered = await create(), session = captureSession('parent');
++  select('学科', '其他（手工输入）'); change('其他学科', 'Private old subject'); select('成长维度', '体育');
++  submit(); expect(api.createGrowthTask).toHaveBeenCalledTimes(1);
++  useFamily.mockReturnValue(family('555555555555555555555555'));
++  rendered.rerender(view()); expect(captureSession('parent')).toEqual(session);
++  await act(async () => finish({ task: task() }));
++  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
++  fireEvent.click(screen.getByRole('button', { name: '新建任务' }));
++  select('学科', '其他（手工输入）'); expect(screen.getByLabelText('其他学科')).toHaveValue('');
++  expect(api.createGrowthTask).toHaveBeenCalledTimes(1);
++  useFamily.mockReturnValue(family(childId)); rendered.rerender(view());
++  await screen.findByText('暂无成长任务'); fireEvent.click(screen.getByRole('button', { name: '新建任务' }));
++  select('学科', '其他（手工输入）'); expect(screen.getByLabelText('其他学科')).toHaveValue('');
++});
++
++test('OPT-08A switching parent and returning clears hidden draft mode and validation errors', async () => {
++  await create(); select('学科', '其他（手工输入）'); change('其他学科', '   '); submit();
++  expect(screen.getByText('请填写其他学科。')).toBeInTheDocument(); select('成长维度', '体育');
++  act(() => saveParentSession({ token: 'other', user: { id: '666666666666666666666666', role: 'parent' } }));
++  await screen.findByText('暂无成长任务'); expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
++  act(() => saveParentSession({ token: 'synthetic', user: { id: actorId, role: 'parent' } }));
++  await screen.findByText('暂无成长任务'); fireEvent.click(screen.getByRole('button', { name: '新建任务' }));
++  expect(screen.queryByLabelText('其他学科')).not.toBeInTheDocument();
++  expect(screen.queryByText('请填写其他学科。')).not.toBeInTheDocument();
++  select('学科', '其他（手工输入）'); expect(screen.getByLabelText('其他学科')).toHaveValue('');
++  expect(api.createGrowthTask).not.toHaveBeenCalled();
++});
++
++test('OPT-08A logout discards hidden subject draft without clearing unrelated command markers', async () => {
++  await create(); select('学科', '其他（手工输入）'); change('其他学科', 'Private old subject'); select('成长维度', '体育');
++  localStorage.setItem('family-growth.recurring-marker.v1:preserved', 'original-marker');
++  act(() => clearParentSession());
++  act(() => saveParentSession({ token: 'synthetic', user: { id: actorId, role: 'parent' } }));
++  await screen.findByText('暂无成长任务'); fireEvent.click(screen.getByRole('button', { name: '新建任务' }));
++  select('学科', '其他（手工输入）'); expect(screen.getByLabelText('其他学科')).toHaveValue('');
++  expect(localStorage.getItem('family-growth.recurring-marker.v1:preserved')).toBe('original-marker');
++  expect(api.createGrowthTask).not.toHaveBeenCalled();
++});
+diff --git a/frontend/web/src/components/family/TaskOptionFields.js b/frontend/web/src/components/family/TaskOptionFields.js
+new file mode 100644
+index 00000000..829fe2c0
+--- /dev/null
++++ b/frontend/web/src/components/family/TaskOptionFields.js
+@@ -0,0 +1,37 @@
++import React, { useId } from 'react';
++import { isCustomTaskOption, taskOptionFields } from './taskCommonOptions';
++
++function OptionField({ field, label, options, required, form, setForm }) {
++  const id = useId(), value = form[field] ?? '';
++  const custom = isCustomTaskOption(value, options, form.optionModes?.[field]);
++  const index = options.findIndex(([v]) => v === value);
++  const error = form.optionErrors?.[field];
++  const change = (next, mode) => setForm(current => ({ ...current, [field]: next,
++    optionModes: { ...current.optionModes, [field]: mode },
++    optionErrors: { ...current.optionErrors, [field]: undefined } }));
++  return <div className="task-option-field">
++    <label htmlFor={id}>{label}</label>
++    <select id={id} required={required} value={custom ? 'custom' : index >= 0 ? `preset:${index}` : ''}
++      aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : undefined}
++      onChange={event => {
++        const selected = event.target.value;
++        if (selected === 'custom') change('', true);
++        else if (selected === '') change('', false);
++        else change(options[Number(selected.slice(7))][0], false);
++      }}>
++      <option value="">请选择</option>
++      {options.map(([v, text], i) => <option key={v} value={`preset:${i}`}>{text}</option>)}
++      <option value="custom">其他（手工输入）</option>
++    </select>
++    {custom && <><label htmlFor={`${id}-custom`}>其他{label}</label>
++      <input id={`${id}-custom`} required value={value} aria-invalid={Boolean(error)}
++        aria-describedby={error ? `${id}-error` : undefined}
++        onChange={event => change(event.target.value, true)} /></>}
++    {error && <p id={`${id}-error`} className="family-form-error" role="alert">{error}</p>}
++  </div>;
++}
++
++export default function TaskOptionFields({ form, setForm, recurring = false }) {
++  return taskOptionFields(form, recurring).map(props =>
++    <OptionField key={props.field} {...props} form={form} setForm={setForm} />);
++}
+diff --git a/frontend/web/src/components/family/taskCommonOptions.js b/frontend/web/src/components/family/taskCommonOptions.js
+new file mode 100644
+index 00000000..e85e6f0d
+--- /dev/null
++++ b/frontend/web/src/components/family/taskCommonOptions.js
+@@ -0,0 +1,26 @@
++export const TASK_TYPES = [['practice', '练习'], ['错题订正', '错题订正'], ['exercise', '锻炼'],
++  ['habit', '习惯'], ['reading', '阅读'], ['chore', '劳动']];
++const named = names => names.map(name => [name, name]);
++export const TASK_SUBJECTS = named(['数学', '语文', '英语', '科学', '道德与法治']);
++const AREAS = {
++  moral: named(['礼貌待人', '遵守约定', '情绪表达']),
++  academic: named(['计算练习', '课外阅读', '朗读', '写作', '错题订正']),
++  physical: named(['跳绳', '跑步', '球类', '体能训练']),
++  artistic: named(['绘画', '书法', '钢琴', '唱歌', '手工']),
++  labor: named(['整理房间', '整理书包', '家务劳动', '烹饪'])
++};
++export const taskOptionFields = (form, recurring = false) => [
++  { field: 'taskType', label: '任务类型', options: TASK_TYPES, required: true },
++  { field: 'area', label: '具体项目', options: AREAS[form.dimension] || [], required: !recurring },
++  ...((recurring || form.dimension === 'academic')
++    ? [{ field: 'subject', label: '学科', options: TASK_SUBJECTS, required: !recurring }] : [])
++];
++export const isCustomTaskOption = (value, options, explicit) => Boolean(explicit)
++  || (typeof value === 'string' && value !== '' && !options.some(([v]) => v === value));
++export const validateTaskOptions = (form, recurring = false) => Object.fromEntries(
++  taskOptionFields(form, recurring).flatMap(({ field, label, options, required }) => {
++    const custom = isCustomTaskOption(form[field], options, form.optionModes?.[field]);
++    return (required || custom) && (typeof form[field] !== 'string' || !form[field].trim())
++      ? [[field, custom ? `请填写其他${label}。` : `请选择${label}。`]] : [];
++  })
++);
+diff --git a/frontend/web/src/testSupport/taskOptionTestHelpers.js b/frontend/web/src/testSupport/taskOptionTestHelpers.js
+new file mode 100644
+index 00000000..a26bdb34
+--- /dev/null
++++ b/frontend/web/src/testSupport/taskOptionTestHelpers.js
+@@ -0,0 +1,8 @@
++import { screen } from '@testing-library/react';
++
++export async function fillTaskOption(user, label, value) {
++  await user.selectOptions(screen.getByRole('combobox', { name: label, exact: true }), 'custom');
++  const input = screen.getByLabelText(`其他${label}`);
++  await user.clear(input);
++  if (value) await user.type(input, value);
++}
+diff --git a/tests/e2e/t2/taskCommonOptions.spec.js b/tests/e2e/t2/taskCommonOptions.spec.js
+new file mode 100644
+index 00000000..e759fae3
+--- /dev/null
++++ b/tests/e2e/t2/taskCommonOptions.spec.js
+@@ -0,0 +1,104 @@
++const { test, expect } = require('@playwright/test');
++const { createT2WebRuntime } = require('./webRuntime');
++const { openParentTasks } = require('./parentNavigation');
++let runtime, prior;
++test.beforeAll(async () => {
++  prior = process.env.RECURRING_TASKS_ENABLED;
++  runtime = await createT2WebRuntime({ beforeStart: async () => { process.env.RECURRING_TASKS_ENABLED = 'true'; } });
++});
++test.afterAll(async () => {
++  try { await runtime?.stop(); }
++  finally { if (prior === undefined) delete process.env.RECURRING_TASKS_ENABLED; else process.env.RECURRING_TASKS_ENABLED = prior; }
++});
++const login = async page => {
++  await page.goto(runtime.webUrl + '/login');
++  await page.getByLabel('用户名').fill(runtime.fixture.actors.parent.username);
++  await page.getByLabel('密码', { exact: true }).fill(runtime.fixture.actors.parent.password);
++  await page.getByRole('button', { name: '登录', exact: true }).click();
++  await expect(page).toHaveURL(/\/app\/today$/);
++  await page.getByLabel('当前孩子').selectOption(runtime.fixture.actors.child.childId);
++  await openParentTasks(page, runtime.webUrl);
++};
++const custom = async (page, label, value) => {
++  await page.getByLabel(label, { exact: true }).selectOption({ label: '其他（手工输入）' });
++  await page.getByLabel('其他' + label, { exact: true }).fill(value);
++};
++const post = (page, path, method = 'POST') => page.waitForResponse(r => new URL(r.url()).pathname === path && r.request().method() === method);
++
++test('formal task HTTP preserves custom values, hides subject without sending it, and remains usable at touch widths', async ({ page }, info) => {
++  const errors = []; page.on('pageerror', e => errors.push(e.message)); await login(page);
++  await page.getByRole('button', { name: '新建任务', exact: true }).click();
++  await page.getByLabel('任务标题').fill('合成下拉任务');
++  await page.getByLabel('截止日期').fill('2026-11-20');
++  await custom(page, '任务类型', 'preset:0'); await custom(page, '具体项目', '社区观察');
++  await page.getByLabel('任务类型', { exact: true }).focus(); await page.keyboard.press('Tab');
++  await expect(page.getByLabel('其他任务类型')).toBeFocused();
++  await custom(page, '学科', '');
++  await page.getByLabel('成长维度').selectOption('physical');
++  await expect(page.getByLabel('其他学科')).toHaveCount(0);
++  for (const [width, height] of [[360, 800], [768, 1024]]) {
++    await page.setViewportSize({ width, height });
++    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
++    for (const label of ['任务类型', '具体项目', '其他任务类型', '其他具体项目']) {
++      const box = await page.getByLabel(label, { exact: true }).boundingBox();
++      expect(box.height).toBeGreaterThanOrEqual(44); expect(box.width).toBeGreaterThan(100);
++      expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(width);
++    }
++    await page.screenshot({ path: info.outputPath(`options-${width}.png`), fullPage: true });
++  }
++  const saved = post(page, '/api/growth-tasks'); await page.getByRole('button', { name: '保存任务' }).click();
++  const response = await saved; expect(response.status()).toBe(201);
++  expect(response.request().postDataJSON()).not.toHaveProperty('subject');
++  const task = (await response.json()).data.task;
++  expect(task).toMatchObject({ taskType: 'preset:0', area: '社区观察', dimension: 'physical' });
++  await page.reload(); await page.getByRole('button', { name: '编辑 合成下拉任务', exact: true }).click();
++  await expect(page.getByLabel('其他任务类型')).toHaveValue('preset:0');
++  await expect(page.getByLabel('其他具体项目')).toHaveValue('社区观察');
++  await page.getByLabel('成长维度').selectOption('academic'); await custom(page, '学科', 'Math');
++  const updated = post(page, '/api/growth-tasks/' + task.taskId, 'PATCH');
++  await page.getByRole('button', { name: '保存任务' }).click(); expect((await updated).status()).toBe(200);
++  await page.reload(); await page.getByRole('button', { name: '编辑 合成下拉任务', exact: true }).click();
++  await expect(page.getByLabel('其他学科')).toHaveValue('Math');
++  expect(errors).toEqual([]);
++});
++
++test('formal recurring commit loss and relogin recover the original custom command without a second POST', async ({ page }, info) => {
++  const errors = []; page.on('pageerror', e => errors.push(e.message)); await login(page);
++  await page.getByRole('link', { name: '重复计划', exact: true }).click();
++  await page.getByRole('button', { name: '新建重复计划' }).click();
++  await page.getByLabel('计划名称').fill('合成自定义重复计划');
++  await page.getByLabel('重复方式').selectOption('daily');
++  for (const [label, value] of [['任务类型', '亲子活动'], ['具体项目', 'custom'], ['学科', 'math']]) await custom(page, label, value);
++  for (const [width, height] of [[360, 800], [768, 1024]]) {
++    await page.setViewportSize({ width, height });
++    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
++    for (const label of ['任务类型', '具体项目', '学科', '其他任务类型', '其他具体项目', '其他学科']) {
++      const box = await page.getByLabel(label, { exact: true }).boundingBox();
++      expect(box.height).toBeGreaterThanOrEqual(44); expect(box.width).toBeGreaterThan(100);
++      expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(width);
++    }
++    await page.screenshot({ path: info.outputPath(`recurring-options-${width}.png`), fullPage: true });
++  }
++  const writes = [];
++  page.on('request', req => { if (req.method() === 'POST' && new URL(req.url()).pathname === '/api/recurring-task-plans') writes.push(req.postDataJSON()); });
++  runtime.dropNextResponse({ method: 'POST', path: '/api/recurring-task-plans' });
++  await page.getByRole('button', { name: '保存计划' }).click();
++  await expect(page.getByRole('button', { name: '核对原命令' })).toBeEnabled();
++  expect(writes).toHaveLength(1); expect(writes[0].template).toMatchObject({ taskType: '亲子活动', area: 'custom', subject: 'math' });
++  expect(writes[0].template).not.toHaveProperty('optionModes'); expect(writes[0].template).not.toHaveProperty('optionErrors');
++  await page.getByRole('button', { name: /退出/ }).click(); await login(page);
++  await page.getByRole('link', { name: '重复计划', exact: true }).click();
++  await expect(page.getByRole('button', { name: '重试原命令' })).toHaveCount(0);
++  await page.getByRole('button', { name: '核对原命令' }).click();
++  await expect(page.getByRole('heading', { name: '合成自定义重复计划' })).toBeVisible();
++  expect(writes).toHaveLength(1);
++  const client = await runtime.login('parent');
++  const receipt = await client.get('/api/recurring-task-plan-commands/' + writes[0].operationId, { params: { childId: writes[0].childId } });
++  expect(receipt.data.data).toMatchObject({ state: 'succeeded', identity: { operationId: writes[0].operationId } });
++  const tasks = (await runtime.snapshot()).database.Task.filter(t => t.title === '合成自定义重复计划');
++  expect(tasks).toHaveLength(1); expect(tasks[0]).toMatchObject({ taskType: '亲子活动', area: 'custom', subject: 'math' });
++  await page.getByRole('button', { name: '修改计划' }).click();
++  await expect(page.getByLabel('其他学科')).toHaveValue('math');
++  await expect(page.getByLabel('其他任务类型')).toHaveValue('亲子活动');
++  expect(errors).toEqual([]);
++});

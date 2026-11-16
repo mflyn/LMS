@@ -1,0 +1,90 @@
+{
+  "candidatePatchSha256": "ed17c46c7d3058744ad2cbaea8a3a846e5b719cf38624b650dea61d146b3844a",
+  "runs": {
+    "components": {
+      "exit": 0,
+      "suites": 5,
+      "passed": 117
+    },
+    "http": {
+      "exit": 0,
+      "suites": 1,
+      "passed": 4
+    },
+    "chromium": {
+      "exit": 0,
+      "passed": 2
+    },
+    "webkit": {
+      "exit": 0,
+      "passed": 2
+    }
+  },
+  "scope": "Independent focused rerun in local synthetic environment; full 1380 regression is previous developer evidence, not rerun here",
+  "files": [
+    {
+      "file": "chromium/.last-run.json",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "chromium/taskCommonOptions-formal-r-864b1-mmand-without-a-second-POST/recurring-options-360.png",
+      "sha256": "1ecd64e2e6617af4e9860353c9bcba888c5c21a302d4c3cc871210c6def14e71"
+    },
+    {
+      "file": "chromium/taskCommonOptions-formal-r-864b1-mmand-without-a-second-POST/recurring-options-768.png",
+      "sha256": "2bb5f074d42fa9a233c057331e468b0b4a44f5175b4eeb32be2113b417d6d9fe"
+    },
+    {
+      "file": "chromium/taskCommonOptions-formal-t-2678a-ains-usable-at-touch-widths/options-360.png",
+      "sha256": "b6a09c607360c09e5e7198ec93384f524f67427a06aadd934ba9165dc64a0319"
+    },
+    {
+      "file": "chromium/taskCommonOptions-formal-t-2678a-ains-usable-at-touch-widths/options-768.png",
+      "sha256": "df51ac7a2d6e72f0096549e2651da87c9dec6816af71eb805ef5a8c983ceb6c0"
+    },
+    {
+      "file": "chromium.log",
+      "sha256": "adffa284d4110cce2a02d4dfa047fa1247deaaad4451e4fd3ca82aa16a8c493d"
+    },
+    {
+      "file": "components.json",
+      "sha256": "d0cd8052cc9f9cabd283db02738d15c632ea1b469c15935298171818d3ae848c"
+    },
+    {
+      "file": "components.log",
+      "sha256": "c327091fd12d54c9f717288b6f7a08e5b0364001449912b71e5bf3dfaa96c4e2"
+    },
+    {
+      "file": "http.json",
+      "sha256": "148485afa0e8c034838fc2dcf479c1bdce2d6192f60c665a36cd85adf830952c"
+    },
+    {
+      "file": "http.log",
+      "sha256": "fa2d17696da54b159258e3c1129e55e9a3e4ff8941f29797b951aa77288879cc"
+    },
+    {
+      "file": "webkit/.last-run.json",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "file": "webkit/taskCommonOptions-formal-r-864b1-mmand-without-a-second-POST/recurring-options-360.png",
+      "sha256": "88b364dfec00cb6c9dd9f6d93a28d5765b6706fbb1976966c8500f3fc676fd8b"
+    },
+    {
+      "file": "webkit/taskCommonOptions-formal-r-864b1-mmand-without-a-second-POST/recurring-options-768.png",
+      "sha256": "bcebc2f8f8859b77d5d6d8238994e79933a8f5c9c96c9d125b77c55b7e5f0d00"
+    },
+    {
+      "file": "webkit/taskCommonOptions-formal-t-2678a-ains-usable-at-touch-widths/options-360.png",
+      "sha256": "b961639a34644ece981302104167b3f723641611b65225ec5167219c4e427ef2"
+    },
+    {
+      "file": "webkit/taskCommonOptions-formal-t-2678a-ains-usable-at-touch-widths/options-768.png",
+      "sha256": "8f01c1021749c213e95f5fe84404b4b16a1870d8d491b34ff99094032d420d3e"
+    },
+    {
+      "file": "webkit.log",
+      "sha256": "addb4fc6ae2f63f94f6680579a8445cc61e899e34ec54b6883f4f8ae5d5c4a44"
+    }
+  ]
+}
