@@ -1,0 +1,28 @@
+{
+  "status": "PRE_COMMIT_CHECKED",
+  "scope": "Public delivery packaging only; no new product code or test changes after approved review",
+  "deliveryBase": "e9147b61",
+  "reviewedBase": "da1d43841ff3057abee7219f36ab3d00bce7bc69",
+  "baseTreesIdentical": true,
+  "approvedFiles": 20,
+  "unchangedImplementationAndTestFiles": 18,
+  "unchangedApprovedFiles": 19,
+  "publicIndexChanges": "Two local absolute paths replaced with placeholders; authorized delivery link appended",
+  "candidatePatchSha256": "ed17c46c7d3058744ad2cbaea8a3a846e5b719cf38624b650dea61d146b3844a",
+  "reviewManifestSha256": "ebcf0418e484b57ca6a0141ef9ff89dd40499c9b559026483890f8b2ae4cba12",
+  "checks": {
+    "familyDocumentationGate": "PASS",
+    "originalEvidenceHashes": "45 original artifacts unchanged",
+    "reviewEvidenceHashes": "16 review artifacts unchanged",
+    "publishedFileMapping": "PASS",
+    "sensitiveInformation": "No detected real credentials, personal data, local absolute paths or private server addresses in selected delivery files; synthetic fixture references retained",
+    "historicalFailures": "PRESERVED"
+  },
+  "testEvidencePolicy": "Reuse reviewed tests because implementation is unchanged; full 1380 regression, prior independent 73, latest independent 117, HTTP 4 and browser batches remain separate",
+  "githubCi": "PENDING_NEW_COMMIT",
+  "manualAcceptance": "PENDING",
+  "deviceAcceptance": "DEVICE_PENDING",
+  "unchangedOpenStates": ["T4 OPEN", "T8 OPEN", "AI-1 OPEN", "SERVER_TIMING_UNVERIFIED", "Docker INCOMPLETE_FAILED"],
+  "deferredScope": "UNCHANGED",
+  "authorization": "Dedicated branch push and Draft PR only; no merge, live entry update, model call, server operation or deployment"
+}

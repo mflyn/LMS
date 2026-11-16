@@ -50,6 +50,62 @@ const beginDraft = async action => {
   return { view, submit };
 };
 
+const chooseOption = (name, label) => {
+  const field = screen.getByRole('combobox', { name, exact: true });
+  const option = Array.from(field.options).find(o => o.textContent === label);
+  expect(option).toBeDefined(); fireEvent.change(field, { target: { value: option.value } });
+};
+test.each(['任务类型', '具体项目', '学科'])('common options: empty other %s writes no request or marker and releases busy', async label => {
+  await beginDraft('create'); chooseOption(label, '其他（手工输入）');
+  fireEvent.change(screen.getByLabelText(`其他${label}`), { target: { value: '   ' } });
+  fireEvent.submit(screen.getByRole('button', { name: '保存计划' }).closest('form'));
+  await enabled('保存计划'); expect(screen.getByText(`请填写其他${label}。`)).toBeInTheDocument();
+  expect(api.sendRecurringCommand).not.toHaveBeenCalled();
+  expect(Object.keys(localStorage).filter(k => k.includes('recurring-marker'))).toEqual([]);
+  expect(Object.keys(sessionStorage).filter(k => k.includes('recurring-body'))).toEqual([]);
+});
+test('common options: custom strings survive an unknown result and exact original replay', async () => {
+  api.sendRecurringCommand.mockRejectedValue(failed(503)); await beginDraft('create');
+  for (const [label, value] of [['任务类型', '亲子活动'], ['具体项目', '社区观察'], ['学科', 'math']]) {
+    chooseOption(label, '其他（手工输入）'); fireEvent.change(screen.getByLabelText(`其他${label}`), { target: { value } });
+  }
+  fireEvent.click(screen.getByRole('button', { name: '保存计划' }));
+  await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(1));
+  const original = JSON.parse(JSON.stringify(api.sendRecurringCommand.mock.calls[0][0]));
+  expect(original.body.template).toMatchObject({ taskType: '亲子活动', area: '社区观察', subject: 'math' });
+  expect(original.body.template).not.toHaveProperty('optionModes'); expect(original.body.template).not.toHaveProperty('optionErrors');
+  const markers = { ...localStorage }; await enabled('重试原命令');
+  fireEvent.click(screen.getByRole('button', { name: '重试原命令' }));
+  await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(2));
+  expect(api.sendRecurringCommand.mock.calls[1][0]).toEqual(original); expect({ ...localStorage }).toEqual(markers);
+});
+test('common options: future revision custom values are displayed and retained in the patch', async () => {
+  const p = plan(); p.pendingRevision = { ...p.currentRevision,
+    template: { ...p.currentRevision.template, taskType: 'other', area: 'custom', subject: 'Math' } };
+  api.listRecurringPlans.mockResolvedValue({ availability: available, items: [p], total: 1 });
+  api.getRecurringPlan.mockResolvedValue(p); api.sendRecurringCommand.mockRejectedValue(failed(503)); mount();
+  await enabled('修改计划'); fireEvent.click(screen.getByRole('button', { name: '修改计划' })); await enabled('保存计划');
+  expect(screen.getByLabelText('其他任务类型')).toHaveValue('other');
+  expect(screen.getByLabelText('其他具体项目')).toHaveValue('custom'); expect(screen.getByLabelText('其他学科')).toHaveValue('Math');
+  fireEvent.click(screen.getByRole('button', { name: '保存计划' }));
+  await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(1));
+  expect(api.sendRecurringCommand.mock.calls[0][0].body).toMatchObject({ expectedVersion: p.version,
+    template: { taskType: 'other', area: 'custom', subject: 'Math' } });
+});
+
+test.each([{}, { area: null, subject: '' }, { area: '', subject: null }])('common options: old command optional fields %j bypass new-form validation unchanged', async optional => {
+  const input = body(); input.template = { ...input.template, taskType: 'custom', ...optional };
+  const original = await prepareRecurringCommand(scope, 'create', null, input, captureSession('parent'));
+  api.sendRecurringCommand.mockRejectedValue(failed(503)); mount();
+  await enabled('重试原命令'); fireEvent.click(screen.getByRole('button', { name: '重试原命令' }));
+  await waitFor(() => expect(api.sendRecurringCommand).toHaveBeenCalledTimes(1));
+  expect(api.sendRecurringCommand.mock.calls[0][0]).toEqual(original);
+  for (const field of ['area', 'subject']) {
+    expect(Object.hasOwn(api.sendRecurringCommand.mock.calls[0][0].body.template, field)).toBe(Object.hasOwn(optional, field));
+    if (Object.hasOwn(optional, field)) expect(api.sendRecurringCommand.mock.calls[0][0].body.template[field]).toBe(optional[field]);
+  }
+});
+
 const unavailableDraftCases = ['create', 'patch', 'stop'].flatMap(action =>
   ['RECURRING_TASKS_DISABLED', 'RECURRING_TASKS_NOT_READY'].map(reason => [action, reason]));
 test.each(unavailableDraftCases)('digest %s: refreshed %s rejects before marker persistence and any write', async (action, reason) => {
@@ -347,14 +403,21 @@ test('403 clears private plan and draft; an earlier late success cannot restore 
   await screen.findByText('私有旧任务');
   fireEvent.click(screen.getByRole('button', { name: '新建重复计划' })); await enabled('保存计划');
   fireEvent.change(screen.getByLabelText('计划名称'), { target: { value: '未提交的私有草稿' } }); let late;
+  chooseOption('学科', '其他（手工输入）');
+  fireEvent.change(screen.getByLabelText('其他学科'), { target: { value: 'Private custom subject' } });
   api.listRecurringPlans.mockImplementationOnce(() => new Promise(resolve => { late = resolve; })).mockRejectedValueOnce(failed(403));
   act(() => window.dispatchEvent(new Event('focus')));
   await waitFor(() => expect(api.listRecurringPlans).toHaveBeenCalledTimes(2));
   act(() => window.dispatchEvent(new Event('focus')));
   await waitFor(() => expect(screen.queryByText('私有旧任务')).not.toBeInTheDocument());
   expect(screen.queryByDisplayValue('未提交的私有草稿')).not.toBeInTheDocument();
+  expect(screen.queryByDisplayValue('Private custom subject')).not.toBeInTheDocument();
   await act(async () => late({ availability: available, items: [plan()], total: 1 }));
   expect(screen.queryByText('私有旧任务')).not.toBeInTheDocument(); expect(api.sendRecurringCommand).not.toHaveBeenCalled();
+  act(() => { clearParentSession(); login(); });
+  await enabled('新建重复计划'); fireEvent.click(screen.getByRole('button', { name: '新建重复计划' }));
+  await enabled('保存计划'); expect(screen.queryByLabelText('其他学科')).not.toBeInTheDocument();
+  chooseOption('学科', '其他（手工输入）'); expect(screen.getByLabelText('其他学科')).toHaveValue('');
 });
 
 test('account switch and late command success cannot clear original actor marker', async () => {

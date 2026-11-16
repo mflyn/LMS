@@ -85,11 +85,13 @@ const createTask = async (page, task, dueDate) => {
   await page.getByRole('button', { name: '新建任务' }).click();
   const dialog = page.getByRole('dialog', { name: '新建任务' });
   await dialog.getByLabel('成长维度').selectOption(task.dimension);
-  if (task.dimension === 'academic') await dialog.getByLabel('学科').fill('数学');
+  if (task.dimension === 'academic') await dialog.getByLabel('学科', { exact: true }).selectOption({ label: '数学' });
   await dialog.getByLabel('任务标题').fill(task.title);
-  await dialog.getByLabel('活动领域').fill(task.area);
+  await dialog.getByLabel('具体项目', { exact: true }).selectOption({ label: '其他（手工输入）' });
+  await dialog.getByLabel('其他具体项目').fill(task.area);
   await dialog.getByLabel('截止日期').fill(dueDate);
-  await dialog.getByLabel('任务类型').selectOption(task.taskType);
+  await dialog.getByLabel('任务类型', { exact: true }).selectOption({ label: '其他（手工输入）' });
+  await dialog.getByLabel('其他任务类型').fill(task.taskType);
   await dialog.getByLabel('预计用时（分钟）').fill('20');
   if (task.dimension === 'physical') {
     await dialog.getByLabel('目标数量').fill('500');

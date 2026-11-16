@@ -1,0 +1,82 @@
+{
+  "base": "da1d43841ff3057abee7219f36ab3d00bce7bc69",
+  "patchSha256": "ed17c46c7d3058744ad2cbaea8a3a846e5b719cf38624b650dea61d146b3844a",
+  "files": [
+    {
+      "file": "backend/tests/t2/recurringPlans.integration.test.js",
+      "sha256": "f5169daf3092f77a055d17fb2da77456dac6d34765d068e84169e224a8b3aab4"
+    },
+    {
+      "file": "docs/superpowers/specs/2026-11-16-family-task-common-options-design.md",
+      "sha256": "3151b51af601f392a5c8514899db481590891950e9f8192c75e3bc1655e15205"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/RecurringPlansPage.test.js",
+      "sha256": "d2d363de30cd2b87489856aca8703c5020921eb7345fb5688d6c7bfdccf84e88"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/T6AppNavigation.test.js",
+      "sha256": "45d8afc8a8a485dee172ab9f5054bd622c80608be0aeebdf113b1b1ab148437c"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/T6LearningSources.test.js",
+      "sha256": "9ed84a48bffebf82a0b43d8e93df4eca47539267b6b13974aacd0b3e46cb6b48"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/Task9TodayTasks.test.js",
+      "sha256": "8cd62b52d4ccf39bd1d476324de4a35f387f7e221bdf6ae96f2e458e6a5f81fa"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TaskChecklistPages.test.js",
+      "sha256": "0f64ac5ffbe1d6f98535c5e29a0ff76b319fe8f56a6c054af8cf5fd22d1a1b7a"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TaskCommonOptions.test.js",
+      "sha256": "33f1589bfa5df9dddd3142edd3e7919f42c415ecbfeb2b38aafee2640fc5a3b2"
+    },
+    {
+      "file": "frontend/web/src/__tests__/family/TaskCommonOptionsPages.test.js",
+      "sha256": "8d9cecb674a344720386f155d87274fcfdc5c0b386cbf3eb81ed27d349d285dd"
+    },
+    {
+      "file": "frontend/web/src/components/family/TaskOptionFields.js",
+      "sha256": "5620130effc8c20d26808d5e61a69663cd64651c588c8a8edf0546f2f44d9ede"
+    },
+    {
+      "file": "frontend/web/src/components/family/taskCommonOptions.js",
+      "sha256": "6fd41825d067d6fa8299c5568582ee6c0538b67a369a9ffce7714ce4fa123f70"
+    },
+    {
+      "file": "frontend/web/src/family-shell.css",
+      "sha256": "acff3b58f4960115f559b89f08f1d9143e1b0cdd22ba2e1874460235a5fe29bb"
+    },
+    {
+      "file": "frontend/web/src/pages/family/RecurringPlansPage.js",
+      "sha256": "112fff49259d0d55777f6f33ae338bf5779c383a1c863dbe79044b1f1c715dce"
+    },
+    {
+      "file": "frontend/web/src/pages/family/TasksPage.js",
+      "sha256": "8cec6bcffef14e09f28b0fbea975f43b5b921f71429c4dc49f0e131d5c12fd8b"
+    },
+    {
+      "file": "frontend/web/src/testSupport/taskOptionTestHelpers.js",
+      "sha256": "117b19bbaf95db2e922be4d4ea17252ba617ae9e5f5a751a668190260de5cb10"
+    },
+    {
+      "file": "tests/e2e/t2/checklist.spec.js",
+      "sha256": "fa31e40d34387c45cd6f2eb2bda056ac55f5543cc1120130a68a8d5be1bcbbbe"
+    },
+    {
+      "file": "tests/e2e/t2/learningSources.spec.js",
+      "sha256": "bc82f4426cbbfecdb2ac4d49653defa27739595ba5084762e0c178c4806b4322"
+    },
+    {
+      "file": "tests/e2e/t2/taskCommonOptions.spec.js",
+      "sha256": "77289dad46265732ee17c7ce3c3ec3312709cb9635c9a96b8480febc5401c99a"
+    },
+    {
+      "file": "tests/e2e/task11/family-growth-flow.spec.js",
+      "sha256": "3a8acc35160b3ec8992eddc284656797a2279d2569c5b964a07536e613b7b687"
+    }
+  ]
+}

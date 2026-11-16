@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import TaskOptionFields from '../../components/family/TaskOptionFields';
+import { validateTaskOptions } from '../../components/family/taskCommonOptions';
 import { Link } from 'react-router-dom';
 import { LeftOutlined, RightOutlined, ReloadOutlined } from '@ant-design/icons';
 import FamilyDialog from '../../components/family/FamilyDialog';
@@ -11,7 +13,7 @@ import { RECURRING_MARKER_PREFIX, prepareRecurringCommand, readRecurringCommand,
 const dimensions = [['moral', '德育'], ['academic', '智育'], ['physical', '体育'], ['artistic', '美育'], ['labor', '劳育']];
 const days = ['一', '二', '三', '四', '五', '六', '日'];
 const today = zone => new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-const blank = zone => ({ title: '', dimension: 'physical', taskType: 'exercise', area: '', subject: '', description: '',
+const blank = zone => ({ optionModes: {}, optionErrors: {}, title: '', dimension: 'physical', taskType: 'exercise', area: '', subject: '', description: '',
   estimatedMinutes: '', targetAmount: '', unit: '', priority: 'medium', startDate: today(zone), endDate: '', kind: 'weekly', weekdays: [1, 2, 3, 4, 5] });
 const message = error => {
   const code = error?.response?.data?.error?.code || error?.code;
@@ -143,6 +145,9 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
   const save = e => { e.preventDefault(); void guarded(async valid => {
     if (!canWrite()) return;
     if (readMarker()) return;
+    const optionErrors = validateTaskOptions(form, true);
+    setForm(value => ({ ...value, optionErrors }));
+    if (Object.keys(optionErrors).length) return;
     const template = Object.fromEntries(['title', 'dimension', 'taskType', 'area', 'subject', 'description', 'unit', 'priority'].map(k => [k, form[k]]));
     for (const field of ['estimatedMinutes', 'targetAmount']) {
       if (form[field] === '' || form[field] == null) continue;
@@ -211,8 +216,8 @@ const ScopedPlans = ({ scope, session, childName, timezone, scopeCurrent }) => {
       <form onSubmit={save}><fieldset className="family-form-grid recurring-fields" disabled={locked}>
         <label>计划名称<input value={form.title} required maxLength={100} onChange={e => change('title', e.target.value)} /></label>
         <label>成长维度<select value={form.dimension} onChange={e => change('dimension', e.target.value)}>{dimensions.map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select></label>
-        <label>任务类型<input required value={form.taskType} onChange={e => change('taskType', e.target.value)} /></label>
-        {['area', 'subject', 'unit'].map((k, i) => <label key={k}>{['领域', '学科', '单位'][i]}<input value={form[k] || ''} onChange={e => change(k, e.target.value)} /></label>)}
+        <TaskOptionFields form={form} setForm={setForm} recurring />
+        <label>单位<input value={form.unit || ''} onChange={e => change('unit', e.target.value)} /></label>
         <label>任务说明<textarea value={form.description || ''} onChange={e => change('description', e.target.value)} /></label>
         {['estimatedMinutes', 'targetAmount'].map((k, i) => <label key={k}>{['预计分钟', '目标数量'][i]}<input inputMode="decimal" value={form[k] ?? ''} onChange={e => change(k, e.target.value)} /></label>)}
         <label>优先级<select value={form.priority || 'medium'} onChange={e => change('priority', e.target.value)}><option value="low">低</option><option value="medium">中</option><option value="high">高</option></select></label>

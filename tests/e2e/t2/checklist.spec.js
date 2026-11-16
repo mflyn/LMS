@@ -45,8 +45,9 @@ async function createViaPage(page, title) {
   await openParentTasks(page, runtime.webUrl);
   await page.getByRole('button', { name: '新建任务', exact: true }).click();
   await page.getByLabel('任务标题', { exact: true }).fill(title);
-  await page.getByLabel('学科', { exact: true }).fill('数学');
-  await page.getByLabel('活动领域', { exact: true }).fill('数学练习');
+  await page.getByLabel('学科', { exact: true }).selectOption({ label: '数学' });
+  await page.getByLabel('具体项目', { exact: true }).selectOption({ label: '其他（手工输入）' });
+  await page.getByLabel('其他具体项目', { exact: true }).fill('数学练习');
   await page.getByLabel('截止日期', { exact: true }).fill('2026-10-26');
   for (const [index, label] of ['再读题目', '检查答案'].entries()) {
     await page.getByRole('button', { name: '添加检查项' }).click();

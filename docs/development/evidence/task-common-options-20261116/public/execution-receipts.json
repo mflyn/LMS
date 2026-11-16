@@ -1,0 +1,19 @@
+{
+  "source": "development tool execution results, not inferred from success text",
+  "full-1": { "exit": 1, "passedTests": 1365, "failedTests": 6 },
+  "full-2": { "exit": 1, "passedTests": 1372, "failedTests": 1 },
+  "full-3": { "exit": 1, "passedTests": 1380, "failedTests": 0, "failedSuites": 1 },
+  "full-4": { "exit": 0, "passedTests": 1380, "passedSuites": 84 },
+  "http-1": { "exit": 0, "passedTests": 4 },
+  "browser-chromium-1": { "exit": 1, "failure": "sandbox browser launch denied, assertions not executed" },
+  "browser-chromium-2": { "exit": 0, "passedTests": 2 },
+  "browser-chromium-regression": { "exit": 0, "passedTests": 12 },
+  "browser-webkit": { "exit": 1, "passedTests": 13, "failedTests": 1 },
+  "browser-chromium-final": { "exit": 0, "passedTests": 2 },
+  "browser-webkit-final": { "exit": 0, "passedTests": 2 },
+  "task11": { "exit": 0, "passedTests": 1 },
+  "build-final": { "exit": 0 },
+  "lint-final": { "exit": 0 },
+  "docs-final": { "exit": 0 },
+  "independent": { "exit": 0, "passedTests": 73, "scope": "three component/page suites; no independent browser rerun" }
+}

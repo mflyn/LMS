@@ -45,12 +45,12 @@ test('real App routes task evidence to mistake then correction form without losi
   const record = await screen.findByRole('link', { name: '记录错题' });
   expect(record).toHaveAttribute('href', `/app/mistakes?sourceTaskId=${id(3)}`);
   await user.click(record);
-  expect(await screen.findByLabelText('学科')).toHaveValue('数学');
+  expect(await screen.findByLabelText('学科')).toHaveDisplayValue('数学');
   expect(window.location.pathname).toBe('/app/mistakes');
   await user.click(screen.getByRole('button', { name: '保存错题' }));
   await user.click(await screen.findByRole('button', { name: '查看已保存错题' }));
   await user.click(await screen.findByRole('button', { name: '创建订正任务' }));
-  expect(await screen.findByLabelText('任务类型')).toHaveValue('错题订正');
+  expect(await screen.findByLabelText('任务类型')).toHaveDisplayValue('错题订正');
   expect(window.location.pathname).toBe('/app/tasks');
   await user.click(screen.getByRole('button', { name: '关闭' }));
   expect(api.createMistake).toHaveBeenCalledTimes(1);
@@ -62,7 +62,7 @@ test('real App routes task evidence to mistake then correction form without losi
 test('same-route task correction closes the evidence dialog and opens exactly one editor', async () => {
   const user = userEvent.setup(); open(`/app/tasks?taskId=${id(3)}`);
   await user.click(await screen.findByRole('link', { name: '创建订正任务' }));
-  expect(await screen.findByLabelText('任务类型')).toHaveValue('错题订正');
+  expect(await screen.findByLabelText('任务类型')).toHaveDisplayValue('错题订正');
   expect(screen.getAllByRole('dialog')).toHaveLength(1);
   expect(screen.queryByText('作品查看与审核')).not.toBeInTheDocument();
   expect(window.location.pathname).toBe('/app/tasks');
@@ -84,13 +84,13 @@ test('SPA source navigation preserves the non-default selected child across task
   const record = await screen.findByRole('link', { name: '记录错题' });
   expect(record).toHaveAttribute('href', `/app/mistakes?sourceTaskId=${id(10)}`);
   await user.click(record);
-  expect(await screen.findByLabelText('学科')).toHaveValue('数学');
+  expect(await screen.findByLabelText('学科')).toHaveDisplayValue('数学');
   expect(screen.getByLabelText('当前孩子')).toHaveValue(id(9));
   expect(window.location.pathname).toBe('/app/mistakes');
   await user.click(screen.getByRole('button', { name: '保存错题' }));
   await user.click(await screen.findByRole('button', { name: '查看已保存错题' }));
   await user.click(await screen.findByRole('button', { name: '创建订正任务' }));
-  expect(await screen.findByLabelText('任务类型')).toHaveValue('错题订正');
+  expect(await screen.findByLabelText('任务类型')).toHaveDisplayValue('错题订正');
   expect(window.location.pathname).toBe('/app/tasks');
   expect(screen.getByLabelText('当前孩子')).toHaveValue(id(9));
   expect(api.getMyFamily).toHaveBeenCalledTimes(1);

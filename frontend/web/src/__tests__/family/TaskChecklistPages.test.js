@@ -1,4 +1,5 @@
 import React from 'react';
+import { fillTaskOption } from '../../testSupport/taskOptionTestHelpers';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -109,8 +110,8 @@ test('checklist edit never sends an unchanged stale material snapshot owned by a
 test('create supports five items and blocks whitespace without calling API', async () => {
   const user = userEvent.setup(); render(tree());
   await user.click(await screen.findByRole('button', { name: '新建任务' }));
-  await user.type(screen.getByLabelText('学科'), '数学'); await user.type(screen.getByLabelText('任务标题'), '新任务');
-  await user.type(screen.getByLabelText('活动领域'), '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
+  await fillTaskOption(user, '学科', '数学'); await user.type(screen.getByLabelText('任务标题'), '新任务');
+  await fillTaskOption(user, '具体项目', '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
   for (let n = 1; n <= 5; n += 1) {
     await user.click(screen.getByRole('button', { name: '添加检查项' }));
     await user.type(screen.getByLabelText(`检查项 ${n}`), n === 1 ? '   ' : `检查${n}`);
@@ -129,8 +130,8 @@ test('create supports five items and blocks whitespace without calling API', asy
 test('create explicitly sends an empty checklist without a client version', async () => {
   const user = userEvent.setup(); render(tree());
   await user.click(await screen.findByRole('button', { name: '新建任务' }));
-  await user.type(screen.getByLabelText('学科'), '数学'); await user.type(screen.getByLabelText('任务标题'), '无清单任务');
-  await user.type(screen.getByLabelText('活动领域'), '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
+  await fillTaskOption(user, '学科', '数学'); await user.type(screen.getByLabelText('任务标题'), '无清单任务');
+  await fillTaskOption(user, '具体项目', '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
   await user.click(screen.getByRole('button', { name: '保存任务' }));
   expect(api.createGrowthTask).toHaveBeenCalledTimes(1);
   expect(api.createGrowthTask.mock.calls[0][0]).toMatchObject({ checklistSnapshot: [] });
@@ -162,8 +163,8 @@ test('legacy missing checklist starts at zero and optional null fields remain co
 test.each([false, true])('unknown create never repeats POST; known resource=%s uses only the original attachment continuation', async known => {
   const user = userEvent.setup(); render(tree());
   await user.click(await screen.findByRole('button', { name: '新建任务' }));
-  await user.type(screen.getByLabelText('学科'), '数学'); await user.type(screen.getByLabelText('任务标题'), '待恢复创建');
-  await user.type(screen.getByLabelText('活动领域'), '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
+  await fillTaskOption(user, '学科', '数学'); await user.type(screen.getByLabelText('任务标题'), '待恢复创建');
+  await fillTaskOption(user, '具体项目', '练习'); await user.type(screen.getByLabelText('截止日期'), '2026-10-26');
   await user.click(screen.getByRole('button', { name: '添加检查项' }));
   await user.type(screen.getByLabelText('检查项 1'), '原创建清单');
   await user.click(screen.getByRole('button', { name: '合成上传材料' }));

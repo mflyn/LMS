@@ -1,4 +1,5 @@
 import React from 'react';
+import { fillTaskOption } from '../../testSupport/taskOptionTestHelpers';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -347,10 +348,12 @@ describe('Task 9 today and task workflows', () => {
 
     await screen.findByText('暂无成长任务');
     await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await fillTaskOption(user, '学科', '数学');
+    await fillTaskOption(user, '具体项目', '计算练习');
     await user.selectOptions(screen.getByLabelText('成长维度'), dimension);
     await user.clear(screen.getByLabelText('任务标题'));
     await user.type(screen.getByLabelText('任务标题'), title);
-    await user.type(screen.getByLabelText('活动领域'), dimension === 'academic' ? '数学' : '日常成长');
+    await fillTaskOption(user, '具体项目', dimension === 'academic' ? '数学' : '日常成长');
     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
     await user.click(screen.getByRole('button', { name: '保存任务' }));
 
@@ -376,6 +379,8 @@ describe('Task 9 today and task workflows', () => {
     await screen.findByText('第 1 页 · 共 20 项');
     expect(screen.getByRole('button', { name: '下一页任务' })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await fillTaskOption(user, '学科', '数学');
+    await fillTaskOption(user, '具体项目', '计算练习');
     await user.type(screen.getByLabelText('任务标题'), created.title);
     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
     await user.click(screen.getByRole('button', { name: '保存任务' }));
@@ -404,6 +409,8 @@ describe('Task 9 today and task workflows', () => {
     await screen.findByText('暂无成长任务');
     const readsBeforeSave = listGrowthTasks.mock.calls.length;
     await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await fillTaskOption(user, '学科', '数学');
+    await fillTaskOption(user, '具体项目', '计算练习');
     await user.type(screen.getByLabelText('任务标题'), created.title);
     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
     await user.click(screen.getByRole('button', { name: '保存任务' }));
@@ -449,6 +456,8 @@ describe('Task 9 today and task workflows', () => {
     await user.click(screen.getByRole('button', { name: '下一页任务' }));
     await screen.findByText('第 2 页 · 共 40 项');
     await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await fillTaskOption(user, '学科', '数学');
+    await fillTaskOption(user, '具体项目', '计算练习');
     await user.type(screen.getByLabelText('任务标题'), created.title);
     await user.type(screen.getByLabelText('截止日期'), created.dueDate);
     await user.click(screen.getByRole('button', { name: '保存任务' }));
@@ -479,6 +488,8 @@ describe('Task 9 today and task workflows', () => {
     renderPage(<TasksPage />);
     await screen.findByText('暂无成长任务');
     await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await fillTaskOption(user, '学科', '数学');
+    await fillTaskOption(user, '具体项目', '计算练习');
     await user.type(screen.getByLabelText('任务标题'), created.title);
     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
     await user.click(screen.getByRole('button', { name: '保存任务' }));
@@ -515,6 +526,8 @@ describe('Task 9 today and task workflows', () => {
 
     await screen.findByText('暂无成长任务');
     await user.click(screen.getByRole('button', { name: '新建任务' }));
+    await fillTaskOption(user, '学科', '数学');
+    await fillTaskOption(user, '具体项目', '计算练习');
     await user.upload(
       screen.getByLabelText('任务附件'),
       new File(['image'], 'task.png', { type: 'image/png' })
@@ -536,9 +549,11 @@ describe('Task 9 today and task workflows', () => {
 
     await screen.findByText('暂无成长任务');
     await user.click(screen.getByRole('button', { name: '新建任务' }));
-    await user.type(screen.getByLabelText('学科'), '体育');
+    await fillTaskOption(user, '学科', '数学');
+    await fillTaskOption(user, '具体项目', '计算练习');
+    await fillTaskOption(user, '学科', '体育');
     await user.type(screen.getByLabelText('任务标题'), '记录两组训练');
-    await user.type(screen.getByLabelText('活动领域'), '体能');
+    await fillTaskOption(user, '具体项目', '体能');
     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
     await user.upload(screen.getByLabelText('任务附件'), [
       new File(['first'], 'first.png', { type: 'image/png' }),
@@ -567,9 +582,11 @@ describe('Task 9 today and task workflows', () => {
 
     await screen.findByText('暂无成长任务');
     await user.click(screen.getByRole('button', { name: '新建任务' }));
-    await user.type(screen.getByLabelText('学科'), '体育');
+    await fillTaskOption(user, '学科', '数学');
+    await fillTaskOption(user, '具体项目', '计算练习');
+    await fillTaskOption(user, '学科', '体育');
     await user.type(screen.getByLabelText('任务标题'), '阅读训练计划');
-    await user.type(screen.getByLabelText('活动领域'), '体能');
+    await fillTaskOption(user, '具体项目', '体能');
     await user.type(screen.getByLabelText('截止日期'), '2026-07-11');
     await user.upload(
       screen.getByLabelText('任务附件'),

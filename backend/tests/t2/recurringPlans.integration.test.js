@@ -25,6 +25,38 @@ const create = async () => {
 };
 const completion = (task, mediaIds = []) => ({ operationId: randomUUID(), expectedCompletionVersion: task.completionVersion,
   expectedChecklistVersion: task.checklistVersion, checkedItemIds: [], completionMediaIds: mediaIds, childNote: 'Synthetic daily work' });
+
+test('common option strings stay literals through ordinary create/read/update; hidden omission does not erase legacy subject', async () => {
+  const body = { childId: fixture.actors.child.childId, title: 'Synthetic custom task', dimension: 'academic',
+    taskType: 'preset:0', area: 'custom', subject: 'Math', dueDate: '2026-11-20' };
+  const task = expectData(await parent.post('/api/growth-tasks', body), 201).task;
+  expect(expectData(await parent.get(url(task))).task).toMatchObject({ taskType: 'preset:0', area: 'custom', subject: 'Math' });
+  expectData(await parent.patch(url(task), { dimension: 'physical', title: 'Synthetic edited custom task' }));
+  expect(expectData(await parent.get(url(task))).task).toMatchObject({ dimension: 'physical', subject: 'Math', taskType: 'preset:0', area: 'custom' });
+  const baseline = await runtime.snapshot();
+  expect((await parent.patch(url(task), { dimension: 'custom' })).status).toBe(400);
+  for (const denied of [child, outsider]) expect((await denied.patch(url(task), { taskType: 'other' })).status).toBe(403);
+  expect(await runtime.snapshot()).toEqual(baseline);
+});
+
+test('common option recurring strings survive original replay and future revision; invalid dimensions and actors still reject', async () => {
+  const body = { operationId: randomUUID(), childId: fixture.actors.child.childId,
+    startDate: formatLocalDate(new Date(), 'Asia/Shanghai'), endDate: null, schedule: { kind: 'daily' },
+    template: { title: 'Synthetic custom plan', dimension: 'physical', taskType: 'other', area: 'custom', subject: 'math' } };
+  const first = expectData(await parent.post('/api/recurring-task-plans', body), 201);
+  expect(expectData(await parent.post('/api/recurring-task-plans', body), 201)).toEqual(first);
+  const daily = expectData(await child.get('/api/growth-tasks/' + first.generatedTaskId)).task;
+  expect(daily).toMatchObject({ taskType: 'other', area: 'custom', subject: 'math' });
+  const patch = { operationId: randomUUID(), expectedVersion: first.plan.version, endDate: null,
+    schedule: { kind: 'daily' }, template: { ...body.template, taskType: '亲子活动', area: '社区观察', subject: 'Math' } };
+  expectData(await parent.patch('/api/recurring-task-plans/' + first.plan.id, patch));
+  const changed = expectData(await parent.get('/api/recurring-task-plans/' + first.plan.id));
+  expect(changed.pendingRevision.template).toMatchObject(patch.template);
+  expect(expectData(await child.get('/api/growth-tasks/' + first.generatedTaskId)).task).toEqual(daily);
+  expect((await parent.post('/api/recurring-task-plans', { ...body, operationId: randomUUID(), template: { ...body.template, dimension: 'other' } })).status).toBe(400);
+  for (const denied of [child, outsider]) expect((await denied.post('/api/recurring-task-plans', { ...body, operationId: randomUUID() })).status).toBe(403);
+  expect(expectData(await parent.get('/api/recurring-task-plans/' + first.plan.id))).toEqual(changed);
+});
 const upload = async () => {
   const form = new FormData(); form.append('purpose', 'task_completion'); form.append('childId', fixture.actors.child.childId);
   form.append('file', new Blob([fixture.image.bytes], { type: fixture.image.mimeType }), fixture.image.name);
