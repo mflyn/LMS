@@ -1,0 +1,478 @@
+diff --git a/frontend/web/src/pages/family/TutorPage.js b/frontend/web/src/pages/family/TutorPage.js
+index 13ef4c87..06dcb930 100644
+--- a/frontend/web/src/pages/family/TutorPage.js
++++ b/frontend/web/src/pages/family/TutorPage.js
+@@ -31,6 +31,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
+   const source = ['task', 'mistake'].includes(sourceType) && oid(sourceId) ? { type: sourceType, id: sourceId } : null;
+   const [detail, setDetail] = useState(null), [cycles, setCycles] = useState([]), [jobs, setJobs] = useState([]);
+   const [page, setPage] = useState(1), [jobsPage, setJobsPage] = useState(1), [error, setError] = useState('');
++  const [readErrors, setReadErrors] = useState({});
+   const [busy, setBusy] = useState(false), [blocked, setBlocked] = useState(false), [loading, setLoading] = useState({});
+   const [form, setForm] = useState(blank), [consent, setConsent] = useState(false);
+   const [revision, setRevision] = useState(''), [reason, setReason] = useState(''), [comment, setComment] = useState('');
+@@ -52,7 +53,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
+     writing.current = false; setBusy(false); setLoading({}); setBlocked(true);
+     setDetail(null); setCycles([]); setJobs([]); setPending(null); setForm(blank()); setRevision(''); setReason('');
+     setComment(''); setChecks(noChecks()); setConsent(false); setCloseReason('');
+-    setError('当前身份无法继续查看这些私有讲解。');
++    setReadErrors({}); setError('当前身份无法继续查看这些私有讲解。');
+   };
+   const refresh = async (kind, requestedPage = 1) => {
+     const generation = epoch.current.value;
+@@ -74,13 +75,15 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
+         if (kind === 'cycles') { setCycles(data.items); setPage(requestedPage); }
+         else { setJobs(data.items); setJobsPage(requestedPage); }
+       }
+-      setBlocked(false); setError('');
++      setBlocked(false); setReadErrors(value => ({ ...value, [kind]: '' }));
+       setPending(readTutorCommand(scope, session));
+     } catch (cause) {
+       if (!current(generation)) return;
+       // A current-identity denial invalidates ALL private reads, including an earlier in-flight detail request.
+       if ([401, 403].includes(cause?.response?.status)) { deny(); return; }
+-      if (requests.current[kind] === request && cause?.code !== 'ERR_CANCELED') setError(message(cause));
++      if (requests.current[kind] === request && cause?.code !== 'ERR_CANCELED') {
++        setReadErrors(value => ({ ...value, [kind]: message(cause) }));
++      }
+     } finally {
+       if (current(generation) && requests.current[kind] === request) setLoading(value => ({ ...value, [kind]: false }));
+     }
+@@ -142,8 +145,13 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
+   return <section className="family-page tutor-page" aria-labelledby="tutor-title">
+     <div className="family-page-heading"><div><h1 id="tutor-title">家长讲解备课</h1><p>仅供家长备课，未经人工核验不可使用。</p></div>
+       <button type="button" className="family-button secondary" aria-label="刷新记录" onClick={() => { refresh('cycles', page); refresh('jobs', jobsPage); }}><ReloadOutlined /> 刷新记录</button></div>
+-    {error && <p className="family-form-error" role="alert">{error}</p>}
+-    {!blocked && pending && <div role="status"><p>{pending.corrupt ? '本地命令损坏，已阻止新写入。重新登录后请核对服务端记录。' : '有待核对的原命令，不会自动再次发送。'}</p>
++    {(error || Object.values(readErrors).some(Boolean)) && <div className="family-form-error" role="alert">
++      {error && <p>{error}</p>}
++      {Object.entries({ cycles: '讲解记录', jobs: '本人待处理任务', detail: '讲解详情' }).map(([kind, label]) =>
++        readErrors[kind] && <p key={kind}>{label}读取失败：{readErrors[kind]}</p>)}
++    </div>}
++    {!blocked && pending && <div role="status"><p>{pending.corrupt ? '本地命令损坏，已阻止新写入。重新登录后请核对服务端记录。'
++      : busy ? (pending.action === 'create' ? '正在创建外发预览。' : '正在处理原命令。') : '有待核对的原命令，不会自动再次发送。'}</p>
+       {!pending.corrupt && <button type="button" className="family-button secondary" disabled={busy} onClick={() => execute(pending)}>重试原命令</button>}</div>}
+     {!blocked && source && !selectedId && <form onSubmit={create}>
+       <h2>{source.type === 'task' ? '任务来源' : '错题来源'} · 四年级上册数学</h2><p>章节：多位数乘两位数（家长声明）</p>
+diff --git a/frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js b/frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js
+new file mode 100644
+index 00000000..7aacc392
+--- /dev/null
++++ b/frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js
+@@ -0,0 +1,174 @@
++import React from 'react';
++import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
++import { MemoryRouter } from 'react-router-dom';
++import TutorPage from '../../pages/family/TutorPage';
++import { tutorApi } from '../../services/tutorApi';
++import { saveParentSession, clearParentSession, captureSession } from '../../services/familySession';
++import { readTutorCommand, tutorCommandKey } from '../../services/tutorCommands';
++import { resetChildScope } from '../../services/childScope';
++
++jest.mock('../../services/tutorApi', () => ({ tutorApi: Object.fromEntries(
++  ['cycles', 'jobs', 'detail', 'job', 'artifact', 'create', 'generate', 'recover', 'revise', 'review', 'close'].map(k => [k, jest.fn()])) }));
++let mockChildId = 'c'.repeat(24);
++jest.mock('../../contexts/FamilyContext', () => ({ useFamily: () => ({
++  family: { familyId: 'b'.repeat(24) }, selectedChildId: mockChildId, childScopeVersion: 1 }) }));
++const actor = 'a'.repeat(24), childId = 'c'.repeat(24), cycleId = 'd'.repeat(24), sourceId = 'e'.repeat(24);
++const scope = { familyId: 'b'.repeat(24), childId };
++const rejection = (status, code) => ({ response: { status, data: { success: false, error: { code } } } });
++const disabled = rejection(503, 'AI_DISABLED');
++const preview = { generationInputHash: 'f'.repeat(64), modelProfileVersion: 'synthetic-model', pricingProfileVersion: 'synthetic-price',
++  messages: [{ role: 'system', content: '完整合成系统提示' }, { role: 'user', content: '完整合成题目' }], reservedCeilingMicros: 184320,
++  sendNotAfter: '2099-01-01T00:00:00.000Z', requestOptions: { model: 'synthetic-only', maxInputTokens: 8192, maxOutputTokens: 4096 } };
++const cycle = { id: cycleId, childId, status: 'ready', stateVersion: 1, source: { type: 'task', id: sourceId }, createdBy: actor };
++const detail = { cycle, preview, artifacts: [], job: null };
++const deferred = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
++const original = () => readTutorCommand(scope, captureSession('parent'));
++const show = (query = `sourceType=task&sourceId=${sourceId}&childId=${childId}`) => render(
++  <MemoryRouter initialEntries={[`/app/tutor?${query}`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><TutorPage /></MemoryRouter>);
++const create = async () => {
++  fireEvent.change(screen.getByLabelText('题目文字'), { target: { value: '合成数学测试：12乘以3。' } });
++  fireEvent.click(screen.getByLabelText('已核对文字，不含个人信息或链接'));
++  fireEvent.click(screen.getByRole('button', { name: '创建外发预览' }));
++  await waitFor(() => expect(tutorApi.create).toHaveBeenCalledTimes(1));
++};
++beforeEach(() => {
++  jest.resetAllMocks(); mockChildId = childId; localStorage.clear(); sessionStorage.clear();
++  saveParentSession({ token: 'synthetic-only', user: { id: actor, role: 'parent' } });
++  tutorApi.cycles.mockResolvedValue({ items: [] }); tutorApi.jobs.mockResolvedValue({ items: [] });
++  tutorApi.create.mockRejectedValue(disabled); tutorApi.detail.mockResolvedValue(detail);
++});
++
++test('settled lists before disabled create retain the rejection and original command', async () => {
++  show(); await screen.findByText('暂无讲解记录'); await screen.findByText('暂无待处理任务');
++  await create(); await screen.findByText('AI 生成尚未启用。');
++  expect(screen.getByRole('alert')).toHaveTextContent('AI 生成尚未启用。');
++  expect(original().action).toBe('create'); expect(tutorApi.generate).not.toHaveBeenCalled();
++});
++
++test('both late lists cannot erase the already displayed disabled-create rejection', async () => {
++  const cycles = deferred(), jobs = deferred();
++  tutorApi.cycles.mockReturnValue(cycles.promise); tutorApi.jobs.mockReturnValue(jobs.promise);
++  const view = show();
++  try {
++    await create(); await screen.findByText('AI 生成尚未启用。'); const saved = original();
++    await act(async () => { cycles.resolve({ items: [] }); jobs.resolve({ items: [] }); });
++    await screen.findByText('暂无讲解记录');
++    expect(tutorApi.create).toHaveBeenCalledTimes(1); expect(tutorApi.generate).not.toHaveBeenCalled();
++    expect(original()).toEqual(saved);
++    expect(screen.queryByRole('alert')).toHaveTextContent('AI 生成尚未启用。');
++  } finally { view.unmount(); cycles.resolve({ items: [] }); jobs.resolve({ items: [] }); }
++});
++
++test.each(['cycles', 'jobs'].flatMap(kind => ['disabled', 'network'].map(failure => [kind, failure])))(
++  'late %s success preserves %s create feedback and exact command', async (kind, failure) => {
++    const read = deferred(); tutorApi[kind].mockReturnValueOnce(read.promise);
++    if (failure === 'network') tutorApi.create.mockRejectedValue(new Error('lost response'));
++    const view = show();
++    try {
++      await create(); const alert = await screen.findByRole('alert'), text = alert.textContent, saved = original();
++      expect(text).toContain(failure === 'disabled' ? 'AI 生成尚未启用。' : '本次结果暂未确认');
++      await act(async () => read.resolve({ items: [] }));
++      expect(screen.getByRole('alert')).toHaveTextContent(text); expect(original()).toEqual(saved);
++      expect(screen.getByRole('button', { name: '创建外发预览' })).toBeDisabled();
++      expect(screen.getByRole('button', { name: '重试原命令' })).toBeEnabled();
++      expect(tutorApi.create).toHaveBeenCalledTimes(1); expect(tutorApi.generate).not.toHaveBeenCalled();
++      view.unmount(); show(); await screen.findByRole('button', { name: '重试原命令' });
++      expect(original()).toEqual(saved); expect(tutorApi.create).toHaveBeenCalledTimes(1);
++    } finally { view.unmount(); read.resolve({ items: [] }); }
++  });
++
++test('pending create is visibly in progress and successful create navigates to full detail without generation', async () => {
++  const write = deferred(); tutorApi.create.mockReturnValue(write.promise); show(); await create();
++  expect(screen.getByText('正在创建外发预览。')).toBeInTheDocument();
++  expect(screen.getByRole('button', { name: '重试原命令' })).toBeDisabled();
++  expect(original().body).toEqual(tutorApi.create.mock.calls[0][0]);
++  await act(async () => write.resolve({ cycle, preview }));
++  const full = await screen.findByRole('region', { name: '完整外发预览' });
++  for (const m of preview.messages) expect(within(full).getByText(m.content)).toBeInTheDocument();
++  expect(full).toHaveTextContent('0.184320 元'); expect(full).toHaveTextContent('synthetic-model');
++  expect(full).toHaveTextContent('synthetic-price'); expect(full).toHaveTextContent(preview.sendNotAfter);
++  expect(full).toHaveTextContent('8192 tokens'); expect(full).toHaveTextContent('4096 tokens');
++  expect(tutorApi.detail).toHaveBeenCalledWith(cycleId, expect.any(Object));
++  expect(original()).toBeNull(); expect(screen.queryByRole('alert')).not.toBeInTheDocument();
++  expect(tutorApi.create).toHaveBeenCalledTimes(1); expect(tutorApi.generate).not.toHaveBeenCalled();
++  expect(screen.getByRole('button', { name: '生成候选讲解' })).toBeDisabled();
++});
++
++test.each(['cycles', 'jobs'])('late %s cannot erase detail failure after committed create; detail retry only reads', async kind => {
++  const read = deferred(); tutorApi.create.mockResolvedValue({ cycle, preview });
++  tutorApi.detail.mockRejectedValueOnce(new Error('detail unavailable'));
++  tutorApi[kind].mockReturnValue(read.promise); const view = show();
++  try {
++    await create(); await screen.findByRole('button', { name: '刷新详情' });
++    const text = (await screen.findByRole('alert')).textContent;
++    await act(async () => read.resolve({ items: [] }));
++    expect(screen.getByRole('alert')).toHaveTextContent(text); expect(original()).toBeNull();
++    expect(screen.queryByRole('region', { name: '完整外发预览' })).not.toBeInTheDocument();
++    fireEvent.click(screen.getByRole('button', { name: '刷新详情' }));
++    await screen.findByRole('region', { name: '完整外发预览' });
++    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
++    expect(tutorApi.detail).toHaveBeenCalledTimes(2); expect(tutorApi.create).toHaveBeenCalledTimes(1);
++    expect(tutorApi.generate).not.toHaveBeenCalled();
++  } finally { view.unmount(); read.resolve({ items: [] }); }
++});
++
++test('each successful read clears only its own failure, not another list or detail error', async () => {
++  const jobs = deferred(); tutorApi.jobs.mockReturnValueOnce(jobs.promise);
++  tutorApi.cycles.mockRejectedValueOnce(rejection(503, 'AI_STORE_ISOLATED'));
++  tutorApi.detail.mockRejectedValueOnce(rejection(503, 'AI_PROFILE_UNAVAILABLE'));
++  show(`cycleId=${cycleId}&childId=${childId}`);
++  await screen.findByText(/存储连续性待核对/); await screen.findByText(/价格或模型配置暂不可用/);
++  await act(async () => jobs.resolve({ items: [] }));
++  expect(screen.getByRole('alert')).toHaveTextContent('存储连续性待核对');
++  expect(screen.getByRole('alert')).toHaveTextContent('价格或模型配置暂不可用');
++  fireEvent.click(screen.getByRole('button', { name: '刷新详情' })); await screen.findByText('完整合成系统提示');
++  expect(screen.getByRole('alert')).toHaveTextContent('存储连续性待核对');
++  expect(screen.getByRole('alert')).not.toHaveTextContent('价格或模型配置暂不可用');
++  fireEvent.click(screen.getByRole('button', { name: '刷新记录' }));
++  await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
++  expect(tutorApi.create).not.toHaveBeenCalled(); expect(tutorApi.generate).not.toHaveBeenCalled();
++});
++
++test('successful record refresh clears only the read failure while unknown create stays locked to the original command', async () => {
++  show(); await screen.findByText('暂无讲解记录'); await create();
++  await screen.findByText('AI 生成尚未启用。'); const saved = original();
++  tutorApi.cycles.mockRejectedValueOnce(rejection(503, 'AI_STORE_ISOLATED'));
++  fireEvent.click(screen.getByRole('button', { name: '刷新记录' }));
++  await screen.findByText(/讲解记录读取失败/);
++  expect(screen.getByRole('alert').querySelectorAll('p')).toHaveLength(2);
++  fireEvent.click(screen.getByRole('button', { name: '刷新记录' }));
++  await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('AI 生成尚未启用。'));
++  expect(original()).toEqual(saved); expect(tutorApi.create).toHaveBeenCalledTimes(1);
++  expect(tutorApi.generate).not.toHaveBeenCalled();
++  expect(screen.getByRole('button', { name: '创建外发预览' })).toBeDisabled();
++  expect(screen.getByRole('button', { name: '重试原命令' })).toBeEnabled();
++});
++
++test.each([401, 403])('current %s rejects private UI and invalidates late list and create success without finishing command', async status => {
++  const write = deferred(), jobs = deferred(); tutorApi.create.mockReturnValue(write.promise); tutorApi.jobs.mockReturnValue(jobs.promise);
++  show(); await create(); const saved = original();
++  tutorApi.cycles.mockRejectedValueOnce(rejection(status, 'FORBIDDEN'));
++  fireEvent.click(screen.getByRole('button', { name: '刷新记录' })); await screen.findByText('当前身份无法继续查看这些私有讲解。');
++  await act(async () => { write.resolve({ cycle, preview }); jobs.resolve({ items: [cycle] }); });
++  expect(screen.getByRole('alert')).toHaveTextContent('当前身份无法继续查看这些私有讲解。');
++  expect(screen.queryByLabelText('题目文字')).not.toBeInTheDocument();
++  expect(screen.queryByRole('region', { name: '完整外发预览' })).not.toBeInTheDocument();
++  expect(original()).toEqual(saved); expect(tutorApi.detail).not.toHaveBeenCalled();
++  expect(tutorApi.create).toHaveBeenCalledTimes(1); expect(tutorApi.generate).not.toHaveBeenCalled();
++});
++
++test.each(['logout', 'child'])('%s clears draft and late create cannot navigate or recreate original command', async mode => {
++  const write = deferred(); tutorApi.create.mockReturnValue(write.promise); show(); await create();
++  const oldSession = captureSession('parent'), key = tutorCommandKey(scope, oldSession);
++  act(() => {
++    if (mode === 'logout') clearParentSession();
++    else { mockChildId = '9'.repeat(24); resetChildScope({ previousChildId: childId, nextChildId: mockChildId }); }
++  });
++  await act(async () => write.resolve({ cycle, preview }));
++  expect(screen.queryByLabelText('题目文字')).not.toBeInTheDocument();
++  expect(screen.queryByRole('region', { name: '完整外发预览' })).not.toBeInTheDocument();
++  expect(sessionStorage.getItem(key)).toBeNull();
++  if (mode === 'logout') expect(() => readTutorCommand(scope, oldSession)).toThrow('Session changed');
++  else expect(readTutorCommand(scope, oldSession)).toBeNull();
++  expect(tutorApi.detail).not.toHaveBeenCalled(); expect(tutorApi.generate).not.toHaveBeenCalled();
++});
+diff --git a/tests/e2e/t2/ai1FormalPage.spec.js b/tests/e2e/t2/ai1FormalPage.spec.js
+index 6a88dcd6..cace20f0 100644
+--- a/tests/e2e/t2/ai1FormalPage.spec.js
++++ b/tests/e2e/t2/ai1FormalPage.spec.js
+@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
+ const express = require('express');
+ const { createHash } = require('crypto');
+ const { createT2WebRuntime } = require('./webRuntime');
++const { openParentTasks } = require('./parentNavigation');
+ const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
+ 
+ // Real LMS services and login; only the external operation protocol is a double. No Provider exists here.
+@@ -131,6 +132,83 @@ async function capture(page, info, name) {
+   await page.screenshot({ path: info.outputPath(name), fullPage: true });
+ }
+ 
++for (const lost of ['create', 'detail']) test(`AI1 formal preview feedback survives late lists after lost ${lost} response`, async ({ page }, info) => {
++  const seen = await observe(page);
++  await login(page);
++  await openParentTasks(page, runtime.webUrl);
++  await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
++  let release, injected = false, created;
++  const held = new Promise(resolve => { release = resolve; }), handlers = [], failures = [], waitingLists = new Set();
++  const interceptor = async route => {
++    const request = route.request(), url = new URL(request.url());
++    const list = request.method() === 'GET' && ['/api/tutor-cycles', '/api/tutor-jobs'].includes(url.pathname);
++    const loseCreate = lost === 'create' && request.method() === 'POST' && url.pathname === '/api/tutor-cycles';
++    const loseDetail = lost === 'detail' && request.method() === 'GET' && /^\/api\/tutor-cycles\/[a-f0-9]{24}$/.test(url.pathname);
++    if (!list && !loseCreate && !loseDetail) return route.fallback();
++    let finish;
++    handlers.push(new Promise(resolve => { finish = resolve; }));
++    try {
++      const response = await route.fetch();
++      if (list) {
++        expect(response.status()).toBe(200); waitingLists.add(url.pathname);
++        await held; return await route.fulfill({ response });
++      }
++      if (injected) return await route.fulfill({ response });
++      expect(response.status()).toBe(loseCreate ? 201 : 200);
++      const data = (await response.json()).data; created = data.cycle;
++      expect(created.childId).toBe(fixture.actors.child.childId);
++      expect(data.preview.messages).toHaveLength(2); injected = true;
++      // The real service committed/read successfully. Replace only its response with a controlled transport failure.
++      return await route.fulfill({ status: 503, contentType: 'application/json',
++        body: JSON.stringify({ success: false, error: { code: 'SERVICE_UNAVAILABLE' } }) });
++    } catch (error) { failures.push(error); throw error; }
++    finally { finish(); }
++  };
++  await page.route('**/api/tutor-**', interceptor);
++  try {
++    await page.getByRole('link', { name: '准备讲解', exact: true }).click();
++    await page.getByLabel('题目文字', { exact: true }).fill('Explain 206 * 30.');
++    await page.getByLabel('已核对文字，不含个人信息或链接').check();
++    await page.getByRole('button', { name: '创建外发预览', exact: true }).click();
++    await expect(page.getByRole('alert')).toContainText('本次结果暂未确认');
++    expect(injected).toBe(true);
++    const command = await page.evaluate(() => Object.entries(sessionStorage).filter(([key]) => key.startsWith('family-growth.ai1-command.v1:')));
++    expect(command).toHaveLength(lost === 'create' ? 1 : 0);
++    await expect.poll(() => [...waitingLists].sort()).toEqual(['/api/tutor-cycles', '/api/tutor-jobs']);
++    release(); await Promise.all(handlers);
++    await expect(page.getByText('正在读取', { exact: true })).toHaveCount(0);
++    await expect(page.getByRole('alert')).toContainText('本次结果暂未确认');
++    expect(await page.evaluate(() => Object.entries(sessionStorage).filter(([key]) => key.startsWith('family-growth.ai1-command.v1:')))).toEqual(command);
++    expect(seen.writes).toHaveLength(1); expect(remote.puts).toEqual([]); expect(remote.gets).toEqual([]);
++    await expect(page.getByRole('region', { name: '完整外发预览' })).toHaveCount(0);
++    await capture(page, info, `preview-${lost}-feedback.png`);
++    if (lost === 'create') {
++      await expect(page.getByRole('button', { name: '创建外发预览' })).toBeDisabled();
++      await page.getByRole('button', { name: '重试原命令' }).click();
++    } else await page.getByRole('button', { name: '刷新详情' }).click();
++    const full = page.getByRole('region', { name: '完整外发预览' });
++    await expect(full).toBeVisible(); await expect(page.getByRole('alert')).toHaveCount(0);
++    const actual = expectData(await parent.get(`/api/tutor-cycles/${created.id}`));
++    expect(await full.locator('pre').allTextContents()).toEqual(actual.preview.messages.map(m => m.content));
++    await expect(full).toContainText(actual.preview.modelProfileVersion);
++    await expect(full).toContainText(actual.preview.pricingProfileVersion);
++    await expect(full).toContainText(actual.preview.sendNotAfter);
++    await expect(full).toContainText('费用上界 0.184320 元');
++    await expect(full).toContainText('输入上限 8192 tokens'); await expect(full).toContainText('输出上限 4096 tokens');
++    expect(seen.writes).toHaveLength(lost === 'create' ? 2 : 1);
++    if (lost === 'create') expect(seen.writes[1]).toEqual(seen.writes[0]);
++    expect(actual.job).toBeNull(); expect(actual.artifacts).toEqual([]);
++    expect(remote.puts).toEqual([]); expect(remote.gets).toEqual([]);
++    expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
++    expect(seen.console).toHaveLength(1); expect(seen.console[0]).toContain('503');
++    await expect(page.getByRole('button', { name: '生成候选讲解' })).toBeDisabled();
++    await capture(page, info, `preview-${lost}-recovered.png`);
++  } finally {
++    release(); await Promise.all(handlers); await page.unroute('**/api/tutor-**', interceptor);
++    expect(failures).toEqual([]);
++  }
++});
++
+ async function assertPrivateVersions(cycleId) {
+   const detail = expectData(await parent.get(`/api/tutor-cycles/${cycleId}`));
+   const paths = [`/api/tutor-cycles/${cycleId}`, `/api/tutor-jobs/${detail.job.id}`,
+@@ -491,7 +569,10 @@ test('AI1 formal network refresh failure retains unknown command until explicit
+   const failed = page.waitForEvent('requestfailed', { predicate: request => new URL(request.url()).pathname === detailPath });
+   await page.getByRole('button', { name: '刷新详情', exact: true }).click();
+   expect((await failed).failure().errorText).toBe('net::ERR_FAILED');
+-  await expect(page.getByRole('alert')).toHaveText('本次结果暂未确认，请保留原命令并显式核对。');
++  await expect(page.getByRole('alert').locator('p')).toHaveText([
++    '本次结果暂未确认，请保留原命令并显式核对。',
++    '讲解详情读取失败：本次结果暂未确认，请保留原命令并显式核对。'
++  ]);
+   await expect(page.getByRole('region', { name: '讲解详情', exact: true })).toBeVisible();
+   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
+   expect(await commands()).toEqual(saved); expect(seen.writes).toHaveLength(2);
+@@ -500,7 +581,8 @@ test('AI1 formal network refresh failure retains unknown command until explicit
+   await page.unroute(`**${detailPath}`, failRead);
+   const read = page.waitForResponse(r => new URL(r.url()).pathname === detailPath && r.status() === 200);
+   await page.getByRole('button', { name: '刷新详情', exact: true }).click(); await read;
+-  await expect(page.getByRole('alert')).toHaveCount(0);
++  // A successful GET clears its read error, not the unresolved generation result.
++  await expect(page.getByRole('alert').locator('p')).toHaveText(['本次结果暂未确认，请保留原命令并显式核对。']);
+   expect(await commands()).toEqual(saved); expect(seen.writes).toHaveLength(2); expect(remote.gets).toEqual([]);
+   await page.getByRole('button', { name: '重试原命令', exact: true }).click();
+   await expect(page.getByText(generated, { exact: true })).toBeVisible();
+diff --git a/docs/development/family-ai1-test-plan.md b/docs/development/family-ai1-test-plan.md
+index e165d3eb..05ad7d2f 100644
+--- a/docs/development/family-ai1-test-plan.md
++++ b/docs/development/family-ai1-test-plan.md
+@@ -561,3 +561,27 @@ DeepTutor交付使用用户随后明确批准创建的公开fork mflyn/DeepTutor
+ CI只执行测试，不启用性能/安全外部扫描、镜像发布或部署。CI与本地结果按实际范围记录。
+ B/D/AI-1 OPEN、历史失败、DEVICE_PENDING及全部未关闭/后置状态保持，不能将PR创建当总验收通过。
+ 本轮交付范围、基线、公开检查及验证索引见[双仓交付记录](evidence/ai1-delivery-20261102/README.md)。
++
++## 18. 外发预览反馈隔离修订（2026-11-16）
++
++`QA-AI1-PREVIEW-FEEDBACK-001`：本机已确认列表晚成功清掉创建错误的P2。
++当前为限定本地修订候选，待测试/评审线程独立复评及用户验收，不提前关闭；
++iPad原请求仍为 `REAL_REQUEST_EVIDENCE_PENDING`，不能将合成503当作真实响应。
++[本轮核实、最小方案、红绿记录及证据入口](evidence/ai1-preview-feedback-20261116/README.md)。
++
++| 永久用例 | 保护点 |
++| --- | --- |
++| FEEDBACK-01 | 原独立顺序对照：列表先完成正常；创建拒绝后两列表晚成功不清写错误 |
++| FEEDBACK-02 | cycles/jobs各自晚成功、503 AI_DISABLED/网络未知均保留可见错误及精确原命令；重挂载不自动POST |
++| FEEDBACK-03 | 创建中有可见状态；合法创建只POST一次，导航详情并展示完整文字、模型、价格版本、费用、期限及上限，零自动生成 |
++| FEEDBACK-04 | 创建成功后的详情失败遇晚列表仍可见；详情重读只清详情错误，不清另一读取错误 |
++| FEEDBACK-05 | 当前401/403清私有界面并隔离迟到成功；退出/换孩子清草稿，旧会话拒绝，旧成功不恢复界面或命令 |
++| FEEDBACK-06 | 正式应用真实创建/详情成功后丢响应，明确等到两类列表响应及界面读取结束再断言；恢复只重试原创建或只GET详情，零远端生成 |
++| FEEDBACK-07 | 写错误与读错误同时存在后，成功GET仅清自身读错误；未知写提示、原命令及新建锁保留，原命令显式重试才继续 |
++
++复用现有组件测试和 `ai1FormalPage.spec.js`，原命令/业务/请求次数断言、原预算、workers=1/retries=0均保留。
++旧网络刷新用例两处全局提示断言改为精确读写分离断言，失败归因与旧日志均保留，不以删除断言或放宽匹配通过。
++不修改 `isDefinitiveTutorRejection`、完整回执校验、费用配置、身份epoch或原命令存储；
++AI_DISABLED/基础设施503仍不证明未提交，不清命令、不换UUID、不自动发送。
++开发实跑与独立验收分开记录；真人/真机待验、历史失败、T4/T8/AI-1 OPEN、
++SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED及全部后置范围不变。
+diff --git a/docs/development/evidence/ai1-preview-feedback-20261116/README.md b/docs/development/evidence/ai1-preview-feedback-20261116/README.md
+new file mode 100644
+index 00000000..e00613e0
+--- /dev/null
++++ b/docs/development/evidence/ai1-preview-feedback-20261116/README.md
+@@ -0,0 +1,87 @@
++# AI-1 外发预览反馈 P2 本地修订候选
++
++日期：2026-11-16。基线：`9e97aa58d0dc98aaae0af14b18d586c733f87ef9`。
++问题 `QA-AI1-PREVIEW-FEEDBACK-001` 状态：LOCAL_FIX_PENDING_INDEPENDENT_REVIEW，不关闭。
++真实事件：REAL_REQUEST_EVIDENCE_PENDING；真人/真机验收不随本地验证完成。
++
++## 先核实，再方案和自审
++
++原独立证据目录标识 `ipad-tutor-preview-diagnosis-2026-11-16`，原生Jest为1通过/1失败、exit1；
++不是包装器返回0就全绿。原反例SHA256 `cdaf68cf9064784da8058a5bd9c259d0abe7cf523971af42b42f16d1ae09a7ec`，
++原results.json SHA256 `e250f833e9f947f6435639aefc8d2d732653782bc200448bba53485be04eb1f0`。
++已核对原5份相关源码与当前基线一致，未覆盖原文件或将原红灯改绿。
++
++原事件仅知用户在iPad/Ubuntu内网HTTPS、北京时间下午3点多、另一条数学任务点击创建预览。
++没有原POST/详情GET的状态、错误码、cycle关联、完整预览/费用字段或真实发送证据。
++本轮只读已有本地报告及元数据，没有新的Network记录可用；未连接服务器、代发POST或猜测ID。
++不能据旧配置AI off认定本次503，也不能据点击预览认定已调用模型或产生费用。
++后续安全补证仅取原Network/已有脱敏日志的请求类别、状态、错误码、字段存在性和同一请求关联，
++不索取正文/Token/完整storage，不为补证再次创建、启用AI或清原命令；服务器取证另需明确授权。
++
++最小方案在编码前自审：`TutorPage`的写错误独立保留，cycles/jobs/detail读错误各自归属；
++某读取成功只能清本类读错误。权限拒绝仍用原epoch失效全部在途读取/写入并清私有界面，
++退出/切换由既有会话生命周期清理；创建中显示状态。没有新API、费用模型或通用恢复框架。
++风险是误清另一操作错误或拒绝后的迟到响应复活，分别以顺序反例和原权限套件保护。
++回滚只撤销本批页面增量并保留证据；不迁移数据、不处理现有实例或已保存命令。
++
++## 实现及永久保护
++
++- 业务修订仅 `frontend/web/src/pages/family/TutorPage.js`；不改变原UUID/正文、确定拒绝清理规则、响应校验或费用/人工同意边界。
++- 新组件反例 `TutorPreviewFeedback.test.js` 纳入现有Jest发现入口；原 `TutorPage.test.js` 未删断言。
++- 原 `tests/e2e/t2/ai1FormalPage.spec.js` 增加创建/详情丢响应两项。旧网络刷新用例的命令、请求次数、远端次数、服务端详情不变和显式重试断言保留；两处提示断言按本次读写分离契约更新，见下方失败归因。
++- 矩阵见[测试方案§18](../../family-ai1-test-plan.md)。固定候选以本地证据包的patch及逐文件SHA绑定，不以未提交HEAD冒充完整候选。
++
++## 分批验证
++
++证据包标识：`ai1-preview-feedback-fix-20261116`。日志、JSON、命令/退出码回执和截图均留在本地受保护目录，不包含用户真实请求内容。
++
++| 批次 | 当前结果 | 边界 |
++| --- | --- | --- |
++| 新反例首轮红灯 | 14项：4通过/10失败，exit1 | 9项反馈缺陷；另1项测试误用已退出会话读取命令，原失败保留 |
++| 修正测试契约后红灯 | 14项：5通过/9失败，exit1 | 直接核对存储键清除并保留旧会话拒绝断言，没有修改产品来迎合夹具 |
++| 修复后定向 | 2套件37项，exit0 | 新14项及原TutorPage23项 |
++| 相关组件回归 | 8套件162项，exit0 | 含AI1客户端、AI2页面、会话和孩子scope；不是全项目前端回归 |
++| 构建及局部lint | exit0 | 使用已有依赖，不升级；Browserslist/CRA等原警告保留 |
++| 正式Chromium新增专项 | 2项，exit0 | 后续补强列表已完成的屏障另验；不是独立复验 |
++| Chromium相关首轮 | 19项：18通过/1失败，exit1 | 旧网络刷新用例期待全局清错，与本次修订契约冲突；原日志与截图保留 |
++| 最终相关组件回归 | 8套件163项，exit0 | 新增第15项固定同屏读写错误恢复；既有148项通过，不冒充一次全量全绿 |
++| Chromium相关修订后 | 19项通过，exit0 | 两处提示断言改为读写分离后；最终新增用例导航接线前的测试快照，产品源码相同 |
++| WebKit相关首轮 | 19项：4通过/15失败，exit1 | 页面离开首页的在途请求错误，以及旧用例Chromium专属取消文本断言；失败保留，未过滤或放宽 |
++| 最终新增专项 | Chromium 2项、WebKit 2项，分别exit0 | 新增用例复用既有openParentTasks真实导航；不是旧19项WebKit全绿，也不是真机验收 |
++| 文档校验 | 指定已有NODE_PATH后exit0 | 首次直接调用因缺dotenv退出1；未安装依赖或改校验器 |
++
++Chromium首轮失败实际收到“未知写入提示＋详情读取失败”，旧断言只期待单条提示，随后还期待GET成功后零提示。
++该旧行为恰是本次需要禁止的全局清错。没有修改产品迎合旧断言，也未改为宽松包含判断：
++现在精确断言失败时两条提示、成功GET后仅剩未知写提示；原命令精确相等、零额外POST/远端查询及原UUID重试保护不变。
++新增组件反例覆盖同屏创建拒绝及记录读取失败，读取恢复只消除自身错误，新建保持锁定。
++此断言语义更新须独立复评确认；首轮失败不追改为通过。
++
++WebKit首轮失败证据表明：新增两项以及部分旧用例在硬导航离开首页后记录到
++`daily-learning-plans`的access-control pageerror；另有旧用例期待`net::ERR_ABORTED`/`net::ERR_FAILED`，
++实际为`cancelled`/`Blocked by Web Inspector`。本次只把新增两项的任务入口换成既有`openParentTasks`，
++保留原零pageerror、精确响应和请求次数断言；两项专项通过。未修改其余旧用例的导航或引擎文本断言，
++未重跑到绿，也未据此宣称旧问题已解决或与本次业务修改无关；旧套件兼容性归因及处置留给独立复评。
++
++实际命令由各`*-receipt.json`保存：组件使用原react-scripts test（runInBand），构建用原build入口，
++浏览器使用原Playwright配置，WebKit只覆盖browserName和绝对testDir。
++最终新增专项使用`ai1FormalPage.spec.js --grep 'preview feedback survives'`，明确仅2项，不代替相关19项。
++局部eslint覆盖三份JS；文档使用`NODE_PATH=<已有依赖>/node_modules node scripts/check-family-docs.js`。
++
++开发自查：产品增量仅分离错误归属和创建进度文案；刷新未增加写调用，503仍保留原命令，
++权限拒绝仍先失效epoch并清私有界面，错误文字来自既有固定映射，不回显后端原始错误或题目正文。
++相关组件覆盖迟到响应/身份切换，正式HTTP覆盖丢响应后显式原命令重试及零自动生成。
++浏览器Fixture的异常关闭反例在两引擎均通过，验证HTTP监听关闭和环境恢复；各运行进程正常退出。
++仅本轮临时服务按既有stop入口收尾，测试副本/日志保留供复验，原始仓库与真人入口未修改。
++未发现需扩大本次产品修订的自查问题；这不是独立复评无问题结论，WebKit相关失败及原事件缺证仍保留。
++
++正式浏览器复用Gateway及既有正式服务、临时Mongo副本集/私有存储，远端operation仅回环替身，无Provider；
++新增两项服务真实成功后仅替换响应为合成503，不能当作iPad原错误码。原 `ai1ParentPage.spec.js` 为全API替身，单独标识。
++本轮不运行ActualRemote/RestoreRemote acceptance入口。Browser插件未提供，复用既有Playwright；
++原120秒用例/10秒断言/15秒动作预算及串行、零重试不变。
++
++## 评审与保持状态
++
++开发自查和测试不等于独立验收；固定候选交测试/评审线程重跑相关反例和Chromium/WebKit后，再由用户决定。
++本次P2、真实事件根因、DEVICE_PENDING/MANUAL_PENDING、T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、
++Docker INCOMPLETE_FAILED、非阻断补测及全部后置状态均不提前关闭。
++不调用真实模型、不操作服务器、不改配置/数据库、不重启入口、不提交推送/合并/部署；旧数据及旧命令现场不变。

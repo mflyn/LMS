@@ -31,6 +31,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
   const source = ['task', 'mistake'].includes(sourceType) && oid(sourceId) ? { type: sourceType, id: sourceId } : null;
   const [detail, setDetail] = useState(null), [cycles, setCycles] = useState([]), [jobs, setJobs] = useState([]);
   const [page, setPage] = useState(1), [jobsPage, setJobsPage] = useState(1), [error, setError] = useState('');
+  const [readErrors, setReadErrors] = useState({});
   const [busy, setBusy] = useState(false), [blocked, setBlocked] = useState(false), [loading, setLoading] = useState({});
   const [form, setForm] = useState(blank), [consent, setConsent] = useState(false);
   const [revision, setRevision] = useState(''), [reason, setReason] = useState(''), [comment, setComment] = useState('');
@@ -52,7 +53,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
     writing.current = false; setBusy(false); setLoading({}); setBlocked(true);
     setDetail(null); setCycles([]); setJobs([]); setPending(null); setForm(blank()); setRevision(''); setReason('');
     setComment(''); setChecks(noChecks()); setConsent(false); setCloseReason('');
-    setError('当前身份无法继续查看这些私有讲解。');
+    setReadErrors({}); setError('当前身份无法继续查看这些私有讲解。');
   };
   const refresh = async (kind, requestedPage = 1) => {
     const generation = epoch.current.value;
@@ -74,13 +75,15 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
         if (kind === 'cycles') { setCycles(data.items); setPage(requestedPage); }
         else { setJobs(data.items); setJobsPage(requestedPage); }
       }
-      setBlocked(false); setError('');
+      setBlocked(false); setReadErrors(value => ({ ...value, [kind]: '' }));
       setPending(readTutorCommand(scope, session));
     } catch (cause) {
       if (!current(generation)) return;
       // A current-identity denial invalidates ALL private reads, including an earlier in-flight detail request.
       if ([401, 403].includes(cause?.response?.status)) { deny(); return; }
-      if (requests.current[kind] === request && cause?.code !== 'ERR_CANCELED') setError(message(cause));
+      if (requests.current[kind] === request && cause?.code !== 'ERR_CANCELED') {
+        setReadErrors(value => ({ ...value, [kind]: message(cause) }));
+      }
     } finally {
       if (current(generation) && requests.current[kind] === request) setLoading(value => ({ ...value, [kind]: false }));
     }
@@ -142,8 +145,13 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
   return <section className="family-page tutor-page" aria-labelledby="tutor-title">
     <div className="family-page-heading"><div><h1 id="tutor-title">家长讲解备课</h1><p>仅供家长备课，未经人工核验不可使用。</p></div>
       <button type="button" className="family-button secondary" aria-label="刷新记录" onClick={() => { refresh('cycles', page); refresh('jobs', jobsPage); }}><ReloadOutlined /> 刷新记录</button></div>
-    {error && <p className="family-form-error" role="alert">{error}</p>}
-    {!blocked && pending && <div role="status"><p>{pending.corrupt ? '本地命令损坏，已阻止新写入。重新登录后请核对服务端记录。' : '有待核对的原命令，不会自动再次发送。'}</p>
+    {(error || Object.values(readErrors).some(Boolean)) && <div className="family-form-error" role="alert">
+      {error && <p>{error}</p>}
+      {Object.entries({ cycles: '讲解记录', jobs: '本人待处理任务', detail: '讲解详情' }).map(([kind, label]) =>
+        readErrors[kind] && <p key={kind}>{label}读取失败：{readErrors[kind]}</p>)}
+    </div>}
+    {!blocked && pending && <div role="status"><p>{pending.corrupt ? '本地命令损坏，已阻止新写入。重新登录后请核对服务端记录。'
+      : busy ? (pending.action === 'create' ? '正在创建外发预览。' : '正在处理原命令。') : '有待核对的原命令，不会自动再次发送。'}</p>
       {!pending.corrupt && <button type="button" className="family-button secondary" disabled={busy} onClick={() => execute(pending)}>重试原命令</button>}</div>}
     {!blocked && source && !selectedId && <form onSubmit={create}>
       <h2>{source.type === 'task' ? '任务来源' : '错题来源'} · 四年级上册数学</h2><p>章节：多位数乘两位数（家长声明）</p>

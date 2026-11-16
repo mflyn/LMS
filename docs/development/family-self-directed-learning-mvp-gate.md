@@ -1,5 +1,7 @@
 # 家庭自主学习 MVP 增量 Gate
 
+> **2026-11-16 AI外发预览反馈P2限定本地验收批准：** 用户复审通过，`QA-AI1-PREVIEW-FEEDBACK-001` 为 **CLOSED / USER_APPROVED / LOCAL_ONLY**。绑定基线 `9e97aa58d0dc98aaae0af14b18d586c733f87ef9`、补丁 `d1b5fa514de3844c7532fa191653a1471ec2ab358003bda73806b45fda5cbf8d`，见[批次关闭与复验证据](evidence/ai1-preview-feedback-20261116/README.md#限定关闭记录2026-11-16)。本轮冻结重建目录组件复验2套件38项通过；开发Chromium相关19项通过与最终两引擎各2项专项分开，WebKit相关4通过/15失败及此前失败仍保留，不写为全量全绿。本轮复审未重跑浏览器。原请求 `REAL_REQUEST_EVIDENCE_PENDING`、T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、MANUAL_PENDING/DEVICE_PENDING、Docker INCOMPLETE_FAILED及其他未关闭/后置状态不变；不授权模型、服务器、Git提交推送或部署。
+
 > **2026-11-15 当前交付状态校正：已合并、自动化通过、真人／真机待验。** 固定 main 为 `1abb623da7eed3bd27b159da3216189952586f1e`，PR #49／#51／#50 已合并；[main CI 43665482647](https://github.com/mflyn/LMS/actions/runs/43665482647)通过，前端 78 套件／1279 项、07b 10 套件／113 项、13b 102 项。可选任务跳过不计通过，PR #49 合并后 94 通过／3 失败及后续分批修订保持历史身份，不改写为一次全绿。当前范围及证据见[开发交付摘要](README.md#当前交付摘要2026-11-15)，[测试线程差异交接](family-child-entry-test-plan.md#8-main-1abb623d-差异验收交接2026-11-15)仅准备，不更新入口或执行验收。
 >
 > T5-NB-001／002 当前 **SCOPED_AUTOMATION_COMPLETE**，从当前自动化待办移出；下方各批批准时的 OPEN_NONBLOCKING 字段只保留历史快照，不能据此重新列为未完成补测。AI2-VIEW-NB-001 OPEN_NONBLOCKING 不变。T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、MANUAL_PENDING、DEVICE_PENDING、历史 Docker INCOMPLETE_FAILED、历史失败及后置状态均保持；本次不关闭总门禁、不扩展执行器、不授权提交推送、模型、服务器或部署。旧 `2ac06898` 业务闭环证据不改绑到新 main。

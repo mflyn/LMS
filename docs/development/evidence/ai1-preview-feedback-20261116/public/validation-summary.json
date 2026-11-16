@@ -1,0 +1,288 @@
+{
+  "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+  "stages": [
+    {
+      "name": "component-red",
+      "result": "14: 4 pass / 10 fail; includes one invalid logged-out-session test expectation",
+      "exitCode": 1,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "e4182c9cd808da923098cebc54a7b7361b8b9088d52f4f71652f860fd2232bc6"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "19d425965070294b724d3fe64e927125a192a60fdfd85959b49e50813728261f"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "e8965578cafabf6d0083984e1452207d6e7f285e0b99774702c5442cf7b51c50"
+        }
+      ],
+      "receiptSha256": "9489432b68735023c16927fa6c651fbfab2b441a832cbc64b569bcb282efb253",
+      "logSha256": "4f8cd867376ddfcfc2fa91974ed86675107cbfb8fe00519613cf56058ed84aa5"
+    },
+    {
+      "name": "component-red-corrected",
+      "result": "14: 5 pass / 9 fail",
+      "exitCode": 1,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "e4182c9cd808da923098cebc54a7b7361b8b9088d52f4f71652f860fd2232bc6"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "e0f7975b9d5373b676f545c9c795fc773c68278fa026d66d22c51c09714b29b7"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "e8965578cafabf6d0083984e1452207d6e7f285e0b99774702c5442cf7b51c50"
+        }
+      ],
+      "receiptSha256": "48269cac8dcfe9592d6b207ce9f7a4570f4c3cfc2f4e034445bcbdec5eb0dbf0",
+      "logSha256": "8b69e34a799ee5db660003d11b7ac228b2afb504272cfebb69e77f7f78fb7ed4"
+    },
+    {
+      "name": "component-green",
+      "result": "2 suites / 37 pass",
+      "exitCode": 0,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "e0f7975b9d5373b676f545c9c795fc773c68278fa026d66d22c51c09714b29b7"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "e8965578cafabf6d0083984e1452207d6e7f285e0b99774702c5442cf7b51c50"
+        }
+      ],
+      "receiptSha256": "a6163d8ac4a40d249c92414254cad98621eea8f4a02b539ab15631d479d1972a",
+      "logSha256": "de48c9dbc7e8e97f3ed3a76409b913c6780eebdfc98958375782fbd5058f4f93"
+    },
+    {
+      "name": "component-related",
+      "result": "8 suites / 162 pass",
+      "exitCode": 0,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "e0f7975b9d5373b676f545c9c795fc773c68278fa026d66d22c51c09714b29b7"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "f09d124c1ffd8af4e4e2ac54bd5bd03c07f9d9ece56c817ed33399319b6dcbc1"
+        }
+      ],
+      "receiptSha256": "7fb4857a271c7e824d6be4dfc176200a6b915735150098ccf749b963df45db7f",
+      "logSha256": "f02572ccc92faf01e0c7672dab96027afe5f02aea26d60e3dd1c0ba7f8d016a2"
+    },
+    {
+      "name": "component-final",
+      "result": "8 suites / 163 pass",
+      "exitCode": 0,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "4f4672d7c55a9aefa1dbdd8b9380909b17749d4c6d01901b447f9ebf75fcfb04"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "4d8b6c11b845016f40e7e86a6fe075c47c450735f420d0632483e04c4f3771e2"
+        }
+      ],
+      "receiptSha256": "c79fe6761b5359b412f055e7c5cd7ac70e3f9320d48f4abaadd7dcfaaaa32cc7",
+      "logSha256": "8ca6a1d07b54a0d4edea10b1cf7b2ee5dcbd4696e5853b677c683511145fb54c"
+    },
+    {
+      "name": "build",
+      "result": "build pass; historical warnings retained",
+      "exitCode": 0,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "e0f7975b9d5373b676f545c9c795fc773c68278fa026d66d22c51c09714b29b7"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "f09d124c1ffd8af4e4e2ac54bd5bd03c07f9d9ece56c817ed33399319b6dcbc1"
+        }
+      ],
+      "receiptSha256": "81d0463d2d17e0041da364a404b71f4db16acc82b35c7bb40d2def8fb6563dcd",
+      "logSha256": "811f638b7219b370458629cbbe47c3bc43ea59ffbeb25c08b105a13b99ea3537"
+    },
+    {
+      "name": "browser-chromium-new",
+      "result": "2 new tests pass before final barriers/navigation",
+      "exitCode": 0,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "e0f7975b9d5373b676f545c9c795fc773c68278fa026d66d22c51c09714b29b7"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "f09d124c1ffd8af4e4e2ac54bd5bd03c07f9d9ece56c817ed33399319b6dcbc1"
+        }
+      ],
+      "receiptSha256": "06af88aaf16e118dc6b21e220146568e92905d498d8139614719d254d0412886",
+      "logSha256": "edbf531fda10e4bbee716d91612a98d195937af7d13ec11ec0c3db3193822dd9"
+    },
+    {
+      "name": "browser-chromium-related",
+      "result": "18 pass / 1 fail; old global-error-clearing assertion",
+      "exitCode": 1,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "e0f7975b9d5373b676f545c9c795fc773c68278fa026d66d22c51c09714b29b7"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "f09d124c1ffd8af4e4e2ac54bd5bd03c07f9d9ece56c817ed33399319b6dcbc1"
+        }
+      ],
+      "receiptSha256": "5797076ff0cdcbd7fc7a4eeca9c2e5e7d037fa5e0a5a68d00f90575af2f91846",
+      "logSha256": "7b0793c80ae5aefbdd6a3e43c5cd1c7e64b8f0a13342386cda48166c7897565b"
+    },
+    {
+      "name": "browser-chromium-final",
+      "result": "19 pass before final new-test navigation change",
+      "exitCode": 0,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "4f4672d7c55a9aefa1dbdd8b9380909b17749d4c6d01901b447f9ebf75fcfb04"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "4d8b6c11b845016f40e7e86a6fe075c47c450735f420d0632483e04c4f3771e2"
+        }
+      ],
+      "receiptSha256": "ae3a4c49feae9afb115086ec5dc8ddfb5f05671f3e9349dba7ce10d95e2fd0fc",
+      "logSha256": "04516808fe3546c9dde785188053a352de955981a433883a869a9400d9c3a4be"
+    },
+    {
+      "name": "browser-webkit-final",
+      "result": "4 pass / 15 fail retained; not closed",
+      "exitCode": 1,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "4f4672d7c55a9aefa1dbdd8b9380909b17749d4c6d01901b447f9ebf75fcfb04"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "4d8b6c11b845016f40e7e86a6fe075c47c450735f420d0632483e04c4f3771e2"
+        }
+      ],
+      "receiptSha256": "5eefd6328fbf10da61e2a12e378fb57b94ce8266798cfca9c5887bef5d9ff6a5",
+      "logSha256": "2aad6d702e59fcc7da08e4a5bb60faa1ad8a8322df8b88f6c8c9a480741e210a"
+    },
+    {
+      "name": "browser-webkit-navigation",
+      "result": "2 new tests pass on final source",
+      "exitCode": 0,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "4f4672d7c55a9aefa1dbdd8b9380909b17749d4c6d01901b447f9ebf75fcfb04"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "33f454f362a5c426eeb4e727051a9ca615220063c0c6eb9dd5473054be334acc"
+        }
+      ],
+      "receiptSha256": "4ac0937d9090dd3b49ac55fc1168815bff1c06212db6b4fea50b91e7fe84002e",
+      "logSha256": "0ba0156c7c1c70da2f408265cc0e4f97e4f73e7c51d84fc367b40008ba95c980"
+    },
+    {
+      "name": "browser-chromium-navigation",
+      "result": "2 new tests pass on final source",
+      "exitCode": 0,
+      "base": "9e97aa58d0dc98aaae0af14b18d586c733f87ef9",
+      "files": [
+        {
+          "file": "frontend/web/src/pages/family/TutorPage.js",
+          "sha256": "a059caf2ad7822a57c36c3148cbdfd6e1ad5cf9c553468435ad763e98eb4947b"
+        },
+        {
+          "file": "frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+          "sha256": "4f4672d7c55a9aefa1dbdd8b9380909b17749d4c6d01901b447f9ebf75fcfb04"
+        },
+        {
+          "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+          "sha256": "33f454f362a5c426eeb4e727051a9ca615220063c0c6eb9dd5473054be334acc"
+        }
+      ],
+      "receiptSha256": "16c275abe67227e4e8cfcc4c2d679023ed67e05675bf4739ffa580bce3c58cd0",
+      "logSha256": "fc9099bea760cb68e507621835f43942007395cbed26c7ce42bbef8078eabeaa"
+    }
+  ],
+  "review": {
+    "suites": 2,
+    "passed": 38,
+    "failed": 0,
+    "browserRerun": false,
+    "resultSha256": "db068e5811179531ab44cd123d2a31adab15206524c20196d8468b17667196ea",
+    "logSha256": "0681a1319bd750acc903a17be5ea93fb72ba4048a3ae6eb9c4fc584d0762c73c"
+  },
+  "retained": [
+    "REAL_REQUEST_EVIDENCE_PENDING",
+    "WebKit related 4 pass / 15 fail",
+    "T4/T8/AI-1 OPEN",
+    "SERVER_TIMING_UNVERIFIED",
+    "DEVICE_PENDING",
+    "MANUAL_PENDING",
+    "Docker INCOMPLETE_FAILED",
+    "deferred scope"
+  ],
+  "note": "Summaries of verified local artifacts, not public raw logs or a new full green run. No real Provider or model call."
+}
