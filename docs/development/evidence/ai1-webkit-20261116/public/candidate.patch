@@ -1,0 +1,737 @@
+diff --git a/docs/development/family-ai1-test-plan.md b/docs/development/family-ai1-test-plan.md
+index a1d2c127..6c6bbbbc 100644
+--- a/docs/development/family-ai1-test-plan.md
++++ b/docs/development/family-ai1-test-plan.md
+@@ -588,3 +588,41 @@ iPad原请求仍为 `REAL_REQUEST_EVIDENCE_PENDING`，不能将合成503当作
+ AI_DISABLED/基础设施503仍不证明未提交，不清命令、不换UUID、不自动发送。
+ 开发实跑与独立验收分开记录；真人/真机待验、历史失败、T4/T8/AI-1 OPEN、
+ SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED及全部后置范围不变。
++
++## 19. WebKit相关测试接线候选（2026-11-16）
++
++本批以main `09180b863189ff64c41c53c094c85dc32ebacca5` 为基线，仅修订浏览器测试接线及有限引擎契约，
++详见[诊断、最小方案与验证索引](evidence/ai1-webkit-20261116/README.md)。状态为等待独立复评，不关闭AI-1总门禁。
++原独立有效批次Chromium19通过/WebKit6通过13失败及此前开发分批/环境失败均原样保留。
++
++| 永久保护 | 验收内容 |
++| --- | --- |
++| AI1-NAV-01 | 任务/错题真实导航在计划读取pending和completed两态保持同一文档；真实服务200、取消精确请求、无额外写入、零pageerror/warning/error |
++| AI1-NAV-02 | 共管/重登从真实讲解记录打开唯一合成周期，核对目标和文档身份；原刷新与新标签直达用例不删 |
++| AI1-TRANSPORT-01 | 取消、注入失败、提交后socket丢响应按引擎精确分类；绑定完整URL/method/无HTTP响应，其他错误不能混入 |
++| AI1-TRANSPORT-02 | WebKit Inspector info与Chromium error分开计数，精确文本和资源绑定；未知消息、额外warning、错误资源、非取消失败永久拒绝 |
++
++复用原Playwright入口，完整相关集合原19项＋新增8项，最终两引擎必须同一源码、原预算、串行、零重试。
++保留原命令/权限/版本/数据不变断言，不通过减少浏览器告警监听、网络空闲等待或放宽CORS消除失败。
++这不是原生硬替换问题、原iPad请求或真实模型的验收；现有关闭限定及未关闭/后置状态不变。
++
++### 19.1 初始化收尾 P2 修订候选（2026-11-17）
++
++复审发现：运行时已创建，但首次 `page.route` 在异常收尾之外，注册失败会漏停临时服务。
++本次将监听器安装、服务监听与首次路由注册全部纳入同一保护范围；原异常与收尾异常分别保存，
++单一异常原样传播，多项异常聚合，等待停止完成后才结束用例。原业务断言、预算及精确错误契约不变。
++
++新增 `ai1NavigationCleanup.spec.js` 直接调用实际注册的导航用例，以运行时和页面替身注入失败，
++不是复制一份收尾逻辑：监听器失败、首次注册失败、导航失败正常收尾、停止未完成不得结束、
++原失败与 unroute/attach/stop 三项失败均可追溯，共5项永久用例。沿用原Playwright自动发现入口。
++旧候选新反例为1通过/4失败；修订后与原契约和收尾用例合计13项通过。
++恢复外部初始化、移除等待、丢弃原异常三项逐一变异分别2/1/1项失败，均为目标断言拒绝。
++
++本次状态为 `FIXED_PENDING_REVIEW`，不是P2已获批准关闭，也不是独立两引擎验收。
++证据包 `ai1-webkit-20261117-cleanup` 另存完整候选、相对前候选增量及逐批结果；
++旧 `ai1-webkit-20261116` 冻结包、原失败和原请求缺证保持，实际最终回归见证据索引追加记录。
++
++最终开发回归：Chromium32通过、WebKit32通过，同一最终测试源码，0skip/0retry；
++每引擎均为原19项＋既有8项＋新增5项，既有收尾4项另在13项专项中执行，不能重复相加为浏览器实跑数。
++完整候选6文件及相对前候选的增量分别冻结并重建校验；局部lint、文档及diff检查通过。
++本次仅开发验证及自查完成，P2/本批仍待复审，不改变原请求缺证、真人/真机和其他OPEN/后置状态。
+diff --git a/tests/e2e/t2/ai1FormalPage.spec.js b/tests/e2e/t2/ai1FormalPage.spec.js
+index cace20f0..d07720a6 100644
+--- a/tests/e2e/t2/ai1FormalPage.spec.js
++++ b/tests/e2e/t2/ai1FormalPage.spec.js
+@@ -3,6 +3,7 @@ const express = require('express');
+ const { createHash } = require('crypto');
+ const { createT2WebRuntime } = require('./webRuntime');
+ const { openParentTasks } = require('./parentNavigation');
++const { openTutorSource, openTutorCycle, assertRequestFailure, assertFaultConsole } = require('./ai1BrowserContracts');
+ const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
+ 
+ // Real LMS services and login; only the external operation protocol is a double. No Provider exists here.
+@@ -79,9 +80,14 @@ async function login(page, name = 'parent') {
+   await expect(page).toHaveURL(/\/app\/today$/);
+ }
+ async function observe(page) {
+-  const observed = { errors: [], console: [], writes: [], external: [], media: [] };
++  const observed = { errors: [], console: [], consoleEvents: [], writes: [], external: [], media: [] };
+   page.on('pageerror', error => observed.errors.push(error.message));
+-  page.on('console', message => { if (['error', 'warning'].includes(message.type())) observed.console.push(message.text()); });
++  page.on('console', message => {
++    if (['error', 'warning'].includes(message.type())) observed.console.push(message.text());
++    if (['error', 'warning', 'info'].includes(message.type())) observed.consoleEvents.push({
++      level: message.type(), text: message.text(), url: message.location().url
++    });
++  });
+   page.on('request', request => {
+     const url = new URL(request.url());
+     if (request.method() === 'POST' && url.pathname.startsWith('/api/tutor-')) observed.writes.push({ path: url.pathname, body: request.postDataJSON() });
+@@ -97,7 +103,7 @@ async function observe(page) {
+ }
+ async function preview(page, entry = 'tasks') {
+   await login(page);
+-  await page.goto(runtime.webUrl + `/app/${entry}`);
++  await openTutorSource(page, runtime.webUrl, entry);
+   await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+   await page.getByRole('link', { name: '准备讲解', exact: true }).click();
+   await expect(page.getByLabel('题目文字', { exact: true })).toHaveValue('');
+@@ -248,7 +254,7 @@ for (const entry of ['tasks', 'mistakes']) test(`AI1 formal ${entry}: preview, g
+   const context = await browser.newContext(), other = await context.newPage();
+   const otherSeen = await observe(other);
+   try {
+-    await login(other, 'coparent'); await other.goto(detailUrl);
++    await login(other, 'coparent'); await openTutorCycle(other, runtime.webUrl, detailUrl);
+     await other.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+     await expect(other.getByText(revised, { exact: true })).toBeVisible(); await checks(other);
+     await other.getByRole('button', { name: '批准所见版本' }).click();
+@@ -266,7 +272,7 @@ for (const entry of ['tasks', 'mistakes']) test(`AI1 formal ${entry}: preview, g
+   await assertPrivateVersions(created.cycle.id);
+   const clean = await browser.newContext(), returned = await clean.newPage();
+   try {
+-    const returnedSeen = await observe(returned); await login(returned); await returned.goto(detailUrl);
++    const returnedSeen = await observe(returned); await login(returned); await openTutorCycle(returned, runtime.webUrl, detailUrl);
+     await returned.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+     await expect(returned.getByRole('heading', { name: '已批准', exact: true })).toBeVisible();
+     await expect(returned.getByText(revised, { exact: true })).toBeVisible();
+@@ -298,11 +304,14 @@ test('AI1 formal fixture restores all AI settings even when remote close reports
+   expect(servers.every(server => !server.listening)).toBe(true); expect(savedRemote.listening).toBe(false);
+ });
+ 
+-test('AI1 formal public response loss reloads and retries only the original generation', async ({ page }) => {
++test('AI1 formal public response loss reloads and retries only the original generation', async ({ page, browserName }) => {
+   const seen = await observe(page), created = await preview(page);
+-  runtime.dropNextResponse({ method: 'POST', path: `/api/tutor-cycles/${created.cycle.id}/explanation-jobs` });
++  const path = `/api/tutor-cycles/${created.cycle.id}/explanation-jobs`, url = runtime.webUrl + path;
++  const failed = page.waitForEvent('requestfailed', { predicate: request => request.url() === url && request.method() === 'POST' });
++  runtime.dropNextResponse({ method: 'POST', path });
+   await generate(page);
+   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
++  await assertRequestFailure(await failed, { browserName, kind: 'dropped', url, method: 'POST' });
+   expect(seen.writes).toHaveLength(2); const original = seen.writes[1];
+   const detailBefore = expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`));
+   expect(detailBefore.job.status).toBe('succeeded'); expect(detailBefore.artifacts).toHaveLength(1);
+@@ -316,7 +325,7 @@ test('AI1 formal public response loss reloads and retries only the original gene
+   expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
+   expect(expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`))).toEqual(detailBefore);
+   expect(runtime.droppedResponses).toHaveLength(1); expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
+-  expect(seen.console).toHaveLength(1); expect(seen.console[0]).toMatch(/ERR_EMPTY_RESPONSE|ERR_CONNECTION_RESET/);
++  expect(seen.console).toHaveLength(1); assertFaultConsole(seen.consoleEvents, { browserName, kind: 'dropped', url });
+ });
+ 
+ test('AI1 formal remote loss survives logout and only original actor explicitly recovers persisted mapping', async ({ page }) => {
+@@ -330,7 +339,7 @@ test('AI1 formal remote loss survives logout and only original actor explicitly
+   await expect(page).toHaveURL(/\/login$/);
+   await expect(page.getByText('Explain 206 * 30.', { exact: true })).toHaveCount(0);
+   expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.includes('ai1')))).toEqual([]);
+-  await login(page, 'coparent'); await page.goto(detailUrl);
++  await login(page, 'coparent'); await openTutorCycle(page, runtime.webUrl, detailUrl);
+   await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+   await expect(page.getByText('暂无待处理任务', { exact: true })).toBeVisible();
+   await expect(page.getByRole('button', { name: '恢复原任务', exact: true })).toHaveCount(0);
+@@ -340,7 +349,7 @@ test('AI1 formal remote loss survives logout and only original actor explicitly
+     schemaVersion: 'ai1-min-v1', operationId: require('crypto').randomUUID()
+   })).status).toBe(403);
+   await page.getByRole('button', { name: '退出登录', exact: true }).click(); await expect(page).toHaveURL(/\/login$/);
+-  await login(page); await page.goto(detailUrl);
++  await login(page); await openTutorCycle(page, runtime.webUrl, detailUrl);
+   await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+   await expect(page.getByRole('button', { name: '恢复原任务', exact: true })).toBeVisible();
+   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toHaveCount(0);
+@@ -364,7 +373,7 @@ test('AI1 formal co-parent stale approval requires reread and a new explicit dec
+   const detailUrl = page.url(), original = expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`));
+   const context = await browser.newContext(), other = await context.newPage(), otherSeen = await observe(other);
+   try {
+-    await login(other, 'coparent'); await other.goto(detailUrl);
++    await login(other, 'coparent'); await openTutorCycle(other, runtime.webUrl, detailUrl);
+     await other.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+     await expect(other.getByText(generated, { exact: true })).toBeVisible(); await checks(other);
+     await page.getByLabel('修订文字', { exact: true }).fill(revised);
+@@ -401,7 +410,7 @@ test('AI1 formal co-parent stale approval requires reread and a new explicit dec
+   } finally { await context.close(); }
+ });
+ 
+-for (const decision of ['reject', 'approve']) test(`AI1 formal ${decision} response loss preserves original review and closing preserves audit`, async ({ page }) => {
++for (const decision of ['reject', 'approve']) test(`AI1 formal ${decision} response loss preserves original review and closing preserves audit`, async ({ page, browserName }) => {
+   const seen = await observe(page), before = await runtime.snapshot(), created = await preview(page);
+   await generate(page); await expect(page.getByText(generated, { exact: true })).toBeVisible();
+   const label = decision === 'reject' ? '拒绝所见版本' : '批准所见版本';
+@@ -410,9 +419,12 @@ for (const decision of ['reject', 'approve']) test(`AI1 formal ${decision} respo
+   await expect(page.getByRole('button', { name: label, exact: true })).toBeDisabled();
+   await page.getByLabel('审核意见', { exact: true }).fill(comment);
+   if (decision === 'approve') await checks(page);
+-  runtime.dropNextResponse({ method: 'POST', path: `/api/tutor-cycles/${created.cycle.id}/explanation-review` });
++  const path = `/api/tutor-cycles/${created.cycle.id}/explanation-review`, url = runtime.webUrl + path;
++  const failed = page.waitForEvent('requestfailed', { predicate: request => request.url() === url && request.method() === 'POST' });
++  runtime.dropNextResponse({ method: 'POST', path });
+   await page.getByRole('button', { name: label, exact: true }).click();
+   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
++  await assertRequestFailure(await failed, { browserName, kind: 'dropped', url, method: 'POST' });
+   const rejected = expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`));
+   expect(rejected.cycle.status).toBe(status);
+   expect(rejected.artifacts[0].review).toMatchObject({ decision, reviewerId: fixture.actors.parent.userId, comment });
+@@ -443,11 +455,11 @@ for (const decision of ['reject', 'approve']) test(`AI1 formal ${decision} respo
+   expect(closed.job).toEqual(rejected.job); expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
+   expect(seen.writes).toHaveLength(5); expect(runtime.droppedResponses).toHaveLength(1);
+   expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
+-  expect(seen.console).toHaveLength(1); expect(seen.console[0]).toMatch(/ERR_EMPTY_RESPONSE|ERR_CONNECTION_RESET/);
++  expect(seen.console).toHaveLength(1); assertFaultConsole(seen.consoleEvents, { browserName, kind: 'dropped', url });
+   const after = await runtime.snapshot(); expect(after.database).toEqual(before.database); expect(after.files).toEqual(before.files);
+ });
+ 
+-test('AI1 formal revoked membership clears private reads and cancels earlier successful detail', async ({ page, browser }) => {
++test('AI1 formal revoked membership clears private reads and cancels earlier successful detail', async ({ page, browser, browserName }) => {
+   await observe(page); const created = await preview(page); await generate(page);
+   await expect(page.getByText(generated, { exact: true })).toBeVisible();
+   const context = await browser.newContext(), other = await context.newPage(), seen = await observe(other);
+@@ -456,7 +468,7 @@ test('AI1 formal revoked membership clears private reads and cancels earlier suc
+   const fetched = new Promise(resolve => { reached = resolve; });
+   const terminal = new Promise(resolve => { finished = resolve; });
+   try {
+-    await login(other, 'coparent'); await other.goto(page.url());
++    await login(other, 'coparent'); await openTutorCycle(other, runtime.webUrl, page.url());
+     await other.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+     await expect(other.getByText(generated, { exact: true })).toBeVisible();
+     await other.getByLabel('修订文字', { exact: true }).fill('Private unfinished revision.');
+@@ -477,7 +489,8 @@ test('AI1 formal revoked membership clears private reads and cancels earlier suc
+     await expect(other.getByRole('alert')).toHaveText('当前身份无法继续查看这些私有讲解。');
+     await expect(other.getByRole('region', { name: '讲解详情', exact: true })).toHaveCount(0);
+     await expect(other.getByLabel('修订文字', { exact: true })).toHaveCount(0);
+-    expect((await cancelled).failure().errorText).toBe('net::ERR_ABORTED');
++    await assertRequestFailure(await cancelled, { browserName, kind: 'cancelled',
++      url: `${runtime.webUrl}/api/tutor-cycles/${created.cycle.id}`, method: 'GET' });
+     release(); await terminal;
+     await expect(other.getByText(generated, { exact: true })).toHaveCount(0);
+     await expect(other.getByRole('region', { name: '讲解记录', exact: true })).toHaveCount(0);
+@@ -485,7 +498,10 @@ test('AI1 formal revoked membership clears private reads and cancels earlier suc
+     expect(seen.console.every(line => line.includes('403'))).toBe(true);
+     expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
+     expect(expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`)).artifacts[0].text).toBe(generated);
+-  } finally { release(); await context.close(); }
++  } finally {
++    release();
++    try { await other.unrouteAll({ behavior: 'wait' }); } finally { await context.close(); }
++  }
+ });
+ 
+ test('AI1 formal expired JWT preserves original generation through real login', async ({ page }) => {
+@@ -504,7 +520,7 @@ test('AI1 formal expired JWT preserves original generation through real login',
+   await expect(page.getByText(generated, { exact: true })).toHaveCount(0);
+   expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('family-growth.ai1-command.v1:')).length)).toBe(1);
+   expect(seen.writes).toHaveLength(2); expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
+-  await login(page); await page.goto(detailUrl);
++  await login(page); await openTutorCycle(page, runtime.webUrl, detailUrl);
+   await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
+   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
+   expect(seen.writes).toHaveLength(2);
+@@ -519,7 +535,7 @@ test('AI1 formal expired JWT preserves original generation through real login',
+   expect(seen.console.every(line => /401|503/.test(line))).toBe(true);
+ });
+ 
+-test('AI1 formal cross-tab logout clears private draft and isolates a held successful response', async ({ page, context }) => {
++test('AI1 formal cross-tab logout clears private draft and isolates a held successful response', async ({ page, context, browserName }) => {
+   const seen = await observe(page), created = await preview(page); await generate(page);
+   await expect(page.getByText(generated, { exact: true })).toBeVisible();
+   await page.evaluate(() => { window.ai1DocumentMarker = 'same-document'; });
+@@ -543,7 +559,8 @@ test('AI1 formal cross-tab logout clears private draft and isolates a held succe
+     await expect(tab).toHaveURL(/\/login/); await expect(page).toHaveURL(/\/login/);
+     await expect(page.getByText(generated, { exact: true })).toHaveCount(0);
+     await expect(page.getByLabel('修订文字', { exact: true })).toHaveCount(0);
+-    expect((await cancelled).failure().errorText).toBe('net::ERR_ABORTED');
++    await assertRequestFailure(await cancelled, { browserName, kind: 'cancelled',
++      url: `${runtime.webUrl}/api/tutor-cycles/${created.cycle.id}`, method: 'GET' });
+     await login(tab, 'outsider');
+     await expect(page.getByRole('heading', { name: '家长登录', exact: true })).toBeVisible();
+     release(); await terminal;
+@@ -553,10 +570,13 @@ test('AI1 formal cross-tab logout clears private draft and isolates a held succe
+     expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('family-growth.ai1-command.v1:')))).toEqual([]);
+     expect(seen.writes).toHaveLength(2); expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
+     expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
+-  } finally { release(); await tab.close(); }
++  } finally {
++    release();
++    try { await page.unrouteAll({ behavior: 'wait' }); } finally { await tab.close(); }
++  }
+ });
+ 
+-test('AI1 formal network refresh failure retains unknown command until explicit retry', async ({ page }) => {
++test('AI1 formal network refresh failure retains unknown command until explicit retry', async ({ page, browserName }) => {
+   const seen = await observe(page), created = await preview(page); remote.drop = true;
+   await generate(page); await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
+   const original = seen.writes[1], detailPath = `/api/tutor-cycles/${created.cycle.id}`;
+@@ -564,11 +584,14 @@ test('AI1 formal network refresh failure retains unknown command until explicit
+     .filter(key => key.startsWith('family-growth.ai1-command.v1:')).map(key => [key, sessionStorage.getItem(key)])));
+   const saved = await commands(); expect(Object.keys(saved)).toHaveLength(1);
+   const before = expectData(await parent.get(detailPath)); expect(before.job.status).toBe('unknown');
+-  const failRead = route => route.abort('failed');
++  const injected = [], consoleStart = seen.consoleEvents.length;
++  const failRead = route => { injected.push(route.request()); return route.abort('failed'); };
+   await page.route(`**${detailPath}`, failRead);
+   const failed = page.waitForEvent('requestfailed', { predicate: request => new URL(request.url()).pathname === detailPath });
+   await page.getByRole('button', { name: '刷新详情', exact: true }).click();
+-  expect((await failed).failure().errorText).toBe('net::ERR_FAILED');
++  const failedRequest = await failed;
++  expect(injected).toEqual([failedRequest]);
++  await assertRequestFailure(failedRequest, { browserName, kind: 'injected', url: runtime.webUrl + detailPath, method: 'GET' });
+   await expect(page.getByRole('alert').locator('p')).toHaveText([
+     '本次结果暂未确认，请保留原命令并显式核对。',
+     '讲解详情读取失败：本次结果暂未确认，请保留原命令并显式核对。'
+@@ -589,11 +612,13 @@ test('AI1 formal network refresh failure retains unknown command until explicit
+   expect(seen.writes).toHaveLength(3); expect(seen.writes[2]).toEqual(original);
+   expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([remote.puts[0].id]);
+   expect(await commands()).toEqual({}); expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
+-  expect(seen.console).toHaveLength(2); expect(seen.console.some(line => line.includes('ERR_FAILED'))).toBe(true);
++  assertFaultConsole(seen.consoleEvents.slice(consoleStart), { browserName, kind: 'injected', url: runtime.webUrl + detailPath });
++  // WebKit emits an exact info event for Inspector abort, not Chromium's error event.
++  expect(seen.console).toHaveLength(browserName === 'webkit' ? 1 : 2);
+   expect(seen.console.some(line => line.includes('503'))).toBe(true);
+ });
+ 
+-test('AI1 formal child switch clears unknown local command but preserves server discovery', async ({ page }) => {
++test('AI1 formal child switch clears unknown local command but preserves server discovery', async ({ page, browserName }) => {
+   const seen = await observe(page), created = await preview(page); remote.drop = true;
+   await generate(page); await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
+   const detailPath = `/api/tutor-cycles/${created.cycle.id}`, before = expectData(await parent.get(detailPath));
+@@ -612,7 +637,7 @@ test('AI1 formal child switch clears unknown local command but preserves server
+     await page.getByRole('button', { name: '刷新详情', exact: true }).click(); expect(await fetched).toBe(200);
+     await page.getByLabel('当前孩子').selectOption(fixture.actors.sibling.childId);
+     await expect(page.getByRole('alert')).toHaveText('该入口不属于当前选择的孩子。');
+-    expect((await cancelled).failure().errorText).toBe('net::ERR_ABORTED');
++    await assertRequestFailure(await cancelled, { browserName, kind: 'cancelled', url: runtime.webUrl + detailPath, method: 'GET' });
+     await expect(page.getByRole('region', { name: '讲解详情', exact: true })).toHaveCount(0);
+     expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('family-growth.ai1-command.v1:')))).toEqual([]);
+     release(); await terminal; await page.unroute(`**${detailPath}`, holdRead);
+@@ -632,10 +657,10 @@ test('AI1 formal child switch clears unknown local command but preserves server
+     expect(after.artifacts).toHaveLength(1); expect(after.job.budget.settledMicros).toBe(2250);
+     expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
+     expect(seen.console).toHaveLength(1); expect(seen.console[0]).toContain('503');
+-  } finally { release(); }
++  } finally { release(); await page.unrouteAll({ behavior: 'wait' }); }
+ });
+ 
+-test('AI1 formal late expired JWT response cannot expire the new actor', async ({ page, context }) => {
++test('AI1 formal late expired JWT response cannot expire the new actor', async ({ page, context, browserName }) => {
+   const seen = await observe(page), created = await preview(page); await generate(page);
+   await expect(page.getByText(generated, { exact: true })).toBeVisible();
+   const sessionKey = 'family-growth.parent-session.v1', jwt = require('jsonwebtoken');
+@@ -666,7 +691,7 @@ test('AI1 formal late expired JWT response cannot expire the new actor', async (
+     expect(JSON.stringify(rejected.body)).not.toContain(generated);
+     await login(tab, 'outsider');
+     await expect(page.getByText(generated, { exact: true })).toHaveCount(0);
+-    expect((await cancelled).failure().errorText).toBe('net::ERR_ABORTED');
++    await assertRequestFailure(await cancelled, { browserName, kind: 'cancelled', url: runtime.webUrl + detailPath, method: 'GET' });
+     const fresh = await tab.evaluate(key => JSON.parse(localStorage.getItem(key)), sessionKey);
+     expect(fresh.user.id).toBe(fixture.actors.outsider.userId); expect(fresh.token).not.toBe(token);
+     release(); await terminal;
+@@ -678,5 +703,8 @@ test('AI1 formal late expired JWT response cannot expire the new actor', async (
+     expect(seen.writes).toHaveLength(2); expect(tabSeen.writes).toEqual([]);
+     expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
+     expect(seen.errors).toEqual([]); expect(tabSeen.errors).toEqual([]); expect(seen.external).toEqual([]);
+-  } finally { release(); await tab.close(); }
++  } finally {
++    release();
++    try { await page.unrouteAll({ behavior: 'wait' }); } finally { await tab.close(); }
++  }
+ });
+diff --git a/docs/development/evidence/ai1-webkit-20261116/README.md b/docs/development/evidence/ai1-webkit-20261116/README.md
+new file mode 100644
+index 00000000..999d2d7e
+--- /dev/null
++++ b/docs/development/evidence/ai1-webkit-20261116/README.md
+@@ -0,0 +1,114 @@
++# AI1 WebKit 相关测试接线修订
++
++状态：本地候选，等待独立复评；不是用户验收或总门禁关闭。
++
++固定基线 `09180b863189ff64c41c53c094c85dc32ebacca5`。仅修改 AI1 浏览器测试及局部辅助函数，
++不修改产品、请求层、权限、CORS、缓存、费用、模型配置或重试策略。
++既有外发预览反馈 P2 的 `CLOSED / USER_APPROVED / LOCAL_ONLY` 不重开；本批处理相关 WebKit 测试兼容性。
++
++## 原失败与核实顺序
++
++原独立证据包 `tutor-preview-p2-followup-2026-11-16/r1` 的135份文件逐份核验，未覆盖。
++有效批次是 `browser-authorized`：Chromium19通过，WebKit6通过/13失败；
++两套受限启动1通过/18失败未进入业务，不能混为同一结果。
++更早的开发WebKit4通过/15失败、两引擎新增2项专项及反馈P2原冻结记录继续保留。
++
++本批按“原证据核实 → 有界事件诊断 → 最小方案自审 → 修订 → 反例/变异 → 最终相关回归”推进。
++本地证据包别名 `ai1-webkit-20261116` 保存原输入、诊断、方案、自查、每批回执及最终补丁/文件摘要；
++原始截图和日志仅本地保存，不作为本文件的公开附件。
++
++原四个代表用例增加被动事件取证后均失败，证据显示登录后立即 `goto` 会在文档替换期间取消读取，
++旧页面计划初始化在 `XMLHttpRequest.send` 报错；对应尝试没有服务端拒绝证据。
++原构建source map定位到axios发送和DailyLearningPlanPanel初始化，不能据文案断言是CORS或权限配置错误。
++受控在途实验与真实SPA导航保留文档和授权读取200；硬替换会丢失文档标记。
++首个诊断夹具末尾缺少数学入口而失败，保留为测量夹具失败，不充当产品红灯或通过证据。
++
++## 最小修订与保护
++
++- 登录后从家长导航进入任务/错题，已有周期从“讲解记录 → 查看讲解”进入，检查目标URL和文档身份；不伪造导航链接或等待网络空闲。
++- 保留真正的页面刷新、新标签直达、真实JWT过期、共管重登及原命令恢复路径；没有声称任意硬文档替换或原生WebKit限制已修复。
++- 对取消、明确注入失败、提交后丢响应采用有限的引擎精确契约，绑定URL、method及无HTTP响应。
++- WebKit的Inspector注入失败仅产生精确info事件，Chromium产生精确error；两者分别检查，新增warning/error仍失败，不用任意错误通配。
++- 保留零pageerror、所有原业务状态、私有内容清理、UUID/正文深相等、写入/远端次数、版本/费用/审计不变断言。
++- 在途和正常完成导航各覆盖任务/错题；非法请求身份、非取消错误、非预期console均必须拒绝。持有响应在异常路径释放，并等待路由收尾。
++
++## 验证入口与范围
++
++复用 `npm run test:t2:e2e`，新 `ai1BrowserContracts.spec.js` 由原testDir自动发现，无需新增测试框架。
++本轮完整相关集合：`ai1FormalPage.spec.js` + `ai1ParentPage.spec.js` 原19项，新增契约/导航8项，合计每引擎27项。
++原预算120000ms用例、10000ms断言、15000ms动作，workers=1/retries=0不变。
++
++```text
++node node_modules/@playwright/test/cli.js test --config=<engine-config>
++  ai1FormalPage.spec.js ai1ParentPage.spec.js ai1BrowserContracts.spec.js
++node node_modules/eslint/bin/eslint.js tests/e2e/t2/ai1FormalPage.spec.js
++  tests/e2e/t2/ai1BrowserContracts.js tests/e2e/t2/ai1BrowserContracts.spec.js
++node scripts/check-family-docs.js
++```
++
++引擎配置仅覆盖browserName、证据输出位置，继承原预算。使用新本机隔离源码、现有Node22/依赖、临时回环Mongo7.0.14及合成家庭。
++正式LMS服务真实HTTP；远端operation为协议替身，Provider不存在；未携带真实模型凭据。
++产品源码未变，逐份核验前端源码和原构建manifest后复用构建，不冒称重新构建或重跑组件/后端全量。
++四项变异：恢复硬导航、Chromium-only错误契约、接受任意失败、接受任意console，各自两项永久测试拒绝，原红灯永久保留。
++首轮定向12项WebKit通过是中间测试快照；最终完整结果及冻结绑定在本节追加，不拼接旧绿灯。
++
++### 最终开发验证
++
++| 批次 | 实际结果 | 边界 |
++| --- | --- | --- |
++| 原代表用例被动诊断 | 4失败，exit1 | 保留原断言，非修订后结果 |
++| 首轮WebKit专项 | 12通过，exit0，62.828秒 | 中间快照，不与最终结果拼接 |
++| 四项逐一变异 | 每项2失败，均exit1 | 检查具体失败断言，非启动/超时失败；随后恢复源码 |
++| 最终WebKit完整相关集合 | 27通过，exit0，162.361秒 | 原19＋新增8，0skip/0retry |
++| 最终Chromium完整相关集合 | 27通过，exit0，152.822秒 | 同一最终3份测试源码，0skip/0retry |
++| 局部ESLint、文档校验、diff检查 | exit0 | 未重跑产品构建、组件或后端全量 |
++
++原19项包括正式应用spec的15项页面与1项夹具收尾，以及3项API替身页面；
++新增8项包括4项纯契约反例和4项正式页面导航对照。不能将全部27项描述为真实后端页面用例。
++两引擎原有权限、退出/撤权/换孩子、原命令、丢响应、所见版本及服务端不变断言已执行到尾；
++WebKit注入失败之后的提示组合、GET只清读错、显式原命令重试等此前未执行断言也通过。
++
++自查未发现需改动产品的新问题。导航变异在pending/completed均被文档身份断言拒绝；
++错误分类/console宽松化由负向断言拒绝，不靠移除监听或只接受任意网络失败。
++复用原收尾辅助函数，失败路径释放屏障并等待route处理器；最后还补跑原收尾反例，见证据回执。
++最终补丁及逐文件摘要位于本地证据包 `candidate.patch` / `candidate.json`，按固定基线重建核对。
++本轮文件为3份测试/辅助文件和2份文档；产品JS、原构建、配置及历史归档不变。
++独立复评尚待原测试/评审线程执行，本节不得作为独立验收或用户批准记录。
++
++## 保持边界
++
++开发测试不代替独立复评、真人或iPad实测。`REAL_REQUEST_EVIDENCE_PENDING`、`DEVICE_PENDING`、`MANUAL_PENDING`、
++`T4/T8/AI-1 OPEN`、`SERVER_TIMING_UNVERIFIED`、Docker `INCOMPLETE_FAILED`、非阻断补测及全部后置范围保持。
++不改写历史冻结补丁/manifest，不操作现有真人实例或服务器，不调用真实模型、不提交推送/合并/部署。
++
++## 初始化收尾 P2 修订（2026-11-17，待复审）
++
++以上是首轮开发候选的历史记录，不覆盖其冻结内容。后续复审指出首次路由注册在try/finally外，
++注册失败时已创建的运行时未停止。本次仅修改导航测试的保护范围和错误传播，并新增5项永久反例；
++产品代码、原19项业务用例、已有8项契约/导航用例及原断言不变。
++
++新反例调用实际导航用例回调，依赖使用替身：监听器或路由注册失败仍收尾；导航失败正对照；
++停止未完成不结束；原错误及三项收尾失败均保留。旧候选1通过/4失败；修订后专项13通过。
++三项逐一变异分别2/1/1失败：恢复外部初始化、移除收尾await、丢弃原异常。没有提高超时或增加重试。
++新本地证据包别名为 `ai1-webkit-20261117-cleanup`，保留初次沙箱ps/EPERM准备失败及红灯；
++权限受控执行的结果单独记录，不把未执行测试记为通过。旧152份归档及更早135份独立失败证据不改写。
++
++状态：`FIXED_PENDING_REVIEW`。本轮是开发验证和自查，不冒称测试线程独立复验，不关闭AI-1或原请求事件。
++最终同源两引擎结果、冻结补丁和增量绑定完成后在下方追加。
++
++### P2 最终开发验证
++
++| 批次 | 实际结果 | 证据边界 |
++| --- | --- | --- |
++| 新反例在旧候选运行 | 1通过/4失败 | 正对照通过；监听器/注册/等待/错误追溯反例失败 |
++| 修订后收尾及契约专项 | 13通过 | 新5项＋既有契约4项＋既有收尾4项；依赖替身，不冒称页面实跑 |
++| 三项逐一变异 | 2/1/1失败，均exit1 | 在目标断言处拒绝，随后恢复源码 |
++| WebKit完整相关集合 | 32通过，exit0，170.987秒 | 原19＋既有8＋新增5，0skip/0retry |
++| Chromium完整相关集合 | 32通过，exit0，171.390秒 | 与WebKit同一最终4份测试/辅助源码，0skip/0retry |
++| 局部ESLint、文档及diff校验 | exit0 | 不代表产品构建、后端全量或独立浏览器复验 |
++
++两引擎均使用临时正式LMS服务和远端operation替身，无Provider；新增5项为实际用例回调的失败注入，
++不能将全部32项称作正式后端页面验收。复用构建前已核验240份前端源码和9份构建文件，未重新构建。
++本轮完整6文件补丁为新包 `candidate.patch`，相对上轮5文件候选的增量为 `increment.patch`；
++两条重建路径均需与新 `candidate.json` 的逐文件哈希一致。`manifest.json` 绑定日志、回执及自查记录。
++开发自查未发现新增阻断，尚待本轮复审；不以自查替代独立复评，不覆盖上轮开发或原独立失败结果。
+diff --git a/tests/e2e/t2/ai1BrowserContracts.js b/tests/e2e/t2/ai1BrowserContracts.js
+new file mode 100644
+index 00000000..a169bda8
+--- /dev/null
++++ b/tests/e2e/t2/ai1BrowserContracts.js
+@@ -0,0 +1,68 @@
++const assert = require('node:assert/strict');
++const { expect } = require('@playwright/test');
++const { randomUUID } = require('crypto');
++const { openParentTasks } = require('./parentNavigation');
++
++async function openTutorSource(page, webUrl, entry = 'tasks') {
++  assert(['tasks', 'mistakes'].includes(entry));
++  const marker = randomUUID();
++  await page.evaluate(value => { window.ai1NavigationMarker = value; }, marker);
++  if (entry === 'tasks') await openParentTasks(page, webUrl);
++  else {
++    const link = page.getByRole('navigation', { name: '家长导航', exact: true })
++      .getByRole('link', { name: '错题', exact: true });
++    await expect(link).toHaveAttribute('href', '/app/mistakes');
++    await link.click(); await expect(page).toHaveURL(webUrl + '/app/mistakes');
++  }
++  expect(await page.evaluate(() => window.ai1NavigationMarker)).toBe(marker);
++}
++
++async function openTutorCycle(page, webUrl, detailUrl) {
++  const target = new URL(detailUrl);
++  assert.equal(target.origin, webUrl); assert.equal(target.pathname, '/app/tutor');
++  assert.match(target.searchParams.get('cycleId'), /^[a-f0-9]{24}$/);
++  await openTutorSource(page, webUrl);
++  const marker = await page.evaluate(() => window.ai1NavigationMarker);
++  await page.getByLabel('当前孩子').selectOption(target.searchParams.get('childId'));
++  const link = page.getByRole('link', { name: '讲解记录', exact: true });
++  await expect(link).toHaveAttribute('href', '/app/tutor'); await link.click();
++  // This isolated fixture contains exactly one cycle; never choose an arbitrary row.
++  const view = page.getByRole('region', { name: '讲解记录', exact: true })
++    .getByRole('button', { name: '查看讲解', exact: true });
++  await expect(view).toHaveCount(1); await view.click(); await expect(page).toHaveURL(detailUrl);
++  expect(await page.evaluate(() => window.ai1NavigationMarker)).toBe(marker);
++}
++
++const transportErrors = {
++  chromium: { cancelled: ['net::ERR_ABORTED'], injected: ['net::ERR_FAILED'],
++    dropped: ['net::ERR_EMPTY_RESPONSE', 'net::ERR_CONNECTION_RESET'] },
++  webkit: { cancelled: ['cancelled'], injected: ['Blocked by Web Inspector'],
++    dropped: ['The network connection was lost.'] }
++};
++
++function assertFailureRecord(record, { browserName, kind, url, method }) {
++  const allowed = transportErrors[browserName]?.[kind];
++  assert(allowed, 'Unsupported engine or fault');
++  assert.equal(record.url, url); assert.equal(record.method, method);
++  assert.equal(record.response, null);
++  assert(allowed.includes(record.errorText), `Unexpected ${kind}: ${record.errorText}`);
++}
++
++async function assertRequestFailure(request, options) {
++  assertFailureRecord({ url: request.url(), method: request.method(), response: await request.response(),
++    errorText: request.failure()?.errorText }, options);
++}
++
++function assertFaultConsole(events, { browserName, kind, url }) {
++  assert(['chromium', 'webkit'].includes(browserName)); assert(['injected', 'dropped'].includes(kind));
++  if (browserName === 'webkit' && kind === 'injected') {
++    assert.deepEqual(events, [{ level: 'info', text: `Web Inspector blocked ${url} from loading`, url: '' }]);
++  } else {
++    assert.equal(events.length, 1);
++    assert.equal(events[0].level, 'error'); assert.equal(events[0].url, url);
++    const messages = transportErrors[browserName][kind].map(text => `Failed to load resource: ${text}`);
++    assert(messages.includes(events[0].text), `Unexpected console: ${events[0].text}`);
++  }
++}
++
++module.exports = { openTutorSource, openTutorCycle, assertFailureRecord, assertRequestFailure, assertFaultConsole };
+diff --git a/tests/e2e/t2/ai1BrowserContracts.spec.js b/tests/e2e/t2/ai1BrowserContracts.spec.js
+new file mode 100644
+index 00000000..8e18bbfd
+--- /dev/null
++++ b/tests/e2e/t2/ai1BrowserContracts.spec.js
+@@ -0,0 +1,117 @@
++const { test, expect } = require('@playwright/test');
++const { createT2WebRuntime } = require('./webRuntime');
++const { finishParentNavigationTest } = require('./parentNavigation');
++const { openTutorSource, assertFailureRecord, assertRequestFailure, assertFaultConsole } = require('./ai1BrowserContracts');
++
++for (const browserName of ['chromium', 'webkit']) {
++  test(`AI1 ${browserName} precise failure contracts reject wrong identity and non-cancellation`, () => {
++    const url = 'http://127.0.0.1:12345/api/tutor-cycles/111111111111111111111111';
++    const options = { browserName, kind: 'cancelled', method: 'GET', url };
++    const record = { url, method: 'GET', response: null, errorText: browserName === 'webkit' ? 'cancelled' : 'net::ERR_ABORTED' };
++    expect(() => assertFailureRecord(record, options)).not.toThrow();
++    for (const override of [{ url: url + '?other=1' }, { method: 'POST' }, { response: { status: 200 } },
++      { errorText: browserName === 'webkit' ? 'Blocked by Web Inspector' : 'net::ERR_FAILED' },
++      { errorText: 'unexpected cancellation or permission failure' }, { errorText: null }]) {
++      expect(() => assertFailureRecord({ ...record, ...override }, options)).toThrow();
++    }
++    expect(() => assertFailureRecord(record, { ...options, browserName: 'unknown' })).toThrow();
++    expect(() => assertFailureRecord(record, { ...options, kind: 'unknown' })).toThrow();
++  });
++
++  test(`AI1 ${browserName} injected and dropped contracts reject unrelated console messages`, () => {
++    const url = 'http://127.0.0.1:12345/api/tutor-cycles/111111111111111111111111';
++    const cases = browserName === 'webkit' ? [
++      { kind: 'injected', text: 'Blocked by Web Inspector', event: { level: 'info', text: `Web Inspector blocked ${url} from loading`, url: '' } },
++      { kind: 'dropped', text: 'The network connection was lost.', event: { level: 'error', text: 'Failed to load resource: The network connection was lost.', url } }
++    ] : [
++      { kind: 'injected', text: 'net::ERR_FAILED', event: { level: 'error', text: 'Failed to load resource: net::ERR_FAILED', url } },
++      ...['ERR_EMPTY_RESPONSE', 'ERR_CONNECTION_RESET'].map(code => ({ kind: 'dropped', text: `net::${code}`,
++        event: { level: 'error', text: `Failed to load resource: net::${code}`, url } }))
++    ];
++    for (const { kind, text, event } of cases) {
++      const options = { browserName, kind, url, method: 'POST' };
++      expect(() => assertFailureRecord({ url, method: 'POST', response: null, errorText: text }, options)).not.toThrow();
++      expect(() => assertFailureRecord({ url, method: 'POST', response: null, errorText: 'Permission denied' }, options)).toThrow();
++      expect(() => assertFaultConsole([event], options)).not.toThrow();
++      for (const invalid of [[], [event, event], [{ ...event, level: 'warning' }], [{ ...event, url: url + '/other' }],
++        [{ ...event, text: event.text + ' unexpected' }], [{ ...event, text: 'Access control checks' }]]) {
++        expect(() => assertFaultConsole(invalid, options)).toThrow();
++      }
++    }
++  });
++}
++
++for (const entry of ['tasks', 'mistakes']) for (const phase of ['pending', 'completed']) {
++  test(`AI1 ${entry} entry during ${phase} real plan read keeps document and data`, async ({ page, browserName }, info) => {
++    const runtime = await createT2WebRuntime(), errors = [], events = [], handlers = [], faults = [], heldRows = [];
++    let release;
++    const held = new Promise(resolve => { release = resolve; });
++    const failures = [];
++    try {
++      page.on('pageerror', e => errors.push({ type: 'pageerror', text: e.message }));
++      page.on('console', m => { if (['warning', 'error'].includes(m.type())) errors.push({ type: m.type(), text: m.text() }); });
++      page.on('request', r => events.push({ type: 'request', path: new URL(r.url()).pathname, document: r.isNavigationRequest() }));
++      page.on('requestfailed', r => events.push({ type: 'failed', path: new URL(r.url()).pathname, text: r.failure()?.errorText }));
++      for (const { name, server } of runtime.servers) server.prependListener('request', req => {
++        if (req.url.includes('/daily-learning-plans/')) events.push({ type: 'ingress', name, path: req.url });
++      });
++      await page.route('**/*', route => {
++        if (new URL(route.request().url()).origin === runtime.webUrl) return route.continue();
++        faults.push(new Error('Non-local request')); return route.abort();
++      });
++      await page.goto(runtime.webUrl + '/login');
++      await page.getByLabel('用户名').fill(runtime.fixture.actors.parent.username);
++      await page.getByLabel('密码', { exact: true }).fill(runtime.fixture.actors.parent.password);
++      await page.getByRole('button', { name: '登录', exact: true }).click();
++      const refresh = page.getByRole('button', { name: '读取最新计划', exact: true });
++      await expect(refresh).toBeEnabled();
++      const before = await runtime.snapshot();
++      await page.evaluate(() => { window.ai1PendingMarker = 'same-document'; });
++      await page.route('**/api/children/*/daily-learning-plans/*', route => {
++        const handler = (async () => {
++          const response = await route.fetch({ maxRetries: 0 });
++          expect(response.status()).toBe(200);
++          expect((await response.json()).data.plan.childId).toBe(runtime.fixture.actors.child.childId);
++          heldRows.push({ request: route.request(), response });
++          events.push({ type: 'real200-held', path: new URL(route.request().url()).pathname });
++          await held; await route.fulfill({ response });
++        })().catch(error => { faults.push(error); });
++        handlers.push(handler); return handler;
++      });
++      await refresh.click(); await expect.poll(() => heldRows.length).toBe(1);
++      if (phase === 'completed') {
++        release(); await Promise.all(handlers);
++        await expect(page.getByText('已读取服务器计划，采用后将替换当前草稿。')).toBeVisible();
++        expect(heldRows[0].request.failure()).toBeNull();
++        expect((await heldRows[0].request.response()).status()).toBe(200);
++      } else await expect(page.getByText('正在读取计划…', { exact: true })).toBeVisible();
++      const documents = events.filter(e => e.document).length;
++      await openTutorSource(page, runtime.webUrl, entry);
++      if (phase === 'pending') {
++        await expect.poll(() => heldRows[0].request.failure()).not.toBeNull();
++        await assertRequestFailure(heldRows[0].request, { browserName, kind: 'cancelled',
++          url: heldRows[0].request.url(), method: 'GET' });
++      }
++      expect(await page.evaluate(() => window.ai1PendingMarker)).toBe('same-document');
++      expect(events.filter(e => e.document)).toHaveLength(documents);
++      release(); await Promise.all(handlers); await page.unrouteAll({ behavior: 'wait' });
++      await expect(page.getByRole('region', { name: '今日计划', exact: true })).toHaveCount(0);
++      expect(events.some(e => e.type === 'ingress' && e.name === 'homework-service')).toBe(true);
++      await page.getByRole('navigation', { name: '家长导航', exact: true }).getByRole('link', { name: '今日', exact: true }).click();
++      await expect(refresh).toBeEnabled();
++      await expect(page.getByText('今日计划暂无任务。', { exact: true })).toBeVisible();
++      expect(await runtime.snapshot()).toEqual(before); expect(errors).toEqual([]); expect(faults).toEqual([]);
++    } catch (error) {
++      failures.push(error);
++    } finally {
++      release();
++      try { await Promise.all(handlers); } catch (error) { failures.push(error); }
++      try {
++        await finishParentNavigationTest({ page, info, runtime, evidence: { entry, phase, events, errors, faults: faults.map(String) } });
++      } catch (error) { failures.push(error); }
++      try { expect(faults).toEqual([]); } catch (error) { failures.push(error); }
++    }
++    if (failures.length === 1) throw failures[0];
++    if (failures.length > 1) throw new AggregateError(failures, 'AI1 navigation and cleanup failed');
++  });
++}
+diff --git a/tests/e2e/t2/ai1NavigationCleanup.spec.js b/tests/e2e/t2/ai1NavigationCleanup.spec.js
+new file mode 100644
+index 00000000..a29963f8
+--- /dev/null
++++ b/tests/e2e/t2/ai1NavigationCleanup.spec.js
+@@ -0,0 +1,73 @@
++const { test, expect } = require('@playwright/test');
++const fs = require('node:fs');
++const path = require('node:path');
++const vm = require('node:vm');
++const { createRequire } = require('node:module');
++
++// Exercise the real registered navigation callback, including its setup boundary.
++function navigationCase() {
++  const filename = path.join(__dirname, 'ai1BrowserContracts.spec.js');
++  const localRequire = createRequire(filename), cases = [];
++  let runtime;
++  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), {
++    URL,
++    require(id) {
++      if (id === '@playwright/test') return { test: (name, run) => cases.push({ name, run }), expect };
++      if (id === './webRuntime') return { createT2WebRuntime: async () => runtime };
++      return localRequire(id);
++    }
++  }, { filename });
++  const selected = cases.find(item => item.name === 'AI1 tasks entry during pending real plan read keeps document and data');
++  expect(selected).toBeDefined();
++  return (page, info, value) => { runtime = value; return selected.run({ page, browserName: 'webkit' }, info); };
++}
++
++function fixture(stage, stop = async () => {}) {
++  const calls = [], original = new Error(`Synthetic ${stage} failure`);
++  const page = {
++    on() { if (stage === 'listener') throw original; },
++    async route() { calls.push('route'); if (stage === 'route') throw original; },
++    async goto() { calls.push('goto'); throw original; },
++    async unrouteAll() { calls.push('unroute'); }
++  };
++  const info = { async attach() { calls.push('attach'); } };
++  const runtime = { servers: [], webUrl: 'http://127.0.0.1:12345', async stop() { calls.push('stop'); await stop(); } };
++  return { calls, original, page, info, runtime };
++}
++
++for (const stage of ['listener', 'route', 'goto']) test(`AI1 navigation cleanup stops runtime after ${stage} failure`, async () => {
++  const f = fixture(stage);
++  const result = await navigationCase()(f.page, f.info, f.runtime).catch(error => error);
++  expect(result).toBe(f.original);
++  expect(f.calls.filter(call => ['unroute', 'attach', 'stop'].includes(call))).toEqual(['unroute', 'attach', 'stop']);
++});
++
++test('AI1 navigation cleanup waits for stop after route registration failure', async () => {
++  let release, settled = false;
++  const held = new Promise(resolve => { release = resolve; });
++  const f = fixture('route', () => held);
++  const result = navigationCase()(f.page, f.info, f.runtime).then(
++    value => { settled = true; return value; }, error => { settled = true; return error; }
++  );
++  try {
++    // A later event-loop turn must not settle the case while stop is held.
++    await new Promise(resolve => setImmediate(resolve));
++    expect(f.calls).toEqual(['route', 'unroute', 'attach', 'stop']);
++    expect(settled).toBe(false);
++  } finally { release(); await result; }
++  expect(await result).toBe(f.original);
++  expect(settled).toBe(true);
++});
++
++test('AI1 navigation cleanup retains original and all cleanup failures', async () => {
++  const stop = new Error('Synthetic stop failure'), unroute = new Error('Synthetic unroute failure');
++  const attach = new Error('Synthetic attach failure');
++  const f = fixture('route', async () => { throw stop; });
++  f.page.unrouteAll = async () => { f.calls.push('unroute'); throw unroute; };
++  f.info.attach = async () => { f.calls.push('attach'); throw attach; };
++  const result = await navigationCase()(f.page, f.info, f.runtime).catch(error => error);
++  const leaves = error => error?.errors ? Array.from(error.errors).flatMap(leaves) : [error];
++  expect(result?.name).toBe('AggregateError');
++  expect(leaves(result)).toEqual([f.original, unroute, attach, stop]);
++  expect(f.calls).toEqual(['route', 'unroute', 'attach', 'stop']);
++});

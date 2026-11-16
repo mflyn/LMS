@@ -3,6 +3,7 @@ const express = require('express');
 const { createHash } = require('crypto');
 const { createT2WebRuntime } = require('./webRuntime');
 const { openParentTasks } = require('./parentNavigation');
+const { openTutorSource, openTutorCycle, assertRequestFailure, assertFaultConsole } = require('./ai1BrowserContracts');
 const { expectData } = require('../../../backend/tests/t2/syntheticSeed');
 
 // Real LMS services and login; only the external operation protocol is a double. No Provider exists here.
@@ -79,9 +80,14 @@ async function login(page, name = 'parent') {
   await expect(page).toHaveURL(/\/app\/today$/);
 }
 async function observe(page) {
-  const observed = { errors: [], console: [], writes: [], external: [], media: [] };
+  const observed = { errors: [], console: [], consoleEvents: [], writes: [], external: [], media: [] };
   page.on('pageerror', error => observed.errors.push(error.message));
-  page.on('console', message => { if (['error', 'warning'].includes(message.type())) observed.console.push(message.text()); });
+  page.on('console', message => {
+    if (['error', 'warning'].includes(message.type())) observed.console.push(message.text());
+    if (['error', 'warning', 'info'].includes(message.type())) observed.consoleEvents.push({
+      level: message.type(), text: message.text(), url: message.location().url
+    });
+  });
   page.on('request', request => {
     const url = new URL(request.url());
     if (request.method() === 'POST' && url.pathname.startsWith('/api/tutor-')) observed.writes.push({ path: url.pathname, body: request.postDataJSON() });
@@ -97,7 +103,7 @@ async function observe(page) {
 }
 async function preview(page, entry = 'tasks') {
   await login(page);
-  await page.goto(runtime.webUrl + `/app/${entry}`);
+  await openTutorSource(page, runtime.webUrl, entry);
   await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
   await page.getByRole('link', { name: '准备讲解', exact: true }).click();
   await expect(page.getByLabel('题目文字', { exact: true })).toHaveValue('');
@@ -248,7 +254,7 @@ for (const entry of ['tasks', 'mistakes']) test(`AI1 formal ${entry}: preview, g
   const context = await browser.newContext(), other = await context.newPage();
   const otherSeen = await observe(other);
   try {
-    await login(other, 'coparent'); await other.goto(detailUrl);
+    await login(other, 'coparent'); await openTutorCycle(other, runtime.webUrl, detailUrl);
     await other.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
     await expect(other.getByText(revised, { exact: true })).toBeVisible(); await checks(other);
     await other.getByRole('button', { name: '批准所见版本' }).click();
@@ -266,7 +272,7 @@ for (const entry of ['tasks', 'mistakes']) test(`AI1 formal ${entry}: preview, g
   await assertPrivateVersions(created.cycle.id);
   const clean = await browser.newContext(), returned = await clean.newPage();
   try {
-    const returnedSeen = await observe(returned); await login(returned); await returned.goto(detailUrl);
+    const returnedSeen = await observe(returned); await login(returned); await openTutorCycle(returned, runtime.webUrl, detailUrl);
     await returned.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
     await expect(returned.getByRole('heading', { name: '已批准', exact: true })).toBeVisible();
     await expect(returned.getByText(revised, { exact: true })).toBeVisible();
@@ -298,11 +304,14 @@ test('AI1 formal fixture restores all AI settings even when remote close reports
   expect(servers.every(server => !server.listening)).toBe(true); expect(savedRemote.listening).toBe(false);
 });
 
-test('AI1 formal public response loss reloads and retries only the original generation', async ({ page }) => {
+test('AI1 formal public response loss reloads and retries only the original generation', async ({ page, browserName }) => {
   const seen = await observe(page), created = await preview(page);
-  runtime.dropNextResponse({ method: 'POST', path: `/api/tutor-cycles/${created.cycle.id}/explanation-jobs` });
+  const path = `/api/tutor-cycles/${created.cycle.id}/explanation-jobs`, url = runtime.webUrl + path;
+  const failed = page.waitForEvent('requestfailed', { predicate: request => request.url() === url && request.method() === 'POST' });
+  runtime.dropNextResponse({ method: 'POST', path });
   await generate(page);
   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
+  await assertRequestFailure(await failed, { browserName, kind: 'dropped', url, method: 'POST' });
   expect(seen.writes).toHaveLength(2); const original = seen.writes[1];
   const detailBefore = expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`));
   expect(detailBefore.job.status).toBe('succeeded'); expect(detailBefore.artifacts).toHaveLength(1);
@@ -316,7 +325,7 @@ test('AI1 formal public response loss reloads and retries only the original gene
   expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
   expect(expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`))).toEqual(detailBefore);
   expect(runtime.droppedResponses).toHaveLength(1); expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
-  expect(seen.console).toHaveLength(1); expect(seen.console[0]).toMatch(/ERR_EMPTY_RESPONSE|ERR_CONNECTION_RESET/);
+  expect(seen.console).toHaveLength(1); assertFaultConsole(seen.consoleEvents, { browserName, kind: 'dropped', url });
 });
 
 test('AI1 formal remote loss survives logout and only original actor explicitly recovers persisted mapping', async ({ page }) => {
@@ -330,7 +339,7 @@ test('AI1 formal remote loss survives logout and only original actor explicitly 
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByText('Explain 206 * 30.', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.includes('ai1')))).toEqual([]);
-  await login(page, 'coparent'); await page.goto(detailUrl);
+  await login(page, 'coparent'); await openTutorCycle(page, runtime.webUrl, detailUrl);
   await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
   await expect(page.getByText('暂无待处理任务', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: '恢复原任务', exact: true })).toHaveCount(0);
@@ -340,7 +349,7 @@ test('AI1 formal remote loss survives logout and only original actor explicitly 
     schemaVersion: 'ai1-min-v1', operationId: require('crypto').randomUUID()
   })).status).toBe(403);
   await page.getByRole('button', { name: '退出登录', exact: true }).click(); await expect(page).toHaveURL(/\/login$/);
-  await login(page); await page.goto(detailUrl);
+  await login(page); await openTutorCycle(page, runtime.webUrl, detailUrl);
   await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
   await expect(page.getByRole('button', { name: '恢复原任务', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toHaveCount(0);
@@ -364,7 +373,7 @@ test('AI1 formal co-parent stale approval requires reread and a new explicit dec
   const detailUrl = page.url(), original = expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`));
   const context = await browser.newContext(), other = await context.newPage(), otherSeen = await observe(other);
   try {
-    await login(other, 'coparent'); await other.goto(detailUrl);
+    await login(other, 'coparent'); await openTutorCycle(other, runtime.webUrl, detailUrl);
     await other.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
     await expect(other.getByText(generated, { exact: true })).toBeVisible(); await checks(other);
     await page.getByLabel('修订文字', { exact: true }).fill(revised);
@@ -401,7 +410,7 @@ test('AI1 formal co-parent stale approval requires reread and a new explicit dec
   } finally { await context.close(); }
 });
 
-for (const decision of ['reject', 'approve']) test(`AI1 formal ${decision} response loss preserves original review and closing preserves audit`, async ({ page }) => {
+for (const decision of ['reject', 'approve']) test(`AI1 formal ${decision} response loss preserves original review and closing preserves audit`, async ({ page, browserName }) => {
   const seen = await observe(page), before = await runtime.snapshot(), created = await preview(page);
   await generate(page); await expect(page.getByText(generated, { exact: true })).toBeVisible();
   const label = decision === 'reject' ? '拒绝所见版本' : '批准所见版本';
@@ -410,9 +419,12 @@ for (const decision of ['reject', 'approve']) test(`AI1 formal ${decision} respo
   await expect(page.getByRole('button', { name: label, exact: true })).toBeDisabled();
   await page.getByLabel('审核意见', { exact: true }).fill(comment);
   if (decision === 'approve') await checks(page);
-  runtime.dropNextResponse({ method: 'POST', path: `/api/tutor-cycles/${created.cycle.id}/explanation-review` });
+  const path = `/api/tutor-cycles/${created.cycle.id}/explanation-review`, url = runtime.webUrl + path;
+  const failed = page.waitForEvent('requestfailed', { predicate: request => request.url() === url && request.method() === 'POST' });
+  runtime.dropNextResponse({ method: 'POST', path });
   await page.getByRole('button', { name: label, exact: true }).click();
   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
+  await assertRequestFailure(await failed, { browserName, kind: 'dropped', url, method: 'POST' });
   const rejected = expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`));
   expect(rejected.cycle.status).toBe(status);
   expect(rejected.artifacts[0].review).toMatchObject({ decision, reviewerId: fixture.actors.parent.userId, comment });
@@ -443,11 +455,11 @@ for (const decision of ['reject', 'approve']) test(`AI1 formal ${decision} respo
   expect(closed.job).toEqual(rejected.job); expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
   expect(seen.writes).toHaveLength(5); expect(runtime.droppedResponses).toHaveLength(1);
   expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
-  expect(seen.console).toHaveLength(1); expect(seen.console[0]).toMatch(/ERR_EMPTY_RESPONSE|ERR_CONNECTION_RESET/);
+  expect(seen.console).toHaveLength(1); assertFaultConsole(seen.consoleEvents, { browserName, kind: 'dropped', url });
   const after = await runtime.snapshot(); expect(after.database).toEqual(before.database); expect(after.files).toEqual(before.files);
 });
 
-test('AI1 formal revoked membership clears private reads and cancels earlier successful detail', async ({ page, browser }) => {
+test('AI1 formal revoked membership clears private reads and cancels earlier successful detail', async ({ page, browser, browserName }) => {
   await observe(page); const created = await preview(page); await generate(page);
   await expect(page.getByText(generated, { exact: true })).toBeVisible();
   const context = await browser.newContext(), other = await context.newPage(), seen = await observe(other);
@@ -456,7 +468,7 @@ test('AI1 formal revoked membership clears private reads and cancels earlier suc
   const fetched = new Promise(resolve => { reached = resolve; });
   const terminal = new Promise(resolve => { finished = resolve; });
   try {
-    await login(other, 'coparent'); await other.goto(page.url());
+    await login(other, 'coparent'); await openTutorCycle(other, runtime.webUrl, page.url());
     await other.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
     await expect(other.getByText(generated, { exact: true })).toBeVisible();
     await other.getByLabel('修订文字', { exact: true }).fill('Private unfinished revision.');
@@ -477,7 +489,8 @@ test('AI1 formal revoked membership clears private reads and cancels earlier suc
     await expect(other.getByRole('alert')).toHaveText('当前身份无法继续查看这些私有讲解。');
     await expect(other.getByRole('region', { name: '讲解详情', exact: true })).toHaveCount(0);
     await expect(other.getByLabel('修订文字', { exact: true })).toHaveCount(0);
-    expect((await cancelled).failure().errorText).toBe('net::ERR_ABORTED');
+    await assertRequestFailure(await cancelled, { browserName, kind: 'cancelled',
+      url: `${runtime.webUrl}/api/tutor-cycles/${created.cycle.id}`, method: 'GET' });
     release(); await terminal;
     await expect(other.getByText(generated, { exact: true })).toHaveCount(0);
     await expect(other.getByRole('region', { name: '讲解记录', exact: true })).toHaveCount(0);
@@ -485,7 +498,10 @@ test('AI1 formal revoked membership clears private reads and cancels earlier suc
     expect(seen.console.every(line => line.includes('403'))).toBe(true);
     expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
     expect(expectData(await parent.get(`/api/tutor-cycles/${created.cycle.id}`)).artifacts[0].text).toBe(generated);
-  } finally { release(); await context.close(); }
+  } finally {
+    release();
+    try { await other.unrouteAll({ behavior: 'wait' }); } finally { await context.close(); }
+  }
 });
 
 test('AI1 formal expired JWT preserves original generation through real login', async ({ page }) => {
@@ -504,7 +520,7 @@ test('AI1 formal expired JWT preserves original generation through real login', 
   await expect(page.getByText(generated, { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('family-growth.ai1-command.v1:')).length)).toBe(1);
   expect(seen.writes).toHaveLength(2); expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
-  await login(page); await page.goto(detailUrl);
+  await login(page); await openTutorCycle(page, runtime.webUrl, detailUrl);
   await page.getByLabel('当前孩子').selectOption(fixture.actors.child.childId);
   await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
   expect(seen.writes).toHaveLength(2);
@@ -519,7 +535,7 @@ test('AI1 formal expired JWT preserves original generation through real login', 
   expect(seen.console.every(line => /401|503/.test(line))).toBe(true);
 });
 
-test('AI1 formal cross-tab logout clears private draft and isolates a held successful response', async ({ page, context }) => {
+test('AI1 formal cross-tab logout clears private draft and isolates a held successful response', async ({ page, context, browserName }) => {
   const seen = await observe(page), created = await preview(page); await generate(page);
   await expect(page.getByText(generated, { exact: true })).toBeVisible();
   await page.evaluate(() => { window.ai1DocumentMarker = 'same-document'; });
@@ -543,7 +559,8 @@ test('AI1 formal cross-tab logout clears private draft and isolates a held succe
     await expect(tab).toHaveURL(/\/login/); await expect(page).toHaveURL(/\/login/);
     await expect(page.getByText(generated, { exact: true })).toHaveCount(0);
     await expect(page.getByLabel('修订文字', { exact: true })).toHaveCount(0);
-    expect((await cancelled).failure().errorText).toBe('net::ERR_ABORTED');
+    await assertRequestFailure(await cancelled, { browserName, kind: 'cancelled',
+      url: `${runtime.webUrl}/api/tutor-cycles/${created.cycle.id}`, method: 'GET' });
     await login(tab, 'outsider');
     await expect(page.getByRole('heading', { name: '家长登录', exact: true })).toBeVisible();
     release(); await terminal;
@@ -553,10 +570,13 @@ test('AI1 formal cross-tab logout clears private draft and isolates a held succe
     expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('family-growth.ai1-command.v1:')))).toEqual([]);
     expect(seen.writes).toHaveLength(2); expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
     expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
-  } finally { release(); await tab.close(); }
+  } finally {
+    release();
+    try { await page.unrouteAll({ behavior: 'wait' }); } finally { await tab.close(); }
+  }
 });
 
-test('AI1 formal network refresh failure retains unknown command until explicit retry', async ({ page }) => {
+test('AI1 formal network refresh failure retains unknown command until explicit retry', async ({ page, browserName }) => {
   const seen = await observe(page), created = await preview(page); remote.drop = true;
   await generate(page); await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
   const original = seen.writes[1], detailPath = `/api/tutor-cycles/${created.cycle.id}`;
@@ -564,11 +584,14 @@ test('AI1 formal network refresh failure retains unknown command until explicit 
     .filter(key => key.startsWith('family-growth.ai1-command.v1:')).map(key => [key, sessionStorage.getItem(key)])));
   const saved = await commands(); expect(Object.keys(saved)).toHaveLength(1);
   const before = expectData(await parent.get(detailPath)); expect(before.job.status).toBe('unknown');
-  const failRead = route => route.abort('failed');
+  const injected = [], consoleStart = seen.consoleEvents.length;
+  const failRead = route => { injected.push(route.request()); return route.abort('failed'); };
   await page.route(`**${detailPath}`, failRead);
   const failed = page.waitForEvent('requestfailed', { predicate: request => new URL(request.url()).pathname === detailPath });
   await page.getByRole('button', { name: '刷新详情', exact: true }).click();
-  expect((await failed).failure().errorText).toBe('net::ERR_FAILED');
+  const failedRequest = await failed;
+  expect(injected).toEqual([failedRequest]);
+  await assertRequestFailure(failedRequest, { browserName, kind: 'injected', url: runtime.webUrl + detailPath, method: 'GET' });
   await expect(page.getByRole('alert').locator('p')).toHaveText([
     '本次结果暂未确认，请保留原命令并显式核对。',
     '讲解详情读取失败：本次结果暂未确认，请保留原命令并显式核对。'
@@ -589,11 +612,13 @@ test('AI1 formal network refresh failure retains unknown command until explicit 
   expect(seen.writes).toHaveLength(3); expect(seen.writes[2]).toEqual(original);
   expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([remote.puts[0].id]);
   expect(await commands()).toEqual({}); expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
-  expect(seen.console).toHaveLength(2); expect(seen.console.some(line => line.includes('ERR_FAILED'))).toBe(true);
+  assertFaultConsole(seen.consoleEvents.slice(consoleStart), { browserName, kind: 'injected', url: runtime.webUrl + detailPath });
+  // WebKit emits an exact info event for Inspector abort, not Chromium's error event.
+  expect(seen.console).toHaveLength(browserName === 'webkit' ? 1 : 2);
   expect(seen.console.some(line => line.includes('503'))).toBe(true);
 });
 
-test('AI1 formal child switch clears unknown local command but preserves server discovery', async ({ page }) => {
+test('AI1 formal child switch clears unknown local command but preserves server discovery', async ({ page, browserName }) => {
   const seen = await observe(page), created = await preview(page); remote.drop = true;
   await generate(page); await expect(page.getByRole('button', { name: '重试原命令', exact: true })).toBeEnabled();
   const detailPath = `/api/tutor-cycles/${created.cycle.id}`, before = expectData(await parent.get(detailPath));
@@ -612,7 +637,7 @@ test('AI1 formal child switch clears unknown local command but preserves server 
     await page.getByRole('button', { name: '刷新详情', exact: true }).click(); expect(await fetched).toBe(200);
     await page.getByLabel('当前孩子').selectOption(fixture.actors.sibling.childId);
     await expect(page.getByRole('alert')).toHaveText('该入口不属于当前选择的孩子。');
-    expect((await cancelled).failure().errorText).toBe('net::ERR_ABORTED');
+    await assertRequestFailure(await cancelled, { browserName, kind: 'cancelled', url: runtime.webUrl + detailPath, method: 'GET' });
     await expect(page.getByRole('region', { name: '讲解详情', exact: true })).toHaveCount(0);
     expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('family-growth.ai1-command.v1:')))).toEqual([]);
     release(); await terminal; await page.unroute(`**${detailPath}`, holdRead);
@@ -632,10 +657,10 @@ test('AI1 formal child switch clears unknown local command but preserves server 
     expect(after.artifacts).toHaveLength(1); expect(after.job.budget.settledMicros).toBe(2250);
     expect(seen.errors).toEqual([]); expect(seen.external).toEqual([]);
     expect(seen.console).toHaveLength(1); expect(seen.console[0]).toContain('503');
-  } finally { release(); }
+  } finally { release(); await page.unrouteAll({ behavior: 'wait' }); }
 });
 
-test('AI1 formal late expired JWT response cannot expire the new actor', async ({ page, context }) => {
+test('AI1 formal late expired JWT response cannot expire the new actor', async ({ page, context, browserName }) => {
   const seen = await observe(page), created = await preview(page); await generate(page);
   await expect(page.getByText(generated, { exact: true })).toBeVisible();
   const sessionKey = 'family-growth.parent-session.v1', jwt = require('jsonwebtoken');
@@ -666,7 +691,7 @@ test('AI1 formal late expired JWT response cannot expire the new actor', async (
     expect(JSON.stringify(rejected.body)).not.toContain(generated);
     await login(tab, 'outsider');
     await expect(page.getByText(generated, { exact: true })).toHaveCount(0);
-    expect((await cancelled).failure().errorText).toBe('net::ERR_ABORTED');
+    await assertRequestFailure(await cancelled, { browserName, kind: 'cancelled', url: runtime.webUrl + detailPath, method: 'GET' });
     const fresh = await tab.evaluate(key => JSON.parse(localStorage.getItem(key)), sessionKey);
     expect(fresh.user.id).toBe(fixture.actors.outsider.userId); expect(fresh.token).not.toBe(token);
     release(); await terminal;
@@ -678,5 +703,8 @@ test('AI1 formal late expired JWT response cannot expire the new actor', async (
     expect(seen.writes).toHaveLength(2); expect(tabSeen.writes).toEqual([]);
     expect(remote.puts).toHaveLength(1); expect(remote.gets).toEqual([]);
     expect(seen.errors).toEqual([]); expect(tabSeen.errors).toEqual([]); expect(seen.external).toEqual([]);
-  } finally { release(); await tab.close(); }
+  } finally {
+    release();
+    try { await page.unrouteAll({ behavior: 'wait' }); } finally { await tab.close(); }
+  }
 });

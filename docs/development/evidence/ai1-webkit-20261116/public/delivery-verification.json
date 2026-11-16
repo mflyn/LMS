@@ -1,0 +1,64 @@
+{
+  "base": "09180b863189ff64c41c53c094c85dc32ebacca5",
+  "status": "P2_CLOSED_USER_APPROVED_LOCAL_ONLY",
+  "files": [
+    {
+      "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+      "bytes": 52432,
+      "sha256": "2f0e0439151baef2143fa3cbf66e225e13dfe7a1d2518eb5cc52cc8c9f187a06",
+      "frozenCandidateSha256": "2f0e0439151baef2143fa3cbf66e225e13dfe7a1d2518eb5cc52cc8c9f187a06",
+      "phase": "UNCHANGED_REVIEWED_SOURCE"
+    },
+    {
+      "file": "tests/e2e/t2/ai1BrowserContracts.js",
+      "bytes": 3577,
+      "sha256": "b8839be8af5f438e1586edc479680740e4b0cb146e930492ca592f049f7a998f",
+      "frozenCandidateSha256": "b8839be8af5f438e1586edc479680740e4b0cb146e930492ca592f049f7a998f",
+      "phase": "UNCHANGED_REVIEWED_SOURCE"
+    },
+    {
+      "file": "tests/e2e/t2/ai1BrowserContracts.spec.js",
+      "bytes": 8042,
+      "sha256": "20bd2008c706017e243c99318cd68c16b824596cf5e2dceffc1b616187326fdd",
+      "frozenCandidateSha256": "20bd2008c706017e243c99318cd68c16b824596cf5e2dceffc1b616187326fdd",
+      "phase": "UNCHANGED_REVIEWED_SOURCE"
+    },
+    {
+      "file": "docs/development/family-ai1-test-plan.md",
+      "bytes": 71059,
+      "sha256": "ed6afe30c25ac065796112d221124f3fb962e96c55dfd08d37bad8ad6efd7eb4",
+      "frozenCandidateSha256": "e7625af3600b1d23dc95f9b48ebaff02ff1ca6e42237b3c96b57c4350baae9e0",
+      "phase": "POST_REVIEW_CLOSURE_DOCUMENT"
+    },
+    {
+      "file": "docs/development/evidence/ai1-webkit-20261116/README.md",
+      "bytes": 11180,
+      "sha256": "cd282565a6543b5e6aefe0d09342eb1a2371bbe70113d7bcfaa1cf5fa3de5b5b",
+      "frozenCandidateSha256": "775017405a526418f9d7e9a33caa965b28a45bac24a5866853918989192b4dba",
+      "phase": "POST_REVIEW_CLOSURE_DOCUMENT"
+    },
+    {
+      "file": "tests/e2e/t2/ai1NavigationCleanup.spec.js",
+      "bytes": 3686,
+      "sha256": "a0b29f314a7d2ad2ab39f5fe5b6329f0d93319013bafd793b57cd927a7d84d0d",
+      "frozenCandidateSha256": "a0b29f314a7d2ad2ab39f5fe5b6329f0d93319013bafd793b57cd927a7d84d0d",
+      "phase": "UNCHANGED_REVIEWED_SOURCE"
+    }
+  ],
+  "fullAndIncrementReconstruction": true,
+  "closureDocumentsNotOriginalFrozenDocuments": true,
+  "preserved": [
+    "REAL_REQUEST_EVIDENCE_PENDING",
+    "DEVICE_PENDING",
+    "MANUAL_PENDING",
+    "T4/T8/AI-1 OPEN",
+    "SERVER_TIMING_UNVERIFIED",
+    "Docker INCOMPLETE_FAILED",
+    "historical failures",
+    "nonblocking followups",
+    "deferred scope"
+  ],
+  "publishScope": "Reviewed tests, closure documents and source/hash-only evidence; no raw logs, screenshots, credentials, real children data or machine metadata",
+  "noProductOrWorkflowChanges": true,
+  "noDeployOrHumanEntryUpdate": true
+}

@@ -1,0 +1,30 @@
+{
+  "archives": [
+    {
+      "alias": "ai1-webkit-20261117-cleanup",
+      "fileCount": 112,
+      "manifestSha256": "64f225e94c56cd333bca9b7160c8fa076be5ffd15566190db01b5e8e00d48f46",
+      "rawEvidence": "LOCAL_PRIVATE_NOT_PUBLISHED"
+    },
+    {
+      "alias": "ai1-cleanup-review-20261117-OtJXaw",
+      "fileCount": 22,
+      "manifestSha256": "d5ab2a5f05c478d8b358ba56d9b7abf2e00f23b12f6eb3e91c1b6e3cb3879c1a",
+      "rawEvidence": "LOCAL_PRIVATE_NOT_PUBLISHED"
+    },
+    {
+      "alias": "ai1-webkit-20261116",
+      "fileCount": 152,
+      "manifestSha256": "c979a15ca51ce17449ad91d48ba77705a9d7f677fe9c6d17b7c0d4207ebbe7e9",
+      "rawEvidence": "LOCAL_PRIVATE_NOT_PUBLISHED"
+    },
+    {
+      "alias": "tutor-preview-p2-followup-2026-11-16/r1",
+      "fileCount": 135,
+      "manifestSha256": "4638a69b9653c0d7791e7647b88bad49ad84f76b2d6efaac545cdf5ebcb884d7",
+      "rawEvidence": "LOCAL_PRIVATE_NOT_PUBLISHED"
+    }
+  ],
+  "reviewReportSha256": "ce45330bc5be20c9c2af5013b5afe46ea2ec0c4b3001b994c6b021f124a2c36d",
+  "noRawLogsOrScreenshotsPublished": true
+}

@@ -1,0 +1,204 @@
+diff --git a/docs/development/evidence/ai1-webkit-20261116/README.md b/docs/development/evidence/ai1-webkit-20261116/README.md
+index 36e07c5..999d2d7 100644
+--- a/docs/development/evidence/ai1-webkit-20261116/README.md
++++ b/docs/development/evidence/ai1-webkit-20261116/README.md
+@@ -80,3 +80,35 @@ WebKit注入失败之后的提示组合、GET只清读错、显式原命令重
+ 开发测试不代替独立复评、真人或iPad实测。`REAL_REQUEST_EVIDENCE_PENDING`、`DEVICE_PENDING`、`MANUAL_PENDING`、
+ `T4/T8/AI-1 OPEN`、`SERVER_TIMING_UNVERIFIED`、Docker `INCOMPLETE_FAILED`、非阻断补测及全部后置范围保持。
+ 不改写历史冻结补丁/manifest，不操作现有真人实例或服务器，不调用真实模型、不提交推送/合并/部署。
++
++## 初始化收尾 P2 修订（2026-11-17，待复审）
++
++以上是首轮开发候选的历史记录，不覆盖其冻结内容。后续复审指出首次路由注册在try/finally外，
++注册失败时已创建的运行时未停止。本次仅修改导航测试的保护范围和错误传播，并新增5项永久反例；
++产品代码、原19项业务用例、已有8项契约/导航用例及原断言不变。
++
++新反例调用实际导航用例回调，依赖使用替身：监听器或路由注册失败仍收尾；导航失败正对照；
++停止未完成不结束；原错误及三项收尾失败均保留。旧候选1通过/4失败；修订后专项13通过。
++三项逐一变异分别2/1/1失败：恢复外部初始化、移除收尾await、丢弃原异常。没有提高超时或增加重试。
++新本地证据包别名为 `ai1-webkit-20261117-cleanup`，保留初次沙箱ps/EPERM准备失败及红灯；
++权限受控执行的结果单独记录，不把未执行测试记为通过。旧152份归档及更早135份独立失败证据不改写。
++
++状态：`FIXED_PENDING_REVIEW`。本轮是开发验证和自查，不冒称测试线程独立复验，不关闭AI-1或原请求事件。
++最终同源两引擎结果、冻结补丁和增量绑定完成后在下方追加。
++
++### P2 最终开发验证
++
++| 批次 | 实际结果 | 证据边界 |
++| --- | --- | --- |
++| 新反例在旧候选运行 | 1通过/4失败 | 正对照通过；监听器/注册/等待/错误追溯反例失败 |
++| 修订后收尾及契约专项 | 13通过 | 新5项＋既有契约4项＋既有收尾4项；依赖替身，不冒称页面实跑 |
++| 三项逐一变异 | 2/1/1失败，均exit1 | 在目标断言处拒绝，随后恢复源码 |
++| WebKit完整相关集合 | 32通过，exit0，170.987秒 | 原19＋既有8＋新增5，0skip/0retry |
++| Chromium完整相关集合 | 32通过，exit0，171.390秒 | 与WebKit同一最终4份测试/辅助源码，0skip/0retry |
++| 局部ESLint、文档及diff校验 | exit0 | 不代表产品构建、后端全量或独立浏览器复验 |
++
++两引擎均使用临时正式LMS服务和远端operation替身，无Provider；新增5项为实际用例回调的失败注入，
++不能将全部32项称作正式后端页面验收。复用构建前已核验240份前端源码和9份构建文件，未重新构建。
++本轮完整6文件补丁为新包 `candidate.patch`，相对上轮5文件候选的增量为 `increment.patch`；
++两条重建路径均需与新 `candidate.json` 的逐文件哈希一致。`manifest.json` 绑定日志、回执及自查记录。
++开发自查未发现新增阻断，尚待本轮复审；不以自查替代独立复评，不覆盖上轮开发或原独立失败结果。
+diff --git a/docs/development/family-ai1-test-plan.md b/docs/development/family-ai1-test-plan.md
+index 1c0c7f8..6c6bbbb 100644
+--- a/docs/development/family-ai1-test-plan.md
++++ b/docs/development/family-ai1-test-plan.md
+@@ -605,3 +605,24 @@ SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED及全部后置范围不变
+ 复用原Playwright入口，完整相关集合原19项＋新增8项，最终两引擎必须同一源码、原预算、串行、零重试。
+ 保留原命令/权限/版本/数据不变断言，不通过减少浏览器告警监听、网络空闲等待或放宽CORS消除失败。
+ 这不是原生硬替换问题、原iPad请求或真实模型的验收；现有关闭限定及未关闭/后置状态不变。
++
++### 19.1 初始化收尾 P2 修订候选（2026-11-17）
++
++复审发现：运行时已创建，但首次 `page.route` 在异常收尾之外，注册失败会漏停临时服务。
++本次将监听器安装、服务监听与首次路由注册全部纳入同一保护范围；原异常与收尾异常分别保存，
++单一异常原样传播，多项异常聚合，等待停止完成后才结束用例。原业务断言、预算及精确错误契约不变。
++
++新增 `ai1NavigationCleanup.spec.js` 直接调用实际注册的导航用例，以运行时和页面替身注入失败，
++不是复制一份收尾逻辑：监听器失败、首次注册失败、导航失败正常收尾、停止未完成不得结束、
++原失败与 unroute/attach/stop 三项失败均可追溯，共5项永久用例。沿用原Playwright自动发现入口。
++旧候选新反例为1通过/4失败；修订后与原契约和收尾用例合计13项通过。
++恢复外部初始化、移除等待、丢弃原异常三项逐一变异分别2/1/1项失败，均为目标断言拒绝。
++
++本次状态为 `FIXED_PENDING_REVIEW`，不是P2已获批准关闭，也不是独立两引擎验收。
++证据包 `ai1-webkit-20261117-cleanup` 另存完整候选、相对前候选增量及逐批结果；
++旧 `ai1-webkit-20261116` 冻结包、原失败和原请求缺证保持，实际最终回归见证据索引追加记录。
++
++最终开发回归：Chromium32通过、WebKit32通过，同一最终测试源码，0skip/0retry；
++每引擎均为原19项＋既有8项＋新增5项，既有收尾4项另在13项专项中执行，不能重复相加为浏览器实跑数。
++完整候选6文件及相对前候选的增量分别冻结并重建校验；局部lint、文档及diff检查通过。
++本次仅开发验证及自查完成，P2/本批仍待复审，不改变原请求缺证、真人/真机和其他OPEN/后置状态。
+diff --git a/tests/e2e/t2/ai1BrowserContracts.spec.js b/tests/e2e/t2/ai1BrowserContracts.spec.js
+index 5462ae3..8e18bbf 100644
+--- a/tests/e2e/t2/ai1BrowserContracts.spec.js
++++ b/tests/e2e/t2/ai1BrowserContracts.spec.js
+@@ -46,18 +46,19 @@ for (const entry of ['tasks', 'mistakes']) for (const phase of ['pending', 'comp
+     const runtime = await createT2WebRuntime(), errors = [], events = [], handlers = [], faults = [], heldRows = [];
+     let release;
+     const held = new Promise(resolve => { release = resolve; });
+-    page.on('pageerror', e => errors.push({ type: 'pageerror', text: e.message }));
+-    page.on('console', m => { if (['warning', 'error'].includes(m.type())) errors.push({ type: m.type(), text: m.text() }); });
+-    page.on('request', r => events.push({ type: 'request', path: new URL(r.url()).pathname, document: r.isNavigationRequest() }));
+-    page.on('requestfailed', r => events.push({ type: 'failed', path: new URL(r.url()).pathname, text: r.failure()?.errorText }));
+-    for (const { name, server } of runtime.servers) server.prependListener('request', req => {
+-      if (req.url.includes('/daily-learning-plans/')) events.push({ type: 'ingress', name, path: req.url });
+-    });
+-    await page.route('**/*', route => {
+-      if (new URL(route.request().url()).origin === runtime.webUrl) return route.continue();
+-      faults.push(new Error('Non-local request')); return route.abort();
+-    });
++    const failures = [];
+     try {
++      page.on('pageerror', e => errors.push({ type: 'pageerror', text: e.message }));
++      page.on('console', m => { if (['warning', 'error'].includes(m.type())) errors.push({ type: m.type(), text: m.text() }); });
++      page.on('request', r => events.push({ type: 'request', path: new URL(r.url()).pathname, document: r.isNavigationRequest() }));
++      page.on('requestfailed', r => events.push({ type: 'failed', path: new URL(r.url()).pathname, text: r.failure()?.errorText }));
++      for (const { name, server } of runtime.servers) server.prependListener('request', req => {
++        if (req.url.includes('/daily-learning-plans/')) events.push({ type: 'ingress', name, path: req.url });
++      });
++      await page.route('**/*', route => {
++        if (new URL(route.request().url()).origin === runtime.webUrl) return route.continue();
++        faults.push(new Error('Non-local request')); return route.abort();
++      });
+       await page.goto(runtime.webUrl + '/login');
+       await page.getByLabel('用户名').fill(runtime.fixture.actors.parent.username);
+       await page.getByLabel('密码', { exact: true }).fill(runtime.fixture.actors.parent.password);
+@@ -100,10 +101,17 @@ for (const entry of ['tasks', 'mistakes']) for (const phase of ['pending', 'comp
+       await expect(refresh).toBeEnabled();
+       await expect(page.getByText('今日计划暂无任务。', { exact: true })).toBeVisible();
+       expect(await runtime.snapshot()).toEqual(before); expect(errors).toEqual([]); expect(faults).toEqual([]);
++    } catch (error) {
++      failures.push(error);
+     } finally {
+-      release(); await Promise.all(handlers);
+-      await finishParentNavigationTest({ page, info, runtime, evidence: { entry, phase, events, errors, faults: faults.map(String) } });
+-      expect(faults).toEqual([]);
++      release();
++      try { await Promise.all(handlers); } catch (error) { failures.push(error); }
++      try {
++        await finishParentNavigationTest({ page, info, runtime, evidence: { entry, phase, events, errors, faults: faults.map(String) } });
++      } catch (error) { failures.push(error); }
++      try { expect(faults).toEqual([]); } catch (error) { failures.push(error); }
+     }
++    if (failures.length === 1) throw failures[0];
++    if (failures.length > 1) throw new AggregateError(failures, 'AI1 navigation and cleanup failed');
+   });
+ }
+diff --git a/b/tests/e2e/t2/ai1NavigationCleanup.spec.js b/tests/e2e/t2/ai1NavigationCleanup.spec.js
+new file mode 100644
+index 0000000..a29963f
+--- /dev/null
++++ b/tests/e2e/t2/ai1NavigationCleanup.spec.js
+@@ -0,0 +1,73 @@
++const { test, expect } = require('@playwright/test');
++const fs = require('node:fs');
++const path = require('node:path');
++const vm = require('node:vm');
++const { createRequire } = require('node:module');
++
++// Exercise the real registered navigation callback, including its setup boundary.
++function navigationCase() {
++  const filename = path.join(__dirname, 'ai1BrowserContracts.spec.js');
++  const localRequire = createRequire(filename), cases = [];
++  let runtime;
++  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), {
++    URL,
++    require(id) {
++      if (id === '@playwright/test') return { test: (name, run) => cases.push({ name, run }), expect };
++      if (id === './webRuntime') return { createT2WebRuntime: async () => runtime };
++      return localRequire(id);
++    }
++  }, { filename });
++  const selected = cases.find(item => item.name === 'AI1 tasks entry during pending real plan read keeps document and data');
++  expect(selected).toBeDefined();
++  return (page, info, value) => { runtime = value; return selected.run({ page, browserName: 'webkit' }, info); };
++}
++
++function fixture(stage, stop = async () => {}) {
++  const calls = [], original = new Error(`Synthetic ${stage} failure`);
++  const page = {
++    on() { if (stage === 'listener') throw original; },
++    async route() { calls.push('route'); if (stage === 'route') throw original; },
++    async goto() { calls.push('goto'); throw original; },
++    async unrouteAll() { calls.push('unroute'); }
++  };
++  const info = { async attach() { calls.push('attach'); } };
++  const runtime = { servers: [], webUrl: 'http://127.0.0.1:12345', async stop() { calls.push('stop'); await stop(); } };
++  return { calls, original, page, info, runtime };
++}
++
++for (const stage of ['listener', 'route', 'goto']) test(`AI1 navigation cleanup stops runtime after ${stage} failure`, async () => {
++  const f = fixture(stage);
++  const result = await navigationCase()(f.page, f.info, f.runtime).catch(error => error);
++  expect(result).toBe(f.original);
++  expect(f.calls.filter(call => ['unroute', 'attach', 'stop'].includes(call))).toEqual(['unroute', 'attach', 'stop']);
++});
++
++test('AI1 navigation cleanup waits for stop after route registration failure', async () => {
++  let release, settled = false;
++  const held = new Promise(resolve => { release = resolve; });
++  const f = fixture('route', () => held);
++  const result = navigationCase()(f.page, f.info, f.runtime).then(
++    value => { settled = true; return value; }, error => { settled = true; return error; }
++  );
++  try {
++    // A later event-loop turn must not settle the case while stop is held.
++    await new Promise(resolve => setImmediate(resolve));
++    expect(f.calls).toEqual(['route', 'unroute', 'attach', 'stop']);
++    expect(settled).toBe(false);
++  } finally { release(); await result; }
++  expect(await result).toBe(f.original);
++  expect(settled).toBe(true);
++});
++
++test('AI1 navigation cleanup retains original and all cleanup failures', async () => {
++  const stop = new Error('Synthetic stop failure'), unroute = new Error('Synthetic unroute failure');
++  const attach = new Error('Synthetic attach failure');
++  const f = fixture('route', async () => { throw stop; });
++  f.page.unrouteAll = async () => { f.calls.push('unroute'); throw unroute; };
++  f.info.attach = async () => { f.calls.push('attach'); throw attach; };
++  const result = await navigationCase()(f.page, f.info, f.runtime).catch(error => error);
++  const leaves = error => error?.errors ? Array.from(error.errors).flatMap(leaves) : [error];
++  expect(result?.name).toBe('AggregateError');
++  expect(leaves(result)).toEqual([f.original, unroute, attach, stop]);
++  expect(f.calls).toEqual(['route', 'unroute', 'attach', 'stop']);
++});

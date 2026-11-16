@@ -1,0 +1,38 @@
+{
+  "base": "09180b863189ff64c41c53c094c85dc32ebacca5",
+  "fullPatchSha256": "192a51a5d51b36d14c3e18c57d194653a4151cd42b3aedd2e9a2509c1cc92723",
+  "incrementalPatchSha256": "bc08682f063272b4b6e4ad4489d3b2fbba5d37fbd42d11cdd698d1e34a9124f9",
+  "previousPatchSha256": "8d7c47a5a5b1132f89ad840d08fdd706239e83ab3c562cc387f980220a8748ad",
+  "files": [
+    {
+      "file": "tests/e2e/t2/ai1FormalPage.spec.js",
+      "bytes": 52432,
+      "sha256": "2f0e0439151baef2143fa3cbf66e225e13dfe7a1d2518eb5cc52cc8c9f187a06"
+    },
+    {
+      "file": "tests/e2e/t2/ai1BrowserContracts.js",
+      "bytes": 3577,
+      "sha256": "b8839be8af5f438e1586edc479680740e4b0cb146e930492ca592f049f7a998f"
+    },
+    {
+      "file": "tests/e2e/t2/ai1BrowserContracts.spec.js",
+      "bytes": 8042,
+      "sha256": "20bd2008c706017e243c99318cd68c16b824596cf5e2dceffc1b616187326fdd"
+    },
+    {
+      "file": "docs/development/family-ai1-test-plan.md",
+      "bytes": 68772,
+      "sha256": "e7625af3600b1d23dc95f9b48ebaff02ff1ca6e42237b3c96b57c4350baae9e0"
+    },
+    {
+      "file": "docs/development/evidence/ai1-webkit-20261116/README.md",
+      "bytes": 9222,
+      "sha256": "775017405a526418f9d7e9a33caa965b28a45bac24a5866853918989192b4dba"
+    },
+    {
+      "file": "tests/e2e/t2/ai1NavigationCleanup.spec.js",
+      "bytes": 3686,
+      "sha256": "a0b29f314a7d2ad2ab39f5fe5b6329f0d93319013bafd793b57cd927a7d84d0d"
+    }
+  ]
+}
