@@ -650,3 +650,31 @@ SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED及全部后置范围不变�
 原1通过/4失败红灯、WebKit历史失败、沙箱准备失败继续保留；`REAL_REQUEST_EVIDENCE_PENDING`、
 `DEVICE_PENDING / MANUAL_PENDING`、`T4/T8/AI-1 OPEN`、`SERVER_TIMING_UNVERIFIED`、Docker `INCOMPLETE_FAILED`、
 非阻断补测及全部后置范围保持。不提交推送、不更新真人入口、不调用模型、不操作服务器或部署。
+
+### 19.3 合并后Ubuntu选定回归证据接续（2026-11-17）
+
+§18～§19.2保留原受验身份、失败和批准范围；本节只追加测试线程已完成的后续证据，
+不改写原冻结包，不扩大预览/初始化收尾P2的 `LOCAL_ONLY` 批准，不关闭AI-1总门禁。
+历史执行在PR #58合并到 `7da928e7d4aee992eb1507e3b898572fcbb012ca` 后，仅更新Ubuntu前端，
+7个后端保留相对该历史目标业务/依赖等价的 `e9147b61` 镜像。版本、精确静态包、255份冻结文件和manifest哈希见
+[Ubuntu选定回归索引](evidence/ubuntu-frontend-update-20261117/README.md)。
+
+该历史批次实际为Mac Chromium/WebKit经SSH连接Ubuntu临时正式服务：AI1相关各32/32，常用项各2/2，
+真实服务求助→人工回应→孩子回看前后各1，共4项健康闭环；0skip/retry，原超时和断言不变。
+32项含原19＋契约/导航8＋收尾5，不全是真实后端页面；远端operation为回环替身，无真实模型。
+原十三个AI1 WebKit失败用例逐项在两引擎通过，不代表全部旧WebKit或完整家庭后端全绿。
+前次本机独立7变异/139份归档、本地13项专项、两引擎32项开发回归与本轮Ubuntu结果分列，
+不声称Ubuntu重跑过变异。QA准备缺括号的exit1/零业务执行保留，不算产品失败。
+
+首轮文档核对的源码身份为历史候选 `7da928e7`，不是后来更新的main。
+本次仅复核原冻结255份文件、manifest及汇总统计/范围标记并收口文档；2026-11-17文档复审通过并获用户批准，
+状态 `DOCUMENT_REVIEW_APPROVED`，详见索引中的文档复审与批准记录。未重复执行实例或测试，不扩大原验收范围。
+`REAL_REQUEST_EVIDENCE_PENDING`、`DEVICE_PENDING / MANUAL_PENDING`、`T4/T8/AI-1 OPEN`、
+`SERVER_TIMING_UNVERIFIED`、Docker `INCOMPLETE_FAILED`及非阻断/后置状态不变。
+历史记录中AI运行开关为off，本次未实时查询；人工求助回应健康不能证明AI原请求已解决，也不提供真实发送授权。
+
+文档收口时main已为 `9bf042c8f631edd82aa6807fcc8e192bd6c5cb23`，[PR #59](https://github.com/mflyn/LMS/pull/59)
+登录429修订已合并，[合并后CI](https://github.com/mflyn/LMS/actions/runs/44025279785)成功；可选作业跳过不算通过。
+这是独立于本节历史Ubuntu批次的新证据，不改绑原32项/2项结果，也不表示真人入口已更新。
+[登录429限定验收](login429-local-acceptance.md)保留开发两引擎各45项、复审各1项及后端分批失败/补验的区别；
+共享额度风险未修复，8次业务503仍 `OPEN / EVIDENCE_MISSING`，不据AI1或health通过猜测根因。

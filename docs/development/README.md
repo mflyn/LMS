@@ -36,7 +36,27 @@
 
 ## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
 
+### 当前交付与受测摘要（2026-11-17）
+
+**当前代码：** main `9bf042c8f631edd82aa6807fcc8e192bd6c5cb23` 已合并[PR #59](https://github.com/mflyn/LMS/pull/59)，
+[合并后CI](https://github.com/mflyn/LMS/actions/runs/44025279785)成功；跳过的可选作业不算通过。
+登录429契约与提示已获限定本地验收，不表示共享额度风险已修复；8次业务503仍 `OPEN / EVIDENCE_MISSING`。
+
+**历史受测：** 测试线程在[PR #58](https://github.com/mflyn/LMS/pull/58)对应的 `7da928e7` 上，
+按单独授权完成Ubuntu**仅前端**更新与选定隔离回归；该版本[原CI](https://github.com/mflyn/LMS/actions/runs/43986403569)另行保留。
+见[历史证据与版本分层](evidence/ubuntu-frontend-update-20261117/README.md)：当时前端为 `7da928e7`，
+7个后端保留相对该历史目标业务/依赖等价的 `e9147b61` 镜像且未重启，不将等价结论扩展到 `9bf042c8`。
+该批Mac两引擎经SSH访问Ubuntu临时正式服务，各AI1相关32项、常用项2项、前后健康各1项通过，
+与登录429开发两引擎各45项、复审各1项及历史失败分别记录；真人／真机仍待验。
+本次未实时查询或更新实例，不以最新main或CI成功推断真人入口已包含登录429修订。
+2026-11-17本批4份测试证据文档复审通过并获用户批准，状态 `DOCUMENT_REVIEW_APPROVED`；
+复审与批准记录绑定上述历史SHA、最新main及原冻结manifest，见历史证据索引；不包含SRS或指南验收。
+本摘要仅核对已结束的执行证据，不授权再次更新入口或执行测试；T4/T8/AI-1 OPEN、
+SERVER_TIMING_UNVERIFIED、DEVICE_PENDING/MANUAL_PENDING、原请求缺证、历史Docker失败及后置状态不变。
+
 ### 当前交付摘要（2026-11-15）
+
+以下保留当日快照，“当前”及禁止更新入口的表述指当时授权；最新受测范围见上方2026-11-17摘要，不追改旧结果。
 
 **已合并、自动化通过、真人／真机待验。** 当前固定代码候选为 main
 `1abb623da7eed3bd27b159da3216189952586f1e`，与本轮核对的 origin/main 一致。
