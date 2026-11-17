@@ -5,9 +5,10 @@ import {
   listKnowledgePoints,
   setChildPin,
   updateChild,
+  updateGrowthTask,
   updateKnowledgePoint
 } from '../../services/familyApi';
-import { PARENT_SESSION_KEY } from '../../services/familySession';
+import { PARENT_SESSION_KEY, saveParentSession } from '../../services/familySession';
 
 const parentConfig = {
   headers: { Authorization: 'Bearer parent-token' }
@@ -16,10 +17,10 @@ const parentConfig = {
 describe('Task 11 parent child API client', () => {
   beforeEach(() => {
     localStorage.clear();
-    localStorage.setItem(PARENT_SESSION_KEY, JSON.stringify({
+    saveParentSession({
       token: 'parent-token',
       user: { id: 'parent-a', name: '家长', role: 'parent' }
-    }));
+    });
     jest.clearAllMocks();
     axios.post.mockResolvedValue({ data: { success: true, data: {} } });
   });
@@ -32,6 +33,15 @@ describe('Task 11 parent child API client', () => {
       { name: ' 小明 ', grade: 3 },
       parentConfig
     );
+  });
+
+  test.each([429, 503, 401])('task edit %s neither retries nor misclassifies session expiry', async status => {
+    const before = localStorage.getItem(PARENT_SESSION_KEY);
+    const error = { response: { status } };
+    axios.patch.mockRejectedValueOnce(error);
+    await expect(updateGrowthTask('synthetic-task', { title: 'Changed' })).rejects.toBe(error);
+    expect(axios.patch).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(status === 401 ? null : before);
   });
 
   test('sets a PIN through an encoded child path', async () => {

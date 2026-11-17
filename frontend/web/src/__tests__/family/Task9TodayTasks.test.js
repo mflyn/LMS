@@ -692,4 +692,29 @@ describe('Task 9 today and task workflows', () => {
     expect(await screen.findByText('任务状态已变化，已重新加载。')).toBeInTheDocument();
     expect(await screen.findByText('服务端最新任务')).toBeInTheDocument();
   });
+
+  test.each(['success', '429'])('task edit %s issues one write without a list refresh loop', async outcome => {
+    const user = userEvent.setup();
+    listGrowthTasks.mockResolvedValue({ items: [task()], total: 1 });
+    if (outcome === 'success') updateGrowthTask.mockResolvedValueOnce({ task: task({ title: 'Updated task' }) });
+    else updateGrowthTask.mockRejectedValueOnce({ response: { status: 429,
+      data: { success: false, error: { code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' } } } });
+    renderPage(<TasksPage />);
+    await screen.findByText('跳绳 500 个');
+    await user.click(screen.getByRole('button', { name: '编辑 跳绳 500 个' }));
+    await user.clear(screen.getByLabelText('任务标题'));
+    await user.type(screen.getByLabelText('任务标题'), 'Updated task');
+    await user.click(screen.getByRole('button', { name: '保存任务' }));
+    if (outcome === 'success') {
+      expect(await screen.findByText('任务已更新。')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Updated task' })).toBeInTheDocument();
+    } else {
+      expect(await screen.findByText('请求过于频繁，请稍后再试')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '保存任务' })).toBeEnabled();
+      expect(screen.getByLabelText('任务标题')).toHaveValue('Updated task');
+    }
+    expect(updateGrowthTask).toHaveBeenCalledTimes(1);
+    expect(listGrowthTasks).toHaveBeenCalledTimes(1);
+    expect(createGrowthTask).not.toHaveBeenCalled();
+  });
 });

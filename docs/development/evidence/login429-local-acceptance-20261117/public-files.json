@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "path": "candidate.patch",
+      "bytes": 29374,
+      "sha256": "c35885423b6cdd1d5a11bc8517ac62f608906f22d8e9e05f6ebade7eeee4531b"
+    },
+    {
+      "path": "candidate-files.json",
+      "bytes": 1561,
+      "sha256": "219ec6609cee4a5272eb4419fd8f2a7680122f4f2a04529ba84af689414c0ecb"
+    },
+    {
+      "path": "archive-index.json",
+      "bytes": 17354,
+      "sha256": "abfba489374efbd243ec776578cf8c1050d915fc0955be883db4cc53a354dffb"
+    },
+    {
+      "path": "review-receipt.json",
+      "bytes": 1827,
+      "sha256": "e0ca020a92de41da880f2e49b86a0b0ecd221052a7c038507d3113bbb4d107b4"
+    }
+  ]
+}

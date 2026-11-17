@@ -1,0 +1,439 @@
+diff --git a/backend/common/config/index.js b/backend/common/config/index.js
+index 0d32a51d..2d386f49 100644
+--- a/backend/common/config/index.js
++++ b/backend/common/config/index.js
+@@ -164,7 +164,10 @@ class ConfigManager {
+     config.RATE_LIMIT_CONFIG = {
+       windowMs: config.RATE_LIMIT_WINDOW_MS,
+       max: config.RATE_LIMIT_MAX_REQUESTS,
+-      message: '请求过于频繁，请稍后再试',
++      message: {
++        success: false,
++        error: { code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' }
++      },
+       standardHeaders: true,
+       legacyHeaders: false
+     };
+@@ -172,7 +175,10 @@ class ConfigManager {
+     config.SENSITIVE_RATE_LIMIT_CONFIG = {
+       windowMs: config.RATE_LIMIT_WINDOW_MS,
+       max: config.SENSITIVE_RATE_LIMIT_MAX_REQUESTS,
+-      message: '请求过于频繁，请稍后再试',
++      message: {
++        success: false,
++        error: { code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' }
++      },
+       standardHeaders: true,
+       legacyHeaders: false,
+       skipSuccessfulRequests: false
+diff --git a/frontend/web/src/__tests__/family/AuthContext.test.js b/frontend/web/src/__tests__/family/AuthContext.test.js
+index f690ae39..161c0381 100644
+--- a/frontend/web/src/__tests__/family/AuthContext.test.js
++++ b/frontend/web/src/__tests__/family/AuthContext.test.js
+@@ -2,7 +2,7 @@ import React from 'react';
+ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+ import axios from 'axios';
+ import { AuthProvider, useAuth } from '../../contexts/AuthContext';
+-import { PARENT_SESSION_EXPIRED_EVENT, PARENT_SESSION_KEY } from '../../services/familySession';
++import { PARENT_SESSION_EXPIRED_EVENT, PARENT_SESSION_KEY, saveParentSession } from '../../services/familySession';
+ 
+ const AuthProbe = () => {
+   const { error, login, logout, status, user } = useAuth();
+@@ -24,6 +24,73 @@ describe('parent auth context', () => {
+     jest.clearAllMocks();
+   });
+ 
++  test.each([
++    ['legacy 429', { status: 429, data: '请求过于频繁，请稍后再试' }, '请求过于频繁，请稍后再试'],
++    ['structured 429', { status: 429, data: { error: { code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' } } }, '请求过于频繁，请稍后再试'],
++    ['empty 429', { status: 429 }, '请求过于频繁，请稍后再试'],
++    ['misleading 429', { status: 429, data: { error: { message: '密码错误' } } }, '请求过于频繁，请稍后再试'],
++    ['401', { status: 401 }, '登录失败，请检查账号和密码'],
++    ['structured 401', { status: 401, data: { error: { message: '用户名或密码错误' } } }, '用户名或密码错误'],
++    ['503', { status: 503, data: '<html>private upstream failure</html>' }, '登录服务暂时不可用，请稍后再试'],
++    ['500 misleading body', { status: 500, data: { error: { message: '密码错误' } } }, '登录服务暂时不可用，请稍后再试'],
++    ['network', undefined, '无法连接登录服务，请检查网络后重试'],
++    ['unexpected response', { status: 418 }, '登录失败，请稍后再试'],
++    ['invalid message type', { status: 400, data: { error: { message: { private: true } } } }, '登录失败，请稍后再试']
++  ])('classifies %s without writing a session or retrying', async (_name, response, message) => {
++    axios.post.mockRejectedValueOnce({ response });
++    localStorage.setItem('synthetic-original-command', 'unchanged');
++    render(<AuthProvider><AuthProbe /></AuthProvider>);
++    fireEvent.click(screen.getByRole('button', { name: '登录' }));
++    await waitFor(() => expect(screen.getByTestId('auth-error')).toHaveTextContent(message));
++    expect(screen.getByTestId('auth-status')).toHaveTextContent('anonymous');
++    expect(localStorage.getItem(PARENT_SESSION_KEY)).toBeNull();
++    expect(localStorage.getItem('synthetic-original-command')).toBe('unchanged');
++    expect(axios.post).toHaveBeenCalledTimes(1);
++  });
++
++  test.each(['429', '401', 'success'])('late %s cannot overwrite an externally changed parent identity', async kind => {
++    let resolve, reject;
++    axios.post.mockImplementationOnce(() => new Promise((yes, no) => { resolve = yes; reject = no; }));
++    render(<AuthProvider><AuthProbe /></AuthProvider>);
++    fireEvent.click(screen.getByRole('button', { name: '登录' }));
++    act(() => saveParentSession({ token: 'fresh-token', user: { id: 'parent-b', name: 'B', role: 'parent' } }));
++    const before = localStorage.getItem(PARENT_SESSION_KEY);
++    await act(async () => {
++      if (kind === 'success') resolve({ data: { token: 'old-token', user: { id: 'parent-a', role: 'parent' } } });
++      else reject({ response: { status: Number(kind) } });
++    });
++    expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(before);
++    expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
++    expect(screen.getByTestId('auth-error')).toHaveTextContent('none');
++  });
++
++  test('a late throttled attempt cannot overwrite a newer successful attempt', async () => {
++    let reject;
++    axios.post.mockImplementationOnce(() => new Promise((_yes, no) => { reject = no; }));
++    axios.post.mockResolvedValueOnce({ data: { token: 'new-token', user: { id: 'parent-b', role: 'parent' } } });
++    render(<AuthProvider><AuthProbe /></AuthProvider>);
++    fireEvent.click(screen.getByRole('button', { name: '登录' }));
++    fireEvent.click(screen.getByRole('button', { name: '登录' }));
++    await waitFor(() => expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated'));
++    await act(async () => reject({ response: { status: 429 } }));
++    expect(localStorage.getItem(PARENT_SESSION_KEY)).toContain('new-token');
++    expect(screen.getByTestId('auth-error')).toHaveTextContent('none');
++  });
++
++  test.each(['429', 'success'])('logout invalidates a held %s', async kind => {
++    let resolve, reject;
++    axios.post.mockImplementationOnce(() => new Promise((yes, no) => { resolve = yes; reject = no; }));
++    render(<AuthProvider><AuthProbe /></AuthProvider>);
++    fireEvent.click(screen.getByRole('button', { name: '登录' }));
++    fireEvent.click(screen.getByRole('button', { name: '退出' }));
++    await act(async () => {
++      if (kind === 'success') resolve({ data: { token: 'old-token', user: { id: 'parent-a', role: 'parent' } } });
++      else reject({ response: { status: 429 } });
++    });
++    expect(localStorage.getItem(PARENT_SESSION_KEY)).toBeNull();
++    expect(screen.getByTestId('auth-error')).toHaveTextContent('none');
++  });
++
+   test('persists only a parent login session', async () => {
+     axios.post.mockResolvedValueOnce({
+       data: {
+diff --git a/frontend/web/src/__tests__/family/Task9TodayTasks.test.js b/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
+index d0e86681..9725c7e3 100644
+--- a/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
++++ b/frontend/web/src/__tests__/family/Task9TodayTasks.test.js
+@@ -692,4 +692,29 @@ describe('Task 9 today and task workflows', () => {
+     expect(await screen.findByText('任务状态已变化，已重新加载。')).toBeInTheDocument();
+     expect(await screen.findByText('服务端最新任务')).toBeInTheDocument();
+   });
++
++  test.each(['success', '429'])('task edit %s issues one write without a list refresh loop', async outcome => {
++    const user = userEvent.setup();
++    listGrowthTasks.mockResolvedValue({ items: [task()], total: 1 });
++    if (outcome === 'success') updateGrowthTask.mockResolvedValueOnce({ task: task({ title: 'Updated task' }) });
++    else updateGrowthTask.mockRejectedValueOnce({ response: { status: 429,
++      data: { success: false, error: { code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' } } } });
++    renderPage(<TasksPage />);
++    await screen.findByText('跳绳 500 个');
++    await user.click(screen.getByRole('button', { name: '编辑 跳绳 500 个' }));
++    await user.clear(screen.getByLabelText('任务标题'));
++    await user.type(screen.getByLabelText('任务标题'), 'Updated task');
++    await user.click(screen.getByRole('button', { name: '保存任务' }));
++    if (outcome === 'success') {
++      expect(await screen.findByText('任务已更新。')).toBeInTheDocument();
++      expect(screen.getByRole('heading', { name: 'Updated task' })).toBeInTheDocument();
++    } else {
++      expect(await screen.findByText('请求过于频繁，请稍后再试')).toBeInTheDocument();
++      expect(screen.getByRole('button', { name: '保存任务' })).toBeEnabled();
++      expect(screen.getByLabelText('任务标题')).toHaveValue('Updated task');
++    }
++    expect(updateGrowthTask).toHaveBeenCalledTimes(1);
++    expect(listGrowthTasks).toHaveBeenCalledTimes(1);
++    expect(createGrowthTask).not.toHaveBeenCalled();
++  });
+ });
+diff --git a/frontend/web/src/__tests__/family/familyApi.task11.test.js b/frontend/web/src/__tests__/family/familyApi.task11.test.js
+index 6fa73206..d4916102 100644
+--- a/frontend/web/src/__tests__/family/familyApi.task11.test.js
++++ b/frontend/web/src/__tests__/family/familyApi.task11.test.js
+@@ -5,9 +5,10 @@ import {
+   listKnowledgePoints,
+   setChildPin,
+   updateChild,
++  updateGrowthTask,
+   updateKnowledgePoint
+ } from '../../services/familyApi';
+-import { PARENT_SESSION_KEY } from '../../services/familySession';
++import { PARENT_SESSION_KEY, saveParentSession } from '../../services/familySession';
+ 
+ const parentConfig = {
+   headers: { Authorization: 'Bearer parent-token' }
+@@ -16,10 +17,10 @@ const parentConfig = {
+ describe('Task 11 parent child API client', () => {
+   beforeEach(() => {
+     localStorage.clear();
+-    localStorage.setItem(PARENT_SESSION_KEY, JSON.stringify({
++    saveParentSession({
+       token: 'parent-token',
+       user: { id: 'parent-a', name: '家长', role: 'parent' }
+-    }));
++    });
+     jest.clearAllMocks();
+     axios.post.mockResolvedValue({ data: { success: true, data: {} } });
+   });
+@@ -34,6 +35,15 @@ describe('Task 11 parent child API client', () => {
+     );
+   });
+ 
++  test.each([429, 503, 401])('task edit %s neither retries nor misclassifies session expiry', async status => {
++    const before = localStorage.getItem(PARENT_SESSION_KEY);
++    const error = { response: { status } };
++    axios.patch.mockRejectedValueOnce(error);
++    await expect(updateGrowthTask('synthetic-task', { title: 'Changed' })).rejects.toBe(error);
++    expect(axios.patch).toHaveBeenCalledTimes(1);
++    expect(localStorage.getItem(PARENT_SESSION_KEY)).toBe(status === 401 ? null : before);
++  });
++
+   test('sets a PIN through an encoded child path', async () => {
+     await setChildPin('child/a 1', '2468');
+ 
+diff --git a/frontend/web/src/contexts/AuthContext.js b/frontend/web/src/contexts/AuthContext.js
+index 30c8a3b9..93e9d5c3 100644
+--- a/frontend/web/src/contexts/AuthContext.js
++++ b/frontend/web/src/contexts/AuthContext.js
+@@ -14,6 +14,16 @@ const AuthContext = createContext(null);
+ 
+ const authPayload = (response) => response?.data?.data || response?.data;
+ 
++const loginErrorMessage = (requestError) => {
++  const response = requestError?.response;
++  if (!response) return '无法连接登录服务，请检查网络后重试';
++  if (response.status === 429) return '请求过于频繁，请稍后再试';
++  if (response.status >= 500) return '登录服务暂时不可用，请稍后再试';
++  const message = response.data?.error?.message;
++  if (typeof message === 'string' && message.trim()) return message;
++  return response.status === 401 ? '登录失败，请检查账号和密码' : '登录失败，请稍后再试';
++};
++
+ const createParentSession = (payload) => {
+   if (!payload?.token || payload?.user?.role !== 'parent') return null;
+ 
+@@ -55,7 +65,7 @@ export const AuthProvider = ({ children }) => {
+       return acceptParentSession(authPayload(response));
+     } catch (requestError) {
+       if (version !== attempt.current || captureSession('parent') !== initial) return false;
+-      setError(requestError?.response?.data?.error?.message || '登录失败，请检查账号和密码');
++      setError(loginErrorMessage(requestError));
+       return false;
+     }
+   }, [acceptParentSession]);
+diff --git a/backend/gateway/__tests__/loginRateLimitContract.test.js b/backend/gateway/__tests__/loginRateLimitContract.test.js
+new file mode 100644
+index 00000000..9d737b87
+--- /dev/null
++++ b/backend/gateway/__tests__/loginRateLimitContract.test.js
+@@ -0,0 +1,83 @@
++const { createHttpTestHarness } = require('../../common/test/httpTestHarness');
++const { request, close } = createHttpTestHarness();
++const createBaseApp = require('../../common/createBaseApp');
++const config = require('../config');
++const { configManager } = require('../../common/config');
++
++afterEach(close);
++
++const expected = { success: false, error: {
++  code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试'
++} };
++
++test('configured gateway general quota still rejects request 101 with structured 429 and headers', async () => {
++  expect(config.rateLimitOptions).toMatchObject({ windowMs: 900000, max: 100 });
++  const { createApp } = require('../server');
++  const app = createApp();
++  expect(app.get('trust proxy')).toBe(false);
++  const client = await request(app);
++  for (let i = 0; i < 100; i++) await client.get('/health').expect(200);
++  const response = await client.post('/api/auth/login').send({});
++  expect(response.status).toBe(429);
++  expect(response.type).toBe('application/json');
++  expect(response.body).toEqual(expected);
++  expect(Number(response.headers['retry-after'])).toBeGreaterThan(0);
++  expect(Number(response.headers['retry-after'])).toBeLessThanOrEqual(900);
++  expect(response.headers['ratelimit-limit']).toBe('100');
++  expect(response.headers['ratelimit-remaining']).toBe('0');
++});
++
++test('configured sensitive quota counts successful requests and rejects request 21', async () => {
++  const options = configManager.get('SENSITIVE_RATE_LIMIT_CONFIG');
++  expect(options).toMatchObject({ windowMs: 900000, max: 20, skipSuccessfulRequests: false });
++  const app = createBaseApp({ rateLimitOptions: config.rateLimitOptions, sensitiveRateLimitOptions: options });
++  const handled = jest.fn((_req, res) => res.json({ success: true }));
++  app.post('/api/auth/login', app.get('sensitiveLimiter'), handled);
++  const client = await request(app);
++  for (let i = 0; i < 20; i++) await client.post('/api/auth/login').send({}).expect(200);
++  const response = await client.post('/api/auth/login').send({});
++  expect(response.status).toBe(429);
++  expect(response.body).toEqual(expected);
++  expect(response.headers['ratelimit-limit']).toBe('20');
++  expect(response.headers['retry-after']).toBeDefined();
++  expect(handled).toHaveBeenCalledTimes(20);
++});
++
++test('same peer business and login requests share quota; forged forwarding headers cannot create another bucket', async () => {
++  const app = createBaseApp({ rateLimitOptions: config.rateLimitOptions });
++  expect(app.get('trust proxy')).toBe(false);
++  const peers = [];
++  const login = jest.fn((_req, res) => res.json({ success: true }));
++  app.get('/api/synthetic', (req, res) => { peers.push(req.ip); res.json({ success: true }); });
++  app.post('/api/auth/login', login);
++  const client = await request(app);
++  // The first direct request establishes the default peer key. Later header changes must not change it.
++  await client.get('/api/synthetic').expect(200);
++  for (let i = 1; i < 100; i++) {
++    await client.get('/api/synthetic').set('X-Forwarded-For', `192.0.2.${i}`)
++      .set('X-Real-IP', `198.51.100.${i}`).expect(200);
++  }
++  expect(new Set(peers).size).toBe(1);
++  expect(peers[0]).toBe('127.0.0.1');
++  const response = await client.post('/api/auth/login').set('X-Forwarded-For', '203.0.113.1').send({});
++  expect(response.status).toBe(429);
++  expect(login).not.toHaveBeenCalled();
++  expect(response.headers['ratelimit-remaining']).toBe('0');
++});
++
++test('a successful task PATCH at the shared quota boundary can precede a throttled login', async () => {
++  const app = createBaseApp({ rateLimitOptions: config.rateLimitOptions });
++  let edits = 0, logins = 0;
++  app.get('/api/synthetic', (_req, res) => res.json({ success: true }));
++  // Synthetic handlers isolate the middleware budget; this is not a production task-write attribution.
++  app.patch('/api/growth-tasks/synthetic-task', (_req, res) => { edits++; res.json({ success: true }); });
++  app.post('/api/auth/login', (_req, res) => { logins++; res.json({ success: true }); });
++  const client = await request(app);
++  for (let i = 0; i < 99; i++) await client.get('/api/synthetic').expect(200);
++  await client.patch('/api/growth-tasks/synthetic-task').send({ title: 'Updated' }).expect(200);
++  const result = await client.post('/api/auth/login').send({});
++  expect(result.status).toBe(429);
++  expect(result.body).toEqual(expected);
++  expect(edits).toBe(1);
++  expect(logins).toBe(0);
++});
+diff --git a/tests/e2e/t2/parentLoginErrors.spec.js b/tests/e2e/t2/parentLoginErrors.spec.js
+new file mode 100644
+index 00000000..d3c41994
+--- /dev/null
++++ b/tests/e2e/t2/parentLoginErrors.spec.js
+@@ -0,0 +1,58 @@
++const { test, expect } = require('@playwright/test');
++const { createT2WebRuntime } = require('./webRuntime');
++
++let runtime;
++test.beforeEach(async () => { runtime = await createT2WebRuntime(); });
++test.afterEach(async () => { await runtime?.stop(); });
++
++test('parent login classifies legacy and current errors without retry; explicit real login still works', async ({ page }, info) => {
++  const errors = [], consoleErrors = [], requests = [];
++  page.on('pageerror', error => errors.push(error.message));
++  page.on('console', message => {
++    if (['error', 'warning'].includes(message.type())) consoleErrors.push(message.text());
++  });
++  page.on('request', request => {
++    if (new URL(request.url()).pathname === '/api/auth/login') requests.push(request.method());
++  });
++  const cases = [
++    { status: 429, contentType: 'text/html', body: '请求过于频繁，请稍后再试', message: '请求过于频繁，请稍后再试' },
++    { status: 429, contentType: 'application/json', body: JSON.stringify({ success: false,
++      error: { code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' } }), message: '请求过于频繁，请稍后再试' },
++    { status: 429, contentType: 'text/plain', body: '', message: '请求过于频繁，请稍后再试' },
++    { status: 401, contentType: 'application/json', body: '{}', message: '登录失败，请检查账号和密码' },
++    { status: 503, contentType: 'text/html', body: '<html>synthetic unavailable</html>', message: '登录服务暂时不可用，请稍后再试' }
++  ];
++  let index = 0;
++  await page.route('**/api/auth/login', async route => {
++    if (index >= cases.length) return route.continue();
++    const { status, contentType, body } = cases[index++];
++    await route.fulfill({ status, contentType, body });
++  });
++  const actor = runtime.fixture.actors.parent;
++  await page.goto(runtime.webUrl + '/login');
++  await page.evaluate(() => localStorage.setItem('synthetic-original-command', 'unchanged'));
++  await page.getByLabel('用户名').fill(actor.username);
++  await page.getByLabel('密码', { exact: true }).fill(actor.password);
++  for (let i = 0; i < cases.length; i++) {
++    const response = page.waitForResponse(response => new URL(response.url()).pathname === '/api/auth/login');
++    await page.getByRole('button', { name: '登录', exact: true }).click();
++    expect((await response).status()).toBe(cases[i].status);
++    await expect(page.getByRole('alert')).toHaveText(cases[i].message);
++    await expect(page.getByRole('button', { name: '登录', exact: true })).toBeEnabled();
++    expect(requests).toHaveLength(i + 1);
++    expect(await page.evaluate(() => localStorage.getItem('family-growth.parent-session.v1'))).toBeNull();
++    expect(await page.evaluate(() => localStorage.getItem('synthetic-original-command'))).toBe('unchanged');
++  }
++  await page.getByRole('button', { name: '登录', exact: true }).click();
++  await expect(page).toHaveURL(/\/app\/today$/);
++  await expect(page.getByRole('navigation', { name: '家长导航' })).toBeVisible();
++  expect(requests).toEqual(Array(6).fill('POST'));
++  expect(errors).toEqual([]);
++  // One native console failure per deliberately rejected HTTP response, no other warning/error.
++  expect(consoleErrors).toHaveLength(cases.length);
++  for (let i = 0; i < cases.length; i++) expect(consoleErrors[i]).toContain(String(cases[i].status));
++  await info.attach('login-error-contract', { body: JSON.stringify({
++    injectedStatuses: cases.map(row => row.status), realLoginSucceeded: true,
++    postCount: requests.length, errors, consoleErrors
++  }), contentType: 'application/json' });
++});
+diff --git a/docs/development/login429-local-review.md b/docs/development/login429-local-review.md
+new file mode 100644
+index 00000000..7de72a18
+--- /dev/null
++++ b/docs/development/login429-local-review.md
+@@ -0,0 +1,56 @@
++# Login 429 local candidate
++
++Status: READY_FOR_REVIEW / independent review pending. No issue or release gate is closed here.
++Baseline: 7da928e7d4aee992eb1507e3b898572fcbb012ca.
++
++## Approved scope and plan self-review
++
++- Original diagnosis manifest: 83ba99c84132b64ffeae641ff18afe8eaabf8aa53d1177a33e71ca65cdf3aae8 (five files verified unchanged).
++- Six parent login 429 responses are archived facts. The original browser body and per-client counters were not captured. Eight non-auth 503 responses remain OPEN, with route template, error code and request correlation missing.
++- Change only the derived general/sensitive rate-limit response message to the existing structured RATE_LIMITED contract. Preserve window, max, headers, skip-success policy, middleware order, source keys and trust proxy.
++- Classify parent login errors by status before reading optional messages: 429 throttled, 401 invalid credentials, 5xx unavailable, missing response network failure. Do not echo unstructured server/HTML text. Preserve attempt and session guards; no automatic retry, session clear or original-command mutation.
++- Add permanent HTTP contract/source tests and component error/race tests before implementation. Verify real loopback HTTP; source sharing is a synthetic reproduction, not attribution of production traffic.
++- Run affected gateway/common/user authentication tests, frontend regression/build, and existing child entry/login-race browser suites plus new parent error cases in Chromium and WebKit, serial with zero retries. No real model calls; only temporary synthetic dependencies.
++- Risk: common configuration consumers receive JSON instead of plain text on 429. Validate both configured limiters and existing consumers; no successful or unauthorized response contract changes.
++- Rollback: revert the two product files in a future reviewed delivery, not any data or counters. No deployment in this batch.
++
++Self-review before implementation: scope is reversible and does not change permissions, numeric limits or proxy trust. The display fix does not solve shared proxy quotas; source attribution and 503 remain separate. No access to server, existing manual instance, account data or credentials is required. PASS to local implementation, not independent acceptance.
++
++## Validation
++
++Evidence files are frozen separately with the final patch and per-file SHA256 manifest. This document is the local plan/self-review record, not an independent acceptance record.
++
++- `backend-red.log`: original product, 2 failed / 1 passed. Configured general response is text/html instead of JSON; configured sensitive body is not structured. No assertion removed.
++- `frontend-red.log`: original product, 8 failed / 13 passed. Includes misleading fallback on 429/5xx/network and non-string error causing a render error. Console guards retained.
++- `backend-green.log`: initial 3 HTTP cases passed, preserving the actual 100/15-minute and 20/15-minute boundaries, headers and successful-request counting.
++- `frontend-full.log`: initial complete active frontend regression, 85 suites / 1412 passed, 109.394s. Existing legacy exclusions unchanged.
++- `backend-related.log`: complete selected family-common + user-service regression, 72 suites passed / 2 failed; 1793 tests passed / 2 failed, 217.889s. The two old Git tests failed with executable error -86, not an application assertion. Do not describe this run as green.
++- `git-environment-recheck.log`: system Git first and local baseline metadata restored to the isolated archive; original two suites passed, 106 tests, 12.67s. No product/source assertion changes. The old cleanliness test creates/deletes its own synthetic fixture commit; no LMS candidate commit or push was made.
++- `chromium.log`: sandbox launch blocked by macOS MachPort permission; stopped with exit 130, 5 failed / 1 interrupted / 35 not run / 4 pure tests passed. Not a browser product verdict; all output retained.
++- `chromium-controlled.log`: same 45 cases passed in controlled local context, 5.1m. Serial, zero retries, existing budgets and console contracts unchanged.
++- `task-edit-followup.log`: new 401 counterexample exposed test-fixture reuse of a denied session in the next three old cases (3 failed / 52 passed). Fixed only the test setup to create each session through the existing saveParentSession API, not raw storage resurrection. No session product code or old assertion changed.
++- `task-edit-followup-green.log`: all three affected suites, 55 tests passed, 11.877s.
++- `backend-task-edit.log`: final 4 HTTP cases passed, 2.344s; adds the successful task PATCH / subsequent login rejection boundary.
++- `frontend-final.log`: after the task-edit clue and fixture correction, the full active frontend regression passed again: 85 suites / 1417 tests, 99.237s.
++- `webkit.log`: the same 45 cases passed in controlled local context, 4.3m, serial and zero retries.
++- Build and final targeted ESLint passed; build retains the existing stale Browserslist-data warning. Documentation gate passed. All runtime stop hooks and test processes completed; no manual test instance was reused.
++
++The 45-case browser selection comprises all 32 existing AI1 cases, all 4 child-entry cases, both child-login races, all 6 parent-navigation/cleanup cases, and 1 new parent-login contract case. The new case injects five HTTP errors (legacy/current/empty 429, 401, 503), asserts one POST per explicit action, preserved storage and exact native console error counts, then uses a real synthetic parent login through the formal application. It does not reproduce the original eight production 503 responses. AI1 remote operation/Provider remains a local substitute, never a real model.
++
++## Task-edit clue and limits
++
++The user's additional observation (task editing often precedes login failure) was checked without changing task logic:
++
++- TasksPage.saveTask sends one PATCH for ordinary edits, updates its local row on success, and reloads the list automatically only for creation or specific conflicts/denials. Two permanent component cases verify successful/429 edit paths do not loop list reads or repeat writes.
++- The real familyApi/requestWithSession boundary preserves the session on task PATCH 429/503; only 401 expires it. Three new cases preserve that distinction and assert no retry.
++- A real loopback limiter test uses 99 synthetic reads, one successful synthetic task PATCH, then a login that receives 429 before its handler. This establishes a possible shared-quota mechanism, not historical per-user attribution or a real task-controller load measurement.
++- No evidence in these tested paths supports task editing directly corrupting a password/PIN, logging out on 429, or creating a normal-save refresh loop. Other production timing/path combinations remain unverified.
++- Shared source quota behavior is NOT fixed in this batch. No trusted-proxy configuration, IP key, count, window, PIN counter, normal instance or original command was changed.
++
++## Self-review and remaining review scope
++
++- Product diff restricted to two files: common config message objects and AuthContext login error mapping. Identity/attempt guards precede error handling unchanged; no retry, storage write or command mutation was added to the error path.
++- HTTP rejection and success controls, stale error/success after account change/logout, newer successful login, malformed message, task-edit no-loop/no-expiry cases retained. Existing frontend/backend assertions and browser cleanup/console checks were not weakened.
++- The source tests show peer sharing and forged-header non-bypass under current trust=false. They do not certify a new proxy configuration or identify the original clients. A later source-key fix requires its own bounded design and evidence.
++- Eight business 503 responses remain OPEN. Minimum missing evidence is time, method, redacted route template, error code, correlation and response layer. No server collection or replay authorized/executed.
++- T4/T8/AI-1 OPEN, DEVICE_PENDING/MANUAL_PENDING, historical failures and deferred work unchanged. All green results here are developer verification; testing/review thread independent replay remains pending.
