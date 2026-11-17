@@ -1,0 +1,202 @@
+{
+  "developer": [
+    {
+      "batch": "red-authorized",
+      "role": "DEVELOPER",
+      "stats": {
+        "startTime": "2026-11-16T23:25:23.070Z",
+        "duration": 1322.576,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 4,
+        "flaky": 0
+      },
+      "exitCode": 1,
+      "resultsSha256": "f402d74c5be21ddccfa23df8d9db7f680f0c17e7b65e1c2efc5105bb9a8575a2",
+      "receiptSha256": "26649fbaac61ba6bd2c11aa723fa70f363c55dae0274c5f7f9187f3ff54439c0"
+    },
+    {
+      "batch": "green",
+      "role": "DEVELOPER",
+      "stats": {
+        "startTime": "2026-11-16T23:25:29.973Z",
+        "duration": 1189.534,
+        "expected": 13,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "exitCode": 0,
+      "resultsSha256": "b2416be453a97d5615e80eb6bd9921b53d485cec96204aa667912e8cca95dc2f",
+      "receiptSha256": "dcef7441441a7a9f0619e0a410980c8ecdf89a671069c05669c0824fde68ab3e"
+    },
+    {
+      "batch": "mutation-setup-outside",
+      "role": "DEVELOPER",
+      "stats": {
+        "startTime": "2026-11-16T23:26:13.875Z",
+        "duration": 603.439,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "exitCode": 1,
+      "resultsSha256": "5d75d0595d8fcccad36a42dccec888bf8a96e82b3a9b25afc4b1033070fed06c",
+      "receiptSha256": "b354b114fb9f15e0f59df9cc18b9f9cda29f38d4c453f7a50747e55978434686"
+    },
+    {
+      "batch": "mutation-no-wait",
+      "role": "DEVELOPER",
+      "stats": {
+        "startTime": "2026-11-16T23:26:14.979Z",
+        "duration": 292.921,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "exitCode": 1,
+      "resultsSha256": "26f47794dd57d46a870bdaff73edc0104315164a12fecf3b0245c935b74d77d6",
+      "receiptSha256": "43909c097f390a1528160b86e1c455c878ab84b42b13bab3a57f63e130ab02f0"
+    },
+    {
+      "batch": "mutation-discard-original",
+      "role": "DEVELOPER",
+      "stats": {
+        "startTime": "2026-11-16T23:26:15.786Z",
+        "duration": 272.907,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "exitCode": 1,
+      "resultsSha256": "9990133bbb9ab26b3d7a964ac5fce2c89f35e1cf89c4485200bdb38200ee0faf",
+      "receiptSha256": "673826ced75722514927b7d9dc6e52919471080fb711f23c8249cf85286b487b"
+    },
+    {
+      "batch": "final-webkit",
+      "role": "DEVELOPER",
+      "stats": {
+        "startTime": "2026-11-16T23:26:20.986Z",
+        "duration": 170660.503,
+        "expected": 32,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "exitCode": 0,
+      "resultsSha256": "8c64f2a79dcc76e654dfa82e97b29cefdc2573590999ef2e0010ddcb92250eb3",
+      "receiptSha256": "0283f9a7ae107a3fd1462b1b22bf508b006ca2b3bcd8f26aba91c96058bc9538"
+    },
+    {
+      "batch": "final-chromium",
+      "role": "DEVELOPER",
+      "stats": {
+        "startTime": "2026-11-16T23:29:36.374Z",
+        "duration": 170927.85,
+        "expected": 32,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "exitCode": 0,
+      "resultsSha256": "5eebb7ee6dad3b3b6b2d2241affc558dcefec72696599ebb43515aea6d2a499e",
+      "receiptSha256": "0df837d41f5c5ce3de80a435cd2e2a8d3f8f62661f05e607ad43ebcbb822f7d1"
+    }
+  ],
+  "review": [
+    {
+      "batch": "focused",
+      "role": "FRESH_RECONSTRUCTION_FOCUSED_REVIEW",
+      "stats": {
+        "startTime": "2026-11-16T23:36:02.194Z",
+        "duration": 1361.3380000000002,
+        "expected": 13,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "exitCode": 0,
+      "failedAssertions": []
+    },
+    {
+      "batch": "setup-outside",
+      "role": "FRESH_RECONSTRUCTION_FOCUSED_REVIEW",
+      "stats": {
+        "startTime": "2026-11-16T23:36:03.890Z",
+        "duration": 506.50199999999995,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "exitCode": 1,
+      "failedAssertions": [
+        {
+          "title": "AI1 navigation cleanup stops runtime after listener failure",
+          "status": "failed"
+        },
+        {
+          "title": "AI1 navigation cleanup stops runtime after route failure",
+          "status": "failed"
+        }
+      ]
+    },
+    {
+      "batch": "no-wait",
+      "role": "FRESH_RECONSTRUCTION_FOCUSED_REVIEW",
+      "stats": {
+        "startTime": "2026-11-16T23:36:04.711Z",
+        "duration": 350.67,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "exitCode": 1,
+      "failedAssertions": [
+        {
+          "title": "AI1 navigation cleanup waits for stop after route registration failure",
+          "status": "failed"
+        }
+      ]
+    },
+    {
+      "batch": "discard-original",
+      "role": "FRESH_RECONSTRUCTION_FOCUSED_REVIEW",
+      "stats": {
+        "startTime": "2026-11-16T23:36:05.395Z",
+        "duration": 301.899,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "exitCode": 1,
+      "failedAssertions": [
+        {
+          "title": "AI1 navigation cleanup retains original and all cleanup failures",
+          "status": "failed"
+        }
+      ]
+    }
+  ],
+  "distinctions": {
+    "developerFocused": 13,
+    "reviewFocused": 13,
+    "not26DistinctTests": true,
+    "developerBrowserEach": 32,
+    "reviewBrowserRerun": false,
+    "composition": "original 19 + existing 8 + new cleanup 5; not all real-backend browser cases",
+    "provider": "ABSENT; external operation double only"
+  },
+  "historicalFailuresRetained": {
+    "originalIndependentChromium": "19P",
+    "originalIndependentWebKit": "6P/13F",
+    "earlierDeveloperWebKit": "4P/15F",
+    "setupAttempts": "ps EPERM before tests; separately retained",
+    "redOnOldCandidate": "1P/4F"
+  }
+}
