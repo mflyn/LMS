@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-17",
+  "status": "USER_ACCEPTED_LOCAL_ONLY",
+  "provenance": "Current development conversation review tool outputs; summary, not raw logs or a separate testing-thread replay",
+  "base": "7da928e7d4aee992eb1507e3b898572fcbb012ca",
+  "candidateArchive": "login429-local-MnHNtF-20261117",
+  "patchSha256": "c35885423b6cdd1d5a11bc8517ac62f608906f22d8e9e05f6ebade7eeee4531b",
+  "manifestSha256": "abfba489374efbd243ec776578cf8c1050d915fc0955be883db4cc53a354dffb",
+  "originalDiagnosisManifestSha256": "83ba99c84132b64ffeae641ff18afe8eaabf8aa53d1177a33e71ca65cdf3aae8",
+  "verified": { "archiveFiles": 82, "sourceFiles": 8, "buildFiles": 9, "originalDiagnosisFiles": 5, "patchApplyCheck": "PASS" },
+  "reviewRuns": [
+    { "suite": "loginRateLimitContract.test.js", "passed": 4, "seconds": 2.302, "exitCode": 0 },
+    { "suite": "AuthContext.test.js + Task9TodayTasks.test.js + familyApi.task11.test.js", "suites": 3, "passed": 55, "seconds": 10.458, "exitCode": 0 },
+    { "suite": "parentLoginErrors.spec.js", "browser": "chromium", "passed": 1, "seconds": 11.9, "exitCode": 0 },
+    { "suite": "parentLoginErrors.spec.js", "browser": "webkit", "passed": 1, "seconds": 12.5, "exitCode": 0 },
+    { "command": "npm run docs:family:check", "exitCode": 0 }
+  ],
+  "developerEvidenceNotRerunInReview": {
+    "frontend": { "suites": 85, "passed": 1417 },
+    "backendRelated": { "passed": 1793, "failed": 2 },
+    "backendTargetedRecheck": { "suites": 2, "passed": 106 },
+    "chromium": { "passed": 45 },
+    "webkit": { "passed": 45 }
+  },
+  "candidatePathProcessCountAfterReview": 0,
+  "sharedQuota": "RISK_RETAINED_NOT_FIXED",
+  "business503": "OPEN_EVIDENCE_MISSING",
+  "manualAndDeviceAcceptance": "PENDING",
+  "serverOperations": 0,
+  "realModelCalls": 0,
+  "commits": 0,
+  "pushes": 0,
+  "deployments": 0
+}

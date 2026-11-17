@@ -6,6 +6,7 @@
 
 ## 当前基线
 
+- [登录 429 契约与提示限定本地验收](./login429-local-acceptance.md)：已批准，公开交付索引见[本批证据](./evidence/login429-local-acceptance-20261117/README.md)；共享额度风险和 8 次业务 503 缺证仍保留，不代表现场或发布验收。
 - [FGT-MVP-1.6 基线候选](./family-growth-baseline-v1.6-manifest.md)
 - [统一发布 Gate](./family-growth-v1.6-release-gate.md)
 - [38 项需求追踪矩阵](./family-growth-requirement-traceability.md)

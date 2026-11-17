@@ -164,7 +164,10 @@ class ConfigManager {
     config.RATE_LIMIT_CONFIG = {
       windowMs: config.RATE_LIMIT_WINDOW_MS,
       max: config.RATE_LIMIT_MAX_REQUESTS,
-      message: '请求过于频繁，请稍后再试',
+      message: {
+        success: false,
+        error: { code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' }
+      },
       standardHeaders: true,
       legacyHeaders: false
     };
@@ -172,7 +175,10 @@ class ConfigManager {
     config.SENSITIVE_RATE_LIMIT_CONFIG = {
       windowMs: config.RATE_LIMIT_WINDOW_MS,
       max: config.SENSITIVE_RATE_LIMIT_MAX_REQUESTS,
-      message: '请求过于频繁，请稍后再试',
+      message: {
+        success: false,
+        error: { code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' }
+      },
       standardHeaders: true,
       legacyHeaders: false,
       skipSuccessfulRequests: false

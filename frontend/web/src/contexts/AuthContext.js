@@ -14,6 +14,16 @@ const AuthContext = createContext(null);
 
 const authPayload = (response) => response?.data?.data || response?.data;
 
+const loginErrorMessage = (requestError) => {
+  const response = requestError?.response;
+  if (!response) return '无法连接登录服务，请检查网络后重试';
+  if (response.status === 429) return '请求过于频繁，请稍后再试';
+  if (response.status >= 500) return '登录服务暂时不可用，请稍后再试';
+  const message = response.data?.error?.message;
+  if (typeof message === 'string' && message.trim()) return message;
+  return response.status === 401 ? '登录失败，请检查账号和密码' : '登录失败，请稍后再试';
+};
+
 const createParentSession = (payload) => {
   if (!payload?.token || payload?.user?.role !== 'parent') return null;
 
@@ -55,7 +65,7 @@ export const AuthProvider = ({ children }) => {
       return acceptParentSession(authPayload(response));
     } catch (requestError) {
       if (version !== attempt.current || captureSession('parent') !== initial) return false;
-      setError(requestError?.response?.data?.error?.message || '登录失败，请检查账号和密码');
+      setError(loginErrorMessage(requestError));
       return false;
     }
   }, [acceptParentSession]);

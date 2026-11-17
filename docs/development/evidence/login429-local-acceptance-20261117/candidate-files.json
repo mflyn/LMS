@@ -1,0 +1,46 @@
+{
+  "base": "7da928e7d4aee992eb1507e3b898572fcbb012ca",
+  "status": "READY_FOR_REVIEW",
+  "files": [
+    {
+      "path": "backend/common/config/index.js",
+      "sha256": "a56f27499c9a651146affcfe75bcbf4274eafa24898624ba80d2bdce9e47df99",
+      "bytes": 12837
+    },
+    {
+      "path": "frontend/web/src/contexts/AuthContext.js",
+      "sha256": "b234287c55e266f3a22f467fd231a01ad2618ddafbee216edcee547b0d8b7feb",
+      "bytes": 4864
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/AuthContext.test.js",
+      "sha256": "b97161d8795e43eda8a7654e5769c13d63ed43b126a156f68a08b1589301b4d4",
+      "bytes": 8276
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/Task9TodayTasks.test.js",
+      "sha256": "0e910ee89de3a23d8c4e57f0ff4a486fb52762d238b5851f453fdae54b9e47db",
+      "bytes": 33468
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/familyApi.task11.test.js",
+      "sha256": "c1ec13bdb559ea72ae1b99af9cd4489647802305509fe68bd51e16cb352bdedb",
+      "bytes": 3474
+    },
+    {
+      "path": "backend/gateway/__tests__/loginRateLimitContract.test.js",
+      "sha256": "d0b8fdebd48a89de6dc528363380e814331c2133be039fefac2b6e904e1fde34",
+      "bytes": 4426
+    },
+    {
+      "path": "tests/e2e/t2/parentLoginErrors.spec.js",
+      "sha256": "f26367c18175d763af506dd831b1900b5f463e847562466e4414b4e401c6cd1c",
+      "bytes": 3616
+    },
+    {
+      "path": "docs/development/login429-local-review.md",
+      "sha256": "a16842d0207f4f8e9b4a4c1602f565d5736593cf19451b1dcabced3e3663612f",
+      "bytes": 8162
+    }
+  ]
+}
