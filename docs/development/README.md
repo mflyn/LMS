@@ -6,6 +6,7 @@
 
 ## 当前基线
 
+- [MVP 当前待办与 DeepTutor CI 暂缓记录（2026-11-21）](./mvp-current-followups.md)：工单5036799保留，DeepTutor PR #2仍Draft，Actions暂缓未解决；优先真人登录/业务失败取证，不关闭现有门禁或改写历史证据。
 - [登录 429 契约与提示限定本地验收](./login429-local-acceptance.md)：已批准，公开交付索引见[本批证据](./evidence/login429-local-acceptance-20261117/README.md)；共享额度风险和 8 次业务 503 缺证仍保留，不代表现场或发布验收。
 - [FGT-MVP-1.6 基线候选](./family-growth-baseline-v1.6-manifest.md)
 - [统一发布 Gate](./family-growth-v1.6-release-gate.md)
@@ -36,7 +37,18 @@
 
 ## 自主学习 MVP 增量计划（T0 已关闭，T1 后端工程已关闭，T2 合成工程已关闭，T3 合成工程已关闭，T4 实施中，T5 合成工程已关闭，T6 合成工程已关闭，T7 合成工程已关闭，T8 本地准备，T9 待执行）
 
+### 2026-11-21 本地文档接续（文档已批准）
+
+已只读核对测试线程后续归档：11月17日晚网关及前端另已更新到`9bf042c8`；原诊断5份、后续更新142份文件哈希均匹配。
+详见[登录事实、缺口和文档接续](mvp-current-followups.md#5-登录事件证据复核与文档接续2026-11-21)。
+未取得新的原请求级根因证据，共享额度风险和8次业务503仍OPEN；本次不查询服务器、不改限流、不重放原命令。
+SRS、指南及待办记录已复审通过并获用户批准，状态为DOCUMENT_REVIEW_APPROVED / USER_APPROVED，见[批准记录](mvp-current-followups.md#6-文档复审与用户批准2026-11-21)。
+下方11月17日早期摘要保留其收口时点（包括当时的待复审状态），不改绑255份原证据；本次不关闭任何现场事件或总门禁。
+
 ### 当前交付与受测摘要（2026-11-17）
+
+[功能规格SRS（待复审）](../product/family-learning-tracker-current-srs.md)逐项盘点账号共管、任务/重复计划、
+提交审核、错题复习、周复盘及默认关闭AI扩展，分别记录实现、启用和验收状态，不代替原Gate或冻结证据。
 
 **当前代码：** main `9bf042c8f631edd82aa6807fcc8e192bd6c5cb23` 已合并[PR #59](https://github.com/mflyn/LMS/pull/59)，
 [合并后CI](https://github.com/mflyn/LMS/actions/runs/44025279785)成功；跳过的可选作业不算通过。
