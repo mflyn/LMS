@@ -14,6 +14,18 @@
 
 ## 目录
 
+> 2026-11-17历史执行记录：[前端更新及选定隔离回归](../development/evidence/ubuntu-frontend-update-20261117/README.md)。
+> 当时仅LMS前端切换到 `7da928e7`；7个后端保留相对该目标业务/依赖等价的 `e9147b61` 镜像且未重启，
+> Mongo/DeepTutor/TLS代理未改，不是系统升级或全栈更新。旧前端镜像/配置备份已save/load与静态可读验证，
+> 不是活动数据库恢复演练。原环境、端口、证书及数据/原命令保持；AI1/2/3 off，高级恢复/新回收关闭。
+> 该批自动化使用独立合成数据和临时服务，桌面Mac两引擎经SSH验证，不等于原账号登录或iPad验收。
+> 收口时最新main为 `9bf042c8`，[PR #59](https://github.com/mflyn/LMS/pull/59)登录429修订已合并，
+> [合并后CI](https://github.com/mflyn/LMS/actions/runs/44025279785)成功；不改绑历史受测身份，不证明实例已升级或后端仍与新main等价。
+> 本次未实时查询或更新实例；共享额度风险保留，8次业务503仍 `OPEN / EVIDENCE_MISSING`。
+> 2026-11-17本批4份证据文档复审通过并获用户批准，状态 `DOCUMENT_REVIEW_APPROVED`；仅文档收口，不是新增部署或运行验收。
+> 这里只追加已结束执行的证据，不授权重跑；T4/T8/AI-1 OPEN、SERVER_TIMING_UNVERIFIED、
+> DEVICE_PENDING/MANUAL_PENDING、历史失败及后置状态不变。
+
 1. [系统安装准备](#1-系统安装准备)
 2. [Ubuntu Server 安装](#2-ubuntu-server-安装)
 3. [基础环境配置](#3-基础环境配置)
