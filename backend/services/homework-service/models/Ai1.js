@@ -20,7 +20,9 @@ const Cycle = model('Ai1Cycle', { ...scope, createdBy: oid, sourceType: { type: 
   { unique: true, partialFilterExpression: { active: true }, name: 'ai1_active_source' }]]);
 const Job = model('Ai1Job', { ...scope, cycleId: oid, createdBy: oid, operationId: { type: String, required: true },
   requestHash: { type: String, required: true }, remoteOperationId: { type: String, required: true },
-  reservationId: oid, preview: { type: Schema.Types.Mixed, required: true, immutable: true }, maxAuthorizedCostMicros: amount,
+  reservationId: oid, preview: { type: Schema.Types.Mixed, required: true, immutable: true },
+  maxAuthorizedCostMicros: { ...amount, required: function () { return this.preview?.feeMode !== 'estimate_only'; } },
+  trialAuthorizationVersion: { type: String, immutable: true },
   sendNotAfter: { type: Date, required: true, immutable: true },
   status: { type: String, enum: ['reserved', 'dispatching', 'unknown', 'succeeded', 'failed'], required: true },
   owner: String, leaseExpiresAt: Date, remoteRequestHash: String, remoteClaimObserved: { type: Boolean, default: false },
@@ -40,11 +42,16 @@ const Command = model('Ai1Command', { ...scope, actorId: oid, endpointOperation:
 }, [[{ familyId: 1, actorId: 1, endpointOperation: 1, operationId: 1 }, { unique: true }]]);
 const Reservation = model('Ai1Reservation', { ...scope, jobId: oid,
   ownerProfile: { type: String, enum: ['ai1', 'ai3'] }, reservedMicros: amount, settledMicros: { type: Number, default: null },
+  feeMode: { type: String, enum: ['estimate_only'], immutable: true },
+  trialAuthorizationVersion: { type: String, immutable: true },
   state: { type: String, enum: ['reserved', 'reserved_unknown', 'settled', 'released'], required: true },
   reservedDay: { type: String, required: true }, reservedMonth: { type: String, required: true },
   reservedTimezone: { type: String, required: true }, settledAt: Date
 }, [[{ jobId: 1 }, { unique: true }]]);
 const Account = model('Ai1Account', { _id: String, outstandingMicros: { ...amount, default: 0 },
-  settledMicros: { ...amount, default: 0 }, revision: { ...amount, default: 0 }, halted: { type: Boolean, default: false } });
+  settledMicros: { ...amount, default: 0 }, revision: { ...amount, default: 0 }, halted: { type: Boolean, default: false },
+  haltReason: { type: String, enum: ['estimate_exceeded', 'cost_unknown'] },
+  trialAuthorizationVersion: String, trialMaxSubmissions: { ...amount, required: false },
+  trialUsedSubmissions: { ...amount, required: false } });
 const Slot = model('Ai1SendSlot', { _id: String, jobId: Schema.Types.ObjectId, ownerProfile: { type: String, enum: ['ai1', 'ai3'] } });
 module.exports = { Cycle, Job, Artifact, Command, Reservation, Account, Slot };

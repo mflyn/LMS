@@ -9,12 +9,14 @@ const { assertAiBudgetOwners } = require('./aiGenerationBudget');
 const unavailable = () => C.error(503, 'AI_PROFILE_UNAVAILABLE');
 const PROFILE_KEYS = ['model', 'modelProfileVersion', 'pricingProfileVersion', 'checkedAt', 'expiresAt',
   'callWindowMs', 'clockMarginMs', 'inputPriceMicrosPerMillion', 'outputPriceMicrosPerMillion'];
+const TRIAL_PROFILE_KEYS = [...PROFILE_KEYS, 'feeMode', 'sourceReference'];
+const TRIAL_KEYS = ['confirmed', 'authorizationVersion', 'maxSubmissions'];
 const BUDGET_KEYS = ['singleMicros', 'dayMicros', 'monthMicros', 'experimentMicros'];
-const jsonConfig = (raw, keys) => {
+const jsonConfig = (raw, ...keySets) => {
   if (typeof raw !== 'string' || Buffer.byteLength(raw) > 8192) throw unavailable();
   const value = JSON.parse(raw);
   if (!value || Array.isArray(value) || typeof value !== 'object'
-    || Object.keys(value).length !== keys.length || !keys.every(k => Object.hasOwn(value, k))) throw unavailable();
+    || !keySets.some(keys => Object.keys(value).length === keys.length && keys.every(k => Object.hasOwn(value, k)))) throw unavailable();
   return Object.freeze(value);
 };
 const validateProfile = profile => C.buildPreview({ input: {}, chapter: {} }, profile, Date.now());
@@ -24,7 +26,7 @@ function createAi1Runtime({ env = process.env, connection = mongoose.connection 
     const mode = env.AI1_MODE === undefined ? 'off' : env.AI1_MODE;
     if (!['off', 'query-only', 'enabled', 'store-isolated'].includes(mode)) throw unavailable();
     const active = mode === 'enabled' || mode === 'query-only';
-    let ready = !active, profile = null, limits = null, operationClient;
+    let ready = !active, profile = null, limits = null, trial = null, operationClient;
     if (active) {
       if (connection !== mongoose.connection || Object.values(M).some(m => m.db !== connection)
         || env.AI1_LOCAL_STORE_CONTINUOUS !== 'true' || env.AI1_REMOTE_STORE_CONTINUOUS !== 'true') throw unavailable();
@@ -40,8 +42,16 @@ function createAi1Runtime({ env = process.env, connection = mongoose.connection 
         allowLoopback: env.NODE_ENV === 'test' && env.AI1_ALLOW_LOOPBACK === 'true' });
       operationClient = mode === 'query-only' ? Object.freeze({ get: client.get }) : Object.freeze(client);
       if (mode === 'enabled') {
-        if (env.AI1_PROVIDER_PROFILE_CONFIRMED !== 'true') throw unavailable();
-        profile = jsonConfig(env.AI1_MODEL_PROFILE, PROFILE_KEYS);
+        profile = jsonConfig(env.AI1_MODEL_PROFILE, PROFILE_KEYS, TRIAL_PROFILE_KEYS);
+        if (profile.feeMode === 'estimate_only') {
+          // Estimate approval must never inherit the v1 qualified-counter confirmation.
+          if (env.AI1_PROVIDER_PROFILE_CONFIRMED !== undefined && env.AI1_PROVIDER_PROFILE_CONFIRMED !== 'false') throw unavailable();
+          const authorization = jsonConfig(env.AI1_TRIAL_AUTHORIZATION, TRIAL_KEYS);
+          if (authorization.confirmed !== true || authorization.maxSubmissions !== 3
+            || typeof authorization.authorizationVersion !== 'string'
+            || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(authorization.authorizationVersion)) throw unavailable();
+          trial = Object.freeze({ authorizationVersion: authorization.authorizationVersion, maxSubmissions: authorization.maxSubmissions });
+        } else if (env.AI1_PROVIDER_PROFILE_CONFIRMED !== 'true' || env.AI1_TRIAL_AUTHORIZATION !== undefined) throw unavailable();
         limits = jsonConfig(env.AI1_BUDGET_LIMITS, BUDGET_KEYS);
         if (!Object.values(limits).every(C.integer)) throw unavailable();
         validateProfile(profile);
@@ -67,6 +77,7 @@ function createAi1Runtime({ env = process.env, connection = mongoose.connection 
       },
       getProfile: () => profile ? { ...profile } : null,
       getLimits: () => limits ? { ...limits } : null,
+      getTrial: () => trial ? { ...trial } : null,
       operationClient
     } };
   } catch { throw unavailable(); }

@@ -194,3 +194,37 @@ AI-3、T4/T8/AI-1 OPEN，DEVICE_PENDING、历史失败、非阻断补测和后�
 祖先依赖503不得伪正常裁剪、最后一次远端授权等待期间和整批文件读取期间的权限/删除/解绑竞争均有永久反例。
 九项媒体竞态变异针对原在途请求失败，不靠重发请求证明拒绝。既有RESOLVING单门槛变异存活仍保留，
 不把后续phase CAS的防御效果冒充该门槛独立敏感性验证。
+
+## 人工试用费用差异测试设计（2026-11-21）
+
+**Status:** TEST_DESIGN_PENDING_REVIEW / NOT_IMPLEMENTED。仅对应[API §8](../api/family-ai3-api.md#8-人工试用费用契约候选2026-11-21)
+及[共享设计](../superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md)，不改历史矩阵/冻结证据或已批准的限定合成工程状态。
+共享用例TRIAL-VERSION-01至TRIAL-FORMAL-12见[AI-1测试§20](family-ai1-test-plan.md#20-人工试用费用差异测试设计2026-11-21)，
+AI-3必须实际走自身profile执行相关用例，不能只引用AI-1绿灯当作覆盖。以下全部待实现，不声称已运行。
+
+| ID | 输入/竞争注入 | 必须断言 |
+| --- | --- | --- |
+| AI3-TRIAL-01 | GET预览的估算方法/价格/模式变化，旧v1命令已存在或同UUID换v2，估算不足/缺确认 | 无命令的GET不写；有命令返回原版本，无新claim；生成CAS/摘要拒绝过时确认，零名额/预留/SDK发送 |
+| AI3-TRIAL-02 | AI-1未知费用或超估算后AI-3预留/恢复，反向同测；claim暂停点插入共享停发；第三个已占名额与第四新命令 | 两profile使用同Account/Slot/名额，第三原命令在剩余零可单次claim、第四拒绝；停发CAS拒绝陈旧准入，跨家庭通用原因通过schema且无他人命令/金额，未阻断原因null |
+| AI3-TRIAL-03 | 超估算合法2/3题Content、缺usage合法Content、非法结构、响应丢失重查原operation | 合法候选只生成一次；全额计价或保留未知占位并停发；非法内容不生成候选；无自动第二次请求 |
+| AI3-TRIAL-04 | 原v1/新v2 namespace及同remoteID跨AI-1/AI-3错用、对端不支持v2、重启旧accepted、无本轮名额的旧reserved | 固定路由/凭据/profile隔离；零降级/新UUID/重复派发；试用下旧reserved零发送、不改绑；GET只读，恢复按原持久版本 |
+| AI3-TRIAL-05 | 出站后祖先撤回/原actor撤权、候选超估算停发、家长人工修订批准 | 已发费用不退款；原终态按合法权限收敛，不扩大可见性；无自动发布，祖先不合法仍拒绝发布，孩子DTO无答案/费用/家长文本 |
+| AI3-TRIAL-06 | 32KiB多字节/转义边界、最终wire膨胀；旧超限UNKNOWN；费用计算安全整数溢出 | 新预留前零写、claim前和SDK前拒绝，原UNKNOWN零出站且保留映射；不伪造计数资格/合法账单 |
+| AI3-TRIAL-07 | 新生成与旧手工create/publish/孩子提交/review/复习写回组合；关闭试用和query-only | 仅生成使用v2，教学接口v1及审核CAS不变；停发不自动撤回/发星/写复习，不因query-only失去原命令查询 |
+
+永久反例复用ai3GenerationPreview/ai3Service/ai3Budget/ai3Operation和DeepTutor ai3 operation/provider/formal runtime套件，
+正式HTTP通过现有Gateway/homework/DeepTutor main，Provider仅合成替身；页面复用现有AI-3浏览器测试，不另建运行平台。
+变异至少定向去掉共享停发/namespace拒绝、超估算丢候选或截断记账、重启accepted重发，各有合法对照并保存预期红灯。
+保留原输出schema、权限、未知锁、响应大小、超时和重试断言；新旧回归、开发自查、独立复验、浏览器结果分层记录。
+本轮只文档自查/校验；无模型、服务器、Git写入或部署，历史失败、DEVICE_PENDING、T4/T8/AI-1 OPEN及后置状态不变。
+
+### 后续批准与首批本地验证
+
+2026-11-21 用户批准上述设计并授权首批限定本地实现；原 NOT_IMPLEMENTED/PENDING 保留为设计冻结时点。
+本批 AI3 服务使用独立合成 operation 替身验证 v2 原 reserved 接续、UNKNOWN只查询、全额结算/停发、
+合法候选不自动发布及可靠未发送仅释放费用；v1/v2 × enabled/query-only 持久预览矩阵同时断言零写/零远端请求及撤权拒绝。
+共享费用契约和账本各自有永久用例，不用AI1单通道结果替代AI3；未改既有教学、审核或孩子DTO断言。
+分批962项相关回归、最后107项受影响复验、独立复验及变异必须分别引用，详见
+[AI1测试后续记录](family-ai1-test-plan.md#203-后续批准与首批验证分层)。
+AI3-TRIAL-04/06的真实受限Provider/SDK部分与07的正式新配置组合仍待后续批次，页面/浏览器尚未实施新费用确认。
+本批不提供真实发送授权、不关闭AI-1或其他总门禁；历史失败及未关闭、后置状态不变。

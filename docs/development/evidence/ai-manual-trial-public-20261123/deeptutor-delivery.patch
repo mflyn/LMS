@@ -1,0 +1,2019 @@
+diff --git a/deeptutor/api/main.py b/deeptutor/api/main.py
+index a2131a4..21cae84 100644
+--- a/deeptutor/api/main.py
++++ b/deeptutor/api/main.py
+@@ -364,11 +364,15 @@ async def lifespan(app: FastAPI):
+     app.state.ready = False
+     try:
+         app.state.ai1_runtime.start()
++        app.state.ai3_runtime.start()
+         async with _application_lifespan(app):
+             yield
+     finally:
+         app.state.ready = False
+-        app.state.ai1_runtime.stop()
++        try:
++            app.state.ai3_runtime.stop()
++        finally:
++            app.state.ai1_runtime.stop()
+ 
+ 
+ from deeptutor.services.workspace.activity import WorkspaceActivityMiddleware
+@@ -385,7 +389,10 @@ app = FastAPI(
+ )
+ 
+ from deeptutor.services.ai1_runtime import mount_operation_runtime
++from deeptutor.services.ai3_runtime import mount_operation_runtime as mount_ai3_runtime
+ 
++# The narrower AI3 namespace must precede the AI1 catch-all mount.
++mount_ai3_runtime(app)
+ mount_operation_runtime(app)
+ 
+ from deeptutor.core.errors import AccessError
+diff --git a/deeptutor/services/ai1_contract.py b/deeptutor/services/ai1_contract.py
+index 2f45a6d..ed1060c 100644
+--- a/deeptutor/services/ai1_contract.py
++++ b/deeptutor/services/ai1_contract.py
+@@ -31,6 +31,18 @@ PROFILE_KEYS = {
+     "inputPriceMicrosPerMillion",
+     "outputPriceMicrosPerMillion",
+ }
++TRIAL_KEYS = {
++    "feeMode",
++    "estimateMethodVersion",
++    "referenceInputTokens",
++    "referenceOutputTokens",
++    "estimatedReservationMicros",
++    "feeNoticeVersion",
++}
++
++
++def is_trial(body):
++    return body.get("schemaVersion") in {"ai1-provider-operation-v2", "ai3-provider-operation-v2"}
+ 
+ 
+ class ContractError(ValueError):
+@@ -108,7 +120,13 @@ def _parse_request(raw, *, schema_version, request_keys):
+         )
+     except (UnicodeError, ValueError, RecursionError):
+         raise ContractError() from None
+-    if not exact(body, request_keys) or body["schemaVersion"] != schema_version:
++    trial = type(body) is dict and body.get("schemaVersion") == schema_version.replace("-v1", "-v2")
++    expected_keys = (
++        (request_keys - {"reservedCeilingMicros"}) | TRIAL_KEYS if trial else request_keys
++    )
++    if not exact(body, expected_keys) or body["schemaVersion"] != (
++        schema_version.replace("-v1", "-v2") if trial else schema_version
++    ):
+         raise ContractError()
+     if not all(text(body[k], 256) for k in ("modelProfileVersion", "pricingProfileVersion")):
+         raise ContractError()
+@@ -116,7 +134,17 @@ def _parse_request(raw, *, schema_version, request_keys):
+         r"[0-9a-f]{64}", body["requestHash"]
+     ):
+         raise ContractError()
+-    if not integer(body["reservedCeilingMicros"]):
++    if not integer(body["estimatedReservationMicros" if trial else "reservedCeilingMicros"]):
++        raise ContractError()
++    if trial and (
++        body["feeMode"] != "estimate_only"
++        or body["estimateMethodVersion"] != "reference-8192-4096-v1"
++        or body["feeNoticeVersion"] != "estimate-not-cap-v1"
++        or type(body["referenceInputTokens"]) is not int
++        or body["referenceInputTokens"] != 8192
++        or type(body["referenceOutputTokens"]) is not int
++        or body["referenceOutputTokens"] != 4096
++    ):
+         raise ContractError()
+     iso_ms(body["sendNotAfter"])
+     messages = body["messages"]
+@@ -131,7 +159,15 @@ def _parse_request(raw, *, schema_version, request_keys):
+             raise ContractError()
+     options = body["requestOptions"]
+     if not exact(
+-        options, {"model", "maxInputTokens", "maxOutputTokens", "thinking", "tools", "attemptLimit"}
++        options,
++        {
++            "model",
++            "maxRequestBytes" if trial else "maxInputTokens",
++            "maxOutputTokens",
++            "thinking",
++            "tools",
++            "attemptLimit",
++        },
+     ):
+         raise ContractError()
+     if (
+@@ -141,7 +177,7 @@ def _parse_request(raw, *, schema_version, request_keys):
+         or any(
+             type(options[key]) is not int or options[key] != value
+             for key, value in (
+-                ("maxInputTokens", 8192),
++                ("maxRequestBytes", 32768) if trial else ("maxInputTokens", 8192),
+                 ("maxOutputTokens", 4096),
+                 ("attemptLimit", 1),
+             )
+@@ -161,7 +197,19 @@ def parse_request(raw):
+ 
+ def check_policy(body, profile, now_ms):
+     """Return a safe not-sent failure code; caller samples time at each boundary."""
+-    if not exact(profile, PROFILE_KEYS) or not integer(now_ms):
++    trial = is_trial(body)
++    keys = (
++        PROFILE_KEYS | {"feeMode", "sourceReference", "estimateAcknowledged"}
++        if trial
++        else PROFILE_KEYS
++    )
++    if not exact(profile, keys) or not integer(now_ms):
++        return "PROFILE_UNAVAILABLE"
++    if trial and (
++        profile["feeMode"] != "estimate_only"
++        or profile["estimateAcknowledged"] is not True
++        or not text(profile["sourceReference"], 2000)
++    ):
+         return "PROFILE_UNAVAILABLE"
+     if not all(
+         text(profile[k], 256) for k in ("model", "modelProfileVersion", "pricingProfileVersion")
+@@ -195,7 +243,10 @@ def check_policy(body, profile, now_ms):
+     ceiling = (8192 * profile["inputPriceMicrosPerMillion"] + 999999) // 1000000 + (
+         4096 * profile["outputPriceMicrosPerMillion"] + 999999
+     ) // 1000000
+-    if ceiling > MAX_SAFE_INTEGER or body["reservedCeilingMicros"] != ceiling:
++    if (
++        ceiling > MAX_SAFE_INTEGER
++        or body["estimatedReservationMicros" if trial else "reservedCeilingMicros"] != ceiling
++    ):
+         return "PROFILE_UNAVAILABLE"
+     if (
+         now_ms >= deadline
+@@ -205,7 +256,7 @@ def check_policy(body, profile, now_ms):
+     return None
+ 
+ 
+-def validate_result(value, usage):
++def validate_result(value, usage, *, trial=False):
+     if not isinstance(value, str):
+         raise ContractError("AI_REMOTE_CONTRACT_INVALID", 503)
+     value = value.replace("\r\n", "\n")
+@@ -213,7 +264,7 @@ def validate_result(value, usage):
+         raise ContractError("AI_REMOTE_CONTRACT_INVALID", 503)
+     if usage is not None and (
+         not exact(usage, {"inputTokens", "outputTokens"})
+-        or not integer(usage["inputTokens"], 8192)
++        or not integer(usage["inputTokens"], MAX_SAFE_INTEGER if trial else 8192)
+         or not integer(usage["outputTokens"], 4096)
+     ):
+         raise ContractError("AI_REMOTE_CONTRACT_INVALID", 503)
+diff --git a/deeptutor/services/ai1_http.py b/deeptutor/services/ai1_http.py
+index 033c520..0c82f9b 100644
+--- a/deeptutor/services/ai1_http.py
++++ b/deeptutor/services/ai1_http.py
+@@ -74,7 +74,9 @@ def create_operation_app(*, service, token, dispatch_replays=True):
+                     raise ContractError("AI_INPUT_TOO_LARGE", 413)
+                 chunks.extend(part)
+             operation, created = service.receive(operation_id, bytes(chunks))
+-            if operation["status"] == "accepted" and (created or dispatch_replays):
++            if operation["status"] == "accepted" and (
++                created or (dispatch_replays and operation.get("feeMode") != "estimate_only")
++            ):
+                 await service.dispatch(operation_id)
+                 operation = service.get(operation_id)
+             return JSONResponse(
+diff --git a/deeptutor/services/ai1_operation.py b/deeptutor/services/ai1_operation.py
+index 50d2aa7..02698c9 100644
+--- a/deeptutor/services/ai1_operation.py
++++ b/deeptutor/services/ai1_operation.py
+@@ -9,9 +9,12 @@ import copy
+ import re
+ import time
+ 
++import rfc8785
++
+ from deeptutor.services.ai1_contract import (
+     ContractError,
+     check_policy,
++    is_trial,
+     parse_request,
+     validate_result,
+ )
+@@ -48,10 +51,14 @@ class OperationService:
+             raise ContractError()
+ 
+     def _check_namespace(self, snapshot):
+-        if snapshot is not None and snapshot.get("schemaVersion") != self._schema_version:
++        if snapshot is not None and snapshot.get("schemaVersion") not in {
++            self._schema_version,
++            self._schema_version.replace("-v1", "-v2"),
++        }:
+             raise ValueError("IDEMPOTENCY_KEY_REUSED")
+ 
+     def _prepare(self, snapshot):
++        self._parse_request(rfc8785.dumps(snapshot))
+         failure = check_policy(snapshot, self._profile, self._clock())
+         if failure:
+             raise ContractError(failure, 503)
+@@ -125,7 +132,7 @@ class OperationService:
+             return
+         try:
+             value, usage = await self.provider.send(prepared)
+-            result, usage = validate_result(value, usage)
++            result, usage = validate_result(value, usage, trial=is_trial(snapshot))
+         except asyncio.CancelledError:
+             try:
+                 self.store.finish(operation_id, owner, "unknown")
+diff --git a/deeptutor/services/ai1_provider.py b/deeptutor/services/ai1_provider.py
+index 043c1ff..5355e1e 100644
+--- a/deeptutor/services/ai1_provider.py
++++ b/deeptutor/services/ai1_provider.py
+@@ -1,7 +1,9 @@
+ """Single-shot SDK path for AI-1, separate from chat retries and key rotation.
+ 
+-No counter is supplied by default: a model-profile-qualified bound on the whole
+-wire body is an enabling prerequisite. Synthetic counters prove plumbing only.
++No counter is supplied by default: strict v1 requires a model-qualified bound.
++Explicit v2 trial profiles acknowledge estimated fees, not a hard cost cap, and
++enforce the complete wire byte limit without claiming input-token qualification.
++Synthetic counters prove strict-path plumbing only.
+ This module never reads runtime settings, credentials or environment at import.
+ """
+ 
+@@ -17,9 +19,11 @@ import httpx
+ import rfc8785
+ 
+ from deeptutor.services.ai1_contract import (
++    MAX_SAFE_INTEGER,
+     ContractError,
+     check_policy,
+     integer,
++    is_trial,
+     parse_request,
+     validate_result,
+ )
+@@ -126,6 +130,8 @@ class _SingleRequestTransport(httpx.AsyncBaseTransport):
+ 
+ 
+ class RestrictedCompletionProvider:
++    _parse_request = staticmethod(parse_request)
++
+     def __init__(self, *, profile, key_loader, counter=None, clock=None, transport_factory=None):
+         self._profile = copy.deepcopy(profile)
+         self._key_loader = key_loader
+@@ -141,9 +147,10 @@ class RestrictedCompletionProvider:
+             raise ContractError(failure, 503)
+ 
+     def prepare(self, snapshot):
+-        snapshot = parse_request(rfc8785.dumps(snapshot))
++        snapshot = self._parse_request(rfc8785.dumps(snapshot))
+         self._policy(snapshot)
+-        if (
++        trial = is_trial(snapshot)
++        if not trial and (
+             self._counter is None
+             or getattr(self._counter, "model_profile_version", None)
+             != self._profile["modelProfileVersion"]
+@@ -158,24 +165,28 @@ class RestrictedCompletionProvider:
+                 "thinking": {"type": "disabled"},
+             }
+         )
+-        try:
+-            bound = self._counter.upper_bound(wire)
+-        except Exception:
+-            raise ContractError("PROFILE_UNAVAILABLE", 503) from None
+-        if not integer(bound, 8192):
+-            raise ContractError("VALIDATION_ERROR")
++        if trial:
++            if len(wire) > 32768:
++                raise ContractError("AI_INPUT_TOO_LARGE", 413)
++        else:
++            try:
++                bound = self._counter.upper_bound(wire)
++            except Exception:
++                raise ContractError("PROFILE_UNAVAILABLE", 503) from None
++            if not integer(bound, 8192):
++                raise ContractError("VALIDATION_ERROR")
+         self._policy(snapshot)
+         return PreparedCompletion(rfc8785.dumps(snapshot), wire)
+ 
+     def _validate(self, prepared):
+         if (
+             type(prepared) is not PreparedCompletion
+-            or self.prepare(parse_request(prepared.snapshot)) != prepared
++            or self.prepare(self._parse_request(prepared.snapshot)) != prepared
+         ):
+             raise ContractError("AI_REMOTE_CONTRACT_INVALID", 503)
+ 
+     @staticmethod
+-    def _result(raw, model):
++    def _result(raw, model, *, trial=False):
+         value = _json(raw)
+         if not isinstance(value, dict) or value.get("model") != model:
+             raise ContractError("AI_REMOTE_CONTRACT_INVALID", 503)
+@@ -199,7 +210,7 @@ class RestrictedCompletionProvider:
+         if usage is not None:
+             if (
+                 type(usage) is not dict
+-                or not integer(usage.get("prompt_tokens"), 8192)
++                or not integer(usage.get("prompt_tokens"), MAX_SAFE_INTEGER if trial else 8192)
+                 or not integer(usage.get("completion_tokens"), 4096)
+             ):
+                 raise ContractError("AI_REMOTE_CONTRACT_INVALID", 503)
+@@ -212,7 +223,7 @@ class RestrictedCompletionProvider:
+                 "inputTokens": usage["prompt_tokens"],
+                 "outputTokens": usage["completion_tokens"],
+             }
+-        result, usage = validate_result(message.get("content"), usage)
++        result, usage = validate_result(message.get("content"), usage, trial=trial)
+         return result["text"], usage
+ 
+     async def send(self, prepared):
+@@ -251,7 +262,11 @@ class RestrictedCompletionProvider:
+                             extra_body={"thinking": {"type": "disabled"}},
+                             extra_headers={"Accept-Encoding": "identity"},
+                         )
+-                    return self._result(response.http_response.content, wire["model"])
++                    return self._result(
++                        response.http_response.content,
++                        wire["model"],
++                        trial=is_trial(self._parse_request(prepared.snapshot)),
++                    )
+         except asyncio.CancelledError:
+             raise
+         except Exception:
+diff --git a/deeptutor/services/ai1_runtime.py b/deeptutor/services/ai1_runtime.py
+index 9c450ca..0566af7 100644
+--- a/deeptutor/services/ai1_runtime.py
++++ b/deeptutor/services/ai1_runtime.py
+@@ -94,6 +94,19 @@ def _profile_probe(profile, now):
+         "sendNotAfter": stamp.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+     }
+     body["requestHash"] = request_hash(body)
++    if profile.get("feeMode") == "estimate_only":
++        body["schemaVersion"] = "ai1-provider-operation-v2"
++        body["estimatedReservationMicros"] = body.pop("reservedCeilingMicros")
++        body.update(
++            feeMode="estimate_only",
++            estimateMethodVersion="reference-8192-4096-v1",
++            referenceInputTokens=8192,
++            referenceOutputTokens=4096,
++            feeNoticeVersion="estimate-not-cap-v1",
++        )
++        body["requestOptions"].pop("maxInputTokens")
++        body["requestOptions"]["maxRequestBytes"] = 32768
++        body["requestHash"] = request_hash(body)
+     if check_policy(body, profile, now):
+         raise ValueError()
+     return body
+@@ -107,6 +120,17 @@ class _IsolatedService:
+ 
+ 
+ class OperationRuntime:
++    _service_type = OperationService
++    _probe = staticmethod(_profile_probe)
++    _dispatch_replays = False
++
++    def _default_provider(self, profile, key):
++        from deeptutor.services.ai1_provider import RestrictedCompletionProvider
++
++        return RestrictedCompletionProvider(
++            profile=profile, key_loader=lambda: key, clock=self._clock
++        )
++
+     def __init__(self, *, config_path=None, provider=None, clock=None):
+         self._config_path = config_path
+         self._provider = provider
+@@ -149,21 +173,17 @@ class OperationRuntime:
+                 profile, provider = None, None
+                 if mode == "enabled":
+                     profile = config["profile"]
+-                    probe = _profile_probe(profile, self._clock())
++                    probe = self._probe(profile, self._clock())
+                     key = _secret(config["providerKeyFile"], minimum=1, maximum=512)
+                     if token == key:
+                         raise ValueError()
+                     provider = self._provider
+                     if provider is None:
+-                        from deeptutor.services.ai1_provider import RestrictedCompletionProvider
+-
+-                        provider = RestrictedCompletionProvider(
+-                            profile=profile, key_loader=lambda: key, clock=self._clock
+-                        )
++                        provider = self._default_provider(profile, key)
+                     provider.prepare(probe)
+                     if check_policy(probe, profile, self._clock()):
+                         raise ValueError()
+-                service = OperationService(
++                service = self._service_type(
+                     store=store,
+                     provider=provider,
+                     profile=profile,
+@@ -171,7 +191,9 @@ class OperationRuntime:
+                     continuous=True,
+                     clock=self._clock,
+                 )
+-            application = create_operation_app(service=service, token=token)
++            application = create_operation_app(
++                service=service, token=token, dispatch_replays=self._dispatch_replays
++            )
+             self.service, self._app, self._started = service, application, True
+         except Exception:
+             self.stop()
+diff --git a/deeptutor/services/ai1_store.py b/deeptutor/services/ai1_store.py
+index d9fc0de..581ff4b 100644
+--- a/deeptutor/services/ai1_store.py
++++ b/deeptutor/services/ai1_store.py
+@@ -147,8 +147,16 @@ class OperationStore:
+             "sendClaimed": row["owner"] is not None,
+             "updatedAt": row["updated_at"],
+         }
+-        if snapshot.get("schemaVersion") == "ai3-provider-operation-v1":
++        if snapshot.get("schemaVersion") in {
++            "ai3-provider-operation-v1",
++            "ai3-provider-operation-v2",
++        }:
+             operation["providerProfile"] = snapshot["providerProfile"]
++        if snapshot.get("schemaVersion") in {
++            "ai1-provider-operation-v2",
++            "ai3-provider-operation-v2",
++        }:
++            operation.update(schemaVersion=snapshot["schemaVersion"], feeMode=snapshot["feeMode"])
+         return operation
+ 
+     def get(self, operation_id):
+@@ -191,7 +199,11 @@ class OperationStore:
+             # The clock/profile check is inside the write lock, not before waiting for it.
+             snapshot = json.loads(row["snapshot"])
+             failure = None
+-            if snapshot.get("schemaVersion") == "ai3-provider-operation-v1":
++            if snapshot.get("schemaVersion") in {
++                "ai3-provider-operation-v1",
++                "ai3-provider-operation-v2",
++                "ai1-provider-operation-v2",
++            }:
+                 # Bind the AI3 claim to the entire immutable profile-bearing request.
+                 try:
+                     if (
+diff --git a/deeptutor/services/ai3_http.py b/deeptutor/services/ai3_http.py
+index e806a19..80d8ad1 100644
+--- a/deeptutor/services/ai3_http.py
++++ b/deeptutor/services/ai3_http.py
+@@ -1,4 +1,4 @@
+-"""Explicit local AI3 assembly, never mounted in the public application."""
++"""Standalone AI3 test assembly; formal application uses ai3_runtime instead."""
+ 
+ from fastapi import FastAPI
+ 
+diff --git a/deeptutor/services/ai3_operation.py b/deeptutor/services/ai3_operation.py
+index 113b013..137aab6 100644
+--- a/deeptutor/services/ai3_operation.py
++++ b/deeptutor/services/ai3_operation.py
+@@ -1,8 +1,8 @@
+ """AI3 uses the AI1 journal/claim machinery with no default real Provider.
+ 
+-Only explicit in-process Provider injection is supported for local synthetic
+-qualification. No settings, credentials, SDK fallback or AI1 counter is loaded.
+-A separately qualified AI3 production configuration is not implemented here.
++Formal lifecycle assembly lives in ai3_runtime. This service itself loads no
++settings, credentials, SDK fallback or counter. Real counter qualification is
++still a separate enabling prerequisite; synthetic injection does not prove it.
+ """
+ 
+ import rfc8785
+diff --git a/b/deeptutor/services/ai3_provider.py b/deeptutor/services/ai3_provider.py
+new file mode 100644
+index 0000000..cf3977a
+--- /dev/null
++++ b/deeptutor/services/ai3_provider.py
+@@ -0,0 +1,8 @@
++"""AI3 envelope on the bounded SDK path; no qualified counter installed."""
++
++from deeptutor.services.ai1_provider import RestrictedCompletionProvider as Ai1Provider
++from deeptutor.services.ai3_contract import parse_request
++
++
++class RestrictedCompletionProvider(Ai1Provider):
++    _parse_request = staticmethod(parse_request)
+diff --git a/b/deeptutor/services/ai3_runtime.py b/deeptutor/services/ai3_runtime.py
+new file mode 100644
+index 0000000..d8c7f06
+--- /dev/null
++++ b/deeptutor/services/ai3_runtime.py
+@@ -0,0 +1,53 @@
++"""Independent default-off AI3 runtime in the existing application lifecycle."""
++
++import os
++
++import rfc8785
++
++from deeptutor.services.ai1_contract import ContractError, request_hash
++from deeptutor.services.ai1_runtime import OperationRuntime as Ai1Runtime
++from deeptutor.services.ai1_runtime import _profile_probe
++from deeptutor.services.ai3_contract import PROFILE_BINDINGS, SCHEMA_VERSION, parse_request
++from deeptutor.services.ai3_operation import OperationService
++
++
++def _ai3_probe(profile, now):
++    probe = _profile_probe(profile, now)
++    probe.update(
++        PROFILE_BINDINGS,
++        schemaVersion=(
++            "ai3-provider-operation-v2"
++            if profile.get("feeMode") == "estimate_only"
++            else SCHEMA_VERSION
++        ),
++    )
++    probe["requestHash"] = request_hash(probe)
++    return parse_request(rfc8785.dumps(probe))
++
++
++class OperationRuntime(Ai1Runtime):
++    _service_type = OperationService
++    _probe = staticmethod(_ai3_probe)
++    _dispatch_replays = False
++
++    def _default_provider(self, profile, key):
++        from deeptutor.services.ai3_provider import RestrictedCompletionProvider
++
++        return RestrictedCompletionProvider(
++            profile=profile, key_loader=lambda: key, clock=self._clock
++        )
++
++
++def mount_operation_runtime(app, *, config_path=None, provider=None, clock=None):
++    if getattr(app.state, "ai3_runtime", None) is not None:
++        raise ContractError("AI_PROFILE_UNAVAILABLE", 503)
++    runtime = OperationRuntime(
++        config_path=(
++            config_path if config_path is not None else os.environ.get("DEEPTUTOR_AI3_CONFIG_FILE")
++        ),
++        provider=provider,
++        clock=clock,
++    )
++    app.mount("/internal/deeptutor/ai3", runtime, name="ai3-internal")
++    app.state.ai3_runtime = runtime
++    return runtime
+diff --git a/b/docs-for-dev/AI3_RUNTIME_FOLLOWUP.md b/docs-for-dev/AI3_RUNTIME_FOLLOWUP.md
+new file mode 100644
+index 0000000..197b9ff
+--- /dev/null
++++ b/docs-for-dev/AI3_RUNTIME_FOLLOWUP.md
+@@ -0,0 +1,282 @@
++# AI3 formal runtime follow-up (2026-11-21)
++
++Base: `d5a30cbd95c7fbed53f7423dd046915a0eb1ebf6`. Local synthetic work only.
++This follow-up is separate from LMS documentation PRs. No commits, deployment,
++real credentials, model calls, database migration or gate closure are authorized.
++
++## Findings and minimal plan, recorded before implementation
++
++The formal main lifecycle only mounts AI1. AI3 has a standalone synthetic ASGI
++factory, not a production lifecycle. The default restricted Provider has no
++qualified counter; enabled startup must continue to reject that condition.
++
++1. Reuse the private AI1 configuration loader, journal and narrow HTTP contract.
++   Add `DEEPTUTOR_AI3_CONFIG_FILE`, independently defaulting to off, using the same
++   closed configuration keys. Mount `/internal/deeptutor/ai3` before the broader
++   AI1 mount. Start both before application readiness and stop both on all exits.
++2. Bind AI3 to its existing request parser, service and schema. Keep the existing
++   `x-ai1-service-token` wire header; AI3 has its separately configured token.
++   Preserve AI1 behavior and AI3 `dispatch_replays=False`. Do not initialize stores
++   during startup. Query-only and store-isolated must not require Provider access.
++3. Reuse the restricted SDK byte/transport path through an AI3 parser-specific
++   subclass. No counter is installed or selected from settings. Synthetic injected
++   counters/transport exercise serialization only, not real qualification.
++4. Test actual main lifecycle, authentication, profile namespace, terminal/accepted
++   replay, query-only restart, startup failure cleanup and exact request bytes.
++   Freeze base + patch + file hashes after tests and self-review.
++
++## Self-review before implementation
++
++The narrower mount must precede AI1 to avoid route shadowing. A failed AI3 startup
++must close already-started AI1; unrelated main startup failure must close both.
++Shared journal IDs are protected by the existing schema/hash checks. Wrong request
++schemas must not write or dispatch. Historical accepted AI3 replay must remain
++read-only even after process restart; UNKNOWN cannot acquire a new send claim.
++No chat Provider, environment credential fallback, retry or new network endpoint
++is introduced. Rollback is reverting this local patch with both features off;
++there is no schema change or real data operation to undo.
++
++## Counter qualification remains blocked
++
++Existing LMS AI1 test plan retains QUALIFIED_COUNTER_PENDING: no accepted evidence
++binds hosted model/profile to tokenizer plus complete system/user roles, generation
++prefix and any additional billable protocol overhead. A byte-bound or synthetic
++8192 result is not such proof. Existing official-inquiry/history is not replaced.
++This batch can verify missing/mismatched/expired synthetic qualification rejection,
++8192/8193 boundaries, Unicode/escaping, changed prepared requests and zero transport.
++It cannot certify a real counter, price, cost cap or enabled deployment. Production
++counter installation and actual model execution remain blocked pending reviewable
++model-specific evidence and a separate activation decision.
++
++## Implemented candidate and local validation
++
++The formal `deeptutor.api.main` now mounts AI3 before AI1 and manages both runtimes
++in its actual lifespan. AI3 reuses the private configuration keys `mode`,
++`storePath`, `storeContinuous`, `serviceTokenFile`, `providerKeyFile`, and `profile`.
++An absent `DEEPTUTOR_AI3_CONFIG_FILE` leaves AI3 off. No configuration file, service
++credential, operation database or qualified counter is created by this patch.
++The current default Provider rejects enabled startup without a qualified counter.
++Existing server configuration and data have not been inspected or modified.
++
++Tests enter actual main/lifespan in isolated processes with synthetic files and
++network connections denied. Enabled successful paths inject a Provider substitute;
++counter tests inject synthetic counters and HTTP transports. Neither proves real
++model qualification, remote deployment, or real generation acceptance.
++
++- Initial product red: actual main lacked `ai3_runtime`; one test failed as expected.
++  Earlier collection/import failures are also retained, not relabeled product reds.
++- Formal runtime plus Provider tests: 26 passed in 27.30 seconds before the review
++  improvement, then 26 passed in 25.28 seconds after it (one existing warning each).
++- Original AI1/AI3/leader regression plus the new tests: 262 passed and five failed
++  in 41.87 seconds (42.870 seconds outer duration, unchanged 180-second budget).
++  All five failures are leader async tests: the available local interpreter lacks
++  `pytest-asyncio`. Those tests were not skipped, rewritten, installed around or
++  counted as passes. This run precedes the final negative-test improvement; the
++  26-test rerun above validates that improvement, not a new full-green run.
++- Independent static review found a false-positive possibility in the missing
++  service-credential test: its thrown sentinel could be translated to the expected
++  startup error. The revised test records calls at the store constructor and asserts
++  zero calls outside the exception handler. Production ordering did not change.
++- Three isolated-copy mutations were killed: moving store construction before
++  credential validation (one failure), enabling dispatch of historical AI3 accepted
++  replays (one failure, two unchanged cases pass), and removing prepared-request
++  revalidation (four failures). Original assertions/timeouts remain intact.
++- Ruff passed on the nine affected service/test files; `git diff --check` passed.
++
++Independent follow-up code review found the negative-test issue fixed and no new
++actionable code finding. Its first execution was diagnostic: 163 passed / five
++async-plugin failures in 35.94 seconds, with command-line `addopts` overriding
++`--strict-config`. That result is retained but is not original-configuration
++acceptance and must not be combined with the development counts above. Missing
++dependency failures and any subsequent original-configuration verification are
++recorded separately in the frozen validation evidence.
++
++The independent original-configuration check subsequently ran once with every
++repository `addopts` retained: 163 passed / five async-plugin failures, zero skipped,
++one warning, exit 1, 35.66 seconds (36.070 seconds outer duration). All ten code/test
++file hashes were unchanged. This final documentation append records the returned
++review results; it is not an additional code revision or test execution. The review
++identified no new actionable code defect, but explicitly did not approve a gate
++closure or real counter. Neither failed execution is superseded or counted as green.
++
++The formal assembly is a local review candidate, not a server acceptance. The
++missing local async test dependency and real counter qualification remain explicit
++limitations. No AI1, AI3, device, deployment or other historical gate is closed here.
++
++## Subsequent authorized Ubuntu validation (2026-11-21)
++
++This is a later record supplied by the testing/review thread and checked locally;
++the earlier authorization boundaries and failed local runs above remain historical
++facts. This development follow-up made no server connection or deployment.
++
++- Following separate user authorization, the existing test instance was updated at
++  16:41:37 Asia/Shanghai to base `d5a30cbd95c7fbed53f7423dd046915a0eb1ebf6` plus the
++  11-file patch `d1dc53b249e590c6d48f03ba1b191efe6c5ba65acacee4898e663b8e1b410ade`.
++  This is not a new Git commit. Image `local/deeptutor:1.7.1-ai3-formal-d1dc53b2`
++  has ID `sha256:141e5f5b9739b15f323f9588fdf571a0d2d1c97262e55f3189c0a88cc6f25b77`.
++- The frozen 4506-file source digest is
++  `e45bf2deb3f4b44843c8fd301ee60de00a4f733b0ac67f577be63e7b5a4f075b`.
++  Online checks matched 1485 runtime files, six startup files and 3632 unchanged
++  frontend files. Frontend artifacts were verified and reused, not rebuilt.
++- Original configuration tests ran against actual `/app` code in that image, with
++  synthetic HOME/data, network disabled and no existing data mounts. Original 241
++  plus formal-main 12 plus Provider 14: **267 passed, zero failures/errors/skips**.
++  JUnit time was 95.680 seconds; phase duration was 98.518 seconds. The original
++  180-second outer and 30-second formal-child budgets were unchanged. Python was
++  3.11.18, SDK 2.54.0, pytest 8.4.2 and pytest-asyncio 1.2.0.
++- This is distinct from local `review-r1` (267 passes; four mutation classes with
++  seven expected reds/two controls), the development 262/5 result and earlier
++  Ubuntu 241 passes. None is relabeled or used to erase a previous failure.
++- Live/ready/login returned 200. AI1/AI3 GET/PUT remained 503 `AI_DISABLED` with
++  `no-store`. Assembly evidence is the online source identity plus same-image
++  formal-main tests, not the generic off response alone.
++- The report verifies 16 settings/credential-file hashes, nine SQLite schema/table
++  counts and 86 historical llm_calls preserved; other ten LMS services unchanged;
++  temporary test containers zero. This is not a supplier billing audit.
++- Subsequent zero-call preflight stopped at `STOPPED_QUALIFIED_COUNTER_PENDING`.
++  Candidate-not-deployed is no longer a blocker for this exact patch. Real service
++  credential/profile/store/address admission was not performed; zero real model
++  calls and default off remain. Formal assembly is **Ubuntu limited synthetic
++  validation passed**, not real LMS-to-DeepTutor-to-DeepSeek, counter or device
++  acceptance. This record does not alter total gates or user approval states.
++
++Evidence locator in the testing thread: `ai3-runtime-counter-followup-2026-11-21/`:
++
++| Frozen package | Files | manifest.json SHA256 |
++| --- | ---: | --- |
++| `ubuntu-r2` | 33 | `d60949bb564b0ce37d62ecc5e37061c53caf48aeb9847e0a11da29399135f25c` |
++| `review-r1` | 42 | `53590383ca408390b3d75ee631d2d0a5324a50e803c5745a33970b2eb0776b36` |
++
++Both manifests and every listed file were checked locally against the handoff.
++Read `REPORT.md`, `verification.json`, `candidate.json`, `preflight.json`, and
++`remote/reports/{switch,tests,finish,environment}.json` plus `ai-tests.xml` in
++`ubuntu-r2`. Original development 31-file archive and the older 29/52/9 packages
++are immutable; this append changes the current documentation, not those snapshots
++or the identity of the deployed d1dc53b2 patch.
++
++## Public counter basis recheck and minimal decision (2026-11-21)
++
++Scope remains the existing two-message `system`/`user` text contract, non-thinking,
++no tools, one attempt, input ceiling 8192 and output ceiling 4096. The Provider
++counts its canonical SDK wire bytes and revalidates before sending. Wire-byte
++identity is necessary, but JSON wire bytes are not themselves the model prompt
++tokenization or proof of billable upper bound. No real runtime profile/key was read.
++
++Public first-party sources read in this follow-up:
++
++| Source | What it establishes | Remaining gap |
++| --- | --- | --- |
++| [Models and pricing](https://api-docs.deepseek.com/quick_start/pricing/) | API name `deepseek-v4-pro` currently maps to `DeepSeek-V4-Pro-0813`; billing uses input/output tokens | No immutable tokenizer/encoding revision or extra-input bound is identified there; no live quote/profile is updated |
++| [Token usage](https://api-docs.deepseek.com/quick_start/token_usage/) | Character ratios are approximate; a demo tokenizer is offered; returned usage is authoritative | Not a guaranteed bound for this complete hosted request, nor a version binding of the demo to 0813 |
++| [Official model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro) | Public model provides separate message encoding followed by tokenization | Public weights/encoding are not explicitly bound to hosted 0813 in the reviewed material |
++| [Fixed encoding documentation](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/b5968e9190ef611bbf34a7229255be88a0e937c1/encoding/README.md) | Documents BOS, roles and non-thinking assistant prefix; demonstrates why body-only counting is insufficient | This is a fixed open-model reference, not a hosted billing guarantee |
++| [Chat completions](https://api-docs.deepseek.com/api/create-chat-completion/) and [thinking mode](https://api-docs.deepseek.com/guides/thinking_mode/) | Describe usage fields and explicit `thinking.type=disabled` | No pre-send count formula or hosted overhead upper bound was found in these reviewed pages |
++
++The fixed public repository revision is
++`b5968e9190ef611bbf34a7229255be88a0e937c1` (its commit page identifies a June 22
++technical-report update), while the API identifies the served Pro version as 0813.
++This does not prove their tokenizers differ; it means equality/applicability has
++not been established. No downloaded model/code was executed, no packages installed,
++and no authenticated API/model requests or new official inquiry were sent.
++
++### Minimal alternatives and recommendation
++
++1. Exact local counter: requires an official binding from hosted 0813 to fixed
++   tokenizer and complete non-thinking message encoding, including billable server
++   additions. Once obtained, pin data/hash, apply only to the existing narrow
++   profile, reuse prepare/send validation and add known vectors and negative tests.
++2. Conservative bound: acceptable only with a proof covering all transformations.
++   A byte-level BPE bound on the *fully rendered prompt* can be considered if the
++   tokenizer/preprocessing and server additions are bounded. Counting only JSON or
++   adding an arbitrary margin does not prove coverage. No such complete bound was
++   established in the reviewed sources.
++3. Keep fail-closed while obtaining the missing binding or a documented conservative
++   overhead bound. **Selected for this follow-up.** Do not change the model, token
++   ceilings, costs, retries, original operation IDs or unknown-result handling.
++
++The smallest useful external clarification is: for the existing text-only two-role
++request to `deepseek-v4-pro` / 0813 with thinking disabled and no tools, which fixed
++tokenizer/encoding revision governs billed prompt tokens; does it include BOS,
++role separators and assistant prefix; and what, if any, additional billable input
++is inserted, with what bound and version-validity rule? A few observed usages or
++successful chat calls would not prove an all-input upper bound. Any authenticated
++probe, new correspondence or deployment requires separate authorization.
++
++### Self-review before any counter implementation
++
++The assembly evidence is sufficient for the limited recorded conclusion. Counter
++evidence is **insufficient for production qualification**, so implementation and
++production injection stop here. Existing counter-missing/version/8192/Unicode/
++changed-input rejection tests remain unchanged; no new counter test is presented
++as proof of an implementation that does not exist. Unknown outcomes still retain
++their claim and original ID. Default off and `QUALIFIED_COUNTER_PENDING` remain.
++This follow-up is documentation and evidence only; rollback is removal of this
++new append, not changes to deployed data or any historical frozen package.
++
++## Approved record and counter-basis review (2026-11-21)
++
++The user approved this batch's limited assembly acceptance record and counter-basis
++review after the read-only review found no new required correction. Approval is
++limited to the accuracy of these records and the evidence-gap decision, not counter
++qualification, real sending, a total gate closure or deployment authorization.
++
++| Identity or evidence | Binding retained by this approval |
++| --- | --- |
++| Git base | `d5a30cbd95c7fbed53f7423dd046915a0eb1ebf6` |
++| Deployed and Ubuntu-tested patch | `d1dc53b249e590c6d48f03ba1b191efe6c5ba65acacee4898e663b8e1b410ade` |
++| Reviewed document-follow-up full patch | `3e1a8f0191ccf8c6f797181b9135600f9f98e26ecd9e18587bdf342cfd2dc8bb` |
++| Reviewed document SHA256 before this approval append | `250059acea3c7b938ac15d420e7167173ce80919ee360915b5db22fae343f76e` |
++| Ubuntu `ubuntu-r2` manifest | `d60949bb564b0ce37d62ecc5e37061c53caf48aeb9847e0a11da29399135f25c` |
++| Independent `review-r1` manifest | `53590383ca408390b3d75ee631d2d0a5324a50e803c5745a33970b2eb0776b36` |
++
++The approved Ubuntu result is 267 passed / zero failures, errors or skips, JUnit
++95.680 seconds, phase 98.518 seconds, under the original 180-second outer budget.
++The review checked the original command, actual `/app` source identity, structured
++JUnit counts and record consistency; it did not rerun the product suite or connect
++to the server. The older 262/5 and 163/5 local results, diagnostic configuration
++override, historical failures and separate mutation counts remain unchanged.
++
++This approval append changes the current document after the reviewed freeze.
++Neither old full patch nor old manifest is regenerated or assigned to these new
++bytes. Ten code/test files remain unchanged. T4/T8/AI-1 OPEN, DEVICE_PENDING,
++SERVER_TIMING_UNVERIFIED and other unclosed/deferred states are not changed by
++this record. `QUALIFIED_COUNTER_PENDING` and default-off/fail-closed remain.
++
++## Minimal official clarification draft - awaiting user confirmation
++
++Status: draft only; not sent. No new email, authenticated API probe or paid request
++is authorized by approval of the records above. No keys, account identifiers,
++children's data or private deployment details are needed in this inquiry.
++
++Subject: Complete billed input-token bound for deepseek-v4-pro / 0813
++
++We need a pre-send input-token count or provable conservative upper bound for a
++single text-only OpenAI-format `POST /chat/completions` request: model
++`deepseek-v4-pro`, exactly one system string and one user string,
++`thinking: {"type":"disabled"}`, `stream:false`, `max_tokens:4096`, with no tools,
++images, files, prior turns or optional features. Our local admission limit is
++8192 input tokens; this is our limit, not an assumed actual input count.
++
++1. Which fixed tokenizer and message-encoding version applies to billed prompt
++   tokens for hosted DeepSeek-V4-Pro-0813? Does public revision
++   `b5968e9190ef611bbf34a7229255be88a0e937c1` apply? Please provide immutable source
++   references/hashes or the correct version and the conditions under which it is
++   valid, including how a hosted-model revision change can be detected.
++2. For this narrow request, does that encoding cover every billed input token,
++   including BOS, system/user role boundaries and the non-thinking assistant
++   generation prefix? Are normalization, escaping, default prompts or other
++   server-added input included? If anything is additional, please specify its
++   exact count or guaranteed maximum and applicability conditions, including
++   Unicode and strings resembling special-token delimiters.
++3. Can you provide a documented offline counting procedure or conservative
++   upper-bound formula covering the above, with a few complete-request reference
++   vectors and expected counts? We need a bound valid before sending, rather than
++   an average character ratio or only post-request usage. If neither is available
++   for the hosted service, please explicitly confirm that limitation.
++
++Reference vectors help validate an implementation but alone do not prove a bound
++for all accepted inputs. A reply must still be reviewed for version/encoding and
++billable-input coverage before implementation or injection. If those facts remain
++missing, real enabling stays rejected; no arbitrary margin, fixed 8192 counter,
++new UUID retry or refund of UNKNOWN is introduced. Sending this draft and any
++subsequent model/server operation require separate user authorization.
+diff --git a/b/docs-for-dev/MANUAL_TRIAL_V2.md b/docs-for-dev/MANUAL_TRIAL_V2.md
+new file mode 100644
+index 0000000..a731de2
+--- /dev/null
++++ b/docs-for-dev/MANUAL_TRIAL_V2.md
+@@ -0,0 +1,164 @@
++# Manual trial v2: local Provider and runtime batch
++
++Status: LOCAL_SYNTHETIC_READY_FOR_REVIEW / INDEPENDENT_REVIEW_PASSED / USER_BATCH_ACCEPTANCE_PENDING
++
++## Approved scope and pre-implementation self-review
++
++The user approved the LMS manual-trial design on 2026-11-21 and accepted its
++first local ledger/contract batch. This batch implements only the matching
++DeepTutor restricted v2 envelope, Provider and formal runtime. It does not
++enable real sending, alter existing settings, deploy or call a model.
++
++Reuse the existing parser, single-shot transport, durable operation journal and
++formal main lifecycle. Preserve v1 qualified-counter rejection and all historical
++snapshots. V2 must be explicit in both the request and server profile; the profile
++also requires explicit estimate acknowledgement, never inferred from a key or
++an enabled flag. Estimates are not single-call or experiment hard cost caps.
++
++Plan: first add failing v2 tests; extend closed contract and persistent public
++projection; bind v2 Provider preparation to exact full wire bytes (32768 maximum),
++4096 output and one attempt; exercise formal main with synthetic configuration,
++no credentials fallback and no network. LMS remains the shared quota/halt owner.
++The remote service must not invent a second ledger or accept client quota claims.
++
++Self-review: preserve namespace checks, same-ID body conflict, historical accepted
++read-only replay, UNKNOWN no resend, and current policy revalidation immediately
++before claim and transport writes. Query-only must read both versions without
++current pricing or counter. New trial configuration must not make v1 sendable.
++Runtime defaults remain off. Rollback after v2 records means stopping new sending
++and retaining query-capable code, never deleting records or downgrading their
++schema. No changes to the live Ubuntu instance are authorized.
++
++Exact input qualification remains deferred, not solved. Local SDK tests use an
++HTTP transport substitute and synthetic secrets. Historical failures, pending
++device acceptance and all other unclosed/deferred gates remain unchanged.
++
++## Implemented protocol and recovery boundary
++
++Both `ai1-provider-operation-v2` and `ai3-provider-operation-v2` require explicit
++`feeMode=estimate_only`, `estimateMethodVersion=reference-8192-4096-v1`, reference
++input/output values 8192/4096, `estimatedReservationMicros` and
++`feeNoticeVersion=estimate-not-cap-v1`. `maxRequestBytes=32768` replaces the v1
++input-token claim. The server profile additionally requires `sourceReference`
++and boolean `estimateAcknowledged=true`. These are local configuration
++requirements, not proof of pricing eligibility, exact counting or authorization
++to send a real request. No actual configuration was changed.
++
++V2 preserves complete usage even above the input estimate; missing usage stays
++null through persistence and query-only restart. It does not cap or manufacture
++the actual charge. Shared quota, settlement and subsequent send inhibition remain
++LMS responsibilities. Off is still the default. V1 still requires its qualified
++counter and cannot silently become v2. The final prepared canonical bytes,
++deadline, namespace and original operation identity remain guarded.
++
++Independent review found formal AI1 could dispatch historical v1 accepted under
++a trial profile and change its terminal state. The formal runtime now disables
++replay dispatch, as AI3 already did; new records still dispatch once. The
++permanent formal-main regression checks zero dispatch, identical projection and
++unchanged SQLite bytes. The synthetic factory default remains compatible.
++Local red/green evidence is retained; user closure of this new P2 remains pending.
++
++## Historical and resumed verification
++
++The 2026-11-21/22 batches remain separate: initial contract/plugin and fixture
++failures; 21 new tests passed; full run 283 passed plus five original leader
++tests failed for missing pytest_asyncio; expanded 27 passed; pre-P2 services
++289 passed; then P2 red/green. The final 180-second timeout, partial FFF output,
++30-second formal subprocess timeout and incomplete freeze remain preserved in
++`ai-manual-trial-deeptutor-batch-b-20261122`. They are not retrospectively green.
++
++On 2026-11-23 all 17 source hashes initially matched that snapshot. Read-only Git
++and file access responded normally. Instrumented synthetic settings reads took
++milliseconds; unrestricted-module import then failed on absent optional
++defusedxml, not a timeout. The existing core/server formal default-off test passed
++in 4.4 seconds. The cause of the historical stall cannot be established from the
++available stack alone; no business fix, system change or installation is claimed.
++
++The first resumed services run had 288 passed / two failures because the new
++diagnostic network guard blocked the original loopback HTTP fixtures. Only the
++diagnostic guard was corrected to allow live listeners bound by that test
++process; external and other endpoints remain denied. The unchanged services
++then passed 290. After review-driven test protection additions, the final related
++suite passed 298 / zero failures or skips in 77.05 seconds (77.966 seconds wall).
++It includes 36 v2 tests; it excludes the five unchanged leader tests whose prior
++missing-plugin failures remain recorded, and is not an all-repository green run.
++
++New protection reuses existing formal-main and actual httpcore fixtures: v2
++cross-namespace same-ID rejection, one-attempt 429 followed by durable unknown,
++unknown usage after restart, near-limit Unicode/escaped wire with content-length
++and output limit assertions, and connect/TLS/body deadline checks. No old
++assertion, test timeout, resource budget or retry limit was relaxed.
++
++Formal-main tests use ASGI TestClient and synthetic settings; SDK success/failure
++uses MockTransport, and httpcore trace tests substitute only network I/O. Two
++original tests additionally use real local loopback HTTP with a synthetic
++Provider. None proves real LMS-to-DeepTutor-to-model, Ubuntu or device acceptance.
++The fresh freeze records a full patch from d5 and an incremental patch from the
++old d1 formal snapshot, including separately identified previously approved
++follow-up documentation. Neither patch is the old d1 patch or a new Git commit.
++
++## Self-review and independent review
++
++The eight in-memory mutation categories produced 12 expected assertion failures,
++seven passing controls, zero collection/runtime errors, zero skips and no timeout:
++historical replay dispatch, missing estimate acknowledgement, raw-body bound,
++incorrectly applying the v1 usage cap, Provider unknown-usage zero fabrication,
++pre-key validation removal, final HTTP write deadline removal, and store return
++projection zero fabrication. The last mutation changes the returned projection,
++not SQLite persisted bytes. The usage-cap mutation rejects, rather than truncates,
++an otherwise valid usage value. Source files were not mutated on disk.
++
++Independent review ran 74 cases: 36 new v2, 12 existing AI3 formal runtime and
++26 existing AI1 runtime, all passing without errors or skips. JUnit was 69.856
++seconds, wall 70.758 seconds, with the original 180/30-second budgets. Twenty
++candidate and related configuration/test hashes were unchanged before/after.
++The reviewer audited the eight mutation runs without rerunning the mutations;
++their unmutated controls passed independently. No remaining P1/P2 was found in
++this local batch. The historical-accepted P2 is technically reverified, but its
++user closure and this batch's acceptance remain pending.
++
++Independent evidence manifest: `c16899fec94236146aaaa86ca1100d05eae879ea09b25cc76ae183e45095336d`.
++The final local archive `ai-manual-trial-deeptutor-final-20261123` binds source,
++full/incremental reconstruction, separate development and independent evidence.
++Historical startup cause remains unconfirmed; successful current runs do not
++erase it, the five plugin failures, or the optional-module diagnostic failure.
++No counter qualification, real sending authorization, production installation,
++server update, total gate closure or device acceptance is implied.
++
++## Subsequent user acceptance (2026-11-23)
++
++Current batch status: ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY.
++Historical-v1-accepted replay P2: CLOSED / USER_APPROVED.
++The pending descriptions above are the original review-time snapshot and remain
++unchanged. The user subsequently approved this batch and the replay P2 closure;
++this addition records that approval, not a new implementation or test run.
++
++Accepted identity: base `d5a30cbd95c7fbed53f7423dd046915a0eb1ebf6`, original
++17-file full patch SHA-256
++`72edd3e34816811e8da724afa4a097325060b258a996fd7adff7bd8126229aa6`,
++increment from the old formal-runtime snapshot
++`3c39822fa1fab97749f94e2d942155fd595f33516189462b73c3fb2fe9df81d6`.
++Original 84-file manifest:
++`0e42015d3a1fddaab6ce71ccfff06e645ccf713ac07c9b329139d84a41a5d27b`.
++Independent evidence manifest:
++`c16899fec94236146aaaa86ca1100d05eae879ea09b25cc76ae183e45095336d`.
++The corresponding LMS approval record is
++`docs/development/evidence/ai-manual-trial-deeptutor-acceptance-20261123/README.md`.
++
++Development 298, independent 74, and 12 expected mutation failures / seven
++controls remain separate results. The reviewer did not rerun the mutations.
++The earlier Ubuntu 267 cases exercised the old formal-runtime patch, not this
++v2 delivery. The five historical leader/plugin failures and other failures
++remain preserved; no whole-repository all-green claim is made.
++
++This appended document has a new delivery hash. The other 16 frozen files and
++the original patch/archive hashes retain their original identities. A new
++delivery patch must include this addition without relabelling the old freeze.
++The LMS page batch has its own later approval and evidence; it is not part of
++the 298/74 counts. Real sending is not authorized, estimates are not hard cost
++caps, exact input qualification remains deferred and v1 remains fail-closed.
++Default-off, UNKNOWN no-resend and original-command protections are unchanged.
++T4/T8/AI-1 OPEN, DEVICE_PENDING, SERVER_TIMING_UNVERIFIED,
++Docker INCOMPLETE_FAILED, historical failures and other deferred states remain.
++PR #2 remains Draft with Actions blocking deferred (support ticket 5036799);
++local acceptance does not imply CI success, merge, server update or deployment.
+diff --git a/b/tests/services/ai1/test_ai3_formal_runtime.py b/tests/services/ai1/test_ai3_formal_runtime.py
+new file mode 100644
+index 0000000..615ea18
+--- /dev/null
++++ b/tests/services/ai1/test_ai3_formal_runtime.py
+@@ -0,0 +1,331 @@
++"""Actual main/lifespan coverage; isolated homes, synthetic providers, no network."""
++
++import copy
++import json
++from pathlib import Path
++
++import pytest
++
++from deeptutor.services.ai1_contract import request_hash
++from tests.services.ai1 import test_operation_runtime as ai1_tests
++from tests.services.ai1.test_operation_runtime import ID, PAYLOAD, TOKEN, formal_probe
++
++AI3_TOKEN = "synthetic-ai3-separate-credential-00001"
++URL = "/internal/deeptutor/ai3/operations/" + ID
++PAYLOAD3 = copy.deepcopy(PAYLOAD)
++PAYLOAD3.update(
++    schemaVersion="ai3-provider-operation-v1",
++    providerProfile="ai3-practice-v1",
++    promptVersion="ai3-practice-prompt-v1",
++    outputSchemaVersion="ai3-practice-content-v1",
++)
++PAYLOAD3["requestHash"] = request_hash(PAYLOAD3)
++
++
++@pytest.fixture
++def setup(tmp_path):
++    return ai1_tests.setup.__wrapped__(tmp_path)
++
++
++def test_formal_main_ai3_off_is_separate_and_zero_store_io(tmp_path):
++    formal_probe(
++        tmp_path,
++        None,
++        """
++assert main.app.state.ai3_runtime is not main.app.state.ai1_runtime
++with TestClient(main.app) as client:
++    for prefix in ['/internal/deeptutor', '/internal/deeptutor/ai3']:
++        r = client.get(prefix + '/operations/11111111-1111-4111-8111-111111111111')
++        assert r.status_code == 503 and r.json()['error']['code'] == 'AI_DISABLED'
++        assert r.headers['cache-control'] == 'no-store'
++    assert main.app.state.ai3_runtime.service is None
++assert not main.app.state.ai3_runtime._started
++print('FORMAL_PROBE_PASS')
++""",
++    )
++
++
++def test_formal_ai3_enabled_replay_auth_and_query_restart(setup, tmp_path):
++    path, config, save, store, _ = setup
++    Path(config["serviceTokenFile"]).write_text(AI3_TOKEN)
++    source = """
++import copy
++import rfc8785
++from deeptutor.services.ai3_contract import parse_request
++class Provider:
++    calls = 0
++    def prepare(self, snapshot):
++        return parse_request(rfc8785.dumps(snapshot))
++    async def send(self, prepared):
++        self.calls += 1
++        return '{"instructions":"Synthetic only","exercises":[]}', None
++runtime = main.app.state.ai3_runtime
++runtime._clock = lambda: 1893456000000
++runtime._provider = provider = Provider()
++with TestClient(main.app) as client:
++    assert client.get('/health/ready').status_code == 200
++    for h in [{}, {'Authorization':'Bearer '+TOKEN3}, {'x-ai1-service-token':TOKEN1}]:
++        assert client.get(URL, headers=h).status_code == 401
++    headers = {'x-ai1-service-token':TOKEN3}
++    assert client.put(URL, headers=headers, json=BODY1).status_code == 400
++    assert runtime.service.store.get(ID_VALUE) is None
++    first = client.put(URL, headers=headers, json=BODY3)
++    assert first.status_code == 201, first.text
++    original = first.json()
++    assert original['data']['operation']['status'] == 'succeeded'
++    assert client.put(URL, headers=headers, json=BODY3).json() == original
++    assert client.get(URL, headers=headers).json() == original
++    assert provider.calls == 1
++    assert client.get('/internal/deeptutor/operations/'+ID_VALUE, headers=headers).status_code == 503
++    assert client.get('/api/settings', headers=headers).status_code == 401
++assert runtime.service is None and not runtime._started
++print('FORMAL_PROBE_PASS')
++"""
++    substitutions = {
++        "TOKEN3": AI3_TOKEN,
++        "TOKEN1": TOKEN,
++        "URL": URL,
++        "BODY1": PAYLOAD,
++        "BODY3": PAYLOAD3,
++        "ID_VALUE": ID,
++    }
++    for key, value in substitutions.items():
++        source = source.replace(key, repr(value))
++    formal_probe(tmp_path, None, source, ai3_config_path=path)
++    original = store.get(ID)
++    config["mode"] = "query-only"
++    config.pop("profile")
++    Path(config.pop("providerKeyFile")).unlink()
++    save()
++    before = store.path.read_bytes()
++    formal_probe(
++        tmp_path,
++        None,
++        """
++with TestClient(main.app) as client:
++    headers = {'x-ai1-service-token': TOKEN_VALUE}
++    response = client.get(URL_VALUE, headers=headers)
++    assert response.json()['data']['operation'] == ORIGINAL_VALUE
++    assert client.put(URL_VALUE, headers=headers, json=BODY_VALUE).status_code == 503
++assert main.app.state.ai3_runtime.service is None
++print('FORMAL_PROBE_PASS')
++""".replace("TOKEN_VALUE", repr(AI3_TOKEN))
++        .replace("URL_VALUE", repr(URL))
++        .replace("ORIGINAL_VALUE", repr(original))
++        .replace("BODY_VALUE", repr(PAYLOAD3)),
++        ai3_config_path=path,
++    )
++    assert store.path.read_bytes() == before
++
++
++@pytest.mark.parametrize("state", ["accepted", "sending", "unknown"])
++def test_formal_ai3_restart_never_redispatches_old_claim_or_accepted(setup, tmp_path, state):
++    path, _, _, store, _ = setup
++    store.accept(ID, PAYLOAD3)
++    if state != "accepted":
++        owner = store.claim(ID, lambda _: None)
++        if state == "unknown":
++            store.finish(ID, owner, "unknown")
++    before = store.path.read_bytes()
++    formal_probe(
++        tmp_path,
++        None,
++        """
++from deeptutor.services.ai3_contract import parse_request
++import rfc8785
++class Provider:
++    def prepare(self, snapshot): return parse_request(rfc8785.dumps(snapshot))
++    async def send(self, prepared): raise AssertionError('No resend')
++r = main.app.state.ai3_runtime
++r._clock = lambda:1893456000000
++r._provider = Provider()
++with TestClient(main.app) as client:
++    headers = {'x-ai1-service-token':TOKEN_VALUE}
++    before = client.get(URL_VALUE, headers=headers).json()
++    after = client.put(URL_VALUE, headers=headers, json=BODY_VALUE)
++    assert after.status_code == 200 and after.json() == before
++assert r.service is None
++print('FORMAL_PROBE_PASS')
++""".replace("TOKEN_VALUE", repr(TOKEN))
++        .replace("URL_VALUE", repr(URL))
++        .replace("BODY_VALUE", repr(PAYLOAD3)),
++        ai3_config_path=path,
++    )
++    assert store.path.read_bytes() == before
++
++
++def test_formal_both_profiles_same_id_cannot_read_or_overwrite(setup, tmp_path):
++    path, config, save, store, _ = setup
++    store.accept(ID, PAYLOAD)
++    config["mode"] = "query-only"
++    save()
++    ai3 = path.with_name("ai3.json")
++    ai3.write_text(path.read_text())
++    ai3.chmod(0o600)
++    before = store.path.read_bytes()
++    formal_probe(
++        tmp_path,
++        path,
++        """
++with TestClient(main.app) as client:
++    headers = {'x-ai1-service-token':TOKEN_VALUE}
++    assert client.get('/internal/deeptutor/operations/'+ID_VALUE, headers=headers).status_code == 200
++    r = client.get('/internal/deeptutor/ai3/operations/'+ID_VALUE, headers=headers)
++    assert r.status_code == 409 and r.json()['error']['code'] == 'IDEMPOTENCY_KEY_REUSED'
++print('FORMAL_PROBE_PASS')
++""".replace("TOKEN_VALUE", repr(TOKEN)).replace("ID_VALUE", repr(ID)),
++        ai3_config_path=ai3,
++    )
++    assert store.path.read_bytes() == before
++
++
++@pytest.mark.parametrize("failure", ["ai3-start", "main-start"])
++def test_formal_start_failure_closes_both_runtimes(setup, tmp_path, failure):
++    path, config, save, _, _ = setup
++    config["mode"] = "query-only"
++    save()
++    formal_probe(
++        tmp_path,
++        path,
++        """
++def fail(): raise RuntimeError('synthetic startup failure')
++if FAILURE == 'ai3-start': main.app.state.ai3_runtime.start = fail
++else: main.validate_tool_consistency = fail
++try:
++    with TestClient(main.app): raise AssertionError('must fail')
++except RuntimeError as error:
++    assert str(error) == 'synthetic startup failure'
++for r in [main.app.state.ai1_runtime, main.app.state.ai3_runtime]:
++    assert not r._started and r.service is None
++assert main.app.state.ready is False
++print('FORMAL_PROBE_PASS')
++""".replace("FAILURE", repr(failure)),
++        ai3_config_path=path,
++    )
++
++
++@pytest.mark.parametrize("mode", ["store-isolated", "enabled"])
++def test_formal_isolation_and_missing_real_counter_fail_closed(setup, tmp_path, mode):
++    path, config, save, store, _ = setup
++    config["mode"] = mode
++    if mode == "store-isolated":
++        config["storePath"] += ".missing"
++        config["providerKeyFile"] += ".missing"
++    save()
++    before = store.path.read_bytes()
++    formal_probe(
++        tmp_path,
++        None,
++        """
++if MODE == 'enabled':
++    from deeptutor.services.ai1_contract import ContractError
++    runtime = main.app.state.ai3_runtime
++    runtime._clock = lambda:1893456000000
++    original_factory = runtime._default_provider
++    created = []
++    def observe(profile, key):
++        provider = original_factory(profile, key)
++        assert provider._counter is None
++        created.append(provider)
++        return provider
++    runtime._default_provider = observe
++    try:
++        with TestClient(main.app): raise AssertionError('Missing counter must block startup')
++    except ContractError as error:
++        assert error.code == 'AI_PROFILE_UNAVAILABLE'
++    assert len(created) == 1
++else:
++    with TestClient(main.app) as client:
++        assert client.get(URL_VALUE).status_code == 401
++        for method in ['GET','PUT']:
++            r = client.request(method, URL_VALUE, headers={'x-ai1-service-token':TOKEN_VALUE}, json=BODY_VALUE)
++            assert r.status_code == 503 and r.json()['error']['code'] == 'AI_STORE_ISOLATED'
++assert main.app.state.ai3_runtime.service is None
++print('FORMAL_PROBE_PASS')
++""".replace("MODE", repr(mode))
++        .replace("URL_VALUE", repr(URL))
++        .replace("TOKEN_VALUE", repr(TOKEN))
++        .replace("BODY_VALUE", repr(PAYLOAD3)),
++        ai3_config_path=path,
++    )
++    assert store.path.read_bytes() == before
++    assert not Path(str(store.path) + ".missing").exists()
++
++
++def test_formal_both_enabled_cross_profile_put_cannot_overwrite(setup, tmp_path):
++    path, config, _, store, _ = setup
++    token3 = path.with_name("ai3-token")
++    token3.write_text(AI3_TOKEN)
++    token3.chmod(0o600)
++    config3 = {**config, "serviceTokenFile": str(token3)}
++    ai3 = path.with_name("ai3.json")
++    ai3.write_text(json.dumps(config3))
++    ai3.chmod(0o600)
++    formal_probe(
++        tmp_path,
++        path,
++        """
++import copy
++class Provider:
++    calls = 0
++    def prepare(self, snapshot): return copy.deepcopy(snapshot)
++    async def send(self, prepared):
++        self.calls += 1
++        return 'synthetic', None
++p1, p3 = Provider(), Provider()
++for runtime, provider in [(main.app.state.ai1_runtime,p1),(main.app.state.ai3_runtime,p3)]:
++    runtime._clock = lambda:1893456000000
++    runtime._provider = provider
++with TestClient(main.app) as client:
++    u1 = '/internal/deeptutor/operations/'+ID_VALUE
++    u3 = '/internal/deeptutor/ai3/operations/'+ID_VALUE
++    h1, h3 = {'x-ai1-service-token':TOKEN1}, {'x-ai1-service-token':TOKEN3}
++    assert client.put(u3, headers=h1, json=BODY3).status_code == 401
++    assert client.put(u1, headers=h3, json=BODY1).status_code == 401
++    assert client.put(u1, headers=h1, json=BODY3).status_code == 400
++    first = client.put(u1, headers=h1, json=BODY1)
++    assert first.status_code == 201
++    r = client.put(u3, headers=h3, json=BODY3)
++    assert r.status_code == 409 and r.json()['error']['code'] == 'IDEMPOTENCY_KEY_REUSED'
++    assert client.get(u3, headers=h3).status_code == 409
++    assert client.get(u1, headers=h1).json() == first.json()
++    assert p1.calls == 1 and p3.calls == 0
++print('FORMAL_PROBE_PASS')
++""".replace("ID_VALUE", repr(ID))
++        .replace("TOKEN1", repr(TOKEN))
++        .replace("TOKEN3", repr(AI3_TOKEN))
++        .replace("BODY1", repr(PAYLOAD))
++        .replace("BODY3", repr(PAYLOAD3)),
++        ai3_config_path=ai3,
++    )
++    assert store.snapshot(ID) == PAYLOAD
++
++
++def test_formal_missing_ai3_service_secret_stops_before_store_access(setup, tmp_path):
++    path, config, save, store, _ = setup
++    config["mode"] = "query-only"
++    config["serviceTokenFile"] += ".missing"
++    save()
++    before = store.path.read_bytes()
++    formal_probe(
++        tmp_path,
++        None,
++        """
++from deeptutor.services.ai1_contract import ContractError
++from deeptutor.services import ai1_runtime
++opened = []
++def forbidden(*args, **kwargs):
++    opened.append(True)
++    raise AssertionError('No store before authentication settings')
++ai1_runtime.OperationStore = forbidden
++try:
++    with TestClient(main.app): raise AssertionError('missing token must fail')
++except ContractError as error:
++    assert error.code == 'AI_PROFILE_UNAVAILABLE'
++assert opened == []
++assert main.app.state.ai3_runtime.service is None
++print('FORMAL_PROBE_PASS')
++""",
++        ai3_config_path=path,
++    )
++    assert store.path.read_bytes() == before
+diff --git a/b/tests/services/ai1/test_manual_trial_v2.py b/tests/services/ai1/test_manual_trial_v2.py
+new file mode 100644
+index 0000000..6efd9bd
+--- /dev/null
++++ b/tests/services/ai1/test_manual_trial_v2.py
+@@ -0,0 +1,463 @@
++"""Synthetic-only v2 fee protocol. No native settings or network credentials."""
++
++import asyncio
++import copy
++import json
++
++import httpx
++import pytest
++import rfc8785
++
++from deeptutor.services.ai1_contract import ContractError, check_policy, request_hash
++from deeptutor.services.ai1_provider import RestrictedCompletionProvider
++from deeptutor.services.ai1_store import OperationStore
++from tests.services.ai1.test_operation_runtime import ID, PAYLOAD, PROFILE
++
++
++def trial(profile=False, namespace="ai1"):
++    if profile:
++        return {
++            **PROFILE,
++            "feeMode": "estimate_only",
++            "sourceReference": "https://example.test/price",
++            "estimateAcknowledged": True,
++        }
++    value = copy.deepcopy(PAYLOAD)
++    value["schemaVersion"] = f"{namespace}-provider-operation-v2"
++    value["estimatedReservationMicros"] = value.pop("reservedCeilingMicros")
++    value.update(
++        feeMode="estimate_only",
++        estimateMethodVersion="reference-8192-4096-v1",
++        referenceInputTokens=8192,
++        referenceOutputTokens=4096,
++        feeNoticeVersion="estimate-not-cap-v1",
++    )
++    value["requestOptions"].pop("maxInputTokens")
++    value["requestOptions"]["maxRequestBytes"] = 32768
++    if namespace == "ai3":
++        value.update(
++            providerProfile="ai3-practice-v1",
++            promptVersion="ai3-practice-prompt-v1",
++            outputSchemaVersion="ai3-practice-content-v1",
++        )
++    value["requestHash"] = request_hash(value)
++    return value
++
++
++@pytest.mark.parametrize("namespace", ["ai1", "ai3"])
++def test_v2_explicit_contract_policy_and_counter_free_prepare(namespace):
++    from importlib import import_module
++
++    parser = import_module(f"deeptutor.services.{namespace}_contract").parse_request
++    provider_type = import_module(
++        f"deeptutor.services.{namespace}_provider"
++    ).RestrictedCompletionProvider
++    value = trial(namespace=namespace)
++    assert parser(rfc8785.dumps(value)) == value
++    assert check_policy(value, trial(True), 1893456000000) is None
++    provider = provider_type(
++        profile=trial(True),
++        key_loader=lambda: pytest.fail("no key in prepare"),
++        clock=lambda: 1893456000000,
++    )
++    prepared = provider.prepare(value)
++    assert len(prepared.wire) <= 32768
++    assert json.loads(prepared.wire)["max_tokens"] == 4096
++    assert check_policy(value, PROFILE, 1893456000000) == "PROFILE_UNAVAILABLE"
++    assert check_policy(PAYLOAD, trial(True), 1893456000000) == "PROFILE_UNAVAILABLE"
++
++
++@pytest.mark.parametrize(
++    "field,value",
++    [
++        ("feeMode", "strict"),
++        ("feeNoticeVersion", "other"),
++        ("referenceInputTokens", 8193),
++        ("estimatedReservationMicros", 0),
++    ],
++)
++def test_v2_refuses_changed_fee_confirmation(field, value):
++    from deeptutor.services.ai1_contract import parse_request
++
++    body = trial()
++    body[field] = value
++    body["requestHash"] = request_hash(body)
++    if field == "estimatedReservationMicros":
++        assert check_policy(body, trial(True), 1893456000000) == "PROFILE_UNAVAILABLE"
++    else:
++        with pytest.raises(ContractError):
++            parse_request(rfc8785.dumps(body))
++
++
++@pytest.mark.parametrize("namespace", ["ai1", "ai3"])
++def test_v2_single_transport_full_usage_and_terminal_replay(tmp_path, namespace):
++    from importlib import import_module
++
++    service_type = import_module(f"deeptutor.services.{namespace}_operation").OperationService
++    provider_type = import_module(
++        f"deeptutor.services.{namespace}_provider"
++    ).RestrictedCompletionProvider
++    calls = []
++
++    async def reply(request):
++        calls.append(request.content)
++        return httpx.Response(
++            200,
++            json={
++                "model": PROFILE["model"],
++                "choices": [
++                    {
++                        "index": 0,
++                        "finish_reason": "stop",
++                        "message": {"role": "assistant", "content": "Synthetic draft"},
++                    }
++                ],
++                "usage": {"prompt_tokens": 30000, "completion_tokens": 1, "total_tokens": 30001},
++            },
++        )
++
++    provider = provider_type(
++        profile=trial(True),
++        key_loader=lambda: "synthetic-not-real",
++        clock=lambda: 1893456000000,
++        transport_factory=lambda: httpx.MockTransport(reply),
++    )
++    tmp_path.chmod(0o700)
++    store = OperationStore(tmp_path / "operations.sqlite", initialize=True)
++    service = service_type(
++        store=store,
++        provider=provider,
++        profile=trial(True),
++        mode="enabled",
++        continuous=True,
++        clock=lambda: 1893456000000,
++    )
++    body = trial(namespace=namespace)
++    original, created = service.receive(ID, rfc8785.dumps(body))
++    assert created and original["schemaVersion"] == body["schemaVersion"]
++    asyncio.run(service.dispatch(ID))
++    result = service.get(ID)
++    assert result["status"] == "succeeded" and result["usage"]["inputTokens"] == 30000
++    assert result["feeMode"] == "estimate_only" and len(calls) == 1
++    query = service_type(
++        store=store, provider=None, profile=None, mode="query-only", continuous=True
++    )
++    assert query.get(ID) == result
++    assert service.receive(ID, rfc8785.dumps(body)) == (result, False)
++    asyncio.run(service.dispatch(ID))
++    assert len(calls) == 1
++
++
++def test_v1_without_counter_still_refused():
++    provider = RestrictedCompletionProvider(
++        profile=PROFILE, key_loader=lambda: pytest.fail("no key"), clock=lambda: 1893456000000
++    )
++    with pytest.raises(ContractError, match="PROFILE_UNAVAILABLE"):
++        provider.prepare(PAYLOAD)
++
++
++def test_formal_trial_profile_old_v1_accepted_is_read_only(tmp_path):
++    from tests.services.ai1.test_operation_runtime import TOKEN, formal_probe, setup
++
++    path, config, save, store, _ = setup.__wrapped__(tmp_path)
++    config["profile"] = trial(True)
++    save()
++    store.accept(ID, PAYLOAD)
++    original = store.get(ID)
++    before = store.path.read_bytes()
++    formal_probe(
++        tmp_path,
++        path,
++        f"""
++runtime = main.app.state.ai1_runtime
++runtime._clock = lambda: 1893456000000
++with TestClient(main.app) as client:
++    headers = {{'x-ai1-service-token':{TOKEN!r}}}
++    url = '/internal/deeptutor/operations/{ID}'
++    def forbidden(_): raise AssertionError('historical replay must not dispatch')
++    runtime.service.dispatch = forbidden
++    result = client.put(url, headers=headers, json={PAYLOAD!r})
++    assert result.status_code == 200, result.text
++    assert result.json()['data']['operation'] == {original!r}
++    assert client.get(url, headers=headers).json() == result.json()
++print('FORMAL_PROBE_PASS')
++""",
++    )
++    assert store.path.read_bytes() == before
++
++
++@pytest.mark.parametrize("namespace", ["ai1", "ai3"])
++@pytest.mark.parametrize("state", ["accepted", "sending", "unknown"])
++def test_formal_v2_restart_replay_never_sends(tmp_path, namespace, state):
++    from tests.services.ai1.test_operation_runtime import TOKEN, formal_probe, setup
++
++    path, config, save, store, _ = setup.__wrapped__(tmp_path)
++    config["profile"] = trial(True)
++    save()
++    body = trial(namespace=namespace)
++    store.accept(ID, body)
++    if state != "accepted":
++        owner = store.claim(ID, lambda _: None)
++        if state == "unknown":
++            store.finish(ID, owner, "unknown")
++    before = store.path.read_bytes()
++    url = f"/internal/deeptutor{'/ai3' if namespace == 'ai3' else ''}/operations/{ID}"
++    source = f"""
++runtime = main.app.state.{namespace}_runtime
++runtime._clock = lambda: 1893456000000
++with TestClient(main.app) as client:
++    assert runtime._provider is None
++    assert runtime.service.provider._counter is None
++    headers = {{'x-ai1-service-token': {TOKEN!r}}}
++    before = client.get({url!r}, headers=headers)
++    assert before.status_code == 200 and before.json()['data']['operation']['feeMode'] == 'estimate_only'
++    after = client.put({url!r}, headers=headers, json={body!r})
++    assert after.status_code == 200 and after.json() == before.json()
++    assert client.get({url!r}).status_code == 401
++assert runtime.service is None
++print('FORMAL_PROBE_PASS')
++"""
++    formal_probe(
++        tmp_path,
++        path if namespace == "ai1" else None,
++        source,
++        ai3_config_path=path if namespace == "ai3" else None,
++    )
++    assert store.path.read_bytes() == before
++
++
++@pytest.mark.parametrize("value", [False, None, "true"])
++def test_trial_requires_server_estimate_acknowledgement(value):
++    profile = trial(True)
++    profile["estimateAcknowledged"] = value
++    provider = RestrictedCompletionProvider(
++        profile=profile, key_loader=lambda: pytest.fail("no key"), clock=lambda: 1893456000000
++    )
++    with pytest.raises(ContractError, match="PROFILE_UNAVAILABLE"):
++        provider.prepare(trial())
++
++
++def test_trial_prepared_mutation_and_expiry_refuse_before_key_or_transport():
++    from dataclasses import replace
++
++    clock = [1893456000000]
++    provider = RestrictedCompletionProvider(
++        profile=trial(True),
++        key_loader=lambda: pytest.fail("no key"),
++        clock=lambda: clock[0],
++        transport_factory=lambda: pytest.fail("no transport"),
++    )
++    prepared = provider.prepare(trial())
++    with pytest.raises(ContractError):
++        asyncio.run(provider.send(replace(prepared, wire=prepared.wire.replace(b"4096", b"4095"))))
++    clock[0] = 1893459600000
++    with pytest.raises(ContractError):
++        asyncio.run(provider.send(prepared))
++
++
++@pytest.mark.parametrize("boundary", ["connect", "tls", "headers"])
++def test_trial_actual_httpcore_final_write_deadline(tmp_path, boundary):
++    from tests.services.ai1 import test_operation_provider as provider_cases
++
++    state = list(provider_cases.setup.__wrapped__())
++    state[1] = trial()
++    state[2] = trial(True)
++    state[8] = None
++    provider_cases.test_actual_httpcore_checks_deadline_after_connection_and_before_body(
++        tuple(state), boundary
++    )
++
++
++@pytest.mark.parametrize("extra", [0, 1])
++def test_trial_raw_json_exact_size_boundary(extra):
++    from deeptutor.services.ai1_contract import parse_request
++
++    body = trial()
++    raw = rfc8785.dumps(body)
++    raw += b" " * (32768 + extra - len(raw))
++    if extra:
++        with pytest.raises(ContractError, match="AI_INPUT_TOO_LARGE"):
++            parse_request(raw)
++    else:
++        assert parse_request(raw) == body
++
++
++@pytest.mark.parametrize("namespace", ["ai1", "ai3"])
++@pytest.mark.parametrize("reported_usage", [None, 9000])
++def test_formal_default_trial_provider_send_auth_and_query_only(
++    tmp_path, namespace, reported_usage
++):
++    from tests.services.ai1.test_operation_runtime import TOKEN, formal_probe, setup
++
++    path, config, save, store, _ = setup.__wrapped__(tmp_path)
++    config["profile"] = trial(True)
++    save()
++    body = trial(namespace=namespace)
++    body["messages"][1]["content"] = (
++        'Synthetic \u6570\u5b66 "quote" \\ slash \n newline' + "\u6570" * 10000
++    )
++    body["requestHash"] = request_hash(body)
++    url = f"/internal/deeptutor{'/ai3' if namespace == 'ai3' else ''}/operations/{ID}"
++    source = f"""
++runtime = main.app.state.{namespace}_runtime
++runtime._clock = lambda: 1893456000000
++factory = runtime._default_provider
++calls = []
++async def reply(request):
++    import json
++    calls.append(request.content)
++    assert request.content == prepared[0].wire
++    assert 30000 <= len(request.content) <= 32768
++    assert int(request.headers['content-length']) == len(request.content)
++    assert json.loads(request.content)['max_tokens'] == 4096
++    assert json.loads(request.content)['messages'] == {body["messages"]!r}
++    return httpx.Response(200, json={{'model':'synthetic-model', 'choices':[{{'index':0,
++      'finish_reason':'stop','message':{{'role':'assistant','content':'Synthetic draft'}}}}],
++      'usage':{None if reported_usage is None else {"prompt_tokens": 9000, "completion_tokens": 1, "total_tokens": 9001}!r}}})
++prepared = []
++def make(profile, key):
++    provider = factory(profile, key)
++    assert provider._counter is None
++    provider._transport_factory = lambda: httpx.MockTransport(reply)
++    prepare = provider.prepare
++    def capture(snapshot):
++        value = prepare(snapshot)
++        prepared[:] = [value]
++        return value
++    provider.prepare = capture
++    return provider
++runtime._default_provider = make
++with TestClient(main.app) as client:
++    headers = {{'x-ai1-service-token':{TOKEN!r}}}
++    for h in [{{}}, {{'x-ai1-service-token':'wrong'}}, {{'Authorization':'Bearer '+{TOKEN!r}}}]:
++        assert client.put({url!r}, headers=h, json={body!r}).status_code == 401
++    first = client.put({url!r}, headers=headers, json={body!r})
++    assert first.status_code == 201, first.text
++    operation = first.json()['data']['operation']
++    assert operation['status'] == 'succeeded'
++    assert operation['usage'] == {None if reported_usage is None else {"inputTokens": 9000, "outputTokens": 1}!r}
++    assert operation['schemaVersion'] == {body["schemaVersion"]!r}
++    assert first.headers['cache-control'] == 'no-store'
++    assert client.put({url!r}, headers=headers, json={body!r}).json() == first.json()
++    assert len(calls) == 1
++assert runtime.service is None
++print('FORMAL_PROBE_PASS')
++"""
++    formal_probe(
++        tmp_path,
++        path if namespace == "ai1" else None,
++        source,
++        ai3_config_path=path if namespace == "ai3" else None,
++    )
++    original = store.get(ID)
++    before = store.path.read_bytes()
++    config["mode"] = "query-only"
++    config.pop("profile")
++    config.pop("providerKeyFile")
++    save()
++    formal_probe(
++        tmp_path,
++        path if namespace == "ai1" else None,
++        f"""
++with TestClient(main.app) as client:
++    headers = {{'x-ai1-service-token':{TOKEN!r}}}
++    assert client.get({url!r}, headers=headers).json()['data']['operation'] == {original!r}
++    assert client.put({url!r}, headers=headers, json={body!r}).status_code == 503
++print('FORMAL_PROBE_PASS')
++""",
++        ai3_config_path=path if namespace == "ai3" else None,
++    )
++    assert store.path.read_bytes() == before
++
++
++def test_formal_v2_cross_namespace_same_id_isolation(tmp_path, monkeypatch):
++    from tests.services.ai1 import test_ai3_formal_runtime as formal_cases
++    from tests.services.ai1.test_operation_runtime import setup
++
++    state = setup.__wrapped__(tmp_path)
++    _, config, save, _, _ = state
++    config["profile"] = trial(True)
++    save()
++    monkeypatch.setattr(formal_cases, "PAYLOAD", trial())
++    monkeypatch.setattr(formal_cases, "PAYLOAD3", trial(namespace="ai3"))
++    formal_cases.test_formal_both_enabled_cross_profile_put_cannot_overwrite(state, tmp_path)
++
++
++@pytest.mark.parametrize("namespace", ["ai1", "ai3"])
++def test_trial_429_is_one_attempt_durable_unknown_no_resend(tmp_path, namespace):
++    from importlib import import_module
++
++    service_type = import_module(f"deeptutor.services.{namespace}_operation").OperationService
++    provider_type = import_module(
++        f"deeptutor.services.{namespace}_provider"
++    ).RestrictedCompletionProvider
++    calls = []
++
++    async def reply(request):
++        calls.append(request.content)
++        return httpx.Response(429, json={"error": {"message": "synthetic rate limit"}})
++
++    provider = provider_type(
++        profile=trial(True),
++        key_loader=lambda: "synthetic-not-real",
++        clock=lambda: 1893456000000,
++        transport_factory=lambda: httpx.MockTransport(reply),
++    )
++    tmp_path.chmod(0o700)
++    store = OperationStore(tmp_path / "operations.sqlite", initialize=True)
++    service = service_type(
++        store=store,
++        provider=provider,
++        profile=trial(True),
++        mode="enabled",
++        continuous=True,
++        clock=lambda: 1893456000000,
++    )
++    body = trial(namespace=namespace)
++    service.receive(ID, rfc8785.dumps(body))
++    asyncio.run(service.dispatch(ID))
++    original = service.get(ID)
++    assert original["status"] == "unknown" and original["usage"] is None
++    assert len(calls) == 1
++    restarted = service_type(
++        store=OperationStore(store.path),
++        provider=provider,
++        profile=trial(True),
++        mode="enabled",
++        continuous=True,
++        clock=lambda: 1893456000000,
++    )
++    assert restarted.receive(ID, rfc8785.dumps(body)) == (original, False)
++    asyncio.run(restarted.dispatch(ID))
++    assert restarted.get(ID) == original and len(calls) == 1
++
++
++@pytest.mark.parametrize(
++    "usage",
++    [
++        None,
++        {"prompt_tokens": 8193, "completion_tokens": 4096, "total_tokens": 12289},
++        {"prompt_tokens": 8193, "completion_tokens": 4097},
++        {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 3},
++    ],
++)
++def test_trial_usage_unknown_full_or_invalid_not_zero(usage):
++    raw = json.dumps(
++        {
++            "model": "synthetic-model",
++            "choices": [
++                {
++                    "index": 0,
++                    "finish_reason": "stop",
++                    "message": {"role": "assistant", "content": "Synthetic"},
++                }
++            ],
++            "usage": usage,
++        }
++    ).encode()
++    if usage is not None and (usage["completion_tokens"] > 4096 or usage.get("total_tokens") == 3):
++        with pytest.raises(ContractError):
++            RestrictedCompletionProvider._result(raw, "synthetic-model", trial=True)
++    else:
++        _, actual = RestrictedCompletionProvider._result(raw, "synthetic-model", trial=True)
++        assert actual == (None if usage is None else {"inputTokens": 8193, "outputTokens": 4096})
+diff --git a/tests/services/ai1/test_operation_runtime.py b/tests/services/ai1/test_operation_runtime.py
+index efbc8b9..1683493 100644
+--- a/tests/services/ai1/test_operation_runtime.py
++++ b/tests/services/ai1/test_operation_runtime.py
+@@ -272,7 +272,7 @@ else:
+     assert result.returncode == 0, result.stdout + result.stderr
+ 
+ 
+-def formal_probe(tmp_path, config_path, source):
++def formal_probe(tmp_path, config_path, source, *, ai3_config_path=None):
+     home = tmp_path / "formal-home"
+     home.mkdir(exist_ok=True)
+     modules = home / "data" / "system"
+@@ -298,6 +298,8 @@ def formal_probe(tmp_path, config_path, source):
+     }
+     if config_path is not None:
+         env["DEEPTUTOR_AI1_CONFIG_FILE"] = str(config_path)
++    if ai3_config_path is not None:
++        env["DEEPTUTOR_AI3_CONFIG_FILE"] = str(ai3_config_path)
+     # No credentials/settings inherit from the developer's process or real home.
+     result = subprocess.run(
+         [
+diff --git a/b/tests/services/ai3/test_restricted_provider.py b/tests/services/ai3/test_restricted_provider.py
+new file mode 100644
+index 0000000..fc250fb
+--- /dev/null
++++ b/tests/services/ai3/test_restricted_provider.py
+@@ -0,0 +1,174 @@
++"""Synthetic counter/transport only; never evidence of real token qualification."""
++
++import asyncio
++import copy
++from dataclasses import replace
++
++import httpx
++import pytest
++import rfc8785
++
++from deeptutor.services.ai1_contract import ContractError, iso_ms, request_hash
++from deeptutor.services.ai1_provider import _SingleRequestTransport
++from deeptutor.services.ai3_provider import RestrictedCompletionProvider
++from tests.services.ai3.test_operations import PROFILE, body
++
++
++@pytest.fixture
++def prepared():
++    clock = [1893456000000]
++    calls, counted, keys = [], [], []
++
++    class Counter:
++        model_profile_version = PROFILE["modelProfileVersion"]
++        bound = 8192
++
++        def upper_bound(self, wire):
++            counted.append(wire)
++            return self.bound
++
++    counter = Counter()
++
++    async def transport(request):
++        calls.append(request)
++        return httpx.Response(
++            200,
++            json={
++                "model": "synthetic-model",
++                "choices": [
++                    {
++                        "index": 0,
++                        "finish_reason": "stop",
++                        "message": {
++                            "role": "assistant",
++                            "content": '{"instructions":"Synthetic","exercises":[]}',
++                        },
++                    }
++                ],
++            },
++        )
++
++    def key():
++        keys.append(True)
++        return "synthetic-test-only-key"
++
++    provider = RestrictedCompletionProvider(
++        profile=PROFILE,
++        key_loader=key,
++        counter=counter,
++        clock=lambda: clock[0],
++        transport_factory=lambda: httpx.MockTransport(transport),
++    )
++    return provider, counter, clock, calls, counted, keys
++
++
++@pytest.mark.parametrize("invalid", ["missing", "version", "counter-error"])
++def test_counter_rejection_before_secret_sdk_or_transport(prepared, invalid):
++    provider, counter, _, calls, _, keys = prepared
++    if invalid == "missing":
++        provider._counter = None
++    elif invalid == "version":
++        counter.model_profile_version = "wrong-version"
++    else:
++
++        def reject(_):
++            raise ValueError("synthetic expired counter qualification")
++
++        counter.upper_bound = reject
++    with pytest.raises(ContractError, match="PROFILE_UNAVAILABLE"):
++        provider.prepare(body())
++    assert calls == keys == []
++
++
++@pytest.mark.parametrize("bound", [8191, 8192, 8193])
++def test_complete_bound_boundary_and_zero_send_on_rejection(prepared, bound):
++    provider, counter, _, calls, counted, keys = prepared
++    counter.bound = bound
++    if bound > 8192:
++        with pytest.raises(ContractError, match="VALIDATION_ERROR"):
++            provider.prepare(body())
++        assert calls == keys == []
++    else:
++        result = asyncio.run(provider.send(provider.prepare(body())))
++        assert result[0] == '{"instructions":"Synthetic","exercises":[]}'
++        assert len(calls) == len(keys) == 1
++        assert calls[0].content == counted[0]
++
++
++@pytest.mark.parametrize("content", ["中文数位🙂", 'line\nquote"slash\\\t'])
++def test_complete_system_user_options_and_unicode_wire_are_counted(prepared, content):
++    provider, _, _, calls, counted, keys = prepared
++    payload = body()
++    payload["messages"][1]["content"] = content
++    payload["requestHash"] = request_hash(payload)
++    ready = provider.prepare(payload)
++    expected = rfc8785.dumps(
++        {
++            "model": "synthetic-model",
++            "messages": payload["messages"],
++            "max_tokens": 4096,
++            "stream": False,
++            "thinking": {"type": "disabled"},
++        }
++    )
++    assert counted == [expected] and ready.wire == expected and not calls and not keys
++    asyncio.run(provider.send(ready))
++    assert len(calls) == 1 and calls[0].content == expected
++    assert all(wire == expected for wire in counted)
++
++
++@pytest.mark.parametrize("mutation", ["wire", "snapshot", "expiry", "counter-after-prepare"])
++def test_prepared_request_and_qualification_rechecked_before_send(prepared, mutation):
++    provider, counter, clock, calls, _, keys = prepared
++    payload = body()
++    ready = provider.prepare(payload)
++    if mutation == "wire":
++        ready = replace(ready, wire=ready.wire.replace(b"Synthetic", b"Changed"))
++    elif mutation == "snapshot":
++        changed = copy.deepcopy(payload)
++        changed["messages"][1]["content"] = "changed after counting"
++        changed["requestHash"] = request_hash(changed)
++        ready = replace(ready, snapshot=rfc8785.dumps(changed))
++    elif mutation == "expiry":
++        clock[0] = iso_ms(payload["sendNotAfter"])
++    else:
++        counter.model_profile_version = "expired-version"
++    with pytest.raises(ContractError):
++        asyncio.run(provider.send(ready))
++    assert calls == keys == []
++
++
++def test_clock_expiry_during_counter_is_rejected_without_send(prepared):
++    provider, counter, clock, calls, _, keys = prepared
++    payload = body()
++
++    def slow_count(_):
++        clock[0] = iso_ms(payload["sendNotAfter"])
++        return 8192
++
++    counter.upper_bound = slow_count
++    with pytest.raises(ContractError):
++        provider.prepare(payload)
++    assert calls == keys == []
++
++
++def test_sdk_changed_wire_rejected_before_inner_transport(prepared):
++    provider, _, _, calls, _, keys = prepared
++    ready = provider.prepare(body())
++    transport = _SingleRequestTransport(
++        httpx.MockTransport(lambda request: calls.append(request)), ready, provider._validate
++    )
++
++    async def run():
++        try:
++            with pytest.raises(ContractError, match="AI_REMOTE_CONTRACT_INVALID"):
++                await transport.handle_async_request(
++                    httpx.Request(
++                        "POST", "https://api.deepseek.com/chat/completions", content=b"{}"
++                    )
++                )
++        finally:
++            await transport.aclose()
++
++    asyncio.run(run())
++    assert calls == keys == []

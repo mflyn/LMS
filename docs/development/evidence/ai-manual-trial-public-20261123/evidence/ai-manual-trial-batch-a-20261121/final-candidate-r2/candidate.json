@@ -1,0 +1,126 @@
+{
+  "base": "0a10d92adca9533a243d636d7c500baa2aaeb5db",
+  "patchSha256": "bccf2a2416207b836a5c495c31240ccb4de697fdb171a215a267d77b8343beeb",
+  "files": [
+    {
+      "path": "backend/common/contracts/ai1-min.schema.json",
+      "sha256": "d3c7f7155a64f84c63e4c6db8322fcc0453661386194895956e9fb1cc6d6c4ea",
+      "bytes": 13140
+    },
+    {
+      "path": "backend/common/contracts/ai3-min.schema.json",
+      "sha256": "997e8ddb55128ddf1dda588135457cbd2f1041c91f926f99660112638fcc3453",
+      "bytes": 1983
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai1TrialBudget.test.js",
+      "sha256": "f43f952ce9da7fc8174eb622bc669a8a48048a6e933ee966872f15a45c46df14",
+      "bytes": 17677
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai1TrialService.test.js",
+      "sha256": "f7663de99d2488fe0e25a556f96d47b077a6e4dadbc98ff011094acd262c4ef5",
+      "bytes": 13643
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3TrialService.test.js",
+      "sha256": "09cd71c02471a8308b20d25ce16254a41e181c67840d0b3df67bf2d8b5edb3d5",
+      "bytes": 9587
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/aiTrialFees.test.js",
+      "sha256": "ad0fd7b9ae8c6a0afa146570bd26ebdd01c033bd9286127d205583fa84b96537",
+      "bytes": 16522
+    },
+    {
+      "path": "backend/services/homework-service/models/Ai1.js",
+      "sha256": "d6adffd324df39d6b576248199361cda556c04e431fe444683405ec7e445e3fe",
+      "bytes": 4944
+    },
+    {
+      "path": "backend/services/homework-service/models/Ai3.js",
+      "sha256": "66d866241daa2ab283a8689595be385efacb417b1155be3165403f815a9d5595",
+      "bytes": 6390
+    },
+    {
+      "path": "backend/services/homework-service/services/ai1Contract.js",
+      "sha256": "e5b05f9903996f1cd1957acedd2ee4a499f27295c44b3bffad5219349bf40e21",
+      "bytes": 5651
+    },
+    {
+      "path": "backend/services/homework-service/services/ai1Operation.js",
+      "sha256": "ae59128690bba5948c168ecdb4a3cc6384a7d4b856d77174e9dccf754671e445",
+      "bytes": 6467
+    },
+    {
+      "path": "backend/services/homework-service/services/ai1Service.js",
+      "sha256": "9ae8a14615d9d9f7c343509680795fc7a3eb6ff0fa6f1648e0321d37406bcdd0",
+      "bytes": 29152
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Contract.js",
+      "sha256": "76bfd94f611580bff90a16f91478adc2e8c5b80965be95cab752860e3573d130",
+      "bytes": 7729
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3GenerationPreview.js",
+      "sha256": "138960aac294d6eb2b1b30e2802a0c90ca924fac67891d9349e2b1865cb2bdd9",
+      "bytes": 3055
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Operation.js",
+      "sha256": "85139e4fd269e9a3054e5b92ad97aa74d229db37ea16afc7b0cb55518e974e7f",
+      "bytes": 7321
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Service.js",
+      "sha256": "b1d2dcabc3a4d6b39d2c2c6707b89b077cd3bb89c18d73045168465b570a0f1f",
+      "bytes": 48196
+    },
+    {
+      "path": "backend/services/homework-service/services/aiGenerationBudget.js",
+      "sha256": "b74762e9b860efa660a065fd9e9162c4ab4196ae960e8cfe4b1ea69362011772",
+      "bytes": 18218
+    },
+    {
+      "path": "backend/services/homework-service/services/aiTrialFees.js",
+      "sha256": "37de9449e61001ad7be0f6d3a1d55af33fb90225be3e403ac68e38ee4b2c2f5a",
+      "bytes": 7625
+    },
+    {
+      "path": "docs/api/family-ai1-api.md",
+      "sha256": "eb19486e89b3c3ff0c038c785dc9759516d88298f1c16b766d725bdfda0ad725",
+      "bytes": 39321
+    },
+    {
+      "path": "docs/api/family-ai3-api.md",
+      "sha256": "74cf0181b8e40b3dc213980a0ef53477d3cce4d721c88f44fe199f4f0335c6c0",
+      "bytes": 30067
+    },
+    {
+      "path": "docs/development/family-ai1-test-plan.md",
+      "sha256": "155803f21cb8d194a3ceb5d56c00d81322ece54e36be7bb94ce1586314dfaa91",
+      "bytes": 81893
+    },
+    {
+      "path": "docs/development/family-ai3-test-plan.md",
+      "sha256": "9635124c0b79837c3b37b92313deb475d3f97e38e2af3c0880105cea57355ba3",
+      "bytes": 25810
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md",
+      "sha256": "2f4698d6e7d8c0da5daceca143452f4f06ec782dbe7a2ca0eaa12c9d48d3958f",
+      "bytes": 25605
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-04-family-ai3-minimal-design.md",
+      "sha256": "db7203528df33ca1ac1d4553efdfac6b815b1ae44dbdc40b50cac8413ac01d9d",
+      "bytes": 22395
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md",
+      "sha256": "527946fc8b44fc53519b65a20ce325254356a4d8db9ce1485dc1f11606a6716d",
+      "bytes": 17316
+    }
+  ]
+}

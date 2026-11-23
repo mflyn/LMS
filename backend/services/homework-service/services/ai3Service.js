@@ -11,12 +11,11 @@ const { pagination } = require('./ai2Contract');
 const { addLocalDateDays } = require('../../../common/utils/familyDate');
 const { assertAi3Ready } = require('./ai3Readiness');
 const C = require('./ai3Contract');
-const Budget = require('../models/Ai1');
+const Fees = require('./aiTrialFees');
 const { createAiGenerationBudget } = require('./aiGenerationBudget');
 const { assertAi1Indexes } = require('./ai1Readiness');
 const { buildGenerationPreview } = require('./ai3GenerationPreview');
 const { buildRequest, validateMapping, validateOperation } = require('./ai3Operation');
-const { costCeiling } = require('./ai1Contract');
 const { createAi3SubmissionService, validateAttempt, validateMapping: validateSubmissionMapping,
   assertPublishedAncestor } = require('./ai3SubmissionService');
 const { createAi3ReviewService, validateReviewCommand } = require('./ai3ReviewService');
@@ -30,12 +29,13 @@ const commandView = c => ({ id: String(c._id), operationId: c.operationId, endpo
 // Deliberately unmounted; remote operations require explicit injected clients.
 function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStore: false }), now = Date.now,
   sourceReader, knowledgePointReader, getProfile = () => null, getLimits = () => null, operationClient = null,
+  getTrial = () => null,
   mediaReferenceClient, mediaInspectClient, submissionLeaseMs = 30000,
   mistakeEvidenceClient, masteryEvidenceClient, reviewLeaseMs = 30000,
   transactionRunner = work => runMongoTransaction({ mongooseInstance: mongoose, work }) } = {}) {
   const continuous = () => { if (getRuntime()?.continuousStore !== true) throw C.error(503, 'AI3_STORE_ISOLATED'); };
   const enabled = () => { if (getRuntime()?.enabled !== true) throw C.error(503, 'AI3_NOT_ENABLED'); };
-  const budget = createAiGenerationBudget({ now, getLimits });
+  const budget = createAiGenerationBudget({ now, getLimits, getTrial });
   const parentOnly = identity => {
     if (!identity) throw C.error(401, 'UNAUTHENTICATED');
     if (identity.role !== 'parent') throw C.error(403, 'CHILD_ACCESS_DENIED');
@@ -167,7 +167,12 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
     currentAttemptId: r.currentAttemptId ? String(r.currentAttemptId) : null, currentAttemptVersion: r.currentAttemptVersion });
   async function acknowledge(identity, c) {
     const r = await resource(M.Round, identity, String(c.roundId));
-    return { command: commandView(c), round: roundView(r) };
+    return { command: await publicCommand(c), round: roundView(r) };
+  }
+  async function publicCommand(c) {
+    if (c.endpointOperation !== 'ai3.generate' || !Fees.isTrial(c.generation?.preview)) return commandView(c);
+    const { sendBlocked, sendBlockReason, ...feeView } = await budget.view('ai3', c);
+    return { ...commandView(c), budget: feeView, sendBlocked, sendBlockReason };
   }
   const ref = (r, extra = {}) => ({ roundId: String(r._id), stateVersion: r.stateVersion + 1, ...extra });
   function writable(r, body) {
@@ -423,6 +428,14 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
   }
   async function generationPreview({ identity, roundId }) {
     parentOnly(identity); const initial = await resource(M.Round, identity, roundId);
+    if (initial.generationCommandId) {
+      continuous();
+      const original = await resource(M.Command, identity, String(initial.generationCommandId));
+      if (original.endpointOperation === 'ai3.generate') {
+        validateMapping(original);
+        return { preview: plain(original.generation.preview) };
+      }
+    }
     enabled(); continuous();
     await sourceCheck(identity, initial, initial.knowledgePointId ? String(initial.knowledgePointId) : null);
     return transact(async session => {
@@ -451,16 +464,19 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
           enabled(); const r = await resource(M.Round, identity, roundId, session); writable(r, b);
           if (r.visibility !== 'draft' || r.generationCommandId || r.currentContentId) throw conflict();
           const p = await ancestor(identity, r, session, true), preview = buildGenerationPreview(r, p, getProfile(), Number(now()));
-          if (b.generationInputHash !== preview.generationInputHash || b.modelProfileVersion !== preview.modelProfileVersion
-            || b.pricingProfileVersion !== preview.pricingProfileVersion || b.maxAuthorizedCostMicros < preview.reservedCeilingMicros) throw conflict('AI_PREVIEW_STALE');
+          if (!Fees.matchesConfirmation(preview, b)) throw conflict('AI_PREVIEW_STALE');
           const remoteRequestHash = buildRequest({ preview }).requestHash;
+          const proof = Fees.isTrial(preview) ? await budget.reserve(await authorize(identity, String(r.childId), session),
+            r.childId, commandId, reservationId, Fees.reservationAmount(preview), session, 'ai3', preview) : null;
           const [made] = await M.Command.create([{ ...key, _id: commandId, roundId: r._id, childId: r.childId, payload: b,
             requestHash: C.requestHash('generate', path, b), phase: 'RESERVED', resultReference: ref(r),
             generation: { reservationId, remoteOperationId, remoteRequestHash,
               preview, sendNotAfter: preview.sendNotAfter,
-              reservedCeilingMicros: preview.reservedCeilingMicros, maxAuthorizedCostMicros: b.maxAuthorizedCostMicros } }], { session });
-          await budget.reserve(await authorize(identity, String(r.childId), session), r.childId, commandId, reservationId,
-            preview.reservedCeilingMicros, session, 'ai3');
+              ...(Fees.isTrial(preview) ? { estimatedReservationMicros: preview.estimatedReservationMicros,
+                feeMode: preview.feeMode, trialAuthorizationVersion: proof.trialAuthorizationVersion }
+                : { reservedCeilingMicros: preview.reservedCeilingMicros, maxAuthorizedCostMicros: b.maxAuthorizedCostMicros }) } }], { session });
+          if (!Fees.isTrial(preview)) await budget.reserve(await authorize(identity, String(r.childId), session), r.childId,
+            commandId, reservationId, preview.reservedCeilingMicros, session, 'ai3');
           await change(r, { generationCommandId: commandId, activeCommandId: commandId, preparation: 'generating' }, session);
           return made.toObject();
         });
@@ -495,6 +511,7 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
         if (c.phase !== 'RESERVED') return { claimed: false, command: commandView(c) };
         // Invalid historical mappings must not become refundable through expiry or quote changes.
         validateMapping(c);
+        await budget.assertClaimCompatible('ai3', c, session);
         const r = await resource(M.Round, identity, String(c.roundId), session);
         if (!same(r.activeCommandId, c._id) || !same(r.generationCommandId, c._id) || r.preparation !== 'generating') throw C.error(503, 'AI3_NOT_READY');
         let stale = sourceFailure, snapshotPackage;
@@ -510,9 +527,7 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
         if (stale) {
           const reservation = await budget.reservation('ai3', c, session);
           if (reservation.state !== 'reserved') throw C.error(503, 'AI3_NOT_READY');
-          await budget.adjust(await budget.account(String(c.familyId), session), -reservation.reservedMicros, 0, session);
-          await budget.adjust(await budget.account('experiment', session), -reservation.reservedMicros, 0, session);
-          await Budget.Reservation.updateOne({ _id: reservation._id, state: 'reserved' }, { $set: { state: 'released' } }, { session });
+          await budget.settle('ai3', c, { release: true, charge: null }, session);
           await budget.releaseSlot('ai3', c, session);
           await change(r, { activeCommandId: null, preparation: 'ready' }, session);
           const ended = await M.Command.findOneAndUpdate({ _id: c._id, phase: 'RESERVED' }, { $set: { phase: 'FAILED' } }, { new: true, session }).lean();
@@ -520,7 +535,7 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
           return { claimed: false, command: commandView(ended) };
         }
         enabled();
-        await budget.budgetState(await authorize(identity, String(c.childId), session), 0, session, c.generation.reservedCeilingMicros);
+        await budget.budgetState(await authorize(identity, String(c.childId), session), 0, session, Fees.reservationAmount(c.generation.preview));
         await budget.claimSlot('ai3', c, session);
         // Recheck volatile authority after all budget/slot awaits, before durable send CAS.
         continuous(); enabled();
@@ -542,7 +557,7 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
     const rows = await M.Command.find({ familyId: access.familyId, childId, actorId: identity.id,
       ...(identity.role === 'student' ? { endpointOperation: 'ai3.submit' } : {}) }).sort({ createdAt: -1, _id: -1 })
       .skip(p.skip).limit(p.pageSize).lean();
-    await authorize(identity, childId); return { items: rows.map(commandView), page: p.page, pageSize: p.pageSize };
+    await authorize(identity, childId); return { items: await Promise.all(rows.map(publicCommand)), page: p.page, pageSize: p.pageSize };
   }
   async function getCommand({ identity, commandId }) {
     continuous();
@@ -561,11 +576,20 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
       }
       return { command, pending: !['SUCCEEDED', 'FAILED'].includes(c.phase) };
     }
-    return { command: commandView(c) };
+    return { command: await publicCommand(c) };
   }
   async function recover({ identity, commandId, body }) {
     const result = await getCommand({ identity, commandId });
-    if (C.normalize('recover', body).operationId !== result.command.operationId) throw conflict('IDEMPOTENCY_CONFLICT');
+    const request = C.normalize('recover', body);
+    if (request.operationId !== result.command.operationId) throw conflict('IDEMPOTENCY_CONFLICT');
+    if (result.command.endpointOperation === 'ai3.generate') {
+      const original = await originalGeneration(identity, commandId);
+      const version = Fees.isTrial(original.generation.preview) ? original.generation.preview.generationSchemaVersion : 'ai3-min-v1';
+      if (request.schemaVersion !== version) throw conflict('IDEMPOTENCY_CONFLICT');
+      if (operationClient && request.schemaVersion === 'ai3-min-v2' && original.phase === 'RESERVED') {
+        return runGeneration({ identity, commandId });
+      }
+    } else if (request.schemaVersion !== 'ai3-min-v1') throw conflict('IDEMPOTENCY_CONFLICT');
     if (result.command.endpointOperation === 'ai3.submit') return submission.recover({ identity, commandId, body });
     if (result.command.endpointOperation === 'ai3.review') return reviews.recover({ identity, commandId, body });
     if (operationClient && result.command.endpointOperation === 'ai3.generate' && ['DISPATCHING', 'UNKNOWN'].includes(result.command.phase)) {
@@ -578,19 +602,17 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
     await transact(async session => {
       const c = await M.Command.findById(commandId).session(session).lean();
       if (!c || !['DISPATCHING', 'UNKNOWN'].includes(c.phase)) return;
+      if (c.phase === 'UNKNOWN' && !Fees.isTrial(c.generation.preview) && getTrial() == null) return;
       const reservation = await budget.reservation('ai3', c, session);
       if (!['reserved', 'reserved_unknown'].includes(reservation.state)) throw remoteInvalid();
+      await budget.markUnknown('ai3', c, session);
       if (c.phase === 'UNKNOWN') return;
       await M.Command.updateOne({ _id: c._id, phase: c.phase }, { $set: { phase: 'UNKNOWN' } }, { session });
-      await Budget.Reservation.updateOne({ _id: reservation._id, state: reservation.state }, { $set: { state: 'reserved_unknown' } }, { session });
     });
   }
   async function haltGeneration(c) {
     await transact(async session => {
-      for (const key of [String(c.familyId), 'experiment']) {
-        await budget.account(key, session);
-        await Budget.Account.updateOne({ _id: key }, { $set: { halted: true } }, { session });
-      }
+      await budget.halt('ai3', c, session);
     });
   }
   async function acceptGeneration(identity, initial, raw) {
@@ -617,7 +639,7 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
       const reservation = await budget.reservation('ai3', c, session);
       if (!['reserved', 'reserved_unknown'].includes(reservation.state)) throw remoteInvalid();
       const release = o.status === 'failed_not_sent';
-      const charge = o.usage === null ? null : costCeiling(o.usage.inputTokens, o.usage.outputTokens, c.generation.preview.pricing);
+      const charge = o.usage === null ? null : Fees.usageCharge(c.generation.preview, o.usage);
       let content = null, saved = null;
       if (o.status === 'succeeded') {
         try { content = C.generatedContent(o.result.text, r.exerciseCount); }
@@ -629,14 +651,7 @@ function createAi3Service({ getRuntime = () => ({ enabled: false, continuousStor
           content, contentHash: C.hash(content), childSnapshot, childSnapshotHash: C.hash(childSnapshot),
           createdBy: c.actorId, origin: 'ai_generation', reason: 'Generated candidate; parent review required' }], { session });
       }
-      if (release || charge !== null) {
-        await budget.adjust(await budget.account(String(c.familyId), session), -reservation.reservedMicros, charge || 0, session);
-        await budget.adjust(await budget.account('experiment', session), -reservation.reservedMicros, charge || 0, session);
-      }
-      const settled = await Budget.Reservation.updateOne({ _id: reservation._id, state: reservation.state }, { $set: {
-        state: release ? 'released' : charge !== null ? 'settled' : 'reserved_unknown', settledMicros: release ? 0 : charge,
-        ...(charge !== null ? { settledAt: new Date(now()) } : {}) } }, { session });
-      if (settled.matchedCount !== 1) throw remoteInvalid();
+      await budget.settle('ai3', c, { release, charge }, session);
       await budget.releaseSlot('ai3', c, session);
       await change(r, { activeCommandId: null, preparation: saved ? 'candidate' : 'ready',
         ...(saved ? { currentContentId: saved._id, currentContentVersion: saved.version, currentContentHash: saved.contentHash } : {}) }, session);

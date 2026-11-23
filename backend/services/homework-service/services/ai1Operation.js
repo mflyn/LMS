@@ -1,5 +1,6 @@
 const axios = require('axios');
 const C = require('./ai1Contract');
+const fees = require('./aiTrialFees');
 const exact = (o, keys) => o && typeof o === 'object' && !Array.isArray(o)
   && Object.keys(o).length === keys.length && keys.every(k => Object.hasOwn(o, k));
 const iso = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
@@ -7,22 +8,31 @@ const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a
 const invalid = () => C.error(503, 'AI_REMOTE_CONTRACT_INVALID');
 function buildRequest(job) {
   const p = job.preview;
-  const body = JSON.parse(JSON.stringify({ schemaVersion: 'ai1-provider-operation-v1', modelProfileVersion: p.modelProfileVersion,
+  const trial = fees.isTrial(p);
+  if (trial) fees.validateTrialPreview(p, 'ai1-min-v2');
+  const body = JSON.parse(JSON.stringify({ schemaVersion: trial ? 'ai1-provider-operation-v2' : 'ai1-provider-operation-v1', modelProfileVersion: p.modelProfileVersion,
     pricingProfileVersion: p.pricingProfileVersion, messages: p.messages, requestOptions: p.requestOptions,
-    reservedCeilingMicros: p.reservedCeilingMicros, sendNotAfter: p.sendNotAfter }));
-  return { ...body, requestHash: C.hash(body) };
+    ...(trial ? { feeMode: p.feeMode, estimateMethodVersion: p.estimateMethodVersion, referenceInputTokens: p.referenceInputTokens,
+      referenceOutputTokens: p.referenceOutputTokens, estimatedReservationMicros: p.estimatedReservationMicros, feeNoticeVersion: p.feeNoticeVersion }
+      : { reservedCeilingMicros: p.reservedCeilingMicros }), sendNotAfter: p.sendNotAfter }));
+  const request = { ...body, requestHash: C.hash(body) };
+  if (Buffer.byteLength(JSON.stringify(request), 'utf8') > 32768) throw C.error(413, 'AI_INPUT_TOO_LARGE');
+  return request;
 }
 function validateOperation(job, o) {
   const request = buildRequest(job);
+  const trial = fees.isTrial(job.preview);
   if (!exact(o, ['remoteOperationId', 'requestHash', 'modelProfileVersion', 'pricingProfileVersion', 'sendNotAfter',
-    'status', 'result', 'error', 'usage', 'sendClaimed', 'updatedAt']) || !iso(o.updatedAt)
+    'status', 'result', 'error', 'usage', 'sendClaimed', 'updatedAt', ...(trial ? ['schemaVersion', 'feeMode'] : [])]) || !iso(o.updatedAt)
+    || (trial && (o.schemaVersion !== request.schemaVersion || o.feeMode !== 'estimate_only'
+      || job.remoteRequestHash !== request.requestHash))
     || o.remoteOperationId !== job.remoteOperationId || o.requestHash !== request.requestHash
     || (job.remoteRequestHash && job.remoteRequestHash !== request.requestHash)
     || o.modelProfileVersion !== request.modelProfileVersion || o.pricingProfileVersion !== request.pricingProfileVersion
     || o.sendNotAfter !== request.sendNotAfter || typeof o.sendClaimed !== 'boolean') throw invalid();
   if (o.usage !== null) {
     if (!exact(o.usage, ['inputTokens', 'outputTokens'])) throw invalid();
-    try { if (C.costCeiling(o.usage.inputTokens, o.usage.outputTokens, job.preview.pricing) > request.reservedCeilingMicros) throw invalid(); }
+    try { const charge = fees.usageCharge(job.preview, o.usage); if (!trial && charge > request.reservedCeilingMicros) throw invalid(); }
     catch { throw invalid(); }
   }
   if (o.status === 'succeeded') {

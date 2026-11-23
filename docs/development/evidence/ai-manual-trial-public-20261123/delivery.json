@@ -1,0 +1,365 @@
+{
+  "status": "LOCAL_PREPUBLICATION_CANDIDATE_NOT_PUBLISHED",
+  "date": "2026-11-23",
+  "patches": [
+    {
+      "repo": "LMS",
+      "base": "a26786a91b670bc5f24c2eb0931290df2ce02ed2",
+      "equivalentLocalTreeBase": "d5e999d19f913809be2a3e82b9c1351c95a70776",
+      "path": "lms-delivery.patch",
+      "sha256": "964457b371b1734f585358fadf6408eed8c3894ba938d4a46dec2e76de146ae4",
+      "files": 42,
+      "applyCheck": true,
+      "reconstructionMatched": true
+    },
+    {
+      "repo": "DeepTutor",
+      "base": "d5a30cbd95c7fbed53f7423dd046915a0eb1ebf6",
+      "equivalentLocalTreeBase": null,
+      "path": "deeptutor-delivery.patch",
+      "sha256": "60954c556e3965cd6965e7989ea5cee26eca5ed0d8b070b93c03407c2c1156a1",
+      "files": 17,
+      "applyCheck": true,
+      "reconstructionMatched": true
+    }
+  ],
+  "files": {
+    "LMS": [
+      {
+        "path": "backend/common/contracts/ai1-min.schema.json",
+        "bytes": 13140,
+        "sha256": "d3c7f7155a64f84c63e4c6db8322fcc0453661386194895956e9fb1cc6d6c4ea"
+      },
+      {
+        "path": "backend/common/contracts/ai3-min.schema.json",
+        "bytes": 1983,
+        "sha256": "997e8ddb55128ddf1dda588135457cbd2f1041c91f926f99660112638fcc3453"
+      },
+      {
+        "path": "backend/services/homework-service/__tests__/services/ai1Runtime.test.js",
+        "bytes": 19548,
+        "sha256": "44d900789ebcbb10fad41345950f4c1f1f3734b1f2380ae6aaea18ea70d06d17"
+      },
+      {
+        "path": "backend/services/homework-service/__tests__/services/ai1TrialBudget.test.js",
+        "bytes": 17677,
+        "sha256": "f43f952ce9da7fc8174eb622bc669a8a48048a6e933ee966872f15a45c46df14"
+      },
+      {
+        "path": "backend/services/homework-service/__tests__/services/ai1TrialService.test.js",
+        "bytes": 13643,
+        "sha256": "f7663de99d2488fe0e25a556f96d47b077a6e4dadbc98ff011094acd262c4ef5"
+      },
+      {
+        "path": "backend/services/homework-service/__tests__/services/ai3Runtime.test.js",
+        "bytes": 8738,
+        "sha256": "3af342219a96d4edb530dc5f777394705e9b84370f0fa1cbd8bc8294601b46e1"
+      },
+      {
+        "path": "backend/services/homework-service/__tests__/services/ai3TrialService.test.js",
+        "bytes": 9587,
+        "sha256": "09cd71c02471a8308b20d25ce16254a41e181c67840d0b3df67bf2d8b5edb3d5"
+      },
+      {
+        "path": "backend/services/homework-service/__tests__/services/aiTrialFees.test.js",
+        "bytes": 16522,
+        "sha256": "ad0fd7b9ae8c6a0afa146570bd26ebdd01c033bd9286127d205583fa84b96537"
+      },
+      {
+        "path": "backend/services/homework-service/models/Ai1.js",
+        "bytes": 4944,
+        "sha256": "d6adffd324df39d6b576248199361cda556c04e431fe444683405ec7e445e3fe"
+      },
+      {
+        "path": "backend/services/homework-service/models/Ai3.js",
+        "bytes": 6390,
+        "sha256": "66d866241daa2ab283a8689595be385efacb417b1155be3165403f815a9d5595"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai1Contract.js",
+        "bytes": 5651,
+        "sha256": "e5b05f9903996f1cd1957acedd2ee4a499f27295c44b3bffad5219349bf40e21"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai1Operation.js",
+        "bytes": 6467,
+        "sha256": "ae59128690bba5948c168ecdb4a3cc6384a7d4b856d77174e9dccf754671e445"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai1Runtime.js",
+        "bytes": 5078,
+        "sha256": "aa43f9020fee3157b2add397313fcabf5685fb04982d32cd8068d97233c68905"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai1Service.js",
+        "bytes": 29152,
+        "sha256": "9ae8a14615d9d9f7c343509680795fc7a3eb6ff0fa6f1648e0321d37406bcdd0"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai3Contract.js",
+        "bytes": 7729,
+        "sha256": "76bfd94f611580bff90a16f91478adc2e8c5b80965be95cab752860e3573d130"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai3GenerationPreview.js",
+        "bytes": 3055,
+        "sha256": "138960aac294d6eb2b1b30e2802a0c90ca924fac67891d9349e2b1865cb2bdd9"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai3Operation.js",
+        "bytes": 7321,
+        "sha256": "85139e4fd269e9a3054e5b92ad97aa74d229db37ea16afc7b0cb55518e974e7f"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai3Runtime.js",
+        "bytes": 1620,
+        "sha256": "5f9674ba862ac8399a8eacc91d56dca6e9a09276399b151176c39ab5f94eac75"
+      },
+      {
+        "path": "backend/services/homework-service/services/ai3Service.js",
+        "bytes": 48196,
+        "sha256": "b1d2dcabc3a4d6b39d2c2c6707b89b077cd3bb89c18d73045168465b570a0f1f"
+      },
+      {
+        "path": "backend/services/homework-service/services/aiGenerationBudget.js",
+        "bytes": 18218,
+        "sha256": "b74762e9b860efa660a065fd9e9162c4ab4196ae960e8cfe4b1ea69362011772"
+      },
+      {
+        "path": "backend/services/homework-service/services/aiTrialFees.js",
+        "bytes": 7625,
+        "sha256": "37de9449e61001ad7be0f6d3a1d55af33fb90225be3e403ac68e38ee4b2c2f5a"
+      },
+      {
+        "path": "docs/api/family-ai1-api.md",
+        "bytes": 39321,
+        "sha256": "eb19486e89b3c3ff0c038c785dc9759516d88298f1c16b766d725bdfda0ad725"
+      },
+      {
+        "path": "docs/api/family-ai3-api.md",
+        "bytes": 30067,
+        "sha256": "74cf0181b8e40b3dc213980a0ef53477d3cce4d721c88f44fe199f4f0335c6c0"
+      },
+      {
+        "path": "docs/development/evidence/ai-manual-trial-deeptutor-acceptance-20261123/README.md",
+        "bytes": 4562,
+        "sha256": "dd8810b77f0a2cc6a0ada6e7a0ac77ff15b87604854e52c1f3703e06a9871679"
+      },
+      {
+        "path": "docs/development/evidence/ai-manual-trial-loop-20261123/README.md",
+        "bytes": 10386,
+        "sha256": "7c1fe8e70a44cf10c8f4ca7d8c6ee0bde0b008a1098313a9b333e324b1b03939"
+      },
+      {
+        "path": "docs/development/family-ai1-test-plan.md",
+        "bytes": 81893,
+        "sha256": "155803f21cb8d194a3ceb5d56c00d81322ece54e36be7bb94ce1586314dfaa91"
+      },
+      {
+        "path": "docs/development/family-ai3-test-plan.md",
+        "bytes": 25810,
+        "sha256": "9635124c0b79837c3b37b92313deb475d3f97e38e2af3c0880105cea57355ba3"
+      },
+      {
+        "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+        "bytes": 798600,
+        "sha256": "c2b2f7894dc79c018a74218967f95c34a5c997f9d33cb6407103976c18b41f8a"
+      },
+      {
+        "path": "docs/superpowers/specs/2026-10-31-family-ai1-minimal-design.md",
+        "bytes": 25605,
+        "sha256": "2f4698d6e7d8c0da5daceca143452f4f06ec782dbe7a2ca0eaa12c9d48d3958f"
+      },
+      {
+        "path": "docs/superpowers/specs/2026-11-04-family-ai3-minimal-design.md",
+        "bytes": 22395,
+        "sha256": "db7203528df33ca1ac1d4553efdfac6b815b1ae44dbdc40b50cac8413ac01d9d"
+      },
+      {
+        "path": "docs/superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md",
+        "bytes": 26877,
+        "sha256": "77b83f3771261254feff6bdabefa143a88c7bac38b123a8c82dd8da8ff26c6a7"
+      },
+      {
+        "path": "frontend/web/src/__tests__/family/Ai3PracticePage.test.js",
+        "bytes": 26516,
+        "sha256": "029a4e7ba62de1a3f9fc4d038875a5e8d5001d8d2506f32b84eb8ea6f7e2ace4"
+      },
+      {
+        "path": "frontend/web/src/__tests__/family/TutorPage.test.js",
+        "bytes": 25620,
+        "sha256": "3e3ca7f737a1d594246c8ca2c1e32bef273cd8f3bffa8099bf3eb26c67174fec"
+      },
+      {
+        "path": "frontend/web/src/__tests__/family/aiTrialPresentation.test.js",
+        "bytes": 3773,
+        "sha256": "e95e1c26aede5843d354008c74d8d3e3c10281445492facc601e4432483094c4"
+      },
+      {
+        "path": "frontend/web/src/components/family/AiTrialFee.js",
+        "bytes": 1932,
+        "sha256": "d71487fa52d358d5bdfc1b280eb08b55b9f45731637670eaf8b6b2be973149e8"
+      },
+      {
+        "path": "frontend/web/src/pages/family/Ai3PracticePage.js",
+        "bytes": 40687,
+        "sha256": "e66cc401c2e6555c3ae58e022f0c980654132f94cccf1e0916d4014c41fd0632"
+      },
+      {
+        "path": "frontend/web/src/pages/family/TutorPage.js",
+        "bytes": 23242,
+        "sha256": "7614443d56c96de18433343df0245e6630c517dccbc2d56fd1557bcb2222b6a4"
+      },
+      {
+        "path": "frontend/web/src/services/ai3Commands.js",
+        "bytes": 8924,
+        "sha256": "0efb10147b7a816b9997d2467450703f16873cfae4498098c3af50cf0d949014"
+      },
+      {
+        "path": "frontend/web/src/services/aiTrialPresentation.js",
+        "bytes": 3530,
+        "sha256": "1049c8065714bb61b60a4566336b945b41b9ce6be87fa738002edc145818b027"
+      },
+      {
+        "path": "frontend/web/src/services/tutorCommands.js",
+        "bytes": 7158,
+        "sha256": "30bc81d7aec8ab56d8bf816e1a9f2dc918a21633b6779a81635e68ab98128f32"
+      },
+      {
+        "path": "tests/e2e/t2/manualTrial.acceptance.js",
+        "bytes": 11414,
+        "sha256": "928560e4de98338c39c85fe659c45a818438eea48f406c250e16f33c1981fd08"
+      },
+      {
+        "path": "tests/e2e/t2/manual_trial_bridge.py",
+        "bytes": 7688,
+        "sha256": "520cb963bdb1316406d8fd131c6475b8c9847bd4bcd7266767f73d75d11434cb"
+      }
+    ],
+    "DeepTutor": [
+      {
+        "path": "deeptutor/api/main.py",
+        "bytes": 21762,
+        "sha256": "996b1d89370e9ae44ced6a5e60f9fead7a324bd724d807b09293750bd8da6842"
+      },
+      {
+        "path": "deeptutor/services/ai1_contract.py",
+        "bytes": 9175,
+        "sha256": "98bc660fc6d9b2b28606f08b6a5bd63b48c259a743e545baeb20a3b65a18b97a"
+      },
+      {
+        "path": "deeptutor/services/ai1_http.py",
+        "bytes": 3532,
+        "sha256": "24dc6211521eb72a64314eb4613ab04d02572ecc6ca8ccbf0cdfda8db122d263"
+      },
+      {
+        "path": "deeptutor/services/ai1_operation.py",
+        "bytes": 5633,
+        "sha256": "8aa1642db74db1d100f9af8071814c8bacecbb2e057b00d1857a2529e93ba637"
+      },
+      {
+        "path": "deeptutor/services/ai1_provider.py",
+        "bytes": 10600,
+        "sha256": "893e220b57b33bf25d463c2cae0667e2cb4a84c57fc20c372425e6e05ebe382c"
+      },
+      {
+        "path": "deeptutor/services/ai1_runtime.py",
+        "bytes": 8185,
+        "sha256": "41278824a7f403bf5d533f0f67b1419de12cbc028042da33091811a424c7ae2a"
+      },
+      {
+        "path": "deeptutor/services/ai1_store.py",
+        "bytes": 11216,
+        "sha256": "dfc12d8cf124634a0afdf37ba4bc6ad81bee5d5ae7b771724e85f4397780f915"
+      },
+      {
+        "path": "deeptutor/services/ai3_http.py",
+        "bytes": 516,
+        "sha256": "f93ede523762941b9edb770a39a3481aa8a5efb9ac5a8eae18506efd1ef2620a"
+      },
+      {
+        "path": "deeptutor/services/ai3_operation.py",
+        "bytes": 980,
+        "sha256": "cb8bf5d860f978b5746ae7fa08a9509e1c505d75cd65728c37b2063c0695a232"
+      },
+      {
+        "path": "deeptutor/services/ai3_provider.py",
+        "bytes": 323,
+        "sha256": "c33f9871c6673dc41816408dcaef510eec51e832e1fc51468d3be661840e7ff6"
+      },
+      {
+        "path": "deeptutor/services/ai3_runtime.py",
+        "bytes": 1795,
+        "sha256": "344f0879ec32afb0e1467e4b2d37ae328f65583397f81c4fc9f0db99aa4c0e52"
+      },
+      {
+        "path": "docs-for-dev/AI3_RUNTIME_FOLLOWUP.md",
+        "bytes": 19592,
+        "sha256": "15df05468de342ff46d2d95e69bccfe0dd281f4442385f8f896d6d7cbcfd8406"
+      },
+      {
+        "path": "docs-for-dev/MANUAL_TRIAL_V2.md",
+        "bytes": 10308,
+        "sha256": "7c3db91e874a40ca4e0a92808f81819e1ff3d32536182b6b1a29b751a2304fdc"
+      },
+      {
+        "path": "tests/services/ai1/test_ai3_formal_runtime.py",
+        "bytes": 12327,
+        "sha256": "03b94da893376675a3a544e55b7be7e54cc4d31e2deddf1d38172568173c02ec"
+      },
+      {
+        "path": "tests/services/ai1/test_manual_trial_v2.py",
+        "bytes": 17462,
+        "sha256": "cc00ee8c76cc66078ba23234a9f0c1f7eb8af895a984f3a435afa5f9f8e6a85f"
+      },
+      {
+        "path": "tests/services/ai1/test_operation_runtime.py",
+        "bytes": 16552,
+        "sha256": "d2a31217da5c5f14b6912fc29773aef995af18d452e0876906b2fa0ae596842c"
+      },
+      {
+        "path": "tests/services/ai3/test_restricted_provider.py",
+        "bytes": 5930,
+        "sha256": "802804120a76ceafddec79de3c80152be269290b73367ea5acfa3a272449f64c"
+      }
+    ]
+  },
+  "archives": [
+    {
+      "archive": "ai-manual-trial-deeptutor-final-20261123",
+      "manifest": "manifest.json",
+      "sha256": "0e42015d3a1fddaab6ce71ccfff06e645ccf713ac07c9b329139d84a41a5d27b",
+      "verifiedFiles": 84
+    },
+    {
+      "archive": "ai-manual-trial-loop-r2-20261123",
+      "manifest": "SHA256SUMS",
+      "sha256": "6c325e8cb51f98db22a9c584bed0bccf86d8927fd97f7264cb740ea196fb1f6a",
+      "verifiedFiles": 121
+    },
+    {
+      "archive": "ai-manual-trial-loop-20261123",
+      "manifest": "SHA256SUMS",
+      "sha256": "85965fe46ecb02867fcb2a65cca8eb95e48fb81583bfa872a0cb574e6389f9ad",
+      "verifiedFiles": 165
+    },
+    {
+      "archive": "ai-manual-trial-loop-r2-review-20261123",
+      "manifest": "manifest.json",
+      "sha256": "03f90307acda06b3b07ee7223a8408b4958e4fdafc39bd684e975713b3375c0d",
+      "verifiedFiles": 6
+    }
+  ],
+  "dependencies": {
+    "lmsRemoteMain": "a26786a91b670bc5f24c2eb0931290df2ce02ed2",
+    "lmsTree": "7eaabd23cde74d86a34a3331c7d61b03d2debe68",
+    "excludedPr61": 8,
+    "deepTutorPr2Head": "d5a30cbd95c7fbed53f7423dd046915a0eb1ebf6",
+    "deepTutorPr2": "OPEN_DRAFT",
+    "deepTutorTarget": "mflyn/DeepTutor",
+    "noUpstreamPush": true,
+    "realSending": "NOT_AUTHORIZED",
+    "counter": "DEFERRED",
+    "cost": "ESTIMATE_NOT_HARD_CAP"
+  }
+}

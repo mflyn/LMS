@@ -1,6 +1,7 @@
 const { canonicalize } = require('json-canonicalize');
 const A = require('./ai1Contract');
 const C = require('./ai3Contract');
+const fees = require('./aiTrialFees');
 const Ajv = require('ajv/dist/2020');
 const chapterSchema = require('../../../common/contracts/ai1-min.schema.json').$defs.create.properties.chapter;
 const valid = new Ajv({ strict: true }).compile({ type: 'object', additionalProperties: false,
@@ -25,7 +26,9 @@ function buildGenerationPreview(round, pkg, profile, now) {
   const base = A.buildPreview({ input: {}, chapter: round.chapter }, profile, now);
   const messages = [{ role: 'system', content: SYSTEM }, { role: 'user', content: canonicalize(input) }];
   const versions = { providerProfile: 'ai3-practice-v1', promptVersion: 'ai3-practice-prompt-v1', outputSchemaVersion: 'ai3-practice-content-v1' };
-  return { ...base, ...versions, messages, generationInputHash: C.hash({ ...versions, messages,
+  const preview = { ...base, ...versions, messages, generationInputHash: C.hash({ ...versions, messages,
     requestOptions: base.requestOptions, modelProfileVersion: base.modelProfileVersion }) };
+  return fees.isTrial(profile) ? fees.buildTrialPreview(preview, profile,
+    { promptVersion: versions.promptVersion, generationSchemaVersion: 'ai3-min-v2' }) : preview;
 }
 module.exports = { buildGenerationPreview };

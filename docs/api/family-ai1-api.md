@@ -326,3 +326,96 @@ off为默认不发送/不远端查询的状态。切换模式需重建服务，�
 这些声明及本地hello/索引检查不证明远端存储、Provider或未声明恢复的可靠性。
 实际DeepTutor实现与连续性/计价/重试核验、凭据部署、付费授权仍是EXTERNAL_ACTIVATION_PENDING；
 本地协议替身配置仅用于合成验证，不能直接用于真实启用。回滚不得清空记录、改变UUID或退化到直连模型。
+
+## 10. 人工试用费用契约候选（2026-11-21）
+
+**Status:** DRAFT_FOR_REVIEW / NOT_IMPLEMENTED。本节是[共享差异设计](../superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md)
+的新版本候选，不原地改变前文v1、现有JSON schema或历史批准。精确计数资格继续后置，默认off及所有未关闭状态不变。
+
+### 10.1 公开预览与确认
+
+路径、actor/家庭/孩子授权、操作幂等键不变。仅create/generate/recover新增 `schemaVersion="ai1-min-v2"`；
+revise/review/close保留v1和原人工审核CAS。create除schemaVersion外沿用v1闭合字段，服务端仅在已配置试用profile时接受v2；
+v1新创建不得在试用配置下自动转v2。旧命令重放/恢复按持久版本分派，不依赖当前新发送profile来重新解释。
+新Cycle持久保存v2预览，详情/GET只读返回原预览；旧记录仍返回旧结构，不在GET中补写新字段。
+
+v2 preview保留v1的messages、generationInputHash、modelProfileVersion、pricingProfileVersion、pricing、sendNotAfter、
+sourceAvailable/inputProvenance，删除reservedCeilingMicros，增加下表字段；未知键仍拒绝：
+
+| 字段 | v2约束 |
+| --- | --- |
+| generationSchemaVersion | 固定ai1-min-v2，不是客户端可选费用模式 |
+| feeMode | 固定estimate_only；不代表具有合格counter |
+| estimateMethodVersion | 固定reference-8192-4096-v1 |
+| referenceInputTokens / referenceOutputTokens | 固定8192 / 4096；输入只作规划参考，输出为额度 |
+| estimatedReservationMicros | 服务端用参考量与pricing整数向上取整计算；不是最高费用 |
+| feeNoticeVersion | 固定estimate-not-cap-v1；确认实际可能超过单次及整轮估算 |
+| requestOptions | 闭合model/maxRequestBytes=32768/maxOutputTokens=4096/thinking=disabled/tools=[]/attemptLimit=1；无maxInputTokens |
+
+pricing在v1原字段基础上增加经核对的 `sourceReference`（无凭据的公开计价来源说明），与模型/价格版本共同冻结。
+报价未核对、已过期、币种换算或额外收费成分无法说明均失败关闭，不使用历史AI-0金额或默认零价。
+generationInputHash覆盖完整规范messages/requestOptions、prompt/model版本、上述新增字段（不含hash自身）、pricing和sendNotAfter；
+身份/来源仍由本地Cycle权限及版本绑定，不加入外发消息。所有实际收费参数必须展示，不允许SDK添加隐式消息。
+
+generate公共字段仍为schemaVersion/operationId，专属闭合字段为：
+`expectedCycleStateVersion,generationInputHash,modelProfileVersion,pricingProfileVersion,feeMode,estimateMethodVersion,
+expectedEstimatedReservationMicros,feeNoticeVersion,estimateAcknowledged=true,externalSendConfirmed=true`。
+不接受maxAuthorizedCostMicros、reservedCeilingMicros或客户端价格；金额必须精确等于所见估算，不能“至少大于”即视为同意。
+确认版本/费用模式/期限/完整摘要不符时409 AI_PREVIEW_STALE，零新Job/预留/名额/远端请求。
+新recover除公共字段外无新增字段，不接收新费用确认或替代正文；按原Job版本/原actor收敛，不能换版本获得发送资格。
+
+v2 job.budget保留reservationId/state，使用estimatedReservationMicros、usagePricedMicros(nullable)、feeMode、
+`chargeStatus=estimated|usage_priced|unknown|released`，不把usage_priced写成供应商实际账单已对账。
+另返回仅限当前授权范围的 `sendBlocked` 与 `sendBlockReason=null|estimate_exceeded|cost_unknown|trial_exhausted|budget_exceeded|cost_review_required`；
+sendBlocked=true时原因非null，false时为null；其他家庭引起experiment停发只给合法通用值cost_review_required，不暴露其命令/金额/actor。
+该投影指后续新命令的费用/名额准入，不代替运行模式/权限或当前原命令canRecover；最后一个已占名额命令仍按下述规则接续。
+费用状态与内容状态不得混同。
+state继续reserved/reserved_unknown/settled/released；settled仅本地按usage和报价记账。历史v1 DTO不改名、不迁移。
+
+### 10.2 内部operation与Provider
+
+原PUT/GET路径和服务鉴权不变；v2请求闭合字段为：
+`schemaVersion="ai1-provider-operation-v2",requestHash,modelProfileVersion,pricingProfileVersion,messages,requestOptions,
+feeMode,estimateMethodVersion,referenceInputTokens,referenceOutputTokens,estimatedReservationMicros,feeNoticeVersion,sendNotAfter`。
+值和公开预览一致，远端从受控profile核对同版pricing并重算估算，不只信任LMS金额；requestHash仍为除自身外全部JCS字节摘要。
+估算字段不传给模型；实际SDK wire仍仅固定model/messages/max_tokens=4096/stream=false/thinking=disabled。
+LMS实际内部请求及远端最终wire分别校验32KiB；持久claim前和transport前再次核对内容/策略/截止点。
+v2不调用缺失的合格counter，也不把测试counter、估算量或字节限制当作token资格；v1 prepare的严格拒绝路径保留。
+
+v2响应在原operation闭合字段上增加schemaVersion（固定ai1-provider-operation-v2）与feeMode（estimate_only）；
+hash/profile/期限、原状态组合与sendClaimed约束不变。原v1响应不补字段，响应版本必须匹配原持久请求。
+usage.inputTokens为非负安全整数，不因超过参考8192拒绝；outputTokens仍为0至4096安全整数。
+原供应商usage合计/实际模型/响应结构继续校验；用量缺失不补零，非法用量不当作有效结算。
+计算金额超过估算但结果合法时返回原成功，由LMS原子记全额、保存候选并停发；不能截断金额/结果或自动再次请求。
+
+### 10.3 停发、旧命令与失败边界
+
+新版本费用仅估算，不承诺单次、整轮或供应商账户硬上限；单次/日/月/experiment额度只控制后续准入。
+共享账本保留旧v1占位，v2持久标记feeMode；数值占位字段reservedMicros可复用，但不能混淆两种来源/语义或改旧hash。
+原子预留同时消费一份本轮授权提交名额，重放不重复，事务失败不消费；提交成功后不自动补回，真实名额另行批准。
+新预留检查容量并持久绑定experiment授权版本、ownerProfile、原Job/Command；claim/原reserved恢复核验该归属证明，
+不再次消费或检查仍有空余名额。故第三个已占名额命令在已用数达到3及重启后仍可合法单次claim；第四个新命令拒绝。
+试用配置下旧v1 reserved无本轮证明，不允许出站或自动改绑；保留旧hash/占位，只有原规则下可靠未发送CAS才能终结。
+
+超估算或费用未知必须锁存家庭及experiment停发；包括有效正文但usage缺失、unknown、矛盾终态/非法响应、发送结果未落盘。
+有效结算与停发、候选、槽位收尾同事务；如先抛协议错误回滚，须保留原锁并另以受保护事务持久记录未知/停发，
+不能让halted随错误事务回滚后放行其他请求。已claim无法确认终结时共享槽不释放；可靠终态但费用未知可收尾槽，停发仍在。
+最终claim以共享账户revision条件写校验halted/预算/本命令已占名额归属，拒绝与停发并发的旧快照，所有AI-1/AI-3新发送都受同一停发约束。
+历史reserved_unknown等未决费用也阻断新试用；停发或预算已超不能阻止匹配原映射的可靠终态收敛，结算不得扣成负数。
+零usage只在可信合法整数证据下计零，绝不能以缺失代替零。不得凭404、超时、关页或租约过期释放费用/名额/未知保护。
+
+只有同actor且可靠未越过本地dispatching的reserved可显式原命令接续；其余只查询，旧accepted不因重启/重复PUT派发。
+旧v1严格模式不降级、旧未知命令不转换、不改UUID或hash；v2遇不支持的对端保持阻断，不自动退回v1或直连模型。
+过期、变更报价在新claim前拒绝；旧可靠终态可用原报价收敛。任何费用待核对停发不自动解除，本批无解除/退款接口。
+
+新增公开错误仅限409 `AI_COST_REVIEW_REQUIRED`（通用费用待核对）和409 `AI_TRIAL_LIMIT_REACHED`（本轮名额用尽）；
+它们拒绝新发送，不命令客户端清除既有原命令。权限401/403及迟到响应处理优先，原AI_BUDGET_EXCEEDED/AI_PREVIEW_STALE继续适用。
+查询/终态收敛不套新发送错误；off/query-only/store-isolated仍按原运行边界，不因试用模式放宽存储连续性要求。
+
+### 10.4 后续批准及首批范围
+
+2026-11-21 用户复审通过本费用差异契约并授权首批限定本地实现；上文候选文字保留为设计时点。
+首批仅 LMS 生成费用契约、共享账本及停发/恢复服务，批次验收待用户确认；
+默认运行配置、DeepTutor v2 Provider、页面与真实发送尚未由此启用。当前实现/分批证据见
+[共享设计后续记录](../superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md#7-后续批准与首批实施状态)。
+历史严格协议、267项 Ubuntu 证据及未关闭门禁不改写，精确计数资格仍后置、未解决。

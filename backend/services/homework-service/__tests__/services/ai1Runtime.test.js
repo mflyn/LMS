@@ -167,3 +167,95 @@ test('formal enabled start runs actual AI checks and closes its synthetic listen
     expect(r.status).toBe(401); expect(server.listening).toBe(true);
   } finally { await new Promise(resolve => server.close(resolve)); }
 });
+
+const trialEnv = (mode = 'enabled') => {
+  const config = env(mode);
+  delete config.AI1_PROVIDER_PROFILE_CONFIRMED;
+  config.AI1_MODEL_PROFILE = JSON.stringify({ ...profile(), feeMode: 'estimate_only', sourceReference: 'synthetic-price-source-v2' });
+  config.AI1_TRIAL_AUTHORIZATION = JSON.stringify({ confirmed: true, authorizationVersion: 'synthetic-trial-v2', maxSubmissions: 3 });
+  return config;
+};
+test('v2 runtime explicitly authorizes estimates and snapshots the shared three-submission grant', async () => {
+  const config = trialEnv(), runtime = createAi1Runtime({ env: config });
+  expect(() => runtime.dependencies.getRuntime()).toThrow('AI_PROFILE_UNAVAILABLE');
+  await runtime.assertReady();
+  expect(runtime.dependencies.getRuntime()).toEqual({ enabled: true, continuousStore: true });
+  expect(runtime.dependencies.getTrial()).toEqual({ authorizationVersion: 'synthetic-trial-v2', maxSubmissions: 3 });
+  const preview = require('../../services/ai1Contract').buildPreview({ input: {}, chapter: {} }, runtime.dependencies.getProfile(), Date.now());
+  expect(preview).toMatchObject({ generationSchemaVersion: 'ai1-min-v2', feeMode: 'estimate_only', feeNoticeVersion: 'estimate-not-cap-v1',
+    pricing: { sourceReference: 'synthetic-price-source-v2' }, requestOptions: { maxRequestBytes: 32768, maxOutputTokens: 4096, attemptLimit: 1 } });
+  expect(preview.reservedCeilingMicros).toBeUndefined();
+  const trial = runtime.dependencies.getTrial(); trial.maxSubmissions = 99; trial.authorizationVersion = 'changed';
+  config.AI1_TRIAL_AUTHORIZATION = '{}'; config.AI1_MODEL_PROFILE = '{}';
+  expect(runtime.dependencies.getTrial()).toEqual({ authorizationVersion: 'synthetic-trial-v2', maxSubmissions: 3 });
+  expect(runtime.dependencies.getProfile().sourceReference).toBe('synthetic-price-source-v2');
+});
+test.each([undefined, '', '{', 'null', '[]', '{}', 'x'.repeat(8193),
+  JSON.stringify({ authorizationVersion: 'synthetic-trial-v2', maxSubmissions: 3 }),
+  ...[false, 'true', 1, null].map(confirmed => JSON.stringify({ confirmed, authorizationVersion: 'synthetic-trial-v2', maxSubmissions: 3 })),
+  ...[undefined, 0, 2, 4, 3.5, '3', true].map(maxSubmissions => JSON.stringify({ confirmed: true, authorizationVersion: 'synthetic-trial-v2', maxSubmissions })),
+  ...[undefined, '', ' ', ' padded ', 'a\nb', 'a\n', 1, {}, 'x'.repeat(129)].map(authorizationVersion => JSON.stringify({ confirmed: true, authorizationVersion, maxSubmissions: 3 })),
+  JSON.stringify({ confirmed: true, authorizationVersion: 'synthetic-trial-v2', maxSubmissions: 3, extra: true })
+])('v2 runtime rejects malformed or unconfirmed grant case %#', authorization => {
+  expect(() => createAi1Runtime({ env: { ...trialEnv(), AI1_TRIAL_AUTHORIZATION: authorization } })).toThrow(/^AI_PROFILE_UNAVAILABLE$/);
+});
+test.each(['true', 'TRUE', '', true])('v2 runtime rejects strict or ambiguous confirmation %s', confirmed => {
+  expect(() => createAi1Runtime({ env: { ...trialEnv(), AI1_PROVIDER_PROFILE_CONFIRMED: confirmed } })).toThrow(/^AI_PROFILE_UNAVAILABLE$/);
+});
+test('v2 permits explicitly disabled strict confirmation without inheriting its authority', async () => {
+  const runtime = createAi1Runtime({ env: { ...trialEnv(), AI1_PROVIDER_PROFILE_CONFIRMED: 'false' } });
+  await runtime.assertReady(); expect(runtime.dependencies.getTrial().maxSubmissions).toBe(3);
+});
+test.each(['missing-mode', 'wrong-mode', 'missing-source', 'empty-source', 'expired', 'future-checked', 'extra'])(
+  'v2 runtime rejects invalid profile %s', kind => {
+    const config = trialEnv(), p = JSON.parse(config.AI1_MODEL_PROFILE);
+    if (kind === 'missing-mode') delete p.feeMode;
+    if (kind === 'wrong-mode') p.feeMode = 'strict';
+    if (kind === 'missing-source') delete p.sourceReference;
+    if (kind === 'empty-source') p.sourceReference = '';
+    if (kind === 'expired') p.expiresAt = new Date(Date.now() - 1).toISOString();
+    if (kind === 'future-checked') p.checkedAt = new Date(Date.now() + 86400000).toISOString();
+    if (kind === 'extra') p.estimateAcknowledged = true;
+    config.AI1_MODEL_PROFILE = JSON.stringify(p);
+    expect(() => createAi1Runtime({ env: config })).toThrow(/^AI_PROFILE_UNAVAILABLE$/);
+  });
+test('v2 readiness revokes an expired profile without rewriting it or its trial grant', async () => {
+  const config = trialEnv(), runtime = createAi1Runtime({ env: config }); await runtime.assertReady();
+  const p = runtime.dependencies.getProfile(), trial = runtime.dependencies.getTrial();
+  jest.spyOn(Date, 'now').mockReturnValue(Date.parse(p.expiresAt));
+  await expect(runtime.assertReady()).rejects.toThrow(/^AI_PROFILE_UNAVAILABLE$/);
+  expect(() => runtime.dependencies.getRuntime()).toThrow(/^AI_PROFILE_UNAVAILABLE$/);
+  expect(runtime.dependencies.getProfile()).toEqual(p); expect(runtime.dependencies.getTrial()).toEqual(trial);
+});
+test('v1 keeps strict preview semantics and cannot mix a trial grant into its configuration', async () => {
+  const runtime = createAi1Runtime({ env: env() }); await runtime.assertReady();
+  expect(runtime.dependencies.getTrial()).toBeNull();
+  const preview = require('../../services/ai1Contract').buildPreview({ input: {}, chapter: {} }, runtime.dependencies.getProfile(), Date.now());
+  expect(preview.reservedCeilingMicros).toBe(184320); expect(preview.feeMode).toBeUndefined();
+  expect(() => createAi1Runtime({ env: { ...env(), AI1_TRIAL_AUTHORIZATION: trialEnv().AI1_TRIAL_AUTHORIZATION } }))
+    .toThrow(/^AI_PROFILE_UNAVAILABLE$/);
+});
+test.each([undefined, 'off', 'store-isolated', 'query-only'])('trial settings cannot enable mode %s or prevent query-only recovery', async mode => {
+  const config = { ...trialEnv(), AI1_MODE: mode, AI1_TRIAL_AUTHORIZATION: '{', AI1_MODEL_PROFILE: '{' };
+  const runtime = createAi1Runtime({ env: config }); await runtime.assertReady();
+  expect(runtime.dependencies.getRuntime()).toEqual({ enabled: false, continuousStore: mode === 'query-only' });
+  expect(runtime.dependencies.getTrial()).toBeNull(); expect(runtime.dependencies.getProfile()).toBeNull();
+  expect(runtime.dependencies.operationClient?.put).toBeUndefined();
+  if (mode === 'query-only') expect(Object.keys(runtime.dependencies.operationClient)).toEqual(['get']);
+});
+test('formal v2 startup rejects missing trial confirmation before connect, queue or listen', async () => {
+  const config = { ...startupEnv(), ...trialEnv(), AI1_TRIAL_AUTHORIZATION: '{}' };
+  delete config.AI1_PROVIDER_PROFILE_CONFIRMED;
+  const connect = jest.fn(), queue = jest.fn(), listen = jest.spyOn(require('express').application, 'listen');
+  await expect(startServer({ env: config, connect, initializeQueue: queue, port: 0, host: '127.0.0.1' }))
+    .rejects.toMatchObject({ code: 'COMPLETION_STARTUP_FAILED' });
+  expect(connect).not.toHaveBeenCalled(); expect(queue).not.toHaveBeenCalled(); expect(listen).not.toHaveBeenCalled();
+});
+test('formal v2 start uses real readiness with explicit estimate authorization', async () => {
+  const config = { ...startupEnv(), ...trialEnv() }; delete config.AI1_PROVIDER_PROFILE_CONFIRMED;
+  const server = await startServer({ env: config, port: 0, host: '127.0.0.1' });
+  try {
+    const r = await require('supertest')(server).get('/api/tutor-cycles');
+    expect(r.status).toBe(401); expect(server.listening).toBe(true);
+  } finally { await new Promise(resolve => server.close(resolve)); }
+});

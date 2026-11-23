@@ -37,6 +37,10 @@ const shapes = {
   withdraw: { expectedRoundVersion: version, reason: text(500) }, recover: {}
 };
 const ajv = new Ajv({ strict: true });
+const trialSchema = require('../../../common/contracts/ai3-min.schema.json');
+ajv.addSchema(trialSchema);
+const trialValidators = Object.fromEntries(['generate', 'recover'].map(action =>
+  [action, ajv.getSchema(`${trialSchema.$id}#/$defs/${action}V2`)]));
 const generatedText = { type: 'string' };
 const validGeneratedContent = ajv.compile(object({ instructions: generatedText, exercises: {
   type: 'array', minItems: 2, maxItems: 3, items: object({ exerciseId: generatedText, questionText: generatedText,
@@ -66,7 +70,8 @@ function normalize(action, body) {
   if (typeof serialized !== 'string') throw error(400, 'VALIDATION_ERROR');
   if (Buffer.byteLength(serialized) > 32768) throw error(413, 'AI3_INPUT_TOO_LARGE');
   const value = clean(body);
-  if (!validators[action]?.(value)) throw error(400, 'VALIDATION_ERROR');
+  const validator = value?.schemaVersion === 'ai3-min-v2' ? trialValidators[action] : validators[action];
+  if (!validator?.(value)) throw error(400, 'VALIDATION_ERROR');
   if (action === 'review') {
     if (value.decision === 'revise' ? !value.comment.trim() || value.evidenceSummary !== '' || value.masteryConfirmed
       || value.reviewReminderDate !== null : !value.evidenceSummary.trim() || value.reviewContextHash === null) throw error(400, 'VALIDATION_ERROR');

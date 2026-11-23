@@ -2,6 +2,47 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lms.family.local/schemas/ai1-min-v1.json",
   "$defs": {
+    "createV2": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "operationId", "childId", "source", "input", "chapter", "deidentifiedConfirmed"],
+      "properties": {
+        "schemaVersion": { "const": "ai1-min-v2" },
+        "operationId": { "$ref": "#/$defs/create/properties/operationId" },
+        "childId": { "$ref": "#/$defs/create/properties/childId" },
+        "source": { "$ref": "#/$defs/create/properties/source" },
+        "input": { "$ref": "#/$defs/create/properties/input" },
+        "chapter": { "$ref": "#/$defs/create/properties/chapter" },
+        "deidentifiedConfirmed": { "const": true }
+      }
+    },
+    "generateV2": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "operationId", "expectedCycleStateVersion", "generationInputHash", "modelProfileVersion",
+        "pricingProfileVersion", "feeMode", "estimateMethodVersion", "expectedEstimatedReservationMicros", "feeNoticeVersion",
+        "estimateAcknowledged", "externalSendConfirmed"],
+      "properties": {
+        "schemaVersion": { "const": "ai1-min-v2" },
+        "operationId": { "$ref": "#/$defs/generate/properties/operationId" },
+        "expectedCycleStateVersion": { "$ref": "#/$defs/generate/properties/expectedCycleStateVersion" },
+        "generationInputHash": { "$ref": "#/$defs/generate/properties/generationInputHash" },
+        "modelProfileVersion": { "$ref": "#/$defs/generate/properties/modelProfileVersion" },
+        "pricingProfileVersion": { "$ref": "#/$defs/generate/properties/pricingProfileVersion" },
+        "feeMode": { "const": "estimate_only" },
+        "estimateMethodVersion": { "const": "reference-8192-4096-v1" },
+        "expectedEstimatedReservationMicros": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "feeNoticeVersion": { "const": "estimate-not-cap-v1" },
+        "estimateAcknowledged": { "const": true },
+        "externalSendConfirmed": { "const": true }
+      }
+    },
+    "recoverV2": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "operationId"],
+      "properties": {
+        "schemaVersion": { "const": "ai1-min-v2" },
+        "operationId": { "$ref": "#/$defs/recover/properties/operationId" }
+      }
+    },
     "create": {
       "type": "object",
       "additionalProperties": false,
@@ -415,6 +456,9 @@
     }
   },
   "oneOf": [
+    { "$ref": "#/$defs/createV2" },
+    { "$ref": "#/$defs/generateV2" },
+    { "$ref": "#/$defs/recoverV2" },
     {
       "$ref": "#/$defs/create"
     },

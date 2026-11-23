@@ -44,7 +44,10 @@ const Command = model('Ai3Command', { ...scope, roundId: oid, actorId: oid,
   remoteClaimObserved: { type: Boolean, default: false }, outcomeHash: String, remoteEvidence: Schema.Types.Mixed,
   failureCode: String,
   generation: { type: new Schema({ reservationId: oid,
-    reservedCeilingMicros: { type: Number, required: true, min: 0, validate: Number.isSafeInteger },
+    reservedCeilingMicros: { type: Number, required: function () { return this.preview?.feeMode !== 'estimate_only'; }, min: 0, validate: Number.isSafeInteger },
+    estimatedReservationMicros: { type: Number, min: 0, validate: Number.isSafeInteger,
+      required: function () { return this.preview?.feeMode === 'estimate_only'; } },
+    feeMode: { type: String, enum: ['estimate_only'] }, trialAuthorizationVersion: String,
     remoteOperationId: String, remoteRequestHash: String, preview: Schema.Types.Mixed, sendNotAfter: Date,
     maxAuthorizedCostMicros: { type: Number, min: 0, validate: Number.isSafeInteger }
   }, { _id: false, strict: 'throw' }), immutable: true }

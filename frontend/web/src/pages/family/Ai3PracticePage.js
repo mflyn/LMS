@@ -10,6 +10,8 @@ import { readAi3Command, saveAi3Command, finishAi3Command, newAi3OperationId } f
 import { createAi2Api } from '../../services/ai2Api';
 import { getMistake, listKnowledgePoints } from '../../services/familyApi';
 import Ai3Media from '../../components/family/Ai3Media';
+import { isTrialPreview, generationConfirmation, recoveryVersion } from '../../services/aiTrialPresentation';
+import { TrialPreviewFee, TrialResultFee, usePreviewExpiry } from '../../components/family/AiTrialFee';
 import './Ai2LearningPage.css';
 import './Ai3PracticePage.css';
 
@@ -30,6 +32,8 @@ const definitive = e => e?.response?.data?.success === false && (
   ([400,413].includes(e.response.status) && ['VALIDATION_ERROR','AI3_INPUT_TOO_LARGE','AI_INPUT_TOO_LARGE'].includes(code(e)))
   || (e.response.status === 409 && ['AI3_VERSION_CONFLICT','AI3_REVIEW_CONFLICT','AI3_SOURCE_NOT_APPROVED','AI3_MEDIA_UNAVAILABLE','AI3_PREVIEW_STALE','AI_PREVIEW_STALE'].includes(code(e))));
 const message = e => ({ AI3_NOT_ENABLED:'变式练习尚未启用。', AI3_REVIEW_CONFLICT:'作答或审核依据已变化，请重新查看后决定。',
+  AI_COST_REVIEW_REQUIRED:'费用待核对，已停止后续发送；请保留原命令并查询原操作。',
+  AI_TRIAL_LIMIT_REACHED:'本轮试用名额已用完，不能新增发送；原命令保持不变。',
   AI3_VERSION_CONFLICT:'练习版本已变化，请重新查看。', AI3_MEDIA_UNAVAILABLE:'作品图片不可用，请核对后再处理。',
   AI_PROFILE_UNAVAILABLE:'生成准备尚不可用，可以在没有未决生成时手工录题。', AI3_OPERATION_UNRESOLVED:'原操作尚未结束，请查询并恢复原命令。'
 }[code(e)] || '结果尚未确认，请保留原命令并重试读取。');
@@ -67,7 +71,15 @@ export function Ai3Workspace({ scope, session, roundId, packageId, currentScope 
   // Pagination is only presentation; a known unresolved command survives empty pages and failed reads.
   const rememberCommands=items=>setKnownCommands(previous=>{
     const next={...previous};
-    for(const item of items)if(!terminal(previous[item.id]?.phase))next[item.id]=item;
+    for(const item of items){
+      const old=previous[item.id];
+      if(!terminal(old?.phase))next[item.id]=item;
+      // Terminal teaching state is immutable; shared fee admission can halt later.
+      else if(old.operationId===item.operationId&&old.roundId===item.roundId&&old.endpointOperation===item.endpointOperation
+        &&item.sendBlocked===true&&!old.sendBlocked)next[item.id]={...old,sendBlocked:true,sendBlockReason:item.sendBlockReason};
+      // No automatic halt reset exists. A late read cannot reopen sending in this identity.
+      if(old?.sendBlocked&&next[item.id])next[item.id]={...next[item.id],sendBlocked:true,sendBlockReason:old.sendBlockReason};
+    }
     return next;
   });
   const [history,setHistory]=useState([]),[oldAttempt,setOldAttempt]=useState(null),[pages,setPages]=useState({rounds:1,commands:1,history:1,contents:1});
@@ -75,6 +87,7 @@ export function Ai3Workspace({ scope, session, roundId, packageId, currentScope 
   const [source,setSource]=useState(null),[points,setPoints]=useState([]),[pointId,setPointId]=useState(''),[count,setCount]=useState(2);
   const [preview,setPreview]=useState(null),[generation,setGeneration]=useState(null),[context,setContext]=useState(null);
   const [editor,setEditor]=useState(null),[reason,setReason]=useState(''),[consent,setConsent]=useState(false),[sendConsent,setSendConsent]=useState(false);
+  usePreviewExpiry(generation,setSendConsent);
   const [note,setNote]=useState(''),[media,setMedia]=useState([]),[mediaBusy,setMediaBusy]=useState(false),[mediaBlocked,setMediaBlocked]=useState(true);
   const [viewed,setViewed]=useState([]),[mediaEpoch,setMediaEpoch]=useState(0),[comment,setComment]=useState(''),[summary,setSummary]=useState('');
   const [mastery,setMastery]=useState(false),[date,setDate]=useState(''),[filters,setFilters]=useState({reviewFrom:'',reviewTo:''});
@@ -103,6 +116,7 @@ export function Ai3Workspace({ scope, session, roundId, packageId, currentScope 
   };
   const refresh=async(kind,page=1,target)=>{
     const g=state.current.epoch;if(!current(g)||blocked)return;
+    if(kind==='detail')setSendConsent(false);
     const contentRead=kind==='contents'||kind==='content';
     if(contentRead&&(!parent||!id(roundId)||!detail))return;
     const selected=kind==='content'?contentHistory?.find(c=>c.id===target):null;
@@ -182,6 +196,7 @@ export function Ai3Workspace({ scope, session, roundId, packageId, currentScope 
   const unresolvedCommands=Object.values(knownCommands).filter(c=>!terminal(c.phase));
   const displayedCommands=[...commands.map(c=>knownCommands[c.id]||c),...unresolvedCommands.filter(c=>!commands.some(item=>item.id===c.id))];
   const locked=blocked||busy||Boolean(pending)||unresolvedCommands.length>0||!discovered;
+  const sendBlocked=Object.values(knownCommands).some(c=>c.sendBlocked);
   const accept=(data,original,expectedId)=>{
     const c=data?.command;if(!validCommand(c)||c.operationId!==original.body.operationId||c.endpointOperation!==`ai3.${original.action}`
       ||(expectedId&&c.id!==expectedId)||(original.targetId&&c.roundId!==original.targetId))throw invalid();
@@ -195,6 +210,7 @@ export function Ai3Workspace({ scope, session, roundId, packageId, currentScope 
   const execute=async saved=>{
     const g=state.current.epoch;if(!current(g)||blocked||state.current.writing||saved?.corrupt)return;
     let original;try{original=saveAi3Command(scope,saved,session);}catch{setError('原命令暂存不可用，尚未发送。');return;}
+    if(original.action==='generate')setSendConsent(false);
     setPending(original);state.current.writing=true;setBusy(true);setError('');
     try{
       const options={session};const method=actionMethod[original.action]||original.action;
@@ -212,7 +228,7 @@ export function Ai3Workspace({ scope, session, roundId, packageId, currentScope 
   const readCommand=async(item,recover=false)=>{
     const g=state.current.epoch;if(!current(g)||blocked||state.current.writing)return;state.current.writing=true;setBusy(true);
     try{
-      const data=recover?await api.recover(item.id,{schemaVersion:'ai3-min-v1',operationId:item.operationId},{session}):await api.command(item.id,{session});
+      const data=recover?await api.recover(item.id,{schemaVersion:recoveryVersion(item,'ai3'),operationId:item.operationId},{session}):await api.command(item.id,{session});
       if(!current(g))return;if(!validCommand(data?.command)||data.command.id!==item.id||data.command.operationId!==item.operationId||data.command.endpointOperation!==item.endpointOperation||data.command.roundId!==item.roundId)throw invalid();
       rememberCommands([data.command]);
       const local=readAi3Command(scope,session),original={action:item.endpointOperation.slice(4),targetId:item.roundId,body:{operationId:item.operationId}};
@@ -288,10 +304,13 @@ export function Ai3Workspace({ scope, session, roundId, packageId, currentScope 
           <button type="button" className="family-button" disabled={!reason.trim()||!editor.content.instructions.trim()||editor.content.exercises.some(q=>!q.questionText.trim()||!q.answerForParent.trim()||!q.rubricForParent.trim())}
             onClick={()=>mutate('revise_content',{...editor,reason})}>保存题组版本</button></fieldset>}
         {generation&&<section aria-label="完整生成预览"><h3>完整生成请求</h3><pre className="ai2-text" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{JSON.stringify(generation,null,2)}</pre>
-          <label><input type="checkbox" checked={sendConsent} disabled={locked} onChange={e=>setSendConsent(e.target.checked)} />已核对完整请求、脱敏内容与本次费用上限</label>
-          <button type="button" className="family-button" disabled={locked||!sendConsent} onClick={()=>mutate('generate',{expectedRoundVersion:detail.stateVersion,
+          {isTrialPreview(generation)&&<TrialPreviewFee preview={generation} />}
+          <label><input type="checkbox" checked={sendConsent} disabled={locked||sendBlocked} onChange={e=>setSendConsent(e.target.checked)} />{isTrialPreview(generation)?'已核对完整请求、脱敏内容并接受估算可能超出、费用未知时停发':'已核对完整请求、脱敏内容与本次费用上限'}</label>
+          <button type="button" className="family-button" disabled={locked||!sendConsent||sendBlocked} onClick={()=>{
+            let fee;try{fee=generationConfirmation(generation,'ai3');}catch{setSendConsent(false);setError('预览已过期或费用契约不可用，请重新核对预览。');return;}
+            mutate('generate',{expectedRoundVersion:detail.stateVersion,
             generationInputHash:generation.generationInputHash,modelProfileVersion:generation.modelProfileVersion,pricingProfileVersion:generation.pricingProfileVersion,
-            maxAuthorizedCostMicros:generation.reservedCeilingMicros,externalSendConfirmed:true,deidentifiedConfirmed:true})}>生成候选题组</button></section>}
+            ...fee,externalSendConfirmed:true,deidentifiedConfirmed:true});}}>生成候选题组</button></section>}
         {preview&&<section aria-label="发布预览"><h3>家长全文</h3><Questions value={preview.content} parent /><h3>孩子可见内容</h3><Questions value={preview.childSnapshot} />
           <label><input type="checkbox" disabled={locked} checked={consent} onChange={e=>setConsent(e.target.checked)} />已核算全部答案和判定要点，并确认孩子可见内容</label>
           <button type="button" className="family-button" disabled={locked||!consent} onClick={()=>{const {content:_c,childSnapshot:_s,roundId:_r,...fields}=preview;mutate('publish',{...fields,childContentConfirmed:true,answersChecked:true});}}>批准并发布</button></section>}
@@ -335,6 +354,7 @@ export function Ai3Workspace({ scope, session, roundId, packageId, currentScope 
         <Link to={`${base}?childId=${scope.childId}&roundId=${r.id}`} onClick={()=>{if(r.id===roundId)refresh('detail');}}>查看练习内容</Link>{r.reviewReminderDate&&<span> · {r.reviewReminderDate}</span>}</article>)}
       {!rows.length&&<p>暂无练习记录</p>}{pager('rounds',rows)}</section>
       <section aria-label="本人操作记录"><h2>本人操作记录</h2>{displayedCommands.map(c=><article className="family-record" key={c.id}><p>{labels[c.phase]||'处理中'} · {c.createdAt}</p>
+        <TrialResultFee record={c} />
         <button type="button" className="family-button secondary" disabled={busy} onClick={()=>readCommand(c)}>查询原操作</button>
         {['ai3.generate','ai3.submit','ai3.review'].includes(c.endpointOperation)&&<button type="button" className="family-button secondary" disabled={busy} onClick={()=>readCommand(c,true)}>恢复原操作</button>}</article>)}
         {!displayedCommands.length&&<p>没有查到操作记录；这不代表未知写入已经失败。</p>}{pager('commands',commands)}</section></>}
