@@ -244,3 +244,10 @@ B批已获授权实施，A批已批准验收；C/D仍PLANNED，AI-1总状态OPEN
 T4/T8 OPEN、T9 NOT_STARTED、DEVICE_PENDING、历史失败、Docker INCOMPLETE_FAILED、
 T5-NB-001/002 OPEN_NONBLOCKING 和高级恢复/新回收 REMAINDER_DEFERRED 保持不变。
 真实家庭使用仍须满足 T8；本候选不以 AI-0 小样本替代 T9，不自动启动 AI-2/AI-3/K12-1。
+
+## 10. 人工小规模试用差异候选（2026-11-21）
+
+用户已授权补齐[共享费用差异设计](2026-11-21-ai-manual-trial-fee-design.md)，状态DRAFT_FOR_REVIEW / NOT_IMPLEMENTED。
+新试用候选将精确输入计数资格后置，费用仅估算、不承诺单次或整轮硬上限；超估算/费用未知暂停后续发送。
+仅新版本生成契约采用该规则，以上严格版本、历史批准/失败和冻结证据不变，不把旧费用授权转换为新试用确认。
+当前未修改实现或启用配置，不调用模型、不操作服务器、不提交推送或部署，不关闭AI-1及其他未关闭门禁。

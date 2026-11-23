@@ -1,0 +1,34 @@
+{
+  "out": "<TEMP>",
+  "base": "548ceda8b713cde00e93d1b1ae5fdeebb0e8eca0",
+  "patch": "3c07bc2bf7d5c04f37c086f64697cac17b546043fe7362510813e3ed2aebc3a2",
+  "increment": "2983ea3778cbfe05dfd555bc0a10bca33baded8aa4f7c1a53f40769fad7612fb",
+  "archiveCounts": {
+    "ai-manual-trial-loop-20261123": 165,
+    "ai-manual-trial-loop-r2-20261123": 121
+  },
+  "candidateFiles": 19,
+  "reconstruction": true,
+  "sourceUnchanged": true,
+  "command": [
+    "/opt/homebrew/Cellar/node/26.9.0/bin/node",
+    "<LMS_ROOT>/frontend/web/node_modules/react-scripts/scripts/test.js",
+    "--watchAll=false",
+    "--runInBand",
+    "--no-cache",
+    "--runTestsByPath",
+    "src/__tests__/family/Ai3PracticePage.test.js",
+    "src/__tests__/family/ai3Client.test.js",
+    "src/__tests__/family/familySession.test.js",
+    "src/__tests__/family/childScope.test.js",
+    "src/__tests__/family/Ai3DraftRefresh.test.js",
+    "--json",
+    "--outputFile=<TEMP>/jest.json"
+  ],
+  "exitCode": 0,
+  "seconds": 6.305,
+  "suites": 5,
+  "passed": 118,
+  "failed": 0,
+  "pending": 0
+}

@@ -1,0 +1,9 @@
+{
+  "oldSnapshotDirectory": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-batch-b-20261122",
+  "oldSnapshotManifestSha256": "1e6381158dbef27f07e920a1476446f2f029baaa0d75969a6001e30a0c0ad0b0",
+  "oldSnapshotFiles": 51,
+  "independentManifestSha256": "c16899fec94236146aaaa86ca1100d05eae879ea09b25cc76ae183e45095336d",
+  "priorFormalCandidate": "<EVIDENCE_ROOT>/ai3-runtime-counter-20261121/candidate.json",
+  "priorFormalPatchSha256": "d1dc53b249e590c6d48f03ba1b191efe6c5ba65acacee4898e663b8e1b410ade",
+  "historicalArchivesModified": false
+}

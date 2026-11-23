@@ -1,5 +1,6 @@
 import { assertSessionCurrent, captureSession, TUTOR_COMMAND_PREFIX } from './familySession';
 import { registerChildScopeReset } from './childScope';
+import { trialFeeFields } from './aiTrialPresentation';
 
 const id = value => typeof value === 'string' && /^[0-9a-f]{24}$/.test(value);
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
@@ -12,7 +13,9 @@ const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const common = ['schemaVersion', 'operationId'];
 const seen = ['artifactId', 'artifactVersion', 'artifactContentHash', 'expectedArtifactReviewVersion', 'expectedCycleStateVersion'];
 const validBody = (action, body) => {
-  if (!object(body) || body.schemaVersion !== 'ai1-min-v1' || !uuid(body.operationId)) return false;
+  if (!object(body) || !['ai1-min-v1', 'ai1-min-v2'].includes(body.schemaVersion) || !uuid(body.operationId)) return false;
+  const trial = body.schemaVersion === 'ai1-min-v2';
+  if (trial && !['create', 'generate', 'recover'].includes(action)) return false;
   if (action === 'recover') return closed(body, common);
   if (action === 'create') return closed(body, [...common, 'childId', 'source', 'input', 'chapter', 'deidentifiedConfirmed'])
     && id(body.childId) && closed(body.source, ['type', 'id']) && ['task', 'mistake'].includes(body.source.type) && id(body.source.id)
@@ -23,10 +26,10 @@ const validBody = (action, body) => {
     && body.chapter.term === 'upper' && text(body.chapter.textbookLabel, 200)
     && body.chapter.chapterLabel === '\u591a\u4f4d\u6570\u4e58\u4e24\u4f4d\u6570' && body.deidentifiedConfirmed === true;
   if (action === 'generate') return closed(body, [...common, 'expectedCycleStateVersion', 'generationInputHash',
-    'modelProfileVersion', 'pricingProfileVersion', 'maxAuthorizedCostMicros', 'externalSendConfirmed'])
+    'modelProfileVersion', 'pricingProfileVersion', ...(trial ? Object.keys(trialFeeFields) : ['maxAuthorizedCostMicros']), 'externalSendConfirmed'])
     && version(body.expectedCycleStateVersion) && hash(body.generationInputHash) && text(body.modelProfileVersion, 100)
-    && text(body.pricingProfileVersion, 100) && Number.isSafeInteger(body.maxAuthorizedCostMicros)
-    && body.maxAuthorizedCostMicros >= 0 && body.externalSendConfirmed === true;
+    && text(body.pricingProfileVersion, 100) && (trial ? Object.entries(trialFeeFields).every(([k, check]) => check(body[k]))
+      : Number.isSafeInteger(body.maxAuthorizedCostMicros) && body.maxAuthorizedCostMicros >= 0) && body.externalSendConfirmed === true;
   if (action === 'close') return closed(body, [...common, 'expectedCycleStateVersion', 'reason'])
     && version(body.expectedCycleStateVersion) && text(body.reason, 500);
   if (!id(body.artifactId) || !version(body.artifactVersion) || !hash(body.artifactContentHash)

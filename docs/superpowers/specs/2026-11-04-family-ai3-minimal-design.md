@@ -218,3 +218,10 @@ QUALIFIED_COUNTER_PENDING、REMAINDER_DEFERRED及T9 NOT_STARTED保留。AI-3总�
 2026-11-04用户批准三稿及§1取舍，孩子提交摘要P1、事件生效时间P2在设计层CLOSED / USER_APPROVED。
 首批实施范围、真实验证与替身边界见[测试计划§6](../../development/family-ai3-test-plan.md#6-后续批准与首批边界)
 及[批次记录](../../development/evidence/ai3-a-20261104/README.md)。AI-3仍OPEN；批准设计不等于实现验收。
+
+## 11. 人工小规模试用差异候选（2026-11-21）
+
+以上为原设计及当时阶段记录，不重新判定已获批准的限定合成工程验收。
+新增[共享费用差异设计](2026-11-21-ai-manual-trial-fee-design.md)仅供复审，未实现、未获真实发送授权。
+新生成版本与AI-1共用估算预算、持久试用名额和停发保护；旧命令不迁移，手工候选/孩子提交/审核/复习写回契约不变。
+精确输入计数资格后置而非已解决；历史失败、真人/真机待验、T4/T8/AI-1 OPEN及其他未关闭、后置状态保持。

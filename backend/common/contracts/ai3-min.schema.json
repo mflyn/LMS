@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lms.family.local/schemas/ai3-min-v2.json",
+  "$defs": {
+    "generateV2": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "operationId", "expectedRoundVersion", "generationInputHash", "modelProfileVersion",
+        "pricingProfileVersion", "feeMode", "estimateMethodVersion", "expectedEstimatedReservationMicros", "feeNoticeVersion",
+        "estimateAcknowledged", "externalSendConfirmed", "deidentifiedConfirmed"],
+      "properties": {
+        "schemaVersion": { "const": "ai3-min-v2" },
+        "operationId": { "type": "string", "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$" },
+        "expectedRoundVersion": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "generationInputHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "modelProfileVersion": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "\\S" },
+        "pricingProfileVersion": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "\\S" },
+        "feeMode": { "const": "estimate_only" },
+        "estimateMethodVersion": { "const": "reference-8192-4096-v1" },
+        "expectedEstimatedReservationMicros": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "feeNoticeVersion": { "const": "estimate-not-cap-v1" },
+        "estimateAcknowledged": { "const": true },
+        "externalSendConfirmed": { "const": true },
+        "deidentifiedConfirmed": { "const": true }
+      }
+    },
+    "recoverV2": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "operationId"],
+      "properties": {
+        "schemaVersion": { "const": "ai3-min-v2" },
+        "operationId": { "$ref": "#/$defs/generateV2/properties/operationId" }
+      }
+    }
+  },
+  "oneOf": [{ "$ref": "#/$defs/generateV2" }, { "$ref": "#/$defs/recoverV2" }]
+}

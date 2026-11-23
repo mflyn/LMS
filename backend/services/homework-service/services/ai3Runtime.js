@@ -16,6 +16,7 @@ function createAi3Runtime({ env = process.env, connection = mongoose.connection,
   }
   return { ...runtime, dependencies: { ...runtime.dependencies, transactionRunner: runtime.transactionRunner,
     getProfile: ai1Runtime?.dependencies.getProfile || (() => null),
+    getTrial: ai1Runtime?.dependencies.getTrial || (() => null),
     getLimits: ai1Runtime?.dependencies.getLimits || (() => null), operationClient } };
 }
 module.exports = { createAi3Runtime };

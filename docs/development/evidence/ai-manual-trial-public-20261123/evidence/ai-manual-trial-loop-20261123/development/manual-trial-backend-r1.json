@@ -1,0 +1,925 @@
+{
+  "success": false,
+  "numTotalTestSuites": 9,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 3,
+  "numTotalTests": 167,
+  "numPassedTests": 167,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "testResults": [
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/ai1Runtime.test.js",
+      "status": "failed",
+      "startTime": 1795428923245,
+      "endTime": 1795428923245,
+      "assertionResults": [],
+      "message": "  ● Test suite failed to run\n\n    EPERM: operation not permitted, mkdir '<LMS_ROOT>/backend/logs/'\n\n      103 |     transports: [\n      104 |       // 错误日志\n    > 105 |       new DailyRotateFile({\n          |       ^\n      106 |         filename: path.join(logDir, `${serviceName}-error-%DATE%.log`),\n      107 |         datePattern: 'YYYY-MM-DD',\n      108 |         level: 'error',\n\n      at ../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:669:24\n          at Array.reduce (<anonymous>)\n      at mkDirForFile (../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:656:27)\n      at Object.<anonymous>.FileStreamRotator.getStream (../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:532:5)\n      at new DailyRotateFile (../../../../../../../GitHub PRJ/LMS/node_modules/winston-daily-rotate-file/daily-rotate-file.js:81:57)\n      at createLogger (../../common/config/logger.js:105:7)\n      at Object.createLogger (../../common/middleware/errorHandler.js:12:23)\n      at Object.require (server.js:14:5)\n      at Object.require (__tests__/services/ai1Runtime.test.js:3:25)\n"
+    },
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/ai1TrialBudget.test.js",
+      "status": "passed",
+      "startTime": 1795428895857,
+      "endTime": 1795428902599,
+      "assertionResults": [
+        {
+          "fullName": "third owner can claim after exhaustion and reconstruction; fourth cannot reserve across families/profiles",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rollback does not spend a submission; release does not refund it",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "configuration renamed cannot reset or grant historical v2 send eligibility",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "configuration capacity cannot reset or grant historical v2 send eligibility",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "configuration disabled cannot reset or grant historical v2 send eligibility",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "trial blocks new and reserved v1 without conversion while preserving old settlement/view",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "ai1 full over-estimate charge latches both accounts, survives config-off and does not repeat",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "ai3 full over-estimate charge latches both accounts, survives config-off and does not repeat",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "settle retains unknown occupancy; cross-family halt is generic and later evidence cannot unlock",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "markUnknown retains unknown occupancy; cross-family halt is generic and later evidence cannot unlock",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "legacy reserved_unknown without halted flag blocks a new trial globally",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "legacy owner_unknown without halted flag blocks a new trial globally",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid v2 ownerProof cannot claim or settle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid v2 reservationProof cannot claim or settle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid v2 preview cannot claim or settle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid v2 amount cannot claim or settle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid v2 profile cannot claim or settle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid v2 accountProof cannot claim or settle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "reserve verifies its estimate against the supplied preview before consuming a submission",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "halt and settlement roll back atomically and claim writes a shared revision barrier",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "concurrent final submissions consume exactly three durable owner-bound slots",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "compatibility guard precedes stale release and does not reject the third allocated owner",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "markUnknown repairs an already UNKNOWN owner idempotently, halt preserves terminal accounting",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "a claim snapshot taken before another transaction halts cannot commit",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 view reports subsequent budget admission, never rewrites the original reservation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "damaged durable trial resetCount cannot mint another submission or claim",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "damaged durable trial missingExperiment cannot mint another submission or claim",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "damaged durable trial missingMode cannot mint another submission or claim",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "historical over-estimate without halt flags is not allowed to admit another trial",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid charge undefined never releases or accounts a reservation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid charge -1 never releases or accounts a reservation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid charge 0.5 never releases or accounts a reservation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid charge \"80\" never releases or accounts a reservation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid charge NaN never releases or accounts a reservation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid charge Infinity never releases or accounts a reservation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid charge 9007199254740992 never releases or accounts a reservation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "duplicate reserve rolls back its quota write; same ID with wrong profile cannot settle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "valid charge after trial is disabled settles without current limits and never initializes a fresh quota",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/aiTrialFees.test.js",
+      "status": "passed",
+      "startTime": 1795428902616,
+      "endTime": 1795428904181,
+      "assertionResults": [
+        {
+          "fullName": "AI-1 trial contract server profile explicitly creates the closed trial preview and reference estimate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract hash binds pricingProfileVersion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract hash binds sourceReference",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract hash binds expiresAt",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract hash binds inputPriceMicrosPerMillion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract unknown explicit fee mode null is refused",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract unknown explicit fee mode  is refused",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract unknown explicit fee mode strict is refused",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract unknown explicit fee mode estimate_ony is refused",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract source provenance is required; no fallback to a historical price",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract generate and recover accept only their closed v2 fields",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract new confirmation requires exact estimate and does not reuse old maximum authorization",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract persistent v2 request/response permit uncapped input and full charge, without changing namespace",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract persistent trial preview tampering cannot produce a new wire hash",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract a v2 response requires the original persisted remote hash",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract fee helpers refuse a corrupted frozen price rather than silently repricing",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract a preview converter cannot mix a new model or quote with an old base snapshot",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 trial contract wire byte limit includes JSON escaping and digest at 32768/32769",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract server profile explicitly creates the closed trial preview and reference estimate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract hash binds pricingProfileVersion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract hash binds sourceReference",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract hash binds expiresAt",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract hash binds inputPriceMicrosPerMillion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract unknown explicit fee mode null is refused",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract unknown explicit fee mode  is refused",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract unknown explicit fee mode strict is refused",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract unknown explicit fee mode estimate_ony is refused",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract source provenance is required; no fallback to a historical price",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract generate and recover accept only their closed v2 fields",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract new confirmation requires exact estimate and does not reuse old maximum authorization",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract persistent v2 request/response permit uncapped input and full charge, without changing namespace",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract persistent trial preview tampering cannot produce a new wire hash",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract a v2 response requires the original persisted remote hash",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract fee helpers refuse a corrupted frozen price rather than silently repricing",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract a preview converter cannot mix a new model or quote with an old base snapshot",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 trial contract wire byte limit includes JSON escaping and digest at 32768/32769",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 alone permits v2 create; AI3 teaching create stays v1",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "schema definition names are not public endpoint actions",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 usage input=8192 output=0 charges 8192 without truncating to estimate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 usage input=8193 output=0 charges 8193 without truncating to estimate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 usage input=16384 output=0 charges 16384 without truncating to estimate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 usage input=16385 output=0 charges 16385 without truncating to estimate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 usage input=0 output=4096 charges 8192 without truncating to estimate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 usage input=0 output=0 charges 0 without truncating to estimate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":-1,\"outputTokens\":0} is never a zero charge",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":0.5,\"outputTokens\":0} is never a zero charge",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":true,\"outputTokens\":0} is never a zero charge",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":9007199254740992,\"outputTokens\":0} is never a zero charge",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":0,\"outputTokens\":4097} is never a zero charge",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":0} is never a zero charge",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage null is never a zero charge",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":0,\"outputTokens\":0,\"totalTokens\":1} is never a zero charge",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "BigInt rounding, safe result limit and overflow are exact",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v1 default remains strict and preserves maximum confirmation semantics",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-1 complete canonical digest binds fee mode and notice independently",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI-3 complete canonical digest binds fee mode and notice independently",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/ai1Http.test.js",
+      "status": "failed",
+      "startTime": 1795428923245,
+      "endTime": 1795428923245,
+      "assertionResults": [],
+      "message": "  ● Test suite failed to run\n\n    EPERM: operation not permitted, mkdir '<LMS_ROOT>/backend/logs/'\n\n      103 |     transports: [\n      104 |       // 错误日志\n    > 105 |       new DailyRotateFile({\n          |       ^\n      106 |         filename: path.join(logDir, `${serviceName}-error-%DATE%.log`),\n      107 |         datePattern: 'YYYY-MM-DD',\n      108 |         level: 'error',\n\n      at ../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:669:24\n          at Array.reduce (<anonymous>)\n      at mkDirForFile (../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:656:27)\n      at Object.<anonymous>.FileStreamRotator.getStream (../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:532:5)\n      at new DailyRotateFile (../../../../../../../GitHub PRJ/LMS/node_modules/winston-daily-rotate-file/daily-rotate-file.js:81:57)\n      at createLogger (../../common/config/logger.js:105:7)\n      at Object.createLogger (../../common/middleware/errorHandler.js:12:23)\n      at Object.require (__tests__/services/ai1Http.test.js:6:26)\n"
+    },
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/ai1TrialService.test.js",
+      "status": "passed",
+      "startTime": 1795428904385,
+      "endTime": 1795428910175,
+      "assertionResults": [
+        {
+          "fullName": "trial confirmation reserves one immutable command and replay consumes no second allowance",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "overestimate retains a valid candidate, charges full usage and atomically stops later sends",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unknown fee retains reservation and candidate; terminal replay does not release or charge twice",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "lost response halts sending; original actor recovery only queries the same remote mapping",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "reliable original outcome reconciles while sending is disabled without clearing the unknown halt",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "outcome transaction failure retains slot and unknown fee; query recovery creates only one candidate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":-1,\"outputTokens\":1} stops subsequent sends without refund or replacement UUID",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "invalid usage {\"inputTokens\":100,\"outputTokens\":4097} stops subsequent sends without refund or replacement UUID",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "old reserved command is not upgraded or automatically refunded when trial configuration appears",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "trial expiry during slot acquisition rolls back claim and preserves the already allocated original command",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/ai3TrialService.test.js",
+      "status": "passed",
+      "startTime": 1795428910180,
+      "endTime": 1795428916700,
+      "assertionResults": [
+        {
+          "fullName": "original reserved trial recovers once, retains overestimate candidate and never auto-publishes",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unknown retry keeps old preview and UUID, survives disabled sending, and only queries",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "trusted not-sent releases only fee, never allowance; original replay never sends again",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "persistent v1 preview remains read-only with sending enabled=true and no current quote",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "persistent v1 preview remains read-only with sending enabled=false and no current quote",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "persistent v2 preview remains read-only with sending enabled=true and no current quote",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "persistent v2 preview remains read-only with sending enabled=false and no current quote",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/ai3Runtime.test.js",
+      "status": "failed",
+      "startTime": 1795428923245,
+      "endTime": 1795428923245,
+      "assertionResults": [],
+      "message": "  ● Test suite failed to run\n\n    EPERM: operation not permitted, mkdir '<LMS_ROOT>/backend/logs/'\n\n      103 |     transports: [\n      104 |       // 错误日志\n    > 105 |       new DailyRotateFile({\n          |       ^\n      106 |         filename: path.join(logDir, `${serviceName}-error-%DATE%.log`),\n      107 |         datePattern: 'YYYY-MM-DD',\n      108 |         level: 'error',\n\n      at ../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:669:24\n          at Array.reduce (<anonymous>)\n      at mkDirForFile (../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:656:27)\n      at Object.<anonymous>.FileStreamRotator.getStream (../../../../../../../GitHub PRJ/LMS/node_modules/file-stream-rotator/FileStreamRotator.js:532:5)\n      at new DailyRotateFile (../../../../../../../GitHub PRJ/LMS/node_modules/winston-daily-rotate-file/daily-rotate-file.js:81:57)\n      at createLogger (../../common/config/logger.js:105:7)\n      at Object.createLogger (../../common/middleware/errorHandler.js:12:23)\n      at Object.require (../analytics-service/app.js:4:58)\n      at Object.require (../analytics-service/server.js:4:19)\n      at require (__tests__/services/ai3Runtime.test.js:6:11)\n          at Array.map (<anonymous>)\n      at Object.map (__tests__/services/ai3Runtime.test.js:5:64)\n"
+    },
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/ai3Operation.test.js",
+      "status": "passed",
+      "startTime": 1795428917447,
+      "endTime": 1795428920230,
+      "assertionResults": [
+        {
+          "fullName": "wire projection is closed, stable and has no local identities",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "complete request wire boundary: 32767 bytes including hash",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "complete request wire boundary: 32768 bytes including hash",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "complete request wire boundary: 32769 bytes including hash",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "wire bytes reject multibyte or escaped expansion: 0",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "wire bytes reject multibyte or escaped expansion: 1",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "wire bytes reject multibyte or escaped expansion: 2",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "real HTTP accepts exactly 32 KiB; oversized wire is rejected with zero extra requests",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state accepted",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state sending",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state succeeded",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state failed_not_sent",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state failed_sent",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state unknown",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"providerProfile\":\"ai1\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"sendClaimed\":true}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"result\":{\"text\":\"bad\",\"contentHash\":\"2f05d4b689d270cafb02285f35f44866f7dc8a2d368a3f9d1124373eeab31fb1\"}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"error\":\"PROVIDER_FAILED\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"usage\":{\"inputTokens\":0,\"outputTokens\":0}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"extra\":true}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"remoteOperationId\":\"wrong\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"requestHash\":\"0000000000000000000000000000000000000000000000000000000000000000\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"sendNotAfter\":\"2026-11-03T00:00:00.000Z\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"pricingProfileVersion\":\"wrong\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"modelProfileVersion\":\"wrong\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"updatedAt\":\"yesterday\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"failed_not_sent\",\"sendClaimed\":true,\"error\":\"PREVIEW_STALE\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"unknown\",\"sendClaimed\":false,\"error\":\"RESULT_UNKNOWN\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"succeeded\",\"sendClaimed\":true,\"result\":{\"text\":\"draft\",\"contentHash\":\"0000000000000000000000000000000000000000000000000000000000000000\"}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"succeeded\",\"sendClaimed\":true,\"result\":{\"text\":\"\\ud800\",\"contentHash\":\"83d544ccc223c057d2bf80d3f2a32982c32c3c0db8e2674820da5064783fb097\"}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"succeeded\",\"sendClaimed\":true,\"result\":{\"text\":\"draft\",\"contentHash\":\"7743ce348d9284d677a185f33295b92266cc435a5b5f775029b300066d26693a\"},\"usage\":{\"inputTokens\":8193,\"outputTokens\":1}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "real HTTP: credential, exact path, no redirect/retry, malformed response and bounded body",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/backend/services/homework-service/__tests__/services/ai1Operation.test.js",
+      "status": "passed",
+      "startTime": 1795428920236,
+      "endTime": 1795428923239,
+      "assertionResults": [
+        {
+          "fullName": "wire projection is closed, stable and has no local identities",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state accepted",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state sending",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state succeeded",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state failed_not_sent",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state failed_sent",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "accepts closed state unknown",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"sendClaimed\":true}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"result\":{\"text\":\"bad\",\"contentHash\":\"2f05d4b689d270cafb02285f35f44866f7dc8a2d368a3f9d1124373eeab31fb1\"}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"error\":\"PROVIDER_FAILED\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"usage\":{\"inputTokens\":0,\"outputTokens\":0}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"extra\":true}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"remoteOperationId\":\"wrong\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"requestHash\":\"0000000000000000000000000000000000000000000000000000000000000000\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"sendNotAfter\":\"2026-11-03T00:00:00.000Z\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"pricingProfileVersion\":\"wrong\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"modelProfileVersion\":\"wrong\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"updatedAt\":\"yesterday\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"failed_not_sent\",\"sendClaimed\":true,\"error\":\"PREVIEW_STALE\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"unknown\",\"sendClaimed\":false,\"error\":\"RESULT_UNKNOWN\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"succeeded\",\"sendClaimed\":true,\"result\":{\"text\":\"draft\",\"contentHash\":\"0000000000000000000000000000000000000000000000000000000000000000\"}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"succeeded\",\"sendClaimed\":true,\"result\":{\"text\":\"\\ud800\",\"contentHash\":\"83d544ccc223c057d2bf80d3f2a32982c32c3c0db8e2674820da5064783fb097\"}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "rejects inconsistent envelope {\"status\":\"succeeded\",\"sendClaimed\":true,\"result\":{\"text\":\"draft\",\"contentHash\":\"7743ce348d9284d677a185f33295b92266cc435a5b5f775029b300066d26693a\"},\"usage\":{\"inputTokens\":8193,\"outputTokens\":1}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "real HTTP: credential, exact path, no redirect/retry, malformed response and bounded body",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    }
+  ]
+}

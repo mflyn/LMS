@@ -1,0 +1,200 @@
+[
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/README.md",
+    "sourceSha256": "f013d4d7e961febf32d49b6b98035b32ac3a8fe0ef7716f49bd48e673619166e",
+    "sourceBytes": 5263,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/README.md",
+    "publicSha256": "f013d4d7e961febf32d49b6b98035b32ac3a8fe0ef7716f49bd48e673619166e",
+    "publicBytes": 5263,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/candidate.json",
+    "sourceSha256": "5b5ff9b95db6ae2d5fb514ddde8aa3da708958c58c7c3e3d69ce4f6960a6dbd0",
+    "sourceBytes": 4386,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/candidate.json",
+    "publicSha256": "5b5ff9b95db6ae2d5fb514ddde8aa3da708958c58c7c3e3d69ce4f6960a6dbd0",
+    "publicBytes": 4386,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/history-bindings.json",
+    "sourceSha256": "0a188bc7a6e5b1262c29424de5105dc3c5d62ce25af7afeffdd1f4d5f30b0307",
+    "sourceBytes": 684,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/history-bindings.json",
+    "publicSha256": "ddfcc80965940eee253a5a781255d69f9111167ca4566770cd68835376c6f983",
+    "publicBytes": 538,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/independent/REPORT.md",
+    "sourceSha256": "888453b237deb1045ffcb2a0dc2d4356468d70c79ee9ddc622d3a671b3f567ef",
+    "sourceBytes": 7820,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/independent/REPORT.md",
+    "publicSha256": "3a580f937304a13d423c41467005474024498c23a1d5ddc66d6ce381cbe6a6fa",
+    "publicBytes": 7714,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/independent/junit-summary.json",
+    "sourceSha256": "a76d82062510a4628d4915ca65c7b70013938ba2df89a1a0e07524db339d116f",
+    "sourceBytes": 17642,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/independent/junit-summary.json",
+    "publicSha256": "fd833f0429e76951a8622e9af4d972028c79b26513ad06b9d60cfe0327ba27ea",
+    "publicBytes": 17372,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/independent/mutation-audit.json",
+    "sourceSha256": "2a9cb002031d78a673350217829cf2da22a458361828c23f1b581ebe39499f5d",
+    "sourceBytes": 36766,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/independent/mutation-audit.json",
+    "publicSha256": "29df7142cddc89bfef618a68a526f50b3c744cb9fa960736d6907ae64a6ab0ef",
+    "publicBytes": 34428,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/validation/final-services-expanded.json",
+    "sourceSha256": "6dab80eb7093642a37757c66ca83dc9e48253029164055c73bfe90c6c98f668f",
+    "sourceBytes": 1464,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/validation/final-services-expanded.json",
+    "publicSha256": "e81fb3e88bc03942a398a0eff41ddea64db2c390cb79cc681eae0260b517134d",
+    "publicBytes": 1356,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/validation/mutation-process-results.json",
+    "sourceSha256": "c4253608ffc431da50283a2d2a71d09d89c7f10cdb86e03be5dc9cd2781f783a",
+    "sourceBytes": 14202,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/validation/mutation-process-results.json",
+    "publicSha256": "1c570c3acc8773740d095919ff2c3ac69ddc59cf0de64084aef371cf8e92a496",
+    "publicBytes": 13338,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-deeptutor-final-20261123/validation/final-services-expanded.log",
+    "sourceSha256": "08457b85380fc56968d950bebc50facc8a624c86b3515037154296d542db2a2c",
+    "sourceBytes": 443,
+    "publicPath": "evidence/ai-manual-trial-deeptutor-final-20261123/validation/final-services-expanded.log.excerpt.txt",
+    "publicSha256": "08457b85380fc56968d950bebc50facc8a624c86b3515037154296d542db2a2c",
+    "publicBytes": 443,
+    "rule": "last 80 lines only, explicitly excerpted; path redaction"
+  },
+  {
+    "source": "ai-manual-trial-loop-r2-20261123/README.md",
+    "sourceSha256": "4528d27d7234c8bcaf3a63e2761ea669d753020c05568da01dca2e292a8c34b1",
+    "sourceBytes": 3014,
+    "publicPath": "evidence/ai-manual-trial-loop-r2-20261123/README.md",
+    "publicSha256": "09d14dd9ac71023c99dfc2470bf16c21294a0935a96921f1b9a3a3d36aff5e03",
+    "publicBytes": 2952,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-loop-r2-20261123/candidate.json",
+    "sourceSha256": "c030989ad350729b869240dfadb556d6d6d77d55e466dc59f4c6ceeb4f560983",
+    "sourceBytes": 4626,
+    "publicPath": "evidence/ai-manual-trial-loop-r2-20261123/candidate.json",
+    "publicSha256": "c030989ad350729b869240dfadb556d6d6d77d55e466dc59f4c6ceeb4f560983",
+    "publicBytes": 4626,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-loop-r2-20261123/development/ai3-consent-p2-red.json",
+    "sourceSha256": "072564de7d6c1b65c25b5d0a68e2eb31945e43ce2d09b0354421bdaef52fe98a",
+    "sourceBytes": 9260,
+    "publicPath": "evidence/ai-manual-trial-loop-r2-20261123/development/ai3-consent-p2-red.json",
+    "publicSha256": "77ce14f770d81d72e5d034c24e9f3d928534f784cecff1736d4720b455931dc4",
+    "publicBytes": 7419,
+    "rule": "Jest projection: counts, case names/statuses/failures/times and suite messages retained; caches and unrelated metadata omitted; path redaction"
+  },
+  {
+    "source": "ai-manual-trial-loop-r2-20261123/development/ai3-consent-p2-green.json",
+    "sourceSha256": "4a10e67ed81dadc9c61f96bd48fc1ba92537d6615655c17ea8f926b19629cf40",
+    "sourceBytes": 70166,
+    "publicPath": "evidence/ai-manual-trial-loop-r2-20261123/development/ai3-consent-p2-green.json",
+    "publicSha256": "3ed9d6c8c8f0f994f1bc55a9a7fe516bf959da34a28cbe5aa0c9e53694430e9c",
+    "publicBytes": 51828,
+    "rule": "Jest projection: counts, case names/statuses/failures/times and suite messages retained; caches and unrelated metadata omitted; path redaction"
+  },
+  {
+    "source": "ai-manual-trial-loop-r2-20261123/development/ai3-consent-p2-green-r2.json",
+    "sourceSha256": "9ff4ec37049c7cb4d745cfeea0a2533612d91ba0cd2747292b60e0446756e5d9",
+    "sourceBytes": 69007,
+    "publicPath": "evidence/ai-manual-trial-loop-r2-20261123/development/ai3-consent-p2-green-r2.json",
+    "publicSha256": "186d8632645771599862a82e68993d424640e9449b3013eaa5fde887328242b4",
+    "publicBytes": 50698,
+    "rule": "Jest projection: counts, case names/statuses/failures/times and suite messages retained; caches and unrelated metadata omitted; path redaction"
+  },
+  {
+    "source": "ai-manual-trial-loop-r2-review-20261123/result.json",
+    "sourceSha256": "25dfbc629b906317e2689ae4023c26705a07dd63f2c57d112a4995c17e374e64",
+    "sourceBytes": 1180,
+    "publicPath": "evidence/ai-manual-trial-loop-r2-review-20261123/result.json",
+    "publicSha256": "d0b18076b5ef583ab845cae7b47edc9ebd92f1ce9dbe3c2385912c0ad784f905",
+    "publicBytes": 1051,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-loop-r2-review-20261123/jest.json",
+    "sourceSha256": "6e8b45fcce8d3ef0ed45ebb68d477f8649c4d07477a700eb099d8385596c51cf",
+    "sourceBytes": 33004,
+    "publicPath": "evidence/ai-manual-trial-loop-r2-review-20261123/jest.json",
+    "publicSha256": "2ca85530594e575f530ff36c9a3582453d662d61a68982aff55efc724bc51f98",
+    "publicBytes": 23893,
+    "rule": "Jest projection: counts, case names/statuses/failures/times and suite messages retained; caches and unrelated metadata omitted; path redaction"
+  },
+  {
+    "source": "ai-manual-trial-loop-20261123/identity/verification.json",
+    "sourceSha256": "7e52f6b3dbac0d2950b6377f977bfeb82845692dd1a404e441709a59f2bc1fbc",
+    "sourceBytes": 186,
+    "publicPath": "evidence/ai-manual-trial-loop-20261123/identity/verification.json",
+    "publicSha256": "7e52f6b3dbac0d2950b6377f977bfeb82845692dd1a404e441709a59f2bc1fbc",
+    "publicBytes": 186,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-loop-20261123/identity/browser.run.json",
+    "sourceSha256": "a8ba9427702a3af80ae3a8ebd001e0c5cfdcf756c0e4625f73695b22e8922f06",
+    "sourceBytes": 534,
+    "publicPath": "evidence/ai-manual-trial-loop-20261123/identity/browser.run.json",
+    "publicSha256": "b5d64d293166bd909d2903971702fbebede010e61ee478a00f345acb385fce86",
+    "publicBytes": 384,
+    "rule": "path-redaction-only; no result/status edits"
+  },
+  {
+    "source": "ai-manual-trial-loop-20261123/development/manual-trial-backend-r1.json",
+    "sourceSha256": "8ad09f5ac6d8bc01ef3f5af2dc660b0f94867c8a3f18fe5409ace47c54a55fa7",
+    "sourceBytes": 64945,
+    "publicPath": "evidence/ai-manual-trial-loop-20261123/development/manual-trial-backend-r1.json",
+    "publicSha256": "5f9fbc7b166db1ccecf6fc03e2e9bcd380381f68508c7758413a866580d8bb6d",
+    "publicBytes": 37557,
+    "rule": "Jest projection: counts, case names/statuses/failures/times and suite messages retained; caches and unrelated metadata omitted; path redaction"
+  },
+  {
+    "source": "ai-manual-trial-loop-20261123/development/manual-trial-backend-r2.json",
+    "sourceSha256": "c6524a234b237fe78a5e8bec6636fb296a06a5e42fb2f4948d8b9e33fc1a7f27",
+    "sourceBytes": 97655,
+    "publicPath": "evidence/ai-manual-trial-loop-20261123/development/manual-trial-backend-r2.json",
+    "publicSha256": "34c57d1674cd3ddc785229ed93fdcd3faab8ddcf263378655ab5365bf7d8f06d",
+    "publicBytes": 53675,
+    "rule": "Jest projection: counts, case names/statuses/failures/times and suite messages retained; caches and unrelated metadata omitted; path redaction"
+  },
+  {
+    "source": "ai-manual-trial-loop-20261123/development/manual-trial-ui-r5.json",
+    "sourceSha256": "ada5e5088452524adbebf53c460d509394384974d4dabe4a9b0ae903e915568c",
+    "sourceBytes": 68447,
+    "publicPath": "evidence/ai-manual-trial-loop-20261123/development/manual-trial-ui-r5.json",
+    "publicSha256": "92eb3d1e58a83279bdcfec9af9649c1999d256e7b94526287e019f567d4f4a0c",
+    "publicBytes": 50302,
+    "rule": "Jest projection: counts, case names/statuses/failures/times and suite messages retained; caches and unrelated metadata omitted; path redaction"
+  },
+  {
+    "source": "ai-manual-trial-batch-a-20261121/final-candidate-r2/candidate.json",
+    "sourceSha256": "66ef3231b944ad01912791da926f4f13959f60485c480e869223a9c237f0207b",
+    "sourceBytes": 4742,
+    "publicPath": "evidence/ai-manual-trial-batch-a-20261121/final-candidate-r2/candidate.json",
+    "publicSha256": "66ef3231b944ad01912791da926f4f13959f60485c480e869223a9c237f0207b",
+    "publicBytes": 4742,
+    "rule": "path-redaction-only; no result/status edits"
+  }
+]

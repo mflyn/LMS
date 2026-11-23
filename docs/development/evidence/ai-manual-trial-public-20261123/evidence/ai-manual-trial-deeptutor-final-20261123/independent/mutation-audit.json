@@ -1,0 +1,529 @@
+{
+  "kind": "independent evidence audit, not independent mutation execution",
+  "mutations": [
+    {
+      "label": "mutation-replay",
+      "code": 1,
+      "timedOut": false,
+      "durationMs": 3765,
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "1",
+          "skipped": "0",
+          "tests": "1",
+          "time": "2.742",
+          "timestamp": "2026-11-23T17:38:13.896646+08:00",
+          "hostname": "Mac"
+        }
+      ],
+      "groups": {
+        "tests.services.ai1.test_manual_trial_v2": 1
+      },
+      "cases": [
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_formal_trial_profile_old_v1_accepted_is_read_only",
+          "time": "2.391",
+          "status": "failed",
+          "message": "AssertionError: INFO    deeptutor.api.main - CORS configured: mode=explicit allow_origins=['http://localhost:3782', 'http://127.0.0.1:3782', 'http://localhost:3000', 'http://127.0.0.1:3000'] allow_origin_regex=None\n  INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-17/test_formal_trial_profile_old_0/formal-home/data/user/settings/interface.json\n  INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-17/test_formal_trial_profile_old_0/formal-home/data/user/settings/main.yaml\n  INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-17/test_formal_trial_profile_old_0/formal-home/data/user/settings/agents.yaml\n  INFO    deeptutor.services.setup.init - Seeded default personas: peer, research-assistant, teacher\n  WARNING deeptutor.multi_user.identity - Auth is enabled and no auth_secret file exists. Generated a stable local secret at <TEMP>/pytest-17/test_formal_trial_profile_old_0/formal-home/data/system/auth/auth_secret.\n  INFO    deeptutor.api.main - Application startup\n  WARNING deeptutor.api.main - Failed to initialize LLM client at startup: No active LLM model is configured. Please set it in Settings > Language models.\n  INFO    deeptutor.events.event_bus - EventBus started\n  INFO    deeptutor.api.main - EventBus started\n  testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 503\n  INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 503 Service Unavailable\"\n  INFO    deeptutor.api.main - Application shutdown\n  INFO    deeptutor.api.main - Leader-owned background services stopped\n  INFO    deeptutor.api.main - Application container closed\n  INFO    deeptutor.api.main - MCP connections closed\n  INFO    deeptutor.api.main - LLM provider pool closed\n  INFO    deeptutor.api.main - Agentic LLM client pool closed\n  INFO    deeptutor.events.event_bus - EventBus stopped\n  INFO    deeptutor.api.main - EventBus stopped\n  Traceback (most recent call last):\n    File \"<string>\", line 23, in <module>\n      assert result.status_code == 200, result.text\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  AssertionError: {\"success\":false,\"error\":{\"code\":\"AI_REMOTE_UNAVAILABLE\",\"message\":\"AI_REMOTE_UNAVAILABLE\",\"details\":[]}}\n  \nassert 1 == 0\n +  where 1 = CompletedProcess(args=['<HOME>/GitHub PRJ/LMS/.cache/ai1-sdk-local-20261101/bin/python', '-B', '-c', '\\nim...ionError: {\"success\":false,\"error\":{\"code\":\"AI_REMOTE_UNAVAILABLE\",\"message\":\"AI_REMOTE_UNAVAILABLE\",\"details\":[]}}\\n').returncode",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:168: in test_formal_trial_profile_old_v1_accepted_is_read_only\n    formal_probe(\ntests/services/ai1/test_operation_runtime.py:330: in formal_probe\n    assert result.returncode == 0, result.stdout + result.stderr\nE   AssertionError: INFO    deeptutor.api.main - CORS configured: mode=explicit allow_origins=['http://localhost:3782', 'http://127.0.0.1:3782', 'http://localhost:3000', 'http://127.0.0.1:3000'] allow_origin_regex=None\nE     INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-17/test_formal_trial_profile_old_0/formal-home/data/user/settings/interface.json\nE     INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-17/test_formal_trial_profile_old_0/formal-home/data/user/settings/main.yaml\nE     INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-17/test_formal_trial_profile_old_0/formal-home/data/user/settings/agents.yaml\nE     INFO    deeptutor.services.setup.init - Seeded default personas: peer, research-assistant, teacher\nE     WARNING deeptutor.multi_user.identity - Auth is enabled and no auth_secret file exists. Generated a stable local secret at <TEMP>/pytest-17/test_formal_trial_profile_old_0/formal-home/data/system/auth/auth_secret.\nE     INFO    deeptutor.api.main - Application startup\nE     WARNING deeptutor.api.main - Failed to initialize LLM client at startup: No active LLM model is configured. Please set it in Settings > Language models.\nE     INFO    deeptutor.events.event_bus - EventBus started\nE     INFO    deeptutor.api.main - EventBus started\nE     testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 503\nE     INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 503 Service Unavailable\"\nE     INFO    deeptutor.api.main - Application shutdown\nE     INFO    deeptutor.api.main - Leader-owned background services stopped\nE     INFO    deeptutor.api.main - Application container closed\nE     INFO    deeptutor.api.main - MCP connections closed\nE     INFO    deeptutor.api.main - LLM provider pool closed\nE     INFO    deeptutor.api.main - Agentic LLM client pool closed\nE     INFO    deeptutor.events.event_bus - EventBus stopped\nE     INFO    deeptutor.api.main - EventBus stopped\nE     Traceback (most recent call last):\nE       File \"<string>\", line 23, in <module>\nE         assert result.status_code == 200, result.text\nE                ^^^^^^^^^^^^^^^^^^^^^^^^^\nE     AssertionError: {\"success\":false,\"error\":{\"code\":\"AI_REMOTE_UNAVAILABLE\",\"message\":\"AI_REMOTE_UNAVAILABLE\",\"details\":[]}}\nE     \nE   assert 1 == 0\nE    +  where 1 = CompletedProcess(args=['<HOME>/GitHub PRJ/LMS/.cache/ai1-sdk-local-20261101/bin/python', '-B', '-c', '\\nim...ionError: {\"success\":false,\"error\":{\"code\":\"AI_REMOTE_UNAVAILABLE\",\"message\":\"AI_REMOTE_UNAVAILABLE\",\"details\":[]}}\\n').returncode"
+        }
+      ],
+      "counts": {
+        "passed": 0,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      },
+      "evidence": [
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-replay.json",
+          "bytes": 1606,
+          "sha256": "e9e6bd36d111105a01091c7f3e19d256f23e7c2d74e748bbc2cf2a5064cac24a"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-replay.xml",
+          "bytes": 6550,
+          "sha256": "503144b4b193d39be98795a4f6f8ed11bd031253296e22a2d94007d74d5a0fd8"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-replay.log",
+          "bytes": 3555,
+          "sha256": "8dbbf69a56759a5167066fc0db2573fddf0c477c65576971d838664a4b90cf13"
+        }
+      ]
+    },
+    {
+      "label": "mutation-ack",
+      "code": 1,
+      "timedOut": false,
+      "durationMs": 1198,
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "3",
+          "skipped": "0",
+          "tests": "3",
+          "time": "0.553",
+          "timestamp": "2026-11-23T17:38:17.598514+08:00",
+          "hostname": "Mac"
+        }
+      ],
+      "groups": {
+        "tests.services.ai1.test_manual_trial_v2": 3
+      },
+      "cases": [
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_requires_server_estimate_acknowledgement[False]",
+          "time": "0.280",
+          "status": "failed",
+          "message": "Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:236: in test_trial_requires_server_estimate_acknowledgement\n    with pytest.raises(ContractError, match=\"PROFILE_UNAVAILABLE\"):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_requires_server_estimate_acknowledgement[None]",
+          "time": "0.002",
+          "status": "failed",
+          "message": "Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:236: in test_trial_requires_server_estimate_acknowledgement\n    with pytest.raises(ContractError, match=\"PROFILE_UNAVAILABLE\"):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_requires_server_estimate_acknowledgement[true]",
+          "time": "0.002",
+          "status": "failed",
+          "message": "Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:236: in test_trial_requires_server_estimate_acknowledgement\n    with pytest.raises(ContractError, match=\"PROFILE_UNAVAILABLE\"):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>"
+        }
+      ],
+      "counts": {
+        "passed": 0,
+        "failed": 3,
+        "error": 0,
+        "skipped": 0
+      },
+      "evidence": [
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-ack.json",
+          "bytes": 1594,
+          "sha256": "5a8613ada8fb19773895adbc8186ecfa84268f134078d27c6274174a9933c507"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-ack.xml",
+          "bytes": 2007,
+          "sha256": "45a2f254d4a599808a7f9360b8c90e6f623ebdad2815163fc56307be5691e342"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-ack.log",
+          "bytes": 1802,
+          "sha256": "4fcb5e3bad0718f0669caba5e2f503ed7c970e0bdcde4074ff6b2b984e489689"
+        }
+      ]
+    },
+    {
+      "label": "mutation-bytes",
+      "code": 1,
+      "timedOut": false,
+      "durationMs": 1207,
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "1",
+          "skipped": "0",
+          "tests": "2",
+          "time": "0.633",
+          "timestamp": "2026-11-23T17:38:18.921193+08:00",
+          "hostname": "Mac"
+        }
+      ],
+      "groups": {
+        "tests.services.ai1.test_manual_trial_v2": 2
+      },
+      "cases": [
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_raw_json_exact_size_boundary[0]",
+          "time": "0.348",
+          "status": "passed"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_raw_json_exact_size_boundary[1]",
+          "time": "0.002",
+          "status": "failed",
+          "message": "Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:279: in test_trial_raw_json_exact_size_boundary\n    with pytest.raises(ContractError, match=\"AI_INPUT_TOO_LARGE\"):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>"
+        }
+      ],
+      "counts": {
+        "passed": 1,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      },
+      "evidence": [
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-bytes.json",
+          "bytes": 1588,
+          "sha256": "9e53b65f46b84c0f618a636e685040c97dea6ee0f8eb1877fb44a493fa244c46"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-bytes.xml",
+          "bytes": 926,
+          "sha256": "bce5497d3b234b45d6cfb135e152bb7780f42e8a62c8d16ba9524e5bd34222fd"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-bytes.log",
+          "bytes": 762,
+          "sha256": "c87c064dcaec4db26790aa2dd9d245b2e33ea63846efe5c6d8f0e7d9b60c3147"
+        }
+      ]
+    },
+    {
+      "label": "mutation-usage-cap",
+      "code": 1,
+      "timedOut": false,
+      "durationMs": 1201,
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "1",
+          "skipped": "0",
+          "tests": "4",
+          "time": "0.632",
+          "timestamp": "2026-11-23T17:38:20.273550+08:00",
+          "hostname": "Mac"
+        }
+      ],
+      "groups": {
+        "tests.services.ai1.test_manual_trial_v2": 4
+      },
+      "cases": [
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_usage_unknown_full_or_invalid_not_zero[None]",
+          "time": "0.319",
+          "status": "passed"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage1]",
+          "time": "0.001",
+          "status": "failed",
+          "message": "deeptutor.services.ai1_contract.ContractError: AI_REMOTE_CONTRACT_INVALID",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:462: in test_trial_usage_unknown_full_or_invalid_not_zero\n    _, actual = RestrictedCompletionProvider._result(raw, \"synthetic-model\", trial=True)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<TEMP>:41: in result\n    text, usage = original(raw, model, trial=False if case == \"mutation-usage-cap\" else trial)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ndeeptutor/services/ai1_provider.py:216: in _result\n    raise ContractError(\"AI_REMOTE_CONTRACT_INVALID\", 503)\nE   deeptutor.services.ai1_contract.ContractError: AI_REMOTE_CONTRACT_INVALID"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage2]",
+          "time": "0.001",
+          "status": "passed"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage3]",
+          "time": "0.001",
+          "status": "passed"
+        }
+      ],
+      "counts": {
+        "passed": 3,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      },
+      "evidence": [
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-usage-cap.json",
+          "bytes": 1610,
+          "sha256": "7103955f2f203e7be967e7741074ebb9581e4c75e9affe40a63bbd505a3296fc"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-usage-cap.xml",
+          "bytes": 1622,
+          "sha256": "717c7a41c875fa4c7914f86d6b95f2f9d66dbcb2fb318ec0b1ab6aac032506d8"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-usage-cap.log",
+          "bytes": 1177,
+          "sha256": "81fbadddade8fc0864ec1e63557d8f7113303c1e7e29b35e60d2d8fef19de117"
+        }
+      ]
+    },
+    {
+      "label": "mutation-usage-zero",
+      "code": 1,
+      "timedOut": false,
+      "durationMs": 1147,
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "1",
+          "skipped": "0",
+          "tests": "4",
+          "time": "0.546",
+          "timestamp": "2026-11-23T17:38:21.531556+08:00",
+          "hostname": "Mac"
+        }
+      ],
+      "groups": {
+        "tests.services.ai1.test_manual_trial_v2": 4
+      },
+      "cases": [
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_usage_unknown_full_or_invalid_not_zero[None]",
+          "time": "0.273",
+          "status": "failed",
+          "message": "AssertionError: assert {'inputTokens': 0, 'outputTokens': 0} == None",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:463: in test_trial_usage_unknown_full_or_invalid_not_zero\n    assert actual == (None if usage is None else {\"inputTokens\": 8193, \"outputTokens\": 4096})\nE   AssertionError: assert {'inputTokens': 0, 'outputTokens': 0} == None"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage1]",
+          "time": "0.001",
+          "status": "passed"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage2]",
+          "time": "0.001",
+          "status": "passed"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage3]",
+          "time": "0.001",
+          "status": "passed"
+        }
+      ],
+      "counts": {
+        "passed": 3,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      },
+      "evidence": [
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-usage-zero.json",
+          "bytes": 1613,
+          "sha256": "7ca6379f7a2a2634bcec0523493ab8e23a6985c55b9b7405c05ba9b112da9118"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-usage-zero.xml",
+          "bytes": 1179,
+          "sha256": "e07c2b4d3b87ca42cb391f46a41ed547e6eee65d3553d52a052e25d9c372313d"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-usage-zero.log",
+          "bytes": 737,
+          "sha256": "b16dd9217f13cc2117d88ca433ef21a542716cfbf75bc4c5ea043c9a30879afd"
+        }
+      ]
+    },
+    {
+      "label": "mutation-validate",
+      "code": 1,
+      "timedOut": false,
+      "durationMs": 1520,
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "1",
+          "skipped": "0",
+          "tests": "1",
+          "time": "0.870",
+          "timestamp": "2026-11-23T17:38:22.859716+08:00",
+          "hostname": "Mac"
+        }
+      ],
+      "groups": {
+        "tests.services.ai1.test_manual_trial_v2": 1
+      },
+      "cases": [
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_prepared_mutation_and_expiry_refuse_before_key_or_transport",
+          "time": "0.563",
+          "status": "failed",
+          "message": "Failed: no key",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:252: in test_trial_prepared_mutation_and_expiry_refuse_before_key_or_transport\n    asyncio.run(provider.send(replace(prepared, wire=prepared.wire.replace(b\"4096\", b\"4095\"))))\n/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py:194: in run\n    return runner.run(main)\n           ^^^^^^^^^^^^^^^^\n/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py:118: in run\n    return self._loop.run_until_complete(task)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py:721: in run_until_complete\n    return future.result()\n           ^^^^^^^^^^^^^^^\ndeeptutor/services/ai1_provider.py:237: in send\n    key = self._key_loader()\n          ^^^^^^^^^^^^^^^^^^\ntests/services/ai1/test_manual_trial_v2.py:246: in <lambda>\n    key_loader=lambda: pytest.fail(\"no key\"),\n                       ^^^^^^^^^^^^^^^^^^^^^\nE   Failed: no key"
+        }
+      ],
+      "counts": {
+        "passed": 0,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      },
+      "evidence": [
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-validate.json",
+          "bytes": 1628,
+          "sha256": "feb236a1f745b84ca9d37ed381f4575d48e34054851a06a55812640482d13670"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-validate.xml",
+          "bytes": 1460,
+          "sha256": "acf7beaac226590910ff990430338eeca107fabb2c7fd10d52b28c97b650ca65"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-validate.log",
+          "bytes": 1482,
+          "sha256": "8b59c8067d651095d671eb243d94ec37945d2e46b86be45aa6614e34b46b45c0"
+        }
+      ]
+    },
+    {
+      "label": "mutation-final-write",
+      "code": 1,
+      "timedOut": false,
+      "durationMs": 2017,
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "3",
+          "skipped": "0",
+          "tests": "3",
+          "time": "1.196",
+          "timestamp": "2026-11-23T17:38:24.425082+08:00",
+          "hostname": "Mac"
+        }
+      ],
+      "groups": {
+        "tests.services.ai1.test_manual_trial_v2": 3
+      },
+      "cases": [
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_actual_httpcore_final_write_deadline[connect]",
+          "time": "0.851",
+          "status": "failed",
+          "message": "Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:266: in test_trial_actual_httpcore_final_write_deadline\n    provider_cases.test_actual_httpcore_checks_deadline_after_connection_and_before_body(\ntests/services/ai1/test_operation_provider.py:652: in test_actual_httpcore_checks_deadline_after_connection_and_before_body\n    with pytest.raises(ContractError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_actual_httpcore_final_write_deadline[tls]",
+          "time": "0.018",
+          "status": "failed",
+          "message": "Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:266: in test_trial_actual_httpcore_final_write_deadline\n    provider_cases.test_actual_httpcore_checks_deadline_after_connection_and_before_body(\ntests/services/ai1/test_operation_provider.py:652: in test_actual_httpcore_checks_deadline_after_connection_and_before_body\n    with pytest.raises(ContractError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>"
+        },
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_trial_actual_httpcore_final_write_deadline[headers]",
+          "time": "0.017",
+          "status": "failed",
+          "message": "Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:266: in test_trial_actual_httpcore_final_write_deadline\n    provider_cases.test_actual_httpcore_checks_deadline_after_connection_and_before_body(\ntests/services/ai1/test_operation_provider.py:652: in test_actual_httpcore_checks_deadline_after_connection_and_before_body\n    with pytest.raises(ContractError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE <class 'deeptutor.services.ai1_contract.ContractError'>"
+        }
+      ],
+      "counts": {
+        "passed": 0,
+        "failed": 3,
+        "error": 0,
+        "skipped": 0
+      },
+      "evidence": [
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-final-write.json",
+          "bytes": 1614,
+          "sha256": "9cd13188f6143d8d8ff1bc0db2945e8694fae8255448f2d9f3bceef2a5ac9c34"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-final-write.xml",
+          "bytes": 2455,
+          "sha256": "d6f3dd370d20287befe9429e8084697542fe076be5468c00a4bb7598f883c209"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-final-write.log",
+          "bytes": 2250,
+          "sha256": "7d608a35ee7cef081ebc512107f079b1d189783510f1e0f602cb275172f32d08"
+        }
+      ]
+    },
+    {
+      "label": "mutation-store-zero",
+      "code": 1,
+      "timedOut": false,
+      "durationMs": 3389,
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "1",
+          "skipped": "0",
+          "tests": "1",
+          "time": "2.766",
+          "timestamp": "2026-11-23T17:38:26.693406+08:00",
+          "hostname": "Mac"
+        }
+      ],
+      "groups": {
+        "tests.services.ai1.test_manual_trial_v2": 1
+      },
+      "cases": [
+        {
+          "classname": "tests.services.ai1.test_manual_trial_v2",
+          "name": "test_formal_default_trial_provider_send_auth_and_query_only[None-ai1]",
+          "time": "2.479",
+          "status": "failed",
+          "message": "AssertionError: INFO    deeptutor.api.main - CORS configured: mode=explicit allow_origins=['http://localhost:3782', 'http://127.0.0.1:3782', 'http://localhost:3000', 'http://127.0.0.1:3000'] allow_origin_regex=None\n  INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-24/test_formal_default_trial_prov0/formal-home/data/user/settings/interface.json\n  INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-24/test_formal_default_trial_prov0/formal-home/data/user/settings/main.yaml\n  INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-24/test_formal_default_trial_prov0/formal-home/data/user/settings/agents.yaml\n  INFO    deeptutor.services.setup.init - Seeded default personas: peer, research-assistant, teacher\n  WARNING deeptutor.multi_user.identity - Auth is enabled and no auth_secret file exists. Generated a stable local secret at <TEMP>/pytest-24/test_formal_default_trial_prov0/formal-home/data/system/auth/auth_secret.\n  INFO    deeptutor.api.main - Application startup\n  WARNING deeptutor.api.main - Failed to initialize LLM client at startup: No active LLM model is configured. Please set it in Settings > Language models.\n  INFO    deeptutor.events.event_bus - EventBus started\n  INFO    deeptutor.api.main - EventBus started\n  testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 401\n  INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 401 Unauthorized\"\n  testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 401\n  INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 401 Unauthorized\"\n  testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 401\n  INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 401 Unauthorized\"\n  INFO    httpx - HTTP Request: POST https://api.deepseek.com/chat/completions \"HTTP/1.1 200 OK\"\n  testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 201\n  INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 201 Created\"\n  INFO    deeptutor.api.main - Application shutdown\n  INFO    deeptutor.api.main - Leader-owned background services stopped\n  INFO    deeptutor.api.main - Application container closed\n  INFO    deeptutor.api.main - MCP connections closed\n  INFO    deeptutor.api.main - LLM provider pool closed\n  INFO    deeptutor.api.main - Agentic LLM client pool closed\n  INFO    deeptutor.events.event_bus - EventBus stopped\n  INFO    deeptutor.api.main - EventBus stopped\n  Traceback (most recent call last):\n    File \"<string>\", line 57, in <module>\n      assert operation['usage'] == None\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  AssertionError\n  \nassert 1 == 0\n +  where 1 = CompletedProcess(args=['<HOME>/GitHub PRJ/LMS/.cache/ai1-sdk-local-20261101/bin/python', '-B', '-c', '\\nim...ine 57, in <module>\\n    assert operation[\\'usage\\'] == None\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\\nAssertionError\\n').returncode",
+          "failureText": "tests/services/ai1/test_manual_trial_v2.py:346: in test_formal_default_trial_provider_send_auth_and_query_only\n    formal_probe(\ntests/services/ai1/test_operation_runtime.py:330: in formal_probe\n    assert result.returncode == 0, result.stdout + result.stderr\nE   AssertionError: INFO    deeptutor.api.main - CORS configured: mode=explicit allow_origins=['http://localhost:3782', 'http://127.0.0.1:3782', 'http://localhost:3000', 'http://127.0.0.1:3000'] allow_origin_regex=None\nE     INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-24/test_formal_default_trial_prov0/formal-home/data/user/settings/interface.json\nE     INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-24/test_formal_default_trial_prov0/formal-home/data/user/settings/main.yaml\nE     INFO    deeptutor.services.setup.init - Created default settings: <TEMP>/pytest-24/test_formal_default_trial_prov0/formal-home/data/user/settings/agents.yaml\nE     INFO    deeptutor.services.setup.init - Seeded default personas: peer, research-assistant, teacher\nE     WARNING deeptutor.multi_user.identity - Auth is enabled and no auth_secret file exists. Generated a stable local secret at <TEMP>/pytest-24/test_formal_default_trial_prov0/formal-home/data/system/auth/auth_secret.\nE     INFO    deeptutor.api.main - Application startup\nE     WARNING deeptutor.api.main - Failed to initialize LLM client at startup: No active LLM model is configured. Please set it in Settings > Language models.\nE     INFO    deeptutor.events.event_bus - EventBus started\nE     INFO    deeptutor.api.main - EventBus started\nE     testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 401\nE     INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 401 Unauthorized\"\nE     testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 401\nE     INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 401 Unauthorized\"\nE     testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 401\nE     INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 401 Unauthorized\"\nE     INFO    httpx - HTTP Request: POST https://api.deepseek.com/chat/completions \"HTTP/1.1 200 OK\"\nE     testclient - \"PUT /internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 HTTP/1.1\" 201\nE     INFO    httpx - HTTP Request: PUT http://testserver/internal/deeptutor/operations/11111111-1111-4111-8111-111111111111 \"HTTP/1.1 201 Created\"\nE     INFO    deeptutor.api.main - Application shutdown\nE     INFO    deeptutor.api.main - Leader-owned background services stopped\nE     INFO    deeptutor.api.main - Application container closed\nE     INFO    deeptutor.api.main - MCP connections closed\nE     INFO    deeptutor.api.main - LLM provider pool closed\nE     INFO    deeptutor.api.main - Agentic LLM client pool closed\nE     INFO    deeptutor.events.event_bus - EventBus stopped\nE     INFO    deeptutor.api.main - EventBus stopped\nE     Traceback (most recent call last):\nE       File \"<string>\", line 57, in <module>\nE         assert operation['usage'] == None\nE                ^^^^^^^^^^^^^^^^^^^^^^^^^^\nE     AssertionError\nE     \nE   assert 1 == 0\nE    +  where 1 = CompletedProcess(args=['<HOME>/GitHub PRJ/LMS/.cache/ai1-sdk-local-20261101/bin/python', '-B', '-c', '\\nim...ine 57, in <module>\\n    assert operation[\\'usage\\'] == None\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\\nAssertionError\\n').returncode"
+        }
+      ],
+      "counts": {
+        "passed": 0,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      },
+      "evidence": [
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-store-zero.json",
+          "bytes": 1633,
+          "sha256": "e39d7bb1c1995a551dc11f717ee791d93cc7a21517f939595d98e5d055fea369"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-store-zero.xml",
+          "bytes": 8008,
+          "sha256": "5a4d61ebcd28c93670d6e0f14dc80fddfecd18db0f2f089a0dc9870b068279ea"
+        },
+        {
+          "path": "<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-store-zero.log",
+          "bytes": 4323,
+          "sha256": "bfc449f5fedbc7217d49339917ff86132d57983e59c6ca1f68dd70c86cb818d5"
+        }
+      ]
+    }
+  ],
+  "scripts": [
+    {
+      "path": "<TEMP>",
+      "bytes": 2927,
+      "sha256": "9d2033a4c70a9c6d1b89fd2f094a26a674f367f3479cddedfbf427c63c3a4385"
+    },
+    {
+      "path": "<TEMP>",
+      "bytes": 3239,
+      "sha256": "1bd44893b5381a4a8017c294bfaa9f83b00cd120d13c837b67b120c135162f7c"
+    }
+  ],
+  "total": {
+    "passed": 7,
+    "failed": 12,
+    "error": 0,
+    "skipped": 0
+  }
+}

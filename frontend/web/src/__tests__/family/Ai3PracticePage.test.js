@@ -5,7 +5,7 @@ import FamilyPracticePage, { ChildPracticePage } from '../../pages/family/Ai3Pra
 import { createAi3Api } from '../../services/ai3Api';
 import { createAi2Api } from '../../services/ai2Api';
 import { listKnowledgePoints } from '../../services/familyApi';
-import { saveParentSession, saveChildSession, clearChildSession } from '../../services/familySession';
+import { saveParentSession, saveChildSession, clearChildSession, AI3_COMMAND_PREFIX } from '../../services/familySession';
 
 jest.mock('../../services/ai3Api', () => {
   const api = Object.fromEntries(['rounds','detail','attempts','attempt','commands','command','create','generationPreview',
@@ -42,12 +42,116 @@ const show = role => render(<MemoryRouter initialEntries={[`/${role === 'parent'
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const reviewContext = () => ({ roundId, expectedRoundVersion: 3, contentId, contentVersion: 1, contentHash: h,
   attemptId, expectedAttemptVersion: 1, attemptPayloadHash: h, targets: { mistake: null, knowledgePoint: null }, reviewContextHash: h });
+const trialPreview = () => ({ generationInputHash: h, generationSchemaVersion: 'ai3-min-v2', feeMode: 'estimate_only',
+  modelProfileVersion: 'synthetic', pricingProfileVersion: 'synthetic', estimateMethodVersion: 'reference-8192-4096-v1',
+  feeNoticeVersion: 'estimate-not-cap-v1', referenceInputTokens: 8192, referenceOutputTokens: 4096, estimatedReservationMicros: 42,
+  messages: [{ role: 'system', content: 'Synthetic full system' }, { role: 'user', content: 'Synthetic full user' }],
+  pricing: { sourceReference: 'synthetic-only', expiresAt: '2099-01-02T00:00:00.000Z' },
+  sendNotAfter: '2099-01-01T00:00:00.000Z', requestOptions: { maxRequestBytes: 32768, maxOutputTokens: 4096,
+    thinking: 'disabled', tools: [], attemptLimit: 1 } });
 beforeEach(() => {
   jest.clearAllMocks(); localStorage.clear(); sessionStorage.clear(); mockChild = childId;
   saveParentSession({ token: 'synthetic-parent', user: { id: 'a'.repeat(24), role: 'parent' } });
   saveChildSession({ token: 'synthetic-child', child: { childId, familyId, name: '合成孩子' } });
   api.rounds.mockResolvedValue({ items: [round()] }); api.commands.mockResolvedValue({ items: [] });
   api.detail.mockResolvedValue({ round: round() }); api.attempts.mockResolvedValue({ items: [] }); api.attempt.mockResolvedValue({ attempt: attempt() });
+});
+test('v2 AI3 explicitly confirms estimate, never auto-reposts unknown generation and recovers original v2 command', async () => {
+  api.detail.mockResolvedValue({ round: { ...parentRound(), visibility: 'draft', currentAttemptId: null } });
+  api.generationPreview.mockResolvedValue({ preview: trialPreview() }); api.generate.mockRejectedValue(new Error('lost'));
+  const view = show('parent'); await screen.findByRole('button', { name: '查看完整生成请求' });
+  fireEvent.click(screen.getByRole('button', { name: '查看完整生成请求' }));
+  await screen.findByText(/不是单次或整轮费用硬上限/);
+  expect(screen.getByRole('button', { name: '生成候选题组' })).toBeDisabled();
+  fireEvent.click(screen.getByLabelText('已核对完整请求、脱敏内容并接受估算可能超出、费用未知时停发'));
+  fireEvent.click(screen.getByRole('button', { name: '生成候选题组' }));
+  await waitFor(() => expect(api.generate).toHaveBeenCalledTimes(1));
+  const original = api.generate.mock.calls[0][1];
+  await screen.findByRole('region', { name: '未确认原命令' });
+  expect(screen.getByLabelText('已核对完整请求、脱敏内容并接受估算可能超出、费用未知时停发')).not.toBeChecked();
+  const commandKey = Object.keys(sessionStorage).find(key => key.startsWith(AI3_COMMAND_PREFIX));
+  expect(commandKey).toBeDefined();
+  expect(JSON.parse(sessionStorage.getItem(commandKey)).body).toEqual(original);
+  expect(original).toMatchObject({ schemaVersion: 'ai3-min-v2', estimateAcknowledged: true, expectedEstimatedReservationMicros: 42 });
+  expect(original).not.toHaveProperty('maxAuthorizedCostMicros');
+  view.unmount();
+  const command = { id: commandId, roundId, operationId: original.operationId, endpointOperation: 'ai3.generate', phase: 'UNKNOWN',
+    sendBlocked: true, sendBlockReason: 'cost_unknown', budget: { feeMode: 'estimate_only', chargeStatus: 'unknown', estimatedReservationMicros: 42 } };
+  api.commands.mockResolvedValue({ items: [command] }); api.recover.mockResolvedValue({ command });
+  show('parent'); await screen.findByRole('button', { name: '恢复原操作' });
+  expect(api.generate).toHaveBeenCalledTimes(1); expect(api.recover).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: '重试原命令' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '恢复原操作' }));
+  await waitFor(() => expect(api.recover).toHaveBeenCalledTimes(1));
+  expect(api.recover.mock.calls[0][1]).toEqual({ schemaVersion: 'ai3-min-v2', operationId: original.operationId });
+  expect(api.generate).toHaveBeenCalledTimes(1);
+});
+test.each([[400, 'VALIDATION_ERROR'], [413, 'AI_INPUT_TOO_LARGE']])(
+  'AI3 definitive %s rejection consumes consent; only fresh confirmation permits a new UUID', async (status, code) => {
+    api.detail.mockResolvedValue({ round: { ...parentRound(), visibility: 'draft', currentAttemptId: null } });
+    api.generationPreview.mockResolvedValue({ preview: trialPreview() });
+    api.generate.mockRejectedValueOnce({ response: { status, data: { success: false, error: { code } } } });
+    show('parent');
+    const previewButton = await screen.findByRole('button', { name: '查看完整生成请求' });
+    await waitFor(() => expect(previewButton).toBeEnabled()); fireEvent.click(previewButton);
+    const consent = await screen.findByLabelText('已核对完整请求、脱敏内容并接受估算可能超出、费用未知时停发');
+    fireEvent.click(consent); fireEvent.click(screen.getByRole('button', { name: '生成候选题组' }));
+    await waitFor(() => expect(api.generate).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(consent).toBeEnabled());
+    const original = api.generate.mock.calls[0][1];
+    expect(Object.keys(sessionStorage).filter(key => key.startsWith(AI3_COMMAND_PREFIX))).toEqual([]);
+    expect(consent).not.toBeChecked();
+    expect(screen.getByRole('button', { name: '生成候选题组' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: '生成候选题组' }));
+    expect(api.generate).toHaveBeenCalledTimes(1);
+    api.generate.mockImplementationOnce(async (_round, body) => ({ command: {
+      id: commandId, roundId, operationId: body.operationId, endpointOperation: 'ai3.generate', phase: 'SUCCEEDED'
+    } }));
+    fireEvent.click(consent);
+    expect(screen.getByRole('button', { name: '生成候选题组' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: '生成候选题组' }));
+    await screen.findByText('原命令已完成，请重新查看练习。');
+    expect(api.generate).toHaveBeenCalledTimes(2);
+    const next = api.generate.mock.calls[1][1];
+    expect(next.operationId).not.toBe(original.operationId);
+    expect(next).toEqual({ ...original, operationId: next.operationId });
+    expect(next.estimateAcknowledged).toBe(true);
+    expect(Object.keys(sessionStorage).filter(key => key.startsWith(AI3_COMMAND_PREFIX))).toEqual([]);
+  }
+);
+test('AI3 v2 stale acknowledged preview is rejected before POST and storage', async () => {
+  api.detail.mockResolvedValue({ round: { ...parentRound(), visibility: 'draft', currentAttemptId: null } });
+  const p = trialPreview(); api.generationPreview.mockResolvedValue({ preview: p });
+  show('parent'); await screen.findByRole('button', { name: '查看完整生成请求' });
+  fireEvent.click(screen.getByRole('button', { name: '查看完整生成请求' }));
+  await screen.findByText(/不是单次或整轮费用硬上限/);
+  fireEvent.click(screen.getByLabelText('已核对完整请求、脱敏内容并接受估算可能超出、费用未知时停发'));
+  const clock = jest.spyOn(Date, 'now').mockReturnValue(Date.parse(p.sendNotAfter));
+  try { fireEvent.click(screen.getByRole('button', { name: '生成候选题组' })); } finally { clock.mockRestore(); }
+  expect(api.generate).not.toHaveBeenCalled();
+  expect(Object.keys(sessionStorage).filter(k => k.startsWith(AI3_COMMAND_PREFIX))).toEqual([]);
+  expect(screen.getByRole('button', { name: '生成候选题组' })).toBeDisabled();
+});
+test('terminal AI3 command accepts current shared halt without regressing phase or letting a late clear reopen sends', async () => {
+  const command = { id: commandId, roundId, operationId: '00000000-0000-4000-8000-000000000001', endpointOperation: 'ai3.generate', phase: 'SUCCEEDED',
+    sendBlocked: false, sendBlockReason: null, budget: { feeMode: 'estimate_only', chargeStatus: 'usage_priced', estimatedReservationMicros: 42, usagePricedMicros: 1 } };
+  api.detail.mockResolvedValue({ round: { ...parentRound(), visibility: 'draft', currentAttemptId: null } });
+  api.commands.mockResolvedValue({ items: [command] });
+  api.command.mockResolvedValue({ command: { ...command, sendBlocked: true, sendBlockReason: 'cost_review_required' } });
+  show('parent'); await screen.findByRole('button', { name: '查询原操作' });
+  fireEvent.click(screen.getByRole('button', { name: '查询原操作' }));
+  await screen.findByText(/费用待核对，已停止后续发送/);
+  api.command.mockResolvedValue({ command: { ...command, phase: 'UNKNOWN' } });
+  fireEvent.click(screen.getByRole('button', { name: '查询原操作' }));
+  await waitFor(() => expect(api.command).toHaveBeenCalledTimes(2));
+  expect(screen.getByText(/费用待核对，已停止后续发送/)).toBeInTheDocument();
+  expect(screen.getByText(/按用量计价 0.000001/)).toBeInTheDocument();
+  api.generationPreview.mockResolvedValue({ preview: trialPreview() });
+  await waitFor(() => expect(screen.getByRole('button', { name: '查看完整生成请求' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: '查看完整生成请求' }));
+  await screen.findByText(/不是单次或整轮费用硬上限/);
+  expect(screen.getByRole('button', { name: '生成候选题组' })).toBeDisabled();
+  expect(api.generate).not.toHaveBeenCalled();
 });
 test('task creation includes exact math aliases across knowledge-point pages without accepting other subjects', async () => {
   const source = createAi2Api('parent'), packageId = '8'.repeat(24);

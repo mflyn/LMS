@@ -6,6 +6,7 @@ const User = require('../../../common/models/User');
 const { resolveChildAccess } = require('../../../common/utils/familyAccess');
 const { runMongoTransaction } = require('../../../common/services/mongoTransaction');
 const C = require('./ai1Contract');
+const Fees = require('./aiTrialFees');
 const { assertAi1Indexes } = require('./ai1Readiness');
 const { buildRequest, validateOperation } = require('./ai1Operation');
 const { createAiGenerationBudget } = require('./aiGenerationBudget');
@@ -26,10 +27,11 @@ const artifactView = a => ({ id: String(a._id), cycleId: String(a.cycleId), vers
 
 // No Provider imports. Remote I/O is outside every retryable Mongo transaction.
 function createAi1Service({ now = Date.now, getProfile = () => null, getLimits = () => null,
+  getTrial = () => null,
   getRuntime = () => ({ enabled: false, continuousStore: false }), sourceReader, operationClient,
   transactionRunner = work => runMongoTransaction({ mongooseInstance: mongoose, work }) } = {}) {
-  const budget = createAiGenerationBudget({ now, getLimits });
-  const { account, adjust, budgetState, reserve } = budget;
+  const budget = createAiGenerationBudget({ now, getLimits, getTrial });
+  const { budgetState, reserve } = budget;
   const continuity = () => { if (getRuntime()?.continuousStore !== true) throw C.error(503, 'AI_STORE_ISOLATED'); };
   const enabled = () => { if (getRuntime()?.enabled !== true) throw C.error(503, 'AI_DISABLED'); continuity(); };
   const parentScope = async (identity, session = null) => {
@@ -94,13 +96,13 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
     return snapshot;
   });
   const jobView = async (j, identity, session = null) => {
-    const r = await budget.reservation('ai1', j, session);
+    const { sendBlocked, sendBlockReason, ...feeView } = await budget.view('ai1', j, session);
     return { id: String(j._id), cycleId: String(j.cycleId), operationId: j.operationId, createdBy: String(j.createdBy),
       status: j.status, recoveryStatus: j.status === 'unknown' ? 'uncertain_manual_reconcile' : j.status === 'dispatching' ? 'query_pending' : 'none',
       canRecover: same(j.createdBy, identity?.id) && ['reserved', 'dispatching', 'unknown'].includes(j.status)
         && getRuntime()?.continuousStore === true && (j.status !== 'reserved' || getRuntime()?.enabled === true),
       artifactId: j.artifactId ? String(j.artifactId) : null, failureCode: j.failureCode || null,
-      budget: { reservationId: String(r._id), reservedMicros: r.reservedMicros, settledMicros: r.settledMicros, state: r.state },
+      budget: feeView, ...(Fees.isTrial(j.preview) ? { sendBlocked, sendBlockReason } : {}),
       createdAt: j.createdAt, updatedAt: j.updatedAt };
   };
   const replayResult = async (result, identity, session = null) => result.job
@@ -130,6 +132,9 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
       if (await M.Cycle.exists({ familyId: currentAccess.familyId, childId: command.childId, sourceType: command.source.type,
         sourceId: command.source.id, active: true }).session(session)) throw C.error(409, 'AI_SOURCE_CYCLE_ACTIVE');
       const preview = C.buildPreview(command, getProfile(), Number(now()));
+      if (command.schemaVersion !== (Fees.isTrial(preview) ? preview.generationSchemaVersion : 'ai1-min-v1')) {
+        throw C.error(409, 'AI_PREVIEW_STALE');
+      }
       const [cycle] = await M.Cycle.create([{ familyId: currentAccess.familyId, childId: command.childId, createdBy: identity.id,
         sourceType: command.source.type, sourceId: command.source.id, sourceSubject: source.subject, subjectAliasVersion: 'ai1-subject-alias-v1',
         input: command.input, chapter: command.chapter, inputHash: C.hash({ input: command.input, chapter: command.chapter }), preview,
@@ -150,17 +155,18 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
         if (c.activeJobId) throw unresolved();
         if (c.status !== 'ready' || c.stateVersion !== command.expectedCycleStateVersion) throw conflict();
         previewCheck(c);
-        if (command.generationInputHash !== c.preview.generationInputHash || command.modelProfileVersion !== c.preview.modelProfileVersion
-          || command.pricingProfileVersion !== c.preview.pricingProfileVersion || command.maxAuthorizedCostMicros < c.preview.reservedCeilingMicros) {
+        if (!Fees.matchesConfirmation(c.preview, command)) {
           throw C.error(409, 'AI_PREVIEW_STALE');
         }
         const jobId = objectId(), reservationId = objectId();
-        await reserve(access, c.childId, jobId, reservationId, c.preview.reservedCeilingMicros, session);
+        const remoteRequestHash = buildRequest({ preview: c.preview }).requestHash;
+        const proof = await reserve(access, c.childId, jobId, reservationId, Fees.reservationAmount(c.preview), session, 'ai1', c.preview);
         const [job] = await M.Job.create([{ _id: jobId, familyId: c.familyId, childId: c.childId, cycleId: c._id, createdBy: identity.id,
           operationId: command.operationId, requestHash: C.requestHash('generate', `/api/tutor-cycles/${cycleId}/explanation-jobs`, command),
           remoteOperationId: randomUUID(), preview: c.preview, sendNotAfter: c.preview.sendNotAfter,
-          remoteRequestHash: buildRequest({ preview: c.preview }).requestHash,
-          maxAuthorizedCostMicros: command.maxAuthorizedCostMicros, reservationId, status: 'reserved' }], { session });
+          remoteRequestHash,
+          ...(Fees.isTrial(c.preview) ? { trialAuthorizationVersion: proof.trialAuthorizationVersion }
+            : { maxAuthorizedCostMicros: command.maxAuthorizedCostMicros }), reservationId, status: 'reserved' }], { session });
         const changed = await M.Cycle.updateOne({ _id: c._id, stateVersion: c.stateVersion, status: 'ready', activeJobId: null },
           { $set: { activeJobId: jobId, status: 'generating' }, $inc: { stateVersion: 1 } }, { session });
         if (changed.matchedCount !== 1) throw conflict();
@@ -180,6 +186,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
     return transact(async session => {
       enabled(); const j = await resource(M.Job, identity, jobId, session);
       if (j.status !== 'reserved') return { claimed: false, job: await jobView(j, identity, session) };
+      await budget.assertClaimCompatible('ai1', j, session);
       let failureCode = sourceFailure;
       try { previewCheck(cycle); } catch (cause) {
         if (!['AI_PREVIEW_STALE', 'AI_PROFILE_UNAVAILABLE'].includes(cause.code)) throw cause;
@@ -190,8 +197,12 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
         await failJob(j, { release: true, charge: null, failureCode, digest: C.hash({ localNotSent: failureCode }) }, session);
         return { claimed: false, job: await jobView(await M.Job.findById(j._id).session(session).lean(), identity, session) };
       }
-      await budgetState(await authorize(identity, String(j.childId), session), 0, session, j.preview.reservedCeilingMicros);
+      await budgetState(await authorize(identity, String(j.childId), session), 0, session, Fees.reservationAmount(j.preview));
       await budget.claimSlot('ai1', j, session);
+      if (Fees.isTrial(j.preview)) {
+        enabled(); previewCheck(cycle);
+        if (Number(now()) >= j.sendNotAfter.getTime()) throw C.error(409, 'AI_PREVIEW_STALE');
+      }
       const claimed = await M.Job.findOneAndUpdate({ _id: j._id, status: 'reserved' },
         { $set: { status: 'dispatching', owner: randomUUID(), leaseExpiresAt: new Date(Number(now()) + 30000) } }, { new: true, session }).lean();
       if (!claimed) throw unresolved();
@@ -200,10 +211,11 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
   };
   const markUnknown = async ({ jobId, owner }) => transact(async session => {
     continuity(); const j = await M.Job.findOne({ _id: jobId, ...(owner ? { owner } : {}), status: { $in: ['dispatching', 'unknown'] } }).session(session).lean();
-    if (!j || j.status === 'unknown') return;
-    await budget.reservation('ai1', j, session);
+    if (!j) return;
+    if (j.status === 'unknown' && !Fees.isTrial(j.preview) && getTrial() == null) return;
+    await budget.markUnknown('ai1', j, session);
+    if (j.status === 'unknown') return;
     await M.Job.updateOne({ _id: j._id, status: j.status }, { $set: { status: 'unknown' } }, { session });
-    await M.Reservation.updateOne({ _id: j.reservationId }, { $set: { state: 'reserved_unknown' } }, { session });
   });
   // Internal local outcome port. Batch B must authenticate and validate the remote wire envelope before calling it.
   const applyOutcome = async ({ jobId, evidence }) => transact(async session => {
@@ -221,12 +233,11 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
       return { artifact: artifactView(a), cycleStateVersion: j.evidence.cycleStateVersion };
     }
     if (!['dispatching', 'unknown'].includes(j.status)) throw invalid();
-    const reservation = await budget.reservation('ai1', j, session);
+    await budget.reservation('ai1', j, session);
     let charge = null;
     if (evidence.usage !== null) {
       if (!evidence.usage || Object.keys(evidence.usage).sort().join(',') !== 'inputTokens,outputTokens') throw invalid();
-      try { charge = C.costCeiling(evidence.usage.inputTokens, evidence.usage.outputTokens, j.preview.pricing); } catch (_) { throw invalid(); }
-      if (charge > j.preview.reservedCeilingMicros) throw invalid();
+      try { charge = Fees.usageCharge(j.preview, evidence.usage); } catch (_) { throw invalid(); }
     }
     const c = await M.Cycle.findOne({ _id: j.cycleId, activeJobId: j._id, status: 'generating' }).session(session).lean();
     if (!c) throw invalid();
@@ -234,12 +245,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
     const [a] = await M.Artifact.create([{ familyId: j.familyId, childId: j.childId, cycleId: c._id, version: 1,
       text, contentHash: C.sha(text), createdBy: j.createdBy, origin: 'ai_generation', status: 'candidate', reviewVersion: 1,
       generation: { jobId: String(j._id), modelProfileVersion: j.preview.modelProfileVersion, generationInputHash: j.preview.generationInputHash } }], { session });
-    if (charge !== null) {
-      if (!['reserved', 'reserved_unknown'].includes(reservation.state)) throw invalid();
-      await adjust(await account(String(j.familyId), session), -reservation.reservedMicros, charge, session);
-      await adjust(await account('experiment', session), -reservation.reservedMicros, charge, session);
-      await M.Reservation.updateOne({ _id: reservation._id }, { $set: { state: 'settled', settledMicros: charge, settledAt: new Date(Number(now())) } }, { session });
-    } else await M.Reservation.updateOne({ _id: j.reservationId }, { $set: { state: 'reserved_unknown' } }, { session });
+    await budget.settle('ai1', j, { charge }, session);
     await M.Cycle.updateOne({ _id: c._id, stateVersion: c.stateVersion },
       { $set: { status: 'candidate', currentArtifactId: a._id }, $inc: { stateVersion: 1 } }, { session });
     await M.Job.updateOne({ _id: j._id, status: j.status }, { $set: { status: 'succeeded', artifactId: a._id, outcomeHash: digest,
@@ -298,15 +304,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
   };
 
   const failJob = async (j, { release, charge, failureCode, digest }, session) => {
-    const r = await budget.reservation('ai1', j, session);
-    if (!r || !['reserved', 'reserved_unknown'].includes(r.state)) throw C.error(503, 'AI_STORE_ISOLATED');
-    if (release || charge !== null) {
-      await adjust(await account(String(j.familyId), session), -r.reservedMicros, charge || 0, session);
-      await adjust(await account('experiment', session), -r.reservedMicros, charge || 0, session);
-    }
-    await M.Reservation.updateOne({ _id: r._id, state: r.state }, { $set: {
-      state: release ? 'released' : charge !== null ? 'settled' : 'reserved_unknown', settledMicros: release ? 0 : charge,
-      ...(charge !== null ? { settledAt: new Date(Number(now())) } : {}) } }, { session });
+    await budget.settle('ai1', j, { release, charge }, session);
     const cycle = await M.Cycle.updateOne({ _id: j.cycleId, status: 'generating', activeJobId: j._id },
       { $set: { status: 'ready' }, $inc: { stateVersion: 1 } }, { session });
     const job = await M.Job.updateOne({ _id: j._id, status: j.status },
@@ -317,10 +315,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
   const halt = async jobId => transact(async session => {
     continuity(); const j = await M.Job.findById(jobId).session(session).lean();
     if (!j) return;
-    for (const key of [String(j.familyId), 'experiment']) {
-      await account(key, session);
-      await M.Account.updateOne({ _id: key }, { $set: { halted: true } }, { session });
-    }
+    await budget.halt('ai1', j, session);
   });
   const acceptRemote = async (j, raw) => {
     let o;
@@ -351,7 +346,7 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
         }
         if (!['dispatching', 'unknown'].includes(current.status)) throw C.error(503, 'AI_REMOTE_CONTRACT_INVALID');
         await failJob(current, { release: o.status === 'failed_not_sent', charge: o.usage === null ? null
-          : C.costCeiling(o.usage.inputTokens, o.usage.outputTokens, j.preview.pricing), digest,
+          : Fees.usageCharge(j.preview, o.usage), digest,
         failureCode: o.status === 'failed_not_sent' && ['PREVIEW_STALE', 'PROFILE_UNAVAILABLE'].includes(o.error)
           ? 'AI_PREVIEW_STALE' : 'AI_PROVIDER_FAILED' }, session);
       });
@@ -389,6 +384,9 @@ function createAi1Service({ now = Date.now, getProfile = () => null, getLimits =
   const recover = async ({ identity, jobId, body }) => {
     const j = await resource(M.Job, identity, jobId), command = C.normalize('recover', body);
     if (!same(j.createdBy, identity.id)) throw C.error(403, 'AI_ORIGINAL_ACTOR_REQUIRED');
+    if (command.schemaVersion !== (Fees.isTrial(j.preview) ? j.preview.generationSchemaVersion : 'ai1-min-v1')) {
+      throw C.error(409, 'AI_PREVIEW_STALE');
+    }
     continuity();
     await mutate({ identity, childId: String(j.childId), action: 'recover', path: `/api/tutor-jobs/${jobId}/recover`, command,
       work: async session => ({ job: await jobView(await resource(M.Job, identity, jobId, session), identity, session) }) });

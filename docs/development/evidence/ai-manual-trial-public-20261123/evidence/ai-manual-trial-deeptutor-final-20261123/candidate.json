@@ -1,0 +1,124 @@
+{
+  "base": "d5a30cbd95c7fbed53f7423dd046915a0eb1ebf6",
+  "status": "LOCAL_SYNTHETIC_READY_FOR_USER_REVIEW",
+  "files": [
+    {
+      "path": "deeptutor/api/main.py",
+      "bytes": 21762,
+      "sha256": "996b1d89370e9ae44ced6a5e60f9fead7a324bd724d807b09293750bd8da6842"
+    },
+    {
+      "path": "deeptutor/services/ai1_contract.py",
+      "bytes": 9175,
+      "sha256": "98bc660fc6d9b2b28606f08b6a5bd63b48c259a743e545baeb20a3b65a18b97a"
+    },
+    {
+      "path": "deeptutor/services/ai1_http.py",
+      "bytes": 3532,
+      "sha256": "24dc6211521eb72a64314eb4613ab04d02572ecc6ca8ccbf0cdfda8db122d263"
+    },
+    {
+      "path": "deeptutor/services/ai1_operation.py",
+      "bytes": 5633,
+      "sha256": "8aa1642db74db1d100f9af8071814c8bacecbb2e057b00d1857a2529e93ba637"
+    },
+    {
+      "path": "deeptutor/services/ai1_provider.py",
+      "bytes": 10600,
+      "sha256": "893e220b57b33bf25d463c2cae0667e2cb4a84c57fc20c372425e6e05ebe382c"
+    },
+    {
+      "path": "deeptutor/services/ai1_runtime.py",
+      "bytes": 8185,
+      "sha256": "41278824a7f403bf5d533f0f67b1419de12cbc028042da33091811a424c7ae2a"
+    },
+    {
+      "path": "deeptutor/services/ai1_store.py",
+      "bytes": 11216,
+      "sha256": "dfc12d8cf124634a0afdf37ba4bc6ad81bee5d5ae7b771724e85f4397780f915"
+    },
+    {
+      "path": "deeptutor/services/ai3_http.py",
+      "bytes": 516,
+      "sha256": "f93ede523762941b9edb770a39a3481aa8a5efb9ac5a8eae18506efd1ef2620a"
+    },
+    {
+      "path": "deeptutor/services/ai3_operation.py",
+      "bytes": 980,
+      "sha256": "cb8bf5d860f978b5746ae7fa08a9509e1c505d75cd65728c37b2063c0695a232"
+    },
+    {
+      "path": "deeptutor/services/ai3_provider.py",
+      "bytes": 323,
+      "sha256": "c33f9871c6673dc41816408dcaef510eec51e832e1fc51468d3be661840e7ff6"
+    },
+    {
+      "path": "deeptutor/services/ai3_runtime.py",
+      "bytes": 1795,
+      "sha256": "344f0879ec32afb0e1467e4b2d37ae328f65583397f81c4fc9f0db99aa4c0e52"
+    },
+    {
+      "path": "docs-for-dev/AI3_RUNTIME_FOLLOWUP.md",
+      "bytes": 19592,
+      "sha256": "15df05468de342ff46d2d95e69bccfe0dd281f4442385f8f896d6d7cbcfd8406"
+    },
+    {
+      "path": "docs-for-dev/MANUAL_TRIAL_V2.md",
+      "bytes": 8083,
+      "sha256": "6b39b9c494d88315e51f56c08c305ef7dfed72be869d2b8ac656e60200375771"
+    },
+    {
+      "path": "tests/services/ai1/test_ai3_formal_runtime.py",
+      "bytes": 12327,
+      "sha256": "03b94da893376675a3a544e55b7be7e54cc4d31e2deddf1d38172568173c02ec"
+    },
+    {
+      "path": "tests/services/ai1/test_manual_trial_v2.py",
+      "bytes": 17462,
+      "sha256": "cc00ee8c76cc66078ba23234a9f0c1f7eb8af895a984f3a435afa5f9f8e6a85f"
+    },
+    {
+      "path": "tests/services/ai1/test_operation_runtime.py",
+      "bytes": 16552,
+      "sha256": "d2a31217da5c5f14b6912fc29773aef995af18d452e0876906b2fa0ae596842c"
+    },
+    {
+      "path": "tests/services/ai3/test_restricted_provider.py",
+      "bytes": 5930,
+      "sha256": "802804120a76ceafddec79de3c80152be269290b73367ea5acfa3a272449f64c"
+    }
+  ],
+  "patchSha256": "72edd3e34816811e8da724afa4a097325060b258a996fd7adff7bd8126229aa6",
+  "incrementSha256": "3c39822fa1fab97749f94e2d942155fd595f33516189462b73c3fb2fe9df81d6",
+  "priorPatchSha256": "d1dc53b249e590c6d48f03ba1b191efe6c5ba65acacee4898e663b8e1b410ade",
+  "changedSincePrior": [
+    "deeptutor/services/ai1_contract.py",
+    "deeptutor/services/ai1_http.py",
+    "deeptutor/services/ai1_operation.py",
+    "deeptutor/services/ai1_provider.py",
+    "deeptutor/services/ai1_runtime.py",
+    "deeptutor/services/ai1_store.py",
+    "deeptutor/services/ai3_runtime.py",
+    "docs-for-dev/AI3_RUNTIME_FOLLOWUP.md",
+    "docs-for-dev/MANUAL_TRIAL_V2.md",
+    "tests/services/ai1/test_manual_trial_v2.py"
+  ],
+  "incrementNote": "From original d1 formal assembly; includes previously approved AI3_RUNTIME_FOLLOWUP documentation append, not only this v2 batch.",
+  "reconstruction": {
+    "full": true,
+    "increment": true,
+    "files": 17
+  },
+  "lms": {
+    "base": "548ceda8b713cde00e93d1b1ae5fdeebb0e8eca0",
+    "document": "docs/superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md",
+    "patchSha256": "343fb8cdaa5f50b3df9b7c2fd4dff3f6d545d7d7fe97bbeaa2d89b34dcd70487"
+  },
+  "boundaries": [
+    "exact counter deferred",
+    "default off",
+    "no real model or server operation",
+    "no commit/push/merge/deploy",
+    "user acceptance pending"
+  ]
+}

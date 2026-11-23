@@ -1,0 +1,119 @@
+{
+  "base": "548ceda8b713cde00e93d1b1ae5fdeebb0e8eca0",
+  "status": "FIXED_REVIEWED_USER_ACCEPTANCE_PENDING",
+  "patchSha256": "3c07bc2bf7d5c04f37c086f64697cac17b546043fe7362510813e3ed2aebc3a2",
+  "incrementCodeSha256": "2983ea3778cbfe05dfd555bc0a10bca33baded8aa4f7c1a53f40769fad7612fb",
+  "files": [
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai1Runtime.test.js",
+      "bytes": 19548,
+      "sha256": "44d900789ebcbb10fad41345950f4c1f1f3734b1f2380ae6aaea18ea70d06d17"
+    },
+    {
+      "path": "backend/services/homework-service/__tests__/services/ai3Runtime.test.js",
+      "bytes": 8738,
+      "sha256": "3af342219a96d4edb530dc5f777394705e9b84370f0fa1cbd8bc8294601b46e1"
+    },
+    {
+      "path": "backend/services/homework-service/services/ai1Runtime.js",
+      "bytes": 5078,
+      "sha256": "aa43f9020fee3157b2add397313fcabf5685fb04982d32cd8068d97233c68905"
+    },
+    {
+      "path": "backend/services/homework-service/services/ai3Runtime.js",
+      "bytes": 1620,
+      "sha256": "5f9674ba862ac8399a8eacc91d56dca6e9a09276399b151176c39ab5f94eac75"
+    },
+    {
+      "path": "docs/development/evidence/ai-manual-trial-deeptutor-acceptance-20261123/README.md",
+      "bytes": 4562,
+      "sha256": "dd8810b77f0a2cc6a0ada6e7a0ac77ff15b87604854e52c1f3703e06a9871679"
+    },
+    {
+      "path": "docs/development/evidence/ai-manual-trial-loop-20261123/README.md",
+      "bytes": 8068,
+      "sha256": "4cb58ffc9bca3cf9f5d4303cca8c0247d4c9d503c4755f00c5f6e5698fc18c66"
+    },
+    {
+      "path": "docs/development/family-self-directed-learning-mvp-gate.md",
+      "bytes": 797398,
+      "sha256": "1253ea95ddd20b965544bad2994e772c8b90ff5275ada6a1d336acaaadc09361"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md",
+      "bytes": 25905,
+      "sha256": "065a88cddcddafd1e45712a9bd5565855f124ac0b8f321a0d02ca628c8d5d1fd"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/Ai3PracticePage.test.js",
+      "bytes": 26516,
+      "sha256": "029a4e7ba62de1a3f9fc4d038875a5e8d5001d8d2506f32b84eb8ea6f7e2ace4"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/TutorPage.test.js",
+      "bytes": 25620,
+      "sha256": "3e3ca7f737a1d594246c8ca2c1e32bef273cd8f3bffa8099bf3eb26c67174fec"
+    },
+    {
+      "path": "frontend/web/src/__tests__/family/aiTrialPresentation.test.js",
+      "bytes": 3773,
+      "sha256": "e95e1c26aede5843d354008c74d8d3e3c10281445492facc601e4432483094c4"
+    },
+    {
+      "path": "frontend/web/src/components/family/AiTrialFee.js",
+      "bytes": 1932,
+      "sha256": "d71487fa52d358d5bdfc1b280eb08b55b9f45731637670eaf8b6b2be973149e8"
+    },
+    {
+      "path": "frontend/web/src/pages/family/Ai3PracticePage.js",
+      "bytes": 40687,
+      "sha256": "e66cc401c2e6555c3ae58e022f0c980654132f94cccf1e0916d4014c41fd0632"
+    },
+    {
+      "path": "frontend/web/src/pages/family/TutorPage.js",
+      "bytes": 23242,
+      "sha256": "7614443d56c96de18433343df0245e6630c517dccbc2d56fd1557bcb2222b6a4"
+    },
+    {
+      "path": "frontend/web/src/services/ai3Commands.js",
+      "bytes": 8924,
+      "sha256": "0efb10147b7a816b9997d2467450703f16873cfae4498098c3af50cf0d949014"
+    },
+    {
+      "path": "frontend/web/src/services/aiTrialPresentation.js",
+      "bytes": 3530,
+      "sha256": "1049c8065714bb61b60a4566336b945b41b9ce6be87fa738002edc145818b027"
+    },
+    {
+      "path": "frontend/web/src/services/tutorCommands.js",
+      "bytes": 7158,
+      "sha256": "30bc81d7aec8ab56d8bf816e1a9f2dc918a21633b6779a81635e68ab98128f32"
+    },
+    {
+      "path": "tests/e2e/t2/manualTrial.acceptance.js",
+      "bytes": 11414,
+      "sha256": "928560e4de98338c39c85fe659c45a818438eea48f406c250e16f33c1981fd08"
+    },
+    {
+      "path": "tests/e2e/t2/manual_trial_bridge.py",
+      "bytes": 7688,
+      "sha256": "520cb963bdb1316406d8fd131c6475b8c9847bd4bcd7266767f73d75d11434cb"
+    }
+  ],
+  "priorCandidatePatchSha256": "bd6eeab6da24067c66f9d7c5c6b99c3d5d632e078cab8904f371e572de75cb5c",
+  "priorArchiveFilesUnchanged": 165,
+  "incrementScope": [
+    "frontend/web/src/pages/family/Ai3PracticePage.js",
+    "frontend/web/src/__tests__/family/Ai3PracticePage.test.js"
+  ],
+  "fullScope": "Prior complete page delivery plus approved DeepTutor closure records and current P2 documentation; no other business changes",
+  "reconstruction": {
+    "full": true,
+    "increment": true
+  },
+  "deepTutorUnchangedFiles": 17,
+  "evidenceBoundary": "Current frontend regression/build and independent tests only; no new backend or browser execution",
+  "realModelCalls": 0,
+  "serverOperations": 0,
+  "gitWrites": 0
+}

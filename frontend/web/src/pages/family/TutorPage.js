@@ -7,9 +7,11 @@ import { registerChildScopeReset } from '../../services/childScope';
 import { tutorApi } from '../../services/tutorApi';
 import { confirmedTutorResult, isDefinitiveTutorRejection } from '../../services/tutorResponse';
 import { readTutorCommand, saveTutorCommand, finishTutorCommand, newTutorOperationId } from '../../services/tutorCommands';
+import { isTrialPreview, generationConfirmation, recoveryVersion } from '../../services/aiTrialPresentation';
+import { TrialPreviewFee, TrialResultFee, usePreviewExpiry } from '../../components/family/AiTrialFee';
 
 const oid = value => typeof value === 'string' && /^[0-9a-f]{24}$/.test(value);
-const blank = () => ({ questionText: '', answerText: '', parentContext: '', textbookLabel: '人教版数学四年级上册，版次由家长核对', deidentified: false });
+const blank = () => ({ questionText: '', answerText: '', parentContext: '', textbookLabel: '人教版数学四年级上册，版次由家长核对', deidentified: false, trial: false });
 const noChecks = () => ({ mathCorrect: false, gradeAppropriate: false, chapterAppropriate: false, wordingReviewed: false });
 const checkLabels = { mathCorrect: '数学正确', gradeAppropriate: '适合年级', chapterAppropriate: '符合章节', wordingReviewed: '表述已核对' };
 const statuses = { ready: '待生成', generating: '处理中', candidate: '待人工审核', approved: '已批准', rejected: '已拒绝', closed: '已关闭',
@@ -20,6 +22,8 @@ const code = error => error?.response?.data?.error?.code || error?.code;
 const message = error => ({ AI_DISABLED: 'AI 生成尚未启用。', AI_PROFILE_UNAVAILABLE: '价格或模型配置暂不可用。',
   AI_PREVIEW_STALE: '预览已过期或变化。请核对原任务状态，结束后重新创建预览。', AI_VERSION_CONFLICT: '候选已变化，请重新查看详情后决定。',
   AI_BUDGET_EXCEEDED: '可用预算不足，未获准新增发送。', AI_SOURCE_SUBJECT_UNSUPPORTED: '本阶段只支持数学来源。',
+  AI_COST_REVIEW_REQUIRED: '费用待核对，已停止后续发送；请保留原命令并查询原记录。',
+  AI_TRIAL_LIMIT_REACHED: '本轮试用名额已用完，不能新增发送；原命令保持不变。',
   AI_SOURCE_CYCLE_ACTIVE: '该来源已有活动讲解，请核对讲解记录。', AI_OPERATION_UNRESOLVED: '原任务尚未收敛，不能重新生成。',
   AI_STORE_ISOLATED: '存储连续性待核对，费用占用和原记录保持不变。', IDEMPOTENCY_KEY_REUSED: '原命令与已保存记录冲突，不能换编号重试。',
   AI_COMMAND_UNRESOLVED: '还有未完成的原命令。', AI_COMMAND_INVALID: '命令不完整，请核对输入。' }[code(error)] ||
@@ -34,6 +38,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
   const [readErrors, setReadErrors] = useState({});
   const [busy, setBusy] = useState(false), [blocked, setBlocked] = useState(false), [loading, setLoading] = useState({});
   const [form, setForm] = useState(blank), [consent, setConsent] = useState(false);
+  usePreviewExpiry(detail?.preview, setConsent);
   const [revision, setRevision] = useState(''), [reason, setReason] = useState(''), [comment, setComment] = useState('');
   const [checks, setChecks] = useState(noChecks), [closeReason, setCloseReason] = useState('');
   const [pending, setPending] = useState(() => { try { return readTutorCommand(scope, session); } catch { return { corrupt: true }; } });
@@ -58,6 +63,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
   const refresh = async (kind, requestedPage = 1) => {
     const generation = epoch.current.value;
     if (!current(generation) || (kind === 'detail' && !oid(selectedId))) return;
+    if (kind === 'detail') setConsent(false);
     requests.current[kind]?.controller.abort();
     const request = { controller: new AbortController() }; requests.current[kind] = request;
     setLoading(value => ({ ...value, [kind]: true }));
@@ -98,6 +104,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
     if (!current(generation) || blocked || writing.current || saved?.corrupt) return;
     let original;
     try { original = saveTutorCommand(scope, saved, session); } catch (cause) { setError(message(cause)); return; }
+    if (original.action === 'generate') setConsent(false);
     writing.current = true; setBusy(true); setPending(original); setError('');
     try {
       const request = { controller: new AbortController() }; requests.current.write = request;
@@ -128,7 +135,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
   };
   const create = event => {
     event.preventDefault(); if (!source || !form.deidentified) return;
-    mutate('create', null, { childId: scope.childId, source, input: { questionText: form.questionText,
+    mutate('create', null, { schemaVersion: form.trial ? 'ai1-min-v2' : 'ai1-min-v1', childId: scope.childId, source, input: { questionText: form.questionText,
       answerText: form.answerText.trim() ? form.answerText : null, parentContext: form.parentContext },
     chapter: { provenance: 'parent_declared', subject: 'math', grade: 4, term: 'upper', textbookLabel: form.textbookLabel,
       chapterLabel: '多位数乘两位数' }, deidentifiedConfirmed: true });
@@ -137,6 +144,7 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
   const seen = () => ({ artifactId: a.id, artifactVersion: a.version, artifactContentHash: a.contentHash,
     expectedArtifactReviewVersion: a.reviewVersion, expectedCycleStateVersion: detail.cycle.stateVersion });
   const locked = busy || Boolean(pending) || blocked;
+  const sendBlocked = detail?.job?.sendBlocked || jobs.some(job => job.sendBlocked);
   const pagination = (kind, number, length) => <nav className="family-inline-actions" aria-label={kind === 'cycles' ? '讲解分页' : '恢复分页'}>
     <button type="button" className="family-button secondary" title="上一页" aria-label={`${kind}上一页`} disabled={number <= 1 || loading[kind]}
       onClick={() => refresh(kind, number - 1)}><LeftOutlined /></button><span>第 {number} 页</span>
@@ -161,25 +169,30 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
         <label className="family-field-wide">可选作答文字<textarea maxLength={4000} value={form.answerText} onChange={e => setForm({ ...form, answerText: e.target.value })} /></label>
         <label className="family-field-wide">家长补充<textarea maxLength={500} value={form.parentContext} onChange={e => setForm({ ...form, parentContext: e.target.value })} /></label>
         <label><input type="checkbox" checked={form.deidentified} onChange={e => setForm({ ...form, deidentified: e.target.checked })} /> 已核对文字，不含个人信息或链接</label>
+        <label><input type="checkbox" checked={form.trial} onChange={e => setForm({ ...form, trial: e.target.checked })} /> 小规模人工试用（费用估算，非硬上限）</label>
         <button type="submit" className="family-button primary" disabled={!form.deidentified || !form.questionText.trim()}>创建外发预览</button>
       </fieldset></form>}
     {oid(selectedId) && <button type="button" className="family-button secondary" aria-label="刷新详情" onClick={() => refresh('detail')}><ReloadOutlined /> 刷新详情</button>}
     {!blocked && detail && <section aria-label="讲解详情">
       {detail.cycle.status === 'approved' && <Link to={`/app/learning?childId=${scope.childId}&cycleId=${detail.cycle.id}`}>预览孩子可见内容</Link>}
       <h2>{statuses[detail.cycle.status] || detail.cycle.status}</h2>
-      {detail.job && <p>生成任务：{statuses[detail.job.status]} · 预留 {money(detail.job.budget?.reservedMicros)} · 已结算 {money(detail.job.budget?.settledMicros)}
+      {detail.job && <p>生成任务：{statuses[detail.job.status]}{detail.job.budget?.feeMode !== 'estimate_only' && <> · 预留 {money(detail.job.budget?.reservedMicros)} · 已结算 {money(detail.job.budget?.settledMicros)}</>}
         {detail.job.failureCode && ` · ${detail.job.failureCode}`}</p>}
+      <TrialResultFee record={detail.job} />
       {detail.cycle.status === 'ready' && !detail.job && detail.preview && <section aria-label="完整外发预览">
         <h3>完整外发预览</h3>{detail.preview.messages.map((m, i) => <div key={i}><strong>{m.role}</strong><pre className="tutor-text">{m.content}</pre></div>)}
         <p>模型 {detail.preview.requestOptions.model} · 模型配置 {detail.preview.modelProfileVersion} · 计价配置 {detail.preview.pricingProfileVersion}</p>
-        <p>费用上界 {money(detail.preview.reservedCeilingMicros)} · 最晚发送 {detail.preview.sendNotAfter}</p>
+        {isTrialPreview(detail.preview) ? <TrialPreviewFee preview={detail.preview} /> : <><p>费用上界 {money(detail.preview.reservedCeilingMicros)} · 最晚发送 {detail.preview.sendNotAfter}</p>
         <p>输入上限 {detail.preview.requestOptions.maxInputTokens} tokens · 输出上限 {detail.preview.requestOptions.maxOutputTokens} tokens · 思考关闭 · 单次发送</p>
-        <label><input type="checkbox" checked={consent} disabled={locked} onChange={e => setConsent(e.target.checked)} /> 确认以上完整文字及费用上界，发送生成</label>
-        <button type="button" className="family-button primary" disabled={locked || !consent} onClick={() => {
-          if (Date.parse(detail.preview.sendNotAfter) <= Date.now()) { setError('预览已过期，请关闭旧周期后重新创建预览。'); return; }
+        </>}
+        <label><input type="checkbox" checked={consent} disabled={locked || loading.detail || sendBlocked} onChange={e => setConsent(e.target.checked)} />{isTrialPreview(detail.preview)
+          ? '已核对完整文字并接受估算可能超出、费用未知时停发，本次发送' : '确认以上完整文字及费用上界，发送生成'}</label>
+        <button type="button" className="family-button primary" disabled={locked || !consent || loading.detail || sendBlocked} onClick={() => {
+          let fee; try { fee = generationConfirmation(detail.preview, 'ai1'); }
+          catch { setConsent(false); setError('预览已过期或费用契约不可用，请重新核对预览。'); return; }
           mutate('generate', detail.cycle.id, { expectedCycleStateVersion: detail.cycle.stateVersion,
             generationInputHash: detail.preview.generationInputHash, modelProfileVersion: detail.preview.modelProfileVersion,
-            pricingProfileVersion: detail.preview.pricingProfileVersion, maxAuthorizedCostMicros: detail.preview.reservedCeilingMicros, externalSendConfirmed: true });
+            pricingProfileVersion: detail.preview.pricingProfileVersion, ...fee, externalSendConfirmed: true });
         }}>生成候选讲解</button></section>}
       <div className="tutor-versions">{detail.artifacts.map(item => <article className="family-record" key={item.id}>
         <h3>版本 {item.version} · {item.origin === 'ai_generation' ? 'AI 原文' : '人工修订'} · {statuses[item.status] || item.status}</h3>
@@ -209,7 +222,8 @@ function TutorWorkspace({ scope, session, search, currentScope }) {
     </section>}
     {!blocked && <><section aria-label="本人待处理任务"><h2>本人待处理任务</h2>{jobs.map(job => <article className="family-record" key={job.id}>
       <p>{statuses[job.status] || job.status}</p><button type="button" className="family-button secondary" onClick={() => open(job.cycleId)}>查看原记录</button>
-      {job.canRecover && <button type="button" className="family-button secondary" disabled={locked} onClick={() => mutate('recover', job.id, {})}>恢复原任务</button>}
+      <TrialResultFee record={job} />
+      {job.canRecover && <button type="button" className="family-button secondary" disabled={locked} onClick={() => mutate('recover', job.id, { schemaVersion: recoveryVersion(job, 'ai1') })}>恢复原任务</button>}
     </article>)}{!jobs.length && <p>{loading.jobs ? '正在读取' : '暂无待处理任务'}</p>}{pagination('jobs', jobsPage, jobs.length)}</section>
       <section aria-label="讲解记录"><h2>讲解记录</h2>{cycles.map(c => <article className="family-record" key={c.id}>
         <p>{c.source.type === 'task' ? '任务' : '错题'} · {statuses[c.status]} · {c.createdAt}</p>

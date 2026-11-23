@@ -1,0 +1,1397 @@
+{
+  "success": false,
+  "numTotalTestSuites": 12,
+  "numPassedTestSuites": 11,
+  "numFailedTestSuites": 1,
+  "numTotalTests": 255,
+  "numPassedTests": 254,
+  "numFailedTests": 1,
+  "numPendingTests": 0,
+  "testResults": [
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/Ai3PracticePage.test.js",
+      "status": "failed",
+      "startTime": 1795436990481,
+      "endTime": 1795436992606,
+      "assertionResults": [
+        {
+          "fullName": "v2 AI3 explicitly confirms estimate, never auto-reposts unknown generation and recovers original v2 command",
+          "status": "failed",
+          "failureMessages": [
+            "TypeError: Cannot read properties of null (reading 'body')\n    at Object.<anonymous> (<LMS_ROOT>/frontend/web/src/__tests__/family/Ai3PracticePage.test.js:73:56)"
+          ]
+        },
+        {
+          "fullName": "AI3 definitive 400 rejection consumes consent; only fresh confirmation permits a new UUID",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 definitive 413 rejection consumes consent; only fresh confirmation permits a new UUID",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 v2 stale acknowledged preview is rejected before POST and storage",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "terminal AI3 command accepts current shared halt without regressing phase or letting a late clear reopen sends",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "task creation includes exact math aliases across knowledge-point pages without accepting other subjects",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unknown submit preserves original body and UUID after refresh and remount",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "current detail 403 clears private work and fences an older successful response",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "ordinary detail refresh and network failure retain child draft without another POST",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "parent approval requires viewed work and explicit matching context; conflict does not approve new version",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "a delayed review context cannot survive an intervening detail refresh",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "saved approval is acknowledged without re-reading media and a later read failure does not retry review",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "revise uses only the viewed version, requires feedback and never fetches effect context",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "passed work remains readable but child cannot submit again",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "logout fences a late private detail and leaves no private question",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "relogin discovers and explicitly recovers original actor command, never a new submit",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "review context with a different content version never enables approval",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "persisted generation never repeats POST; discovered=true",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "persisted generation never repeats POST; discovered=false",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": "  ● v2 AI3 explicitly confirms estimate, never auto-reposts unknown generation and recovers original v2 command\n\n    TypeError: Cannot read properties of null (reading 'body')\n\n      71 |   expect(screen.getByLabelText('已核对完整请求、脱敏内容并接受估算可能超出、费用未知时停发')).not.toBeChecked();\n      72 |   const commandKey = Object.keys(sessionStorage).find(key => key.includes('ai3.command'));\n    > 73 |   expect(JSON.parse(sessionStorage.getItem(commandKey)).body).toEqual(original);\n         |                                                        ^\n      74 |   expect(original).toMatchObject({ schemaVersion: 'ai3-min-v2', estimateAcknowledged: true, expectedEstimatedReservationMicros: 42 });\n      75 |   expect(original).not.toHaveProperty('maxAuthorizedCostMicros');\n      76 |   view.unmount();\n\n      at Object.<anonymous> (src/__tests__/family/Ai3PracticePage.test.js:73:56)\n"
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/Ai3ContentHistory.test.js",
+      "status": "passed",
+      "startTime": 1795436992627,
+      "endTime": 1795436993727,
+      "assertionResults": [
+        {
+          "fullName": "parent history is metadata-first, explicitly paged, and never sends a mutation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "reading old content cannot replace the current publication tuple or preview",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "parent can read withdrawn history without enabling new publication",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "parent can read cancelled history without enabling new publication",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "child never requests or renders parent content history",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "current history 403 clears private views and fences older successful history",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "current history 404 clears private views and fences older successful history",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "new history selection fences an older detail and detail refresh clears both",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "logout change clears loaded metadata and fences pending private content",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "child change clears loaded metadata and fences pending private content",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "mismatched history id cannot render another revision",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "mismatched history roundId cannot render another revision",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "mismatched history version cannot render another revision",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "mismatched history contentHash cannot render another revision",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "parent renders sourceAvailability available without changing stored questions",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "parent renders sourceAvailability missing without changing stored questions",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "parent renders sourceAvailability unavailable without changing stored questions",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "student renders sourceAvailability available without changing stored questions",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "student renders sourceAvailability missing without changing stored questions",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "student renders sourceAvailability unavailable without changing stored questions",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/Ai3DraftRefresh.test.js",
+      "status": "passed",
+      "startTime": 1795436993736,
+      "endTime": 1795436994964,
+      "assertionResults": [
+        {
+          "fullName": "AI3 manual refresh retains successes, failures and submission lock after response commits",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 focus refresh retains successes, failures and submission lock after response commits",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 network failure during refresh retains draft and never releases the upload failure lock",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 manual pending round transition retains partial upload failures until explicitly handled",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 focus pending round transition retains partial upload failures until explicitly handled",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 command pagination and empty refresh cannot release a discovered unresolved write",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 current detail 403 clears partial draft and blob and fences older successful detail",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 current media 403 clears entire retained draft, not only the image preview",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 local account switch releases blobs and fences late detail and bytes",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 external account switch releases blobs and fences late detail and bytes",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/TutorPage.test.js",
+      "status": "passed",
+      "startTime": 1795436994969,
+      "endTime": 1795436996020,
+      "assertionResults": [
+        {
+          "fullName": "parent sees full preview and explicitly retries the same unknown generation command after refresh",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 shows estimate not a hard cap; consent is cleared on refresh and original unknown command is preserved",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "explicit trial selection creates v2, but unknown create never changes schema on retry",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 expiry after acknowledgement is zero POST and zero local command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 definitive rejection consumes only this consent; a new UUID needs a new acknowledgement",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 unknown fee after relogin is not zero and explicit recovery retains v2; no generation is sent",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 pending send loses private view on logout and late result cannot restore a different identity",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "source create requires explicit private-text confirmation and does not copy source metadata",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "review binds the viewed version; conflict clears it and requires an explicit detail reread",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "current list 403 clears private detail and ignores a pending detail success",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "logout hides private text immediately; relogin discovers original unfinished job without auto recovery",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "child switch aborts an unknown write and late success cannot restore text or local commands",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "detail 403 invalidates a pending write success; ordinary network refresh retains its original command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "approved text is plain text, never editable or published to a child",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "closed text is plain text, never editable or published to a child",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "manual revision retains its original text, hash, editor, derivation and reason on reread",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "StrictMode effect replay retains live reads while discarding the first setup response",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "same identity focus preserves manual input and does not reload",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "same identity visibilitychange preserves manual input and does not reload",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unverifiable generation success preserves and retries the original command: undefined",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unverifiable generation success preserves and retries the original command: {}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unverifiable generation success preserves and retries the original command: {\"job\":{\"id\":\"333333333333333333333333\",\"cycleId\":\"999999999999999999999999\",\"status\":\"unknown\"}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unverified HTTP 400 does not discard an unknown generation command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unverified HTTP 404 does not discard an unknown generation command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unverified HTTP 409 does not discard an unknown generation command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unverified HTTP 413 does not discard an unknown generation command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "non-string rejection code at HTTP 400 keeps the same pending command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "non-string rejection code at HTTP 409 keeps the same pending command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "non-string rejection code at HTTP 413 keeps the same pending command",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/TutorPreviewFeedback.test.js",
+      "status": "passed",
+      "startTime": 1795436996026,
+      "endTime": 1795436996692,
+      "assertionResults": [
+        {
+          "fullName": "settled lists before disabled create retain the rejection and original command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "both late lists cannot erase the already displayed disabled-create rejection",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "late cycles success preserves disabled create feedback and exact command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "late cycles success preserves network create feedback and exact command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "late jobs success preserves disabled create feedback and exact command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "late jobs success preserves network create feedback and exact command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "pending create is visibly in progress and successful create navigates to full detail without generation",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "late cycles cannot erase detail failure after committed create; detail retry only reads",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "late jobs cannot erase detail failure after committed create; detail retry only reads",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "each successful read clears only its own failure, not another list or detail error",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "successful record refresh clears only the read failure while unknown create stays locked to the original command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "current 401 rejects private UI and invalidates late list and create success without finishing command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "current 403 rejects private UI and invalidates late list and create success without finishing command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "logout clears draft and late create cannot navigate or recreate original command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "child clears draft and late create cannot navigate or recreate original command",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/shared/Ai3Media.test.js",
+      "status": "passed",
+      "startTime": 1795436996697,
+      "endTime": 1795436997318,
+      "assertionResults": [
+        {
+          "fullName": "AI3 count 0 uses fixed profile and never fetches or deletes automatically",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 count 1 uses fixed profile and never fetches or deletes automatically",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 count 10 uses fixed profile and never fetches or deletes automatically",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 partial uploads survive focus and manual preview; failures block until explicit retry",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 ordinary removal and unmount never DELETE; explicit readonly privacy delete keeps tombstone",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 child change clears blob and fences pending bytes",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 scope change clears blob and fences pending bytes",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 session change clears blob and fences pending bytes",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 external change clears blob and fences pending bytes",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 ai2_correction descriptors cannot become a usable submission",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 deleted descriptors cannot become a usable submission",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 account invalidation removes private failed filenames immediately without automatic deletion",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/ai3Client.test.js",
+      "status": "passed",
+      "startTime": 1795436997327,
+      "endTime": 1795436997479,
+      "assertionResults": [
+        {
+          "fullName": "AI3 parent GET paths, filters and session options are exact",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 student GET paths, filters and session options are exact",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 encodes route identifiers and permits omitted child filter",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 create sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 revise_content sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 reject_content sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 publish sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 cancel sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 withdraw sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 generate sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 submit sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 review sends all original keys, and lost response never retries or clears command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 all POST paths including recover are fixed and recovery body is not projected",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 create closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 revise_content closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 reject_content closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 publish closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 cancel closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 withdraw closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 generate closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 submit closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 review closed command requires every key and valid target shape",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed create.exerciseCount",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed create.knowledgePointId",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed publish.answersChecked",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed generate.maxAuthorizedCostMicros",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed generate.externalSendConfirmed",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed generate.deidentifiedConfirmed",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed generate.pricingProfileVersion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed cancel.reason",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed withdraw.expectedRoundVersion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed submit.mediaIds",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed submit.mediaIds",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed submit.mediaIds",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed submit.mediaIds",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed submit.note",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed submit.note",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed review.reviewReminderDate",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed review.reviewContextHash",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed review.masteryConfirmed",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed review.evidenceSummary",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed review.expectedAttemptVersion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed review.decision",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects malformed revise_content.expectedContentId",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 content nested shapes, exercise ordering, URL/HTML and revision triples are closed",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 revise review and Unicode/CRLF preserve original values without normalization",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 parent replacement identity fences late success and late 401",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 student replacement identity fences late success and late 401",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 parent child switch rejects already in-flight response without exposing it",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 corrupt body is cleared by canonical ownership on logout",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 corrupt body is cleared by canonical ownership on switch",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 corrupt body is cleared by canonical ownership on child",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 corrupt body is cleared by canonical ownership on external-exit",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 role actor family child isolation, corrupt lock and exact replay are enforced",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 error 403 retains unresolved original command with zero retries",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 error 404 retains unresolved original command with zero retries",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 error 409 retains unresolved original command with zero retries",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 error 503 retains unresolved original command with zero retries",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 current parent expiry clears owned private/corrupt=false commands without changing older protocol recovery",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 current parent expiry clears owned private/corrupt=true commands without changing older protocol recovery",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 current student expiry clears owned private/corrupt=false commands without changing older protocol recovery",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 current student expiry clears owned private/corrupt=true commands without changing older protocol recovery",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 late old parent 401 never clears replacement account command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 late old student 401 never clears replacement account command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 parent storage reconciles expiry without clearing AI2 or replaying after reauthentication",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 parent pageshow reconciles expiry without clearing AI2 or replaying after reauthentication",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 student storage reconciles expiry without clearing AI2 or replaying after reauthentication",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 student pageshow reconciles expiry without clearing AI2 or replaying after reauthentication",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 malformed success envelope and inaccessible storage fail closed",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 preview wrappers and raw review context are preserved, never silently projected",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 cannot dispatch through stale, wrong-role or unsupported sessions",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 UUIDs, byte limits, nested property descriptors and years align with the server contract",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/ai1Client.test.js",
+      "status": "passed",
+      "startTime": 1795436997485,
+      "endTime": 1795436997578,
+      "assertionResults": [
+        {
+          "fullName": "AI1 client preserves exact versioned command, session and abort without transport retry",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 reads and all write actions use the narrow public endpoints",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 stale success/401 cannot affect the new parent: reject=false",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 stale success/401 cannot affect the new parent: reject=true",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 pending command is cloned, survives reload/expiry and only exact completion clears it",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 damaged pending command is cleared on logout",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 damaged pending command is cleared on switch",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 damaged pending command is cleared on child",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 suspended tab observes explicit exit marker and clears damaged private command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 old session cannot write or clear commands after reauthentication",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 parseable damaged command stays locked: missing",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 parseable damaged command stays locked: extra",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 parseable damaged command stays locked: type",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 cleanup preserves other actors, children and unrelated completion commands",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 transport never treats a malformed success envelope as a confirmed write: {}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 transport never treats a malformed success envelope as a confirmed write: {\"success\":false,\"data\":{}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 transport never treats a malformed success envelope as a confirmed write: {\"success\":true}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 transport never treats a malformed success envelope as a confirmed write: {\"success\":true,\"data\":null}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 transport never treats a malformed success envelope as a confirmed write: {\"success\":true,\"data\":[]}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 create validates its own result linkage before completing a command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 generate validates its own result linkage before completing a command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 recover validates its own result linkage before completing a command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 revise validates its own result linkage before completing a command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 review validates its own result linkage before completing a command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 close validates its own result linkage before completing a command",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI1 generation UUID, recovery Job and reviewed version/hash cannot be substituted",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/ai3HistoryApi.test.js",
+      "status": "passed",
+      "startTime": 1795436997583,
+      "endTime": 1795436997645,
+      "assertionResults": [
+        {
+          "fullName": "parent history GETs encode identifiers, preserve DTO and use the current session and abort signal",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "child history calls fail before network",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "late parent history after identity change never reaches the caller",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "late parent history after child change never reaches the caller",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/familySession.test.js",
+      "status": "passed",
+      "startTime": 1795436997652,
+      "endTime": 1795436997714,
+      "assertionResults": [
+        {
+          "fullName": "family parent session storage restores only the versioned parent session key",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "family parent session storage removes malformed or non-parent saved sessions",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup parent logout clears corrupt owned bodies without trusting their contents",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup student logout clears corrupt owned bodies without trusting their contents",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup parent switch clears owned corrupt entries even when their body claims another actor: {broken",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup parent switch clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup parent storage clears owned corrupt entries even when their body claims another actor: {broken",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup parent storage clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup parent pageshow clears owned corrupt entries even when their body claims another actor: {broken",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup parent pageshow clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup student switch clears owned corrupt entries even when their body claims another actor: {broken",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup student switch clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup student storage clears owned corrupt entries even when their body claims another actor: {broken",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup student storage clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup student pageshow clears owned corrupt entries even when their body claims another actor: {broken",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI2 canonical command exit cleanup student pageshow clears owned corrupt entries even when their body claims another actor: {\"role\":\"forged\",\"actorId\":\"dddddddddddddddddddddddd\"}",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/shared/ai3MediaApi.test.js",
+      "status": "passed",
+      "startTime": 1795436997723,
+      "endTime": 1795436997802,
+      "assertionResults": [
+        {
+          "fullName": "AI3 upload locks purpose while AI2 default remains correction",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects cross-purpose response ai2_correction",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects cross-purpose response task_completion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects cross-purpose response mistake_question",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "media profile is closed and AI2 descriptors cannot silently accept AI3",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 parent capability and bytes remain authenticated, same origin, no-store and no redirect",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 student capability and bytes remain authenticated, same origin, no-store and no redirect",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 MIME application/pdf fails before upload network",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 MIME image/heic fails before upload network",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 MIME image/svg+xml fails before upload network",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 MIME  fails before upload network",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 size 0 fails before upload network",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 size 10485761 fails before upload network",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 parent and substituted child upload are rejected before network",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects anonymous content capability/response",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects foreign content capability/response",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects redirect content capability/response",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 rejects extra content capability/response",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 late success after identity replacement never reaches new actor",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 late 401 after identity replacement never reaches new actor",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 fences identity changes during asynchronous blob consumption and DELETE never retries",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    },
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/aiTrialPresentation.test.js",
+      "status": "passed",
+      "startTime": 1795436997810,
+      "endTime": 1795436997885,
+      "assertionResults": [
+        {
+          "fullName": "ai1 v2 confirmation never carries a hard-cap authorization",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "ai3 v2 confirmation never carries a hard-cap authorization",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "malformed or expired preview does not downgrade: {\"feeMode\":\"unknown\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "malformed or expired preview does not downgrade: {\"feeNoticeVersion\":\"old\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "malformed or expired preview does not downgrade: {\"reservedCeilingMicros\":42}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "malformed or expired preview does not downgrade: {\"sendNotAfter\":\"2000-01-01T00:00:00.000Z\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "malformed or expired preview does not downgrade: {\"generationSchemaVersion\":\"ai3-min-v2\"}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "malformed or expired preview does not downgrade: {\"pricing\":{\"sourceReference\":\"synthetic\",\"expiresAt\":\"invalid\"}}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "malformed or expired preview does not downgrade: {\"referenceInputTokens\":0}",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "v2 original body survives storage; missing acknowledgement and mixed v1 ceiling are rejected",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "AI3 v2 validates acknowledgement and keeps original v1 commands valid",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": ""
+    }
+  ]
+}

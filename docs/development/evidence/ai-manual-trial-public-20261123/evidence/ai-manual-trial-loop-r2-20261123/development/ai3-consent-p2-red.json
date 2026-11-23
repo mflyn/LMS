@@ -1,0 +1,122 @@
+{
+  "success": false,
+  "numTotalTestSuites": 1,
+  "numPassedTestSuites": 0,
+  "numFailedTestSuites": 1,
+  "numTotalTests": 19,
+  "numPassedTests": 16,
+  "numFailedTests": 3,
+  "numPendingTests": 0,
+  "testResults": [
+    {
+      "name": "<LMS_ROOT>/frontend/web/src/__tests__/family/Ai3PracticePage.test.js",
+      "status": "failed",
+      "startTime": 1795436969031,
+      "endTime": 1795436971997,
+      "assertionResults": [
+        {
+          "fullName": "v2 AI3 explicitly confirms estimate, never auto-reposts unknown generation and recovers original v2 command",
+          "status": "failed",
+          "failureMessages": [
+            "Error: expect(element).not.toBeChecked()\n\nReceived element is checked:\n  <input disabled=\"\" type=\"checkbox\" />\n    at Object.<anonymous> (<LMS_ROOT>/frontend/web/src/__tests__/family/Ai3PracticePage.test.js:71:70)"
+          ]
+        },
+        {
+          "fullName": "AI3 definitive 400 rejection consumes consent; only fresh confirmation permits a new UUID",
+          "status": "failed",
+          "failureMessages": [
+            "Error: expect(element).not.toBeChecked()\n\nReceived element is checked:\n  <input type=\"checkbox\" />\n    at <LMS_ROOT>/frontend/web/src/__tests__/family/Ai3PracticePage.test.js:102:25"
+          ]
+        },
+        {
+          "fullName": "AI3 definitive 413 rejection consumes consent; only fresh confirmation permits a new UUID",
+          "status": "failed",
+          "failureMessages": [
+            "Error: expect(element).not.toBeChecked()\n\nReceived element is checked:\n  <input type=\"checkbox\" />\n    at <LMS_ROOT>/frontend/web/src/__tests__/family/Ai3PracticePage.test.js:102:25"
+          ]
+        },
+        {
+          "fullName": "AI3 v2 stale acknowledged preview is rejected before POST and storage",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "terminal AI3 command accepts current shared halt without regressing phase or letting a late clear reopen sends",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "task creation includes exact math aliases across knowledge-point pages without accepting other subjects",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "unknown submit preserves original body and UUID after refresh and remount",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "current detail 403 clears private work and fences an older successful response",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "ordinary detail refresh and network failure retain child draft without another POST",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "parent approval requires viewed work and explicit matching context; conflict does not approve new version",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "a delayed review context cannot survive an intervening detail refresh",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "saved approval is acknowledged without re-reading media and a later read failure does not retry review",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "revise uses only the viewed version, requires feedback and never fetches effect context",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "passed work remains readable but child cannot submit again",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "logout fences a late private detail and leaves no private question",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "relogin discovers and explicitly recovers original actor command, never a new submit",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "review context with a different content version never enables approval",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "persisted generation never repeats POST; discovered=true",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "persisted generation never repeats POST; discovered=false",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ],
+      "message": "  ● v2 AI3 explicitly confirms estimate, never auto-reposts unknown generation and recovers original v2 command\n\n    expect(element).not.toBeChecked()\n\n    Received element is checked:\n      <input disabled=\"\" type=\"checkbox\" />\n\n      69 |   const original = api.generate.mock.calls[0][1];\n      70 |   await screen.findByRole('region', { name: '未确认原命令' });\n    > 71 |   expect(screen.getByLabelText('已核对完整请求、脱敏内容并接受估算可能超出、费用未知时停发')).not.toBeChecked();\n         |                                                                      ^\n      72 |   const commandKey = Object.keys(sessionStorage).find(key => key.includes('ai3.command'));\n      73 |   expect(JSON.parse(sessionStorage.getItem(commandKey)).body).toEqual(original);\n      74 |   expect(original).toMatchObject({ schemaVersion: 'ai3-min-v2', estimateAcknowledged: true, expectedEstimatedReservationMicros: 42 });\n\n      at Object.<anonymous> (src/__tests__/family/Ai3PracticePage.test.js:71:70)\n\n  ● AI3 definitive 400 rejection consumes consent; only fresh confirmation permits a new UUID\n\n    expect(element).not.toBeChecked()\n\n    Received element is checked:\n      <input type=\"checkbox\" />\n\n      100 |     const original = api.generate.mock.calls[0][1];\n      101 |     expect(Object.keys(sessionStorage).filter(key => key.includes('ai3.command'))).toEqual([]);\n    > 102 |     expect(consent).not.toBeChecked();\n          |                         ^\n      103 |     expect(screen.getByRole('button', { name: '生成候选题组' })).toBeDisabled();\n      104 |     fireEvent.click(screen.getByRole('button', { name: '生成候选题组' }));\n      105 |     expect(api.generate).toHaveBeenCalledTimes(1);\n\n      at src/__tests__/family/Ai3PracticePage.test.js:102:25\n\n  ● AI3 definitive 413 rejection consumes consent; only fresh confirmation permits a new UUID\n\n    expect(element).not.toBeChecked()\n\n    Received element is checked:\n      <input type=\"checkbox\" />\n\n      100 |     const original = api.generate.mock.calls[0][1];\n      101 |     expect(Object.keys(sessionStorage).filter(key => key.includes('ai3.command'))).toEqual([]);\n    > 102 |     expect(consent).not.toBeChecked();\n          |                         ^\n      103 |     expect(screen.getByRole('button', { name: '生成候选题组' })).toBeDisabled();\n      104 |     fireEvent.click(screen.getByRole('button', { name: '生成候选题组' }));\n      105 |     expect(api.generate).toHaveBeenCalledTimes(1);\n\n      at src/__tests__/family/Ai3PracticePage.test.js:102:25\n"
+    }
+  ]
+}

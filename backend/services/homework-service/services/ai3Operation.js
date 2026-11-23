@@ -1,5 +1,6 @@
 const axios = require('axios');
 const C = require('./ai1Contract');
+const fees = require('./aiTrialFees');
 const exact = (o, keys) => o && typeof o === 'object' && !Array.isArray(o)
   && Object.keys(o).length === keys.length && keys.every(k => Object.hasOwn(o, k));
 const iso = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
@@ -7,12 +8,16 @@ const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a
 const invalid = () => C.error(503, 'AI_REMOTE_CONTRACT_INVALID');
 function buildRequest(job) {
   const p = job.preview;
+  const trial = fees.isTrial(p);
+  if (trial) fees.validateTrialPreview(p, 'ai3-min-v2');
   if (p.providerProfile !== 'ai3-practice-v1' || p.promptVersion !== 'ai3-practice-prompt-v1'
     || p.outputSchemaVersion !== 'ai3-practice-content-v1') throw invalid();
-  const body = JSON.parse(JSON.stringify({ schemaVersion: 'ai3-provider-operation-v1', providerProfile: p.providerProfile,
+  const body = JSON.parse(JSON.stringify({ schemaVersion: trial ? 'ai3-provider-operation-v2' : 'ai3-provider-operation-v1', providerProfile: p.providerProfile,
     promptVersion: p.promptVersion, outputSchemaVersion: p.outputSchemaVersion, modelProfileVersion: p.modelProfileVersion,
     pricingProfileVersion: p.pricingProfileVersion, messages: p.messages, requestOptions: p.requestOptions,
-    reservedCeilingMicros: p.reservedCeilingMicros, sendNotAfter: p.sendNotAfter }));
+    ...(trial ? { feeMode: p.feeMode, estimateMethodVersion: p.estimateMethodVersion, referenceInputTokens: p.referenceInputTokens,
+      referenceOutputTokens: p.referenceOutputTokens, estimatedReservationMicros: p.estimatedReservationMicros, feeNoticeVersion: p.feeNoticeVersion }
+      : { reservedCeilingMicros: p.reservedCeilingMicros }), sendNotAfter: p.sendNotAfter }));
   const request = { ...body, requestHash: C.hash(body) };
   // Match the actual JSON wire body, including escaping, envelope and digest.
   if (Buffer.byteLength(JSON.stringify(request), 'utf8') > 32768) throw C.error(413, 'AI_INPUT_TOO_LARGE');
@@ -28,15 +33,17 @@ function validateMapping(command) {
 function validateOperation(command, o) {
   const job = validateMapping(command);
   const request = buildRequest(job);
+  const trial = fees.isTrial(job.preview);
   if (!exact(o, ['providerProfile', 'remoteOperationId', 'requestHash', 'modelProfileVersion', 'pricingProfileVersion', 'sendNotAfter',
-    'status', 'result', 'error', 'usage', 'sendClaimed', 'updatedAt']) || !iso(o.updatedAt)
+    'status', 'result', 'error', 'usage', 'sendClaimed', 'updatedAt', ...(trial ? ['schemaVersion', 'feeMode'] : [])]) || !iso(o.updatedAt)
+    || (trial && (o.schemaVersion !== request.schemaVersion || o.feeMode !== 'estimate_only'))
     || o.providerProfile !== 'ai3-practice-v1' || o.remoteOperationId !== job.remoteOperationId || o.requestHash !== request.requestHash
     || (job.remoteRequestHash && job.remoteRequestHash !== request.requestHash)
     || o.modelProfileVersion !== request.modelProfileVersion || o.pricingProfileVersion !== request.pricingProfileVersion
     || o.sendNotAfter !== request.sendNotAfter || typeof o.sendClaimed !== 'boolean') throw invalid();
   if (o.usage !== null) {
     if (!exact(o.usage, ['inputTokens', 'outputTokens'])) throw invalid();
-    try { if (C.costCeiling(o.usage.inputTokens, o.usage.outputTokens, job.preview.pricing) > request.reservedCeilingMicros) throw invalid(); }
+    try { const charge = fees.usageCharge(job.preview, o.usage); if (!trial && charge > request.reservedCeilingMicros) throw invalid(); }
     catch { throw invalid(); }
   }
   if (o.status === 'succeeded') {

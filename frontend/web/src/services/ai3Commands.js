@@ -1,6 +1,7 @@
 import { AI3_COMMAND_PREFIX, assertSessionCurrent, captureSession, loadChildSession } from './familySession';
 import { registerChildScopeReset } from './childScope';
 import { newTutorOperationId } from './tutorCommands';
+import { trialFeeFields } from './aiTrialPresentation';
 
 const id = value => typeof value === 'string' && /^[0-9a-f]{24}$/.test(value);
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
@@ -51,9 +52,11 @@ const fields = {
     masteryConfirmed: value => typeof value === 'boolean', reviewReminderDate: nullable(localDate), reviewContextHash: nullable(hash) }
 };
 const validBody = (action, body) => {
-  const shape = fields[action];
+  const trial = body?.schemaVersion === 'ai3-min-v2';
+  const { maxAuthorizedCostMicros, ...generation } = fields.generate;
+  const shape = trial && action === 'generate' ? { ...generation, ...trialFeeFields } : fields[action];
   if (!shape || !closed(body, ['schemaVersion', 'operationId', ...Object.keys(shape)])
-    || body.schemaVersion !== 'ai3-min-v1' || !uuid(body.operationId)
+    || (trial ? action !== 'generate' : body.schemaVersion !== 'ai3-min-v1') || !uuid(body.operationId)
     || !Object.entries(shape).every(([key, check]) => check(body[key]))) return false;
   if (action === 'revise_content') {
     const tuple = [body.expectedContentId, body.expectedContentVersion, body.expectedContentHash];

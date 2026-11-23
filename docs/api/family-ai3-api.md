@@ -234,3 +234,44 @@ AI3-1设计批准时快照：没有变式题生成成功、真实成本、完整
 AI3-E首批快照：当时仅有本地合成候选及受限内部HTTP工厂验证，公共AI3路由/页面尚未装配。
 当前公共路由、页面和正式应用已有本地合成验收候选，见[集成记录](../development/evidence/ai3-integration-20261105/README.md)；
 这不构成真实模型成本、用户批次批准或AI-3总门禁通过证据。
+
+## 8. 人工试用费用契约候选（2026-11-21）
+
+**Status:** DRAFT_FOR_REVIEW / NOT_IMPLEMENTED。仅生成费用采用[共享差异设计](../superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md)
+和[AI-1 API §10](family-ai1-api.md#10-人工试用费用契约候选2026-11-21)，不原地修改以上v1或教学闭环。
+精确计数资格继续后置、未解决；估算不承诺硬上限，真实发送及部署仍未获本稿授权。
+
+- GET generation-preview只读：无生成命令时按服务端受控profile给出v1或v2预览；已有生成命令时返回该命令的持久版本，
+  不按当前配置重新封装。v2 generationSchemaVersion=ai3-min-v2，费用和requestOptions字段精确沿用AI-1 §10.1，
+  不含reservedCeilingMicros/maxInputTokens；原providerProfile/promptVersion/outputSchemaVersion和完整两消息保留并纳入摘要。
+  预览仍绑定来源快照、Round版本和题量，祖先撤回/权限失效不能借估算模式跳过。
+- 仅generate及对应生成命令的recover支持schemaVersion=ai3-min-v2；手工create/revise、publish、submit、review、withdraw及写回仍v1。
+  generate专属字段为 `expectedRoundVersion,generationInputHash,modelProfileVersion,pricingProfileVersion,feeMode,
+  estimateMethodVersion,expectedEstimatedReservationMicros,feeNoticeVersion,estimateAcknowledged=true,
+  externalSendConfirmed=true,deidentifiedConfirmed=true`；无maxAuthorizedCostMicros。客户端不能修改模式/价格/输出参数。
+  recover仍只有公共schemaVersion/operationId，UUID等于原命令；不得把其他v1教学命令转换为v2恢复。
+- 内部仍PUT/GET `/internal/deeptutor/ai3/operations/:remoteOperationId`，专用凭据不变。
+  schemaVersion=ai3-provider-operation-v2；其余请求为AI-1 §10.2闭合字段，加原providerProfile/promptVersion/outputSchemaVersion。
+  响应为AI-1 v2闭合operation字段（schemaVersion改为ai3-provider-operation-v2），加providerProfile；跨AI-1/AI-3同ID错用继续拒绝。
+  内容仍按ai3-practice-content-v1返回2–3题，不降级自由文本；新版本仅改费用/输入准入，不修改孩子DTO白名单。
+- 费用投影与AI-1 v2 job.budget同义；Ai3Command.generation持久保存v2估算/确认字段及原remoteRequestHash，旧v1保留旧字段。
+  共享Account/SendSlot/本轮名额与AI-1相同，未知费用或超估算同时阻断两个profile的新发送及reserved恢复出站。
+  新预留消费名额，claim只验证原命令已占名额证明，不重新消费或因剩余零拒绝；旧v1 reserved不能借试用模式出站。
+  跨家庭停发投影为sendBlocked=true/sendBlockReason=cost_review_required，不暴露其他家庭原因/金额/命令，非阻断原因必须null。
+  未知不退款、不换UUID；可靠终态仍可查询收敛，即使新报价过期或账户已停发，不自动解除停发。
+- 合法结果超估算仍生成家长候选并全额按usage计价、锁存停发，重复终态只落一次Content/结算。
+  有效内容缺usage可保留候选但费用未知停发；内容schema非法不产生Content，不以付费为由通过审核。
+  祖先撤回不抹去费用，原命令可收敛但发布仍按原权限/祖先/所见版本拒绝；孩子不会因生成成功直接收到内容。
+- 沿用AI-1 §10.3的稳定错误和严格旧版本兼容；完整32KiB在新预留前、共享槽后claim前及最终wire核验。
+  历史超限UNKNOWN仍按原保护零出站、不补算映射。v2不把32KiB或参考8192宣称为完整token上界。
+
+本节拟议变更的测试与原工程证据分开，见[专项方案](../development/family-ai3-test-plan.md#人工试用费用差异测试设计2026-11-21)。
+历史通过/失败、原冻结候选、DEVICE_PENDING、T4/T8/AI-1 OPEN及其他未关闭/后置状态不改写。
+
+### 8.1 后续批准及首批范围
+
+2026-11-21 用户复审通过本节差异及测试方案，授权首批限定本地实现；保留上文候选时点，不改旧冻结文本。
+首批覆盖 LMS 费用共享、原命令恢复和持久预览读取；已有合法 v1/v2 生成命令均按原版本只读投影，
+不因切换估算配置或 query-only 而重建外发正文。业务差异与验证分层见
+[共享设计后续记录](../superpowers/specs/2026-11-21-ai-manual-trial-fee-design.md#7-后续批准与首批实施状态)。
+DeepTutor v2 Provider、页面与正式启用尚待后续批次，不据本地服务替身通过关闭总门禁或授权真实发送。

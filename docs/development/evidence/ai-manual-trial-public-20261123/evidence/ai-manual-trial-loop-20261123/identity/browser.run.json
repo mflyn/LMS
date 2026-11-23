@@ -1,0 +1,18 @@
+{
+  "args": [
+    "<HOME>/GitHub PRJ/LMS/.cache/ai1-sdk-local-20261101/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "<LMS_ROOT>/tests/e2e/t2/manual_trial_bridge.py",
+    "-q",
+    "-x",
+    "--basetemp=<TEMP>/browser",
+    "--junitxml=<TEMP>/browser.xml",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "cwd": "<DEEPTUTOR_ROOT>",
+  "exitCode": 0,
+  "wallSeconds": 39.728780208999524
+}

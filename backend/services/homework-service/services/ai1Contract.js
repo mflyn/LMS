@@ -2,6 +2,7 @@ const { createHash } = require('crypto');
 const { canonicalize } = require('json-canonicalize');
 const Ajv = require('ajv/dist/2020');
 const schema = require('../../../common/contracts/ai1-min.schema.json');
+const fees = require('./aiTrialFees');
 const ajv = new Ajv({ strict: true, strictRequired: false });
 ajv.addSchema(schema);
 const validators = Object.fromEntries(Object.keys(schema.$defs).map(k => [k, ajv.getSchema(`${schema.$id}#/$defs/${k}`)]));
@@ -23,7 +24,9 @@ function normalize(action, body) {
   try { serialized = JSON.stringify(body); } catch (_) { throw error(400, 'VALIDATION_ERROR'); }
   if (typeof serialized !== 'string') throw error(400, 'VALIDATION_ERROR');
   if (Buffer.byteLength(serialized, 'utf8') > 32768) throw error(413, 'AI_INPUT_TOO_LARGE');
-  if (!validators[action]?.(body)) throw error(400, 'VALIDATION_ERROR');
+  const validator = body?.schemaVersion === 'ai1-min-v2'
+    ? (['create', 'generate', 'recover'].includes(action) ? validators[`${action}V2`] : undefined) : validators[action];
+  if (!validator?.(body)) throw error(400, 'VALIDATION_ERROR');
   const result = clean(body);
   const texts = action === 'create' ? [...Object.values(result.input), ...Object.values(result.chapter)]
     : action === 'revise' ? [result.revisedText, result.revisionReason] : [];
@@ -50,6 +53,7 @@ function subjectAlias(subject) {
   return 'math';
 }
 function buildPreview(command, profile, now) {
+  const trial = fees.isTrial(profile);
   if (!profile || !['model', 'modelProfileVersion', 'pricingProfileVersion'].every(k => typeof profile[k] === 'string' && profile[k].trim())
     || !integer(profile.callWindowMs) || profile.callWindowMs < 1 || !integer(profile.clockMarginMs) || profile.clockMarginMs < 1
     || !Number.isSafeInteger(now) || !Number.isFinite(Date.parse(profile.checkedAt)) || !Number.isFinite(Date.parse(profile.expiresAt))
@@ -64,10 +68,11 @@ function buildPreview(command, profile, now) {
   // A bounded local preview only. Provider-specific token accounting is a batch-B prerequisite.
   const pricing = { currency: 'CNY', inputPriceMicrosPerMillion: profile.inputPriceMicrosPerMillion,
     outputPriceMicrosPerMillion: profile.outputPriceMicrosPerMillion, checkedAt: profile.checkedAt, expiresAt: profile.expiresAt };
-  return { generationInputHash: hash({ messages, requestOptions, promptVersion: 'ai1-prompt-v1', modelProfileVersion: profile.modelProfileVersion }),
+  const preview = { generationInputHash: hash({ messages, requestOptions, promptVersion: 'ai1-prompt-v1', modelProfileVersion: profile.modelProfileVersion }),
     modelProfileVersion: profile.modelProfileVersion, pricingProfileVersion: profile.pricingProfileVersion,
     messages, requestOptions, pricing, reservedCeilingMicros: costCeiling(8192, 4096, pricing),
     sendNotAfter: new Date(deadline).toISOString(), sourceAvailable: true, inputProvenance: 'parent_confirmed_text' };
+  return trial ? fees.buildTrialPreview(preview, profile, { promptVersion: 'ai1-prompt-v1', generationSchemaVersion: 'ai1-min-v2' }) : preview;
 }
 module.exports = { normalize, costCeiling, subjectAlias, buildPreview, hash, sha, integer, error,
   requestHash: (action, path, body) => hash({ method: 'POST', path, endpointOperation: `ai1.${action}`, schemaVersion: body.schemaVersion, body }) };

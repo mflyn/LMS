@@ -1,0 +1,506 @@
+{
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "74",
+      "time": "69.856",
+      "timestamp": "2026-11-23T17:40:24.018016+08:00",
+      "hostname": "Mac"
+    }
+  ],
+  "groups": {
+    "tests.services.ai1.test_manual_trial_v2": 36,
+    "tests.services.ai1.test_ai3_formal_runtime": 12,
+    "tests.services.ai1.test_operation_runtime": 26
+  },
+  "cases": [
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v2_explicit_contract_policy_and_counter_free_prepare[ai1]",
+      "time": "0.462",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v2_explicit_contract_policy_and_counter_free_prepare[ai3]",
+      "time": "0.009",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v2_refuses_changed_fee_confirmation[feeMode-strict]",
+      "time": "0.001",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v2_refuses_changed_fee_confirmation[feeNoticeVersion-other]",
+      "time": "0.003",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v2_refuses_changed_fee_confirmation[referenceInputTokens-8193]",
+      "time": "0.002",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v2_refuses_changed_fee_confirmation[estimatedReservationMicros-0]",
+      "time": "0.002",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v2_single_transport_full_usage_and_terminal_replay[ai1]",
+      "time": "0.806",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v2_single_transport_full_usage_and_terminal_replay[ai3]",
+      "time": "0.017",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_v1_without_counter_still_refused",
+      "time": "0.001",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_trial_profile_old_v1_accepted_is_read_only",
+      "time": "1.916",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_v2_restart_replay_never_sends[accepted-ai1]",
+      "time": "1.821",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_v2_restart_replay_never_sends[accepted-ai3]",
+      "time": "1.826",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_v2_restart_replay_never_sends[sending-ai1]",
+      "time": "2.050",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_v2_restart_replay_never_sends[sending-ai3]",
+      "time": "2.034",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_v2_restart_replay_never_sends[unknown-ai1]",
+      "time": "2.138",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_v2_restart_replay_never_sends[unknown-ai3]",
+      "time": "1.962",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_requires_server_estimate_acknowledgement[False]",
+      "time": "0.002",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_requires_server_estimate_acknowledgement[None]",
+      "time": "0.001",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_requires_server_estimate_acknowledgement[true]",
+      "time": "0.001",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_prepared_mutation_and_expiry_refuse_before_key_or_transport",
+      "time": "0.004",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_actual_httpcore_final_write_deadline[connect]",
+      "time": "0.134",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_actual_httpcore_final_write_deadline[tls]",
+      "time": "0.019",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_actual_httpcore_final_write_deadline[headers]",
+      "time": "0.020",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_raw_json_exact_size_boundary[0]",
+      "time": "0.002",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_raw_json_exact_size_boundary[1]",
+      "time": "0.002",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_default_trial_provider_send_auth_and_query_only[None-ai1]",
+      "time": "5.389",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_default_trial_provider_send_auth_and_query_only[None-ai3]",
+      "time": "4.508",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_default_trial_provider_send_auth_and_query_only[9000-ai1]",
+      "time": "4.315",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_default_trial_provider_send_auth_and_query_only[9000-ai3]",
+      "time": "4.157",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_formal_v2_cross_namespace_same_id_isolation",
+      "time": "2.122",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_429_is_one_attempt_durable_unknown_no_resend[ai1]",
+      "time": "0.026",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_429_is_one_attempt_durable_unknown_no_resend[ai3]",
+      "time": "0.029",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_usage_unknown_full_or_invalid_not_zero[None]",
+      "time": "0.001",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage1]",
+      "time": "0.001",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage2]",
+      "time": "0.002",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_manual_trial_v2",
+      "name": "test_trial_usage_unknown_full_or_invalid_not_zero[usage3]",
+      "time": "0.001",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_main_ai3_off_is_separate_and_zero_store_io",
+      "time": "2.100",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_ai3_enabled_replay_auth_and_query_restart",
+      "time": "3.588",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_ai3_restart_never_redispatches_old_claim_or_accepted[accepted]",
+      "time": "2.043",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_ai3_restart_never_redispatches_old_claim_or_accepted[sending]",
+      "time": "1.816",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_ai3_restart_never_redispatches_old_claim_or_accepted[unknown]",
+      "time": "1.774",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_both_profiles_same_id_cannot_read_or_overwrite",
+      "time": "1.843",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_start_failure_closes_both_runtimes[ai3-start]",
+      "time": "1.642",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_start_failure_closes_both_runtimes[main-start]",
+      "time": "1.635",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_isolation_and_missing_real_counter_fail_closed[store-isolated]",
+      "time": "1.767",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_isolation_and_missing_real_counter_fail_closed[enabled]",
+      "time": "1.605",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_both_enabled_cross_profile_put_cannot_overwrite",
+      "time": "2.233",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_ai3_formal_runtime",
+      "name": "test_formal_missing_ai3_service_secret_stops_before_store_access",
+      "time": "1.883",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_default_off_is_zero_io_and_rejects_before_start_and_after_stop",
+      "time": "0.009",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_mounted_enabled_path_auth_replay_and_narrow_credential",
+      "time": "0.049",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_query_only_reads_without_quote_or_provider_credential",
+      "time": "0.017",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_isolated_does_not_open_missing_store_or_load_provider",
+      "time": "0.008",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_bad_enabled_configuration_stops_without_write_or_send[mode]",
+      "time": "0.007",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_bad_enabled_configuration_stops_without_write_or_send[continuity]",
+      "time": "0.007",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_bad_enabled_configuration_stops_without_write_or_send[missing-store]",
+      "time": "0.007",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_bad_enabled_configuration_stops_without_write_or_send[missing-key]",
+      "time": "0.009",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_bad_enabled_configuration_stops_without_write_or_send[same-key]",
+      "time": "0.009",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_bad_enabled_configuration_stops_without_write_or_send[profile]",
+      "time": "0.008",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_bad_enabled_configuration_stops_without_write_or_send[extra]",
+      "time": "0.007",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_private_configuration_and_secret_files_reject_unsafe_inputs[config-mode]",
+      "time": "0.005",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_private_configuration_and_secret_files_reject_unsafe_inputs[token-mode]",
+      "time": "0.006",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_private_configuration_and_secret_files_reject_unsafe_inputs[parent-mode]",
+      "time": "0.005",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_private_configuration_and_secret_files_reject_unsafe_inputs[symlink]",
+      "time": "0.006",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_private_configuration_and_secret_files_reject_unsafe_inputs[hardlink]",
+      "time": "0.006",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_private_configuration_and_secret_files_reject_unsafe_inputs[duplicate-json]",
+      "time": "0.009",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_private_configuration_and_secret_files_reject_unsafe_inputs[oversize]",
+      "time": "0.008",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_real_provider_missing_counter_rejects_enabled_start",
+      "time": "0.012",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_startup_rejects_store_without_unique_id_index",
+      "time": "0.009",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_fifo_configuration_or_secret_is_rejected_without_blocking[config]",
+      "time": "0.405",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_fifo_configuration_or_secret_is_rejected_without_blocking[serviceTokenFile]",
+      "time": "0.356",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_fifo_configuration_or_secret_is_rejected_without_blocking[providerKeyFile]",
+      "time": "0.378",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_actual_formal_main_default_off_lifecycle",
+      "time": "1.894",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_actual_main_startup_failure_closes_prepared_runtime",
+      "time": "1.872",
+      "status": "passed"
+    },
+    {
+      "classname": "tests.services.ai1.test_operation_runtime",
+      "name": "test_actual_main_enabled_sdk_narrow_auth_and_query_only_restart",
+      "time": "4.547",
+      "status": "passed"
+    }
+  ],
+  "counts": {
+    "passed": 74,
+    "failed": 0,
+    "error": 0,
+    "skipped": 0
+  },
+  "execution": {
+    "python": "<HOME>/GitHub PRJ/LMS/.cache/ai1-sdk-local-20261101/bin/python",
+    "args": [
+      "-B",
+      "-c",
+      "import socket, sys, runpy\noriginal_connect = socket.socket.connect\noriginal_connect_ex = socket.socket.connect_ex\ndef deny_connect(self, address):\n    if self.family in (socket.AF_INET, socket.AF_INET6):\n        raise AssertionError('Independent review: all IP connections forbidden')\n    return original_connect(self, address)\ndef deny_connect_ex(self, address):\n    if self.family in (socket.AF_INET, socket.AF_INET6):\n        raise AssertionError('Independent review: all IP connections forbidden')\n    return original_connect_ex(self, address)\nsocket.socket.connect = deny_connect\nsocket.socket.connect_ex = deny_connect_ex\nsys.argv = ['pytest'] + sys.argv[1:]\nrunpy.run_module('pytest', run_name='__main__')\n",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/services/ai1/test_manual_trial_v2.py",
+      "tests/services/ai1/test_ai3_formal_runtime.py",
+      "tests/services/ai1/test_operation_runtime.py",
+      "--basetemp=<TEMP>/pytest-temp",
+      "--junitxml=<TEMP>/independent.xml"
+    ],
+    "cwd": "<DEEPTUTOR_ROOT>",
+    "env": {
+      "PATH": "/usr/local/bin:/usr/bin:/bin",
+      "HOME": "<TEMP>/home",
+      "DEEPTUTOR_HOME": "<TEMP>/home",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "budgetMs": 180000,
+    "formalChildTimeoutSeconds": 30,
+    "startedAt": "2026-11-23T09:40:23.651Z",
+    "excludesLeaderTests": true,
+    "mutationsInstalled": false,
+    "output": "<TEMP>",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "durationMs": 70758,
+    "finishedAt": "2026-11-23T09:41:34.410Z",
+    "filesUnchanged": true
+  }
+}

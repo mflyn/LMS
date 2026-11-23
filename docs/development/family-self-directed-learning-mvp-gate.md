@@ -8267,3 +8267,41 @@ AI-3 CLOSED / USER_APPROVED / ENGINEERING_SYNTHETIC_ONLY。三项行为问题及
 源码147+14文件候选不变；新关闭文档和状态校验是独立增量，不改写旧冻结。
 保留T4/T8/AI-1 OPEN、DEVICE_PENDING、Docker INCOMPLETE_FAILED、历史失败、非阻断补测、
 QUALIFIED_COUNTER_PENDING与REMAINDER_DEFERRED。真实模型、Git交付、合并和部署仍未授权。
+
+### DeepTutor v2 人工小规模试用限定本地验收（2026-11-23）
+
+用户明确批准本批DeepTutor v2限定本地验收及正式AI1旧v1 accepted重放P2关闭：
+本批ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY，单一P2 CLOSED / USER_APPROVED。
+绑定base `d5a30cbd95c7fbed53f7423dd046915a0eb1ebf6`、17文件完整补丁
+`72edd3e34816811e8da724afa4a097325060b258a996fd7adff7bd8126229aa6`；
+增量、原84文件manifest和独立证据身份见[本次评审与关闭记录](evidence/ai-manual-trial-deeptutor-acceptance-20261123/README.md)。
+开发298项、独立74项及8类变异12项预期失败/7项对照分层记录；不混算Ubuntu267项、下一批页面回归或全仓通过。
+关闭前只读核验原84份冻结归档和当前17份DeepTutor文件一致；本轮无业务变更或重新执行产品测试。
+历史快照及当时待批准记录保留，首轮失败、5项leader缺插件失败、历史超时及根因缺证不改写。
+下一批页面与正式接线闭环及两项页面P2仍USER_ACCEPTANCE_PENDING，不能沿用本次批准。
+AI-1总门禁OPEN，T4/T8 OPEN、DEVICE_PENDING、SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED、
+历史失败、非阻断补测及REMAINDER_DEFERRED保持；精确计数资格后置不等于取得资格，费用估算不承诺硬上限。
+本次未授权真实发送、服务器操作、提交推送、合并或部署，不改变AI-2/AI-3既有合成工程关闭范围。
+
+### 人工试用页面批次AI3逐次确认P2（2026-11-23）
+
+后续页面复审发现明确400/413拒绝后旧费用勾选可用于新UUID；用户授权最小本地修复。
+当前FIXED_REVIEWED / USER_REVIEW_PENDING，不关闭本P2或页面批次；与上述已批准DeepTutor v2及旧accepted P2分开。
+业务仅在generate原命令成功保存后消耗页面勾选，保留原正文、UNKNOWN、权限及身份隔离。
+永久反例、首轮失败、修正后255项相关回归及新冻结身份见[页面修订记录](evidence/ai-manual-trial-loop-20261123/README.md)。
+旧253/282项、原独立217/109项及两引擎结果仍为当时分批证据，不称本修订已重跑浏览器或后端。
+本轮独立页面19项、原命令/隔离99项通过；回退一行触发3项预期失败，原断言及预算不变。
+不调用模型、不操作服务器、不提交推送或部署；精确计数资格后置，所有其他未关闭/后置状态保持。
+
+### 人工试用页面批次限定本地验收批准（2026-11-23）
+
+用户在最终复审后批准：页面与正式接线批次ACCEPTED / USER_APPROVED / LOCAL_SYNTHETIC_ONLY，
+本次AI3逐次费用确认P2 CLOSED / USER_APPROVED。上节待复审状态保留为历史记录，不改原冻结包。
+绑定base `548ceda8b713cde00e93d1b1ae5fdeebb0e8eca0`、完整19文件补丁
+`3c07bc2bf7d5c04f37c086f64697cac17b546043fe7362510813e3ed2aebc3a2`；
+两文件增量、最终复审及原分批证据见[验收批准记录](evidence/ai-manual-trial-loop-20261123/README.md)。
+最终复审5套件118项通过，源码前后一致且完整补丁重建匹配；开发255、独立19/99及变异分别记录。
+原165份、新121份冻结归档和最终6份复审证据核验通过；不重写历史失败或把旧浏览器链路算成新版重验。
+AI-1总门禁OPEN，T4/T8 OPEN、DEVICE_PENDING、SERVER_TIMING_UNVERIFIED、Docker INCOMPLETE_FAILED、
+非阻断补测、历史失败和后置范围保持。精确计数资格后置、估算非硬上限、人工审核限制不变。
+本次不授权模型调用、服务器操作、提交推送、合并或部署；后续交付和试用需另行授权。

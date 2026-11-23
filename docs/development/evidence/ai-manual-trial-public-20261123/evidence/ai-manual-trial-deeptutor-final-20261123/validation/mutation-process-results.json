@@ -1,0 +1,74 @@
+[
+  {
+    "label": "mutation-replay",
+    "nodes": [
+      "test_formal_trial_profile_old_v1_accepted_is_read_only"
+    ],
+    "status": 1,
+    "stdout": "{\"label\":\"mutation-replay\",\"args\":[\"-B\",\"-c\",\"import socket, sys, runpy, os, time, pathlib, faulthandler\\noriginal_connect = socket.socket.connect\\noriginal_bind = socket.socket.bind\\nlisteners = []\\ndef local_bind(self, address):\\n    result = original_bind(self, address)\\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\\n        listeners.append(self)\\n    return result\\nsocket.socket.bind = local_bind\\ndef deny(self, address):\\n    if self.family in (socket.AF_INET, socket.AF_INET6):\\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\\n    return original_connect(self,address)\\nsocket.socket.connect=deny\\nsys.path.insert(0,'/private/tmp')\\nfrom trial_v2_mutations import install\\ninstall(\\\"mutation-replay\\\")\\nsys.argv=['pytest']+sys.argv[1:]\\nrunpy.run_module('pytest',run_name='__main__')\\n\",\"-q\",\"-p\",\"no:cacheprovider\",\"tests/services/ai1/test_manual_trial_v2.py::test_formal_trial_profile_old_v1_accepted_is_read_only\",\"--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-replay.xml\"],\"home\":\"<TEMP>\",\"code\":1,\"signal\":null,\"timedOut\":false,\"budgetMs\":180000,\"durationMs\":3765,\"synthetic\":true,\"network\":\"only process-owned bound loopback listeners; formal child retains existing deny\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "mutation-ack",
+    "nodes": [
+      "test_trial_requires_server_estimate_acknowledgement"
+    ],
+    "status": 1,
+    "stdout": "{\"label\":\"mutation-ack\",\"args\":[\"-B\",\"-c\",\"import socket, sys, runpy, os, time, pathlib, faulthandler\\noriginal_connect = socket.socket.connect\\noriginal_bind = socket.socket.bind\\nlisteners = []\\ndef local_bind(self, address):\\n    result = original_bind(self, address)\\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\\n        listeners.append(self)\\n    return result\\nsocket.socket.bind = local_bind\\ndef deny(self, address):\\n    if self.family in (socket.AF_INET, socket.AF_INET6):\\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\\n    return original_connect(self,address)\\nsocket.socket.connect=deny\\nsys.path.insert(0,'/private/tmp')\\nfrom trial_v2_mutations import install\\ninstall(\\\"mutation-ack\\\")\\nsys.argv=['pytest']+sys.argv[1:]\\nrunpy.run_module('pytest',run_name='__main__')\\n\",\"-q\",\"-p\",\"no:cacheprovider\",\"tests/services/ai1/test_manual_trial_v2.py::test_trial_requires_server_estimate_acknowledgement\",\"--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-ack.xml\"],\"home\":\"<TEMP>\",\"code\":1,\"signal\":null,\"timedOut\":false,\"budgetMs\":180000,\"durationMs\":1198,\"synthetic\":true,\"network\":\"only process-owned bound loopback listeners; formal child retains existing deny\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "mutation-bytes",
+    "nodes": [
+      "test_trial_raw_json_exact_size_boundary"
+    ],
+    "status": 1,
+    "stdout": "{\"label\":\"mutation-bytes\",\"args\":[\"-B\",\"-c\",\"import socket, sys, runpy, os, time, pathlib, faulthandler\\noriginal_connect = socket.socket.connect\\noriginal_bind = socket.socket.bind\\nlisteners = []\\ndef local_bind(self, address):\\n    result = original_bind(self, address)\\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\\n        listeners.append(self)\\n    return result\\nsocket.socket.bind = local_bind\\ndef deny(self, address):\\n    if self.family in (socket.AF_INET, socket.AF_INET6):\\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\\n    return original_connect(self,address)\\nsocket.socket.connect=deny\\nsys.path.insert(0,'/private/tmp')\\nfrom trial_v2_mutations import install\\ninstall(\\\"mutation-bytes\\\")\\nsys.argv=['pytest']+sys.argv[1:]\\nrunpy.run_module('pytest',run_name='__main__')\\n\",\"-q\",\"-p\",\"no:cacheprovider\",\"tests/services/ai1/test_manual_trial_v2.py::test_trial_raw_json_exact_size_boundary\",\"--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-bytes.xml\"],\"home\":\"<TEMP>\",\"code\":1,\"signal\":null,\"timedOut\":false,\"budgetMs\":180000,\"durationMs\":1207,\"synthetic\":true,\"network\":\"only process-owned bound loopback listeners; formal child retains existing deny\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "mutation-usage-cap",
+    "nodes": [
+      "test_trial_usage_unknown_full_or_invalid_not_zero"
+    ],
+    "status": 1,
+    "stdout": "{\"label\":\"mutation-usage-cap\",\"args\":[\"-B\",\"-c\",\"import socket, sys, runpy, os, time, pathlib, faulthandler\\noriginal_connect = socket.socket.connect\\noriginal_bind = socket.socket.bind\\nlisteners = []\\ndef local_bind(self, address):\\n    result = original_bind(self, address)\\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\\n        listeners.append(self)\\n    return result\\nsocket.socket.bind = local_bind\\ndef deny(self, address):\\n    if self.family in (socket.AF_INET, socket.AF_INET6):\\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\\n    return original_connect(self,address)\\nsocket.socket.connect=deny\\nsys.path.insert(0,'/private/tmp')\\nfrom trial_v2_mutations import install\\ninstall(\\\"mutation-usage-cap\\\")\\nsys.argv=['pytest']+sys.argv[1:]\\nrunpy.run_module('pytest',run_name='__main__')\\n\",\"-q\",\"-p\",\"no:cacheprovider\",\"tests/services/ai1/test_manual_trial_v2.py::test_trial_usage_unknown_full_or_invalid_not_zero\",\"--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-usage-cap.xml\"],\"home\":\"<TEMP>\",\"code\":1,\"signal\":null,\"timedOut\":false,\"budgetMs\":180000,\"durationMs\":1201,\"synthetic\":true,\"network\":\"only process-owned bound loopback listeners; formal child retains existing deny\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "mutation-usage-zero",
+    "nodes": [
+      "test_trial_usage_unknown_full_or_invalid_not_zero"
+    ],
+    "status": 1,
+    "stdout": "{\"label\":\"mutation-usage-zero\",\"args\":[\"-B\",\"-c\",\"import socket, sys, runpy, os, time, pathlib, faulthandler\\noriginal_connect = socket.socket.connect\\noriginal_bind = socket.socket.bind\\nlisteners = []\\ndef local_bind(self, address):\\n    result = original_bind(self, address)\\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\\n        listeners.append(self)\\n    return result\\nsocket.socket.bind = local_bind\\ndef deny(self, address):\\n    if self.family in (socket.AF_INET, socket.AF_INET6):\\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\\n    return original_connect(self,address)\\nsocket.socket.connect=deny\\nsys.path.insert(0,'/private/tmp')\\nfrom trial_v2_mutations import install\\ninstall(\\\"mutation-usage-zero\\\")\\nsys.argv=['pytest']+sys.argv[1:]\\nrunpy.run_module('pytest',run_name='__main__')\\n\",\"-q\",\"-p\",\"no:cacheprovider\",\"tests/services/ai1/test_manual_trial_v2.py::test_trial_usage_unknown_full_or_invalid_not_zero\",\"--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-usage-zero.xml\"],\"home\":\"<TEMP>\",\"code\":1,\"signal\":null,\"timedOut\":false,\"budgetMs\":180000,\"durationMs\":1147,\"synthetic\":true,\"network\":\"only process-owned bound loopback listeners; formal child retains existing deny\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "mutation-validate",
+    "nodes": [
+      "test_trial_prepared_mutation_and_expiry_refuse_before_key_or_transport"
+    ],
+    "status": 1,
+    "stdout": "{\"label\":\"mutation-validate\",\"args\":[\"-B\",\"-c\",\"import socket, sys, runpy, os, time, pathlib, faulthandler\\noriginal_connect = socket.socket.connect\\noriginal_bind = socket.socket.bind\\nlisteners = []\\ndef local_bind(self, address):\\n    result = original_bind(self, address)\\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\\n        listeners.append(self)\\n    return result\\nsocket.socket.bind = local_bind\\ndef deny(self, address):\\n    if self.family in (socket.AF_INET, socket.AF_INET6):\\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\\n    return original_connect(self,address)\\nsocket.socket.connect=deny\\nsys.path.insert(0,'/private/tmp')\\nfrom trial_v2_mutations import install\\ninstall(\\\"mutation-validate\\\")\\nsys.argv=['pytest']+sys.argv[1:]\\nrunpy.run_module('pytest',run_name='__main__')\\n\",\"-q\",\"-p\",\"no:cacheprovider\",\"tests/services/ai1/test_manual_trial_v2.py::test_trial_prepared_mutation_and_expiry_refuse_before_key_or_transport\",\"--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-validate.xml\"],\"home\":\"<TEMP>\",\"code\":1,\"signal\":null,\"timedOut\":false,\"budgetMs\":180000,\"durationMs\":1520,\"synthetic\":true,\"network\":\"only process-owned bound loopback listeners; formal child retains existing deny\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "mutation-final-write",
+    "nodes": [
+      "test_trial_actual_httpcore_final_write_deadline"
+    ],
+    "status": 1,
+    "stdout": "{\"label\":\"mutation-final-write\",\"args\":[\"-B\",\"-c\",\"import socket, sys, runpy, os, time, pathlib, faulthandler\\noriginal_connect = socket.socket.connect\\noriginal_bind = socket.socket.bind\\nlisteners = []\\ndef local_bind(self, address):\\n    result = original_bind(self, address)\\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\\n        listeners.append(self)\\n    return result\\nsocket.socket.bind = local_bind\\ndef deny(self, address):\\n    if self.family in (socket.AF_INET, socket.AF_INET6):\\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\\n    return original_connect(self,address)\\nsocket.socket.connect=deny\\nsys.path.insert(0,'/private/tmp')\\nfrom trial_v2_mutations import install\\ninstall(\\\"mutation-final-write\\\")\\nsys.argv=['pytest']+sys.argv[1:]\\nrunpy.run_module('pytest',run_name='__main__')\\n\",\"-q\",\"-p\",\"no:cacheprovider\",\"tests/services/ai1/test_manual_trial_v2.py::test_trial_actual_httpcore_final_write_deadline\",\"--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-final-write.xml\"],\"home\":\"<TEMP>\",\"code\":1,\"signal\":null,\"timedOut\":false,\"budgetMs\":180000,\"durationMs\":2017,\"synthetic\":true,\"network\":\"only process-owned bound loopback listeners; formal child retains existing deny\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "mutation-store-zero",
+    "nodes": [
+      "test_formal_default_trial_provider_send_auth_and_query_only[None-ai1]"
+    ],
+    "status": 1,
+    "stdout": "{\"label\":\"mutation-store-zero\",\"args\":[\"-B\",\"-c\",\"import socket, sys, runpy, os, time, pathlib, faulthandler\\noriginal_connect = socket.socket.connect\\noriginal_bind = socket.socket.bind\\nlisteners = []\\ndef local_bind(self, address):\\n    result = original_bind(self, address)\\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\\n        listeners.append(self)\\n    return result\\nsocket.socket.bind = local_bind\\ndef deny(self, address):\\n    if self.family in (socket.AF_INET, socket.AF_INET6):\\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\\n    return original_connect(self,address)\\nsocket.socket.connect=deny\\nsys.path.insert(0,'/private/tmp')\\nfrom trial_v2_mutations import install\\ninstall(\\\"mutation-store-zero\\\")\\nsys.argv=['pytest']+sys.argv[1:]\\nrunpy.run_module('pytest',run_name='__main__')\\n\",\"-q\",\"-p\",\"no:cacheprovider\",\"tests/services/ai1/test_manual_trial_v2.py::test_formal_default_trial_provider_send_auth_and_query_only[None-ai1]\",\"--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/mutation-store-zero.xml\"],\"home\":\"<TEMP>\",\"code\":1,\"signal\":null,\"timedOut\":false,\"budgetMs\":180000,\"durationMs\":3389,\"synthetic\":true,\"network\":\"only process-owned bound loopback listeners; formal child retains existing deny\"}\n",
+    "stderr": ""
+  }
+]

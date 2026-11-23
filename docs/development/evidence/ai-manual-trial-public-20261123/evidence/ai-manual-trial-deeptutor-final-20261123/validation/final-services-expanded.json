@@ -1,0 +1,22 @@
+{
+  "label": "final-services-expanded",
+  "args": [
+    "-B",
+    "-c",
+    "import socket, sys, runpy, os, time, pathlib, faulthandler\noriginal_connect = socket.socket.connect\noriginal_bind = socket.socket.bind\nlisteners = []\ndef local_bind(self, address):\n    result = original_bind(self, address)\n    if self.family in (socket.AF_INET, socket.AF_INET6) and address[0] in ('127.0.0.1', '::1'):\n        listeners.append(self)\n    return result\nsocket.socket.bind = local_bind\ndef deny(self, address):\n    if self.family in (socket.AF_INET, socket.AF_INET6):\n        allowed = {s.getsockname()[:2] for s in listeners if s.fileno() >= 0}\n        if tuple(address[:2]) not in allowed: raise AssertionError('unowned or external connection forbidden')\n    return original_connect(self,address)\nsocket.socket.connect=deny\nsys.argv=['pytest']+sys.argv[1:]\nrunpy.run_module('pytest',run_name='__main__')\n",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/services/ai1",
+    "tests/services/ai3",
+    "--junitxml=<EVIDENCE_ROOT>/ai-manual-trial-deeptutor-resume-20261123/final-services-expanded.xml"
+  ],
+  "home": "<TEMP>",
+  "code": 0,
+  "signal": null,
+  "timedOut": false,
+  "budgetMs": 180000,
+  "durationMs": 77966,
+  "synthetic": true,
+  "network": "only process-owned bound loopback listeners; formal child retains existing deny"
+}
