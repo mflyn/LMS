@@ -3,6 +3,7 @@ const fs = require('fs/promises');
 const { login, capture, expectData, pathname, observe } = require('./ai2Fixture');
 const { submitWithLostResult } = require('./ai3BrowserRecovery');
 const { assertAi3AppliedEffects } = require('./ai3EffectAssertions');
+const { observeAi3Navigation, finishAi3Navigation } = require('./ai3NavigationEvidence');
 
 async function runAi3Flow({ page, browser, browserName, info, runtime, parent, packageId, source }) {
   const { fixture } = runtime, childId = fixture.actors.child.childId;
@@ -35,8 +36,10 @@ async function runAi3Flow({ page, browser, browserName, info, runtime, parent, p
   };
   const childContext = await browser.newContext({ viewport: { width: 768, height: 1024 }, hasTouch: true });
   let remoteOperationId;
+  let observation, failure;
   try {
     const child = await childContext.newPage(), childSeen = await observe(child, runtime);
+    observation = observeAi3Navigation(child);
     await login(child, runtime, 'child');
     for (const count of [2, 3]) {
       await page.goto(runtime.webUrl + `/app/learning?childId=${childId}&packageId=${packageId}`);
@@ -113,8 +116,10 @@ async function runAi3Flow({ page, browser, browserName, info, runtime, parent, p
       } else await child.getByRole('button', { name: '刷新练习记录', exact: true }).click();
       await child.getByRole('region', { name: '练习列表', exact: true })
         .locator(`a[href="/child/practice?childId=${childId}&roundId=${roundId}"]`).click();
+      observation.mark(roundId, count, 'selected');
       const submit = async (note, imageCount) => {
         const files = Array.from({ length: imageCount }, (_, i) => ({ name: `synthetic-${count}-${note}-${i}.png`, mimeType: 'image/png', buffer: fixture.image.bytes }));
+        observation.mark(roundId, count, note === 'First attempt' ? 'first-upload' : 'revision-upload');
         await child.getByLabel('添加练习图片', { exact: true }).setInputFiles(files);
         await expect(child.getByRole('button', { name: '提交作答', exact: true })).toBeEnabled();
         await child.getByRole('textbox', { name: '作答说明', exact: true }).fill(note);
@@ -204,6 +209,7 @@ async function runAi3Flow({ page, browser, browserName, info, runtime, parent, p
     expect(await M.Attempt.countDocuments()).toBe(4);
     await fs.writeFile(process.env.AI3_ACTUAL_RESULT, JSON.stringify({ engine: browserName, source, counts: [2, 3],
       closedLoops: 2, remoteOperationId, syntheticProvider: true, realGatewayAndConsumers: true }));
-  } finally { await childContext.close(); }
+  } catch (error) { failure = error; }
+  finally { await finishAi3Navigation({ context: childContext, observation, info, failure }); }
 }
 module.exports = { runAi3Flow };
